@@ -887,8 +887,8 @@ class S3Request(object):
         # Custom action?
         if not self.custom_action:
             self.custom_action = s3db.get_method(self.prefix, self.name,
-                                                          component_name=self.component_name,
-                                                          method=self.method)
+                                                 component_name=self.component_name,
+                                                 method=self.method)
 
         # Method handling
         http = self.http

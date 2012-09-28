@@ -299,7 +299,7 @@ class S3ProjectModel(S3Model):
                              organisation_id(
                                 label = org_label,
                                 requires = self.org_organisation_requires(updateable=True,
-                                                                          required = True),
+                                                                          required=True),
                                 widget = None,
                                 ),
                              Field("name", unique = True,
@@ -1717,8 +1717,8 @@ class S3Project3WModel(S3Model):
         table = define_table(tablename,
                              project_id(),
                              organisation_id(
-                                requires = self.org_organisation_requires( updateable=True,
-                                                                           required = True),
+                                requires = self.org_organisation_requires(updateable=True,
+                                                                          required=True),
                                 widget = None,
                                 comment=S3AddResourceLink(c="org",
                                                           f="organisation",

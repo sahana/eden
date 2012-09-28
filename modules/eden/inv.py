@@ -2349,12 +2349,14 @@ def inv_tabs(r):
         @ToDo: Make these Expand/Contract without a server-side call
     """
 
-    T = current.T
-    s3 = current.session.s3
     settings = current.deployment_settings
 
     if settings.has_module("inv") and \
-        current.auth.s3_has_permission("read", "inv_inv_item", c = "inv"):
+       current.auth.s3_has_permission("read", "inv_inv_item", c="inv"):
+
+        T = current.T
+        s3 = current.session.s3
+
         collapse_tabs = settings.get_inv_collapse_tabs()
         tablename, record = s3_rheader_resource(r)
         if collapse_tabs and not (tablename == "inv_warehouse"):

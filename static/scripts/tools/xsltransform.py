@@ -2,7 +2,7 @@
 #
 # Debug/Helper script for XSL stylesheet development
 #
-# >>> python xsltransform <XML File> <XSLT Stylesheet>
+# >>> python xsltransform <XML File> <XSLT Stylesheet> [<name>]
 #       ... transforms the XML file using the stylesheet
 #
 import sys
@@ -36,7 +36,7 @@ def main(argv):
     try:
         xmlpath = argv[0]
     except:
-        print "Usage: python xsltransform <XML File> [<XSLT Stylesheet>]"
+        print "Usage: python xsltransform <XML File> [<XSLT Stylesheet>] [<name>]"
         return
     try:
         xslpath = argv[1]
@@ -46,7 +46,11 @@ def main(argv):
     tree = parse(xmlpath)
 
     if xslpath is not None:
-        tree = transform(tree, xslpath)
+        try:
+            name = argv[2]
+            tree = transform(tree, xslpath, name=name)
+        except:
+            tree = transform(tree, xslpath)
 
     print etree.tostring(tree, pretty_print=True)
 

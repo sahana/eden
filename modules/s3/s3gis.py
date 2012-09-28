@@ -7407,72 +7407,109 @@ class S3ImportPOI(S3Method):
             @param attr: controller options for this request
         """
 
-        T = current.T
-        auth = current.auth
-        request = current.request
-        response = current.response
+        if r.representation == "html":
 
-        if r.representation == "html" and \
-           r.id and not r.component:
+            T = current.T
+            auth = current.auth
+            s3db = current.s3db
+            request = current.request
+            response = current.response
 
             title = T("Import from OpenStreetMap")
 
             form = FORM(
                     TABLE(
                         TR(
-                            TD(T("Can read PoIs either from an OpenStreetMap mirror or from an uploaded .osm file.")),
+                            TD(T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
+                               _colspan=3),
+                            ),
+                        TR(
+                            TD(B("%s: " % T("File"))),
+                            TD(INPUT(_type="file", _name="file", _size="50")),
+                            TD(SPAN("*", _class="req",
+                                        _style="padding-right: 5px;"))
+                            ),
+                        TR(
+                            TD(),
+                            TD(T("or")),
+                            TD(),
                             ),
                         TR(
                             TD(B("%s: " % T("Host"))),
                             TD(INPUT(_type="text", _name="host",
-                                     _id="host", _value="localhost"))
+                                     _id="host", _value="localhost")),
+                            TD(),
                             ),
                         TR(
                             TD(B("%s: " % T("Database"))),
                             TD(INPUT(_type="text", _name="database",
-                                     _id="database", _value="osm"))
+                                     _id="database", _value="osm")),
+                            TD(),
                             ),
                         TR(
                             TD(B("%s: " % T("User"))),
                             TD(INPUT(_type="text", _name="user",
-                                     _id="user", _value="osm"))
+                                     _id="user", _value="osm")),
+                            TD(),
                             ),
                         TR(
                             TD(B("%s: " % T("Password"))),
                             TD(INPUT(_type="text", _name="password",
-                                     _id="password", _value="osm"))
-                            ),
-                        TR(
-                            TD(T("or")),
-                            ),
-                        TR(
-                            TH(B("%s: " % T("File"))),
-                            INPUT(_type="file", _name="file", _size="50"),
-                            TH(DIV(SPAN("*", _class="req",
-                                        _style="padding-right: 5px;")))
+                                     _id="password", _value="osm")),
+                            TD(),
                             ),
                         TR(
                             TD(B("%s: " % T("Ignore Errors?"))),
                             TD(INPUT(_type="checkbox", _name="ignore_errors",
-                                     _id="ignore_errors"))
+                                     _id="ignore_errors")),
+                            TD(),
                             ),
-                        TR("",
-                           INPUT(_type="submit", _value=T("Import"))
+                        TR(TD(),
+                           TD(INPUT(_type="submit", _value=T("Import"))),
+                           TD(),
                            )
                         )
                     )
 
+            if not r.id:
+                from s3validators import IS_LOCATION
+                from s3widgets import S3LocationAutocompleteWidget
+                # dummy field
+                field = s3db.org_office.location_id
+                field.requires = IS_NULL_OR(IS_LOCATION())
+                widget = S3LocationAutocompleteWidget()(field, None)
+                row = TR(TD(B("%s: " % T("Location"))),
+                         TD(widget),
+                         TD(SPAN("*", _class="req",
+                                 _style="padding-right: 5px;"))
+                         )
+                form[0].insert(3, row)
+
+            response.view = "create.html"
             output = dict(title=title,
                           form=form)
 
             if form.accepts(request.vars, current.session):
 
                 vars = form.vars
-                if vars.file:
-                    File = vars.file
+                if vars.file != "":
+                    File = vars.file.file
                 else:
                     # Create .poly file
-                    error = GIS.create_poly(r.record)
+                    if r.record:
+                        record = r.record
+                    elif not vars.location_id:
+                        form.errors["location_id"] = T("Location is Required!")
+                        return output
+                    else:
+                        gtable = s3db.gis_location
+                        record = db(gtable.id == vars.location_id).select(gtable.wkt,
+                                                                          limitby=(0, 1)
+                                                                          ).first()
+                        if record.wkt is None:
+                            form.errors["location_id"] = T("Location needs to have WKT!")
+                            return output
+                    error = GIS.create_poly(record)
                     if error:
                         current.session.error = error
                         redirect(URL(args=r.id))
@@ -7484,47 +7521,52 @@ class S3ImportPOI(S3Method):
                         import tempfile
                         TEMP = tempfile.gettempdir()
                     filename = os.path.join(TEMP, "%s.osm" % name)
+                    cmd = ["/home/osm/osmosis/bin/osmosis", # @ToDo: deployment_setting
+                           "--read-pgsql",
+                           "host=%s" % vars.host,
+                           "database=%s" % vars.database,
+                           "user=%s" % vars.user,
+                           "password=%s" % vars.password,
+                           "--dataset-dump",
+                           "--bounding-polygon",
+                           "file=%s" % os.path.join(TEMP, "%s.poly" % name),
+                           "--write-xml",
+                           "file=%s" % filename,
+                           ]
+                    import subprocess
                     try:
-                        from subprocess import check_output as call
-                    except:
-                        # Python < 2.7
-                        from subprocess import call
-                    try:
-                        result = call(["/home/osm/osmosis/bin/osmosis", # @ToDo: deployment_setting
-                                       "--read-pgsql",
-                                       "host=%s" % vars.host,
-                                       "database=%s" % vars.database,
-                                       "user=%s" % vars.user,
-                                       "password=%s" % vars.password,
-                                       "--dataset-dump",
-                                       "--bounding-polygon",
-                                       "file=%s" % os.path.join(TEMP, "%s.poly" % name),
-                                       "--write-xml",
-                                       "file=%s" % filename,
-                                       ], shell=True)
-                    except:
-                        # Py2.7
-                        current.session.error = T("OSM file generation failed: %s") % result
+                        result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                    except subprocess.CalledProcessError, e:
+                        current.session.error = T("OSM file generation failed: %s") % e.output
                         redirect(URL(args=r.id))
+                    except AttributeError:
+                        # Python < 2.7
+                        error = subprocess.call(cmd, shell=True)
+                        if error:
+                            current.session.error = T("OSM file generation failed!")
+                            redirect(URL(args=r.id))
                     try:
                         File = open(filename, "r")
                     except:
-                        # Py2.6
-                        current.session.error = T("OSM file generation failed")
+                        current.session.error = T("Cannot open created OSM file!")
                         redirect(URL(args=r.id))
 
                 stylesheet = os.path.join(request.folder, "static", "formats",
                                           "osm", "import.xsl")
                 ignore_errors = vars.get("ignore_errors", None)
                 xml = current.xml
-                tree = xml.csv2tree(File)
-                #tree = xml.transform(tree, stylesheet_path=stylesheet)
-                define_resource = current.s3db.resource
+                tree = xml.parse(File)
+                define_resource = s3db.resource
                 response.error = ""
                 import_count = 0
                 for tablename in current.deployment_settings.get_gis_poi_resources():
+                    try:
+                        table = s3db[tablename]
+                    except:
+                        # Module disabled
+                        continue
                     resource = define_resource(tablename)
-                    x3xml = xml.transform(tree, stylesheet_path=stylesheet,
+                    s3xml = xml.transform(tree, stylesheet_path=stylesheet,
                                           name=tablename.split("_", 1)[1])
                     try:
                         success = resource.import_xml(s3xml,
@@ -7540,7 +7582,6 @@ class S3ImportPOI(S3Method):
                 else:
                     response.information = T("No PoIs available.")
 
-            response.view = "create.html"
             return output
 
         else:

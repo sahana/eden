@@ -711,6 +711,9 @@ class S3Msg(object):
                    http://eden.sahanafoundation.org/ticket/439
         """
 
+        if not to:
+            return False
+
         limit = current.deployment_settings.get_mail_limit()
 
         if limit:

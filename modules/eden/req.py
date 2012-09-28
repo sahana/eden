@@ -607,7 +607,7 @@ $(function() {
         s3_has_permission = current.auth.s3_has_permission
         settings = current.deployment_settings
         if settings.has_module("req") and \
-            s3_has_permission("read", "req_req", c = "req"):
+           s3_has_permission("read", "req_req", c="req"):
             tabs= [(T("Requests"), "req")]
             if s3_has_permission("read", "req_req",
                                  c=current.request.controller,

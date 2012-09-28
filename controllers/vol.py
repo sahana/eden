@@ -95,7 +95,6 @@ def volunteer():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
-    table.person_id.widget=S3AddPersonWidget(controller="vol")
     _type = table.type
     s3.filter = (_type == 2)
     _location = table.location_id
@@ -110,11 +109,12 @@ def volunteer():
                    (T("Certificates"), "certificate"),
                    (T("Email"), "email"),
                   ]
-    report_options = s3db.get_config(tablename,
-                                     "report_options")
+    get_config = s3db.get_config
+    report_options = get_config(tablename,
+                                "report_options")
     # Remove inappropriate filters from the Search widget
-    human_resource_search = s3db.get_config(tablename,
-                                            "search_method")
+    human_resource_search = get_config(tablename,
+                                       "search_method")
     # Remove Facility
     human_resource_search.advanced.pop(5)
     if settings.get_hrm_vol_experience() == "programme":
@@ -187,6 +187,8 @@ def volunteer():
 
     def prep(r):
         if r.interactive:
+            table = r.table
+            table.person_id.widget = S3AddPersonWidget(controller="vol")
             if not r.component and \
                not r.id and \
                r.method in [None, "create"]:
@@ -197,7 +199,6 @@ def volunteer():
                 _type.default = 2
                 _location.writable = True
                 _location.readable = True
-                table = r.table
                 table.code.writable = False
                 table.code.readable = False
                 table.department.writable = False
@@ -283,7 +284,6 @@ def person():
 
     configure = s3db.configure
     set_method = s3db.set_method
-    super_key = s3db.super_key
 
     # Custom Method for Contacts
     set_method("pr", resourcename,
@@ -595,8 +595,8 @@ def person_search():
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
     s3db.configure("hrm_human_resource",
-                    # S3HRSearch
-                    search_method = s3db.hrm_autocomplete_search,
+                   # S3HRSearch
+                   search_method = s3db.hrm_autocomplete_search,
                    )
     s3.prep = lambda r: r.representation == "json" and \
                         r.method == "search"
@@ -663,15 +663,16 @@ def group():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
-    s3db.configure(tablename, main="name", extra="description",
-                    # Redirect to member list when a new group has been created
-                    create_next = URL(f="group",
-                                      args=["[id]", "group_membership"]))
-    s3db.configure("pr_group_membership",
-                    list_fields=["id",
-                                 "person_id",
-                                 "group_head",
-                                 "description"])
+    configure = s3db.configure
+    configure(tablename, main="name", extra="description",
+              # Redirect to member list when a new group has been created
+              create_next = URL(f="group",
+                                args=["[id]", "group_membership"]))
+    configure("pr_group_membership",
+              list_fields=["id",
+                           "person_id",
+                           "group_head",
+                           "description"])
 
     # Post-process
     def postp(r, output):
@@ -682,7 +683,7 @@ def group():
                 s3_action_buttons(r, deletable=False, update_url=update_url)
                 if "msg" in settings.modules:
                     s3.actions.append({
-                        "url": URL(f="compose",
+                        "url": URL(f = "compose",
                                    vars = {"group_id": "[id]"}),
                         "_class": "action-btn",
                         "label": str(T("Send Notification"))})

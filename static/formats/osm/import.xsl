@@ -8,7 +8,8 @@
         Transformation of
             OpenStreetMap Points of Interest
         into
-            Sahana Eden Records (Hospitals, Locations)
+            Sahana Eden Records:
+                Airports, Hospitals, Offices, Seaports, Shelters, and their Locations
 
         Large files can give memory errors, so best to reduce the file first to just the bounding box &/or tag type of interest:
         e.g. (replace single hyphens with double-hyphens)
@@ -16,9 +17,7 @@
     -->
 
     <xsl:output method="xml"/>
-    <!-- @ToDo: Could this be called something else besides name, which is
-                a keyword?
-    -->
+
     <xsl:param name="name"/>
 
     <xsl:key name="nodes" match="node" use="@id" />
@@ -127,10 +126,10 @@
             <reference field="facility_type_id" resource="org_facility_type">
                 <data field="name">
                     <xsl:choose>
-                        <xsl:when test="./tag[@v='place_of_worship']"/>
+                        <xsl:when test="./tag[@v='place_of_worship']">
                             <xsl:text>Church</xsl:text>
                         </xsl:when>
-                        <xsl:when test="./tag[@v='school']"/>
+                        <xsl:when test="./tag[@v='school']">
                             <xsl:text>School</xsl:text>
                         </xsl:when>
                     </xsl:choose>
@@ -155,16 +154,11 @@
                 </xsl:call-template>
             </xsl:attribute>
 
-            <data field="gov_uuid">
-                <xsl:choose>
-                    <xsl:when test="./tag[@k='paho:id']">
-                        <xsl:value-of select="concat('urn:paho:id:', ./tag[@k='paho:id']/@v)"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:value-of select="concat('urn:osm:id:', @id)"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </data>
+            <xsl:if test="./tag[@k='paho:id']">
+                <data field="gov_uuid">
+                    <xsl:value-of select="concat('urn:paho:id:', ./tag[@k='paho:id']/@v)"/>
+                </data>
+            </xsl:if>
 
             <!-- Main Record -->
             <data field="name">
@@ -234,17 +228,23 @@
                 </xsl:if>
             </xsl:for-each>
 
-            <data field="phone_exchange">
-                <xsl:call-template name="phone_exchange"/>
-            </data>
+            <xsl:if test="./tag[@k='contact:phone' or @k='phone' or @k='phone_number' or @k='telephone']">
+                <data field="phone_exchange">
+                    <xsl:call-template name="phone_exchange"/>
+                </data>
+            </xsl:if>
 
-            <data field="phone_business">
-                <xsl:call-template name="phone_business"/>
-            </data>
+            <xsl:if test="./tag[@k='emergency_phone' or @k='emergency_department_phone']">
+                <data field="phone_business">
+                    <xsl:call-template name="phone_business"/>
+                </data>
+            </xsl:if>
 
-            <data field="phone_emergency">
-                <xsl:call-template name="phone_emergency"/>
-            </data>
+            <xsl:if test="./tag[@k='emergency_phone' or @k='emergency_department_phone']">
+                <data field="phone_emergency">
+                    <xsl:call-template name="phone_emergency"/>
+                </data>
+            </xsl:if>
 
             <xsl:for-each select="./tag[@k='contact:website' or @k='website' or @k='url'][1]">
                 <data field="website">
@@ -347,7 +347,7 @@
     <xsl:template name="location">
         <resource name="gis_location">
 
-            <xsl:attribute name="uuid">
+            <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('urn:osm:id:', @id)"/>
             </xsl:attribute>
 
@@ -373,23 +373,23 @@
                         http://www.upu.int/en/activities/addressing/postal-addressing-systems-in-member-countries.html
                         http://www.columbia.edu/kermit/postal.html
                  @ToDo: Is there a better way to conditionally include
-                        punctuation? Also, if none of these elements exist
-                        in the node, would rather not include the field, but
-                        would rather have a null.
+                        punctuation?
             -->
-            <data field="addr_street">
-                <xsl:for-each select="./tag[@k='addr:housenumber'][1]">
-                    <xsl:value-of select="@v"/>
-                    <xsl:text> </xsl:text>
-                </xsl:for-each>
-                <xsl:for-each select="./tag[@k='addr:street'][1]">
-                    <xsl:value-of select="@v"/>
-                    <xsl:text>, </xsl:text>
-                </xsl:for-each>
-                <xsl:for-each select="./tag[@k='addr:city'][1]">
-                    <xsl:value-of select="@v"/>
-                </xsl:for-each>
-            </data>
+            <xsl:if test="./tag[@k='addr:housenumber' or @k='addr:street' or @k='addr:city']">
+                <data field="addr_street">
+                    <xsl:for-each select="./tag[@k='addr:housenumber'][1]">
+                        <xsl:value-of select="@v"/>
+                        <xsl:text> </xsl:text>
+                    </xsl:for-each>
+                    <xsl:for-each select="./tag[@k='addr:street'][1]">
+                        <xsl:value-of select="@v"/>
+                        <xsl:text>, </xsl:text>
+                    </xsl:for-each>
+                    <xsl:for-each select="./tag[@k='addr:city'][1]">
+                        <xsl:value-of select="@v"/>
+                    </xsl:for-each>
+                </data>
+            </xsl:if>
 
             <xsl:for-each select="./tag[@k='addr:postcode'][1]">
                 <data field="addr_postcode">
@@ -456,7 +456,6 @@
             <xsl:choose>
                 <xsl:when test="local-name()='node'">
                     <data field="gis_feature_type" value="1">Point</data>
-
                     <data field="lat">
                         <xsl:value-of select="@lat"/>
                     </data>
@@ -465,8 +464,8 @@
                     </data>
                 </xsl:when>
                 <xsl:when test="local-name()='way'">
-                    <!-- Note that we assume a closed way here. The onvalidation routine will try an open way (LINESTRING) if the POLYGON import fails
-                    <data field="gis_feature_type" value="3">Polygon</data> -->
+                    <!-- Note that we assume a closed way here. The onvalidation routine will try an open way (LINESTRING) if the POLYGON import fails -->
+                    <data field="gis_feature_type" value="3">Polygon</data>
                     <data field="wkt">
                         <xsl:text>POLYGON((</xsl:text>
                         <xsl:for-each select="./nd">

@@ -2200,16 +2200,17 @@ def org_root_organisation(organisation_id=None, pe_id=None):
 
 # =============================================================================
 def org_organisation_requires(updateable=False,
-                              required = False):
+                              required=False):
     """
         Optionally: Filter the list of organisations for a form field to
         just those which the user has update permissions for
     """
+
     requires = IS_ONE_OF(current.db, "org_organisation.id",
-                                org_organisation_represent,
-                                updateable = updateable,
-                                orderby = "org_organisation.name",
-                                sort = True)
+                         org_organisation_represent,
+                         updateable = updateable,
+                         orderby = "org_organisation.name",
+                         sort = True)
     if not required:
         requires = IS_NULL_OR(requires) 
     return requires
