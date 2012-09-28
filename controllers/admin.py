@@ -959,4 +959,21 @@ def result_smoke():
         file_list_smoke.append(link)
     return dict(file_list_smoke=file_list_smoke)
 
+def result_roles():
+    """
+        Selenium Test Result Reports list
+    """
+
+    file_list_roles = UL()
+    static_path = os.path.join(request.folder, "static", "test_roles")
+    for filename in os.listdir(static_path):
+        link = A(filename,
+                 _href = URL(c = "static",
+                             f = "test_roles",
+                             args = [filename]
+                             )
+                 )
+        file_list_roles.append(link)
+    return dict(file_list_roles=file_list_roles)
+
 # END =========================================================================

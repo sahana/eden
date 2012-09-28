@@ -57,7 +57,7 @@ class AddStaffToOffice(SeleniumUnitTest):
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",
-                       "Liliana Otilia",
+                       "Beatriz de Carvalho",
                        "autocomplete")
                      ]
                      )
