@@ -7567,7 +7567,7 @@ class S3ImportPOI(S3Method):
                         continue
                     resource = define_resource(tablename)
                     s3xml = xml.transform(tree, stylesheet_path=stylesheet,
-                                          name=tablename.split("_", 1)[1])
+                                          name=resource.name)
                     try:
                         success = resource.import_xml(s3xml,
                                                       ignore_errors=ignore_errors)
