@@ -623,7 +623,7 @@ class S3Resource(object):
                             qfields.append(f)
                             qf.append(str(e))
             else:
-                orderby = self._id
+                attributes["orderby"] = self._id
 
         #if db._dbname == "postgres":
         #    # Look for extra fields in query
