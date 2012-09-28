@@ -95,6 +95,7 @@ def volunteer():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
+    table.person_id.widget=S3AddPersonWidget(controller="vol")
     _type = table.type
     s3.filter = (_type == 2)
     _location = table.location_id

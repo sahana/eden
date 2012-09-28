@@ -438,23 +438,35 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
+                        M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("List", f="asset")(
-                        M("Assets"),
-                        M("Items", f="item")
+                    M("Items", c="supply", f="item")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", f="catalog_item", m="search"),
                     ),
-                    M("Search", f="asset", m = "search")(
-                        M("Assets", m = "search"),
-                        M("Items", f="item", m = "search")
+                    M("Catalogs", c="supply", f="catalog")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
                     ),
-                    M("Reports", f="asset", m = "report")(
-                        M("Assets", m = "report"),
-                        M("Items", f="item", m = "report")
+                    M("Item Categories", c="supply", f="item_category",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
                     ),
-                    M("Reports")(
-                      M("Assets",  f="asset", m="report")
-                      )
+                    M("Suppliers", c="inv", f="supplier")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Facilities", c="inv", f="facility")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------

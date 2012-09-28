@@ -298,7 +298,8 @@ class S3ProjectModel(S3Model):
                              # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
                              organisation_id(
                                 label = org_label,
-                                requires = self.org_organisation_requires(updateable=True),
+                                requires = self.org_organisation_requires(updateable=True,
+                                                                          required = True),
                                 widget = None,
                                 ),
                              Field("name", unique = True,
@@ -1716,7 +1717,8 @@ class S3Project3WModel(S3Model):
         table = define_table(tablename,
                              project_id(),
                              organisation_id(
-                                requires = self.org_organisation_requires(updateable=True),
+                                requires = self.org_organisation_requires( updateable=True,
+                                                                           required = True),
                                 widget = None,
                                 comment=S3AddResourceLink(c="org",
                                                           f="organisation",
