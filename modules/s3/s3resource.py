@@ -598,29 +598,32 @@ class S3Resource(object):
 
         # Add orderby fields which are not in qfields
         # @todo: this could need some cleanup/optimization
-        if distinct and orderby is not None:
-            qf = [str(f) for f in qfields]
-            if isinstance(orderby, str):
-                of = orderby.split(",")
-            elif not isinstance(orderby, (list, tuple)):
-                of = [orderby]
-            else:
-                of = orderby
-            for e in of:
-                if isinstance(e, Field) and str(e) not in qf:
-                    qfields.append(e)
-                    qf.append(str(e))
-                elif isinstance(e, str):
-                    fn = e.strip().split()[0].split(".", 1)
-                    tn, fn = ([table._tablename] + fn)[-2:]
-                    try:
-                        t = db[tn]
-                        f = t[fn]
-                    except:
-                        continue
-                    if str(f) not in qf:
-                        qfields.append(f)
+        if distinct:
+            if orderby is not None:
+                qf = [str(f) for f in qfields]
+                if isinstance(orderby, str):
+                    of = orderby.split(",")
+                elif not isinstance(orderby, (list, tuple)):
+                    of = [orderby]
+                else:
+                    of = orderby
+                for e in of:
+                    if isinstance(e, Field) and str(e) not in qf:
+                        qfields.append(e)
                         qf.append(str(e))
+                    elif isinstance(e, str):
+                        fn = e.strip().split()[0].split(".", 1)
+                        tn, fn = ([table._tablename] + fn)[-2:]
+                        try:
+                            t = db[tn]
+                            f = t[fn]
+                        except:
+                            continue
+                        if str(f) not in qf:
+                            qfields.append(f)
+                            qf.append(str(e))
+            else:
+                orderby = self._id
 
         #if db._dbname == "postgres":
         #    # Look for extra fields in query
