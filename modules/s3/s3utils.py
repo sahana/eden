@@ -88,16 +88,21 @@ def s3_dev_toolbar():
         Shows useful stuff at the bottom of the page in Debug mode
     """
 
-    from gluon.dal import thread
+    try:
+        # New web2py
+        from gluon.dal import THREAD_LOCAL
+    except:
+        # Old web2py
+        from gluon.dal import thread as THREAD_LOCAL
     from gluon.utils import web2py_uuid
 
     BUTTON = TAG.button
 
-    if hasattr(thread, "instances"):
+    if hasattr(THREAD_LOCAL, "instances"):
         dbstats = [TABLE(*[TR(PRE(row[0]),
                            "%.2fms" % (row[1]*1000)) \
                            for row in i.db._timings]) \
-                         for i in thread.instances]
+                         for i in THREAD_LOCAL.instances]
     else:
         dbstats = [] # if no db or on GAE
     u = web2py_uuid()

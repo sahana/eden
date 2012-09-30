@@ -5,7 +5,7 @@
 Usage:
     Install py2exe: http://sourceforge.net/projects/py2exe/files/
     Copy script to the web2py directory
-    c:\bin\python26\python standalone_exe.py py2exe
+    c:\bin\python27\python standalone_exe.py py2exe
 """
 
 from distutils.core import setup
@@ -53,7 +53,7 @@ setup(
     'dest_base':'web2py_no_console' # MUST NOT be just 'web2py' otherwise it overrides the standard web2py.exe
     }],
   data_files=[
-        'ABOUT',
+        #'ABOUT',
         'LICENSE',
         'VERSION'
         ],
