@@ -2212,7 +2212,7 @@ def org_organisation_requires(updateable=False,
                          orderby = "org_organisation.name",
                          sort = True)
     if not required:
-        requires = IS_NULL_OR(requires) 
+        requires = IS_NULL_OR(requires)
     return requires
 
 # =============================================================================
@@ -2399,7 +2399,7 @@ def org_rheader(r, tabs=[]):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
-                
+
                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
             tabs.append((T("Assign Staff"), "human_resource_site"))
@@ -2511,6 +2511,8 @@ def org_organisation_controller():
                                post_process='''hide_host_role($('#%s').val())''')
                 s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
                     request.application)
+
+            s3db.configure("project_project", create_next=None)
 
             # If a filter is being applied to the Organisations, change the CRUD Strings accordingly
             type_filter = request.get_vars["organisation.organisation_type_id$name"]
