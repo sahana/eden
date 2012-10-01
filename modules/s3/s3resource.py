@@ -517,7 +517,7 @@ class S3Resource(object):
                                                            skip_components=False)
 
         distinct = distinct | d
-        attributes = dict(distinct=distinct)
+        attributes = {"distinct":distinct}
 
         # Left joins
         left_joins = left
@@ -549,7 +549,7 @@ class S3Resource(object):
                 left_joins.sort(self.sortleft)
             except:
                 pass
-            attributes.update(left=left_joins)
+            attributes["left"] = left_joins
 
         # Joins
         for join in joins.values():
@@ -558,13 +558,13 @@ class S3Resource(object):
 
         # Orderby
         if orderby is not None:
-            attributes.update(orderby=orderby)
+            attributes["orderby"] = orderby
 
         # Limitby
         if vfltr is None:
             limitby = self.limitby(start=start, limit=limit)
             if limitby is not None:
-                attributes.update(limitby=limitby)
+                attributes["limitby"] = limitby
         else:
             # Retrieve all records when filtering for virtual fields
             # => apply start/limit in vfltr instead
@@ -623,18 +623,10 @@ class S3Resource(object):
                             qfields.append(f)
                             qf.append(str(e))
             else:
+                # default ORDERBY needed with postgresql and DISTINCT,
+                # otherwise DAL will add an ORDERBY for any primary keys
+                # in the join, which could render DISTINCT meaningless here.
                 attributes["orderby"] = self._id
-
-        #if db._dbname == "postgres":
-        #    # Look for extra fields in query
-        #    qf = [str(f) for f in qfields]
-        #    for join in left_joins:
-        #        extra_field = join.second.second
-        #        e = str(extra_field)
-        #        # Works for Country filter but not Branch filter
-        #        if e == "gis_location.id" and e not in qf:
-        #            qfields.append(extra_field)
-        #            qf.append(str(extra_field))
 
         # Retrieve the rows
         rows = db(query).select(*qfields, **attributes)

@@ -1,7 +1,8 @@
-Name,Description
-Population,
-Households,
-Men,
-Women,
-Adults,
-Children,
+"Name","Description"
+"Population",
+"Male",
+"Female",
+"Over 60",
+"Under 5",
+"Households",
+"Households below poverty line",
