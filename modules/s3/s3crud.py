@@ -254,9 +254,6 @@ class S3CRUD(S3Method):
 
             subheadings = _config("subheadings")
 
-            # Set default approver
-            current.auth.permission.set_default_approver(table)
-
             # Get the form
             form = self.sqlform(request=request,
                                 resource=resource,

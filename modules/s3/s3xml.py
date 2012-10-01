@@ -72,6 +72,7 @@ class S3XML(S3Codec):
     UID = "uuid"
     MCI = "mci"
     DELETED = "deleted"
+    APPROVED = "approved"
     CTIME = "created_on"
     CUSER = "created_by"
     MTIME = "modified_on"
@@ -88,6 +89,7 @@ class S3XML(S3Codec):
             "id",
             "deleted_fk",
             "owned_by_entity",
+            "approved_by",
             "realm_entity"] # @todo: export the realm entity
 
     FIELDS_TO_ATTRIBUTES = [
@@ -112,7 +114,8 @@ class S3XML(S3Codec):
             CTIME,
             MTIME,
             MCI,
-            DELETED]
+            DELETED,
+            APPROVED]
 
     TAG = Storage(
         root="s3xml",
@@ -1097,12 +1100,18 @@ class S3XML(S3Codec):
         deleted = False
         for f in self.ATTRIBUTES_TO_FIELDS:
             if f == self.DELETED:
-                v = element.get(f, None)
-                if v == "True":
+                if f in table and \
+                   element.get(f, "false").lower() == "true":
                     record[f] = deleted = True
                     break
                 else:
                     continue
+            if f == self.APPROVED:
+                # Override default-approver:
+                if "approved_by" in table and \
+                   element.get(f, "true").lower() == "false":
+                    record["approved_by"] = None
+                continue
             if f in self.IGNORE_FIELDS or f in skip:
                 continue
             elif f in (self.CUSER, self.MUSER, self.OUSER):
