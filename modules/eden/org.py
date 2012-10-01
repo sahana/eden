@@ -433,7 +433,7 @@ class S3OrganisationModel(S3Model):
                                           label=T("Organization"),
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget=widget
+                                          widget=None, #widget
                                          )
 
         organisations_id = S3ReusableField("organisations_id",
@@ -1798,8 +1798,7 @@ class S3OfficeModel(S3Model):
                                    ),
                              self.org_organisation_id(
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                                 widget = None,
-                                 requires = self.org_organisation_requires(updateable=True),
+                                 requires = self.org_organisation_requires(updateable=True)
                                  ),
                              office_type_id(
                                             #readable = False,
@@ -1963,36 +1962,50 @@ class S3OfficeModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def org_office_onaccept(form):
-        """ Process injected fields """
+        """ 
+            * Update Affiliation and Realms
+            * Process injected fields 
+        """
+        s3db = current.s3db
+        auth = current.auth
+        
+        otable = s3db.org_office
+        vars = form.vars
 
-        if not current.deployment_settings.get_org_summary():
-            return
+        # Affiliation, record ownership and component ownership
+        s3db.pr_update_affiliations(otable, vars)
+        auth.s3_set_record_owner(otable, vars, force_update=True)
+        auth.set_component_realm_entity( otable, vars,
+                                         skip_components = ["human_resource"])
 
-        db = current.db
-        id = form.vars.id
-        table = current.s3db.org_office_summary
-        query = (table.office_id == id)
-        existing = db(query).select(table.id,
-                                    limitby=(0, 1)).first()
-        vars = current.request.post_vars
-        if "national_staff" in vars:
-            national_staff = vars.national_staff
-        else:
-            national_staff = None
-        if "international_staff" in vars:
-            international_staff = vars.international_staff
-        else:
-            international_staff = None
+        if current.deployment_settings.get_org_summary():
+           
 
-        if existing:
-            db(query).update(national_staff=national_staff,
+            db = current.db
+            id = form.vars.id
+            table = current.s3db.org_office_summary
+            query = (table.office_id == id)
+            existing = db(query).select(table.id,
+                                        limitby=(0, 1)).first()
+            vars = current.request.post_vars
+            if "national_staff" in vars:
+                national_staff = vars.national_staff
+            else:
+                national_staff = None
+            if "international_staff" in vars:
+                international_staff = vars.international_staff
+            else:
+                international_staff = None
+    
+            if existing:
+                db(query).update(national_staff=national_staff,
+                                 international_staff=international_staff
+                                 )
+            elif national_staff or international_staff:
+                table.insert(office_id=id,
+                             national_staff=national_staff,
                              international_staff=international_staff
                              )
-        elif national_staff or international_staff:
-            table.insert(office_id=id,
-                         national_staff=national_staff,
-                         international_staff=international_staff
-                         )
 
     # ---------------------------------------------------------------------
     @staticmethod

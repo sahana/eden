@@ -70,7 +70,8 @@ def human_resource():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                    current.auth.permission.has_permission("update", c="hrm", f = "compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",
@@ -170,7 +171,8 @@ def staff():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                    current.auth.permission.has_permission("update", c="hrm", f = "compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                             "url": URL(f="compose",
@@ -669,7 +671,8 @@ def group():
             if not r.component:
                 update_url = URL(args=["[id]", "group_membership"])
                 s3_action_buttons(r, deletable=False, update_url=update_url)
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                    current.auth.permission.has_permission("update", c="hrm", f = "compose"):
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),

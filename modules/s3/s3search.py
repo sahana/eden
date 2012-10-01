@@ -1447,7 +1447,8 @@ class S3Search(S3CRUD):
                 s3.dataTableMap = map_popup
 
             if settings.has_module("msg") and \
-               ("pe_id" in table or "person_id" in table):
+               ("pe_id" in table or "person_id" in table) and \
+               current.auth.permission.has_permission("update", c="msg"):
                 # Provide the ability to Message person entities in search results
                 tabs.append((T("Message"), "compose"))
 

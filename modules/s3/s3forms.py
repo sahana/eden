@@ -468,6 +468,8 @@ class S3SQLDefaultForm(S3SQLForm):
                     auth = current.auth
                     auth.s3_set_record_owner(table, vars.id)
                     auth.s3_make_session_owner(table, vars.id)
+                    # Update super entity links
+                    current.s3db.update_super(table, vars)
                 # Store session vars
                 self.resource.lastid = str(vars.id)
                 manager.store_session(prefix, name, vars.id)
