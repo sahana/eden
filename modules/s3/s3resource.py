@@ -628,6 +628,8 @@ class S3Resource(object):
                 # default ORDERBY needed with postgresql and DISTINCT,
                 # otherwise DAL will add an ORDERBY for any primary keys
                 # in the join, which could render DISTINCT meaningless here.
+                if str(self._id) not in [str(f) for f in qfields]:
+                    qfields.insert(0, self._id)
                 attributes["orderby"] = self._id
 
         # Retrieve the rows
