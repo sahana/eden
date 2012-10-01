@@ -200,8 +200,8 @@ class S3WarehouseModel(S3Model):
                                    #writable=False,
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    ),
-                             self.org_organisation_id(widget = S3OrganisationAutocompleteWidget(
-                                default_from_profile=True)),
+                             self.org_organisation_id(requires = self.org_organisation_requires(updateable=True)
+                                                      ),
                              #warehouse_type_id(),
                              self.gis_location_id(),
                              Field("phone1", label = T("Phone 1"),
@@ -271,7 +271,8 @@ class S3WarehouseModel(S3Model):
         configure(tablename,
                   super_entity=("pr_pentity", "org_site"),
                   search_method = warehouse_search,
-                  deduplicate=self.inv_warehouse_duplicate,
+                  deduplicate = self.inv_warehouse_duplicate,
+                  onaccept = self.inv_warehouse_onaccept,
                   list_fields=["id",
                                "name",
                                "organisation_id",   # Filtered in Component views
@@ -324,6 +325,23 @@ class S3WarehouseModel(S3Model):
     #        return r.name
     #    except:
     #        return current.messages.UNKNOWN_OPT
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_warehouse_onaccept(form):
+        """ 
+            * Update Affiliation and Realms
+        """
+        s3db = current.s3db
+        auth = current.auth
+
+        wtable = s3db.inv_warehouse
+        vars = form.vars
+
+        # Affiliation, record ownership and component ownership
+        s3db.pr_update_affiliations(wtable, vars)
+        auth.s3_set_record_owner(wtable, vars, force_update=True)
+        auth.set_component_realm_entity( wtable, vars,
+                                         skip_components = ["human_resource"])
 
     # ---------------------------------------------------------------------
     @staticmethod

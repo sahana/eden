@@ -607,9 +607,6 @@ class S3ProjectModel(S3Model):
         # Themes
         add_component("project_theme_percentage", project_project="project_id")
 
-        # Statuses
-        add_component("project_status", project_project="project_id")
-
         # DRRPP
         if settings.get_template() == "DRRPP":
             add_component("project_drrpp",
@@ -750,9 +747,15 @@ class S3ProjectModel(S3Model):
         """
 
         db = current.db
+        auth = current.auth
+        
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars
+        
+        # Update asset realm_entity and components' realm_entity  
+        auth.set_realm_entity(ptable, vars, force_update=True)
+        auth.set_component_realm_entity(ptable, vars)
 
         lead_role = current.deployment_settings.get_project_organisation_lead_role()
 

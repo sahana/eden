@@ -152,6 +152,7 @@ class S3AssetModel(S3Model):
                                                                       asset_item_represent,
                                                                       sort=True,
                                                                       ),
+                                                 widget = None,
                                                  script = None, # No Item Pack Filter
                                                  ),
                              # This is a component, so needs to be a super_link
@@ -555,14 +556,21 @@ class S3AssetModel(S3Model):
     def asset_onaccept(form):
         """
         """
+        db = current.db
+        auth = current.auth
 
         vars = form.vars
+        atable = db.asset_asset
+
+        # Update asset realm_entity and components' realm_entity  
+        auth.set_realm_entity(atable, vars, force_update=True)
+        auth.set_component_realm_entity(atable, vars)
+
         site_id = vars.get("site_id", None)
         if site_id:
             asset_id = vars.id
             db = current.db
             # Set the Base Location
-            atable = db.asset_asset
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
             asset_tracker.set_base_location(tracker(db.org_site,
