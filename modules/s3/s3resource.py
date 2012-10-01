@@ -144,6 +144,7 @@ class S3Resource(object):
         """
 
         s3db = current.s3db
+        auth = current.auth
         manager = current.manager
 
         # Names ---------------------------------------------------------------
@@ -192,6 +193,9 @@ class S3Resource(object):
                 raise # KeyError(manager.error)
         table = self.table
 
+        # Set default approver
+        auth.permission.set_default_approver(table)
+
         self._alias = tablename
         """ Table alias (the tablename used in joins/queries) """
 
@@ -212,8 +216,6 @@ class S3Resource(object):
         self.ERROR = manager.ERROR
 
         # Authorization hooks
-        auth = current.auth
-
         self.permit = auth.s3_has_permission
         self.accessible_query = auth.s3_accessible_query
 

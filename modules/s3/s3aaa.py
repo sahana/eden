@@ -4436,8 +4436,10 @@ class S3Permission(object):
 
         if APPROVER in table:
             approver = table[APPROVER]
-            if auth.s3_logged_in() and \
-               auth.s3_has_permission("approve", table):
+            if auth.override:
+                approver.default = 0
+            elif auth.s3_logged_in() and \
+                 auth.s3_has_permission("approve", table):
                 approver.default = auth.user.id
             else:
                 approver.default = None

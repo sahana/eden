@@ -88,6 +88,7 @@ class S3XML(S3Codec):
             "id",
             "deleted_fk",
             "owned_by_entity",
+            "approved_by",
             "realm_entity"] # @todo: export the realm entity
 
     FIELDS_TO_ATTRIBUTES = [
