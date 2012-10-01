@@ -701,6 +701,7 @@ $(document).ready(function() {
         }
       aoTableConfig[t]['groupTitles'] = config['groupTitles'];
       aoTableConfig[t]['groupTotals'] = config['groupTotals'];
+      aoTableConfig[t]['displayLength'] = config['displayLength'];
       oDataTable[t] = $(oTable).dataTable({
         'bDestroy': bReplace,
         'sDom': sDom[t],
