@@ -4359,8 +4359,6 @@ class S3Permission(object):
                              False = check if unapproved
         """
 
-        db = current.db
-
         if "approved_by" not in table.fields or \
            not self.requires_approval(table):
             return approved
@@ -4374,8 +4372,9 @@ class S3Permission(object):
             record = None
 
         if record is None and record_id:
-            query = table._id == record_id
-            record = db(query).select(table.approved_by, limitby=(0, 1)).first()
+            record = current.db(table._id == record_id).select(table.approved_by,
+                                                               limitby=(0, 1)
+                                                               ).first()
             if not record:
                 return False
 

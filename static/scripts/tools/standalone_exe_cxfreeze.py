@@ -42,7 +42,7 @@ buildOptions = dict(
     	includes = base_modules,
   	    include_files=[
             'applications',
-            'ABOUT',
+            #'ABOUT',
             'LICENSE',
             'VERSION',
             'logging.example.conf',
