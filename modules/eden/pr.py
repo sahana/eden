@@ -565,6 +565,13 @@ class S3PersonModel(S3Model):
             9:T("other")
         }
 
+        pr_marital_status = S3ReusableField("marital_status", "integer",
+                                            requires = IS_IN_SET(pr_marital_status_opts, zero=None),
+                                            default = 1,
+                                            label = T("Marital Status"),
+                                            represent = lambda opt: \
+                                                        pr_marital_status_opts.get(opt, UNKNOWN_OPT))
+
         pr_religion_opts = settings.get_L10n_religions()
 
         pr_impact_tags = {
@@ -641,6 +648,7 @@ class S3PersonModel(S3Model):
                                    writable = False,
                                   ),
                              pr_gender(label = T("Gender")),
+                             pr_marital_status(),
                              s3_date("date_of_birth",
                                      label = T("Date of Birth"),
                                      past = 1320,  # Months, so 110 years
@@ -1669,7 +1677,7 @@ class S3PersonImageModel(S3Model):
                        onaccept = self.pr_image_onaccept,
                        onvalidation = self.pr_image_onvalidation,
                        ondelete = self.pr_image_ondelete,
-                       mark_required = ["url", "image"],
+                       #mark_required = ["url", "image"],
                        list_fields=["id",
                                     "title",
                                     "profile",
@@ -1768,7 +1776,7 @@ class S3PersonImageModel(S3Model):
 
         if not hasattr(image, "file") and not image and not url:
             form.errors.image = \
-            form.errors.url = T("Either file upload or image URL required.")
+            form.errors.url = current.T("Either file upload or image URL required.")
         return
 
     # -------------------------------------------------------------------------

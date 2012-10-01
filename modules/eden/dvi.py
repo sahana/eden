@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden DVI Model
+""" Sahana Eden Disaster Victim Identifciation Model
 
     @author: Dominic König <dominic[at]aidiq.com>
 

@@ -1537,6 +1537,10 @@ class S3Compose(S3CRUD):
         if not current.deployment_settings.has_module("msg"):
             current.session.error = T("Cannot send messages if Messaging module disabled")
             redirect(URL(f="index"))
+            
+        if not current.auth.permission.has_permission("update", c="msg"):
+            current.session.error = T("You do not have permission to send messages")
+            redirect(URL(f="index"))
 
         #_vars = r.get_vars
 
