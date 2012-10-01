@@ -2748,7 +2748,7 @@ class S3PersonDescription(S3Model):
                                                 pr_hair_color_opts.get(opt, UNKNOWN_OPT)),
                              Field("facial_hair_length", "integer",
                                    requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_length_opts)),
-                                   label = T("Facial hear, length"),
+                                   label = T("Facial hair, length"),
                                    represent = lambda opt: \
                                                 pr_facial_hair_length_opts.get(opt, UNKNOWN_OPT)),
                              Field("facial_hair_comment"),

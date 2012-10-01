@@ -19,9 +19,10 @@
          L3.............................optional.....gis_location.L3
          L4.............................optional.....gis_location.L4
          Name...........................optional.....gis_location.name
-         The following is to be **removed** once approval is added to prepopulate
-         Status.........................optional.....demographic.approved_by ... list from (Pending, Approved, it will default as if Pending)
-
+         Approved.......................optional.....demographic_data.approved_by
+                                                     Set to 'false' to not approve records.
+                                                     Note this only works for prepop or users with acl.APPROVE rights
+         
     *********************************************************************** -->
     <xsl:output method="xml"/>
     <xsl:include href="../commons.xsl"/>
@@ -117,21 +118,22 @@
         <xsl:variable name="date" select="col[@field='Date']"/>
         <xsl:variable name="source" select="col[@field='Source Name']"/>
 
-        <resource name="stats_demographic_data">
-            <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
-            <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
-            <data field="created_by">1</data>
+        <xsl:variable name="approved">
             <xsl:choose>
-                <xsl:when test="$status='Pending'">
-                    <data field="approved_by">0</data>
-                </xsl:when>
-                <xsl:when test="$status='Approved'">
-                    <data field="approved_by">1</data>
+                <xsl:when test="col[@field='Approved']='false'">
+                    <xsl:text>false</xsl:text>
                 </xsl:when>
                 <xsl:otherwise>
-                    <data field="approved_by">0</data>
+                    <xsl:text>true</xsl:text>
                 </xsl:otherwise>
             </xsl:choose>
+        </xsl:variable>
+
+        <resource name="stats_demographic_data" approved="$approved">
+            <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
+            <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+            <!-- Bad to hardcode a created_by to an ID in an .xsl!
+            <data field="created_by">1</data> -->
 
             <!-- Link to Demographic -->
             <reference field="parameter_id" resource="stats_demographic">

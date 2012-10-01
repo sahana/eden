@@ -1993,7 +1993,7 @@ Thank you
 
         results = self.settings.mailer.send(user["email"], subject=subject, message=message)
         if not results:
-            db.rollback()
+            #current.db.rollback()
             current.response.error = self.messages.unable_send_email
         return
 
