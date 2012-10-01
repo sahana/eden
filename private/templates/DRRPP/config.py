@@ -31,6 +31,10 @@ settings.auth.registration_pending = \
 A confirmation email will be sent to you once approved.
 For enquiries contact %s""" % settings.get_mail_approver()
 
+# Record Approval
+settings.auth.record_approval = True
+settings.auth.record_approval_required_for = ["org_organisation", "project_project", "project_framework"]
+
 # L10n settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),

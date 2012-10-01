@@ -7503,9 +7503,10 @@ class S3ImportPOI(S3Method):
                         return output
                     else:
                         gtable = s3db.gis_location
-                        record = db(gtable.id == vars.location_id).select(gtable.wkt,
-                                                                          limitby=(0, 1)
-                                                                          ).first()
+                        record = current.db(gtable.id == vars.location_id).select(gtable.name,
+                                                                                  gtable.wkt,
+                                                                                  limitby=(0, 1)
+                                                                                  ).first()
                         if record.wkt is None:
                             form.errors["location_id"] = T("Location needs to have WKT!")
                             return output
@@ -7514,7 +7515,7 @@ class S3ImportPOI(S3Method):
                         current.session.error = error
                         redirect(URL(args=r.id))
                     # Use Osmosis to extract an .osm file using this .poly
-                    name = r.record.name
+                    name = record.name
                     if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp
                         TEMP = os.path.join(os.getcwd(), "temp")
                     else:
