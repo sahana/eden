@@ -576,7 +576,7 @@ Thank you
                 )
             if self.settings.remember_me_form:
                 # Add a new input checkbox "remember me for longer"
-                addrow(form,XML("&nbsp;"),
+                addrow(form, XML("&nbsp;"),
                        DIV(XML("&nbsp;"),
                            INPUT(_type='checkbox',
                                  _class='checkbox',
@@ -584,12 +584,11 @@ Thank you
                                  _name="remember",
                                  ),
                            XML("&nbsp;&nbsp;"),
-                           LABEL(
-                            self.messages.label_remember_me,
-                            _for="auth_user_remember",
-                            )),"",
+                           LABEL(self.messages.label_remember_me,
+                                 _for="auth_user_remember",
+                                 )), "",
                        self.settings.formstyle,
-                       'auth_user_remember__row')
+                       "auth_user_remember__row")
 
             captcha = self.settings.login_captcha or \
                 (self.settings.login_captcha!=False and self.settings.captcha)
@@ -688,29 +687,7 @@ Thank you
         # Process authenticated users
         if user:
             user = Storage(utable._filter_fields(user, id=True))
-            # If the user hasn't set a personal UTC offset,
-            # then read the UTC offset from the form:
-            if not user.utc_offset:
-                user.utc_offset = session.s3.utc_offset
-            session.auth = Storage(
-                user=user,
-                last_visit=request.now,
-                expiration = request.vars.get("remember", False) and \
-                    self.settings.long_expiration or self.settings.expiration,
-                remember = request.vars.has_key("remember"),
-                hmac_key = web2py_uuid()
-                )
-            self.user = user
-            self.s3_set_roles()
-            # Read their language from the Profile
-            language = user.language
-            T.force(language)
-            session.s3.language = language
-            session.confirmation = self.messages.logged_in
-            # Set a Cookie to present user with login box by default
-            self.set_cookie()
-            # Update the timestamp of the User so we know when they last logged-in
-            db(utable.id == self.user.id).update(timestmp = request.utcnow)
+            self.login_user(user)
         if log and self.user:
             self.log_event(log % self.user)
 
@@ -729,6 +706,48 @@ Thank you
             return form
         else:
             redirect(next)
+
+    # -------------------------------------------------------------------------
+    def login_user(self, user):
+        """
+            Log the user in
+            - common function called by login() & register()
+        """
+
+        request = current.request
+        session = current.session
+        settings = self.settings
+        vars = request.vars
+
+        # If the user hasn't set a personal UTC offset,
+        # then read the UTC offset from the form:
+        if not user.utc_offset:
+            user.utc_offset = session.s3.utc_offset
+
+        session.auth = Storage(
+            user=user,
+            last_visit=request.now,
+            expiration = vars.get("remember", False) and \
+                settings.long_expiration or settings.expiration,
+            remember = vars.has_key("remember"),
+            hmac_key = web2py_uuid()
+            )
+        self.user = user
+        self.s3_set_roles()
+
+        # Read their language from the Profile
+        language = user.language
+        current.T.force(language)
+        session.s3.language = language
+
+        session.confirmation = self.messages.logged_in
+
+        # Set a Cookie to present user with login box by default
+        self.set_cookie()
+
+        # Update the timestamp of the User so we know when they last logged-in
+        utable = settings.table_user
+        current.db(utable.id == self.user.id).update(timestmp = request.utcnow)
 
     # -------------------------------------------------------------------------
     def register(self,
@@ -796,8 +815,8 @@ Thank you
                        #formstyle = formstyle
                        )
         for i, row in enumerate(form[0].components):
-            item = row[1][0]
-            if isinstance(item, INPUT) and item["_name"] == passfield:
+            item = row.element("input", _name=passfield)
+            if item:
                 field_id = "%s_password_two" % utable._tablename
                 #row = formstyle(...)
                 form[0].insert(i + 1,
@@ -816,15 +835,15 @@ Thank you
                         "",
                         _id=field_id + SQLFORM.ID_ROW_SUFFIX))
                 #form[0].insert(i + 1, row)
-        # add an opt in clause to receive emails depending on the deployment settings
+        # Add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
             field_id = "%s_opt_in" % utable._tablename
             comment = DIV(DIV(_class="tooltip",
-                            _title="%s|%s" % ("Mailing list",
-                                              "By selecting this you agree that we may contact you.")))
+                              _title="%s|%s" % (T("Mailing list"),
+                                                T("By selecting this you agree that we may contact you."))))
             checked = deployment_settings.get_auth_opt_in_default() and "selected"
             form[0].insert(-1,
-                           TR(TD(LABEL("%s:" % "Receive updates",
+                           TR(TD(LABEL("%s:" % T("Receive updates"),
                                        _for="opt_in",
                                        _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
                                  _class="w2p_fl"),
@@ -896,11 +915,9 @@ Thank you
                 self.add_membership(admin_group_id, users.first().id)
 
                 # Log them in
-                user = utable[form.vars.id]
-                session.auth = Storage(user=user, last_visit=request.now,
-                                       expiration=self.settings.expiration)
-                self.user = user
-                session.confirmation = self.messages.logged_in
+                #user = utable[form.vars.id]
+                user = Storage(utable._filter_fields(form.vars, id=True))
+                self.login_user(user)
 
                 self.s3_send_welcome_email(form.vars)
 
@@ -925,14 +942,9 @@ Thank you
 
                 if approved:
                     # Log them in
-                    user = utable[form.vars.id]
-                    session.auth = Storage(user=user, last_visit=request.now,
-                                           expiration=self.settings.expiration)
-                    self.user = user
-                    session.confirmation = self.messages.logged_in
-
-            # Set a Cookie to present user with login box by default
-            self.set_cookie()
+                    #user = utable[form.vars.id]
+                    user = Storage(utable._filter_fields(form.vars, id=True))
+                    self.login_user(user)
 
             if log:
                 self.log_event(log % form.vars)

@@ -353,7 +353,7 @@ if len(pop_list) > 0:
         try:
             print >> sys.stderr, errorLine
         except:
-            print >> sys.stderr, s3_unicode(errorLine)
+            print >> sys.stderr, s3base.s3_unicode(errorLine)
 
     # Restore table protection
     s3mgr.PROTECTED = protected
