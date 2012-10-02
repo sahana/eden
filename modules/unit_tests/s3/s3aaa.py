@@ -2456,6 +2456,7 @@ class RecordApprovalTests(unittest.TestCase):
 
             # Create test record
             otable = s3db.org_organisation
+            otable.approved_by.default = None
             org = Storage(name="Test Approval Organisation")
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
@@ -2566,7 +2567,7 @@ class RecordApprovalTests(unittest.TestCase):
 
         otable = current.s3db.org_organisation
 
-        self.assertEqual(otable.approved_by.default, None)
+        otable.approved_by.default = None
 
         auth.s3_impersonate("normaluser@example.com")
         acl.set_default_approver(otable)
@@ -2630,6 +2631,7 @@ class RecordApprovalTests(unittest.TestCase):
 
             # Create test record
             otable = s3db.org_organisation
+            otable.approved_by.default = None
             org = Storage(name="Test Approval Organisation")
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
@@ -2638,6 +2640,7 @@ class RecordApprovalTests(unittest.TestCase):
 
             # Create test component
             ftable = s3db.org_office
+            ftable.approved_by.default = None
             office = Storage(name="Test Approval Office",
                              organisation_id=org_id)
             office_id = ftable.insert(**office)
@@ -2720,6 +2723,7 @@ class RecordApprovalTests(unittest.TestCase):
 
             # Create test record
             otable = s3db.org_organisation
+            otable.approved_by.default = None
             org = Storage(name="Test Approval Organisation")
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
@@ -2728,6 +2732,7 @@ class RecordApprovalTests(unittest.TestCase):
 
             # Create test component
             ftable = s3db.org_office
+            ftable.approved_by.default = None
             office = Storage(name="Test Approval Office",
                              organisation_id=org_id)
             office_id = ftable.insert(**office)
@@ -2805,8 +2810,10 @@ class RecordApprovalTests(unittest.TestCase):
         settings.auth.record_approval = True
         otable = s3db.org_organisation
         otable_requires_approval = s3db.get_config(otable, "requires_approval", None)
+        otable.approved_by.default = None
         ftable = s3db.org_office
         ftable_requires_approval = s3db.get_config(ftable, "requires_approval", None)
+        ftable.approved_by.default = None
 
         try:
 
@@ -2910,6 +2917,7 @@ class RecordApprovalTests(unittest.TestCase):
 
             # Create test record
             otable = s3db.org_organisation
+            otable.approved_by.default = None
             org = Storage(name="Test Approval Organisation")
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
@@ -3186,6 +3194,15 @@ class RealmEntityTests(unittest.TestCase):
 
         self.org_id = org_id
 
+        # Create a dummy record
+        ftable = s3db.org_office
+        office = Storage(name="Ownership Test Office")
+        office_id = ftable.insert(**office)
+        office.update(id=office_id)
+        s3db.update_super(ftable, office)
+
+        self.office_id = office_id
+
         # Clear the hooks
         tname = "org_organisation"
         settings = current.deployment_settings
@@ -3364,6 +3381,30 @@ class RealmEntityTests(unittest.TestCase):
 
         record = otable[self.org_id]
         self.assertEqual(record.realm_entity, None)
+
+    # -------------------------------------------------------------------------
+    def testUpdateSuperRealm(self):
+        """ Test that realm entity gets set in super-entity """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        ftable = s3db.org_office
+        stable = s3db.org_site
+
+        row = ftable[self.office_id]
+        row.update_record(realm_entity=row["pe_id"])
+
+        site_id = row["site_id"]
+
+        auth.update_super_realm(ftable, self.office_id, realm_entity=None)
+        site = stable[site_id]
+        self.assertEqual(site["realm_entity"], None)
+
+        auth.update_super_realm(ftable, self.office_id, realm_entity=row["realm_entity"])
+        site = stable[site_id]
+        self.assertEqual(site["realm_entity"], row["realm_entity"])
 
     # -------------------------------------------------------------------------
     def realm_entity(self, table, row):

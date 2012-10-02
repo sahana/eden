@@ -943,20 +943,19 @@ class S3Resource(object):
             return False
 
         tablename = self.tablename
+        table = self.table
 
         for record in self.select():
 
-            table = self.table
             record_id = record[table._id]
 
             # Forget any cached permission for this record
             auth.permission.forget(table, record_id)
 
             if "approved_by" in table.fields:
-                query = (table._id == record_id)
-                success = current.db(query).update(approved_by=user_id)
+                success = record.update_record(approved_by=user_id)
                 if not success:
-                    db.rollback()
+                    current.db.rollback()
                     return False
                 else:
                     onapprove = self.get_config("onapprove", None)
@@ -970,7 +969,7 @@ class S3Resource(object):
                 component = self.components[alias]
                 success = component.approve(components=None, approve=approve)
                 if not success:
-                    db.rollback()
+                    current.db.rollback()
                     return False
 
         return True
