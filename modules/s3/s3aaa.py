@@ -965,7 +965,7 @@ Thank you
             group_id = self.id_group(group_id) # interpret group_id as a role
         if not user_id and self.user:
             user_id = self.user.id
-        membership = self.table_membership()
+        membership = self.settings.table_membership
         record = membership(user_id=user_id, group_id=group_id, pe_id=entity)
         if record:
             return record.id
