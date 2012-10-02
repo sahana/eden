@@ -285,12 +285,15 @@ class S3StatsModel(S3Model):
         stats_aggregated_period = cls.stats_aggregated_period
 
         if not data_id:
-            records = db((dtable.deleted != True) & (dtable.approved_by != None)).select()
+            query = (dtable.deleted != True) & \
+                    (dtable.approved_by != None)
+            records = db(query).select()
             for record in records:
                 cls.stats_update_time_aggregate(record)
             return
         elif not isinstance(data_id, Row):
-            record = db(dtable.data_id == data_id).select(limitby=(0, 1)).first()
+            record = db(dtable.data_id == data_id).select(limitby=(0, 1)
+                                                          ).first()
         else:
             record = data_id
             data_id = record.data_id
@@ -1157,7 +1160,7 @@ def stats_source_represent(id, row=None):
 
     table = current.s3db.stats_source
     r = current.db(table._id == id).select(table.name,
-                                           limitby = (0, 1)).first()
+                                           limitby=(0, 1)).first()
     try:
         return r.name
     except:
@@ -1169,17 +1172,16 @@ class StatsGroupVirtualFields:
         used by vulnerability/report
     """
 
-    extra_fields = ["group",
-                    ]
+    extra_fields = ["group"]
 
     def group(self):
         try:
             approved = self.stats_group.approved_by
-        except (AttributeError,TypeError):
+        except (AttributeError, TypeError):
             # @ToDo: i18n?
             return "Approval pending"
         else:
-            if not approved or approved == 0:
+            if approved is None:
                 return "Approval pending"
             else:
                 # @todo: add conditional branch for VCA report
