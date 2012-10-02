@@ -81,7 +81,10 @@ def test_roles():
                 db_table = s3db[table]
             elif c and f:
                 tablename = "%s_%s" % (c,f)
-                db_table =  s3db[table_lookup.get(tablename,tablename)]
+                try:
+                    db_table =  s3db[table_lookup.get(tablename,tablename)]
+                except:
+                    db_table = None
             else:
                 # No Table or C and F - probably header row
                 row_num = row_num - 1
