@@ -144,6 +144,7 @@ class S3Resource(object):
         """
 
         s3db = current.s3db
+        auth = current.auth
         manager = current.manager
 
         # Names ---------------------------------------------------------------
@@ -192,6 +193,9 @@ class S3Resource(object):
                 raise # KeyError(manager.error)
         table = self.table
 
+        # Set default approver
+        auth.permission.set_default_approver(table)
+
         self._alias = tablename
         """ Table alias (the tablename used in joins/queries) """
 
@@ -212,8 +216,6 @@ class S3Resource(object):
         self.ERROR = manager.ERROR
 
         # Authorization hooks
-        auth = current.auth
-
         self.permit = auth.s3_has_permission
         self.accessible_query = auth.s3_accessible_query
 
@@ -626,6 +628,8 @@ class S3Resource(object):
                 # default ORDERBY needed with postgresql and DISTINCT,
                 # otherwise DAL will add an ORDERBY for any primary keys
                 # in the join, which could render DISTINCT meaningless here.
+                if str(self._id) not in [str(f) for f in qfields]:
+                    qfields.insert(0, self._id)
                 attributes["orderby"] = self._id
 
         # Retrieve the rows
@@ -3302,9 +3306,10 @@ class S3Resource(object):
         ltable = self.table
         mtable = self.parent.table
         ctable = self.linked.table
-        query = join & \
-                (mtable._id == master_id) & \
-                (ltable._id == link_id)
+        query = join & (ltable._id == link_id)
+        if master_id is not None:
+            # master ID is redundant, but can be used to check negatives
+            query &= (mtable._id == master_id)
         row = current.db(query).select(ctable._id, limitby=(0, 1)).first()
         if row:
             return row[ctable._id.name]
@@ -3771,7 +3776,13 @@ class S3ResourceField(object):
             self.virtual = False
             field = self.field
             self.ftype = str(field.type)
-            self.represent = field.represent
+            if resource.linked is not None and self.ftype == "id":
+                # Always represent the link-table's ID as the
+                # linked record's ID => needed for data tables
+                self.represent = lambda i, resource=resource: \
+                                           resource.component_id(None, i)
+            else:
+                self.represent = field.represent
             self.requires = field.requires
         else:
             self.virtual = True

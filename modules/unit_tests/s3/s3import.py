@@ -10,7 +10,60 @@ import unittest
 from gluon import *
 
 # =============================================================================
-class S3ComponentDisambiguationTests(unittest.TestCase):
+class DefaultApproverOverrideTests(unittest.TestCase):
+    """ Test ability to override default approver in imports """
+
+    def setUp(self):
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="DAOOrganisation1">
+        <data field="name">DAOOrganisation1</data>
+    </resource>
+    <resource name="org_organisation" uuid="DAOOrganisation2" approved="false">
+        <data field="name">DAOOrganisation2</data>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        self.tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+    def testDefaultApproverOverride(self):
+        """ Test import with approve-attribute """
+
+        db = current.db
+        s3db = current.s3db
+
+        current.auth.override = True
+
+        resource = s3db.resource("org_organisation")
+
+        # Check default approver
+        self.assertEqual(resource.table.approved_by.default, 0)
+
+        # Import the elements
+        resource.import_xml(self.tree)
+
+        table = resource.table
+
+        # Without approved-flag should be set to default approver
+        query = (table.uuid == "DAOOrganisation1")
+        row = db(query).select(table.approved_by, limitby=(0, 1)).first()
+        self.assertEqual(row.approved_by, 0)
+
+        # With approved-flag false should be set to None
+        query = (table.uuid == "DAOOrganisation2")
+        row = db(query).select(table.approved_by, limitby=(0, 1)).first()
+        self.assertEqual(row.approved_by, None)
+
+        current.auth.override = False
+
+    def tearDown(self):
+
+        current.db.rollback()
+
+# =============================================================================
+class ComponentDisambiguationTests(unittest.TestCase):
     """ Test component disambiguation using the alias-attribute """
 
     def setUp(self):
@@ -117,7 +170,8 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        S3ComponentDisambiguationTests,
+        DefaultApproverOverrideTests,
+        ComponentDisambiguationTests,
     )
 
 # END ========================================================================

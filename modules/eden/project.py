@@ -750,8 +750,9 @@ class S3ProjectModel(S3Model):
         """
 
         db = current.db
-        ptable = db.project_project
-        otable = db.project_organisation
+        s3db = current.s3db
+        ptable = s3db.project_project
+        otable = s3db.project_organisation
         vars = form.vars
 
         lead_role = current.deployment_settings.get_project_organisation_lead_role()

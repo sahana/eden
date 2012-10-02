@@ -20,6 +20,7 @@
          Twitter.................org_organisation
          Donation Phone..........org_organisation
          Comments................org_organisation
+         Approved................org_organisation.approved_by
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -104,6 +105,10 @@
                 </xsl:when>
             </xsl:choose>
 
+            <xsl:if test="col[@field='Approved']!=''">
+                <data field="approved_by">0</data>
+            </xsl:if>
+            
             <xsl:if test="col[@field='Acronym']!=''">
                 <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
             </xsl:if>

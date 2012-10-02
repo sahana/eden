@@ -593,7 +593,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_values = []
                 rows = resource.select(fields=[field_name],
                                        start=None,
-                                       limit=None)
+                                       limit=None,
+                                       orderby=field)
                 if rows:
                     if field_type.startswith("list"):
                         for row in rows:
