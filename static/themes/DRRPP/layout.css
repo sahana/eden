@@ -1,10 +1,10 @@
 @charset "UTF-8";
 
 /* Layout Elements */
-   
+
 #header,
 #menu_modules,
-.container, 
+.container,
 #footer .content {
     width: 886px;
     margin-left: auto;
@@ -13,30 +13,31 @@
 
 #header {
     position: relative;
-    height: 70px;           
+    height: 70px;
     overflow:auto;
 }
 
 #strapline {
     position: absolute;
     bottom: 0;
-    right: 0;              
+    right: 0;
     width: 600px;
     margin: 42px 0 5px 10px;
+    font-weight: bold;
 }
 
-#strapline h1 { 			 
+#strapline h1 {
     color: #FAB73D;
     font-size: 1.3em;
-    line-height: 1em;  
+    line-height: 1em;
     text-align: left;
-    font-style: italic;           
+    font-style: italic;
 }
 
 #logo {
-    width: 250px; 
+    width: 250px;
     height: 59px;
-    background: url(img/head_title.png) no-repeat; 
+    background: url(img/head_title.png) no-repeat;
     margin-top: 10px;
     float: left;
 }
@@ -57,7 +58,7 @@
 
 .container .footer {
     height: 13px;
-    font-size: 0;                   
+    font-size: 0;
     background: url(img/page_bottom.png) no-repeat;
 }
 
@@ -65,7 +66,7 @@
 #cd_to_live_div  {
     float: right;
     font-size: 1.07em;
-    font-weight: bold; 
+    font-weight: bold;
     color: #F5902E;
     width: 196px;
     height: 10px;

@@ -1,0 +1,48 @@
+{{extend "layout.html"}}
+
+<h1>{{=T("What is 'My Page'?")}}</h1>
+<p>{{=XML(unicode(
+	T("'My Page' is a private space which allows you to <strong>save your favourite searches, graphs, matrix reports and maps</strong> for later viewing. It is also where you can <strong>manage the projects you are authorised to edit</strong>.")
+))}}</p>
+<p>{{=XML(unicode(
+	T("You may also use 'My Page' to <strong>subscribe to DRR Project Portal emails</strong>; just click the 'Subscribe' button next to any searches, graphs, matrix reports, or maps which you have filtered and when new projects fitting your filter criteria are entered (countries, hazards, themes, organisations, donors etc.) you will be emailed.")
+))}}</p>
+<p>{{=XML(unicode(
+	T("In order to use this service, you must first <a href=\"%s\">register</a> with the DRR Project Portal.") % (
+		URL(
+			c="default",
+			f="user",
+			args=["register"],
+		)
+	)
+))}}</p>
+
+<ul>
+	<li>{{=XML(unicode(
+		T("I am a new user and want to <a href=\"%s\">register</a>") % (
+			URL(
+				c="default",
+				f="user",
+				args=["register"],
+			)
+		)
+	))}}</li>
+	<li>{{=XML(unicode(
+		T("I have already registered and want to <a href=\"%s\">login</a>") % (
+			URL(
+				c="default",
+				f="user",
+				args=["login"],
+			)
+		)
+	))}}</li>
+	<li>{{=XML(unicode(
+		T("<a href=\"%s\">About</a> the DRR Project Portal") % (
+			URL(
+				c="default",
+				f="index",
+				args=["about"],
+			)
+		)
+	))}}</li>
+</ul>
