@@ -350,7 +350,10 @@ if len(pop_list) > 0:
             print >> sys.stdout, "Pre-populate task completed in %s" % duration
         bi.resultList = []
     for errorLine in bi.errorList:
-        print >> sys.stderr, errorLine
+        try:
+            print >> sys.stderr, errorLine
+        except:
+            print >> sys.stderr, s3_unicode(errorLine)
 
     # Restore table protection
     s3mgr.PROTECTED = protected
