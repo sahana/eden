@@ -70,7 +70,8 @@ def human_resource():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                   auth.permission.has_permission("update", c="hrm", f="compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",
@@ -170,7 +171,8 @@ def staff():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                   auth.permission.has_permission("update", c="hrm", f="compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                             "url": URL(f="compose",
@@ -553,13 +555,7 @@ def profile():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-            elif r.component_name == "asset":
-                # Provide a link to assign a new Asset
-                # @ToDo: Proper Widget to do this inline
-                output["add_btn"] = A(T("Assign Asset"),
-                                      _href=URL(c="asset", f="asset"),
-                                      _id="add-btn",
-                                      _class="action-btn")
+
         return output
     s3.postp = postp
 
@@ -669,7 +665,8 @@ def group():
             if not r.component:
                 update_url = URL(args=["[id]", "group_membership"])
                 s3_action_buttons(r, deletable=False, update_url=update_url)
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                   auth.permission.has_permission("update", c="hrm", f="compose"):
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),

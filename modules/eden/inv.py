@@ -200,8 +200,9 @@ class S3WarehouseModel(S3Model):
                                    #writable=False,
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    ),
-                             self.org_organisation_id(widget = S3OrganisationAutocompleteWidget(
-                                default_from_profile=True)),
+                             self.org_organisation_id(
+                                requires = self.org_organisation_requires(updateable=True)
+                                ),
                              #warehouse_type_id(),
                              self.gis_location_id(),
                              Field("phone1", label = T("Phone 1"),
@@ -271,7 +272,8 @@ class S3WarehouseModel(S3Model):
         configure(tablename,
                   super_entity=("pr_pentity", "org_site"),
                   search_method = warehouse_search,
-                  deduplicate=self.inv_warehouse_duplicate,
+                  deduplicate = self.inv_warehouse_duplicate,
+                  onaccept = self.inv_warehouse_onaccept,
                   list_fields=["id",
                                "name",
                                "organisation_id",   # Filtered in Component views
@@ -324,6 +326,40 @@ class S3WarehouseModel(S3Model):
     #        return r.name
     #    except:
     #        return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_warehouse_onaccept(form):
+        """ 
+            * Update Affiliation and Realms
+        """
+
+        auth = current.auth
+        s3db = current.s3db
+        wtable = s3db.inv_warehouse
+        vars = form.vars
+
+        # Affiliation, record ownership and component ownership
+        s3db.pr_update_affiliations(wtable, vars)
+        auth.s3_set_record_owner(wtable, vars, force_update=True)
+        auth.set_component_realm_entity(wtable, vars,
+                                        update_components = ["contact_emergency",
+                                                             "physical_description",
+                                                             "config",
+                                                             "image",
+                                                             "req",
+                                                             "send",
+                                                             "human_resource_site",
+                                                             "note",
+                                                             "contact",
+                                                             "role",
+                                                             "asset",
+                                                             "commit",
+                                                             "inv_item",
+                                                             "document",
+                                                             "recv",
+                                                             "address",
+                                                             ])
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2635,6 +2671,11 @@ def inv_send_rheader(r):
                                TH("%s: " % table.to_site_id.label),
                                table.to_site_id.represent(record.to_site_id),
                               ),
+                           TR( TH("%s: " % table.sender_id.label),
+                               table.sender_id.represent(record.sender_id),
+                               TH("%s: " % table.recipient_id.label),
+                               table.recipient_id.represent(record.recipient_id),
+                              ),
                            TR( TH("%s: " % table.status.label),
                                table.status.represent(record.status),
                              ),
@@ -3420,6 +3461,7 @@ class InvItemVirtualFields:
                     "pack_value",
                     ]
 
+    # -------------------------------------------------------------------------
     def total_value(self):
         try:
             v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
@@ -3431,6 +3473,7 @@ class InvItemVirtualFields:
         else:
             return v
 
+    # -------------------------------------------------------------------------
     def item_code(self):
         try:
             return self.inv_inv_item.item_id.code
@@ -3438,6 +3481,7 @@ class InvItemVirtualFields:
             # not available
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
     def item_category(self):
         try:
             return self.inv_inv_item.item_id.item_category_id.name
@@ -3453,6 +3497,7 @@ class InvTrackItemVirtualFields:
                     "pack_value",
                     ]
 
+    # -------------------------------------------------------------------------
     def total_value(self):
         try:
             v = self.inv_track_item.quantity * self.inv_track_item.pack_value
@@ -3460,6 +3505,14 @@ class InvTrackItemVirtualFields:
             #return IS_FLOAT_AMOUNT.represent(v, precision=2)
             return v
         except:
+            # not available
+            return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    def item_code(self):
+        try:
+            return self.inv_track_item.item_id.code
+        except AttributeError:
             # not available
             return current.messages.NONE
 

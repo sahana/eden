@@ -209,7 +209,10 @@ class S3Config(Storage):
         """ Have the registration form request an Image """
         return self.auth.get("registration_requests_image", False)
     def get_auth_registration_roles(self):
-        """ The list of role UUIDs to assign to newly-registered users """
+        """
+            A dictionary of realms, with lists of role UUIDs, to assign to newly-registered users
+            Use key = 0 to have the roles not restricted to a realm
+        """
         return self.auth.get("registration_roles", [])
     def get_auth_registration_volunteer(self):
         """ Redirect the newly-registered user to their volunteer details page """

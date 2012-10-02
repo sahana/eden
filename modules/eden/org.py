@@ -336,16 +336,13 @@ class S3OrganisationModel(S3Model):
                                                                   zero=messages.SELECT_LOCATION)),
                                    represent=lambda code: \
                                         gis.get_country(code, key_type="code") or messages.UNKNOWN_OPT),
-                             Field("logo", "upload",
-                                   label=T("Logo"),
-                                   requires=[IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
-                                                                    error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
-                                               IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
-                                   represent=self.doc_image_represent,
-                                   comment=DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Logo"),
-                                                                   T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400")))
-                                  ),
+                             Field("phone",
+                                   label=T("Phone #"),
+                                   #readable = False,
+                                   #writable = False,
+                                   requires=IS_NULL_OR(s3_phone_requires),
+                                   represent=lambda v: v or NONE
+                                   ),
                              # http://hxl.humanitarianresponse.info/#organisationHomepage
                              Field("website",
                                    label=T("Website"),
@@ -378,6 +375,16 @@ class S3OrganisationModel(S3Model):
                                    comment=DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Donation Phone #"),
                                                                    T("Phone number to donate to this organization's relief efforts.")))),
+                             Field("logo", "upload",
+                                   label=T("Logo"),
+                                   requires=[IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
+                                                                    error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
+                                               IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
+                                   represent=self.doc_image_represent,
+                                   comment=DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Logo"),
+                                                                   T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400")))
+                                  ),
                              s3_comments(),
                              #document_id(), # Better to have multiple Documents on a Tab
                              * s3_meta_fields())
@@ -433,7 +440,7 @@ class S3OrganisationModel(S3Model):
                                           label=T("Organization"),
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget=widget
+                                          widget=None, #widget
                                          )
 
         organisations_id = S3ReusableField("organisations_id",
@@ -1798,8 +1805,7 @@ class S3OfficeModel(S3Model):
                                    ),
                              self.org_organisation_id(
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                                 widget = None,
-                                 requires = self.org_organisation_requires(updateable=True),
+                                 requires = self.org_organisation_requires(updateable=True)
                                  ),
                              office_type_id(
                                             #readable = False,
@@ -1963,36 +1969,65 @@ class S3OfficeModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def org_office_onaccept(form):
-        """ Process injected fields """
+        """ 
+            * Update Affiliation and Realms
+            * Process injected fields 
+        """
 
-        if not current.deployment_settings.get_org_summary():
-            return
+        auth = current.auth
+        s3db = current.s3db
+        otable = s3db.org_office
+        vars = form.vars
 
-        db = current.db
-        id = form.vars.id
-        table = current.s3db.org_office_summary
-        query = (table.office_id == id)
-        existing = db(query).select(table.id,
-                                    limitby=(0, 1)).first()
-        vars = current.request.post_vars
-        if "national_staff" in vars:
-            national_staff = vars.national_staff
-        else:
-            national_staff = None
-        if "international_staff" in vars:
-            international_staff = vars.international_staff
-        else:
-            international_staff = None
+        # Affiliation, record ownership and component ownership
+        s3db.pr_update_affiliations(otable, vars)
+        auth.s3_set_record_owner(otable, vars, force_update=True)
+        auth.set_component_realm_entity(otable, vars,
+                                        update_components = ["contact_emergency",
+                                                             "physical_description",
+                                                             "config",
+                                                             "image",
+                                                             "req",
+                                                             "send",
+                                                             "human_resource_site",
+                                                             "note",
+                                                             "contact",
+                                                             "role",
+                                                             "asset",
+                                                             "commit",
+                                                             "inv_item",
+                                                             "document",
+                                                             "recv",
+                                                             "address",
+                                                             ])
 
-        if existing:
-            db(query).update(national_staff=national_staff,
+        if current.deployment_settings.get_org_summary():
+
+            db = current.db
+            id = form.vars.id
+            table = current.s3db.org_office_summary
+            query = (table.office_id == id)
+            existing = db(query).select(table.id,
+                                        limitby=(0, 1)).first()
+            vars = current.request.post_vars
+            if "national_staff" in vars:
+                national_staff = vars.national_staff
+            else:
+                national_staff = None
+            if "international_staff" in vars:
+                international_staff = vars.international_staff
+            else:
+                international_staff = None
+    
+            if existing:
+                db(query).update(national_staff=national_staff,
+                                 international_staff=international_staff
+                                 )
+            elif national_staff or international_staff:
+                table.insert(office_id=id,
+                             national_staff=national_staff,
                              international_staff=international_staff
                              )
-        elif national_staff or international_staff:
-            table.insert(office_id=id,
-                         national_staff=national_staff,
-                         international_staff=international_staff
-                         )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2469,18 +2504,8 @@ def org_organisation_controller():
             request = current.request
             r.table.country.default = current.gis.get_default_country("code")
 
-            # Plug in role matrix for Admins/OrgAdmins
-            auth = current.auth
-            if r.id and auth.user is not None:
-                sr = auth.get_system_roles()
-                realms = auth.user.realms or Storage()
-                if sr.ADMIN in realms or \
-                   sr.ORG_ADMIN in realms and \
-                   (realms[sr.ORG_ADMIN] is None or \
-                    r.record.pe_id in realms[sr.ORG_ADMIN]):
-                    s3db.set_method(r.prefix, r.name,
-                                    method="roles",
-                                    action=S3OrgRoleManager())
+            # Add in role matrix for Admins/OrgAdmins
+            current.auth.add_org_role_manager_method(r)
 
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
@@ -2697,16 +2722,8 @@ def org_office_controller():
             table.obsolete.readable = False
 
         if r.interactive:
-            # Plug in role matrix for Admins/OrgAdmins
-            auth = current.auth
-            if r.id and auth.user is not None:
-                sr = auth.get_system_roles()
-                realms = auth.user.realms or Storage()
-                if sr.ADMIN in realms or \
-                   sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
-                    s3db.set_method(r.prefix, r.name,
-                                    method="roles",
-                                    action=S3OrgRoleManager())
+            # Add in role matrix for Admins/OrgAdmins
+            current.auth.add_org_role_manager_method(r)
 
             if r.component:
                 cname = r.component.name

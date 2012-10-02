@@ -437,7 +437,7 @@ class S3SupplyModel(S3Model):
 
             defaults=Storage(
                              rows="name",
-                             cols="category_id",
+                             cols="item_category_id",
                              fact="brand_id",
                              aggregate="count",
                             ),

@@ -3536,7 +3536,7 @@ def s3_checkboxes_widget(field,
 
 
     options = [(k, v) for k, v in options if k != ""]
-    options = sorted(options, key=lambda option: option[1].lower())
+    options = sorted(options, key=lambda option: option[1])
 
     input_index = start_at_id
     rows = []

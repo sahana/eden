@@ -69,7 +69,8 @@ def human_resource():
         if r.interactive:
             if not r.component:
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-                if "msg" in settings.modules:
+                if "msg" in settings.modules and \
+                   auth.permission.has_permission("update", c="hrm", f="compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",

@@ -1151,6 +1151,8 @@ class S3HRSkillModel(S3Model):
         super_link = self.super_link
 
         root_org = auth.root_org()
+        
+        group = current.request.get_vars.get("group", None)
 
         # ---------------------------------------------------------------------
         # Skill Types
@@ -1559,7 +1561,8 @@ class S3HRSkillModel(S3Model):
 
         if s3_has_role(ADMIN):
             label_create = crud_strings[tablename].label_create_button
-            course_help = S3AddResourceLink(f="course",
+            course_help = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                            f="course",
                                             label=label_create)
         else:
             course_help = DIV(_class="tooltip",
@@ -3230,6 +3233,10 @@ def hrm_human_resource_onaccept(form):
         return
 
     db = current.db
+    s3db = current.s3db
+    auth = current.auth
+    setting = current.deployment_settings
+    
     htable = db.hrm_human_resource
     record = db(htable.id == id).select(htable.id,
                                         htable.type,
@@ -3244,25 +3251,27 @@ def hrm_human_resource_onaccept(form):
                                         limitby=(0, 1)).first()
     data = Storage()
 
-    # Affiliation and record ownership
-    s3db = current.s3db
+    # Affiliation, record ownership and component ownership
     s3db.pr_update_affiliations(htable, record)
-    auth = current.auth
     auth.s3_set_record_owner(htable, record, force_update=True)
+    auth.set_component_realm_entity(htable, vars,
+                                    update_components = ["presence"])
 
+    # realm_entity for the pr_person record
     ptable = s3db.pr_person
     person_id = record.person_id
-
-    setting = current.deployment_settings
+    person = Storage(id = person_id)
     if setting.get_auth_person_realm_human_resource_org():
-        # Set realm_entity = organisation pe_id for pr_person now that it is affliated
-        otable = s3db.org_organisation
+        # Set pr_person.realm_entity to the human_resource's organisation pe_id
         organisation_id = record.organisation_id
-        person = ptable[person_id]
-        organisation = otable[organisation_id]
-        if organisation and not person.realm_entity:
-            db(s3db.pr_person.id == person_id
-               ).update(realm_entity = organisation.pe_id)
+        entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
+        if entity:
+            auth.set_realm_entity(ptable, person, 
+                                  entity = entity,
+                                  force_update = True)
+            auth.set_component_realm_entity(ptable, person, 
+                                            entity = entity,
+                                            update_components = ["presence"])
 
     site_id = record.site_id
     site_contact = record.site_contact

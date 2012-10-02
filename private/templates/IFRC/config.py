@@ -20,6 +20,28 @@ settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = True
 settings.auth.record_approval = True
 
+settings.auth.registration_roles = {"site_id": ["asset_reader",
+                                                "inv_reader",
+                                                "irs_reader",
+                                                "member_reader",
+                                                "project_reader",
+                                                "staff_reader",
+                                                "vol_reader",
+                                                "survey_reader",
+                                                "vulnerability_reader",
+                                                ],
+                                    "organisation_id": ["asset_reader",
+                                                        "inv_reader",
+                                                        "irs_reader",
+                                                        "member_reader",
+                                                        "project_reader",
+                                                        "staff_reader",
+                                                        "vol_reader",
+                                                        "survey_reader",
+                                                        "vulnerability_reader",
+                                                        ]
+                                    }
+
 # -----------------------------------------------------------------------------
 # Security Policy
 settings.security.policy = 8 # Delegations
@@ -56,6 +78,7 @@ def ifrc_realm_entity(table, row):
     realm_entity_fks = dict(pr_contact = EID,
                             pr_physical_description = EID,
                             pr_address = EID,
+                            pr_image = EID,
                             pr_identity = "person_id",
                             pr_education = "person_id",
                             pr_note = "person_id",
@@ -89,7 +112,7 @@ def ifrc_realm_entity(table, row):
             row = rows.first()
 
     # Check if there is a FK to inherit the realm_entity
-    realm_entity = None
+    realm_entity = 0
     fk = realm_entity_fks.get(tablename,None)
     for default_fk in [fk] + default_fks:
         if default_fk in table.fields:
@@ -109,22 +132,31 @@ def ifrc_realm_entity(table, row):
                 realm_entity = record.realm_entity
                 break
             else:
-                #print tablename + ", " + ftablename + ", " + str(row.id)
-                realm_entity = None
+                realm_entity = 0 # Fall back to default get_realm_entity function
                 # continue to loop through the rest of the default_fks
+                
+    
+    use_user_organisation = False
+    # Suppliers & Partners are owned by the user's organisation
+    if realm_entity == 0 and tablename == "org_organisation":
+        ott = s3db.org_organisation_type
+        row = table[row.id]
+        row = db(table.organisation_type_id == ott.id).select(ott.name,
+                                                              limitby = (0,1)
+                                                              ).first()
+        
+        if row and row.name != "Red Cross / Red Crescent":
+            use_user_organisation = True
 
-    if not realm_entity:
-        get_pe_id = s3db.pr_get_pe_id
-        if EID in row and tablename not in ("pr_person", "dvi_body"):
-            realm_entity = row[EID]
-        elif OID in row:
-            realm_entity = get_pe_id(otablename, row[OID])
-        elif SID in row:
-            realm_entity = get_pe_id(stablename, row[SID])
-        elif GID in row:
-            realm_entity = get_pe_id(gtablename, row[GID])
-        else:
-            realm_entity = None
+    # Groups are owned by the user's organisation
+    if tablename in ["pr_group"]:
+        use_user_organisation = True
+
+    user = current.auth.user
+    if use_user_organisation and user:
+        # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org 
+        realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                         user.organisation_id)
 
     return realm_entity
 settings.auth.realm_entity = ifrc_realm_entity

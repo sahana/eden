@@ -889,7 +889,6 @@ Thank you
             if len(users) == 1:
                 # 1st user to register doesn't need verification/approval
                 self.s3_approve_user(form.vars)
-                self.s3_send_welcome_email(form.vars)
                 current.session.confirmation = self.messages.registration_successful
 
                 # 1st user gets Admin rights
@@ -902,6 +901,8 @@ Thank you
                                        expiration=self.settings.expiration)
                 self.user = user
                 session.confirmation = self.messages.logged_in
+
+                self.s3_send_welcome_email(form.vars)
 
             elif settings.registration_requires_verification:
                 # Send the Verification email
@@ -947,6 +948,33 @@ Thank you
             redirect(next)
 
         return form
+
+    # -------------------------------------------------------------------------
+    def add_membership(self, group_id=None, user_id=None, role=None,
+                       entity=None):
+        """
+            gives user_id membership of group_id or role
+            if user is None than user_id is that of current logged in user
+            S3: extended to support Entities
+        """
+
+        group_id = group_id or self.id_group(role)
+        try:
+            group_id = int(group_id)
+        except:
+            group_id = self.id_group(group_id) # interpret group_id as a role
+        if not user_id and self.user:
+            user_id = self.user.id
+        membership = self.table_membership()
+        record = membership(user_id=user_id, group_id=group_id, pe_id=entity)
+        if record:
+            return record.id
+        else:
+            id = membership.insert(group_id=group_id, user_id=user_id, pe_id=entity)
+        self.update_groups()
+        self.log_event(self.messages.add_membership_log,
+                       dict(user_id=user_id, group_id=group_id))
+        return id
 
     # -------------------------------------------------------------------------
     def verify_email(self,
@@ -1435,15 +1463,24 @@ Thank you
         self.add_membership(authenticated, user_id)
 
         # Add User to required registration roles
-        roles = deployment_settings.get_auth_registration_roles()
-        if roles:
+        entity_roles = deployment_settings.get_auth_registration_roles()
+        if entity_roles:
             gtable = self.settings.table_group
             mtable = self.settings.table_membership
+        for entity in entity_roles.keys():
+            roles = entity_roles[entity]
+
+            # Get User's Organisation or Site pe_id
+            if entity in ["organisation_id", "site_id"]:
+                tablename = "org_%s" % entity.split("_")[0]
+                entity = s3db.pr_get_pe_id(tablename, user[entity])
+                if not entity:
+                    continue
+
             query = (gtable.uuid.belongs(roles))
             rows = db(query).select(gtable.id)
             for role in rows:
-                mtable.insert(user_id=user_id,
-                              group_id=role.id)
+                self.add_membership(role.id, user_id, entity=entity)
 
         if deployment_settings.has_module("delphi"):
             # Add user as a participant of the default problem group
@@ -1898,8 +1935,13 @@ Thank you
                                owned_by_user=user_id)
 
         # Create an HR record, if one doesn't already exist
-        query = (htable.person_id == person_id) & \
-                (htable.organisation_id == organisation_id)
+        if isinstance(person_id, list):
+            person_ids = person_id
+        else:
+            person_ids = [person_id]
+        query = (htable.person_id.belongs(person_ids)) & \
+                (htable.organisation_id == organisation_id) & \
+                (htable.site_id == site_id)
         row = db(query).select(htable.id, limitby=(0, 1)).first()
 
         if row:
@@ -1910,8 +1952,9 @@ Thank you
                 type = 1 # Staff
             else:
                 type = 2 # Volunteer
-            record = Storage(person_id=person_id,
+            record = Storage(person_id=person_ids[0],
                              organisation_id=organisation_id,
+                             site_id = site_id,
                              type=type,
                              owned_by_user=user_id,
                              )
@@ -1993,7 +2036,6 @@ Thank you
 
         results = self.settings.mailer.send(user["email"], subject=subject, message=message)
         if not results:
-            #current.db.rollback()
             current.response.error = self.messages.unable_send_email
         return
 
@@ -3446,6 +3488,7 @@ Thank you
                   "pr_contact_emergency",
                   "pr_physical_description",
                   "pr_group_membership",
+                  "pr_image",
                   "hrm_training")
             if OUSR in fields:
                 data[OUSR] = fields[OUSR]
@@ -3565,7 +3608,7 @@ Thank you
         # Update record by record
         for record in records:
 
-            if not isinstance(record, Row):
+            if not isinstance(record, (Row, Storage)):
                 record_id = record
                 row = Storage()
             else:
@@ -3654,6 +3697,51 @@ Thank you
                 realm_entity = None
 
         return realm_entity
+
+    # -------------------------------------------------------------------------
+    def set_component_realm_entity(self, table, record, entity=0, 
+                                   force_update=True,
+                                   update_components=[]):
+        """
+            Update the realm entity for a record and it's components
+
+            @param table: the table
+            @param record: the record (as Row or dict)
+            @param entity: the entity (pe_id)
+        """
+
+        s3db = current.s3db
+
+        if not entity:
+            entity = self.get_realm_entity(table, record)
+
+        # Find Record Components
+        components = s3db.get_components(table)
+
+        # Update Components
+        for component in update_components:
+            c = components[component]
+            if not c:
+                continue
+
+            # @ToDo: Replace with: 
+            #join = c.get_join()
+            #query = join & (table._id == record.id)
+            # But this requires a resource
+            if c.linktable:
+                query = (c.linktable[c.lkey] == record.id) & \
+                        (c.linktable[c.rkey] == c.table[c.fkey])
+                rows =  current.db(query).select(c.table.id)
+            else:
+                rows = (c.table[c.fkey] == record.id)
+
+            self.set_realm_entity(c.table, rows, entity,
+                                  force_update=force_update)
+
+            # @ToDo: Check if we need to update component Super Links
+
+        # Update Super Links
+        s3db.update_super(table, record)
 
     # -------------------------------------------------------------------------
     def permitted_facilities(self,
@@ -3781,6 +3869,24 @@ Thank you
                     lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
                     time_expire=120
                 )
+
+    # -------------------------------------------------------------------------
+    def add_org_role_manager_method(self, r):
+        """
+            Adds the Org. Role Manager method to a resource
+            @param r: Resource to add the mehthod to  
+        """
+
+        if r.id and self.user is not None:
+            sr = self.get_system_roles()
+            realms = self.user.realms or Storage()
+            if sr.ADMIN in realms or \
+               sr.ORG_ADMIN in realms and \
+               (realms[sr.ORG_ADMIN] is None or \
+                r.record.pe_id in realms[sr.ORG_ADMIN]):
+                current.s3db.set_method(r.prefix, r.name,
+                                        method="roles",
+                                        action=S3OrgRoleManager())
 
 # =============================================================================
 class S3Permission(object):
@@ -6839,7 +6945,7 @@ class S3EntityRoleManager(S3Method):
         """
 
         if self.method == "roles" and \
-           r.name in ("organisation", "office", "person"):
+           r.name in ("organisation", "office", "person", "warehouse"):
             context = self.get_context_data(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)

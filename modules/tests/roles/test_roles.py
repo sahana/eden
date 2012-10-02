@@ -80,8 +80,11 @@ def test_roles():
             if table:
                 db_table = s3db[table]
             elif c and f:
-                tablename = "%s_%s" % (c,f)
-                db_table =  s3db[table_lookup.get(tablename,tablename)]
+                tablename = "%s_%s" % (c, f)
+                try:
+                    db_table =  s3db[table_lookup.get(tablename, tablename)]
+                except:
+                    db_table = None
             else:
                 # No Table or C and F - probably header row
                 row_num = row_num - 1
@@ -89,7 +92,8 @@ def test_roles():
             if uuid:
                 #print "%s, %s, %s, %s" % (table,c,f, uuid)
                 #print uuid
-                record_id = db(db_table.uuid==uuid).select(db_table._id, limitby=(0,1)).first()[db_table._id]
+                record_id = db(db_table.uuid==uuid).select(db_table._id,
+                                                           limitby=(0, 1)).first()[db_table._id]
             else:
                 record_id = None
 
