@@ -2071,14 +2071,14 @@ class S3PersonEducationModel(S3Model):
 class S3SavedSearch(S3Model):
     """ Saved Searches """
 
-    names = [
-        "pr_saved_search",
-    ]
+    names = ["pr_saved_search"]
 
     def model(self):
 
         T = current.T
-        auth = current.auth
+
+        CONTACT_OPTS = current.msg.CONTACT_OPTS
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         pr_saved_search_notification_format = {
@@ -2088,213 +2088,129 @@ class S3SavedSearch(S3Model):
             4: T("Graph"),
         }
 
-        pr_saved_search_notification_frequency = [
-            ("never", T("Never")),
-            ("hourly", T("Hourly")),
-            ("daily", T("Daily")),
-            ("weekly", T("Weekly")),
-            ("monthly", T("Monthly")),
-        ]
+        pr_saved_search_notification_frequency = {
+            "never": T("Never"),
+            "hourly": T("Hourly"),
+            "daily": T("Daily"),
+            "weekly": T("Weekly"),
+            "monthly": T("Monthly"),
+        }
 
-        table = self.define_table(
-            "pr_saved_search",
-            Field(
-                "name",
-                requires=IS_NOT_EMPTY(),
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Name"),
-                        T("Your name for this search. Notifications will use this name."),
-                    )
-                )
-            ),
-            self.super_link(
-                "pe_id",
-                "pr_pentity",
-                label=T("Person Entity"),
-                readable=True,
-                writable=True,
-                represent=pr_pentity_represent
-            ),
-            Field(
-                "controller",
-                "string",
-                label=T("Controller"),
-                readable=False,
-                writable=False,
-            ),
-            Field(
-                "function",
-                "string",
-                label=T("Function"),
-                readable=False,
-                writable=False,
-            ),
-            Field(
-                "prefix",
-                "string",
-                label=T("Module prefix"),
-                readable=False,
-                writable=False,
-            ),
-            Field(
-                "resource_name",
-                "string",
-                label=T("Resource name"),
-                readable=False,
-                writable=False,
-            ),
-            Field(
-                "url",
-                "string",
-                label=T("URL"),
-                readable=False,
-                writable=False,
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("URL"),
-                        T("The URL with field query. Used to fetch the search results.")
-                    )
-                )
-            ),
-            # Friendly representation of the search URL
-            Field(
-                "query",
-                "text",
-                label=T("Query"),
-                writable=False,
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Query"),
-                        T("These are the filters being used by the search."),
-                    )
-                ),
-            ),
-            Field(
-                "filters",
-                "string",
-                label=T("Search Filters"),
-                readable=False,
-                writable=False,
-            ),
-            Field(
-                "notification_format",
-                "integer",
-                label=T("Format"),
-                readable=False,
-                writable=False,
-                requires=IS_IN_SET(
-                    pr_saved_search_notification_format,
-                    zero=None
-                ),
-                default=1,
-                represent=lambda opt: \
-                    pr_saved_search_notification_format.get(
-                        opt,
-                        current.messages.UNKNOWN_OPT
-                    ),
-            ),
-            Field(
-                "notification_method",
-                label=T("Notification method"),
-                readable=False,
-                writable=False,
-                requires=IS_IN_SET(
-                    current.msg.CONTACT_OPTS,
-                    zero=None
-                ),
-                represent=lambda opt: \
-                    current.msg.CONTACT_OPTS.get(
-                        opt,
-                        current.messages.UNKNOWN_OPT
-                    ),
-                default="EMAIL",
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Notification method"),
-                        T("How you want to be notified."),
-                    )
-                ),
-            ),
-            Field(
-                "notification_frequency",
-                "string",
-                label=T("Frequency"),
-                requires=IS_IN_SET(
-                    pr_saved_search_notification_frequency,
-                    zero=None
-                ),
-                default="never",
-                represent=lambda opt: \
-                    dict(pr_saved_search_notification_frequency).get(
-                        opt,
-                        current.messages.UNKNOWN_OPT
-                    ),
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Notification frequency"),
-                        T("How often you want to be notified. If there are no changes, no notification will be sent."),
-                    )
-                ),
-            ),
-            Field(
-                "notification_batch",
-                "boolean",
-                label=T("Send batch"),
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Send batch"),
-                        T("If checked, the notification will contain all modified records. If not checked, a notification will be send for each modified record."),
-                    )
-                ),
-                default=True,
-                represent=lambda v: T("Yes") if v else T("No")
-            ),
-            Field(
-                "last_checked",
-                "datetime",
-                default=datetime.datetime.utcnow(),
-                writable=False,
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Last Checked"),
-                        T("When this search was last checked for changes."),
-                    )
-                ),
-            ),
-            Field(
-                "public",
-                "boolean",
-                default=False,
-                represent=lambda v: T("Yes") if v else T("No"),
-                comment=DIV(
-                    _class="tooltip",
-                    _title="%s|%s" % (
-                        T("Public"),
-                        T("Check this to make your search viewable by others."),
-                    )
-                ),
-            ),
-            Field(
-                "auth_token",
-                "string",
-                readable=False,
-                writable=False,
-            ),
-            s3_comments(),
-            *s3_meta_fields(),
-            format="%(name)s"
-        )
+        tablename = "pr_saved_search"
+        table = self.define_table(tablename,
+                                  Field("name",
+                                        requires=IS_NOT_EMPTY(),
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Name"),
+                                                                      T("Your name for this search. Notifications will use this name."))),
+                                        ),
+                                  self.super_link("pe_id", "pr_pentity",
+                                                  #label=T("Person Entity"),
+                                                  readable=True,
+                                                  writable=True,
+                                                  #represent=pr_pentity_represent,
+                                                  ),
+                                  Field("controller",
+                                        #label=T("Controller"),
+                                        readable=False,
+                                        writable=False),
+                                  Field("function",
+                                        #label=T("Function"),
+                                        readable=False,
+                                        writable=False),
+                                  Field("prefix",
+                                        #label=T("Module prefix"),
+                                        readable=False,
+                                        writable=False),
+                                  Field("resource_name",
+                                        #label=T("Resource name"),
+                                        readable=False,
+                                        writable=False),
+                                  Field("url",
+                                        #label=T("URL"),
+                                        readable=False,
+                                        writable=False,
+                                        #comment=DIV(_class="tooltip",
+                                        #            _title="%s|%s" % (T("URL"),
+                                        #                              T("The URL with field query. Used to fetch the search results."))),
+                                        ),
+                                  # Friendly representation of the search URL
+                                  Field("query", "text",
+                                        label=T("Query"),
+                                        writable=False,
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Query"),
+                                                                      T("These are the filters being used by the search."))),
+                                        ),
+                                  Field("filters",
+                                        #label=T("Search Filters"),
+                                        readable=False,
+                                        writable=False),
+                                  Field("notification_format", "integer",
+                                        #label=T("Format"),
+                                        readable=False,
+                                        writable=False,
+                                        requires=IS_IN_SET(pr_saved_search_notification_format,
+                                                           zero=None),
+                                        default=1,
+                                        represent=lambda opt: \
+                                            pr_saved_search_notification_format.get(opt, UNKNOWN_OPT),
+                                        ),
+                                  Field("notification_method",
+                                        label=T("Notification method"),
+                                        readable=False,
+                                        writable=False,
+                                        requires=IS_IN_SET(CONTACT_OPTS,
+                                                           zero=None),
+                                        represent=lambda opt: \
+                                            CONTACT_OPTS.get(opt, UNKNOWN_OPT),
+                                        default="EMAIL",
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Notification method"),
+                                                                      T("How you want to be notified."))),
+                                        ),
+                                  Field("notification_frequency",
+                                        label=T("Frequency"),
+                                        requires=IS_IN_SET(pr_saved_search_notification_frequency,
+                                                           zero=None),
+                                        default="never",
+                                        represent=lambda opt: \
+                                            pr_saved_search_notification_frequency.get(opt, UNKNOWN_OPT),
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Notification frequency"),
+                                                                      T("How often you want to be notified. If there are no changes, no notification will be sent."))),
+                                        ),
+                                  Field("notification_batch", "boolean",
+                                        label=T("Send batch"),
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Send batch"),
+                                                                      T("If checked, the notification will contain all modified records. If not checked, a notification will be send for each modified record."))),
+                                        default=True,
+                                        represent=lambda v: T("Yes") if v else T("No"),
+                                        ),
+                                  Field("last_checked", "datetime",
+                                        default=current.request.utcnow,
+                                        writable=False,
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Last Checked"),
+                                                                      T("When this search was last checked for changes."))),
+                                        ),
+                                  Field("public", "boolean",
+                                        default=False,
+                                        represent=lambda v: T("Yes") if v else T("No"),
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Public"),
+                                                                      T("Check this to make your search viewable by others."))),
+                                        ),
+                                  Field("auth_token",
+                                        readable=False,
+                                        writable=False),
+                                  s3_comments(),
+                                  *s3_meta_fields()
+                                  )
 
         # CRUD Strings
-        current.response.s3.crud_strings["pr_saved_search"] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create=T("Add search"),
             title_display=T("Saved search details"),
             title_list=T("Saved searches"),
@@ -2311,19 +2227,17 @@ class S3SavedSearch(S3Model):
         )
 
         # Resource configuration
-        self.configure(
-            "pr_saved_search",
-            onvalidation=self.pr_saved_search_onvalidation,
-            listadd=False,
-            list_fields=[
-                "name",
-                "notification_format",
-                "notification_method",
-                "notification_frequency",
-                "notification_batch",
-                "public",
-            ]
-        )
+        self.configure(tablename,
+                       onvalidation=self.pr_saved_search_onvalidation,
+                       listadd=False,
+                       list_fields=["name",
+                                    "notification_format",
+                                    "notification_method",
+                                    "notification_frequency",
+                                    "notification_batch",
+                                    "public",
+                                    ]
+                       )
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
@@ -2337,21 +2251,22 @@ class S3SavedSearch(S3Model):
             Set values for some fields if left empty
         """
 
+        vars = form.vars
         # If the pe_id is empty, populate it with the current user pe_id
-        if not form.vars.pe_id:
-            form.vars.pe_id = current.auth.s3_user_pe_id(current.auth.user_id)
+        if not vars.pe_id:
+            vars.pe_id = current.auth.s3_user_pe_id(current.auth.user_id)
 
         # Set the friendly query string from the url
-        if form.vars.url:
-            form.vars.query = S3SavedSearch.friendly_string_from_field_query(
-                form.vars.prefix,
-                form.vars.resource_name,
-                form.vars.url
+        if vars.url:
+            vars.query = S3SavedSearch.friendly_string_from_field_query(
+                vars.prefix,
+                vars.resource_name,
+                vars.url
             )
 
         # By default we set the name to match the friendly query string
-        if not form.vars.name and form.vars.query:
-            form.vars.name = form.vars.query
+        if not vars.name and vars.query:
+            vars.name = vars.query
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2360,10 +2275,12 @@ class S3SavedSearch(S3Model):
             Takes a field query URL
             Returns a string of nice labels and represent-ed values
         """
+
         from s3.s3resource import S3Resource, S3ResourceField, S3ResourceFilter
         from s3.s3xml import S3XML
         import urlparse
 
+        represent = current.manager.represent
         resource = S3Resource(prefix, resource_name)
 
         parsed_url = urlparse.urlparse(url)
@@ -2376,13 +2293,13 @@ class S3SavedSearch(S3Model):
             field_selector, filter = field_filter.split("__")
             lf = S3FieldSelector(field_selector).resolve(resource)
 
-            # parse the values back out
+            # Parse the values back out
             values = S3ResourceFilter._parse_value(values)
 
             if not isinstance(values, list):
                 values = [values]
 
-            # field names are sometimes concatenated with pipes if they
+            # Field names are sometimes concatenated with pipes if they
             # cover multiple fields, e.g., simple search
             if "|" in field_selector:
                 selectors = field_selector.split("|")
@@ -2393,7 +2310,7 @@ class S3SavedSearch(S3Model):
 
                     labels.append(s3_unicode(field.label))
 
-                # represent the value as a unicode string
+                # Represent the value as a unicode string
                 for index, value in enumerate(values):
                     values[index] = s3_unicode(value)
             else:
@@ -2401,21 +2318,20 @@ class S3SavedSearch(S3Model):
                 labels = [s3_unicode(field.label)]
 
                 for index, value in enumerate(values):
-                    # some represent need ints
+                    # Some represents need ints
                     if s3_has_foreign_key(field.field):
                         try:
                             value = int(value)
                         except:
                             pass
 
-                    rep_value = current.manager.represent(
-                        lf.field,
-                        value,
-                        strip_markup=True,
-                    )
+                    rep_value = represent(lf.field,
+                                          value,
+                                          strip_markup=True,
+                                          )
                     values[index] = rep_value
 
-            # join the nice labels back together
+            # Join the nice labels back together
             field_labels.append("|".join(labels))
             nice_values.append(",".join(values))
 
@@ -2426,7 +2342,6 @@ class S3SavedSearch(S3Model):
         query_list = " AND ".join(query_list)
 
         return query_list
-
 
 # =============================================================================
 class S3PersonPresence(S3Model):

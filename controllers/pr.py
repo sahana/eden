@@ -147,7 +147,10 @@ def person():
             elif r.component_name == "saved_search":
                 if r.method == "load":
                     if r.component_id:
-                        record = s3db.pr_saved_search[r.component_id]
+                        table = db.pr_saved_search
+                        record = db(table.id == r.component_id).select(table.url,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
                         if record:
                             redirect(record.url)
                         else:
@@ -164,13 +167,9 @@ def person():
         if r.component_name == "saved_search":
             s3_action_buttons(r)
             s3.actions.append(
-                dict(
-                    url=URL(
-                        args=r.args + ["[id]", "load"],
-                    ),
-                    label=str(T("Load")),
-                    _class="action-btn",
-                )
+                dict(url=URL(args=r.args + ["[id]", "load"]),
+                     label=str(T("Load")),
+                     _class="action-btn")
             )
         return output
     s3.postp = postp
@@ -424,8 +423,9 @@ def tooltip():
 # -----------------------------------------------------------------------------
 def saved_search():
     """
-        Full rest controller for saving a loading saved searches
+        REST controller for saving and loading saved searches
     """
+
     return s3_rest_controller()
 
 # END =========================================================================

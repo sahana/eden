@@ -1467,20 +1467,20 @@ Thank you
         if entity_roles:
             gtable = self.settings.table_group
             mtable = self.settings.table_membership
-        for entity in entity_roles.keys():
-            roles = entity_roles[entity]
+            for entity in entity_roles.keys():
+                roles = entity_roles[entity]
 
-            # Get User's Organisation or Site pe_id
-            if entity in ["organisation_id", "site_id"]:
-                tablename = "org_%s" % entity.split("_")[0]
-                entity = s3db.pr_get_pe_id(tablename, user[entity])
-                if not entity:
-                    continue
+                # Get User's Organisation or Site pe_id
+                if entity in ["organisation_id", "site_id"]:
+                    tablename = "org_%s" % entity.split("_")[0]
+                    entity = s3db.pr_get_pe_id(tablename, user[entity])
+                    if not entity:
+                        continue
 
-            query = (gtable.uuid.belongs(roles))
-            rows = db(query).select(gtable.id)
-            for role in rows:
-                self.add_membership(role.id, user_id, entity=entity)
+                query = (gtable.uuid.belongs(roles))
+                rows = db(query).select(gtable.id)
+                for role in rows:
+                    self.add_membership(role.id, user_id, entity=entity)
 
         if deployment_settings.has_module("delphi"):
             # Add user as a participant of the default problem group

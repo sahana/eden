@@ -19,11 +19,3 @@ S3.i18n.in_inv='{{=T("in Stock")}}'
 S3.i18n.no_packs='{{=T("No Packs for Item")}}'
 S3.i18n.input_number='{{=T("Please enter a number only")}}'
 S3.i18n.ac_widget_more_results='{{=T("Greater than 10 matches. Please refine search further")}}'
-
-function _(string) {
-	var translated_string = S3.i18n[string];
-	if (translated_string == null) {
-		return string;
-	}
-	return translated_string;
-}

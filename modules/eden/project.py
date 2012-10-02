@@ -2268,37 +2268,33 @@ class S3ProjectActivityModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_activity_represent(activity_id, activity=None):
+    def project_activity_represent(id, row=None):
         """
             Show activities with a prefix of the project code
-
-            @param activity_id: Record id or Row for a project activity record
-            @param activity: Row for a project_activity record
         """
 
         db = current.db
         s3db = current.s3db
-
         atable = s3db.project_activity
-        ptable = s3db.project_project
 
-        if activity is None and activity_id is not None:
-            if isinstance(activity_id, Row):
-                activity = activity_id
+        if row is None and id is not None:
+            if isinstance(id, Row):
+                row = id
             else:
-                activity = atable(activity_id)
+                row = db(atable.id == id).select(atable.name,
+                                                 atable.project_id,
+                                                 limitby=(0, 1)).first()
 
-        if activity is None:
+        if row is None:
             return current.messages.NONE
 
-        # Fetch the project record by itself
-        project = ptable(activity.project_id)
+        # Fetch the project record
+        ptable = s3db.project_project
+        project = db(ptable.id == row.project_id).select(ptable.code,
+                                                         limitby=(0, 1)).first()
 
-        if project:
-            return "%s - %s" % (
-                project.code,
-                activity.name,
-            )
+        if project and project.code:
+            return "%s - %s" % (project.code, activity.name)
         else:
             return activity.name
 
@@ -3286,71 +3282,57 @@ class S3ProjectTaskModel(S3Model):
         # Virtual Fields
         table.virtualfields.append(S3ProjectTimeVirtualFields())
 
-        list_fields = [
-            "id",
-            (T("Project"), "project"),
-            (T("Activity"), "activity"),
-            "task_id",
-            "person_id",
-            "date",
-            "hours",
-            "comments",
-        ]
+        list_fields = ["id",
+                       (T("Project"), "project"),
+                       (T("Activity"), "activity"),
+                       "task_id",
+                       "person_id",
+                       "date",
+                       "hours",
+                       "comments",
+                       ]
 
-        report_fields = list_fields + [
-            (T("Day"), "day"),
-            (T("Week"), "week")
-        ]
+        report_fields = list_fields + [(T("Day"), "day"),
+                                       (T("Week"), "week")
+                                       ]
 
-        task_time_search = [
-            S3SearchOptionsWidget(
-                name="person_id",
-                label = T("Person"),
-                field = "person_id",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="project",
-                label = T("Project"),
-                field = "project",
-                options = self.task_project_opts,
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="activity",
-                label = T("Activity"),
-                field = "activity",
-                options = self.task_activity_opts,
-                cols = 3
-            ),
-            S3SearchMinMaxWidget(
-                name="date",
-                label=T("Date"),
-                field="date",
-            ),
-        ]
+        task_time_search = [S3SearchOptionsWidget(name="person_id",
+                                                  label = T("Person"),
+                                                  field = "person_id",
+                                                  cols = 3),
+                            S3SearchOptionsWidget(name="project",
+                                                  label = T("Project"),
+                                                  field = "project",
+                                                  options = self.task_project_opts,
+                                                  cols = 3),
+                            S3SearchOptionsWidget(name="activity",
+                                                  label = T("Activity"),
+                                                  field = "activity",
+                                                  options = self.task_activity_opts,
+                                                  cols = 3),
+                            S3SearchMinMaxWidget(name="date",
+                                                 label=T("Date"),
+                                                 field="date"),
+                            ]
 
-        configure(
-            tablename,
-            onaccept=self.time_onaccept,
-            search_method=S3Search(
-                advanced=task_time_search,
-            ),
-            report_options=Storage(
-                rows = report_fields,
-                cols = report_fields,
-                facts = report_fields,
-                defaults = Storage(
-                    rows = "project",
-                    cols = "person_id",
-                    fact = "hours",
-                    aggregate = "sum",
-                    totals = True
-                ),
-                search=task_time_search,
-            ),
-            list_fields=list_fields
-        )
+        configure(tablename,
+                  onaccept=self.time_onaccept,
+                  search_method=S3Search(advanced=task_time_search),
+                  report_options=Storage(
+                        rows = report_fields,
+                        cols = report_fields,
+                        facts = report_fields,
+                        defaults = Storage(
+                            rows = "project",
+                            cols = "person_id",
+                            fact = "hours",
+                            aggregate = "sum",
+                            totals = True
+                        ),
+                        search=task_time_search,
+                    ),
+                  list_fields=list_fields
+                  )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -3811,22 +3793,20 @@ class S3ProjectTaskModel(S3Model):
 
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def task_activity_comment():
         """
             Define the comment widget for the activity field on tasks
+            - done as a function in order to inject the JS
         """
+
         T = current.T
 
-        ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
-        ADD_ACTIVITY = T("Add Activity")
-
-        comment = S3AddResourceLink(
-            ADD_ACTIVITY,
-            c="project",
-            f="activity",
-            tooltip=ACTIVITY_TOOLTIP
-        )
+        comment = S3AddResourceLink(T("Add Activity"),
+                                    c="project",
+                                    f="activity",
+                                    tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
 
         options = {
             "FilterField": "project_id",
@@ -3836,11 +3816,10 @@ class S3ProjectTaskModel(S3Model):
         }
 
         current.response.s3.jquery_ready.append(
-            "S3FilterFieldChange(%s);" % json.dumps(options)
+            "S3FilterFieldChange(%s)" % json.dumps(options)
         )
 
         return comment
-
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):
@@ -4699,14 +4678,11 @@ class S3ProjectTimeVirtualFields:
         task_activities = s3db.project_task_activity
         activities = s3db.project_activity
 
-        activity = db(
-            (task_activities.deleted != True) & \
-            (task_activities.task_id == task_id) & \
-            (task_activities.activity_id == activities.id)
-        ).select(
-            activities.name,
-            limitby=(0, 1),
-        ).first()
+        query = (task_activities.deleted != True) & \
+                (task_activities.task_id == task_id) & \
+                (task_activities.activity_id == activities.id)
+        activity = db(query).select(activities.name,
+                                    limitby=(0, 1)).first()
 
         if activity:
             return activity.name
@@ -4743,14 +4719,14 @@ class S3ProjectTimeVirtualFields:
         """
             Rturns the date of the Monday previous to this time entry
         """
-        # convert the datetime to a date
+
+        # Convert the datetime to a date
         day = self.project_time.date.date()
 
-        # count back to monday
+        # Count back to monday
         monday = day - datetime.timedelta(days=day.weekday())
 
         return monday
-
 
 # =============================================================================
 def project_ckeditor():

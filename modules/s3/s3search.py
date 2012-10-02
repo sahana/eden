@@ -1080,78 +1080,67 @@ class S3Search(S3CRUD):
             Add a widget to a Search form to allow saving this search to the
             user's profile, to which they can subscribe
         """
+
         import urllib
+
         T = current.T
 
         person_id = current.auth.s3_logged_in_person()
+        resource = self.resource
 
         save_options = {
-            "url": URL(
-                c="pr",
-                f="saved_search",
-                vars={"format": "s3json"}
-            ),
-            "url_detail": URL(
-                c="pr",
-                f="person",
-                args=[
-                    person_id,
-                    "saved_search",
-                    "<id>",
-                    "update",
-                ]
-            ),
+            "url": URL(c="pr", f="saved_search", vars={"format": "s3json"}),
+            "url_detail": URL(c="pr", f="person", args=[person_id, "saved_search", "<id>", "update"]),
             "data": json.dumps({
                 "$_pr_saved_search": [
                     {
                         "controller": r.controller,
                         "function": r.function,
-                        "prefix": self.resource.prefix,
-                        "resource_name": self.resource.name,
+                        "prefix": resource.prefix,
+                        "resource_name": resource.name,
                         "url": r.url(
-                            # can't use the search method handler because then
+                            # Can't use the search method handler because then
                             # we can't get different formats
-                            method="search", # want to see search form
-                            vars=query.serialize_url(self.resource),
+                            method = "search", # want to see search form
+                            vars = query.serialize_url(resource),
                         ),
-                        "filters": urllib.urlencode(query.serialize_url(self.resource)),
+                        "filters": urllib.urlencode(query.serialize_url(resource)),
                     },
                 ],
             }),
         }
 
-        widget = TAG[""](
-            BUTTON(
-                T("Save this search"),
-                _id="save-search",
-            ),
-            SCRIPT(
-                """
-S3.search.saveOptions=%s;
-S3.i18n['View saved search.'] = %s;
-                """ % (
-                    json.dumps(save_options),
-                    json.dumps(s3_unicode(T("View saved search."))),
-                )
-            )
-        )
+        widget = TAG[""](BUTTON(T("Save this search"),
+                                _id="save-search"),
+                         SCRIPT('''
+S3.search.saveOptions=%s
+S3.i18n.edit_saved_search=%s
+''' % (json.dumps(save_options),
+       T("Edit saved search"))))
 
         return widget
 
     # -------------------------------------------------------------------------
     def email(self, r, **kwargs):
         """
-            Takes a search request and renders it through a template
+            Take a search request and render it through a template
             to format it for email notifications.
         """
 
-        # saved search is optional, but used to filter results and
+        represent = current.manager.represent
+
+        # Saved search is optional, but used to filter results and
         # put save search name into the output
         search_subscription = current.request.get_vars.get("search_subscription", None)
         if search_subscription:
             search = current.db(current.s3db.pr_saved_search.auth_token == search_subscription).select().first()
         else:
             search = None
+
+        if search:
+            controller = search.controller
+            function = search.function
+            last_checked = search.last_checked
 
         list_fields = self._config("list_fields")
 
@@ -1164,65 +1153,57 @@ S3.i18n['View saved search.'] = %s;
                 else:
                     field_names.append(f)
 
-        # get the field objects based on list_fields
+        # Get the field objects based on list_fields
         fields = self.resource.readable_fields(field_names)
 
         #fields = [f for f in resource.readable_fields() if f.name != "id"] # We don't want to show the "id" field at all
         head_row = TR([TH(f.label) for f in fields if f.name != "id"])
         new_rows = []
+        nappend = new_rows.append
         mod_rows = []
+        mappend = mod_rows.append
 
         for row in self.resource.load():
             first_cell = True # disabled
             row_cells = []
+            rappend = row_cells.append
 
             for f in fields:
-                rep_value = current.manager.represent(f, record=row)
+                rep_value = represent(f, record=row)
 
                 # Hyperlink the text in the first
                 # cell to the record page
                 if first_cell and search:
-                    url = URL(
-                        scheme=True,
-                        c=search.controller,
-                        f=search.function,
-                        args=row["id"],
-                    )
-                    rep_value = A(
-                        rep_value,
-                        _href=url,
-                    )
+                    url = URL(c=controller, f=function, args=row["id"],
+                              scheme=True)
+                    rep_value = A(rep_value, _href=url)
                     first_cell = False
 
-                row_cells.append(TD(XML(rep_value)))
+                rappend(TD(XML(rep_value)))
 
             if row_cells:
                 tr = TR(*row_cells)
 
-                if search and row.created_on >= search.last_checked:
+                if search and row.created_on >= last_checked:
                     # Records are either "new" or "modified"
-                    new_rows.append(tr)
+                    nappend(tr)
                 else:
-                    mod_rows.append(tr)
+                    mappend(tr)
 
         if not new_rows and not mod_rows:
             return ""
 
         # Generate a table for the new records
         if new_rows:
-            new_table = TABLE(
-                THEAD(head_row),
-                TBODY(*new_rows),
-            )
+            new_table = TABLE(THEAD(head_row),
+                              TBODY(*new_rows))
         else:
             new_table = None
 
         # Generate a table for updated records
         if mod_rows:
-            mod_table = TABLE(
-                THEAD(head_row),
-                TBODY(*mod_rows),
-            )
+            mod_table = TABLE(THEAD(head_row),
+                              TBODY(*mod_rows))
         else:
             mod_table = None
 
@@ -1231,7 +1212,8 @@ S3.i18n['View saved search.'] = %s;
         else:
             search_name = ""
 
-        crud_strings = current.response.s3.crud_strings[self.resource.tablename]
+        response = current.response
+        crud_strings = response.s3.crud_strings[self.resource.tablename]
 
         if crud_strings:
             resource_name = crud_strings.title_list
@@ -1239,7 +1221,7 @@ S3.i18n['View saved search.'] = %s;
             resource_name = string.capwords(self.resource.name, "_")
 
         # Render the records via a template
-        message = current.response.render(
+        message = response.render(
             "msg/notification_email.html",
             {
                 "search_name": search_name,

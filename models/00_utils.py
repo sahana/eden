@@ -4,28 +4,27 @@
     Common Utilities run most requests
 """
 
-
 # =============================================================================
-# for saved search
-if current.request.is_local:
-    # this is a request made from the local server
+if request.is_local:
+    # This is a request made from the local server
 
-    search_subscription = current.request.get_vars.get("search_subscription", None)
-
+    search_subscription = request.get_vars.get("search_subscription", None)
     if search_subscription:
         # We're doing a request for a saved search
-        search = db(s3db.pr_saved_search.auth_token == search_subscription).select().first()
-
+        table = s3db.pr_saved_search
+        search = db(table.auth_token == search_subscription).select(table.pe_id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
         if search:
-            # impersonate user
-            user_id = current.auth.s3_get_user_id(search.pe_id)
+            # Impersonate user
+            user_id = auth.s3_get_user_id(search.pe_id)
 
             if user_id:
-                # impersonate the user who is subscribed to this saved search
-                current.auth.s3_impersonate(user_id)
+                # Impersonate the user who is subscribed to this saved search
+                auth.s3_impersonate(user_id)
             else:
-                # log out so the request is ANONYMOUS
-                current.auth.s3_impersonate(None)
+                # Request is ANONYMOUS
+                auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can

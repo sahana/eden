@@ -813,145 +813,159 @@ class S3ParsingModel(S3Model):
         else:
             return repr
 
-
+# =============================================================================
 def search_subscription_notifications(frequency):
+    """
+        Send Notifications for all Subscriptions
+    """
+
+    s3db = current.s3db
+    table = s3db.pr_saved_search
+
+    if frequency not in dict(table.notification_frequency.requires.options()):
+        return
+
+    db = current.db
+    searches = db(table.notification_frequency == frequency).select()
+    if not searches:
+        return
+
     import urlparse
-    import urllib
-    import uuid
-    import json
-    from s3.s3resource import S3Resource, S3ResourceField, S3FieldSelector
+    from urllib import urlencode
+    from uuid import uuid4
+    
+    try:
+        import json # try stdlib (Python 2.6)
+    except ImportError:
+        try:
+            import simplejson as json # try external module
+        except:
+            import gluon.contrib.simplejson as json # fallback to pure-Python module
+    loads = json.loads
+
     from gluon.tools import fetch
 
+    msg = current.msg
     settings = current.deployment_settings
-    db = current.db
-    s3db = current.s3db
+    public_url = settings.get_base_public_url()
+    system_name_short = settings.get_system_name_short()
 
-    pr_saved_search = S3Resource("pr", "saved_search")
-    frequency_field = S3ResourceField(pr_saved_search, "notification_frequency")
+    def send(search, message):
+        if not message:
+            return
+        # Send the email
+        msg.send_by_pe_id(search.pe_id,
+                          subject="%s Search Notification %s" % \
+                            (system_name_short, search.name),
+                          message=message)
 
-    if frequency in dict(frequency_field.requires.options()):
-        pr_saved_search.add_filter(S3FieldSelector("notification_frequency") == frequency)
-        saved_searches = pr_saved_search.load()
+    for search in searches:
+        # Fetch the latest records from the search
 
-        if saved_searches:
-            for search in saved_searches:
-                # fetch the latest records from the search
+        # search.url has no host
+        search_url = "%s%s" % (public_url, search.url)
 
-                # search.url has no host
-                search_url = "%s%s" % (settings.get_base_public_url(), search.url)
+        # Create a temporary token for this search
+        # that will be used when impersonating users
+        auth_token = uuid4()
+        search.update_record(auth_token=auth_token)
+        # Commit so that when we request via http, then we'll see the change
+        db.commit()
 
-                # create a temporary token for this search
-                # that will be used when impersonating users
-                auth_token = uuid.uuid4()
-                search.update_record(auth_token=auth_token)
-                db.commit()
+        # Parsed URL, break up the URL into its components
+        purl = list(urlparse.urlparse(search_url))
 
-                # parsed URL, break up the URL into its components
-                purl = list(urlparse.urlparse(search_url))
+        if search.notification_batch:
+            # Send all records in a single notification
 
-                def send(search, message):
-                    if not message:
-                        return
+            # query string parameters to be added to the search URL
+            page_qs_parms = {
+                "search_subscription": auth_token,
+                "%s.modified_on__ge" % (search.resource_name): search.last_checked,
+                "format": "email",
+            }
 
-                    # Send the email
-                    current.msg.send_by_pe_id(
-                        search.pe_id,
-                        subject="%s Search Notification %s" % (
-                            settings.get_system_name_short(),
-                            search.name,
-                        ),
-                        message=message,
+            # Turn the parameter list into a URL query string
+            page_qs = urlencode(page_qs_parms)
+
+            # Put the URL back together
+            page_url = urlparse.urlunparse(
+                [
+                    purl[0], # scheme
+                    purl[1], # netloc
+                    purl[2], # path
+                    purl[3], # params
+                    "&".join([purl[4], page_qs]), # query
+                    purl[5], # fragment
+                ]
+            )
+            message = fetch(page_url)
+
+            # Send the email
+            send(search, message)
+
+        else:
+            # Not batch
+
+            # query string parameters to be added to the search URL
+            page_qs_parms = {
+                "search_subscription": auth_token,
+                "%s.modified_on__ge" % (search.resource_name): search.last_checked,
+                "format": "json",
+            }
+
+            # Turn the parameter list into a URL query string
+            page_qs = urlencode(page_qs_parms)
+
+            # Put the URL back together
+            page_url = urlparse.urlunparse(
+                [
+                    purl[0], # scheme
+                    purl[1], # netloc
+                    purl[2], # path
+                    purl[3], # params
+                    "&".join([purl[4], page_qs]), # query
+                    purl[5], # fragment
+                ]
+            )
+            # Fetch the record list as json
+            json_string = fetch(page_url)
+
+            if json_string:
+                records = loads(json_string)
+
+                for record in records:
+                    email_qs = urlencode(
+                        {
+                            "search_subscription": auth_token,
+                            "format": "email",
+                            "%s.id__eq" % search.resource_name: record["id"],
+                        }
                     )
-
-                # should all records be sent in a single notification?
-                if search.notification_batch:
-                    # query string parameters to be added to the search URL
-                    page_qs_parms = {
-                        "search_subscription": auth_token,
-                        "%s.modified_on__ge" % (search.resource_name): search.last_checked,
-                        "format": "email",
-                    }
-
-                    # turn the parameter list into a URL query string
-                    page_qs = urllib.urlencode(page_qs_parms)
-
-                    # put the URL back together
-                    page_url = urlparse.urlunparse(
+                    email_url = urlparse.urlunparse(
                         [
                             purl[0], # scheme
                             purl[1], # netloc
                             purl[2], # path
                             purl[3], # params
-                            "&".join([purl[4], page_qs]), # query
+                            email_qs, # query
                             purl[5], # fragment
                         ]
                     )
-                    message = fetch(page_url)
+
+                    message = fetch(email_url)
 
                     # Send the email
                     send(search, message)
-                else: # !batch
-                    # query string parameters to be added to the search URL
-                    page_qs_parms = {
-                        "search_subscription": auth_token,
-                        "%s.modified_on__ge" % (search.resource_name): search.last_checked,
-                        "format": "json",
-                    }
 
-                    # turn the parameter list into a URL query string
-                    page_qs = urllib.urlencode(page_qs_parms)
-
-                    # put the URL back together
-                    page_url = urlparse.urlunparse(
-                        [
-                            purl[0], # scheme
-                            purl[1], # netloc
-                            purl[2], # path
-                            purl[3], # params
-                            "&".join([purl[4], page_qs]), # query
-                            purl[5], # fragment
-                        ]
-                    )
-                    # fetch the record list as json
-                    json_string = fetch(page_url)
-
-                    if json_string:
-                        records = json.loads(json_string)
-
-                        for record in records:
-                            email_qs = urllib.urlencode(
-                                {
-                                    "search_subscription": auth_token,
-                                    "format": "email",
-                                    "%s.id__eq" % search.resource_name: record["id"],
-                                }
-                            )
-                            email_url = urlparse.urlunparse(
-                                [
-                                    purl[0], # scheme
-                                    purl[1], # netloc
-                                    purl[2], # path
-                                    purl[3], # params
-                                    email_qs, # query
-                                    purl[5], # fragment
-                                ]
-                            )
-
-                            message = fetch(email_url)
-
-                            # Send the email
-                            send(search, message)
-
-            # Update the saved searches to indicate they've just been checked
-            # revoke the temporary token
-            table = s3db.pr_saved_search
-            db(
-                (table.notification_frequency == frequency) & \
-                (table.deleted != True)
-            ).update(
-                last_checked=datetime.datetime.utcnow(),
-                auth_token=None,
-            )
-            db.commit()
+    # Update the saved searches to indicate they've just been checked
+    # & revoke the temporary token
+    query = (table.notification_frequency == frequency) & \
+            (table.deleted != True)
+    db(query).update(last_checked=datetime.datetime.utcnow(),
+                     auth_token=None,
+                     )
+    # Explictly commit
+    db.commit()
 
 # END =========================================================================

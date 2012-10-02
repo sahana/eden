@@ -13,9 +13,8 @@ S3.search.saveCurrentSearch = function(event) {
 	var btn = $(event.currentTarget);
 
 	// Show the progress indicator in the button
-	$('<img/>')
-		.attr('src', '/eden/static/img/indicator.gif')
-		.insertAfter(btn);
+	$('<img/>').attr('src', S3.Ap.concat('/static/img/indicator.gif'))
+               .insertAfter(btn);
 
 	// Disable the button to prevent clicking while loading
 	btn.attr('disabled', 'disabled');
@@ -37,22 +36,21 @@ S3.search.saveCurrentSearch = function(event) {
 			var link = $('<a/>')
 				.attr('id', id)
 				.attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
-				.text(_('Edit saved search')); // _() is in i10n.js
+				.text(S3.i18n.edit_saved_search);
 
 			// replace the Save button with the hyperlink
 			btn.replaceWith(link);
 
 			// change indicator to 'success' icon
-			link.next().attr('src', '/eden/static/img/tick.png');
+			link.next().attr('src', S3.Ap.concat('/static/img/tick.png'));
 		},
 		error: function(data) {
 			// If the request fails, change the indicator icon
-			btn.next().attr('src', '/eden/static/img/cross2.png');
+			btn.next().attr('src', S3.Ap.concat('/static/img/cross2.png'));
 
 			// show the response text
-			$('<span/>')
-				.text(data.statusText)
-				.insertAfter(btn);
+			$('<span/>').text(data.statusText)
+                        .insertAfter(btn);
 		}
 	});
 	//event.preventDefault();
@@ -284,5 +282,5 @@ $(document).ready(function() {
     });
 
     // Activate the Save Search buttons
-	$("button#save-search").on("click", S3.search.saveCurrentSearch);
+	$('button#save-search').on('click', S3.search.saveCurrentSearch);
 });
