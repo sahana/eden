@@ -1537,6 +1537,7 @@ Thank you
         return
 
     # -----------------------------------------------------------------------------
+    @staticmethod
     def s3_user_profile_onaccept(form):
         """ Update the UI locale from user profile """
 
@@ -3398,7 +3399,8 @@ Thank you
             if key in ownership_fields:
                 data[key] = fields[key]
         if data:
-            return current.db(table._id == record_id).update(**data)
+            success = current.db(table._id == record_id).update(**data)
+            self.update_super_realm(table, record, **data)
         else:
             return None
 
@@ -3592,7 +3594,9 @@ Thank you
 
         # Bulk update?
         if realm_entity != 0 and force_update and query is not None:
-            db(query).update(**{REALM:realm_entity})
+            data = {REALM:realm_entity}
+            db(query).update(**data)
+            self.update_super_realm(table, query, **data)
             return
 
         # Find the records
@@ -3631,8 +3635,9 @@ Thank you
 
             realm_entity = self.get_realm_entity(table, row,
                                                  entity=realm_entity)
-
-            db(q).update(**{REALM:realm_entity})
+            data = {REALM:realm_entity}
+            db(q).update(**data)
+            self.update_super_realm(table, record_id, **data)
 
         return
 
@@ -3724,6 +3729,7 @@ Thank you
             if not c:
                 continue
 
+
             # @ToDo: Replace with: 
             #join = c.get_join()
             #query = join & (table._id == record.id)
@@ -3742,6 +3748,68 @@ Thank you
 
         # Update Super Links
         s3db.update_super(table, record)
+
+    # -------------------------------------------------------------------------
+    def update_super_realm(self, table, record, **data):
+        """
+            Update the shared fields in data in all super-entity rows linked
+            with this record.
+
+            @param table: the table
+            @param record: a record, record ID or a query
+            @param data: the field/value pairs to update
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        super_entities = s3db.get_config(table, "super_entity")
+        if not super_entities:
+            return
+        if not isinstance(super_entities, (list, tuple)):
+            super_entities = [super_entities]
+
+        tables = dict()
+        load = s3db.table
+        super_key = s3db.super_key
+        for se in super_entities:
+            supertable = load(se)
+            if not supertable or \
+               not any([f in supertable.fields for f in data]):
+                continue
+            tables[super_key(supertable)] = supertable
+
+        if not isinstance(record, (Row, dict)) or \
+           any([f not in record for f in tables]):
+            if isinstance(record, Query):
+                query = record
+                limitby = None
+            elif isinstance(record, (Row, dict)):
+                query = table._id == record[table._id.name]
+                limitby = (0, 1)
+            else:
+                query = table._id == record
+                limitby = (0, 1)
+            fields = [table[f] for f in tables]
+            records = db(query).select(limitby=limitby, *fields)
+        else:
+            records = [record]
+        if not records:
+            return
+
+        for record in records:
+            for skey in tables:
+                supertable = tables[skey]
+                if skey in record:
+                    query = (supertable[skey] == record[skey])
+                else:
+                    continue
+                updates = dict([(f, data[f])
+                                for f in data if f in supertable.fields])
+                if not updates:
+                    continue
+                db(query).update(**updates)
+        return
 
     # -------------------------------------------------------------------------
     def permitted_facilities(self,
@@ -3869,24 +3937,6 @@ Thank you
                     lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
                     time_expire=120
                 )
-
-    # -------------------------------------------------------------------------
-    def add_org_role_manager_method(self, r):
-        """
-            Adds the Org. Role Manager method to a resource
-            @param r: Resource to add the mehthod to  
-        """
-
-        if r.id and self.user is not None:
-            sr = self.get_system_roles()
-            realms = self.user.realms or Storage()
-            if sr.ADMIN in realms or \
-               sr.ORG_ADMIN in realms and \
-               (realms[sr.ORG_ADMIN] is None or \
-                r.record.pe_id in realms[sr.ORG_ADMIN]):
-                current.s3db.set_method(r.prefix, r.name,
-                                        method="roles",
-                                        action=S3OrgRoleManager())
 
 # =============================================================================
 class S3Permission(object):
@@ -6904,8 +6954,16 @@ class S3GroupedOptionsWidget(OptionsWidget):
 
 # =============================================================================
 class S3EntityRoleManager(S3Method):
+    """ Entity/User role manager """
+
+    ENTITY_TYPES = ["org_organisation",
+                    "org_office",
+                    "inv_warehouse",
+                    "hms_hospital",
+                    "pr_group"]
 
     def __init__(self, *args, **kwargs):
+        """ Constructor """
 
         super(S3EntityRoleManager, self).__init__(*args, **kwargs)
 
@@ -6945,7 +7003,7 @@ class S3EntityRoleManager(S3Method):
         """
 
         if self.method == "roles" and \
-           r.name in ("organisation", "office", "person", "warehouse"):
+           (r.tablename in self.ENTITY_TYPES + ["pr_person"]):
             context = self.get_context_data(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)
@@ -7292,9 +7350,10 @@ class S3OrgRoleManager(S3EntityRoleManager):
 
             @return: dictionary containing the ID and name of the entity
         """
+
         entity = dict(id=int(self.request.record.pe_id))
         entity["name"] = current.s3db.pr_get_entities(pe_ids=[entity["id"]],
-                                                      types=["org_organisation", "org_office"])[entity["id"]]
+                                                      types=self.ENTITY_TYPES)[entity["id"]]
         return entity
 
     # -------------------------------------------------------------------------
@@ -7368,13 +7427,15 @@ class S3OrgRoleManager(S3EntityRoleManager):
 
 # =============================================================================
 class S3PersonRoleManager(S3EntityRoleManager):
+    """ Role Manager for Person Records """
 
     def __init__(self, *args, **kwargs):
+        """ Constructor """
+
         super(S3PersonRoleManager, self).__init__(*args, **kwargs)
 
         # dictionary {id: name, ...} of pentities
-        self.objects = current.s3db.pr_get_entities(types=["org_organisation",
-                                                           "org_office"])
+        self.objects = current.s3db.pr_get_entities(types=self.ENTITY_TYPES)
 
     # -------------------------------------------------------------------------
     def get_context_data(self, r, **attr):
@@ -7384,7 +7445,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
             @return: dictionary for view
         """
         context = super(S3PersonRoleManager, self).get_context_data(r, **attr)
-        context["foreign_object_label"] = current.T("Organisations and Offices")
+        context["foreign_object_label"] = current.T("Organizations / Teams / Facilities")
         return context
 
     # -------------------------------------------------------------------------
@@ -7397,7 +7458,8 @@ class S3PersonRoleManager(S3EntityRoleManager):
         """
         entity = self.request.get_vars.get("edit", None)
         if entity:
-            entity = dict(id=int(entity), name=self.objects.get(int(entity), None))
+            entity = dict(id=int(entity),
+                          name=self.objects.get(int(entity), None))
         return entity
 
     # -------------------------------------------------------------------------
@@ -7418,12 +7480,14 @@ class S3PersonRoleManager(S3EntityRoleManager):
         else:
             username = utable.email
 
-        query = (ptable.pe_id == pe_id) & (ptable.user_id == utable.id)
+        query = (ptable.pe_id == pe_id) & \
+                (ptable.user_id == utable.id)
         record = current.db(query).select(utable.id,
                                           username,
                                           limitby=(0, 1)).first()
 
-        return dict(id=record.id, name=record[username]) if record else None
+        return dict(id=record.id,
+                    name=record[username]) if record else None
 
     # -------------------------------------------------------------------------
     def get_foreign_object(self):
@@ -7439,7 +7503,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
 
             @return: dictionary of assigned roles with entity pe_id as the keys
         """
-        user_id = current.auth.user.id
+        user_id = self.user["id"]
         return super(S3PersonRoleManager, self).get_assigned_roles(user_id=user_id)
 
     # -------------------------------------------------------------------------
@@ -7455,8 +7519,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
 
         if not self.entity:
             options = s3db.pr_get_entities(pe_ids=self.realm,
-                                           types=["org_organisation",
-                                                  "org_office"],
+                                           types=self.ENTITY_TYPES,
                                            group=True)
 
             nice_name = s3db.table("pr_pentity").instance_type.represent

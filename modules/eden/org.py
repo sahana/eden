@@ -2504,9 +2504,6 @@ def org_organisation_controller():
             request = current.request
             r.table.country.default = current.gis.get_default_country("code")
 
-            # Add in role matrix for Admins/OrgAdmins
-            current.auth.add_org_role_manager_method(r)
-
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
                 branch_filter = S3FieldSelector("parent.id") == None
@@ -2722,9 +2719,6 @@ def org_office_controller():
             table.obsolete.readable = False
 
         if r.interactive:
-            # Add in role matrix for Admins/OrgAdmins
-            current.auth.add_org_role_manager_method(r)
-
             if r.component:
                 cname = r.component.name
                 if cname in ("inv_item", "recv", "send"):

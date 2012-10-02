@@ -1066,6 +1066,8 @@ def hms_hospital_rheader(r, tabs=[]):
                 except:
                     pass
 
+                tabs.append((T("User Roles"), "roles"))
+
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             hospital = record

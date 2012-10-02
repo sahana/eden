@@ -266,10 +266,6 @@ def warehouse():
     # CRUD pre-process
     def prep(r):
         
-        if r.interactive:
-            # Add in role matrix for Admins/OrgAdmins
-            auth.add_org_role_manager_method(r)
-
         if r.id:
             r.table.obsolete.readable = r.table.obsolete.writable = True
 
