@@ -29,6 +29,7 @@
          Father Name....................optional.....person father name
          Mother Name....................optional.....person mother name
          Religion.......................optional.....person religion
+         Blood Type.....................optional.....pr_physical_description blood_type
          National ID....................optional.....person identity type = 2, value
          Passport No....................optional.....person identity type = 1, value
          Passport Country...............optional.....person identity
@@ -38,6 +39,9 @@
          Office Phone...................optional.....office phone number
          Skype..........................optional.....person skype ID
          Callsign.......................optional.....person Radio Callsign
+         Emergency Contact Name.........optional.....pr_contact_emergency name
+         Emergency Contact Relationship.optional.....pr_contact_emergency relationship
+         Emergency Contact Phone........optional.....pr_contact_emergency phone
          Home Address...................optional.....person home address
          Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
@@ -445,6 +449,13 @@
                 <data field="religion"><xsl:value-of select="$religion"/></data>
             </xsl:if>
 
+
+            <xsl:if test="col[@field='Blood Type']!=''">
+                <resource name="pr_physical_description">
+                    <data field="blood_type"><xsl:value-of select="col[@field='Blood Type']"/></data>
+                </resource>
+            </xsl:if>
+
             <!-- Identity Information -->
             <xsl:call-template name="IdentityInformation"/>
 
@@ -721,6 +732,20 @@
                 <data field="contact_method" value="RADIO"/>
                 <data field="value">
                     <xsl:value-of select="col[@field='Callsign']/text()"/>
+                </data>
+            </resource>
+        </xsl:if>
+
+        <xsl:if test="col[@field='Emergency Contact Name']!=''">
+            <resource name="pr_contact_emergency">
+                <data field="name">
+                    <xsl:value-of select="col[@field='Emergency Contact Name']/text()"/>
+                </data>
+                <data field="relationship">
+                    <xsl:value-of select="col[@field='Emergency Contact Relationship']/text()"/>
+                </data>
+                <data field="phone">
+                    <xsl:value-of select="col[@field='Emergency Contact Phone']/text()"/>
                 </data>
             </resource>
         </xsl:if>
