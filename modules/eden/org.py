@@ -1222,8 +1222,7 @@ class S3SiteModel(S3Model):
                                   #readable = True,
                                   label=T("Office/Warehouse/Facility"),
                                   default=auth.user.site_id if auth.is_logged_in() else None,
-                                  represent=lambda id: \
-                                    org_site_represent(id, show_link=True),
+                                  represent=org_site_represent,
                                   orderby="org_site.name",
                                   sort=True,
                                   # Comment these to use a Dropdown & not an Autocomplete

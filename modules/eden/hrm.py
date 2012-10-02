@@ -499,7 +499,7 @@ class S3HRModel(S3Model):
                     field = ["person_id$first_name",
                              "person_id$middle_name",
                              "person_id$last_name",
-                             "job_role_id$name",
+                             #"job_role_id$name",
                              "job_title_id$name",
                              ]
                     )

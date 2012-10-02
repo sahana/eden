@@ -10,12 +10,13 @@
 /* Main Menu */
 #menu_modules {
     position: relative;
-    height: 28px; 
+    height: 28px;
     z-index: 1;
 }
 
 #modulenav {
     margin: 0 0 0 15px;
+    text-transform: uppercase;
 }
 #modulenav,
 #modulenav li,
@@ -29,20 +30,20 @@
     list-style: none;
 }
 #modulenav li {
-    margin-right: 4px;
+    margin-right: 8px;
 }
 
-/* Menu Buttons */            
+/* Menu Buttons */
 #modulenav li a div {
     padding-top: 3px;
     height: 28px;
-    width: 126px;
-    text-align:center; 
+    width: 122px;
+    text-align:center;
     display: table-cell;
     vertical-align: middle;
     background: url(img/menu_grey.png) no-repeat;
 }
-               
+
 #modulenav li a {
     font-size: 1.1em;
     font-weight: 700;
@@ -55,19 +56,19 @@
 
 #menu_top,
 #menu_bottom {
-    font-size: 1.2em;       
+    font-size: 1.2em;
     height: 20px;
     vertical-align: bottom;
 }
-            
-#menu_top li a,             
+
+#menu_top li a,
 #menu_bottom li a {
     text-decoration: none;
 }
 
 #menu_top li a div,
 #menu_bottom li a div {
-    color: white;                      
+    color: white;
     padding: 0 5px 3px 5px;
     border-left: 1px  solid white;
 }
@@ -78,11 +79,12 @@
 #menu_top li a:hover,
 #menu_bottom li a:hover {
     background: none;
-}  
+}
 
-#modulenav li a div.selected,
-#modulenav li a div.hovered, 
+#modulenav li.selected a div,
+#modulenav li.hovered a div,
 #modulenav li a div:hover {
+    color: #F5902E;
     background: url(img/menu_white.png) no-repeat;
 }
 

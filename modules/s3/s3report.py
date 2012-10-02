@@ -492,7 +492,11 @@ class S3Report(S3CRUD):
             return (None, None)
 
         for widget in filter_widgets:
-            name = widget.attr["_name"]
+            if hasattr(widget, "name"):
+                name = widget.name
+            else:
+                name = widget.attr.get("_name", None)
+
             query, errors = S3Search._build_widget_query(self.resource,
                                                          name,
                                                          widget,
