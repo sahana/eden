@@ -444,15 +444,16 @@ class S3OptionsMenu(object):
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", f="catalog_item", m="search"),
+                        M("Search", m="search"),
+                        M("Report", m="report"),
+                        M("Import", m="import", p="create"),
                     ),
                     M("Catalogs", c="supply", f="catalog")(
                         M("New", m="create"),
                         M("List All"),
                         #M("Search", m="search"),
                     ),
-                    M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
+                    M("Item Categories", c="supply", f="item_category")(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -1075,7 +1076,9 @@ class S3OptionsMenu(object):
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", f="catalog_item", m="search"),
+                        M("Search", m="search"),
+                        M("Report", m="report"),
+                        M("Import", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories
                     #M("Catalog Items", c="supply", f="catalog_item")(

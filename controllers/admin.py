@@ -176,9 +176,17 @@ def user():
                                     )
                         )
                 rheader.append(btn)
-
-            if registration_key == "pending":
+            elif registration_key == "pending":
                 btn = A(T("Approve"),
+                        _class = "action-btn",
+                        _title = "Approve User",
+                        _href = URL(args=[id,
+                                          "approve"]
+                                    )
+                        )
+                rheader.append(btn)
+            else:
+                btn = A(T("Verify & Approve"),
                         _class = "action-btn",
                         _title = "Approve User",
                         _href = URL(args=[id,

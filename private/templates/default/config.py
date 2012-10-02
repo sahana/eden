@@ -60,7 +60,9 @@ T = current.T
 # Uncomment this to default the Organisation during registration
 #settings.auth.registration_organisation_default = "My Organisation"
 # Uncomment to set the default role UUIDs assigned to newly-registered users
-#settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
+# Can be a dictionary of lists, where the key is the realm that the list of role apply to
+# The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"  
+#settings.auth.registration_entity_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
 # Uncomment this to enable record approval
 #settings.auth.record_approval = True
 # Uncomment this and specify a list of tablenames for which record approval is required
