@@ -2807,7 +2807,7 @@ class S3PersonDescription(S3Model):
         }
 
         # http://docs.oasis-open.org/emergency/edxl-have/cs01/xPIL-types.xsd
-        pr_blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "0+", "0-")
+        pr_blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
 
         pr_eye_color_opts = {
             1: T("blue"),
