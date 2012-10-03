@@ -1983,7 +1983,6 @@ class S3OfficeModel(S3Model):
         auth.s3_set_record_owner(otable, vars, force_update=True)
         auth.set_component_realm_entity(otable, vars,
                                         update_components = ["contact_emergency",
-                                                             "physical_description",
                                                              "config",
                                                              "image",
                                                              "req",
@@ -2835,11 +2834,7 @@ def org_office_controller():
         return output
     s3.postp = postp
 
-    if "inv_item" in request.args:
-        rheader = s3db.inv_warehouse_rheader
-    else:
-        rheader = s3db.org_rheader
-    output = current.rest_controller("org", "office", rheader=rheader)
+    output = current.rest_controller("org", "office", rheader=s3db.org_rheader)
     return output
 
 # END =========================================================================

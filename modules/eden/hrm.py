@@ -126,7 +126,16 @@ class S3HRModel(S3Model):
                                     widget = None,
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
-                                    empty=False
+                                    empty=False,
+                                    script = SCRIPT('''
+$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'organisation_id',
+  'Field':'site_id',
+  'FieldResource':'site',
+  'FieldPrefix':'org',
+ })
+})'''),
                                     ),
                                   self.super_link("site_id", "org_site",
                                                   label=T("Office/Warehouse/Facility"),
@@ -456,9 +465,9 @@ class S3HRModel(S3Model):
                             cols=report_fields,
                             facts=report_fields,
                             methods=["count", "list"],
-                            defaults=Storage(rows="organisation_id",
-                                             cols="course",
-                                             fact="person_id",
+                            defaults=Storage(rows="human_resource.organisation_id",
+                                             cols="human_resource.course",
+                                             fact="human_resource.person_id",
                                              aggregate="count")
                        ),
                        create_next = hrm_url,
@@ -1892,9 +1901,9 @@ class S3HRSkillModel(S3Model):
                       cols=report_fields,
                       facts=report_fields,
                       methods=["count", "list"],
-                      defaults=Storage(rows="course_id",
-                                      cols="month",
-                                      fact="person_id",
+                      defaults=Storage(rows="hrm_training.course_id",
+                                      cols="hrm_training.month",
+                                      fact="hrm_training.person_id",
                                       aggregate="count"),
                   ),
                   list_fields = [
