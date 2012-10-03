@@ -735,7 +735,7 @@ class S3ParsingModel(S3Model):
     def model(self):
 
         T = current.T
-        
+
         # ---------------------------------------------------------------------
         #
         # Link between Message Sources and Workflows in parser.py
@@ -747,9 +747,9 @@ class S3ParsingModel(S3Model):
                                         represent = self.source_represent,
                                         ),
                                   Field("workflow_task_id",
-                                        label = T("Workflow")),                                          
+                                        label = T("Workflow")),
                                   *s3_meta_fields())
-                                  
+
         # ---------------------------------------------------------------------
         #
         # Login sessions for Message Parsing
@@ -764,7 +764,7 @@ class S3ParsingModel(S3Model):
                                         default = False),
                                   Field("sender"),
                                   *s3_meta_fields())
-                                  
+
         # ---------------------------------------------------------------------
         #
         # Keywords for Message Parsing
@@ -794,7 +794,7 @@ class S3ParsingModel(S3Model):
     @staticmethod
     def source_represent(id, show_link=True):
         """ Represent a Message Source in the Workflow Table """
-    
+
         db = current.db
         stable = db.msg_inbound_email_settings
         wtable = db.msg_workflow
@@ -833,7 +833,7 @@ def search_subscription_notifications(frequency):
     import urlparse
     from urllib import urlencode
     from uuid import uuid4
-    
+
     try:
         import json # try stdlib (Python 2.6)
     except ImportError:

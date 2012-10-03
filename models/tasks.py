@@ -166,6 +166,12 @@ if settings.has_module("msg"):
 
     tasks["msg_parse_workflow"] = msg_parse_workflow
 
+    # --------------------------------------------------------------------------
+    def msg_search_subscription_notifications(frequency):
+        return eden.msg.search_subscription_notifications(frequency=frequency)
+
+    tasks["msg_search_subscription_notifications"] = msg_search_subscription_notifications
+
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 
