@@ -155,6 +155,15 @@ class S3AssetModel(S3Model):
                                                  widget = None,
                                                  script = None, # No Item Pack Filter
                                                  ),
+                             organisation_id(script = SCRIPT('''
+$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'organisation_id',
+  'Field':'site_id',
+  'FieldResource':'site',
+  'FieldPrefix':'org',
+ })
+})'''),),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
@@ -171,13 +180,17 @@ class S3AssetModel(S3Model):
                                         #                                T("Enter some characters to bring up a list of possible matches"))),
                                         represent = self.org_site_represent
                                         ),
-                             organisation_id(),
                              Field("sn",
                                    label = T("Serial Number")),
-                             # @ToDo: Switch to using org_organisation filtered to suppliers
-                             #supplier_id(),
+                             organisation_id(name = "supply_org_id",
+                                             label = T("Supplier/Donor"),
+                                             ondelete = "SET NULL"),
+                             # @ToDo: Remove after data is migrated
                              Field("supplier",
-                                   label = T("Supplier")),
+                                   label = T("Supplier"),
+                                   readable = False,
+                                   writable = False,
+                                   ),
                              s3_date("purchase_date",
                                      label = T("Purchase Date")
                                      ),
@@ -312,9 +325,9 @@ class S3AssetModel(S3Model):
                         methods=["count", "list"],
                         defaults=Storage(
                                 aggregate="count",
-                                cols="L1",
-                                fact="number",
-                                rows="item_id$item_category_id"
+                                cols="asset.L1",
+                                fact="asset.number",
+                                rows="asset.item_id$item_category_id"
                             )
                         ),
                   list_fields=["id",
@@ -565,9 +578,8 @@ class S3AssetModel(S3Model):
 
         # Update asset realm_entity and components' realm_entity
         auth.set_realm_entity(atable, vars, force_update=True)
-        #auth.set_component_realm_entity(atable, vars,
-                                        #update_components = ["log", "presence"]
-                                        #)
+        auth.set_component_realm_entity(atable, vars,
+                                        update_components = ["log", "presence"])
 
         site_id = vars.get("site_id", None)
         if site_id:

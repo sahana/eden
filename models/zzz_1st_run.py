@@ -390,13 +390,6 @@ if len(pop_list) > 0:
     # Restore table protection
     s3mgr.PROTECTED = protected
 
-    # Update stats_aggregate (disabled during prepop)
-    if has_module("stats"):
-        start = datetime.datetime.now()
-        s3db.stats_rebuild_aggregates()
-        end = datetime.datetime.now()
-        print >> sys.stdout, "Statistics data aggregation completed in %s" % (end - start)
-
     # Restore Auth
     auth.override = False
 
@@ -405,6 +398,14 @@ if len(pop_list) > 0:
     gis.update_location_tree()
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
+
+    # Update stats_aggregate (disabled during prepop)
+    # - needs to be done after locations
+    if has_module("stats"):
+        start = datetime.datetime.now()
+        s3db.stats_rebuild_aggregates()
+        end = datetime.datetime.now()
+        print >> sys.stdout, "Statistics data aggregation completed in %s" % (end - start)
 
     grandTotalEnd = datetime.datetime.now()
     duration = grandTotalEnd - grandTotalStart
