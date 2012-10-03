@@ -1184,6 +1184,12 @@ class StatsGroupVirtualFields:
             if approved is None:
                 return "Approval pending"
             else:
+                sgtype = current.s3db.stats_group_type
+                query = (self.stats_group.group_type_id == sgtype.id)
+                r = current.db(query).select(sgtype.name,
+                                             limitby = (0, 1)).first()
+                if  (r.name == "stats_vca"):
+                    return "VCA Report"
                 # @todo: add conditional branch for VCA report
                 return "Report"
 
