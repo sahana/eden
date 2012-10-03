@@ -751,21 +751,21 @@ class S3ProjectModel(S3Model):
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars
-        # Update asset realm_entity and components' realm_entity  
+        # Update asset realm_entity and components' realm_entity
         auth.set_realm_entity(ptable, vars, force_update=True)
-        auth.set_component_realm_entity(ptable, vars,
-                                        update_components = ["human_resource",
-                                                             "task",
-                                                             "organisation",
-                                                             "activity",
-                                                             "annual_budget",
-                                                             "beneficiary",
-                                                             "location",
-                                                             "milestone",
-                                                             "theme_percentage",
-                                                             "document",
-                                                             "image",
-                                                             ])
+        #auth.set_component_realm_entity(ptable, vars,
+                                        #update_components = ["human_resource",
+                                                             #"task",
+                                                             #"organisation",
+                                                             #"activity",
+                                                             #"annual_budget",
+                                                             #"beneficiary",
+                                                             #"location",
+                                                             #"milestone",
+                                                             #"theme_percentage",
+                                                             #"document",
+                                                             #"image",
+                                                             #])
 
         lead_role = current.deployment_settings.get_project_organisation_lead_role()
 

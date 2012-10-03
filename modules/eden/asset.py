@@ -563,11 +563,11 @@ class S3AssetModel(S3Model):
         vars = form.vars
         atable = db.asset_asset
 
-        # Update asset realm_entity and components' realm_entity  
+        # Update asset realm_entity and components' realm_entity
         auth.set_realm_entity(atable, vars, force_update=True)
-        auth.set_component_realm_entity(atable, vars, 
-                                        update_components = ["log", "presence"]
-                                        )
+        #auth.set_component_realm_entity(atable, vars,
+                                        #update_components = ["log", "presence"]
+                                        #)
 
         site_id = vars.get("site_id", None)
         if site_id:

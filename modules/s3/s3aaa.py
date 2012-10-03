@@ -3412,7 +3412,7 @@ Thank you
                 data[key] = fields[key]
         if data:
             success = current.db(table._id == record_id).update(**data)
-            self.update_super_realm(table, record, **data)
+            self.update_shared_fields(table, record, **data)
         else:
             return None
 
@@ -3608,7 +3608,7 @@ Thank you
         if realm_entity != 0 and force_update and query is not None:
             data = {REALM:realm_entity}
             db(query).update(**data)
-            self.update_super_realm(table, query, **data)
+            self.update_shared_fields(table, query, **data)
             return
 
         # Find the records
@@ -3649,7 +3649,7 @@ Thank you
                                                  entity=realm_entity)
             data = {REALM:realm_entity}
             db(q).update(**data)
-            self.update_super_realm(table, record_id, **data)
+            self.update_shared_fields(table, record_id, **data)
 
         return
 
@@ -3716,53 +3716,53 @@ Thank you
         return realm_entity
 
     # -------------------------------------------------------------------------
-    def set_component_realm_entity(self, table, record, entity=0, 
-                                   force_update=True,
-                                   update_components=[]):
-        """
-            Update the realm entity for a record and it's components
+    #def set_component_realm_entity(self, table, record, entity=0,
+                                   #force_update=True,
+                                   #update_components=[]):
+        #"""
+            #Update the realm entity for a record and it's components
 
-            @param table: the table
-            @param record: the record (as Row or dict)
-            @param entity: the entity (pe_id)
-        """
+            #@param table: the table
+            #@param record: the record (as Row or dict)
+            #@param entity: the entity (pe_id)
+        #"""
 
-        s3db = current.s3db
+        #s3db = current.s3db
 
-        if not entity:
-            entity = self.get_realm_entity(table, record)
+        #if not entity:
+            #entity = self.get_realm_entity(table, record)
 
-        # Find Record Components
-        components = s3db.get_components(table)
+        ## Find Record Components
+        #components = s3db.get_components(table)
 
-        # Update Components
-        for component in update_components:
-            c = components[component]
-            if not c:
-                continue
+        ## Update Components
+        #for component in update_components:
+            #c = components[component]
+            #if not c:
+                #continue
 
 
-            # @ToDo: Replace with: 
-            #join = c.get_join()
-            #query = join & (table._id == record.id)
-            # But this requires a resource
-            if c.linktable:
-                query = (c.linktable[c.lkey] == record.id) & \
-                        (c.linktable[c.rkey] == c.table[c.fkey])
-                rows =  current.db(query).select(c.table.id)
-            else:
-                rows = (c.table[c.fkey] == record.id)
+            ## @ToDo: Replace with:
+            ##join = c.get_join()
+            ##query = join & (table._id == record.id)
+            ## But this requires a resource
+            #if c.linktable:
+                #query = (c.linktable[c.lkey] == record.id) & \
+                        #(c.linktable[c.rkey] == c.table[c.fkey])
+                #rows =  current.db(query).select(c.table.id)
+            #else:
+                #rows = (c.table[c.fkey] == record.id)
 
-            self.set_realm_entity(c.table, rows, entity,
-                                  force_update=force_update)
+            #self.set_realm_entity(c.table, rows, entity,
+                                  #force_update=force_update)
 
-            # @ToDo: Check if we need to update component Super Links
+            ## @ToDo: Check if we need to update component Super Links
 
-        # Update Super Links
-        s3db.update_super(table, record)
+        ## Update Super Links
+        #s3db.update_super(table, record)
 
     # -------------------------------------------------------------------------
-    def update_super_realm(self, table, record, **data):
+    def update_shared_fields(self, table, record, **data):
         """
             Update the shared fields in data in all super-entity rows linked
             with this record.

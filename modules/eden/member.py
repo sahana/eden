@@ -338,9 +338,9 @@ class S3MembersModel(S3Model):
 
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(mtable, record)
-        auth.s3_set_record_owner(mtable, record, force_update=True)
-        auth.set_component_realm_entity(mtable, record)
-        
+        #auth.s3_set_record_owner(mtable, record, force_update=True)
+        #auth.set_component_realm_entity(mtable, record)
+
         # realm_entity for the pr_person record
         person_id = record.person_id
         person = Storage(id = person_id)
@@ -349,10 +349,10 @@ class S3MembersModel(S3Model):
             organisation_id = record.organisation_id
             entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
             if entity:
-                auth.set_realm_entity(ptable, person, 
+                auth.set_realm_entity(ptable, person,
                                       entity = entity,
                                       force_update = True)
-                #auth.set_component_realm_entity(ptable, person, 
+                #auth.set_component_realm_entity(ptable, person,
                 #                                entity = entity,
                 #                                update_components = [])
 
