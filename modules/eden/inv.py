@@ -631,9 +631,9 @@ $(document).ready(function(){
             cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
             facts=["quantity", (T("Total Value"), "total_value"),],
             methods=["sum"],
-            defaults=Storage(rows="item_id",
-                             cols="site_id",
-                             fact="quantity",
+            defaults=Storage(rows="inv_item.item_id",
+                             cols="inv_item.site_id",
+                             fact="inv_item.quantity",
                              aggregate="sum"),
             groupby=self.inv_inv_item.site_id,
             hide_comments=True,
@@ -942,13 +942,6 @@ class S3TrackingModel(S3Model):
         #
         tablename = "inv_send"
         table = define_table(tablename,
-                             send_ref(),
-                             req_ref(),
-                             person_id(name = "sender_id",
-                                       label = T("Sent By"),
-                                       default = auth.s3_logged_in_person(),
-                                       ondelete = "SET NULL",
-                                       comment = self.pr_person_comment(child="sender_id")),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              self.super_link("site_id", "org_site",
@@ -966,6 +959,27 @@ class S3TrackingModel(S3Model):
                                               represent = org_site_represent,
                                               #widget = S3SiteAutocompleteWidget(),
                                               ),
+                             Field("type", "integer",
+                                   requires = IS_IN_SET(send_type_opts),
+                                   represent = lambda opt: send_type_opts.get(opt, UNKNOWN_OPT),
+                                   label = T("Shipment Type"),
+                                   default = 0,
+                                   ),
+                             # This is a reference, not a super-link, so we can override
+                             Field("to_site_id", self.org_site,
+                                   label = T("To Warehouse/Facility/Office"),
+                                   requires = IS_NULL_OR(IS_ONE_OF(db, "org_site.site_id",
+                                                        lambda id: \
+                                                            org_site_represent(id, show_link = False),
+                                                        sort=True,
+                                                        not_filterby = "obsolete",
+                                                        not_filter_opts = [True],
+                                                        )),
+                                   ondelete = "SET NULL",
+                                   represent =  org_site_represent
+                                  ),
+                             org_id( label = T("To Organisation")
+                                    ),
                              Field("date", "date",
                                    label = T("Date Sent"),
                                    writable = False,
@@ -973,41 +987,30 @@ class S3TrackingModel(S3Model):
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()
                                    ),
-                             person_id(name = "recipient_id",
-                                       label = T("To Person"),
-                                       ondelete = "SET NULL",
-                                       comment = self.pr_person_comment(child="recipient_id")),
                              Field("delivery_date", "date",
                                    label = T("Est. Delivery Date"),
                                    requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()
                                    ),
-                             # This is a reference, not a super-link, so we can override
-                             Field("to_site_id", self.org_site,
-                                   label = T("To Warehouse/Facility/Office"),
-                                   requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
-                                                        sort=True,
-                                                        not_filterby = "obsolete",
-                                                        not_filter_opts = [True],
-                                                        ),
-                                   ondelete = "SET NULL",
-                                   represent =  org_site_represent
-                                  ),
+                             send_ref(),
+                             req_ref(),
+                             person_id(name = "sender_id",
+                                       label = T("Sent By"),
+                                       default = auth.s3_logged_in_person(),
+                                       ondelete = "SET NULL",
+                                       comment = self.pr_person_comment(child="sender_id")),
+
+                             person_id(name = "recipient_id",
+                                       label = T("To Person"),
+                                       ondelete = "SET NULL",
+                                       comment = self.pr_person_comment(child="recipient_id")),
                              Field("status", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(shipment_status)),
                                    represent = lambda opt: shipment_status.get(opt, UNKNOWN_OPT),
                                    default = SHIP_STATUS_IN_PROCESS,
                                    label = T("Status"),
                                    writable = False,
-                                   ),
-                             Field("type", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(send_type_opts)),
-                                   represent = lambda opt: send_type_opts.get(opt, UNKNOWN_OPT),
-                                   label = T("Shipment Type"),
-                                   default = 0,
                                    ),
                              Field("transport_type",
                                    label = T("Type of Transport"),
@@ -1099,6 +1102,7 @@ class S3TrackingModel(S3Model):
                                  "comments"
                                 ],
                   onaccept = self.inv_send_onaccept,
+                  onvalidation = self.inv_send_onvalidation,
                   create_next = send_item_url,
                   update_next = send_item_url,
                   orderby=~table.date,
@@ -1135,28 +1139,11 @@ class S3TrackingModel(S3Model):
                                               represent = org_site_represent,
                                               #widget = S3SiteAutocompleteWidget(),
                                               ),
-                             Field("eta", "date",
-                                   label = T("Date Expected"),
-                                   writable = False,
-                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget()
-                                   ),
-                             Field("date", "date",
-                                   label = T("Date Received"),
-                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget(),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Date Received"),
-                                                                   T("Will be filled automatically when the Shipment has been Received"))
-                                                 )
-                                   ),
                              Field("type", "integer",
                                    requires = IS_IN_SET(recv_type_opts),
                                    represent = lambda opt: \
                                     recv_type_opts.get(opt, UNKNOWN_OPT),
-                                   label = T("Type"),
+                                   label = T("Shipment Type"),
                                    default = 0,
                                    ),
                              org_id( label = T("Organisation/Supplier")
@@ -1175,6 +1162,23 @@ class S3TrackingModel(S3Model):
                                                                     )
                                                          ),
                                    represent = org_site_represent
+                                   ),
+                             Field("eta", "date",
+                                   label = T("Date Expected"),
+                                   writable = False,
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                   represent = s3_date_represent,
+                                   widget = S3DateWidget()
+                                   ),
+                             Field("date", "date",
+                                   label = T("Date Received"),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                   represent = s3_date_represent,
+                                   widget = S3DateWidget(),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Date Received"),
+                                                                   T("Will be filled automatically when the Shipment has been Received"))
+                                                 )
                                    ),
                              send_ref(),
                              recv_ref(),
@@ -1858,6 +1862,16 @@ $(document).ready(function(){
                     rtable.recv_ref,
                 )
             db(rtable.id == id).update(recv_ref = code)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_send_onvalidation(form):
+        """
+            Check that either organisation_id or to_site_id are filled according to the type
+        """
+        if not form.vars.to_site_id and not form.vars.organisation_id:
+            form.errors.to_site_id = T("Please enter a Warehouse/Facility/Office OR an Organisation")
+            form.errors.organisation_id = T("Please enter a Warehouse/Facility/Office OR an Organisation")
 
     # -------------------------------------------------------------------------
     @staticmethod

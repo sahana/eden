@@ -1194,7 +1194,7 @@ def recv():
             tracktable.recv_bin.writable = True
 
     def prep(r):
-        record = recvtable[r.id]
+        record = r.record
         if (record and
             (record.status != SHIP_STATUS_IN_PROCESS and
              record.status != SHIP_STATUS_SENT)):
@@ -1206,7 +1206,7 @@ def recv():
                             editable=False,
                             deletable=False,
                            )
-        if r.component:
+        if r.component and r.component.name == "track_item":
             # Set the track_item attributes
             # Can only create or delete track items for a recv record if the status is preparing
             if r.method == "create" or r.method == "delete":
@@ -1222,6 +1222,9 @@ def recv():
             if r.record and r.record.status == SHIP_STATUS_IN_PROCESS:
                 s3.crud_strings.inv_recv.title_update = \
                 s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+                
+            # Default the Supplier/Donor to the Org sending the shipment
+            tracktable.supply_org_id.default = record.organisation_id
         else:
             # Set the recv attributes
             if r.id:

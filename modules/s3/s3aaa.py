@@ -3733,26 +3733,16 @@ Thank you
             entity = self.get_realm_entity(table, record)
 
         # Find Record Components
-        components = s3db.get_components(table)
+        resource = s3db.resource(table, components = update_components)
+        components = resource.components
 
         # Update Components
-        for component in update_components:
+        for component in components:
             c = components[component]
             if not c:
                 continue
-
-
-            # @ToDo: Replace with: 
-            #join = c.get_join()
-            #query = join & (table._id == record.id)
-            # But this requires a resource
-            if c.linktable:
-                query = (c.linktable[c.lkey] == record.id) & \
-                        (c.linktable[c.rkey] == c.table[c.fkey])
-                rows =  current.db(query).select(c.table.id)
-            else:
-                rows = (c.table[c.fkey] == record.id)
-
+            query = c.get_join() & (table._id == record.id)
+            rows =  current.db(query).select(c.table.id)
             self.set_realm_entity(c.table, rows, entity,
                                   force_update=force_update)
 

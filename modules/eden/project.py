@@ -534,9 +534,9 @@ class S3ProjectModel(S3Model):
                     cols=report_fields,
                     facts=report_fields,
                     defaults=Storage(
-                        rows="multi_hazard_id",
-                        cols="countries_id",
-                        fact="multi_theme_id",
+                        rows="project.multi_hazard_id",
+                        cols="project.countries_id",
+                        fact="project.multi_theme_id",
                         aggregate="count",
                         totals=True
                     )
@@ -1370,9 +1370,9 @@ class S3Project3WModel(S3Model):
                                          cols=report_fields,
                                          facts=report_fields,
                                          defaults=Storage(
-                                                          rows="L1",
-                                                          cols="project_id",
-                                                          fact="multi_activity_type_id",
+                                                          rows="location.L1",
+                                                          cols="location.project_id",
+                                                          fact="location.multi_activity_type_id",
                                                           aggregate="list",
                                                           totals=True
                                                           )
@@ -1693,9 +1693,9 @@ class S3Project3WModel(S3Model):
                     cols=report_fields,
                     facts=["number"],
                     methods=["sum"],
-                    defaults=Storage( rows="project_id",
-                                      cols="beneficiary_type_id",
-                                      fact="number",
+                    defaults=Storage( rows="beneficiary.project_id",
+                                      cols="beneficiary.beneficiary_type_id",
+                                      fact="beneficiary.number",
                                       aggregate="sum",
                                       totals=True
                                       )
@@ -1787,9 +1787,9 @@ class S3Project3WModel(S3Model):
                                   cols = report_fields,
                                   facts = report_fields,
                                   #methods = ["sum"],
-                                  defaults = Storage( rows = "organisation_id",
-                                                      cols  ="currency",
-                                                      fact = "amount",
+                                  defaults = Storage( rows = "organisation.organisation_id",
+                                                      cols  ="organisation.currency",
+                                                      fact = "organisation.amount",
                                                       aggregate = "sum",
                                                       totals = False
                                                       )
@@ -2187,9 +2187,9 @@ class S3ProjectActivityModel(S3Model):
                                 cols=report_fields,
                                 facts=report_fields,
                                 defaults=Storage(
-                                    rows="project_id",
-                                    cols="name",
-                                    fact="time_actual",
+                                    rows="activity.project_id",
+                                    cols="activity.name",
+                                    fact="activity.time_actual",
                                     aggregate="sum",
                                     totals=True
                                 )
@@ -3323,9 +3323,9 @@ class S3ProjectTaskModel(S3Model):
                         cols = report_fields,
                         facts = report_fields,
                         defaults = Storage(
-                            rows = "project",
-                            cols = "person_id",
-                            fact = "hours",
+                            rows = "time.project",
+                            cols = "time.person_id",
+                            fact = "time.hours",
                             aggregate = "sum",
                             totals = True
                         ),
