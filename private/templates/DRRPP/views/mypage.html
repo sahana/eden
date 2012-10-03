@@ -1,0 +1,22 @@
+{{extend "layout.html"}}
+<h1>{{=T("What is 'My Page'?")}}</h1>
+<p>
+{{=XML(T("'My Page' is a private space which allows you to %(save)s for later viewing. It is also where you can %(manage)s.") % dict(save=STRONG(T("save your favourite searches, graphs, matrix reports and maps")), manage=STRONG(T("manage the projects you are authorised to edit"))))}}
+</p>
+<p>
+{{=XML(T("You may also use 'My Page' to %(subscribe)s; just click the 'Subscribe' button next to any searches, graphs, matrix reports, or maps which you have filtered and when new projects fitting your filter criteria are entered (countries, hazards, themes, organisations, donors etc.) you will be emailed.") % dict(subscribe=STRONG(T("subscribe to DRR Project Portal emails"))))}}
+</p>
+<p>
+{{=XML(T("In order to use this service, you must first %(register)s with the DRR Project Portal.") % dict(register=A(T("register"), _href=URL(c="default", f="user", args=["register"]))))}}
+</p>
+<ul>
+  <li>
+    {{=XML(T("I am a new user and want to %(register)s") % dict(register=A(T("register"), _href=URL(c="default", f="user", args=["register"]))))}}
+  </li>
+  <li>
+    {{=XML(T("I have already registered and want to %(login)s") % dict(login=A(T("login"), _href=URL(c="default", f="user", args=["login"]))))}}
+  </li>
+  <li>
+    {{=XML(T("%(about)s the DRR Project Portal") % dict(about=A(T("About"), _href=URL(c="default", f="index", args=["about"]))))}}
+  </li>
+</ul>

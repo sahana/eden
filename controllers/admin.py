@@ -32,12 +32,7 @@ def setting():
 def role():
     """
         Role Manager
-
-        @author: Dominic König <dominic@aidiq.com>
     """
-
-    module = "auth"
-    name = "group"
 
     # ACLs as component of roles
     s3db.add_component(auth.permission.table,
@@ -63,7 +58,7 @@ def role():
     s3.prep = prep
 
     s3.stylesheets.append( "S3/role.css" )
-    output = s3_rest_controller(module, name)
+    output = s3_rest_controller("auth", "group")
     return output
 
 # -----------------------------------------------------------------------------
@@ -163,27 +158,28 @@ def user():
                 btn = A(T("Disable"),
                         _class = "action-btn",
                         _title = "Disable User",
-                        _href = URL(args=[id,
-                                          "disable"]
-                                    )
+                        _href = URL(args=[id, "disable"])
                         )
                 rheader.append(btn)
                 btn = A(T("Link"),
                         _class = "action-btn",
                         _title = "Link (or refresh link) between User, Person & HR Record",
-                        _href = URL(args=[id,
-                                          "link"]
-                                    )
+                        _href = URL(args=[id, "link"])
                         )
                 rheader.append(btn)
-
-            if registration_key == "pending":
+            #elif registration_key == "pending":
+            #    btn = A(T("Approve"),
+            #            _class = "action-btn",
+            #            _title = "Approve User",
+            #            _href = URL(args=[id, "approve"])
+            #            )
+            #    rheader.append(btn)
+            else:
+                # Verify & Approve
                 btn = A(T("Approve"),
                         _class = "action-btn",
                         _title = "Approve User",
-                        _href = URL(args=[id,
-                                          "approve"]
-                                    )
+                        _href = URL(args=[id, "approve"])
                         )
                 rheader.append(btn)
 

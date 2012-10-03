@@ -1,0 +1,69 @@
+{{extend "layout.html"}}
+<h2>{{=T("Purpose")}}</h2>
+<p>
+  {{=XML(T("The Disaster Risk Reduction (DRR) Project Portal aims to collect information on all multi-country and national level DRR projects and initiatives in Asia and the Pacific implemented since 2005. By facilitating information sharing in Asia and the Pacific, the Portal aims to advance the %(hyogo_framework)s strategic goals.") % \
+    dict(hyogo_framework=A(T("Hyogo Framework for Action (HFA)"),
+                           _href="http://www.preventionweb.net/files/1217_HFAbrochureEnglish.pdf")))}}
+</p>
+<p>{{=T("The portal:")}}</p>
+<ul>
+  <li>{{=T("Helps effective planning, programming, cooperation, and collaboration of DRR projects and programmes in the region by facilitating project analysis to identify gaps and overlaps;")}}</li>
+  <li>{{=T("Is essential for governments, organisations and donors involved in implementing and supporting DRR projects and programmes in the region;")}}</li>
+  <li>{{=T("Is a useful resource for academics, students and the media for obtaining an overview of DRR projects being implemented in the region.")}}</li>
+</ul>
+<h2>{{=T("More information")}}</h2>
+<ul>
+  <li>
+    {{=XML(T("A %(flyer)s.") % \
+        dict(flyer=A(T("flyer summarising the uses and benefits of the DRR Project Portal"),
+                   _href=URL(c="static", f="DRRProjectPortal_Flyer.pdf"))))}}
+  </li>
+  <li>
+    {{=XML(A(T("Presentations introducing and explaining how to use the DRR Project Portal."),
+             _href="http://www.slideshare.net/DRRProjectPortal"))}}
+  </li>
+  <li>
+    {{=XML(T("A %(video)s.") % \
+        dict(video=A(T("video tour of the Portal's features"),
+                     _href=URL(c="default", f="index", args=["video"]))))}}
+  </li>
+  <li>
+    {{=XML(T("To experiment and learn how to add projects, use the %(demo)s.") % \
+        dict(demo=A(T("demo of this portal"), _href="http://demo.drrprojects.net")))}} <strong>{{=T("The demo site does not contain the current updated list of projects and data entered in the demo portal will not be added to the project list on the portal")}}</strong>
+  </li>
+  <li>
+    {{=XML(T("For more information, comments, or feedback please email us at %(address)s.") % \
+        dict(address=A(_href="mailto:admin@drrprojects.net")))}}
+  </li>
+</ul>
+<h2>{{=T("Definition of DRR projects")}}</h2>
+<p>
+	{{=T("DRR projects are those which involve reducing exposure to hazards, reducing vulnerability of people and property, wise management of land and the environment, and/or improved preparedness for adverse events.  DRR projects include climate change adaptation projects where they are related to DRR, but they do not include relief or response initiatives undertaken in the aftermath of disasters unless they incorporate an aspect of reducing risk to future disasters.")}}
+</p>
+<h2>{{=T("DRR Project Portal development")}}</h2>
+<ul>
+	<li>{{=T("Developed by the UNISDR Asia Partnership on Disaster Reduction (IAP) including the members shown below")}}</li>
+	<li>{{=T("Supported by the Asian Development Bank (ADB)")}}</li>
+	<li>{{=T("Developed by the Asian Disaster Preparedness Center (ADPC)")}}</li>
+	<li>{{=T("Developed using the Sahana Eden Open Source Disaster Management Platform")}}</li>
+</ul>
+<ul id="about_logos">
+  {{for img, url, title in [
+    ("unisdr", "http://www.unisdr.org", "The United Nations Office for Disaster Risk Reduction"),
+    ("adb", "http://www.adb.org", "Asian Development Bank"),
+    ("adpc", "http://www.adpc.net", "Asian Disaster Preparedness Center"),
+    ("adrc", "http://www.adrc.asia", "Asian Disaster Reduction Center"),
+    ("ifrc", "http://www.ifrc.org", "International Federation of Red Cross and Red Crescent Societies"),
+    ("sopac", "http://www.sopac.org", "Secretariat of the Pacific Community"),
+    ("undp", "http://www.undp.org", "United Nations Development Programme"),
+    ("unescap", "http://www.unescap.org", "United Nations Economic and Social Commission for Asia and the Pacific"),
+    ("unocha", "http://ochaonline.un.org", "United Nations Office for the Coordination of Humanitarian Affairs"),
+    ("wb", "http://www.worldbank.org", "The World Bank"),
+    ]:}}
+  <li>
+    {{=A(IMG(_src="/%s/static/themes/DRRPP/img/about/%s.png" % (appname, img)),
+         _href=url,
+         _title=title)}}
+  </li>
+  {{pass}}
+</ul>

@@ -4,6 +4,59 @@
 
 S3.search = Object();
 
+/*
+ * Save the current search to the users' profile
+ * so it can be subscribed to
+ */
+S3.search.saveCurrentSearch = function(event) {
+	// The Save this Search button
+	var btn = $(event.currentTarget);
+
+	// Show the progress indicator in the button
+	$('<img/>').attr('src', S3.Ap.concat('/static/img/indicator.gif'))
+               .insertAfter(btn);
+
+	// Disable the button to prevent clicking while loading
+	btn.attr('disabled', 'disabled');
+
+	// POST the s3json to the saved_search REST controller
+	$.ajax({
+		type: 'POST',
+		url: S3.search.saveOptions.url,
+		data: S3.search.saveOptions.data,
+		success: function(data) {
+			// If successful this will be the new record ID
+			var recordId = data.created[0];
+
+			// Set the id of the new hyperlink to the id the button had
+			id = (btn.attr('id') != undefined) ? btn.attr('id') : '';
+
+			// Create a new hyperlink pointing to the new record
+			// under the current users' profile
+			var link = $('<a/>')
+				.attr('id', id)
+				.attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
+				.text(S3.i18n.edit_saved_search);
+
+			// replace the Save button with the hyperlink
+			btn.replaceWith(link);
+
+			// change indicator to 'success' icon
+			link.next().attr('src', S3.Ap.concat('/static/img/tick.png'));
+		},
+		error: function(data) {
+			// If the request fails, change the indicator icon
+			btn.next().attr('src', S3.Ap.concat('/static/img/cross2.png'));
+
+			// show the response text
+			$('<span/>').text(data.statusText)
+                        .insertAfter(btn);
+		}
+	});
+	//event.preventDefault();
+	return false;
+}
+
 // ============================================================================
 
 S3.search.AutocompleteTimer = function() {
@@ -226,6 +279,8 @@ $(document).ready(function() {
             //selInput.attr('_value', represent);
             selResultList.remove();
         }
-
     });
+
+    // Activate the Save Search buttons
+	$('button#save-search').on('click', S3.search.saveCurrentSearch);
 });

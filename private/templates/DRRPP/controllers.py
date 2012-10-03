@@ -65,7 +65,7 @@ class index():
 
         map_img = A(IMG(_src="/%s/static/themes/DRRPP/img/map_img.png" % appname,
                         _id="map_img"),
-                    _href=URL( f="project", args=["map"]),
+                    _href=URL(c="project", f="project", args=["map"]),
                     _title="Project Map")
 
         graph_img = A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname,
@@ -233,6 +233,7 @@ class index():
             languages.get(opt, current.messages.UNKNOWN_OPT)
 
         request.args = ["login"]
+        auth.settings.formstyle = "divs"
         login = auth()
         login[0][-1][1][0] = INPUT_BTN(_type = "submit",
                                       _value = T("Login"))
@@ -256,7 +257,6 @@ class index():
                     map_img = map_img,
                     graph_img = graph_img,
                     )
-
 
 # =============================================================================
 class register():
@@ -638,7 +638,24 @@ class about():
     """
 
     def __call__(self):
-        return "tbc"
+        response = current.response
+        request = current.request
+        T = current.T
+
+        view = path.join(request.folder, "private", "templates",
+                         "DRRPP", "views", "about.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        response.title = T("About")
+
+        return dict(
+            title=T("About"),
+        )
 
 # =============================================================================
 class analysis():
@@ -647,7 +664,24 @@ class analysis():
     """
 
     def __call__(self):
-        return "tbc"
+        response = current.response
+        request = current.request
+        T = current.T
+
+        view = path.join(request.folder, "private", "templates",
+                         "DRRPP", "views", "analysis.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        response.title = T("Project Analysis")
+
+        return dict(
+            title=T("Project Analysis"),
+        )
 
 # =============================================================================
 class mypage():
@@ -656,7 +690,30 @@ class mypage():
     """
 
     def __call__(self):
-        return "tbc"
+        auth = current.auth
+
+        if not auth.is_logged_in():
+            response = current.response
+            request = current.request
+            T = current.T
+
+            view = path.join(request.folder, "private", "templates",
+                             "DRRPP", "views", "mypage.html")
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+            response.title = T("My Page")
+
+            return dict(
+                title=T("My Page"),
+            )
+        else:
+            person_id = auth.s3_logged_in_person()
+            redirect(URL(c="pr", f="person", args=[person_id]))
 
 # =============================================================================
 class organisations():
@@ -806,18 +863,32 @@ class organisations():
             if orderby and str(orderby)==str(field_name):
                 orderby=field
 
-        rows = resource.sqltable(fields=field_list,
-                                 start=None,
-                                 limit=None,
-                                 orderby=orderby,
-                                 as_page=True)
+        records = resource.select(
+            fields=field_list,
+            start=None,
+            limit=None,
+            orderby=orderby,
+            #as_page=True,
+        )
 
-        if rows is None:
-            rows = []
+        if records is None:
+            records = []
+
+        rows = []
+        represent = current.manager.represent
+        for record in records:
+            row = []
+
+            for field in fields:
+                row.append(
+                    represent(field=field, record=record)
+                )
+
+            rows.append(row)
 
         options = json.dumps({
             "iDisplayLength": limit,
-            "iDeferLoading": len(resource.load()),
+            "iDeferLoading": resource.count(),
             "bProcessing": True,
             #"bServerSide": True,
             #"sAjaxSource": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),

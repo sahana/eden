@@ -607,9 +607,6 @@ class S3ProjectModel(S3Model):
         # Themes
         add_component("project_theme_percentage", project_project="project_id")
 
-        # Statuses
-        add_component("project_status", project_project="project_id")
-
         # DRRPP
         if settings.get_template() == "DRRPP":
             add_component("project_drrpp",
@@ -750,10 +747,25 @@ class S3ProjectModel(S3Model):
         """
 
         db = current.db
-        s3db = current.s3db
-        ptable = s3db.project_project
-        otable = s3db.project_organisation
+        auth = current.auth
+        ptable = db.project_project
+        otable = db.project_organisation
         vars = form.vars
+        # Update asset realm_entity and components' realm_entity
+        auth.set_realm_entity(ptable, vars, force_update=True)
+        #auth.set_component_realm_entity(ptable, vars,
+                                        #update_components = ["human_resource",
+                                                             #"task",
+                                                             #"organisation",
+                                                             #"activity",
+                                                             #"annual_budget",
+                                                             #"beneficiary",
+                                                             #"location",
+                                                             #"milestone",
+                                                             #"theme_percentage",
+                                                             #"document",
+                                                             #"image",
+                                                             #])
 
         lead_role = current.deployment_settings.get_project_organisation_lead_role()
 
@@ -2257,21 +2269,34 @@ class S3ProjectActivityModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_activity_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
+        """
+            Show activities with a prefix of the project code
+        """
 
         db = current.db
-        table = db.project_activity
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
+        s3db = current.s3db
+        atable = s3db.project_activity
+
+        if row is None and id is not None:
+            if isinstance(id, Row):
+                row = id
+            else:
+                row = db(atable.id == id).select(atable.name,
+                                                 atable.project_id,
+                                                 limitby=(0, 1)).first()
+
+        if row is None:
+            return current.messages.NONE
+
+        # Fetch the project record
+        ptable = s3db.project_project
+        project = db(ptable.id == row.project_id).select(ptable.code,
+                                                         limitby=(0, 1)).first()
+
+        if project and project.code:
+            return "%s - %s" % (project.code, activity.name)
+        else:
+            return activity.name
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3178,7 +3203,9 @@ class S3ProjectTaskModel(S3Model):
         tablename = "project_task_activity"
         table = define_table(tablename,
                              task_id(),
-                             self.project_activity_id(),
+                             self.project_activity_id(
+                                comment=self.task_activity_comment(),
+                             ),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -3257,22 +3284,55 @@ class S3ProjectTaskModel(S3Model):
 
         list_fields = ["id",
                        (T("Project"), "project"),
+                       (T("Activity"), "activity"),
                        "task_id",
                        "person_id",
                        "date",
                        "hours",
                        "comments",
                        ]
-        report_fields = list_fields + [(T("Day"), "day")]
+
+        report_fields = list_fields + [(T("Day"), "day"),
+                                       (T("Week"), "week")
+                                       ]
+
+        task_time_search = [S3SearchOptionsWidget(name="person_id",
+                                                  label = T("Person"),
+                                                  field = "person_id",
+                                                  cols = 3),
+                            S3SearchOptionsWidget(name="project",
+                                                  label = T("Project"),
+                                                  field = "project",
+                                                  options = self.task_project_opts,
+                                                  cols = 3),
+                            S3SearchOptionsWidget(name="activity",
+                                                  label = T("Activity"),
+                                                  field = "activity",
+                                                  options = self.task_activity_opts,
+                                                  cols = 3),
+                            S3SearchMinMaxWidget(name="date",
+                                                 label=T("Date"),
+                                                 field="date"),
+                            ]
 
         configure(tablename,
                   onaccept=self.time_onaccept,
+                  search_method=S3Search(advanced=task_time_search),
                   report_options=Storage(
                         rows = report_fields,
                         cols = report_fields,
                         facts = report_fields,
+                        defaults = Storage(
+                            rows = "project",
+                            cols = "person_id",
+                            fact = "hours",
+                            aggregate = "sum",
+                            totals = True
+                        ),
+                        search=task_time_search,
                     ),
-                  list_fields=list_fields)
+                  list_fields=list_fields
+                  )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -3732,6 +3792,34 @@ class S3ProjectTaskModel(S3Model):
             db(query).update(time_actual=hours)
 
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_activity_comment():
+        """
+            Define the comment widget for the activity field on tasks
+            - done as a function in order to inject the JS
+        """
+
+        T = current.T
+
+        comment = S3AddResourceLink(T("Add Activity"),
+                                    c="project",
+                                    f="activity",
+                                    tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
+
+        options = {
+            "FilterField": "project_id",
+            "Field": "activity_id",
+            "FieldPrefix": "project",
+            "FieldResource": "activity",
+        }
+
+        current.response.s3.jquery_ready.append(
+            "S3FilterFieldChange(%s)" % json.dumps(options)
+        )
+
+        return comment
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):
@@ -4573,6 +4661,35 @@ class S3ProjectTimeVirtualFields:
             return None
 
     # -------------------------------------------------------------------------
+    def activity(self):
+        """
+            Activity associated with this time entry
+            - used by the 'Project Time' report
+        """
+
+        try:
+            task_id = self.project_time.task_id
+        except AttributeError:
+            return current.messages.NONE
+
+        db = current.db
+        s3db = current.s3db
+
+        task_activities = s3db.project_task_activity
+        activities = s3db.project_activity
+
+        query = (task_activities.deleted != True) & \
+                (task_activities.task_id == task_id) & \
+                (task_activities.activity_id == activities.id)
+        activity = db(query).select(activities.name,
+                                    limitby=(0, 1)).first()
+
+        if activity:
+            return activity.name
+        else:
+            return current.messages.NONE
+
+    # -------------------------------------------------------------------------
     def day(self):
         """
             Day of the last Week this time entry relates to
@@ -4596,6 +4713,20 @@ class S3ProjectTimeVirtualFields:
             return default
 
         return thisdate.date().strftime("%d %B")
+
+    # -------------------------------------------------------------------------
+    def week(self):
+        """
+            Rturns the date of the Monday previous to this time entry
+        """
+
+        # Convert the datetime to a date
+        day = self.project_time.date.date()
+
+        # Count back to monday
+        monday = day - datetime.timedelta(days=day.weekday())
+
+        return monday
 
 # =============================================================================
 def project_ckeditor():

@@ -1,12 +1,10 @@
  /*
- * jQuery UI selectmenu 1.3.0pre version
+ * jQuery UI Selectmenu version 1.3.0pre 
  *
  * Copyright (c) 2009-2010 filament group, http://filamentgroup.com
  * Copyright (c) 2010-2012 Felix Nagel, http://www.felixnagel.com
- * Dual licensed under the MIT (MIT-LICENSE.txt)
- * and GPL (GPL-LICENSE.txt) licenses.
+ * Licensed under the MIT (MIT-LICENSE.txt)
  *
- * http://docs.jquery.com/UI
  * https://github.com/fnagel/jquery-ui/wiki/Selectmenu
  */
 
@@ -280,7 +278,7 @@ $.widget("ui.selectmenu", {
 			var opt = $(this);
 			selectOptionData.push({
 				value: opt.attr('value'),
-				text: self._formatText(opt.text()),
+				text: self._formatText(opt.text(), opt),
 				selected: opt.attr('selected'),
 				disabled: opt.attr('disabled'),
 				classes: opt.attr('class'),
@@ -316,7 +314,13 @@ $.widget("ui.selectmenu", {
 				if ( selectOptionData[ i ].typeahead ) {
 					thisAAttr[ 'typeahead' ] = selectOptionData[ i ].typeahead;
 				}
-				var thisA = $('<a/>', thisAAttr);
+				var thisA = $('<a/>', thisAAttr)
+					.bind('focus.selectmenu', function() {
+						$(this).parent().mouseover();
+					})
+					.bind('blur.selectmenu', function() {
+						$(this).parent().mouseout();
+					});					
 				var thisLi = $('<li/>', thisLiAttr)
 					.append(thisA)
 					.data('index', i)
@@ -337,16 +341,16 @@ $.widget("ui.selectmenu", {
 					.bind("click.selectmenu", function() {
 						return false;
 					})
-					.bind('mouseover.selectmenu focus.selectmenu', function(e) {
+					.bind('mouseover.selectmenu', function() {
 						// no hover if diabled
-						if (!$(e.currentTarget).hasClass(self.namespace + '-state-disabled') && !$(e.currentTarget).parent("ul").parent("li").hasClass(self.namespace + '-state-disabled')) {
+						if (!$(this).hasClass(self.namespace + '-state-disabled') && !$(this).parent("ul").parent("li").hasClass(self.namespace + '-state-disabled')) {
 							self._selectedOptionLi().addClass(activeClass);
 							self._focusedOptionLi().removeClass(self.widgetBaseClass + '-item-focus ui-state-hover');
 							$(this).removeClass('ui-state-active').addClass(self.widgetBaseClass + '-item-focus ui-state-hover');
 						}
 					})
-					.bind('mouseout.selectmenu blur.selectmenu', function() {
-						if ($(this).is(self._selectedOptionLi().selector)) {
+					.bind('mouseout.selectmenu', function() {
+						if ($(this).is(self._selectedOptionLi())) {
 							$(this).addClass(activeClass);
 						}
 						$(this).removeClass(self.widgetBaseClass + '-item-focus ui-state-hover');
@@ -431,7 +435,7 @@ $.widget("ui.selectmenu", {
 		}
 
 		// update value
-		this.index( this._selectedIndex() );
+		this._refreshValue();
 
 		// set selected item so movefocus has intial state
 		this._selectedOptionLi().addClass(this.widgetBaseClass + '-item-focus');
@@ -623,9 +627,9 @@ $.widget("ui.selectmenu", {
 		}
 	},
 
-	_formatText: function(text) {
+	_formatText: function(text, opt) {
 		if (this.options.format) {
-			text = this.options.format(text);
+			text = this.options.format(text, opt);
 		} else if (this.options.escapeHtml) {
 			text = $('<div />').text(text).html();
 		}
@@ -753,7 +757,6 @@ $.widget("ui.selectmenu", {
 			return $(elem).hasClass( this.namespace + '-state-disabled' );
 	},
 
-
 	_disableOption: function(index) {
 			var optionElem = this._optionLis.eq(index);
 			if (optionElem) {
@@ -863,7 +866,7 @@ $.widget("ui.selectmenu", {
 				my: o.positionOptions.my,
 				at: o.positionOptions.at,
 				offset: o.positionOptions.offset || _offset,
-				collision: o.positionOptions.collision || o.style == "popup" ? 'fit' :'flip'
+				collision: o.positionOptions.collision || (o.style == "popup" ? 'fit' :'flip')
 			});
 	}
 });

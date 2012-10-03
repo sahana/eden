@@ -1,5 +1,5 @@
 {{extend "layout.html"}}
-<div id="home">
+<div id='home'>
 {{if request.args(0) == "login":}}
  {{=H2(T("Login"))}}
  {{include "auth/_login.html"}}
@@ -21,7 +21,7 @@
 {{pass}}
 {{elif request.args(0) == "profile":}}
  {{=H2(T("User Profile"))}}
- <div class="form-container">
+ <div class='form-container'>
  {{=form}}
  </div>
 {{elif request.args(0) == "change_password":}}
@@ -32,12 +32,12 @@
 {{s3.jquery_ready.append("$('.password:eq(1)').pstrength()")}}
 {{elif request.args(0) == "reset_password":}}
  {{=H2(T("Reset Password"))}}
-<div class="form-container">
+<div class='form-container'>
  {{=form}}
 </div>
 {{elif request.args(0) == "retrieve_password":}}
  {{=H2(T("Retrieve Password"))}}
- <div class="form-container">
+ <div class='form-container'>
  {{=form}}
  </div>
 {{pass}}

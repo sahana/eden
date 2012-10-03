@@ -1602,7 +1602,7 @@ class S3ResourceHeader:
                     if not isinstance(v, basestring) and not isinstance(value, A):
                         try:
                             v = unicode(v)
-                        except UnicodeEncodeError, UnicodeDecodeError:
+                        except:
                             pass
                     tr.append(TD(v))
                 trs.append(tr)

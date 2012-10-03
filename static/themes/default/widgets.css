@@ -37,6 +37,7 @@ div.form-container form p.note {
     color: #666;
 }
 div.form-container form input,
+div.form-container form button,
 div.form-container form select,
 div.form-container form textarea {
     padding: 2px;

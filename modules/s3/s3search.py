@@ -30,6 +30,7 @@
 """
 
 import re
+import string
 
 try:
     import json # try stdlib (Python 2.6)
@@ -42,6 +43,7 @@ except ImportError:
 from gluon import *
 from gluon.serializers import json as jsons
 from gluon.storage import Storage
+from gluon.html import BUTTON
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
@@ -269,9 +271,8 @@ class S3SearchSimpleWidget(S3SearchWidget):
 
         self.name = attr._name
 
-
         # Search Autocomplete - Display current value
-        attr["_value"] = value
+        attr["_value"] = vars.get(self.name, value)
 
         return INPUT(**attr)
 
@@ -1014,14 +1015,8 @@ class S3Search(S3CRUD):
         elif "is_autocomplete" in attr:
             output = self.search_autocomplete(r, **attr)
 
-        # Save search
-        elif "save" in r.vars :
-            r.interactive = False
-            output = self.save_search(r, **attr)
-
         # Interactive or saved search
-        elif "load" in r.vars or \
-                r.interactive and self.__interactive:
+        elif r.interactive and self.__interactive:
             output = self.search_interactive(r, **attr)
 
         # SSPag response => CRUD native
@@ -1039,6 +1034,9 @@ class S3Search(S3CRUD):
         # Search form for popup on Map Layers
         elif format == "plain":
             output = self.search_interactive(r, **attr)
+
+        elif format == "email":
+            output = self.email(r, **attr)
 
         # Not supported
         else:
@@ -1077,109 +1075,164 @@ class S3Search(S3CRUD):
         return (query, errors)
 
     # -------------------------------------------------------------------------
-    def save_search_widget(self, r, search_vars, **attr):
+    def save_search_widget(self, r, query, **attr):
         """
             Add a widget to a Search form to allow saving this search to the
             user's profile, to which they can subscribe
         """
 
+        import urllib
+
         T = current.T
-        db = current.db
-        request = self.request
 
-        user_id = current.session.auth.user.id
-        now = request.utcnow.microsecond
-        save_search_btn_id = "save_my_filter_btn_%s" % now
-        save_search_processing_id = "save_search_processing_%s" % now
-        save_search_a_id = "save_search_a_%s" % now
-        arg = "%s/save_search" % user_id
-        save_search_a = DIV(T("View and Subscribe to Saved Searches"),
-                            A(T("Here"),
-                              _href=URL(r=request, c="pr", f="person",
-                                        args=[arg]),
-                              _target="_blank"
-                             ),
-                            ".",
-                        _id=save_search_a_id,
-                        _class="save_search_a"
-                        )
-        search_vars["prefix"] = r.controller
-        search_vars["function"] = r.function
+        person_id = current.auth.s3_logged_in_person()
+        resource = self.resource
 
-        table = current.s3db.pr_save_search
-        rows = db(table.user_id == user_id).select(table.ALL)
-        if rows:
-            import cPickle
-            for row in rows:
-                pat = "_"
-                s_v = cPickle.loads(row.search_vars)
-                if ((search_vars["prefix"] == s_v["prefix"]) and \
-                    (search_vars["function"] == s_v["function"])):
-                    s_dict = s_v["criteria"]
-                    if "criteria" in search_vars:
-                        c_dict = search_vars["criteria"]
-                    else:
-                        break
-                    diff = [ k for k in c_dict if k not in s_dict ]
-                    if not len(diff):
-                        flag = 1
-                        for j in s_dict.iterkeys():
-                            if not re.match(pat, j):
-                                if c_dict[j] != s_dict[j]:
-                                    flag = 0
-                                    break
-                        if flag == 1:
-                            return DIV(save_search_a,
-                                       _style="font-size:12px;padding:5px 0px 5px 90px;",
-                                       _id="save_search"
-                                       )
+        save_options = {
+            "url": URL(c="pr", f="saved_search", vars={"format": "s3json"}),
+            "url_detail": URL(c="pr", f="person", args=[person_id, "saved_search", "<id>", "update"]),
+            "data": json.dumps({
+                "$_pr_saved_search": [
+                    {
+                        "controller": r.controller,
+                        "function": r.function,
+                        "prefix": resource.prefix,
+                        "resource_name": resource.name,
+                        "url": r.url(
+                            # Can't use the search method handler because then
+                            # we can't get different formats
+                            method = "search", # want to see search form
+                            vars = query.serialize_url(resource),
+                        ),
+                        "filters": urllib.urlencode(query.serialize_url(resource)),
+                    },
+                ],
+            }),
+        }
 
-        save_search_btn = A("Save Search",
-                            _class="save_search_btn",
-                            _id=save_search_btn_id,
-                            _href="#",
-                            _title=T("Save this search"))
-        save_search_a["_style"] = "display:none;"
-        save_search_processing = IMG(_src="/%s/static/img/ajax-loader.gif" % request.application,
-                                    _id=save_search_processing_id,
-                                    _class="save_search_processing_id",
-                                    _style="display:none;"
-                                    )
-        s_var = {}
-        s_var["save"] = True
-        jurl = URL(r=request, c=r.controller, f=r.function,
-                   args=["search"], vars=s_var)
-        save_search_script = \
-'''$('#%s').live('click',function(){
- $('#%s').show()
- $('#%s').hide()
- $.ajax({
-  url:'%s',
-  data:'%s',
-  success:function(data){
-   $('#%s').show()
-   $('#%s').hide()
-  },
-  type:'POST'
- })
- return false
-})''' % (save_search_btn_id,
-         save_search_processing_id,
-         save_search_btn_id,
-         jurl,
-         json.dumps(search_vars),
-         save_search_a_id,
-         save_search_processing_id)
+        widget = TAG[""](BUTTON(T("Save this search"),
+                                _id="save-search"),
+                         SCRIPT('''
+S3.search.saveOptions=%s
+S3.i18n.edit_saved_search=%s
+''' % (json.dumps(save_options),
+       T("Edit saved search"))))
 
-        current.response.s3.jquery_ready.append(save_search_script)
-
-        widget = DIV(save_search_processing,
-                     save_search_a,
-                     save_search_btn,
-                     _style="font-size:12px;padding:5px 0px 5px 90px;",
-                     _id="save_search"
-                     )
         return widget
+
+    # -------------------------------------------------------------------------
+    def email(self, r, **kwargs):
+        """
+            Take a search request and render it through a template
+            to format it for email notifications.
+        """
+
+        represent = current.manager.represent
+
+        # Saved search is optional, but used to filter results and
+        # put save search name into the output
+        search_subscription = current.request.get_vars.get("search_subscription", None)
+        if search_subscription:
+            search = current.db(current.s3db.pr_saved_search.auth_token == search_subscription).select().first()
+        else:
+            search = None
+
+        if search:
+            controller = search.controller
+            function = search.function
+            last_checked = search.last_checked
+
+        list_fields = self._config("list_fields")
+
+        # create a list of the names, not labels, from list_fields
+        field_names = []
+        for f in list_fields:
+            if f != "id":
+                if isinstance(f, tuple):
+                    field_names.append(f[1]) # (label, name)
+                else:
+                    field_names.append(f)
+
+        # Get the field objects based on list_fields
+        fields = self.resource.readable_fields(field_names)
+
+        #fields = [f for f in resource.readable_fields() if f.name != "id"] # We don't want to show the "id" field at all
+        head_row = TR([TH(f.label) for f in fields if f.name != "id"])
+        new_rows = []
+        nappend = new_rows.append
+        mod_rows = []
+        mappend = mod_rows.append
+
+        for row in self.resource.load():
+            first_cell = True # disabled
+            row_cells = []
+            rappend = row_cells.append
+
+            for f in fields:
+                rep_value = represent(f, record=row)
+
+                # Hyperlink the text in the first
+                # cell to the record page
+                if first_cell and search:
+                    url = URL(c=controller, f=function, args=row["id"],
+                              scheme=True)
+                    rep_value = A(rep_value, _href=url)
+                    first_cell = False
+
+                rappend(TD(XML(rep_value)))
+
+            if row_cells:
+                tr = TR(*row_cells)
+
+                if search and row.created_on >= last_checked:
+                    # Records are either "new" or "modified"
+                    nappend(tr)
+                else:
+                    mappend(tr)
+
+        if not new_rows and not mod_rows:
+            return ""
+
+        # Generate a table for the new records
+        if new_rows:
+            new_table = TABLE(THEAD(head_row),
+                              TBODY(*new_rows))
+        else:
+            new_table = None
+
+        # Generate a table for updated records
+        if mod_rows:
+            mod_table = TABLE(THEAD(head_row),
+                              TBODY(*mod_rows))
+        else:
+            mod_table = None
+
+        if search:
+            search_name = search.name
+        else:
+            search_name = ""
+
+        response = current.response
+        crud_strings = response.s3.crud_strings[self.resource.tablename]
+
+        if crud_strings:
+            resource_name = crud_strings.title_list
+        else:
+            resource_name = string.capwords(self.resource.name, "_")
+
+        # Render the records via a template
+        message = response.render(
+            "msg/notification_email.html",
+            {
+                "search_name": search_name,
+                "new_table": new_table,
+                "mod_table": mod_table,
+                "system_name": current.deployment_settings.get_system_name(),
+                "resource_name": resource_name,
+            }
+        )
+
+        return message
 
     # -------------------------------------------------------------------------
     def search_interactive(self, r, **attr):
@@ -1255,23 +1308,6 @@ class S3Search(S3CRUD):
         # Build the search forms
         simple_form, advanced_form = self.build_forms(r, form_values)
 
-        # Check for Load Search
-        if "load" in r.get_vars:
-            search_id = r.get_vars.get("load", None)
-            if not search_id:
-                r.error(400, current.manager.ERROR.BAD_RECORD)
-            r.post_vars = r.vars
-            search_table = s3db.pr_save_search
-            _query = (search_table.id == search_id)
-            record = db(_query).select(record.search_vars,
-                                       limitby=(0, 1)).first()
-            if not record:
-                r.error(400, current.manager.ERROR.BAD_RECORD)
-            import cPickle
-            s_vars = cPickle.loads(record.search_vars)
-            r.post_vars = Storage(s_vars["criteria"])
-            r.http = "POST"
-
         # Process the search forms
         query, errors = self.process_forms(r,
                                            simple_form,
@@ -1280,11 +1316,16 @@ class S3Search(S3CRUD):
 
         search_url = None
         search_url_vars = Storage()
+        save_search = ""
         if not errors:
             if hasattr(query, "serialize_url"):
                 search_url_vars = query.serialize_url(resource)
                 search_url = r.url(method = "",
                                    vars = search_url_vars)
+
+                # Create a Save Search widget
+                save_search = self.save_search_widget(r, query, **attr)
+
             resource.add_filter(query)
             search_vars = dict(simple=False,
                                advanced=True,
@@ -1315,18 +1356,14 @@ class S3Search(S3CRUD):
         else:
             form.append(DIV(_id="search-mode", _mode="advanced"))
 
-        # Save Search Widget
-        if session.auth and settings.get_save_search_widget():
-            save_search = self.save_search_widget(r, search_vars, **attr)
-        else:
-            save_search = DIV()
-
         # Complete the output form-DIV()
         if simple_form is not None:
-            simple_form.append(save_search)
+            # Insert the save button next to the submit button
+            simple_form[0][-1][1].insert(1, save_search)
             form.append(simple_form)
         if advanced_form is not None:
-            advanced_form.append(save_search)
+            # Insert the save button next to the submit button
+            advanced_form[0][-1][1].insert(1, save_search)
             form.append(advanced_form)
         output["form"] = form
 
@@ -1448,7 +1485,8 @@ class S3Search(S3CRUD):
                 s3.dataTableMap = map_popup
 
             if settings.has_module("msg") and \
-               ("pe_id" in table or "person_id" in table):
+               ("pe_id" in table or "person_id" in table) and \
+               current.auth.permission.has_permission("update", c="msg"):
                 # Provide the ability to Message person entities in search results
                 tabs.append((T("Message"), "compose"))
 

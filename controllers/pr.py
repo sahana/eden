@@ -144,10 +144,17 @@ def person():
                 ctable.organisation_id.writable = False
                 ctable.skill_id.comment = None
 
-            #elif r.component_name == "pe_subscription":
-            #    # Load all Tables
-            #    s3db.load_all_models()
-            #    db.pr_pe_subscription.resource.requires = IS_IN_SET(db.tables)
+            elif r.component_name == "saved_search":
+                if r.method == "load":
+                    if r.component_id:
+                        table = db.pr_saved_search
+                        record = db(table.id == r.component_id).select(table.url,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                        if record:
+                            redirect(record.url)
+                        else:
+                            raise HTTP(404)
 
             elif r.id:
                 r.table.volunteer.readable = True
@@ -157,50 +164,13 @@ def person():
     s3.prep = prep
 
     def postp(r, output):
-        if r.component_name == "save_search":
-            stable = s3db.pr_save_search
-            # Handle Subscribe/Unsubscribe requests
-            if "subscribe" in r.get_vars:
-                save_search_id = r.get_vars.get("subscribe", None)
-                stable[save_search_id] = dict(subscribed = True)
-            if "unsubscribe" in r.get_vars:
-                save_search_id = r.get_vars.get("unsubscribe", None)
-                stable[save_search_id] = dict(subscribed = False)
-
+        if r.component_name == "saved_search":
             s3_action_buttons(r)
-            rows = db(stable.subscribed == False).select(stable.id)
-            restrict_s = [str(row.id) for row in rows]
-            rows = db(stable.subscribed == True).select(stable.id)
-            restrict_u = [str(row.id) for row in rows]
-            s3.actions = s3.actions + [
-                                        dict(label=str(T("Load Search")),
-                                             _class="action-btn",
-                                             url=URL(f="load_search",
-                                                     args=["[id]"]))
-                                      ]
-            vars = {}
-            #vars["person.uid"] = r.uid
-            vars["subscribe"] = "[id]"
-            s3.actions.append(dict(label=str(T("Subscribe")),
-                                   _class="action-btn",
-                                   url = URL(f = "person",
-                                             args = [s3_logged_in_person(),
-                                                     "save_search"],
-                                             vars = vars),
-                                   restrict = restrict_s)
-                             )
-            var = {}
-            #var["person.uid"] = r.uid
-            var["unsubscribe"] = "[id]"
-            s3.actions.append(dict(label=str(T("Unsubscribe")),
-                              _class="action-btn",
-                              url = URL(f = "person",
-                                        args = [s3_logged_in_person(),
-                                                "save_search",],
-                                        vars = var),
-                              restrict = restrict_u)
-                             )
-
+            s3.actions.append(
+                dict(url=URL(args=r.args + ["[id]", "load"]),
+                     label=str(T("Load")),
+                     _class="action-btn")
+            )
         return output
     s3.postp = postp
 
@@ -223,12 +193,10 @@ def person():
             (T("Journal"), "note"),
             (T("Skills"), "competency"),
             (T("Training"), "training"),
+            (T("Saved Searches"), "saved_search"),
         ]
 
     # Configuration tabs
-    if deployment_settings.get_save_search_widget():
-        tabs = tabs + [(T("Saved Searches"), "save_search"),
-                       (T("Subscription Details"), "subscription")]
     tabs.append((T("Map Settings"), "config"))
 
     s3db.configure("pr_person", listadd=False, insertable=True)
@@ -452,21 +420,12 @@ def tooltip():
         response.view = "pr/ajaxtips/%s.html" % request.vars.formfield
     return dict()
 
-#------------------------------------------------------------------------------
-# Function to redirect for loading the search
-#
-def load_search():
-    var = {}
-    var["load"] = request.args[0]
-    table = s3db.pr_save_search
-    rows = db(table.id == request.args[0]).select(table.ALL)
-    import cPickle
-    for row in rows:
-        search_vars = cPickle.loads(row.search_vars)
-        prefix = str(search_vars["prefix"])
-        function = str(search_vars["function"])
-        break
-    redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
-    return
+# -----------------------------------------------------------------------------
+def saved_search():
+    """
+        REST controller for saving and loading saved searches
+    """
+
+    return s3_rest_controller()
 
 # END =========================================================================

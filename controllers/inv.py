@@ -265,7 +265,7 @@ def warehouse():
 
     # CRUD pre-process
     def prep(r):
-
+        
         if r.id:
             r.table.obsolete.readable = r.table.obsolete.writable = True
 

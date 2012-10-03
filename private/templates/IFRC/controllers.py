@@ -196,14 +196,15 @@ $('.marker').mouseout(function(){
 
         append = map.append
         for marker in markers:
-            append(DIV(A(_href=URL(c="org", f="organisation", args="read",
+            append(DIV(A("",    
+                         _href=URL(c="org", f="organisation", args="read",
                                    vars={"organisation.name": marker.name})),
-                           DIV(SPAN(marker.name),
-                               SPAN(_class="marker-plus"),
-                               _class="marker-window %s" % marker.direction),
-                           _class="marker",
-                           _style="top:%ipx;left:%ipx;" % (marker.top,
-                                                           marker.left)))
+                       DIV(SPAN(marker.name),
+                           SPAN(_class="marker-plus"),
+                           _class="marker-window %s" % marker.direction),
+                       _class="marker",
+                       _style="top:%ipx;left:%ipx;" % (marker.top,
+                                                       marker.left)))
         append(DIV(SPAN(T("Click anywhere on the map for full functionality")),
                    _class="map-tip"))
 

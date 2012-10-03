@@ -1,0 +1,61 @@
+{{extend "layout.html"}}
+<div id='page_project_analysis'>
+  <h1>{{=T("Project Analysis")}}</h1>
+  <div id='project_analysis_matrix' class='page_column'>
+    <h2>{{=T("Matrix Reports")}}</h2>
+    <p>
+      {{=T("Cross examine different project data and filter criteria.")}}
+    </p>
+    <p>
+      {{=A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname),
+           _href=URL(c="project", f="project", args=["matrix"]),
+           _title="Project Matrix Report")}}
+    </p>
+    <p>
+      {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["matrix"]))}}
+    </p>
+</div>
+<div id="project_analysis_graph" class="page_column">
+    <h2>{{=T("Graphs")}}</h2>
+    <p>
+      {{=T("Develop your customised bar chart to identify gaps and find trends in the implementation of DRR Projects.")}}
+    </p>
+    <p>
+      {{=A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname),
+           _href=URL(c="project", f="project", args=["graphs"] ),
+          _title="Project Graphs")}}
+    </p>
+    <p>
+      {{=T("Display graph for:")}}
+      <ul>
+        {{for f, l in [("country_dummy", T("Countries")),
+                       ("hazard_ids", T("Hazards")),
+                       ("theme_ids", T("Themes")),
+                       ("hfa_ids", T("HFA priorities")),
+                       ("rfa_ids", T("RFA priorities")),
+                       ("lead_organisation_id", T("Lead organisations")),
+                       ("impl_org_dummy", T("Partner organisations")),
+                       ("funding_dummy", T("Donor(s)"))
+                       ]:}}
+        <li>
+          {{=A(l, _href=URL(c="project", f="project", args=["graphs"], vars={"graph_field_name": f}))}}
+        </li>
+        {{pass}}
+      </ul>
+    </p>
+  </div>
+  <div id='project_analysis_map' class='page_column'>
+    <h2>{{=T("Maps")}}</h2>
+    <p>
+      {{=T("Develop maps which show the types of DRR Projects being implemented by different organisations and compare this with geographical risk mapping data.")}}
+    </p>
+    <p>
+      {{=A(IMG(_src="/%s/static/themes/DRRPP/img/map_img.png" % appname),
+           _href=URL(c="project", f="project", args=["map"]),
+           _title="Project Map")}}
+    </p>
+    <p>
+      {{=A(T("Go to map analysis"), _href=URL(c="project", f="project", args=["map"]))}}
+    </p>
+  </div>
+</div>

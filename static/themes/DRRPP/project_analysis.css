@@ -2,24 +2,22 @@
 
 /* Project Analysis page */
 
-#analy_matrix_div,
-#analy_graph_div,
-#analy_map_div {
+#page_project_analysis .page_column {
     padding: 15px;
 	float: left;
-} 
-
-#analy_matrix_div {
-    width: 250px;				   
 }
 
-#analy_graph_div {
+#project_analysis_matrix {
+    width: 250px;
+}
+
+#project_analysis_graph {
     width: 260px;
     border-left: 2px #F5902E solid;
     border-right: 2px #F5902E solid;
 }
 
-#analy_map_div {
+#project_analysis_map {
     width: 250px;
 }
 
