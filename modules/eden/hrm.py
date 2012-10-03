@@ -3253,7 +3253,7 @@ def hrm_human_resource_onaccept(form):
 
     # Affiliation, record ownership and component ownership
     s3db.pr_update_affiliations(htable, record)
-    auth.s3_set_record_owner(htable, record, force_update=True)
+    #auth.s3_set_record_owner(htable, record, force_update=True)
     #auth.set_component_realm_entity(htable, vars,
                                     #update_components = ["presence"])
 

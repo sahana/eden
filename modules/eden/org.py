@@ -1980,7 +1980,7 @@ class S3OfficeModel(S3Model):
 
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(otable, vars)
-        auth.s3_set_record_owner(otable, vars, force_update=True)
+        #auth.s3_set_record_owner(otable, vars, force_update=True)
         #auth.set_component_realm_entity(otable, vars,
                                         #update_components = ["contact_emergency",
                                                              #"physical_description",

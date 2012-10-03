@@ -168,7 +168,7 @@ class S3SupplyModel(S3Model):
                     sortby="name",
                     requires = IS_NULL_OR(
                                    IS_ONE_OF( # Restrict to catalogs the user can update
-                                              db(current.auth.s3_accessible_query("update", table)), 
+                                              db(current.auth.s3_accessible_query("update", table)),
                                               "supply_catalog.id",
                                               "%(name)s",
                                               sort=True,
@@ -192,7 +192,7 @@ class S3SupplyModel(S3Model):
 
         # Catalog Items as component of Catalogs
         add_component("supply_catalog_item", supply_catalog="catalog_id")
-        
+
         # =====================================================================
         # Item Category
         #
@@ -276,7 +276,7 @@ class S3SupplyModel(S3Model):
   'FieldResource':'item_category',
  })
 })''')
-        
+
 
         # Categories as component of Categories
         add_component("supply_item_category",
@@ -1152,13 +1152,13 @@ S3FilterFieldChange({
         catalog_id = vars.catalog_id
         catalog_item_id = None
 
-        
+
         citable = db.supply_catalog_item
         query = (citable.item_id == item_id) & \
                 (citable.deleted == False )
         rows = db(citable).select(citable.id)
         if not len(rows):
-        # Create supply_catalog_item 
+        # Create supply_catalog_item
             catalog_item_id = \
                 citable.insert(catalog_id = catalog_id,
                                item_category_id = vars.item_category_id,
@@ -1173,7 +1173,7 @@ S3FilterFieldChange({
                             item_category_id = vars.item_category_id,
                             item_id = item_id
                             )
-        auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
+        #auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
 
         # Update UM
         um = vars.um or db.supply_item.um.default

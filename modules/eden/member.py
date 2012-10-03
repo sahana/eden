@@ -338,7 +338,7 @@ class S3MembersModel(S3Model):
 
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(mtable, record)
-        auth.s3_set_record_owner(mtable, record, force_update=True)
+        #auth.s3_set_record_owner(mtable, record, force_update=True)
         #auth.set_component_realm_entity(mtable, record)
 
         # realm_entity for the pr_person record
