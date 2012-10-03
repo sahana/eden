@@ -49,6 +49,7 @@ class S3StatsModel(S3Model):
              "stats_aggregate",
              "stats_param_id",
              "stats_rebuild_aggregates",
+             "stats_update_time_aggregate",
              ]
 
     def model(self):
@@ -213,8 +214,13 @@ class S3StatsModel(S3Model):
                                    readable=False,
                                    writable=False
                                    )
+        def rebuild_aggregates():
+            return
 
-        return Storage(stats_param_id = param_id)
+        return Storage(
+                stats_param_id = param_id,
+                stats_rebuild_aggregates = rebuild_aggregates
+            )
 
     # ---------------------------------------------------------------------
     @staticmethod

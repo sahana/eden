@@ -1029,6 +1029,7 @@ class S3OrganisationModel(S3Model):
         # @ToDo: This ctaches manual creation but need to catch Imports somehow
         vars = form.request_vars
         if vars and \
+           vars.branch_id and \
            int(vars.branch_id) == int(vars.organisation_id):
             error = current.T("Cannot make an Organisation a branch of itself!")
             form.errors["branch_id"] = error
@@ -2520,8 +2521,36 @@ def org_organisation_controller():
 
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
-                branch_filter = S3FieldSelector("parent.id") == None
+                lfilter = current.session.s3.location_filter
+                if lfilter:
+                    # Include those whose parent is in a different country
+                    db = current.db
+                    gtable = s3db.gis_location
+                    query = (gtable.id == lfilter)
+                    row = db(query).select(gtable.id,
+                                           gtable.name,
+                                           gtable.level,
+                                           gtable.path,
+                                           limitby=(0, 1)).first()
+                    if row and row.level:
+                        if row.level != "L0":
+                            code = current.gis.get_parent_country(row, key_type="code")
+                        else:
+                            ttable = s3db.gis_location_tag
+                            query = (ttable.tag == "ISO2") & \
+                                    (ttable.location_id == row.id)
+                            tag = db(query).select(ttable.value,
+                                                   limitby=(0, 1)).first()
+                            code = tag.value
+                        branch_filter = (S3FieldSelector("parent.id") == None) | \
+                                        (S3FieldSelector("parent.country") != code) | \
+                                        (S3FieldSelector("parent.country") == None)
+                    else:
+                        branch_filter = (S3FieldSelector("parent.id") == None)
+                else:
+                    branch_filter = (S3FieldSelector("parent.id") == None)
                 r.resource.add_filter(branch_filter)
+
             elif r.component_name == "human_resource" and r.component_id:
                 # Workaround until widget is fixed:
                 htable = s3db.hrm_human_resource
@@ -2529,6 +2558,13 @@ def org_organisation_controller():
                 htable.person_id.writable = False
 
             elif r.component_name == "branch":
+                # Branches default to the same type/sector/country as the parent
+                otable = r.table
+                record = r.record
+                otable.organisation_type_id.default = record.organisation_type_id
+                otable.sector_id.default = record.sector_id
+                otable.country.default = record.country
+                # Represent orgs without the parent prefix as we have that context already
                 s3db.org_organisation_branch.branch_id.represent = lambda val: \
                     s3db.org_organisation_represent(val, parent=False)
 

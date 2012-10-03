@@ -3549,7 +3549,7 @@ def gis_layer_onaccept(form):
 # =============================================================================
 def gis_location_filter(r):
     """
-        Filter resources to those for a specific location
+        Filter resources to those for a specified location
     """
 
     lfilter = current.session.s3.location_filter
@@ -3560,11 +3560,11 @@ def gis_location_filter(r):
     s3db = current.s3db
     gtable = s3db.gis_location
     query = (gtable.id == lfilter)
-    row = current.db(query).select(gtable.id,
-                                   gtable.name,
-                                   gtable.level,
-                                   gtable.path,
-                                   limitby=(0, 1)).first()
+    row = db(query).select(gtable.id,
+                           gtable.name,
+                           gtable.level,
+                           gtable.path,
+                           limitby=(0, 1)).first()
     if row and row.level:
         resource = r.resource
         if resource.name == "organisation":
