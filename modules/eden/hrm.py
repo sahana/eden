@@ -1151,7 +1151,7 @@ class S3HRSkillModel(S3Model):
         super_link = self.super_link
 
         root_org = auth.root_org()
-        
+
         group = current.request.get_vars.get("group", None)
 
         # ---------------------------------------------------------------------
@@ -3236,7 +3236,7 @@ def hrm_human_resource_onaccept(form):
     s3db = current.s3db
     auth = current.auth
     setting = current.deployment_settings
-    
+
     htable = db.hrm_human_resource
     record = db(htable.id == id).select(htable.id,
                                         htable.type,
@@ -3254,8 +3254,8 @@ def hrm_human_resource_onaccept(form):
     # Affiliation, record ownership and component ownership
     s3db.pr_update_affiliations(htable, record)
     auth.s3_set_record_owner(htable, record, force_update=True)
-    auth.set_component_realm_entity(htable, vars,
-                                    update_components = ["presence"])
+    #auth.set_component_realm_entity(htable, vars,
+                                    #update_components = ["presence"])
 
     # realm_entity for the pr_person record
     ptable = s3db.pr_person
@@ -3266,12 +3266,12 @@ def hrm_human_resource_onaccept(form):
         organisation_id = record.organisation_id
         entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
         if entity:
-            auth.set_realm_entity(ptable, person, 
+            auth.set_realm_entity(ptable, person,
                                   entity = entity,
                                   force_update = True)
-            auth.set_component_realm_entity(ptable, person, 
-                                            entity = entity,
-                                            update_components = ["presence"])
+            #auth.set_component_realm_entity(ptable, person,
+                                            #entity = entity,
+                                            #update_components = ["presence"])
 
     site_id = record.site_id
     site_contact = record.site_contact

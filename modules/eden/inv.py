@@ -330,7 +330,7 @@ class S3WarehouseModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_warehouse_onaccept(form):
-        """ 
+        """
             * Update Affiliation and Realms
         """
 
@@ -342,24 +342,24 @@ class S3WarehouseModel(S3Model):
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(wtable, vars)
         auth.s3_set_record_owner(wtable, vars, force_update=True)
-        auth.set_component_realm_entity(wtable, vars,
-                                        update_components = ["contact_emergency",
-                                                             "physical_description",
-                                                             "config",
-                                                             "image",
-                                                             "req",
-                                                             "send",
-                                                             "human_resource_site",
-                                                             "note",
-                                                             "contact",
-                                                             "role",
-                                                             "asset",
-                                                             "commit",
-                                                             "inv_item",
-                                                             "document",
-                                                             "recv",
-                                                             "address",
-                                                             ])
+        #auth.set_component_realm_entity(wtable, vars,
+                                        #update_components = ["contact_emergency",
+                                                             #"physical_description",
+                                                             #"config",
+                                                             #"image",
+                                                             #"req",
+                                                             #"send",
+                                                             #"human_resource_site",
+                                                             #"note",
+                                                             #"contact",
+                                                             #"role",
+                                                             #"asset",
+                                                             #"commit",
+                                                             #"inv_item",
+                                                             #"document",
+                                                             #"recv",
+                                                             #"address",
+                                                             #])
 
     # ---------------------------------------------------------------------
     @staticmethod

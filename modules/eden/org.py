@@ -1968,9 +1968,9 @@ class S3OfficeModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def org_office_onaccept(form):
-        """ 
+        """
             * Update Affiliation and Realms
-            * Process injected fields 
+            * Process injected fields
         """
 
         auth = current.auth
@@ -1981,24 +1981,24 @@ class S3OfficeModel(S3Model):
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(otable, vars)
         auth.s3_set_record_owner(otable, vars, force_update=True)
-        auth.set_component_realm_entity(otable, vars,
-                                        update_components = ["contact_emergency",
-                                                             "physical_description",
-                                                             "config",
-                                                             "image",
-                                                             "req",
-                                                             "send",
-                                                             "human_resource_site",
-                                                             "note",
-                                                             "contact",
-                                                             "role",
-                                                             "asset",
-                                                             "commit",
-                                                             "inv_item",
-                                                             "document",
-                                                             "recv",
-                                                             "address",
-                                                             ])
+        #auth.set_component_realm_entity(otable, vars,
+                                        #update_components = ["contact_emergency",
+                                                             #"physical_description",
+                                                             #"config",
+                                                             #"image",
+                                                             #"req",
+                                                             #"send",
+                                                             #"human_resource_site",
+                                                             #"note",
+                                                             #"contact",
+                                                             #"role",
+                                                             #"asset",
+                                                             #"commit",
+                                                             #"inv_item",
+                                                             #"document",
+                                                             #"recv",
+                                                             #"address",
+                                                             #])
 
         if current.deployment_settings.get_org_summary():
 
@@ -2017,7 +2017,7 @@ class S3OfficeModel(S3Model):
                 international_staff = vars.international_staff
             else:
                 international_staff = None
-    
+
             if existing:
                 db(query).update(national_staff=national_staff,
                                  international_staff=international_staff
