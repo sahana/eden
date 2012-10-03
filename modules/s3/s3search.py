@@ -1114,7 +1114,7 @@ class S3Search(S3CRUD):
                                 _id="save-search"),
                          SCRIPT('''
 S3.search.saveOptions=%s
-S3.i18n.edit_saved_search=%s
+S3.i18n.edit_saved_search="%s"
 ''' % (json.dumps(save_options),
        T("Edit saved search"))))
 
@@ -1125,6 +1125,8 @@ S3.i18n.edit_saved_search=%s
         """
             Take a search request and render it through a template
             to format it for email notifications.
+
+            @param r: S3Request object
         """
 
         represent = current.manager.represent
@@ -1156,7 +1158,7 @@ S3.i18n.edit_saved_search=%s
         # Get the field objects based on list_fields
         fields = self.resource.readable_fields(field_names)
 
-        #fields = [f for f in resource.readable_fields() if f.name != "id"] # We don't want to show the "id" field at all
+        # We don't want to show the "id" field at all
         head_row = TR([TH(f.label) for f in fields if f.name != "id"])
         new_rows = []
         nappend = new_rows.append

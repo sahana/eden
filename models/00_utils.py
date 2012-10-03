@@ -17,7 +17,7 @@ if request.is_local:
                                                                     ).first()
         if search:
             # Impersonate user
-            user_id = auth.s3_get_user_id(search.pe_id)
+            user_id = auth.s3_get_user_id(pe_id=search.pe_id)
 
             if user_id:
                 # Impersonate the user who is subscribed to this saved search
