@@ -667,6 +667,7 @@ class S3OrganisationModel(S3Model):
         configure(tablename,
                   deduplicate=self.org_branch_duplicate,
                   onaccept=self.org_branch_onaccept,
+                  onvalidation=self.org_branch_onvalidation,
                   ondelete=self.org_branch_ondelete,
                   )
 
@@ -1017,6 +1018,21 @@ class S3OrganisationModel(S3Model):
                 if duplicate:
                     item.id = duplicate.id
                     item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_branch_onvalidation(form):
+        """
+            Prevent an Organisation from being a Branch of itself
+        """
+
+        # @ToDo: This ctaches manual creation but need to catch Imports somehow
+        vars = form.request_vars
+        if vars and \
+           int(vars.branch_id) == int(vars.organisation_id):
+            error = current.T("Cannot make an Organisation a branch of itself!")
+            form.errors["branch_id"] = error
+            current.response.error = error
 
     # -------------------------------------------------------------------------
     @staticmethod
