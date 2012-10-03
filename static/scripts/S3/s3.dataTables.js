@@ -122,9 +122,11 @@ function accordionRow(t, level, groupid) {
     // Get the level being opened
     var lvlOpened = level.substr(6);
     // Get a list of levels from the table
-    groupLevel = getElementClass($(tableId[t]), 'level_');
+    theTableID = tableId[t];
+    theTableObj = $(theTableID);
+    groupLevel = getElementClass(theTableObj, 'level_');
     // The table should have a list of all the level_# that it supports
-    var classList = $(tableId[t]).attr('class').split(/\s+/);
+    var classList = theTableObj.attr('class').split(/\s+/);
     $.each( classList, function(index, groupLevel){
         if (groupLevel.substr(0, 6) == 'level_'){
             var lvlNo = groupLevel.substr(6);
@@ -642,6 +644,7 @@ $(document).ready(function() {
                 item = getElementClass($(nTrs[i]), 'group_');
                 sublevel = 'sublevel' + item.substr(6);
                 sLastGroup = '';
+                groupPrefix = '';
                 for (var gpCnt = 0; gpCnt < prefixID.length; gpCnt++) {
                     try {
                         groupPrefix += oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[prefixID[gpCnt]] + "_";
@@ -691,6 +694,24 @@ $(document).ready(function() {
       }
     } // end of loop through for each table
 
+    function setSpecialSortRules(t){
+        var titles = aoTableConfig[t]['groupTitles'];
+        var order = Array();
+        var fname = 'group-title-' + t;
+        var limit = titles[0].length;
+        for (var cnt=0; cnt < limit; cnt++) {
+            title = titles[0][cnt][0];
+            order[title] = cnt;
+        }
+        jQuery.fn.dataTableExt.oSort[fname + '-asc']  = function(x,y) {
+            return ((order[x] < order[y]) ? -1 : ((order[x] > order[y]) ?  1 : 0));
+        };
+        jQuery.fn.dataTableExt.oSort[fname + '-desc']  = function(x,y) {
+            return ((order[x] < order[y]) ? 1 : ((order[x] > order[y]) ?  -1 : 0));
+        };
+        ColumnSettings[t][aoTableConfig[t]['group'][0][0]] = { "sType": fname };
+    }
+
     function initDataTable(oTable, t, bReplace) {
         var config_id = tableId[t] + '_configurations'
         if ($(config_id).length > 0) {
@@ -700,6 +721,9 @@ $(document).ready(function() {
             return;
         }
       aoTableConfig[t]['groupTitles'] = config['groupTitles'];
+      if (config['groupTitles'].length > 0){
+        setSpecialSortRules(t);
+      }
       aoTableConfig[t]['groupTotals'] = config['groupTotals'];
       aoTableConfig[t]['displayLength'] = config['displayLength'];
       oDataTable[t] = $(oTable).dataTable({
