@@ -1103,7 +1103,7 @@ def stats_parameter_represent(id, row=None):
     db = current.db
     table = db.stats_parameter
     r = db(table._id == id).select(table.name,
-                                   limitby = (0, 1)).first()
+                                   limitby=(0, 1)).first()
     try:
         return r.name
     except:
@@ -1124,7 +1124,7 @@ def stats_group_type_represent(id, row=None):
     db = current.db
     table = db.stats_group_type
     r = db(table._id == id).select(table.display,
-                                   limitby = (0, 1)).first()
+                                   limitby=(0, 1)).first()
     try:
         return r.display
     except:
@@ -1147,7 +1147,7 @@ def stats_group_represent(id, row=None):
     query = (table._id == id) & \
             (stable._id == table.source_id)
     r = current.db(query).select(stable.name,
-                                 limitby = (0, 1)).first()
+                                 limitby=(0, 1)).first()
     try:
         return r.name
     except:
@@ -1193,7 +1193,7 @@ class StatsGroupVirtualFields:
                 sgtype = current.s3db.stats_group_type
                 query = (self.stats_group.group_type_id == sgtype.id)
                 r = current.db(query).select(sgtype.name,
-                                             limitby = (0, 1)).first()
+                                             limitby=(0, 1)).first()
                 if  (r.name == "stats_vca"):
                     return "VCA Report"
                 # @todo: add conditional branch for VCA report

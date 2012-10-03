@@ -694,7 +694,7 @@ $(document).ready(function() {
       }
     } // end of loop through for each table
 
-    function setSpecialSortRules(t){
+    function setSpecialSortRules(t) {
         var titles = aoTableConfig[t]['groupTitles'];
         var order = Array();
         var fname = 'group-title-' + t;
@@ -703,208 +703,208 @@ $(document).ready(function() {
             title = titles[0][cnt][0];
             order[title] = cnt;
         }
-        jQuery.fn.dataTableExt.oSort[fname + '-asc']  = function(x,y) {
+        jQuery.fn.dataTableExt.oSort[fname + '-asc']  = function(x, y) {
             return ((order[x] < order[y]) ? -1 : ((order[x] > order[y]) ?  1 : 0));
         };
-        jQuery.fn.dataTableExt.oSort[fname + '-desc']  = function(x,y) {
+        jQuery.fn.dataTableExt.oSort[fname + '-desc']  = function(x, y) {
             return ((order[x] < order[y]) ? 1 : ((order[x] > order[y]) ?  -1 : 0));
         };
-        ColumnSettings[t][aoTableConfig[t]['group'][0][0]] = { "sType": fname };
+        ColumnSettings[t][aoTableConfig[t]['group'][0][0]] = {"sType": fname};
     }
 
     function initDataTable(oTable, t, bReplace) {
-        var config_id = tableId[t] + '_configurations'
+        var config_id = tableId[t] + '_configurations';
         if ($(config_id).length > 0) {
             config = jQuery.parseJSON($(config_id).val());
         } else {
             oDataTable[t] = null;
             return;
         }
-      aoTableConfig[t]['groupTitles'] = config['groupTitles'];
-      if (config['groupTitles'].length > 0){
-        setSpecialSortRules(t);
-      }
-      aoTableConfig[t]['groupTotals'] = config['groupTotals'];
-      aoTableConfig[t]['displayLength'] = config['displayLength'];
-      oDataTable[t] = $(oTable).dataTable({
-        'bDestroy': bReplace,
-        'sDom': sDom[t],
-        'sPaginationType': sPaginationType[t],
-        'bServerSide': bServerSide,
-        'bAutoWidth' : false,
-        'bFilter': aoTableConfig[t]['bFilter'] == 'true',
-        'bSort': true,
-        'bDeferRender': true,
-        'aaSorting': aoTableConfig[t]['aaSort'],
-        "aaSortingFixed": aoTableConfig[t]['group'],
-        "aoColumnDefs": [ oGroupColumns[t] ],
-        'aoColumns': ColumnSettings[t],
-        'iDisplayLength': aoTableConfig[t]['displayLength'],
-        'aLengthMenu': [[ 25, 50, -1], [ 25, 50, S3.i18n.all]],
-        'bProcessing': bProcessing,
-        'sAjaxSource': aoTableConfig[t]['ajaxUrl'],
-        'fnServerData': fnAjaxCallback[t],
-        'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
-            $('#modeSelectionAll').on('click', setModeSelectionAll);
-            $('#modeSelectionNone').on('click', setModeSelectionNone);
-        },
-        'fnRowCallback': function(nRow, aData, iDisplayIndex) {
-            // Extract the id # from the link
-            t = tableIdReverse(this.selector);
-            var actionCol = aoTableConfig[t]['actionCol'];
-            var re = />(.*)</i;
-            var result = re.exec(aData[actionCol]);
-            if (result == null) {
-                var id = aData[actionCol];
-            } else {
-                var id = result[1];
-            }
-            // Set the action buttons in the id column for each row
-            if (aoTableConfig[t]['rowActions'].length > 0 || aoTableConfig[t]['bulkActions']) {
-                var Buttons = '';
-                if (aoTableConfig[t]['rowActions'].length > 0) {
-                    var Actions = aoTableConfig[t]['rowActions'];
-                    // Loop through each action to build the button
-                    for (var i=0; i < Actions.length; i++) {
+        aoTableConfig[t]['groupTitles'] = config['groupTitles'];
+        if (config['groupTitles'].length > 0) {
+            setSpecialSortRules(t);
+        }
+        aoTableConfig[t]['groupTotals'] = config['groupTotals'];
+        aoTableConfig[t]['displayLength'] = config['displayLength'];
+        oDataTable[t] = $(oTable).dataTable({
+            'bDestroy': bReplace,
+            'sDom': sDom[t],
+            'sPaginationType': sPaginationType[t],
+            'bServerSide': bServerSide,
+            'bAutoWidth' : false,
+            'bFilter': aoTableConfig[t]['bFilter'] == 'true',
+            'bSort': true,
+            'bDeferRender': true,
+            'aaSorting': aoTableConfig[t]['aaSort'],
+            "aaSortingFixed": aoTableConfig[t]['group'],
+            "aoColumnDefs": [ oGroupColumns[t] ],
+            'aoColumns': ColumnSettings[t],
+            'iDisplayLength': aoTableConfig[t]['displayLength'],
+            'aLengthMenu': [[ 25, 50, -1], [ 25, 50, S3.i18n.all]],
+            'bProcessing': bProcessing,
+            'sAjaxSource': aoTableConfig[t]['ajaxUrl'],
+            'fnServerData': fnAjaxCallback[t],
+            'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
+                $('#modeSelectionAll').on('click', setModeSelectionAll);
+                $('#modeSelectionNone').on('click', setModeSelectionNone);
+            },
+            'fnRowCallback': function(nRow, aData, iDisplayIndex) {
+                // Extract the id # from the link
+                t = tableIdReverse(this.selector);
+                var actionCol = aoTableConfig[t]['actionCol'];
+                var re = />(.*)</i;
+                var result = re.exec(aData[actionCol]);
+                if (result == null) {
+                    var id = aData[actionCol];
+                } else {
+                    var id = result[1];
+                }
+                // Set the action buttons in the id column for each row
+                if (aoTableConfig[t]['rowActions'].length > 0 || aoTableConfig[t]['bulkActions']) {
+                    var Buttons = '';
+                    if (aoTableConfig[t]['rowActions'].length > 0) {
+                        var Actions = aoTableConfig[t]['rowActions'];
+                        // Loop through each action to build the button
+                        for (var i=0; i < Actions.length; i++) {
 
-                        $('th:eq(0)').css( { 'width': 'auto' } );
+                            $('th:eq(0)').css( { 'width': 'auto' } );
 
-                        // Check if action is restricted to a subset of records
-                        if ('restrict' in Actions[i]) {
-                            if (inList(id, Actions[i].restrict) == -1) {
-                                continue;
+                            // Check if action is restricted to a subset of records
+                            if ('restrict' in Actions[i]) {
+                                if (inList(id, Actions[i].restrict) == -1) {
+                                    continue;
+                                }
                             }
-                        }
-                        var c = Actions[i]._class;
-                        var label = S3.Utf8.decode(Actions[i].label);
-                        re = /%5Bid%5D/g;
-                        if (Actions[i]._onclick) {
-                            var oc = Actions[i]._onclick.replace(re, id);
-                            Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
-                        } else if (Actions[i]._jqclick) {
-                            Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
-                            fnActionCallBacks[t].push([id, S3ActionCallBack]);
-                        }else {
-                            if (Actions[i].icon) {
-                                label = '<img src="'+Actions[i].icon+'" alt="'+label+'" title="'+label+'">';
+                            var c = Actions[i]._class;
+                            var label = S3.Utf8.decode(Actions[i].label);
+                            re = /%5Bid%5D/g;
+                            if (Actions[i]._onclick) {
+                                var oc = Actions[i]._onclick.replace(re, id);
+                                Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
+                            } else if (Actions[i]._jqclick) {
+                                Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
+                                fnActionCallBacks[t].push([id, S3ActionCallBack]);
+                            }else {
+                                if (Actions[i].icon) {
+                                    label = '<img src="'+Actions[i].icon+'" alt="'+label+'" title="'+label+'">';
+                                }
+                                var url = Actions[i].url.replace(re, id);
+                                Buttons = Buttons + '<a class="'+ c + '" href="' + url + '">' + label + '</a>' + '&nbsp;';
                             }
-                            var url = Actions[i].url.replace(re, id);
-                            Buttons = Buttons + '<a class="'+ c + '" href="' + url + '">' + label + '</a>' + '&nbsp;';
-                        }
-                    } // end of loop through for each row Action for this table
-                } // end of if there are to be Row Actions for this table
-                // Put the actions buttons in the actionCol
-                if ((aoTableConfig[t]['group'].length > 0) && (aoTableConfig[t]['group'][0][0] < actionCol)) {
-                    actionCol -= 1;
-                }
-                $('td:eq(' + actionCol + ')', nRow).html( Buttons );
-            } // end of processing for the action and bulk buttons
+                        } // end of loop through for each row Action for this table
+                    } // end of if there are to be Row Actions for this table
+                    // Put the actions buttons in the actionCol
+                    if ((aoTableConfig[t]['group'].length > 0) && (aoTableConfig[t]['group'][0][0] < actionCol)) {
+                        actionCol -= 1;
+                    }
+                    $('td:eq(' + actionCol + ')', nRow).html( Buttons );
+                } // end of processing for the action and bulk buttons
 
-            // Code to toggle the selection of the row
-            if (aoTableConfig[t]['bulkActions']) {
-                setSelectionClass(t, nRow, inList(id, selectedRows[t]));
-            }
-            // Code to add special CSS styles to a row
-            styles = aoTableConfig[t]['rowStyles'];
-            for (style in styles) {
-                if (inList(id, styles[style]) > -1) {
-                    $(nRow).addClass( style );
+                // Code to toggle the selection of the row
+                if (aoTableConfig[t]['bulkActions']) {
+                    setSelectionClass(t, nRow, inList(id, selectedRows[t]));
                 }
-            }
-            // Code to condense any text that is longer than the display limits
-            tdposn = 0;
-            gList = [];
-            if (aoTableConfig[t]['group'].length > 0) {
-                groupList = aoTableConfig[t]['group'];
-                var gList = [];
-                for (var gCnt=0; gCnt < groupList.length; gCnt++) {
-                    gList.push(groupList[gCnt][0]);
-                }
-            }
-            for (var i=0; i < aData.length; i++) {
-                // Ignore any columns used for groups
-                if ($.inArray(i, gList) != -1) { continue; }
-                // Ignore if the data starts with an html open tag
-                if (aData[i][0] == '<') {
-                    tdposn++;
-                    continue;
-                }
-                if (aData[i].length > textDisplay[t][0]) {
-                    uniqueid = '_' + t + iDisplayIndex + i;
-                    icon = '<a href="javascript:toggleDiv(\''+uniqueid+'\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
-                    display = '<div id="display'+uniqueid+'">' + icon + aData[i].substr(0,textDisplay[t][1]) + "&hellip;</div>";
-                    icon = '<a href="javascript:toggleDiv(\''+uniqueid+'\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
-                    display += '<div  style="display:none" id="full'+uniqueid+'">' + icon + aData[i] + "</div>";
-                    $('td:eq(' + tdposn + ')', nRow).html( display );
-                }
-                tdposn++; // increment the count of the td tags (don't do this for groups)
-            } // end of code to condense 'long text' in a cell
-            return nRow;
-        }, // end of fnRowCallback
-        'fnDrawCallback': function(oSettings) {
-            table = '#' + oSettings.nTable.id;
-            t = tableIdReverse(table);
-            bindButtons(t);
-            if (oSettings.aiDisplay.length == 0) {
-                return;
-            }
-            if (aoTableConfig[t]['group'].length > 0) {
-                groupList = aoTableConfig[t]['group'];
-                for (var gCnt=0; gCnt < groupList.length; gCnt++) {
-                    // The prefixID is used to identify what will be added to the key for the
-                    // groupTotals, typically it will be a comma separated list of the groups
-                    prefixID = [];
-                    for (var pixidCnt = 0; pixidCnt < gCnt; pixidCnt++) {
-                        prefixID.push(groupList[pixidCnt][0]);
+                // Code to add special CSS styles to a row
+                styles = aoTableConfig[t]['rowStyles'];
+                for (style in styles) {
+                    if (inList(id, styles[style]) > -1) {
+                        $(nRow).addClass( style );
                     }
-                    group = groupList[gCnt];
-                    groupTotals = [];
-                    if (aoTableConfig[t]['groupTotals'].length > gCnt) {
-                        groupTotals = aoTableConfig[t]['groupTotals'][gCnt];
-                    }
-                    groupTitles = [];
-                    if (aoTableConfig[t]['groupTitles'].length > gCnt) {
-                        groupTitles = aoTableConfig[t]['groupTitles'][gCnt];
-                    }
-                    buildGroups(oSettings,
-                                t,
-                                group[0],
-                                groupTotals,
-                                prefixID,
-                                groupTitles,
-                                gCnt + 1
-                                );
                 }
-                // Now loop through each row and add the subLevel controls for row collapsing
-                var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
-                var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
-                if (shrink || accordion) {
-                    var nTrs = $(tableId[t] + ' tbody tr');
-                    var sublevel = '';
-                    for (var i=0; i < nTrs.length; i++) {
-                        obj = $(nTrs[i]);
-                        // If the row is a headerRow get the level
-                        if (obj.hasClass('headerRow')) {
-                            item = getElementClass(obj, 'group_');
-                            sublevel = 'sublevel' + item.substr(6);
-                        } else {
-                            $(nTrs[i]).addClass(sublevel);
-                            $(nTrs[i]).addClass('collapsable');
+                // Code to condense any text that is longer than the display limits
+                tdposn = 0;
+                gList = [];
+                if (aoTableConfig[t]['group'].length > 0) {
+                    groupList = aoTableConfig[t]['group'];
+                    var gList = [];
+                    for (var gCnt=0; gCnt < groupList.length; gCnt++) {
+                        gList.push(groupList[gCnt][0]);
+                    }
+                }
+                for (var i=0; i < aData.length; i++) {
+                    // Ignore any columns used for groups
+                    if ($.inArray(i, gList) != -1) { continue; }
+                    // Ignore if the data starts with an html open tag
+                    if (aData[i][0] == '<') {
+                        tdposn++;
+                        continue;
+                    }
+                    if (aData[i].length > textDisplay[t][0]) {
+                        uniqueid = '_' + t + iDisplayIndex + i;
+                        icon = '<a href="javascript:toggleDiv(\''+uniqueid+'\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
+                        display = '<div id="display'+uniqueid+'">' + icon + aData[i].substr(0,textDisplay[t][1]) + "&hellip;</div>";
+                        icon = '<a href="javascript:toggleDiv(\''+uniqueid+'\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
+                        display += '<div  style="display:none" id="full'+uniqueid+'">' + icon + aData[i] + "</div>";
+                        $('td:eq(' + tdposn + ')', nRow).html( display );
+                    }
+                    tdposn++; // increment the count of the td tags (don't do this for groups)
+                } // end of code to condense 'long text' in a cell
+                return nRow;
+            }, // end of fnRowCallback
+            'fnDrawCallback': function(oSettings) {
+                table = '#' + oSettings.nTable.id;
+                t = tableIdReverse(table);
+                bindButtons(t);
+                if (oSettings.aiDisplay.length == 0) {
+                    return;
+                }
+                if (aoTableConfig[t]['group'].length > 0) {
+                    groupList = aoTableConfig[t]['group'];
+                    for (var gCnt=0; gCnt < groupList.length; gCnt++) {
+                        // The prefixID is used to identify what will be added to the key for the
+                        // groupTotals, typically it will be a comma separated list of the groups
+                        prefixID = [];
+                        for (var pixidCnt = 0; pixidCnt < gCnt; pixidCnt++) {
+                            prefixID.push(groupList[pixidCnt][0]);
                         }
-                    } // end of loop through each row adding controls to collapse & expand the grouped table
-                    $('.collapsable').hide();
-                    if (accordion) {
-                        accordionRow(t, 'level_1', 'group_' + t + '11');
+                        group = groupList[gCnt];
+                        groupTotals = [];
+                        if (aoTableConfig[t]['groupTotals'].length > gCnt) {
+                            groupTotals = aoTableConfig[t]['groupTotals'][gCnt];
+                        }
+                        groupTitles = [];
+                        if (aoTableConfig[t]['groupTitles'].length > gCnt) {
+                            groupTitles = aoTableConfig[t]['groupTitles'][gCnt];
+                        }
+                        buildGroups(oSettings,
+                                    t,
+                                    group[0],
+                                    groupTotals,
+                                    prefixID,
+                                    groupTitles,
+                                    gCnt + 1
+                                    );
                     }
-               } // end of collapsable rows
-            }
-            if (Math.ceil((oSettings.fnRecordsDisplay()) / oSettings._iDisplayLength) > 1)  {
-                $(tableId[t] + '_paginate').css('display', 'block');
-            } else {
-                $(tableId[t] + '_paginate').css('display', 'none');
-            }
-        } // end of fnDrawCallback
-      }); // end of call to $(oTable).datatable()
+                    // Now loop through each row and add the subLevel controls for row collapsing
+                    var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
+                    var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
+                    if (shrink || accordion) {
+                        var nTrs = $(tableId[t] + ' tbody tr');
+                        var sublevel = '';
+                        for (var i=0; i < nTrs.length; i++) {
+                            obj = $(nTrs[i]);
+                            // If the row is a headerRow get the level
+                            if (obj.hasClass('headerRow')) {
+                                item = getElementClass(obj, 'group_');
+                                sublevel = 'sublevel' + item.substr(6);
+                            } else {
+                                $(nTrs[i]).addClass(sublevel);
+                                $(nTrs[i]).addClass('collapsable');
+                            }
+                        } // end of loop through each row adding controls to collapse & expand the grouped table
+                        $('.collapsable').hide();
+                        if (accordion) {
+                            accordionRow(t, 'level_1', 'group_' + t + '11');
+                        }
+                   } // end of collapsable rows
+                }
+                if (Math.ceil((oSettings.fnRecordsDisplay()) / oSettings._iDisplayLength) > 1)  {
+                    $(tableId[t] + '_paginate').css('display', 'block');
+                } else {
+                    $(tableId[t] + '_paginate').css('display', 'none');
+                }
+            } // end of fnDrawCallback
+        }); // end of call to $(oTable).datatable()
     } // end of initDataTable function
 
     // Allow dataTables to be initialised outside of this function.
