@@ -489,6 +489,8 @@ class S3StatsModel(S3Model):
         loc_level = s3db.gis_location[location_id].level
         if current.deployment_settings.has_module("vulnerability"):
             vulnerability = True
+        else:
+            vulnerability = False
         for (start_date, end_date) in changed_periods:
 
             s, e = str(start_date), str(end_date)
