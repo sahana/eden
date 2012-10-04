@@ -101,8 +101,17 @@ def project():
 
     # Pre-process
     def prep(r):
+        table = s3db.project_project 
+        
         # Location Filter
         s3db.gis_location_filter(r)
+        
+        # Filter Themes based on Sector
+        if r.record:
+            sector_ids = r.record.sector_id
+        else:
+            sector_ids = []
+        set_project_multi_theme_id_requires(sector_ids)
 
         if r.interactive:
             if not r.component:
@@ -138,6 +147,10 @@ def project():
                                 (ttable.tag == "ISO2")
                         countries = db(query).select(ttable.value)
                         settings.gis.countries = [c.value for c in countries]
+                        
+                    # Filter Activity Type based on Sector
+                    set_project_multi_activity_type_id_requires(sector_ids)
+                    #@ToDo: Do this for project_activity too.
                 elif r.component_name == "task":
                     r.component.table.milestone_id.requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                 "project_milestone.id",
@@ -228,7 +241,73 @@ def project():
                               "project", # Need to specify as sometimes we come via index()
                               rheader=rheader,
                               csv_template="project")
+# -----------------------------------------------------------------------------
+def set_project_multi_theme_id_requires(sector_ids):
+    """
+        Filters the multi_theme_id based on the sector_id
+    """
+    table = s3db.project_project
+    ttable = s3db.project_theme
+    tstable = s3db.project_theme_sector
 
+    # All themes linked to the projects sectors or to no sectors 
+    rows = db().select(ttable.id,
+                       tstable.sector_id,
+                       left=tstable.on(ttable.id == tstable.theme_id))
+    theme_ids = [row.project_theme.id for row in rows 
+                 if not row.project_theme_sector.sector_id or 
+                    row.project_theme_sector.sector_id[0] in sector_ids]
+    table.multi_theme_id.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, 
+                                                  "project_theme.id",
+                                                  s3db.project_theme_represent,
+                                                  filterby="id",
+                                                  filter_opts=theme_ids,
+                                                  sort=True,
+                                                  multiple=True
+                                                  )
+                                               )
+# -----------------------------------------------------------------------------
+def set_project_multi_activity_type_id_requires(sector_ids):
+    """
+        Filters the multi_activity_type_id based on the sector_id
+    """
+    # @ToDo: merge with set_project_multi_theme_id_requires?
+    table = s3db.project_location
+    attable = s3db.project_activity_type
+    atstable = s3db.project_activity_type_sector
+
+    # All activity_types linked to the projects sectors or to no sectors 
+    rows = db().select(attable.id,
+                       atstable.sector_id,
+                       left=atstable.on(attable.id == atstable.activity_type_id))
+    activity_type_ids = [row.project_activity_type.id for row in rows 
+                 if not row.project_activity_type_sector.sector_id or 
+                    row.project_activity_type_sector.sector_id[0] in sector_ids]
+    table.multi_activity_type_id.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, 
+                                                  "project_activity_type.id",
+                                                  s3db.project_activity_type_represent,
+                                                  filterby="id",
+                                                  filter_opts=activity_type_ids,
+                                                  sort=True,
+                                                  multiple=True
+                                                  )
+                                               )
+# -----------------------------------------------------------------------------
+def project_multi_theme_id_widget():
+    """
+        Used by the project controller to return dynamically generated 
+        multi_theme_id widget based on sector_id
+    """
+    ptable = s3db.project_project
+    sector_ids = [int(id) for id in request.vars.sector_ids.split(',') if id]
+    value = [int(id) for id in request.vars.value.split(',') if id]
+    
+    set_project_multi_theme_id_requires(sector_ids)
+    widget = ptable.multi_theme_id.widget(ptable.multi_theme_id,
+                                          value)
+    return widget
 # =============================================================================
 def status():
     """ RESTful CRUD controller """
@@ -373,7 +452,13 @@ def location():
     # Pre-process
     def prep(r):
         if r.interactive:
-            if r.component is not None:
+            if r.record and r.record.project_id:
+                sector_ids = ptable[r.record.project_id].sector_id
+            else:
+                sector_ids = []
+            set_project_multi_activity_type_id_requires(sector_ids)
+                    
+            if r.component:
                 if r.component_name == "document":
                     doc_table = s3db.doc_document
                     doc_table.organisation_id.readable = False
@@ -452,7 +537,9 @@ def location():
     return s3_rest_controller(interactive_report=True,
                               rheader=s3db.project_rheader,
                               csv_template="location")
-
+# -----------------------------------------------------------------------------
+def demographic_data():
+    return s3db.stats_demographic_data_controller()
 # -----------------------------------------------------------------------------
 def community_contact():
     """ Show a list of all community contacts """

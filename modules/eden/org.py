@@ -179,7 +179,6 @@ class S3OrganisationModel(S3Model):
                                                 tooltip=help),
                                     label=SECTOR,
                                     ondelete="SET NULL")
-
         # =====================================================================
         # (Cluster) Subsector
         #
@@ -687,6 +686,7 @@ class S3OrganisationModel(S3Model):
         return Storage(
                     org_sector_id=sector_id,
                     org_sector_opts=self.org_sector_opts,
+                    org_sector_represent = self.org_sector_represent,
                     org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
                 )
