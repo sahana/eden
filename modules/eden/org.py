@@ -1024,9 +1024,9 @@ class S3OrganisationModel(S3Model):
     def org_branch_onvalidation(form):
         """
             Prevent an Organisation from being a Branch of itself
+            - this is for interactive forms, imports are caught in .xsl
         """
 
-        # @ToDo: This ctaches manual creation but need to catch Imports somehow
         vars = form.request_vars
         if vars and \
            vars.branch_id and \

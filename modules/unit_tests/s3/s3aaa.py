@@ -3383,7 +3383,7 @@ class RealmEntityTests(unittest.TestCase):
         self.assertEqual(record.realm_entity, None)
 
     # -------------------------------------------------------------------------
-    def testUpdateSuperRealm(self):
+    def testUpdateSharedFields(self):
         """ Test that realm entity gets set in super-entity """
 
         s3db = current.s3db
@@ -3398,11 +3398,11 @@ class RealmEntityTests(unittest.TestCase):
 
         site_id = row["site_id"]
 
-        auth.update_super_realm(ftable, self.office_id, realm_entity=None)
+        auth.update_shared_fields(ftable, self.office_id, realm_entity=None)
         site = stable[site_id]
         self.assertEqual(site["realm_entity"], None)
 
-        auth.update_super_realm(ftable, self.office_id, realm_entity=row["realm_entity"])
+        auth.update_shared_fields(ftable, self.office_id, realm_entity=row["realm_entity"])
         site = stable[site_id]
         self.assertEqual(site["realm_entity"], row["realm_entity"])
 

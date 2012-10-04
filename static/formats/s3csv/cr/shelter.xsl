@@ -173,13 +173,16 @@
 
             <xsl:if test="$BranchName!=''">
                 <!-- Nest the Top-Level -->
-                <resource name="org_organisation_branch">
-                    <reference field="organisation_id">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="col[@field='Organisation']"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
+                <!-- Don't create Orgs as Branches of themselves -->
+                <xsl:if test="col[@field='Organisation']!=$BranchName">
+                    <resource name="org_organisation_branch">
+                        <reference field="organisation_id">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="col[@field='Organisation']"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
             </xsl:if>
 
         </resource>

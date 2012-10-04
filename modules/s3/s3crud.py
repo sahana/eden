@@ -2048,8 +2048,9 @@ class S3CRUD(S3Method):
                         return
                     if selected:
                         # Update post_vars and form.vars
-                        request.post_vars.update({key:str(selected)})
-                        form.vars.update({key:selected})
+                        request.post_vars[key] = str(selected)
+                        form.request_vars[key] = str(selected)
+                        form.vars[key] = selected
                         # Super-entity update
                         s3db.update_super(table, dict(id=selected))
                         # Onaccept

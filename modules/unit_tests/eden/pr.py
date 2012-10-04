@@ -450,7 +450,7 @@ class SavedSearchTests(unittest.TestCase):
         f = S3SavedSearch.pr_saved_search_onvalidation
 
     def testFriendlyQuery(self):
-        app = request.application
+        app = current.request.application
         f = S3SavedSearch.friendly_string_from_field_query
 
         result = f(
