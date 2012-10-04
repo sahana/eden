@@ -272,7 +272,7 @@ class S3SearchSimpleWidget(S3SearchWidget):
         self.name = attr._name
 
         # Search Autocomplete - Display current value
-        attr["_value"] = vars.get(self.name, value)
+        attr["_value"] = vars.get(self.name, value) if vars else value
 
         return INPUT(**attr)
 
