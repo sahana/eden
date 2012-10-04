@@ -83,12 +83,14 @@ class S3ProjectModel(S3Model):
 
     names = ["project_status",
              "project_theme",
+             "project_theme_sector",
              "project_theme_id",
              "project_theme_opts",
              "project_hazard",
              "project_hfa_opts",
              "project_project",
              "project_activity_type",
+             "project_activity_type_sector",
              "project_project_id",
              "project_multi_activity_type_id",
              ]
@@ -229,7 +231,22 @@ class S3ProjectModel(S3Model):
         # Projects
         add_component("project_theme_percentage", project_theme="theme_id")
 
+        crud_form = s3forms.S3SQLCustomForm(
+                        "name",
+                        # Project Organisations
+                        s3forms.S3SQLInlineComponent(
+                            "theme_sector",
+                            label=T("Theme Sectors"),
+                            fields=["sector_id"],
+                        ),
+                    )
+    
+        configure(tablename,
+                  crud_form=crud_form)
+
+        # ---------------------------------------------------------------------
         # Theme - Sector Link Table
+        #
         tablename = "project_theme_sector"
         location = current.session.s3.location_filter
         if location:
@@ -241,29 +258,17 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              theme_id(),
                              self.org_sector_id(
-                                 requires=IS_ONE_OF(db, "org_sector.id",
-                                                    self.org_sector_represent,
-                                                    sort=True,
-                                                    filterby=filterby,
-                                                    filter_opts=filter_opts),
-                                                ),
+                                label = "",
+                                requires=IS_ONE_OF(db, "org_sector.id",
+                                                   self.org_sector_represent,
+                                                   sort=True,
+                                                   filterby=filterby,
+                                                   filter_opts=filter_opts),
+                                ),
                              *s3_meta_fields())
 
         add_component(tablename, project_theme="theme_id")
         add_component(tablename, org_sector="sector_id")
-
-        table.sector_id.label = ""
-        crud_form = s3forms.S3SQLCustomForm(
-                        "name",
-                        # Project Organisations
-                        s3forms.S3SQLInlineComponent(
-                            "theme_sector",
-                            label=T("Theme Sectors"),
-                            fields=["sector_id"],
-                        ),
-                    )
-    
-        configure("project_theme", crud_form=crud_form)
 
         # ---------------------------------------------------------------------
         # Hazard
@@ -758,30 +763,6 @@ $(document).ready(function(){
                                                     CheckboxesWidgetS3.widget(f, v, cols=3),
                                                  ondelete = "RESTRICT")
 
-        # Activity Type - Sector Link Table
-        tablename = "project_activity_type_sector"
-        location = current.session.s3.location_filter
-        if location:
-            filterby = "location_id"
-            filter_opts = (location, None)
-        else:
-            filterby = None
-            filter_opts = (None,)
-        table = define_table(tablename,
-                             activity_type_id(),
-                             self.org_sector_id(
-                                 requires=IS_ONE_OF(db, "org_sector.id",
-                                                    self.org_sector_represent,
-                                                    sort=True,
-                                                    filterby=filterby,
-                                                    filter_opts=filter_opts),
-                                                ),
-                             *s3_meta_fields())
-
-        add_component(tablename, project_activity_type="activity_type_id")
-        add_component(tablename, org_sector="sector_id") # Doesn't Work???
-
-        table.sector_id.label = ""
         crud_form = s3forms.S3SQLCustomForm(
                         "name",
                         # Project Organisations
@@ -792,7 +773,27 @@ $(document).ready(function(){
                         ),
                     )
     
-        configure("project_activity_type", crud_form=crud_form)
+        configure(tablename,
+                  crud_form=crud_form)
+
+        # ---------------------------------------------------------------------
+        # Activity Type - Sector Link Table
+        #
+        tablename = "project_activity_type_sector"
+        table = define_table(tablename,
+                             activity_type_id(),
+                             self.org_sector_id(
+                                 label = "",
+                                 requires=IS_ONE_OF(db, "org_sector.id",
+                                                    self.org_sector_represent,
+                                                    sort=True,
+                                                    filterby=filterby,
+                                                    filter_opts=filter_opts),
+                                                ),
+                             *s3_meta_fields())
+
+        add_component(tablename, project_activity_type="activity_type_id")
+        add_component(tablename, org_sector="sector_id") # Doesn't Work???
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -1618,14 +1619,13 @@ class S3Project3WModel(S3Model):
         #
         tablename = "project_beneficiary"
         table = define_table(tablename,
-                             # LINK FIELDS
+                             # Link Fields
                              # populated automatically
                              project_id(readable=False,
                                         writable=False),
                              project_location_id(comment=None),
                              
-                             #STATS_DATA FIELDS
-                             #beneficiary_type
+                             # stats_data Fields
                              super_link("data_id", "stats_data"),
                              beneficiary_type_param_id(),
                              # populated automatically
@@ -4967,9 +4967,6 @@ def project_rheader(r, tabs=[]):
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename == "task":
-        db = current.db
-        s3db = current.s3db
-
         # Tabs
         tabs = [(T("Details"), None)]
         append = tabs.append
@@ -4986,6 +4983,7 @@ def project_rheader(r, tabs=[]):
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         # RHeader
+        db = current.db
         ptable = s3db.project_project
         ltable = s3db.project_task_project
         query = (ltable.deleted == False) & \

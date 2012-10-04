@@ -179,6 +179,7 @@ class S3OrganisationModel(S3Model):
                                                 tooltip=help),
                                     label=SECTOR,
                                     ondelete="SET NULL")
+
         # =====================================================================
         # (Cluster) Subsector
         #

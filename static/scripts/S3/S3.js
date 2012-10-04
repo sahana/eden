@@ -583,16 +583,16 @@ function S3FilterFieldChange (setting) {
     var selField = $('[name = "' + Field + '"]');
     //var selFieldRows = $('[id *= "' + Field + '__row"]');
 
-	if (setting.FilterOnLoad != undefined) {
-		var FilterOnLoad = setting.FilterOnLoad;
-	} else {
-		var FilterOnLoad = true;
+    if (setting.FilterOnLoad != undefined) {
+        var FilterOnLoad = setting.FilterOnLoad;
+    } else {
+        var FilterOnLoad = true;
     }
     
-    selFilterField.change( function() {
+    selFilterField.change(function() {
 
-	    // Cancel previous request
-	    try {
+        // Cancel previous request
+        try {
             S3.JSONRequest[$(this).attr('id')].abort();
         } catch(err) {};
 
@@ -610,45 +610,45 @@ function S3FilterFieldChange (setting) {
         	});
         }
         
-	    if ( FilterVal == "" || FilterVal == undefined) {
-	    	// No value to filter
-	    	//selFieldRows.hide();
-	    	selField.attr('disabled', 'disabled');
-	        return;
-	    }
+        if ( FilterVal == "" || FilterVal == undefined) {
+            // No value to filter
+            //selFieldRows.hide();
+        selField.attr('disabled', 'disabled');
+            return;
+        }
 
-		var FieldResource = setting.FieldResource;
+        var FieldResource = setting.FieldResource;
 
-		if (setting.Widget != undefined) {
-			var Widget = setting.Widget;
-		} else {
-			var Widget = Field;
-	    }
-		var selWidget =  $('[name = "' + Widget + '"]');
-		
-		if (setting.FieldKey != undefined) {
-			var FieldKey = setting.FieldKey;
-		} else {
-			var FieldKey = FilterField;
-	    }
+        if (setting.Widget != undefined) {
+            var Widget = setting.Widget;
+        } else {
+            var Widget = Field;
+        }
+        var selWidget =  $('[name = "' + Widget + '"]');
 
-		var FieldID = setting.FieldID;
-		if (FieldID == undefined) {
-			var FieldID = "id";
-		}
+        if (setting.FieldKey != undefined) {
+            var FieldKey = setting.FieldKey;
+        } else {
+            var FieldKey = FilterField;
+        }
 
-	    if (setting.url  != undefined && setting.url  != null) {
-	    	var url = setting.url
-	    } else {
-	    	var FieldPrefix = setting.FieldPrefix;
-	    	var url = S3.Ap.concat('/', FieldPrefix, '/', FieldResource, '.json?',
-	    							FieldResource, '.',  FieldKey, '=' );
-	    }
-	    url = url.concat(FilterVal)
-	    
+        var FieldID = setting.FieldID;
+        if (FieldID == undefined) {
+            var FieldID = "id";
+        }
+
+        if (setting.url  != undefined && setting.url  != null) {
+            var url = setting.url
+        } else {
+            var FieldPrefix = setting.FieldPrefix;
+            var url = S3.Ap.concat('/', FieldPrefix, '/', FieldResource, '.json?',
+                                   FieldResource, '.',  FieldKey, '=' );
+        }
+        url = url.concat(FilterVal)
+
         // Get Field Val from Select or CheckBoxes
         if (selField.length == 0 || selField.length == undefined ) {
-        	FieldVal = ""
+            FieldVal = ""
         } else if (selField.length == 1) {
         	FieldVal = selField.val();
         } else {
@@ -657,130 +657,132 @@ function S3FilterFieldChange (setting) {
         		FieldVal.push($(this).val());
         	});
         }
-	    if (url.indexOf("?")) {
-	    	url = url.concat("&value=");
-	    } else {
-	    	url = url.concat("?value=");
-	    }
-	    url = url.concat(FieldVal);
+        if (url.indexOf("?")) {
+            url = url.concat("&value=");
+        } else {
+            url = url.concat("?value=");
+        }
+        url = url.concat(FieldVal);
 
-	    var GetWidgetHTML = setting.GetWidgetHTML;
-		if (GetWidgetHTML == undefined) {
-			var GetWidgetHTML = false;
-		}
-	    
-		if (setting.ShowEmptyField != undefined) {
-			var ShowEmptyField = setting.ShowEmptyField;
-		} else {
-			var ShowEmptyField = true;
-	    }
-		if (setting.msgNoRecords != undefined) {
-			var msgNoRecords = setting.msgNoRecords;
-		} else {
-			var msgNoRecords = '-';
-			setting.msgNoRecords = msgNoRecords;
-		}
-		if (setting.fncPrep != undefined) {
-			var fncPrep = setting.fncPrep;
-		} else {
-			var fncPrep = function(data) {return null};
-			setting.fncPrep = fncPrep;
-	    }
-		if (setting.fncRepresent != undefined) {
-			var fncRepresent = setting.fncRepresent;
-		} else {
-			var fncRepresent = function(record) {return record.name};
-			setting.fncRepresent = fncRepresent;
-	    }
+        var GetWidgetHTML = setting.GetWidgetHTML;
+        if (GetWidgetHTML == undefined) {
+            var GetWidgetHTML = false;
+        }
 
-		//if ($('[id$="' + FilterField + '__row1"]:visible').length > 0) {
-			// Only show if the filter field is shown
-			//selFieldRows.show();
-		//}
+        if (setting.ShowEmptyField != undefined) {
+            var ShowEmptyField = setting.ShowEmptyField;
+        } else {
+            var ShowEmptyField = true;
+        }
+        if (setting.msgNoRecords != undefined) {
+            var msgNoRecords = setting.msgNoRecords;
+        } else {
+            var msgNoRecords = '-';
+            setting.msgNoRecords = msgNoRecords;
+        }
+        if (setting.fncPrep != undefined) {
+            var fncPrep = setting.fncPrep;
+        } else {
+            var fncPrep = function(data) {return null};
+            setting.fncPrep = fncPrep;
+        }
+        if (setting.fncRepresent != undefined) {
+            var fncRepresent = setting.fncRepresent;
+        } else {
+            var fncRepresent = function(record) {return record.name};
+            setting.fncRepresent = fncRepresent;
+        }
 
-	    /* Show Throbber */
-		selWidget.hide();
-	    if ($('#' + FieldResource + '_ajax_throbber').length == 0 ) {
-	    	selWidget.after('<div id="' + FieldResource + '_ajax_throbber" class="ajax_throbber"/>')
-	    }
+        //if ($('[id$="' + FilterField + '__row1"]:visible').length > 0) {
+            // Only show if the filter field is shown
+            //selFieldRows.show();
+        //}
 
-	    var data;
+        /* Show Throbber */
+        selWidget.hide();
+        if ($('#' + FieldResource + '_ajax_throbber').length == 0 ) {
+            selWidget.after('<div id="' + FieldResource + '_ajax_throbber" class="ajax_throbber"/>')
+        }
 
-	    // Save JSON Request by element id
-	    if (!GetWidgetHTML) {
-		    S3.JSONRequest[$(this).attr('id')] = $.ajax( {
-		        url: url,
-		        dataType: 'json',
-		        context: setting,
-		        success: function(data) {
-		        /* Create Select Element */
-		            var options = '';
-		            var FilterField = this.FilterField;
-		            var FieldResource = this.FieldResource;
-		            var selField = $('[name = "' + this.Field + '"]');
-		            var selFilterField = $('[name = "' + FilterField + '"]');
+        var data;
+
+        // Save JSON Request by element id
+        if (!GetWidgetHTML) {
+            S3.JSONRequest[$(this).attr('id')] = $.ajax( {
+                url: url,
+                dataType: 'json',
+                context: setting,
+                success: function(data) {
+                /* Create Select Element */
+                    var options = '';
+                    var FilterField = this.FilterField;
+                    var FieldResource = this.FieldResource;
+                    var selField = $('[name = "' + this.Field + '"]');
+                    var selFilterField = $('[name = "' + FilterField + '"]');
+
+                    PrepResult = fncPrep(data);
+
+                    if (data.length == 0) {
+                        if (ShowEmptyField) {
+                            var first_value = 0;
+                            options += '<option value="">' + this.msgNoRecords + '</options>';
+                        }
+                    } else {
+                        for (var i = 0; i < data.length; i++) {
+                            if (i == 0) {
+                                first_value = data[i][FieldID]
+                            };
+                            options += '<option value="' +  data[i][FieldID] + '">';
+                            options += this.fncRepresent( data[i], PrepResult);
+                            options += '</option>';
+                        }
+                    }
+                    /* Set field value */
+                    if (options != '') {
+                        selField.html(options)
+                                .val(first_value)
+                                .change()
+                                .removeAttr('disabled')
+                                .show();
+                    } else {
+                        //selFieldRows.hide();
+                        selField.attr('disabled', 'disabled');
+                    }
+                    /* Show "Add" Button & modify link */
+                    selFieldAdd = $('#' + FieldResource + '_add')
+                    href = selFieldAdd.attr('href') + "&' + FilterField + '=" + $('[name = "' + FilterField + '"]').val();
+                    selFieldAdd.attr('href', href)
+                               .show();
 	
-		            PrepResult = fncPrep(data);
-	
-		            if (data.length == 0) {
-		            	if (ShowEmptyField) {
-		            		var first_value = 0;
-			                options += '<option value="">' + this.msgNoRecords + '</options>';
-		            	}
-		            } else {
-		                for (var i = 0; i < data.length; i++) {
-		                	if (i == 0) {first_value = data[i][FieldID]};
-		                    options += '<option value="' +  data[i][FieldID] + '">';
-		                    options += this.fncRepresent( data[i], PrepResult);
-		                    options += '</option>';
-		                }
-		            }
-		            /* Set field value */
-		            if (options != '') {
-			            selField.html(options)
-	                    .val(first_value)
-	                    .change()
-	                    .removeAttr('disabled')
-	                    .show();
-		            } else {
-		            	//selFieldRows.hide();
-		            	selField.attr('disabled', 'disabled');
-		            }
-		            /* Show "Add" Button & modify link */
-		            selFieldAdd = $('#' + FieldResource + '_add')
-		            href = selFieldAdd.attr('href') + "&' + FilterField + '=" + $('[name = "' + FilterField + '"]').val();
-		            selFieldAdd.attr('href', href)
-		                       .show();
-	
-		            /* Remove Throbber */
-		            $('#' + FieldResource + '_ajax_throbber').remove();
-		        }
-		    });
-	    } else {
-		    S3.JSONRequest[$(this).attr('id')] = $.ajax( {
-		        url: url,
-		        dataType: 'html',
-		        context: setting,
-		        success: function(data) {
-		        /* Replace widget with data */
-		        	var selField = $('[name = "' + this.Field + '"]');
-		        	
-		            /* Set field widget */
-		            if (data != '') {
-		            	selWidget.html(data)
-	                    .change()
-	                    .removeAttr('disabled')
-	                    .show();
-		            } else {
-		            	//selFieldRows.hide();
-		            	selWidget.attr('disabled', 'disabled');
-		            }
+                    /* Remove Throbber */
+                    $('#' + FieldResource + '_ajax_throbber').remove();
+                }
+            });
+        } else {
+            S3.JSONRequest[$(this).attr('id')] = $.ajax( {
+                url: url,
+                dataType: 'html',
+                context: setting,
+                success: function(data) {
+                /* Replace widget with data */
+                    var selField = $('[name = "' + this.Field + '"]');
 
-		            /* Remove Throbber */
-		            $('#' + FieldResource + '_ajax_throbber').remove();
-		        }
-		    });
-	    }
+                    /* Set field widget */
+                    if (data != '') {
+                        selWidget.html(data)
+                                 .change()
+                                 .removeAttr('disabled')
+                                 .show();
+                    } else {
+                        //selFieldRows.hide();
+                        selWidget.attr('disabled', 'disabled');
+                    }
+
+                    /* Remove Throbber */
+                    $('#' + FieldResource + '_ajax_throbber').remove();
+                }
+            });
+        }
     });
 
     // If the field value is empty

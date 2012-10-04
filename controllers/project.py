@@ -246,6 +246,7 @@ def set_project_multi_theme_id_requires(sector_ids):
     """
         Filters the multi_theme_id based on the sector_id
     """
+
     table = s3db.project_project
     ttable = s3db.project_theme
     tstable = s3db.project_theme_sector
@@ -267,11 +268,13 @@ def set_project_multi_theme_id_requires(sector_ids):
                                                   multiple=True
                                                   )
                                                )
+
 # -----------------------------------------------------------------------------
 def set_project_multi_activity_type_id_requires(sector_ids):
     """
         Filters the multi_activity_type_id based on the sector_id
     """
+
     # @ToDo: merge with set_project_multi_theme_id_requires?
     table = s3db.project_location
     attable = s3db.project_activity_type
@@ -294,6 +297,7 @@ def set_project_multi_activity_type_id_requires(sector_ids):
                                                   multiple=True
                                                   )
                                                )
+
 # -----------------------------------------------------------------------------
 def project_multi_theme_id_widget():
     """
@@ -301,13 +305,14 @@ def project_multi_theme_id_widget():
         multi_theme_id widget based on sector_id
     """
     ptable = s3db.project_project
-    sector_ids = [int(id) for id in request.vars.sector_ids.split(',') if id]
-    value = [int(id) for id in request.vars.value.split(',') if id]
+    sector_ids = [int(id) for id in request.vars.sector_ids.split(",") if id]
+    value = [int(id) for id in request.vars.value.split(",") if id]
     
     set_project_multi_theme_id_requires(sector_ids)
     widget = ptable.multi_theme_id.widget(ptable.multi_theme_id,
                                           value)
     return widget
+
 # =============================================================================
 def status():
     """ RESTful CRUD controller """
@@ -354,7 +359,7 @@ def organisation():
                 (T("Basic Details"), None),
                 (T("Projects"), "project"),
                 (T("Contacts"), "human_resource"),
-               ]
+                ]
         rheader = lambda r: s3db.org_rheader(r, tabs)
         return s3_rest_controller("org", resourcename,
                                   rheader=rheader)
@@ -539,7 +544,10 @@ def location():
                               csv_template="location")
 # -----------------------------------------------------------------------------
 def demographic_data():
+    """ RESTful CRUD controller """
+
     return s3db.stats_demographic_data_controller()
+
 # -----------------------------------------------------------------------------
 def community_contact():
     """ Show a list of all community contacts """

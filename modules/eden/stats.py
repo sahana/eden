@@ -121,16 +121,15 @@ class S3StatsModel(S3Model):
                                 ),
                              Field("value", "double",
                                    label = T("Value")),
-                             Field("date", "date",
-                                   label = T("Date")),
-                             Field("date_end", "date",
-                                   label = T("End Date")),
+                             s3_date(),
+                             s3_date("date_end",
+                                     label = T("End Date")),
                              self.stats_group_id(),
                              Field("approved_by", "integer",
                                    default = None)
                              )
 
-        self.configure("stats_data",
+        self.configure(tablename,
                        onapprove = self.stats_data_onapprove,
                        requires_approval = True,
                        )
@@ -867,11 +866,10 @@ class S3StatsDemographicModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
                 
-
 # =============================================================================
 class S3StatsGroupModel(S3Model):
     """
-        Table to hold the group details of the different stats records
+        Tables to hold the group details of the different stats records
     """
 
     names = ["stats_group_type",
@@ -1122,39 +1120,36 @@ def stats_demographic_data_controller():
         requests as a tab for a site.
     """
 
-    s3db = current.s3db
-    s3 = current.response.s3
-    request = current.request
-    settings = current.deployment_settings
-    
-    dtable = s3db.stats_demographic_data
+    vars = current.request.vars
 
     output = dict()
 
-    if "viewing" not in request.vars:
+    if "viewing" not in vars:
         return output
     else:
-        viewing = request.vars.viewing
+        viewing = vars.viewing
     if "." in viewing:
         tablename, id = viewing.split(".", 1)
     else:
         return output
 
-    location_id = s3db[tablename][id].location_id
-    
-    if tablename == "project_location":
-        rheader = s3db.project_rheader
-    else:
-        rheader = None
+    s3db = current.s3db
+    table = s3db[tablename]
+    location_id = current.db(table.id == id).select(table.location_id,
+                                                    limitby=(0, 1)
+                                                    ).first().location_id
 
-    s3.filter = (dtable.location_id == location_id)
-    dtable.location_id.default = location_id
-    dtable.location_id.readable = False
-    dtable.location_id.writable = False
+    s3 = current.response.s3
+    dtable = s3db.stats_demographic_data
+
+    field = dtable.location_id
+    s3.filter = (field == location_id)
+    field.default = location_id
+    field.readable = False
+    field.writable = False
 
     dtable.group_id.readable = False
     dtable.group_id.writable = False
-    
 
     # Post-process
     def postp(r, output):
@@ -1163,7 +1158,13 @@ def stats_demographic_data_controller():
         return output
     s3.postp = postp
 
-    output = current.rest_controller("stats", "demographic_data", rheader = rheader)
+    if tablename == "project_location":
+        rheader = s3db.project_rheader
+    else:
+        rheader = None
+
+    output = current.rest_controller("stats", "demographic_data",
+                                     rheader=rheader)
 
     return output
 
