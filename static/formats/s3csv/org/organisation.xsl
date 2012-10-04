@@ -162,13 +162,16 @@
                 <!-- Nest all the Branches -->
                 <xsl:for-each select="//row[col[@field='Organisation']=$OrgName]">
                     <xsl:if test="col[@field='Branch']!=''">
-                        <resource name="org_organisation_branch" alias="branch">
-                            <reference field="branch_id"  resource="org_organisation">
-                                <xsl:attribute name="tuid">
-                                    <xsl:value-of select="concat($OrgName,col[@field='Branch'])"/>
-                                </xsl:attribute>
-                            </reference>
-                        </resource>
+                        <!-- Don't create Orgs as Branches of themselves -->
+                        <xsl:if test="col[@field='Branch']!=$OrgName">
+                            <resource name="org_organisation_branch" alias="branch">
+                                <reference field="branch_id"  resource="org_organisation">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat($OrgName,col[@field='Branch'])"/>
+                                    </xsl:attribute>
+                                </reference>
+                            </resource>
+                        </xsl:if>
                     </xsl:if>
                 </xsl:for-each>
             </xsl:if>
