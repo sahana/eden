@@ -423,9 +423,9 @@ class S3SQLDefaultForm(S3SQLForm):
         if link and link.postprocess:
             postprocess = link.postprocess
             if isinstance(onvalidation, list):
-                onvalidation.append(postprocess)
+                onvalidation.insert(0, postprocess)
             elif onvalidation is not None:
-                onvalidation = [onvalidation, postprocess]
+                onvalidation = [postprocess, onvalidation]
             else:
                 onvalidation = [postprocess]
 

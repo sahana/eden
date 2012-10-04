@@ -1921,11 +1921,13 @@ class S3ImportItem(object):
             self.accepted = False
             return False
 
-        form = Storage()
-        form.method = self.method
-        form.vars = self.data
+        form = Storage(method = self.method,
+                       vars = self.data,
+                       request_vars = self.data)
+
         if self.id:
             form.vars.id = self.id
+
         form.errors = Storage()
         tablename = self.tablename
         key = "%s_onvalidation" % self.method
