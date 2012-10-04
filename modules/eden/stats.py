@@ -290,7 +290,6 @@ class S3StatsModel(S3Model):
         s3db = current.s3db
         dtable = s3db.stats_data
         atable = s3db.stats_aggregate
-        s3db.vulnerability_data
 
         stats_aggregated_period = cls.stats_aggregated_period
 
@@ -488,6 +487,8 @@ class S3StatsModel(S3Model):
         parents = current.gis.get_parents(location_id)
         async = current.s3task.async
         loc_level = s3db.gis_location[location_id].level
+        if current.deployment_settings.has_module("vulnerability"):
+            vulnerability = True
         for (start_date, end_date) in changed_periods:
 
             s, e = str(start_date), str(end_date)
@@ -498,8 +499,9 @@ class S3StatsModel(S3Model):
                     async("stats_update_aggregate_location",
                           args = [loc_level, location.id, parameter_id, s, e])
 
-            if parameter_id in s3db.vulnerability_ids() or \
-               parameter_id == s3db.vulnerability_resilience_id():
+            if vulnerability and \
+               (parameter_id in s3db.vulnerability_ids() or \
+                parameter_id == s3db.vulnerability_resilience_id()):
                 s3db.vulnerability_update_resilience(loc_level,
                                                      location_id,
                                                      start_date,
