@@ -536,7 +536,7 @@ class S3PersonModel(S3Model):
         pr_gender = S3ReusableField("gender", "integer",
                                     requires = IS_IN_SET(pr_gender_opts, zero=None),
                                     default = 1,
-                                    label = T("Gender"),
+                                    label = T("Sex"),
                                     represent = lambda opt: \
                                                 pr_gender_opts.get(opt, UNKNOWN_OPT))
 

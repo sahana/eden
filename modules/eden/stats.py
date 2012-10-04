@@ -31,6 +31,7 @@ __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
            "S3StatsGroupModel",
            "stats_parameter_represent",
+           "stats_demographic_data_controller",
            ]
 
 from gluon import *
@@ -70,8 +71,9 @@ class S3StatsModel(S3Model):
                            vulnerability_indicator = T("Vulnerability Indicator"),
                            vulnerability_aggregated_indicator = T("Vulnerability Aggregated Indicator"),
                            stats_demographic = T("Demographic"),
+                           project_beneficiary_type = T("Project Beneficiary Type"),
                            #survey_question_type = T("Survey Question Type"),
-                           #project_beneficary_type = T("Project Beneficiary Type"),
+                           
                            #climate_parameter = T("Climate Parameter"),
                           )
 
@@ -83,6 +85,7 @@ class S3StatsModel(S3Model):
                              Field("description",
                                    label = T("Description")),
                              )
+        table.instance_type.readable = True
 
         # Reusable Field
         param_id = S3ReusableField("parameter_id", table,
@@ -103,7 +106,7 @@ class S3StatsModel(S3Model):
                            vulnerability_data = T("Vulnerability Data"),
                            stats_demographic_data = T("Demographic Data"),
                            #survey_answer = T("Survey Answer"),
-                           #project_beneficary = T("Project Beneficiary"),
+                           project_beneficiary = T("Project Beneficiary"),
                            #climate_data = T("Climate Data"),
                            )
 
@@ -120,6 +123,8 @@ class S3StatsModel(S3Model):
                                    label = T("Value")),
                              Field("date", "date",
                                    label = T("Date")),
+                             Field("date_end", "date",
+                                   label = T("End Date")),
                              self.stats_group_id(),
                              Field("approved_by", "integer",
                                    default = None)
@@ -861,6 +866,7 @@ class S3StatsDemographicModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+                
 
 # =============================================================================
 class S3StatsGroupModel(S3Model):
@@ -1109,6 +1115,57 @@ def stats_parameter_represent(id, row=None):
     except:
         return current.messages.UNKNOWN_OPT
 
+# =============================================================================
+def stats_demographic_data_controller():
+    """
+        Function to be called from controller functions to display all
+        requests as a tab for a site.
+    """
+
+    s3db = current.s3db
+    s3 = current.response.s3
+    request = current.request
+    settings = current.deployment_settings
+    
+    dtable = s3db.stats_demographic_data
+
+    output = dict()
+
+    if "viewing" not in request.vars:
+        return output
+    else:
+        viewing = request.vars.viewing
+    if "." in viewing:
+        tablename, id = viewing.split(".", 1)
+    else:
+        return output
+
+    location_id = s3db[tablename][id].location_id
+    
+    if tablename == "project_location":
+        rheader = s3db.project_rheader
+    else:
+        rheader = None
+
+    s3.filter = (dtable.location_id == location_id)
+    dtable.location_id.default = location_id
+    dtable.location_id.readable = False
+    dtable.location_id.writable = False
+
+    dtable.group_id.readable = False
+    dtable.group_id.writable = False
+    
+
+    # Post-process
+    def postp(r, output):
+        if r.representation == "html":
+            output["title"] = s3.crud_strings[tablename].title_display
+        return output
+    s3.postp = postp
+
+    output = current.rest_controller("stats", "demographic_data", rheader = rheader)
+
+    return output
 
 # =============================================================================
 def stats_group_type_represent(id, row=None):

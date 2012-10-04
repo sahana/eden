@@ -112,7 +112,7 @@ class CreateProject(SeleniumUnitTest):
                      )
 
         self.create("project_beneficiary", 
-                    [( "beneficiary_type_id",
+                    [( "parameter_id",
                        "Teachers",
                        "option"),
                      ( "value",
@@ -126,7 +126,7 @@ class CreateProject(SeleniumUnitTest):
         self.browser.find_element_by_id("show-add-btn").click()
         
         self.create("project_beneficiary", 
-                    [( "beneficiary_type_id",
+                    [( "parameter_id",
                        "Pupils",
                        "option"),
                      ( "value",

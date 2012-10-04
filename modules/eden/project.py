@@ -229,6 +229,42 @@ class S3ProjectModel(S3Model):
         # Projects
         add_component("project_theme_percentage", project_theme="theme_id")
 
+        # Theme - Sector Link Table
+        tablename = "project_theme_sector"
+        location = current.session.s3.location_filter
+        if location:
+            filterby = "location_id"
+            filter_opts = (location, None)
+        else:
+            filterby = None
+            filter_opts = (None,)
+        table = define_table(tablename,
+                             theme_id(),
+                             self.org_sector_id(
+                                 requires=IS_ONE_OF(db, "org_sector.id",
+                                                    self.org_sector_represent,
+                                                    sort=True,
+                                                    filterby=filterby,
+                                                    filter_opts=filter_opts),
+                                                ),
+                             *s3_meta_fields())
+
+        add_component(tablename, project_theme="theme_id")
+        add_component(tablename, org_sector="sector_id")
+
+        table.sector_id.label = ""
+        crud_form = s3forms.S3SQLCustomForm(
+                        "name",
+                        # Project Organisations
+                        s3forms.S3SQLInlineComponent(
+                            "theme_sector",
+                            label=T("Theme Sectors"),
+                            fields=["sector_id"],
+                        ),
+                    )
+    
+        configure("project_theme", crud_form=crud_form)
+
         # ---------------------------------------------------------------------
         # Hazard
         # @ToDo: Move to link table to move to S3ProjectDRRModel
@@ -300,7 +336,6 @@ class S3ProjectModel(S3Model):
                                 label = org_label,
                                 requires = self.org_organisation_requires(updateable=True,
                                                                           required=True),
-                                widget = None,
                                 ),
                              Field("name", unique = True,
                                    label = T("Name"),
@@ -344,12 +379,6 @@ class S3ProjectModel(S3Model):
                                          readable = False if multi_budgets else True,
                                          writable = False if multi_budgets else True,
                                          ),
-                             sector_id(
-                                       readable = use_sectors,
-                                       writable = use_sectors,
-                                       widget = lambda f, v: \
-                                        CheckboxesWidgetS3.widget(f, v, cols=3),
-                                       ),
                              countries_id(
                                           readable = mode_3w,
                                           writable = mode_3w
@@ -358,11 +387,29 @@ class S3ProjectModel(S3Model):
                                             readable = mode_drr,
                                             writable = mode_drr
                                             ),
+                             sector_id(
+                                       readable = use_sectors,
+                                       writable = use_sectors,
+                                       widget = lambda f, v: \
+                                        CheckboxesWidgetS3.widget(f, v, cols=3),
+                                       ),
                              multi_theme_id(
                                             readable = mode_3w and \
                                                        not theme_percentages,
                                             writable = mode_3w and \
                                                        not theme_percentages,
+                                            script = SCRIPT('''
+$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'sector_id',
+  'Field':'multi_theme_id',
+  'Widget':'multi_theme_id_widget',
+  'FieldResource':'theme',
+  'url':S3.Ap.concat('/project/project_multi_theme_id_widget?sector_ids='),
+  'GetWidgetHTML':true,
+  'FilterOnLoad':false,
+ })
+})'''),
                                            ),
                              Field("hfa", "list:integer",
                                    label = T("HFA Priorities"),
@@ -711,14 +758,52 @@ class S3ProjectModel(S3Model):
                                                     CheckboxesWidgetS3.widget(f, v, cols=3),
                                                  ondelete = "RESTRICT")
 
+        # Activity Type - Sector Link Table
+        tablename = "project_activity_type_sector"
+        location = current.session.s3.location_filter
+        if location:
+            filterby = "location_id"
+            filter_opts = (location, None)
+        else:
+            filterby = None
+            filter_opts = (None,)
+        table = define_table(tablename,
+                             activity_type_id(),
+                             self.org_sector_id(
+                                 requires=IS_ONE_OF(db, "org_sector.id",
+                                                    self.org_sector_represent,
+                                                    sort=True,
+                                                    filterby=filterby,
+                                                    filter_opts=filter_opts),
+                                                ),
+                             *s3_meta_fields())
+
+        add_component(tablename, project_activity_type="activity_type_id")
+        add_component(tablename, org_sector="sector_id") # Doesn't Work???
+
+        table.sector_id.label = ""
+        crud_form = s3forms.S3SQLCustomForm(
+                        "name",
+                        # Project Organisations
+                        s3forms.S3SQLInlineComponent(
+                            "activity_type_sector",
+                            label=T("Activity Type Sectors"),
+                            fields=["sector_id"],
+                        ),
+                    )
+    
+        configure("project_activity_type", crud_form=crud_form)
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         #
         return dict(
             project_project_id = project_id,
             project_multi_activity_type_id = multi_activity_type_id,
+            project_activity_type_represent = self.project_activity_type_represent,
             project_theme_id = theme_id,
             project_hfa_opts = project_hfa_opts,
+            project_theme_represent = project_theme_represent,
             project_theme_opts = self.project_theme_opts,
         )
 
@@ -1139,7 +1224,7 @@ class S3Project3WModel(S3Model):
     names = ["project_beneficiary_type",
              "project_beneficiary",
              "project_location",
-             "project_community_contact",
+             "project_location_contact",
              "project_organisation",
              "project_organisation_roles",
              "project_organisation_lead_role",
@@ -1188,13 +1273,6 @@ class S3Project3WModel(S3Model):
                                     readable = theme_percentages,
                                     writable = False,
                                 ),
-                             # @ToDo: This duplicates the data in gis_location
-                             #        - move to stats_demographic_data
-                             Field("population", "integer",
-                                   label = T("Population")),
-                             # @ToDo: Replace with a 'family size' value & auto-calculate?
-                             Field("number_families", "integer",
-                                   label = T("Number of Families")),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -1401,7 +1479,7 @@ class S3Project3WModel(S3Model):
         add_component("pr_person",
                       project_location=Storage(
                             name="contact",
-                            link="project_community_contact",
+                            link="project_location_contact",
                             joinby="project_location_id",
                             key="person_id",
                             actuate="hide",
@@ -1410,7 +1488,7 @@ class S3Project3WModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Community Contact Person
         #
-        tablename = "project_community_contact"
+        tablename = "project_location_contact"
         table = define_table(tablename,
                              project_location_id(),
                              person_id(widget=S3AddPersonWidget(controller="pr"),
@@ -1418,7 +1496,7 @@ class S3Project3WModel(S3Model):
                                        comment=None),
                              *s3_meta_fields())
 
-        table.virtualfields.append(S3ProjectCommunityContactVirtualFields())
+        table.virtualfields.append(S3ProjectLocationContactVirtualFields())
 
         # CRUD Strings
         ADD_CONTACT = T("Add Contact")
@@ -1481,9 +1559,12 @@ class S3Project3WModel(S3Model):
         #
         tablename = "project_beneficiary_type"
         table = define_table(tablename,
+                             super_link("parameter_id", "stats_parameter"),
                              Field("name", length=128, unique=True,
                                    requires = IS_NOT_IN_DB(db,
                                                            "project_beneficiary_type.name")),
+                             s3_comments("description",
+                                         label = T("Description")),
                              *s3_meta_fields())
 
         # Field configuration?
@@ -1507,32 +1588,51 @@ class S3Project3WModel(S3Model):
 
         # Search Method?
 
-        # Resource Configuration?
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = "stats_parameter",
+                  )
+                  
 
         # Reusable Field
-        beneficiary_type_id = S3ReusableField("beneficiary_type_id", table,
-            requires = IS_NULL_OR(
-                        IS_ONE_OF(db, "project_beneficiary_type.id",
-                                  self.project_beneficiary_type_represent)),
-            represent = self.project_beneficiary_type_represent,
-            label = T("Beneficiary Type"),
-            comment = S3AddResourceLink(c="project",
+        beneficiary_type_param_id = S3ReusableField("parameter_id", table,
+                                   sortby="name",
+                                   requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
+                                                        self.stats_parameter_represent,
+                                                        orderby="stats_parameter.name",
+                                                        filterby = "instance_type",
+                                                        filter_opts = ["project_beneficiary_type"],
+                                                        sort=True),
+                                   represent = self.stats_parameter_represent,
+                                   label = T("Beneficiary Type"),
+                                   comment = S3AddResourceLink(c="project",
                                         f="beneficiary_type",
+                                        vars = dict(child = "parameter_id"),
                                         title=ADD_BNF_TYPE,
                                         tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
-            ondelete = "CASCADE")
+                                   ondelete = "CASCADE"
+                                   )
 
         # ---------------------------------------------------------------------
         # Project Beneficiary
         #
         tablename = "project_beneficiary"
         table = define_table(tablename,
+                             # LINK FIELDS
                              # populated automatically
                              project_id(readable=False,
                                         writable=False),
-                             #activity_id(comment=None),
                              project_location_id(comment=None),
-                             beneficiary_type_id(empty=False),
+                             
+                             #STATS_DATA FIELDS
+                             #beneficiary_type
+                             super_link("data_id", "stats_data"),
+                             beneficiary_type_param_id(),
+                             # populated automatically
+                             self.gis_location_id(readable = False,
+                                                  writable = False),
+                             self.stats_group_id(readable = False,
+                                                 writable = False),
                              Field("value", "double",
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
@@ -1574,7 +1674,7 @@ class S3Project3WModel(S3Model):
         report_fields=[
                       #"activity_id",
                       "project_location_id",
-                      (T("Beneficiary Type"), "beneficiary_type_id"),
+                      (T("Beneficiary Type"), "parameter_id"),
                       "project_id",
                       (T("Year"), "year"),
                       "project_id$multi_hazard_id",
@@ -1658,6 +1758,7 @@ class S3Project3WModel(S3Model):
             return od
 
         configure(tablename,
+                  super_entity = "stats_data",
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
                   report_options=Storage(
@@ -1668,8 +1769,8 @@ class S3Project3WModel(S3Model):
                             label=T("Project")
                         ),
                         S3SearchOptionsWidget(
-                            field="beneficiary_type_id",
-                            name="beneficiary_type_id",
+                            field="parameter_id",
+                            name="parameter_id",
                             label=T("Beneficiary Type")
                         ),
                         # @ToDo: These do now work - no results are returned
@@ -1689,11 +1790,11 @@ class S3Project3WModel(S3Model):
                     ],
                     rows=report_fields,
                     cols=report_fields,
-                    facts=["number"],
+                    facts=["value"],
                     methods=["sum"],
                     defaults=Storage( rows="beneficiary.project_id",
-                                      cols="beneficiary.beneficiary_type_id",
-                                      fact="beneficiary.number",
+                                      cols="beneficiary.parameter_id",
+                                      fact="beneficiary.value",
                                       aggregate="sum",
                                       totals=True
                                       )
@@ -1869,20 +1970,24 @@ class S3Project3WModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def project_beneficiary_onaccept(form):
-        """ Record creation post-processing """
+        """
+            Update project_beneficiary project & location from project_location_id 
+        """
 
         db = current.db
         btable = db.project_beneficiary
-        ctable = db.project_location
+        ltable = db.project_location
 
         record_id = form.vars.id
         query = (btable.id == record_id) & \
-                (ctable.id == btable.project_location_id)
-        project_location = db(query).select(ctable.project_id,
+                (ltable.id == btable.project_location_id)
+        project_location = db(query).select(ltable.project_id,
+                                            ltable.location_id,
                                             limitby=(0, 1)).first()
         if project_location:
             db(btable.id == record_id).update(
-                    project_id=project_location.project_id
+                    project_id = project_location.project_id,
+                    location_id = project_location.location_id
                 )
         return
 
@@ -1895,13 +2000,13 @@ class S3Project3WModel(S3Model):
             return
 
         data = item.data
-        if "beneficiary_type_id" in data and \
+        if "parameter_id" in data and \
            "project_location_id" in data:
             # Match beneficiary by type and activity_id
             table = item.table
-            beneficiary_type_id = data.beneficiary_type_id
+            parameter_id = data.parameter_id
             project_location_id = data.project_location_id
-            query = (table.beneficiary_type_id == beneficiary_type_id) & \
+            query = (table.parameter_id == parameter_id) & \
                     (table.project_location_id == project_location_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -4497,13 +4602,16 @@ class S3ProjectBeneficiaryVirtualFields:
                     date = project.date
                 if not end_date:
                     end_date = project.end_date
-        if not date or not end_date:
+        if not date and not end_date:
+            return []
+        elif not date or not end_date:
             return [date.year or end_date.year]
-        return [year for year in xrange(date.year, end_date.year + 1)]
+        else:
+            return [year for year in xrange(date.year, end_date.year + 1)]
 
 # =============================================================================
-class S3ProjectCommunityContactVirtualFields:
-    """ Virtual fields for the project_community_contact table """
+class S3ProjectLocationContactVirtualFields:
+    """ Virtual fields for the project_location_contact table """
 
     extra_fields = ["person_id"]
 
@@ -4515,7 +4623,7 @@ class S3ProjectCommunityContactVirtualFields:
         ctable = s3db.pr_contact
 
         try:
-            person_id = self.project_community_contact.person_id
+            person_id = self.project_location_contact.person_id
         except AttributeError:
             return "-"
 
@@ -4534,7 +4642,7 @@ class S3ProjectCommunityContactVirtualFields:
         ctable = s3db.pr_contact
 
         try:
-            person_id = self.project_community_contact.person_id
+            person_id = self.project_location_contact.person_id
         except AttributeError:
             return "-"
 
@@ -4763,13 +4871,17 @@ def project_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
-    record = r.record
-    if record is None:
-        # List or Create form: rheader makes no sense here
+    
+    # Need to use this as otherwise demographic_data?viewing=project_location.x
+    # doesn't have an rheader
+    tablename, record = s3_rheader_resource(r)
+    if not record:
         return None
-
-    table = r.table
+    s3db = current.s3db
+    table = s3db.table(tablename)
+    
     resourcename = r.name
+    
     T = current.T
     auth = current.auth
     settings = current.deployment_settings
@@ -4815,32 +4927,22 @@ def project_rheader(r, tabs=[]):
         if settings.has_module("vol"):
             append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
-        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader_fields = [["code", "name"], ["organisation_id", "countries_id"], ["start_date", "end_date"]]
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-        tbl = TABLE()
-        append = tbl.append
-        fields = ["code", "name", "organisation_id", "countries_id", "start_date", "end_date"]
-        for field in fields:
-            _field = table[field]
-            if _field.readable and record[field]:
-                represent = _field.represent(record[field]) if _field.represent else record[field]
-                append(TR(
-                            TH("%s: " % _field.label),
-                            represent
-                    ))
-
-        rheader = DIV(tbl, rheader_tabs)
-
-    elif resourcename == "location":
+    elif resourcename in ["location","demographic_data"]:
         tabs = [(T("Details"), None),
                 (T("Beneficiaries"), "beneficiary"),
+                (T("Demographics"), "demographic_data/"),
                 (T("Contact People"), "contact"),
                 ]
         rheader_fields = []
         if record.project_id is not None:
             rheader_fields.append(["project_id"])
         rheader_fields.append(["location_id"])
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         record = record,
+                                                         table = table)
 
     elif resourcename == "framework":
         tabs = [(T("Details"), None),

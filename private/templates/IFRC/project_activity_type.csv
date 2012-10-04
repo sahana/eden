@@ -1,31 +1,127 @@
-"Name"
-"Advocacy"
-"Awareness raising"
-"BDRT (Branch disaster response teams)"
-"Capacity Building"
-"CDRT (Community disaster response teams)"
-"Children's Education"
-"Climate change mitigation"
-"Climate change preparednes"
-"Community Based Health and First Aid (CBHFA)"
-"Community organisation"
-"Contingency planning"
-"DM Planning"
-"Early warning"
-"Evacuation drills"
-"Food security "
-"Hygiene promotion"
-"IDRL"
-"IEC Materials"
-"Livelihoods"
-"Logistics"
-"Mainstreaming DRR"
-"NDRT (National disaster response teams)"
-"Nutrition"
-"Risk transfer"
-"Sanitation"
-"School Safety"
-"Small scale mitigation"
-"Tools & Equipment"
-"VCA (Vulnerability and Capacity Assessment)"
-"Water Supply"
+Name,Sector:Health,Sector:DRR,Sector:OD,Sector:WatSan,Notes
+Auxiliary role,,Yes,,,
+Climate change awareness ,,Yes,,,
+"Climate change mainstreaming, ",,Yes,,,
+Coastal conservation ,,Yes,,,
+Community disaster awareness,,Yes,,,
+Community early warning systems,,Yes,,,
+Education & advocacy,,Yes,,,
+"Financial risk sharing (community funds, etc.), ",,Yes,,,
+Insurance ,,Yes,,,
+"legislation/IDRL, ",,Yes,,,
+Logistics & warehouses,,Yes,,,
+National DM planning ,,Yes,,,
+Provision of tools and equipment,,Yes,,,
+RDRT (Regional disaster response teams),,Yes,,,
+"School safety and children education,",,Yes,,,
+"Simulation small scale mitigation, ",,Yes,,,
+"Staff/volunteer capacity building, (does this mean volunteering development guidelines??)",,Yes,,,
+Tree  and mangrove planting ,,Yes,,,
+Volunteering in emergencies guidelines/toolkit,,Yes,,,
+Vulnerability and Capacity Assessments,,Yes,,,
+Advocacy,Yes,,,,
+Behaviour change communication,Yes,,,,
+Better programming initiative guidance,Yes,,,,DRR
+Blood banking,Yes,,,,
+Club 25 / Pledge 25,Yes,,,,
+Community action planning,Yes,,,,DRR
+Community health committees,Yes,,,,
+Community health initiative/projects,Yes,,,,
+Community health risk assessments,Yes,,,,
+Community mobilisation,Yes,,,,
+Community preparedness,Yes,,,,
+Contingency planning/preparedness planning,Yes,,,,
+Coordination and partnerships,Yes,,,,
+Disease prevention,Yes,,,,
+"Distribution of prevention items – such as condoms, mosquito nets, soap",Yes,,,,
+Donor recruitment,Yes,,,,
+Feeding programmes,Yes,,,,
+First Aid,Yes,,,,
+Food supplementation,Yes,,,,
+"Health awareness, promotion",Yes,,,,
+Health facilities - construction and operation,Yes,,,,
+"Health policy, strategy development",Yes,,,,
+Immunisation campaigns,Yes,,,,
+Infant and young child feeding,Yes,,,,
+Knowledge management ,Yes,,,,
+Medical supplies and equipment,Yes,,,,
+Mobile health units,Yes,,,,
+Monitoring and evaluation,Yes,,,,
+Nutritional assessments,Yes,,,,
+Organisational preparedness – NHQ and branches,Yes,,,,
+Peer support,Yes,,,,
+Project assessments and planning,Yes,,,,
+Psychosocial support (tools/guidelines/trainings in cross-cultural contexts),Yes,,,,
+Referral,Yes,,,,
+Risk management and quality assurance,Yes,,,,
+School-based activities,Yes,,,,
+Situation monitoring/community surveillance,Yes,,,,
+Staff capacity building,Yes,,,,
+"Stockpiling, prepositioning of supplies",Yes,,,,
+Tools and guidelines development,Yes,,,,
+Training of community/first responders ,Yes,,,,
+Training of master trainers/trainers,Yes,,,,
+Vector control,Yes,,,,
+Volunteer capacity building - training and mobilisation,Yes,,,,
+Volunteer training,Yes,,,,
+Volunteering in pandemic emergency situations (Jim had shared guidelines earlier?),Yes,,,,
+Branch planning,,,Yes,,
+Capacity building of governance,,,Yes,,
+Capacity building of management staff,,,Yes,,
+"Database development (vol, member, donors)",,,Yes,,
+Policy development,,,Yes,,
+"Resource Mobilisation (fundraising, income generation, in-kind support, partnership) ",,,Yes,,
+School RC units development,,,Yes,,
+SOPs and guidelines development,,,Yes,,
+Strategy development,,,Yes,,
+Training ,,,Yes,,
+Volunteer insurance,,,Yes,,
+Volunteer recognition,,,Yes,,
+Volunteer recruitment (normal and ViE too),,,Yes,,
+Volunteer training,,,Yes,,
+Youth leadership development,,,Yes,,
+Catchment protection,,,,Yes,
+Clean-up campaign,,,,Yes,
+"Construction of water supply systems (gravity-fed, shallow wells, boreholes)",,,,Yes,
+Desluding ,,,,Yes,
+Emergency householdwater treatment and storage,,,,Yes,
+Emergency water supply,,,,Yes,
+Hand washing facilities and demonstration,,,,Yes,
+Installation of rainwater harvesting systems,,,,Yes,
+latrine construction (emergency and permanent),,,,Yes,
+Participatory Hygiene and Sanitation Transformation,,,,Yes,
+Planning and construction of drainage systems ,,,,Yes,
+Solid waste management,,,,Yes,
+Spraying of vectors,,,,Yes,
+Training and capacity building,,,,Yes,
+Water testing,,,,Yes,
+Advocacy,,,,,
+Awareness raising,,,,,
+BDRT (Branch disaster response teams),,,,,DRR
+Capacity Building,,,,,
+CDRT (Community disaster response teams),,,,,DRR
+Children's Education,,,,,
+Climate change mitigation,,,,,
+Climate change preparedness,,,,,DRR
+Community Based Health and First Aid (CBHFA),,,,,
+Community organisation,,,,,DRR
+Contingency planning,,,,,DRR
+DM Planning,,,,,
+Early warning,,,,,
+Evacuation drills,,,,,DRR
+Food security ,,,,,
+Hygiene promotion,,,,,
+IDRL,,,,,
+IEC Materials,,,,,"Development/dissemination WatSan,DRR"
+Livelihoods,,,,,
+Logistics,,,,,
+Mainstreaming DRR,,,,,DRR
+NDRT (National disaster response teams),,,,,DRR
+Nutrition,,,,,
+Risk transfer,,,,,
+Sanitation,,,,,
+School Safety,,,,,
+Small scale mitigation,,,,,
+Tools & Equipment,,,,,
+VCA (Vulnerability and Capacity Assessment),,,,,
+Water Supply,,,,,

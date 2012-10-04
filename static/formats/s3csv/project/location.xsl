@@ -150,12 +150,12 @@
 
         <xsl:if test="$BeneficiaryNumber!=''">
             <resource name="project_beneficiary">
-                <reference field="beneficiary_type_id" resource="project_beneficiary_type">
+                <reference field="parameter_id" resource="project_beneficiary_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
                     </xsl:attribute>
                 </reference>
-                <data field="number"><xsl:value-of select="$BeneficiaryNumber"/></data>
+                <data field="value"><xsl:value-of select="$BeneficiaryNumber"/></data>
             </resource>
         </xsl:if>
 
@@ -499,7 +499,7 @@
             <xsl:variable name="MobilePhone" select="substring-after(substring-after(substring-after($PersonData, ','), ','), ',')"/>
             <xsl:if test="$FirstName!='' and $Email!=''">
 
-                <resource name="project_community_contact">
+                <resource name="project_location_contact">
                     <reference field="person_id" resource="pr_person">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="concat('Contact:', $Email)"/>

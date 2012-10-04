@@ -231,23 +231,21 @@ $(document).ready(function() {
         Hide all the expanding/collapsing letter widgets that don't have
         any options selected
     */
-    $('.search_select_letter_label,.s3-grouped-checkboxes-widget-label').each(function() {
-        widget = $(this).next();
-        if ($(':checked', widget).length < 1) {
-            widget.toggleClass('hide');
-        }
-        else {
-            $(this).toggleClass('expanded');
-        }
-    })
-    .click( function(event) {
+    $('.search_select_letter_label,.s3-grouped-checkboxes-widget-label').live("click", function(event) {
         /*
             Listen for click events on the expanding/collapsing letter widgets
         */
         var div = $(this)
         div.next('table').toggleClass('hide');
         div.toggleClass('expanded');
-    });
+    })
+    .each(function() {
+        widget = $(this).next();
+        if ($(':checked', widget).length < 1) {
+        	$(this).click();
+        }
+    })
+    ;
 
     /* Search AutoComplete */
 
