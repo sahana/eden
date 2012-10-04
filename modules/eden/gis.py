@@ -1369,10 +1369,7 @@ class S3GISConfigModel(S3Model):
                   onvalidation=self.gis_config_onvalidation,
                   onaccept=self.gis_config_onaccept,
                   create_next=URL(args=["[id]", "layer_entity"]),
-                  # @ToDo: Not currently allowing delete, but with some
-                  # restrictions, we could.
-                  #delete_onaccept=self.gis_config_ondelete,
-                  update_ondelete=self.gis_config_ondelete,
+                  ondelete=self.gis_config_ondelete,
                   subheadings = {
                        T("Map Settings"): "zoom",
                        T("Form Settings"): "default_location_id",
@@ -1683,16 +1680,14 @@ class S3GISConfigModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_config_ondelete(form):
+    def gis_config_ondelete(row):
         """
             If the currently-active config was deleted, clear the cache
         """
 
-        record_id = form.record_id
         s3 = current.response.s3
-        if s3.gis.config:
-            gis_config_id = s3.gis.config.id
-            if record_id == gis_config_id:
+        if s3.gis.config and \
+           s3.gis.config.id == row.id:
                 s3.gis.config = None
 
     # -------------------------------------------------------------------------
