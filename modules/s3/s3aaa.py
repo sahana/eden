@@ -3385,7 +3385,7 @@ Thank you
         return
 
     # -------------------------------------------------------------------------
-    def s3_update_record_owner(self, table, record, **fields):
+    def s3_update_record_owner(self, table, record, update=False, **fields):
         """
             Update the ownership for a record
 
@@ -3411,7 +3411,29 @@ Thank you
             if key in ownership_fields:
                 data[key] = fields[key]
         if data:
-            success = current.db(table._id == record_id).update(**data)
+            s3db = current.s3db
+            db = current.db
+
+            # Update record
+            q = (table._id == record_id)
+            success = db(q).update(**data)
+
+            # Update realm-components
+            if success and update and REALM in data:
+                rc = s3db.get_config(table, "realm_components", [])
+                resource = s3db.resource(table, components=rc)
+                realm = {REALM:data[REALM]}
+                for component in resource.components.values():
+                    ctable = component.table
+                    if REALM not in ctable.fields:
+                        continue
+                    query = component.get_join() & q
+                    rows = db(query).select(ctable._id)
+                    ids = list(set([row[ctable._id] for row in rows]))
+                    if ids:
+                        db(ctable._id.belongs(ids)).update(**realm)
+
+            # Update super-entity
             self.update_shared_fields(table, record, **data)
         else:
             return None
@@ -3548,7 +3570,7 @@ Thank you
                                                      entity=entity)
                 data[REALM] = realm_entity
 
-        self.s3_update_record_owner(table, row, **data)
+        self.s3_update_record_owner(table, row, update=force_update, **data)
         return
 
     # -------------------------------------------------------------------------
@@ -3648,8 +3670,8 @@ Thank you
             realm_entity = self.get_realm_entity(table, row,
                                                  entity=realm_entity)
             data = {REALM:realm_entity}
-            db(q).update(**data)
-            self.update_shared_fields(table, record_id, **data)
+            self.s3_update_record_owner(table, row,
+                                        update=force_update, **data)
 
         return
 
@@ -3714,41 +3736,6 @@ Thank you
                 realm_entity = None
 
         return realm_entity
-
-    # -------------------------------------------------------------------------
-    def set_component_realm_entity(self, table, record, entity=0, 
-                                   force_update=True,
-                                   update_components=[]):
-        """
-            Update the realm entity for a record and it's components
-
-            @param table: the table
-            @param record: the record (as Row or dict)
-            @param entity: the entity (pe_id)
-        """
-
-        s3db = current.s3db
-
-        if not entity:
-            entity = self.get_realm_entity(table, record)
-
-        # Find Record Components
-        resource = s3db.resource(table, components = update_components)
-        components = resource.components
-
-        # Update Components
-        for component in components:
-            c = components[component]
-            if not c:
-                continue
-            query = c.get_join() & (table._id == record.id)
-            rows =  current.db(query).select(c.table.id)
-            self.set_realm_entity(c.table, rows, entity,
-                                  force_update=force_update)
-            # @ToDo: Check if we need to update component Super Links
-
-        # Update Super Links
-        s3db.update_super(table, record)
 
     # -------------------------------------------------------------------------
     def update_shared_fields(self, table, record, **data):

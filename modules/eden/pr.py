@@ -747,7 +747,8 @@ class S3PersonModel(S3Model):
                         search_method=pr_person_search,
                         deduplicate=self.person_deduplicate,
                         main="first_name",
-                        extra="last_name"
+                        extra="last_name",
+                        realm_components = ["presence"],
                         )
 
         person_id_comment = pr_person_comment(

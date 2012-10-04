@@ -265,7 +265,9 @@ class S3MembersModel(S3Model):
                                "location_id$L2",
                                "location_id$L3",
                                "location_id$L4",
-                               ])
+                               ],
+                  update_realm=True,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -338,8 +340,6 @@ class S3MembersModel(S3Model):
 
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(mtable, record)
-        auth.set_realm_entity(mtable, record, force_update=True)
-        auth.set_component_realm_entity(mtable, record)
 
         # realm_entity for the pr_person record
         person_id = record.person_id
@@ -352,10 +352,6 @@ class S3MembersModel(S3Model):
                 auth.set_realm_entity(ptable, person,
                                       entity = entity,
                                       force_update = True)
-                auth.set_component_realm_entity(ptable, person,
-                                                entity = entity,
-                                                update_components = [])
-
 
         # Update the location ID from the Home Address
         atable = s3db.pr_address

@@ -3196,7 +3196,8 @@ class RealmEntityTests(unittest.TestCase):
 
         # Create a dummy record
         ftable = s3db.org_office
-        office = Storage(name="Ownership Test Office")
+        office = Storage(organisation_id=self.org_id,
+                         name="Ownership Test Office")
         office_id = ftable.insert(**office)
         office.update(id=office_id)
         s3db.update_super(ftable, office)
@@ -3283,6 +3284,48 @@ class RealmEntityTests(unittest.TestCase):
         self.assertEqual(self.owned_record, (tname, record.id))
         record = otable[self.org_id]
         self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRealmComponent(self):
+        """ Test whether the realm entity of the component updates automatically """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        realm_components = s3db.get_config("org_organisation",
+                                           "realm_components", "none")
+        s3db.configure("org_organisation",
+                       realm_components = ["office"])
+
+        try:
+            otable = s3db.org_organisation
+            ftable = s3db.org_office
+
+            settings.auth.realm_entity = self.realm_entity
+
+            record = otable[self.org_id]
+            record.update_record(realm_entity = None)
+            record = ftable[self.office_id]
+            record.update_record(realm_entity = None)
+
+            record = otable[self.org_id]
+            auth.set_realm_entity(otable, record, force_update=True)
+
+            tname = "org_organisation"
+            self.assertEqual(self.owned_record, (tname, record.id))
+
+            record = otable[self.org_id]
+            self.assertEqual(record.realm_entity, 5)
+
+            record = ftable[self.office_id]
+            self.assertEqual(record.realm_entity, 5)
+        finally:
+            if realm_components != "none":
+                s3db.configure("org_organisation",
+                               realm_components=realm_components)
+            else:
+                s3db.clear_config("org_organisation", "realm_components")
 
     # -------------------------------------------------------------------------
     def testSetRealmEntityWithRecordID(self):

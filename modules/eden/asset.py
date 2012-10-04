@@ -162,6 +162,7 @@ $(document).ready(function(){
   'Field':'site_id',
   'FieldResource':'site',
   'FieldPrefix':'org',
+  'FieldID':'site_id'
  })
 })'''),),
                              # This is a component, so needs to be a super_link
@@ -344,7 +345,10 @@ $(document).ready(function(){
                                #"L2",
                                #"L3",
                                "comments",
-                               ])
+                               ],
+                  realm_components = ["log", "presence"],
+                  update_realm = True,
+                )
 
         # Log as component of Assets
         add_component("asset_log", asset_asset="asset_id")
@@ -575,11 +579,6 @@ $(document).ready(function(){
 
         vars = form.vars
         atable = db.asset_asset
-
-        # Update asset realm_entity and components' realm_entity
-        auth.set_realm_entity(atable, vars, force_update=True)
-        auth.set_component_realm_entity(atable, vars,
-                                        update_components = ["log", "presence"])
 
         site_id = vars.get("site_id", None)
         if site_id:

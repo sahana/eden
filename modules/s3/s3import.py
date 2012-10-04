@@ -1834,6 +1834,9 @@ class S3ImportItem(object):
 
     # -------------------------------------------------------------------------
     def deduplicate(self):
+        """
+            Detect whether this is an update or a new record
+        """
 
         RESOLVER = "deduplicate"
 
@@ -1873,18 +1876,11 @@ class S3ImportItem(object):
         if not self.table:
             return False
 
-        manager = current.manager
-
         prefix = self.tablename.split("_", 1)[0]
-        if prefix in manager.PROTECTED:
+        if prefix in current.manager.PROTECTED:
             return False
 
-        authorize = manager.permit
-        if authorize:
-            self.permitted = False
-        else:
-            self.permitted = True
-
+        # Determine the method
         self.method = self.METHOD.CREATE
         if self.id:
 
@@ -1899,13 +1895,18 @@ class S3ImportItem(object):
                 if self.original:
                     self.method = self.METHOD.UPDATE
 
+        # Set self.id
         if self.method == self.METHOD.CREATE:
             self.id = 0
 
+        # Authorization
+        authorize = current.auth.s3_has_permission
         if authorize:
             self.permitted = authorize(self.method,
                                        self.tablename,
                                        record_id=self.id)
+        else:
+            self.permitted = True
 
         return self.permitted
 
@@ -1977,6 +1978,9 @@ class S3ImportItem(object):
 
         _debug("Committing item %s" % self)
 
+        METHOD = self.METHOD
+        POLICY = self.POLICY
+
         db = current.db
         s3db = current.s3db
         xml = current.xml
@@ -2026,12 +2030,13 @@ class S3ImportItem(object):
             self.skip = True
             return ignore_errors
 
-        _debug("Method: %s" % self.method)
+        method = self.method
+        _debug("Method: %s" % method)
 
         # Check if import method is allowed in strategy
         if not isinstance(self.strategy, (list, tuple)):
             self.strategy = [self.strategy]
-        if self.method not in self.strategy:
+        if method not in self.strategy:
             _debug("Method not in strategy - skip")
             self.error = manager.ERROR.NOT_PERMITTED
             self.skip = True
@@ -2039,7 +2044,7 @@ class S3ImportItem(object):
 
         this = self.original
         if not this and self.id and \
-           self.method in (self.METHOD.UPDATE, self.METHOD.DELETE):
+           method in (METHOD.UPDATE, METHOD.DELETE):
             query = (table.id == self.id)
             this = db(query).select(limitby=(0, 1)).first()
         this_mtime = None
@@ -2065,7 +2070,7 @@ class S3ImportItem(object):
                 self.conflict = True
 
         if self.conflict and \
-           self.method in (self.METHOD.UPDATE, self.METHOD.DELETE):
+           method in (METHOD.UPDATE, METHOD.DELETE):
             _debug("Conflict: %s" % self)
             if self.job.onconflict:
                 self.job.onconflict(self)
@@ -2075,15 +2080,30 @@ class S3ImportItem(object):
         else:
             data = Storage()
 
+        if isinstance(self.update_policy, dict):
+            def update_policy(f):
+                setting = self.update_policy
+                p = setting.get(f,
+                    setting.get("__default__", POLICY.THIS))
+                if p not in POLICY:
+                    return POLICY.THIS
+                return p
+        else:
+            def update_policy(f):
+                p = self.update_policy
+                if p not in POLICY:
+                    return POLICY.THIS
+                return p
+
         # Update existing record
-        if self.method == self.METHOD.UPDATE:
+        if method == METHOD.UPDATE:
 
             if this:
                 if "deleted" in this and this.deleted:
-                    policy = self._get_update_policy(None)
-                    if policy == self.POLICY.NEWER and \
+                    policy = update_policy(None)
+                    if policy == POLICY.NEWER and \
                        this_mtime and this_mtime > self.mtime or \
-                       policy == self.POLICY.MASTER and \
+                       policy == POLICY.MASTER and \
                        (this_mci == 0 or self.mci != 1):
                         self.skip = True
                         return True
@@ -2100,13 +2120,13 @@ class S3ImportItem(object):
                             del data[f]
                             continue
                     remove = False
-                    policy = self._get_update_policy(f)
-                    if policy == self.POLICY.THIS:
+                    policy = update_policy(f)
+                    if policy == POLICY.THIS:
                         remove = True
-                    elif policy == self.POLICY.NEWER:
+                    elif policy == POLICY.NEWER:
                         if this_mtime and this_mtime > self.mtime:
                             remove = True
-                    elif policy == self.POLICY.MASTER:
+                    elif policy == POLICY.MASTER:
                         if this_mci == 0 or self.mci != 1:
                             remove = True
                     if remove:
@@ -2145,7 +2165,7 @@ class S3ImportItem(object):
                 self.committed = True
 
         # Create new record
-        elif self.method == self.METHOD.CREATE:
+        elif method == METHOD.CREATE:
 
             # Do not apply field policy to UID and MCI
             UID = xml.UID
@@ -2156,8 +2176,8 @@ class S3ImportItem(object):
                 del data[MCI]
 
             for f in data:
-                policy = self._get_update_policy(f)
-                if policy == self.POLICY.MASTER and self.mci != 1:
+                policy = update_policy(f)
+                if policy == POLICY.MASTER and self.mci != 1:
                     del data[f]
 
             if len(data) or self.components or self.references:
@@ -2185,18 +2205,18 @@ class S3ImportItem(object):
                 return True
 
         # Delete local record
-        elif self.method == self.METHOD.DELETE:
+        elif method == METHOD.DELETE:
 
             if this:
                 if this.deleted:
                     self.skip = True
-                policy = self._get_update_policy(None)
-                if policy == self.POLICY.THIS:
+                policy = update_policy(None)
+                if policy == POLICY.THIS:
                     self.skip = True
-                elif policy == self.POLICY.NEWER and \
+                elif policy == POLICY.NEWER and \
                      (this_mtime and this_mtime > self.mtime):
                     self.skip = True
-                elif policy == self.POLICY.MASTER and \
+                elif policy == POLICY.MASTER and \
                      (this_mci == 0 or self.mci != 1):
                     self.skip = True
             else:
@@ -2216,27 +2236,36 @@ class S3ImportItem(object):
 
             _debug("Success: %s, id=%s %sd" % (self.tablename, self.id,
                                                self.skip and "skippe" or \
-                                               self.method))
+                                               method))
             return True
 
         # Audit + onaccept on successful commits
         if self.committed:
             form = Storage()
-            form.method = self.method
+            form.method = method
             form.vars = self.data
             tablename = self.tablename
             prefix, name = tablename.split("_", 1)
             if self.id:
                 form.vars.id = self.id
             if manager.audit is not None:
-                manager.audit(self.method, prefix, name,
+                manager.audit(method, prefix, name,
                               form=form,
                               record=self.id,
                               representation="xml")
+            # Update super entity links
             s3db.update_super(table, form.vars)
-            if self.method == self.METHOD.CREATE:
+            if method == METHOD.CREATE:
+                # Set record owner
                 current.auth.s3_set_record_owner(table, self.id)
-            key = "%s_onaccept" % self.method
+            elif method == METHOD.UPDATE:
+                # Update realm
+                update_realm = s3db.get_config(table, "update_realm")
+                if update_realm:
+                    current.auth.set_realm_entity(table, self.id,
+                                                  force_update=True)
+            # Onaccept
+            key = "%s_onaccept" % method
             onaccept = s3db.get_config(tablename, key,
                        s3db.get_config(tablename, "onaccept"))
             if onaccept:
@@ -2261,26 +2290,8 @@ class S3ImportItem(object):
 
         _debug("Success: %s, id=%s %sd" % (self.tablename, self.id,
                                            self.skip and "skippe" or \
-                                           self.method))
+                                           method))
         return True
-
-    # -------------------------------------------------------------------------
-    def _get_update_policy(self, field):
-        """
-            Get the update policy for a field (if the item will
-            update an existing record)
-
-            @param field: the name of the field
-        """
-
-        if isinstance(self.update_policy, dict):
-            r = self.update_policy.get(field,
-                self.update_policy.get("__default__", self.POLICY.THIS))
-        else:
-            r = self.update_policy
-        if not r in self.POLICY.values():
-            r = self.POLICY.THIS
-        return r
 
     # -------------------------------------------------------------------------
     def _resolve_references(self):

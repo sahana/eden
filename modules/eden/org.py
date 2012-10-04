@@ -1915,7 +1915,25 @@ class S3OfficeModel(S3Model):
                                #"location_id$L4",
                                "phone1",
                                "email"
-                               ])
+                               ],
+                  realm_components=["contact_emergency",
+                                    "config",
+                                    "image",
+                                    "req",
+                                    "send",
+                                    "human_resource_site",
+                                    "note",
+                                    "contact",
+                                    "role",
+                                    "asset",
+                                    "commit",
+                                    "inv_item",
+                                    "document",
+                                    "recv",
+                                    "address",
+                                    ],
+                  update_realm=True,
+                 )
 
         if current.deployment_settings.get_org_summary():
             add_component("org_office_summary",
@@ -1997,24 +2015,6 @@ class S3OfficeModel(S3Model):
 
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(otable, vars)
-        auth.set_realm_entity(otable, vars, force_update=True)
-        auth.set_component_realm_entity(otable, vars,
-                                        update_components = ["contact_emergency",
-                                                             "config",
-                                                             "image",
-                                                             "req",
-                                                             "send",
-                                                             "human_resource_site",
-                                                             "note",
-                                                             "contact",
-                                                             "role",
-                                                             "asset",
-                                                             "commit",
-                                                             "inv_item",
-                                                             "document",
-                                                             "recv",
-                                                             "address",
-                                                             ])
 
         if current.deployment_settings.get_org_summary():
 

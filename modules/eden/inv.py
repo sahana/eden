@@ -286,7 +286,26 @@ class S3WarehouseModel(S3Model):
                                #"location_id$L4",
                                "phone1",
                                "email"
-                               ])
+                               ],
+                  realm_components = ["contact_emergency",
+                                      "physical_description",
+                                      "config",
+                                      "image",
+                                      "req",
+                                      "send",
+                                      "human_resource_site",
+                                      "note",
+                                      "contact",
+                                      "role",
+                                      "asset",
+                                      "commit",
+                                      "inv_item",
+                                      "document",
+                                      "recv",
+                                      "address",
+                                      ],
+                  update_realm = True,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -341,25 +360,6 @@ class S3WarehouseModel(S3Model):
 
         # Affiliation, record ownership and component ownership
         s3db.pr_update_affiliations(wtable, vars)
-        auth.set_realm_entity(wtable, vars, force_update=True)
-        auth.set_component_realm_entity(wtable, vars,
-                                        update_components = ["contact_emergency",
-                                                             "physical_description",
-                                                             "config",
-                                                             "image",
-                                                             "req",
-                                                             "send",
-                                                             "human_resource_site",
-                                                             "note",
-                                                             "contact",
-                                                             "role",
-                                                             "asset",
-                                                             "commit",
-                                                             "inv_item",
-                                                             "document",
-                                                             "recv",
-                                                             "address",
-                                                             ])
 
     # ---------------------------------------------------------------------
     @staticmethod

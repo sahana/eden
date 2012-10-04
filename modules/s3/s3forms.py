@@ -409,6 +409,8 @@ class S3SQLDefaultForm(S3SQLForm):
             @todo: describe arguments
         """
 
+        s3db = current.s3db
+
         manager = current.manager
         audit = manager.audit
         table = self.table
@@ -454,7 +456,7 @@ class S3SQLDefaultForm(S3SQLForm):
             vars = form.vars
 
             # Update super entity links
-            current.s3db.update_super(table, vars)
+            s3db.update_super(table, vars)
 
             # Update component link
             if link and link.postprocess is None:
@@ -463,11 +465,17 @@ class S3SQLDefaultForm(S3SQLForm):
                 resource.update_link(master, vars)
 
             if vars.id:
+                auth = current.auth
                 if record_id is None:
-                    # Set record ownership
-                    auth = current.auth
+                    # Set record owner
                     auth.s3_set_record_owner(table, vars.id)
                     auth.s3_make_session_owner(table, vars.id)
+                else:
+                    # Update realm
+                    update_realm = s3db.get_config(table, "update_realm")
+                    if update_realm:
+                        auth.set_realm_entity(table, vars,
+                                              force_update=True)
                 # Store session vars
                 self.resource.lastid = str(vars.id)
                 manager.store_session(prefix, name, vars.id)
@@ -954,9 +962,15 @@ class S3SQLCustomForm(S3SQLForm):
 
         if accept_id:
             if record_id is None:
-                # Set record ownership
+                # Set record owner
                 auth.s3_set_record_owner(table, accept_id)
                 auth.s3_make_session_owner(table, accept_id)
+            else:
+                # Update realm
+                update_realm = s3db.get_config(table, "update_realm")
+                if update_realm:
+                    auth.set_realm_entity(table, vars,
+                                          force_update=True)
 
             # Store session vars
             component.lastid = str(accept_id)
@@ -1682,7 +1696,14 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         if success:
                             audit("update", prefix, name,
                                   record=record_id, representation=format)
+                            # Update super entity links
                             s3db.update_super(table, values)
+                            # Update realm
+                            update_realm = s3db.get_config(table, "update_realm")
+                            if update_realm:
+                                auth.set_realm_entity(table, vars,
+                                                      force_update=True)
+                            # Onaccept
                             manager.onaccept(table, Storage(vars=values),
                                              method="update")
                 else:
@@ -1712,8 +1733,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         audit("create", prefix, name,
                               record=record_id, representation=format)
                         values[table._id.name] = record_id
+                        # Update super entity link
                         s3db.update_super(table, values)
+                        # Set record owner
                         auth.s3_set_record_owner(table, record_id)
+                        # onaccept
                         manager.onaccept(table, Storage(vars=values),
                                          method="create")
         else:
