@@ -3385,7 +3385,8 @@ def s3_grouped_checkboxes_widget(field,
                     letters_options[letter].append((val, label))
 
         widget = DIV(_class=attributes.pop("_class",
-                                           "s3-grouped-checkboxes-widget"))
+                                           "s3-grouped-checkboxes-widget"),
+                     _name = "%s_widget" % field.name)
 
         input_index = 0
         group_index = 0
@@ -3419,7 +3420,7 @@ def s3_grouped_checkboxes_widget(field,
                 widget.append(DIV(group_label,
                                   _id="%s-group-label-%s" % (field.name,
                                                              group_index),
-                                  _class="s3-grouped-checkboxes-widget-label"))
+                                  _class="s3-grouped-checkboxes-widget-label expanded"))
 
                 group_field = field
                 # Can give Unicode issues:

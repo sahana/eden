@@ -142,7 +142,7 @@
 
         <xsl:if test="$BeneficiaryNumber!=''">
             <resource name="project_beneficiary">
-                <reference field="beneficiary_type_id" resource="project_beneficiary_type">
+                <reference field="parameter_id" resource="project_beneficiary_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
                     </xsl:attribute>
