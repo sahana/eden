@@ -50,7 +50,7 @@ class CreateCatalog(SeleniumUnitTest):
                        "Romanian Food Catalogue" ),
                      ( "organisation_id",
                        "Romanian Food Assistance Association",
-                       "autocomplete" ),
+                       "option" ),
                      ( "comments",
                        "This is a test Catalogue")
                      ]
