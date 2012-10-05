@@ -49,7 +49,7 @@ class CreateMember(SeleniumUnitTest):
         self.login(account="admin", nexturl="member/membership/create")
         self.create("member_membership", 
                     [( "organisation_id",
-                       "Timor-Leste Red Cross Society",
+                       "Timor-Leste Red Cross Society (CVTL)",
                        "option"),
                      ( "first_name",
                        "Denise",

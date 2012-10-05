@@ -705,6 +705,7 @@ $(document).ready(function(){
         table = define_table(tablename,
                              Field("name", length=128,
                                    notnull=True, unique=True),
+                             s3_comments(),
                              *s3_meta_fields())
 
         # Field configuration?
@@ -1516,9 +1517,9 @@ class S3Project3WModel(S3Model):
             msg_record_deleted = T("Contact Deleted"),
             msg_list_empty = T("No Contacts Found"))
 
-        community_contact_search = S3Search(
+        location_contact_search = S3Search(
             advanced=(S3SearchSimpleWidget(
-                            name = "community_contact_search_simple",
+                            name = "location_contact_search_simple",
                             label = T("Name"),
                             comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
                             field = ["person_id$first_name",
@@ -1527,13 +1528,13 @@ class S3Project3WModel(S3Model):
                                     ]
                         ),
                         S3SearchOptionsWidget(
-                            name="community_contact_search_L1",
+                            name="location_contact_search_L1",
                             field="person_id$L1",
                             location_level="L1",
                             cols = 3,
                         ),
                         S3SearchOptionsWidget(
-                            name="community_contact_search_L2",
+                            name="location_contact_search_L2",
                             field="person_id$L2",
                             location_level="L2",
                             cols = 3,
@@ -1543,7 +1544,7 @@ class S3Project3WModel(S3Model):
         # Resource configuration
         #hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
-                  search_method=community_contact_search,
+                  search_method=location_contact_search,
                   list_fields=["person_id",
                                # (hierarchy["L0"], "person_id$L0"),
                                # (hierarchy["L1"], "person_id$L1"),

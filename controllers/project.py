@@ -549,7 +549,7 @@ def demographic_data():
     return s3db.stats_demographic_data_controller()
 
 # -----------------------------------------------------------------------------
-def community_contact():
+def location_contact():
     """ Show a list of all community contacts """
 
     return s3_rest_controller()

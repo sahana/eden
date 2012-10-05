@@ -8,6 +8,7 @@
          CSV column...........Format..........Content
 
          Name.................string..........Name
+         Comments.............string..........Comments
          Sector:<Sector Abrv>.Yes/blank.......Flag to link activity type to Sector 
 
     *********************************************************************** -->
