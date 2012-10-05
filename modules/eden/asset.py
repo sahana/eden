@@ -155,7 +155,8 @@ class S3AssetModel(S3Model):
                                                  widget = None,
                                                  script = None, # No Item Pack Filter
                                                  ),
-                             organisation_id(script = SCRIPT('''
+                             organisation_id(required = True,
+                                             script = SCRIPT('''
 $(document).ready(function(){
  S3FilterFieldChange({
   'FilterField':'organisation_id',

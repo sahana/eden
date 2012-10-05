@@ -132,6 +132,7 @@ $(document).ready(function(){
  S3FilterFieldChange({
   'FilterField':'organisation_id',
   'Field':'site_id',
+  'FieldID':'site_id',
   'FieldResource':'site',
   'FieldPrefix':'org',
  })
@@ -1903,9 +1904,9 @@ class S3HRSkillModel(S3Model):
                       cols=report_fields,
                       facts=report_fields,
                       methods=["count", "list"],
-                      defaults=Storage(rows="hrm_training.course_id",
-                                      cols="hrm_training.month",
-                                      fact="hrm_training.person_id",
+                      defaults=Storage(rows="training.course_id",
+                                      cols="training.month",
+                                      fact="training.person_id",
                                       aggregate="count"),
                   ),
                   list_fields = [

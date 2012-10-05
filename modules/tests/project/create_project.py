@@ -51,7 +51,10 @@ class CreateProject(SeleniumUnitTest):
         self.login(account="admin", nexturl="project/project/create")
         
         self.create("project_project", 
-                    [( "name",
+                    [("organisation_id", 
+                      "International Federation of Red Cross and Red Crescent Societies (IFRC)", 
+                      "option"),
+                     ( "name",
                        "Community Strengthening through Dance" ),
                      ( "comments",
                        "Host National Society")
@@ -100,14 +103,8 @@ class CreateProject(SeleniumUnitTest):
                        "gis_location"),
                      ( "lon",
                        "0",
-                       "gis_location"),
+                       "gis_location")
                      # @ToDo: Activities - Community Organisation, Contingency Planning, Logistics
-                     ( "population",
-                       "1000"),
-                     ( "number_families",
-                       "200"),
-                     ( "comments",
-                       "First Community")
                      ]
                      )
 

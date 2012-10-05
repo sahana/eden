@@ -657,7 +657,7 @@ function S3FilterFieldChange (setting) {
         		FieldVal.push($(this).val());
         	});
         }
-        if (url.indexOf("?")) {
+        if (url.indexOf("?") != -1) {
             url = url.concat("&value=");
         } else {
             url = url.concat("?value=");
