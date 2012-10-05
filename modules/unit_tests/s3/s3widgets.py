@@ -531,17 +531,18 @@ class TestS3GroupedCheckboxesWidget(unittest.TestCase):
                                            multiple=True))
         self.assertEqual(str(widget),
                          str(TAG[""](DIV(DIV("A - O",
-                                             _class="s3-grouped-checkboxes-widget-label",
+                                             _class="s3-grouped-checkboxes-widget-label expanded",
                                              _id="f-group-label-0"),
                                          s3_checkboxes_widget(f1,
                                                               []),
                                          DIV("T - Z",
-                                             _class="s3-grouped-checkboxes-widget-label",
+                                             _class="s3-grouped-checkboxes-widget-label expanded",
                                              _id="f-group-label-1"),
                                          s3_checkboxes_widget(f2,
                                                               [],
                                                               start_at_id=1),
-                                         _class="s3-grouped-checkboxes-widget"))))
+                                         _class="s3-grouped-checkboxes-widget",
+                                         _name="f_widget"))))
 
 # =============================================================================
 def run_suite(*test_classes):
