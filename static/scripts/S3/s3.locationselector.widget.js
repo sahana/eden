@@ -11,7 +11,7 @@ $(function() {
 });
 
 function s3_gis_locationselector_jQuery_onReady() {
-    if ( typeof(S3.gis.location_id) == 'undefined' ) {
+    if (typeof(S3.gis.location_id) == 'undefined') {
         // This page doesn't include the Location Selector Widget
     } else {
         // Hide the Label row
@@ -170,6 +170,7 @@ function s3_gis_autocomplete(level) {
     if (undefined != $('#gis_location_L' + level + '_ac').val()) {
         $('#gis_location_L' + level + '_ac').autocomplete({
             source: s3_gis_ac_set_source(level),
+            delay: 500,
             minLength: 2,
             search: function(event, ui) {
                 $( '#gis_location_L' + level + '_throbber' ).removeClass('hide').show();
@@ -211,6 +212,7 @@ function s3_gis_autocomplete_search() {
     if (undefined != $('#gis_location_search_ac').val()) {
         $('#gis_location_search_ac').autocomplete({
             source: s3_gis_ac_set_search_source(),
+            delay: 500,
             minLength: 2,
             search: function(event, ui) {
                 $('#gis_location_search_throbber').removeClass('hide').show();
