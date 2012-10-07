@@ -810,7 +810,7 @@ class S3SearchLocationWidget(S3SearchWidget):
                                      _id="gis_search_polygon_input_clear"))
 
         # Settings to be read by static/scripts/S3/s3.gis.js
-        js_location_search = "S3.gis.draw_polygon = true;"
+        js_location_search = '''S3.gis.draw_polygon=true'''
 
         # The overall layout of the components
         return TAG[""](

@@ -78,32 +78,32 @@ S3.addTooltips = function() {
     $('label[title]').cluetip({splitTitle: '|', showTitle:false});
     $('.tooltipbody').cluetip({activation: 'hover', sticky: false, splitTitle: '|', showTitle: false});
     var tipCloseText = '<img src="' + S3.Ap.concat('/static/img/cross2.png') + '" alt="close" />';
-    $('.stickytip').cluetip( {
+    $('.stickytip').cluetip({
     	activation: 'hover',
     	sticky: true,
     	closePosition: 'title',
     	closeText: tipCloseText,
     	splitTitle: '|'
-    } );
-    $('.errortip').cluetip( {
+    });
+    $('.errortip').cluetip({
         activation: 'click',
         sticky: true,
         closePosition: 'title',
         closeText: tipCloseText,
         splitTitle: '|'
-    } );
-    $('.ajaxtip').cluetip( {
+    });
+    $('.ajaxtip').cluetip({
     	activation: 'click',
     	sticky: true,
     	closePosition: 'title',
     	closeText: tipCloseText,
     	width: 380
-    } );
+    });
 }
 
 $(document).ready(function() {
     // Web2Py Layer
-    $('.error').hide().slideDown('slow')
+    $('.error').hide().slideDown('slow');
     $('.error').click(function() { $(this).fadeOut('slow'); return false; });
     $('.warning').hide().slideDown('slow')
     $('.warning').click(function() { $(this).fadeOut('slow'); return false; });
@@ -111,13 +111,17 @@ $(document).ready(function() {
     $('.information').click(function() { $(this).fadeOut('slow'); return false; });
     $('.confirmation').hide().slideDown('slow')
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
-    $("input[type='checkbox'].delete").click(function() { if(this.checked) if(!confirm(S3.i18n.delete_confirmation)) this.checked=false; });
+    $("input[type='checkbox'].delete").click(function() {
+        if ((this.checked) && (!confirm(S3.i18n.delete_confirmation))) {
+                this.checked=false;
+        }
+    });
 
     // If a form is submitted with errors, this will scroll
     // the window to the first form error message
     inputErrorId = $('form .error[id]').eq(0).attr('id');
     if (inputErrorId != undefined) {
-        inputName = inputErrorId.replace("__error", "");
+        inputName = inputErrorId.replace('__error', '');
         inputId = $('[name=' + inputName + ']').attr('id');
         inputLabel = $('[for=' + inputId + ']');
         window.scrollTo(0, inputLabel.offset().top)

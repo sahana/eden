@@ -88,7 +88,7 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
     var selInput = $('[name ^= "' + Fieldname + '_search_simple"]');
 
     // Clear the current input
-    selHiddenInput.val("");
+    selHiddenInput.val('');
 	selHiddenInput.change(); // Trigger other events
 
     var selResultList = $('#' + Fieldname + '_result_list');
@@ -283,16 +283,14 @@ $(document).ready(function() {
 
     // S3SearchLocationWidget
     // Allow clearing of map polygons in search forms
-    $('button#gis_search_polygon_input_clear')
-        .on('click', function(event) {
-            S3.search.clearMapPolygon();
-            // prevent form submission
-            event.preventDefault();
-        });
-    $('input#gis_search_polygon_input')
-        .on('change', S3.search.toggleMapClearButton)
-        .trigger('change');
- });
+    $('button#gis_search_polygon_input_clear').on('click', function(event) {
+        S3.search.clearMapPolygon();
+        // prevent form submission
+        event.preventDefault();
+    });
+    $('input#gis_search_polygon_input').on('change', S3.search.toggleMapClearButton)
+                                       .trigger('change');
+});
 
 /*
  * S3SearchLocationWidget
@@ -304,7 +302,7 @@ S3.search.clearMapPolygon = function() {
     if (S3.gis.lastDraftFeature) {
         S3.gis.lastDraftFeature.destroy();
     }
-    $('input#gis_search_polygon_input').val("").trigger('change');
+    $('input#gis_search_polygon_input').val('').trigger('change');
 }
 
 /*
@@ -316,11 +314,9 @@ S3.search.clearMapPolygon = function() {
 S3.search.toggleMapClearButton = function(event) {
     var inputElement = $(event.currentTarget);
     var clearButton = inputElement.siblings('button#gis_search_polygon_input_clear');
-
     if (inputElement.val()) {
         clearButton.show();
-    }
-    else {
+    } else {
         clearButton.hide();
     }
 }

@@ -116,7 +116,7 @@ class S3TransportModel(S3Model):
                              Field("parking_tarmac_space", "double",
                                    label=T("Parking/Tarmac Space Capacity")),
                              Field("capacity", "integer",
-                                   label = T("Parking/Tarmac Space Units")
+                                   label = T("Parking/Tarmac Space Units"),
                                    requires = IS_IN_SET(transport_airport_capacity_opts, zero=None),
                                    default = 1,
                                    represent = lambda opt: \
