@@ -279,5 +279,48 @@ $(document).ready(function() {
     });
 
     // Activate the Save Search buttons
-	$('button#save-search').on('click', S3.search.saveCurrentSearch);
-});
+   $('button#save-search').on('click', S3.search.saveCurrentSearch);
+
+    // S3SearchLocationWidget
+    // Allow clearing of map polygons in search forms
+    $('button#gis_search_polygon_input_clear')
+        .on('click', function(event) {
+            S3.search.clearMapPolygon();
+            // prevent form submission
+            event.preventDefault();
+        });
+    $('input#gis_search_polygon_input')
+        .on('change', S3.search.toggleMapClearButton)
+        .trigger('change');
+ });
+
+/*
+ * S3SearchLocationWidget
+ *
+ * Clears the map widget in a search form and also removes the
+ * polygon from the map itself
+ */
+S3.search.clearMapPolygon = function() {
+    if (S3.gis.lastDraftFeature) {
+        S3.gis.lastDraftFeature.destroy();
+    }
+    $('input#gis_search_polygon_input').val("").trigger('change');
+}
+
+/*
+ * S3SearchLocationWidget
+ *
+ * If the map widget has a value, a clear button will be shown
+ * otherwise it is hidden
+ */
+S3.search.toggleMapClearButton = function(event) {
+    var inputElement = $(event.currentTarget);
+    var clearButton = inputElement.siblings('button#gis_search_polygon_input_clear');
+
+    if (inputElement.val()) {
+        clearButton.show();
+    }
+    else {
+        clearButton.hide();
+    }
+}

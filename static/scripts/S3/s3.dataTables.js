@@ -524,7 +524,7 @@ $(document).ready(function() {
 
     /****************************************************************/
     /* Helper function to add the new group row                     */
-    /****************************************************************/        
+    /****************************************************************/
     function addNewGroup(t,
                          sGroup,
                          level,
@@ -614,7 +614,7 @@ $(document).ready(function() {
 
     /*********************************************************************
      * Function to group the data
-     * 
+     *
      * @param oSettings the dataTable settings
      * @param t the index of the table
      * @param group The index of the colum that will be grouped
@@ -1020,7 +1020,9 @@ Ext.onReady(function(){
     }
     var s3_search_mapButton = Ext.get('gis_search_map-btn');
     if (s3_search_mapButton) {
-        s3_search_mapButton.on('click', function() {
+        s3_search_mapButton.on('click', function(evt) {
+            // prevent button submitting the form
+            evt.preventDefault();
             // Enable the polygon control
             S3.gis.polygonButton.enable();
             // @ToDo: Set appropriate Bounds

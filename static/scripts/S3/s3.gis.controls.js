@@ -339,7 +339,7 @@ function googleEarthKmlLoaded(object) {
 
 // Google Streetview control
 function addGoogleStreetviewControl(toolbar) {
-    var Clicker = OpenLayers.Class(OpenLayers.Control, {                
+    var Clicker = OpenLayers.Class(OpenLayers.Control, {
         defaults: {
             pixelTolerance: 1,
             stopSingle: true
@@ -348,11 +348,11 @@ function addGoogleStreetviewControl(toolbar) {
             this.handlerOptions = OpenLayers.Util.extend(
                 {}, this.defaults
             );
-            OpenLayers.Control.prototype.initialize.apply(this, arguments); 
+            OpenLayers.Control.prototype.initialize.apply(this, arguments);
             this.handler = new OpenLayers.Handler.Click(
                 this, {click: this.trigger}, this.handlerOptions
             );
-        }, 
+        },
         trigger: function(event) {
             openStreetviewPopup(map.getLonLatFromViewPortPx(event.xy));
         }
@@ -491,7 +491,7 @@ function addMeasureControls(toolbar) {
             allowDepress: true,
             enableToggle: true
         });
-   
+
         toolbar.add(areaButton);
     }
 }
@@ -587,7 +587,7 @@ function addPolygonControl(toolbar, polygon_pressed, not_regular) {
                 }
                 // update Form Field
                 var WKT = feature.geometry.transform(S3.gis.projection_current, S3.gis.proj4326).toString();
-                $('#gis_search_polygon_input').val(WKT);
+                $('#gis_search_polygon_input').val(WKT).trigger('change');
                 $('#gis_location_wkt').val(WKT);
                 // Prepare in case user draws a new polygon
                 S3.gis.lastDraftFeature = feature;
@@ -846,13 +846,13 @@ function addRemoveLayersControl() {
         uploadText: S3.i18n.gis_uploadlayer,
         relativeUploadOnly: false
     });
-    
+
     // @ToDo: Populate this from disabled Catalogue Layers (to which the user has access)
     // Use WMStore for the GeoServer which we can write to?
     // Use current layerStore for Removelayer()?
     //var store = S3.gis.mapPanel.layers;
     var store = new GeoExt.data.LayerStore();
-    
+
     // Set up shortcuts to allow GXP Plugin to work
     S3.gis.addLayersControl.target = S3.gis.layerTree;
     S3.gis.layerTree.proxy = OpenLayers.ProxyHost; // Required for 'Add a New Server'
@@ -981,7 +981,7 @@ function addLayerPropertiesButton() {
                             var pcs = [];
                             for (i=0; i < ids.length; i++) {
                                 q = $('#' + ids[i]).serialize();
-                                if (q) { 
+                                if (q) {
                                     pcs.push(q);
                                 }
                             }
