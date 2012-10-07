@@ -43,6 +43,8 @@ class S3TransportModel(S3Model):
 
     names = ["transport_airport",
              "transport_seaport",
+             "transport_airport_capacity_opts",
+             "transport_airport_capacity",
              ]
 
     def model(self):
@@ -57,6 +59,22 @@ class S3TransportModel(S3Model):
         # ---------------------------------------------------------------------
         # Airports
         #
+        storage_types = {
+            1: "covered",
+            2: "uncovered",
+        }
+        transport_airport_capacity_opts = {
+            1:"",
+            2:T("number of planes"),
+            3:T("m3")
+        }
+        transport_airport_capacity = S3ReusableField("capacity", "integer",
+                                                     requires = IS_IN_SET(transport_airport_capacity_opts, zero=None),
+                                                     default = 1,
+                                                     label = T("Units"),
+                                                     represent = lambda opt: \
+                                                                 transport_airport_capacity_opts.get(opt, UNKNOWN_OPT))
+
         tablename = "transport_airport"
         table = define_table(tablename,
                              self.super_link("site_id", "org_site"),
@@ -76,6 +94,34 @@ class S3TransportModel(S3Model):
                              self.org_organisation_id(widget=S3OrganisationAutocompleteWidget(
                                 default_from_profile=True)),
                              self.gis_location_id(),
+                             Field("restrictions", "text",
+                                   label=T("Restrictions")),
+                             Field("ils", "boolean",
+                                   label=T("Instrument Landing System")),
+                             Field("lighting", "boolean",
+                                   label=T("Lighting")),
+                             Field("immigration_customs_capabilities", "text",
+                                   label=T("Immigration and Customs Capabilities")),
+                             Field("aircraft_max_size", "text",
+                                   label=T("Aircraft Maximum Size")),
+                             Field("security_desc", "text",
+                                   label=T("Security Description"),
+                                   comment=DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Security Description"),
+                                                                   T("Description of perimeter fencing, security guards, security lighting.")))),
+                             # @ToDo: put storage type inline
+                             Field("storage_capacity", "double",
+                                   label=T("Storage Capacity (m3)")),
+                             Field("storage_type", "integer",
+                                   requires = IS_NULL_OR(IS_IN_SET(storage_types)),
+                                   label=T("Storage Type")),
+                             # @ToDo: put units inline 
+                             Field("parking_tarmac_space", "double",
+                                   label=T("Parking/Tarmac Space Capacity")),
+                             transport_airport_capacity(label=T("Parking/Tarmac Space Units")),
+                             Field("helipad_info", "text",
+                                   label=T("Helipad Information")),
+                             self.pr_person_id(label=T("Information Source")),
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
