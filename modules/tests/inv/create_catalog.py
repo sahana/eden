@@ -47,10 +47,10 @@ class CreateCatalog(SeleniumUnitTest):
         self.login(account="admin", nexturl="supply/catalog/create")
         self.create("supply_catalog", 
                     [( "name",
-                       "Romanian Food Catalogue" ),
+                       "IFRC Food Catalogue" ),
                      ( "organisation_id",
-                       "Romanian Food Assistance Association",
-                       "autocomplete" ),
+                       "International Federation of Red Cross and Red Crescent Societies (IFRC)",
+                       "option" ),
                      ( "comments",
                        "This is a test Catalogue")
                      ]

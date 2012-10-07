@@ -60,9 +60,13 @@ class ReceiveItem(InvTestFunctions):
                       "option",
                      ),
                      ("type",
-                      "-",
+                      "Internal Shipment",
                       "option",
-                     )
+                     ),
+                     ("from_site_id",
+                      "Ainaro Warehouse (Warehouse)",
+                      "option",
+                     ),
                     ]
 
         item_data = [

@@ -56,7 +56,7 @@ class CreateWarehouse(SeleniumUnitTest):
         # 1st field used to check whether record already exists
         ("name", "Bucharest RFAAT Central Warehouse (Test)"),
         ("code", "12345679"),
-        ("organisation_id", "Romanian Food Assistance Association", "autocomplete"),
+        ("organisation_id", "International Federation of Red Cross and Red Crescent Societies (IFRC)", "option"),
         ("comments", "This is a Test Warehouse"),
     ],
 ]

@@ -1481,8 +1481,8 @@ class S3OptionsMenu(object):
                         M("List All"),
                         M("Map", m="map"),
                         M("Search", m="search"),
-                        M("List All Community Contacts", f="community_contact"),
-                        M("Search Community Contacts", f="community_contact",
+                        M("List All Community Contacts", f="location_contact"),
+                        M("Search Community Contacts", f="location_contact",
                           m="search"),
                      ),
                     )
