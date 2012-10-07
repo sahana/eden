@@ -803,17 +803,19 @@ class S3SearchLocationWidget(S3SearchWidget):
 
         # Button to open the Map
         OPEN_MAP = T("Open Map")
-        map_button = A(OPEN_MAP,
-                       _style="cursor:pointer; cursor:hand",
-                       _id="gis_search_map-btn")
+        CLEAR_MAP = T("Clear selection")
+        map_buttons = TAG[""](BUTTON(OPEN_MAP,
+                                     _id="gis_search_map-btn"),
+                              BUTTON(CLEAR_MAP,
+                                     _id="gis_search_polygon_input_clear"))
 
         # Settings to be read by static/scripts/S3/s3.gis.js
-        js_location_search = """S3.gis.draw_polygon = true;"""
+        js_location_search = "S3.gis.draw_polygon = true;"
 
         # The overall layout of the components
         return TAG[""](
                         polygon_input,
-                        map_button,
+                        map_buttons,
                         #map_popup,
                         SCRIPT(js_location_search)
                       )
@@ -2379,7 +2381,7 @@ class S3OrganisationSearch(S3Search):
 
         resource.add_filter(query)
 
-        limit = int(_vars.limit or 0)
+        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = jsons([dict(id="",
                                  name="Search results are over %d. Please input more characters." \

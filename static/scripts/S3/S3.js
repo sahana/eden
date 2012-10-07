@@ -113,6 +113,16 @@ $(document).ready(function() {
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() { if(this.checked) if(!confirm(S3.i18n.delete_confirmation)) this.checked=false; });
 
+    // If a form is submitted with errors, this will scroll
+    // the window to the first form error message
+    inputErrorId = $('form .error[id]').eq(0).attr('id');
+    if (inputErrorId != undefined) {
+        inputName = inputErrorId.replace("__error", "");
+        inputId = $('[name=' + inputName + ']').attr('id');
+        inputLabel = $('[for=' + inputId + ']');
+        window.scrollTo(0, inputLabel.offset().top)
+    }
+
     // T2 Layer
     //try { $('.zoom').fancyZoom( {
     //    scaleImg: true,
