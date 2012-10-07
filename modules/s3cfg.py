@@ -313,9 +313,9 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Database settings
     def get_database_type(self):
-        return self.database.get("db_type", "sqlite")
+        return self.database.get("db_type", "sqlite").lower()
     def get_database_string(self):
-        db_type = self.database.get("db_type", "sqlite")
+        db_type = self.database.get("db_type", "sqlite").lower()
         pool_size = self.database.get("pool_size", 30)
         if (db_type == "sqlite"):
             db_string = "sqlite://storage.db"
