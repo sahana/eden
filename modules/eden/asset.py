@@ -647,6 +647,8 @@ $(document).ready(function(){
             atable = s3db.asset_asset
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
+            
+            thistime = request.now
 
             if status == ASSET_LOG_SET_BASE:
                 # Set Base Location
@@ -892,54 +894,54 @@ def asset_rheader(r):
             current_log = asset_get_current_log(record.id)
             status = current_log.status
 
-            if record.location_id:
-                # A Base Site has been set
-                # Return functionality removed  - as it doesn't set site_id & organisation_id in the logs
-                #if status == ASSET_LOG_ASSIGN:
-                #    asset_action_btns += [ A( T("Return"),
-                #                              _href = URL(f=func,
-                #                                          args = [record.id, "log", "create"],
-                #                                          vars = dict(status = ASSET_LOG_RETURN)
-                #                                        ),
-                #                              _class = "action-btn"
-                #                            )
-                #                           ]
-                if status < ASSET_LOG_DONATED:
-                    # @ToDo: deployment setting to prevent assigning assets before returning them
-                    # The Asset is available for assignment (not disposed)
-                    asset_action_btns += [ A( T("Assign to Person"),
-                                              _href = URL(f=func,
-                                                          args = [record.id, "log", "create"],
-                                                          vars = dict(status = ASSET_LOG_ASSIGN,
-                                                                      type = "person")
-                                                        ),
-                                              _class = "action-btn"
-                                            ),
-                                          A( T("Assign to Facility/Site"),
-                                              _href = URL(f=func,
-                                                          args = [record.id, "log", "create"],
-                                                          vars = dict(status = ASSET_LOG_ASSIGN,
-                                                                      type = "site")
-                                                        ),
-                                              _class = "action-btn"
-                                            ),
-                                          A( T("Assign to Organization"),
-                                             _href = URL(f=func,
-                                                         args = [record.id, "log", "create"],
-                                                         vars = dict(status = ASSET_LOG_ASSIGN,
-                                                                     type = "organisation")
-                                                        ),
-                                             _class = "action-btn"
-                                           ),
-                                        ]
-                asset_action_btns += [  A( T("Update Status"),
-                                           _href = URL(f=func,
-                                                       args = [record.id, "log", "create"],
-                                                       vars = None
+            #if record.location_id:
+            # A Base Site has been set
+            # Return functionality removed  - as it doesn't set site_id & organisation_id in the logs
+            #if status == ASSET_LOG_ASSIGN:
+            #    asset_action_btns += [ A( T("Return"),
+            #                              _href = URL(f=func,
+            #                                          args = [record.id, "log", "create"],
+            #                                          vars = dict(status = ASSET_LOG_RETURN)
+            #                                        ),
+            #                              _class = "action-btn"
+            #                            )
+            #                           ]
+            if status < ASSET_LOG_DONATED:
+                # @ToDo: deployment setting to prevent assigning assets before returning them
+                # The Asset is available for assignment (not disposed)
+                asset_action_btns += [ A( T("Assign to Person"),
+                                          _href = URL(f=func,
+                                                      args = [record.id, "log", "create"],
+                                                      vars = dict(status = ASSET_LOG_ASSIGN,
+                                                                  type = "person")
                                                     ),
-                                           _class = "action-btn"
-                                         ),
-                                      ]
+                                          _class = "action-btn"
+                                        ),
+                                      A( T("Assign to Facility/Site"),
+                                          _href = URL(f=func,
+                                                      args = [record.id, "log", "create"],
+                                                      vars = dict(status = ASSET_LOG_ASSIGN,
+                                                                  type = "site")
+                                                    ),
+                                          _class = "action-btn"
+                                        ),
+                                      A( T("Assign to Organization"),
+                                         _href = URL(f=func,
+                                                     args = [record.id, "log", "create"],
+                                                     vars = dict(status = ASSET_LOG_ASSIGN,
+                                                                 type = "organisation")
+                                                    ),
+                                         _class = "action-btn"
+                                       ),
+                                    ]
+            asset_action_btns += [  A( T("Update Status"),
+                                       _href = URL(f=func,
+                                                   args = [record.id, "log", "create"],
+                                                   vars = None
+                                                ),
+                                       _class = "action-btn"
+                                     ),
+                                  ]
 
             table = r.table
             ltable = s3db.asset_log
