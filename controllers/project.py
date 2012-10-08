@@ -232,7 +232,7 @@ def project():
             elif r.component_name == "beneficiary":
                     # Set the minimum end_date to the same as the start_date
                     s3.jquery_ready.append(
-'''S3.start_end_date('project_beneficiary_start_date','project_beneficiary_end_date')''')
+'''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
         return output
     s3.postp = postp
 
@@ -458,7 +458,7 @@ def location():
     def prep(r):
         if r.interactive:
             if r.record and r.record.project_id:
-                sector_ids = ptable[r.record.project_id].sector_id
+                sector_ids = s3db.project_project[r.record.project_id].sector_id
             else:
                 sector_ids = []
             set_project_multi_activity_type_id_requires(sector_ids)

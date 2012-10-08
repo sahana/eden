@@ -863,9 +863,10 @@ ul.x-tree-root-ct {
     margin-left: 2em;
 }
 
-.search_select_letter_widget label,
-.s3-checkboxes-widget label {
+div.form-container form fieldset .search_select_letter_widget label,
+div.form-container form fieldset  .s3-checkboxes-widget label {
     white-space: nowrap;
+    text-align: left;
 }
 /* Checkboxes with title attributes */
 /*

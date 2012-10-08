@@ -48,7 +48,7 @@ settings.security.policy = 8 # Delegations
 settings.security.map = True
 
 # Owner Entity
-settings.auth.person_realm_human_resource_org = True
+settings.auth.person_realm_human_resource_site = True
 settings.auth.person_realm_member_org = True
 
 def ifrc_realm_entity(table, row):
@@ -82,6 +82,7 @@ def ifrc_realm_entity(table, row):
                             pr_identity = "person_id",
                             pr_education = "person_id",
                             pr_note = "person_id",
+                            hrm_human_resource = "site_id",
                             inv_recv = "site_id",
                             inv_recv_item = "req_id",
                             inv_track_item = "track_org_id",

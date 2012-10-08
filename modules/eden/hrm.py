@@ -127,6 +127,7 @@ class S3HRModel(S3Model):
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
                                     empty=False,
+                                    required = True,
                                     script = SCRIPT('''
 $(document).ready(function(){
  S3FilterFieldChange({
@@ -3270,10 +3271,10 @@ def hrm_human_resource_onaccept(form):
     ptable = s3db.pr_person
     person_id = record.person_id
     person = Storage(id = person_id)
-    if setting.get_auth_person_realm_human_resource_org():
-        # Set pr_person.realm_entity to the human_resource's organisation pe_id
-        organisation_id = record.organisation_id
-        entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
+    if setting.get_auth_person_realm_human_resource_site():
+        # Set pr_person.realm_entity to the human_resource's site pe_id
+        site_id = record.site_id
+        entity = s3db.pr_get_pe_id("org_site", site_id)
         if entity:
             auth.set_realm_entity(ptable, person,
                                   entity = entity,

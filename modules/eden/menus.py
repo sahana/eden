@@ -441,32 +441,22 @@ class S3OptionsMenu(object):
                         M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Items", c="supply", f="item")(
+                    M("Items", f="item")(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Catalogs", c="supply", f="catalog")(
-                        M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
-                    ),
-                    M("Item Categories", c="supply", f="item_category")(
+                    M("Item Categories", f="item_category")(
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Suppliers", c="inv", f="supplier")(
+                    M("Suppliers", f="supplier")(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
-                    ),
-                    M("Facilities", c="inv", f="facility")(
-                        M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
                     ),
                 )
 

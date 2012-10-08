@@ -3480,6 +3480,7 @@ def s3_checkboxes_widget(field,
     values = not isinstance(value, (list, tuple)) and [value] or value
     values = [str(v) for v in values]
 
+    attributes["_name"] = "%s_widget" % field.name
     if "_class" not in attributes:
         attributes["_class"] = "s3-checkboxes-widget"
 
