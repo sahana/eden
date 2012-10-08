@@ -647,8 +647,6 @@ $(document).ready(function(){
             atable = s3db.asset_asset
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
-            
-            thistime = request.now
 
             if status == ASSET_LOG_SET_BASE:
                 # Set Base Location
@@ -660,10 +658,10 @@ $(document).ready(function(){
                 if type == "person":#
                     if vars.check_in_to_person:
                         asset_tracker.check_in(s3db.pr_person, vars.person_id,
-                                               timestmp = thistime)
+                                               timestmp = request.utcnow)
                     else:
                         asset_tracker.set_location(vars.person_id,
-                                                   timestmp = thistime)
+                                                   timestmp = request.utcnow)
                     # Update main record for component
                     db(atable.id == asset_id).update(
                                                 assigned_to_id=vars.person_id
@@ -671,19 +669,19 @@ $(document).ready(function(){
 
                 elif type == "site":
                     asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                           timestmp = thistime)
+                                           timestmp = request.utcnow)
                 elif type == "organisation":
                     #if vars.site_or_location == SITE:
                     asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                           timestmp = thistime)
+                                           timestmp = request.utcnow)
                     #if vars.site_or_location == LOCATION:
                     #    asset_tracker.set_location(vars.location_id,
-                    #                               timestmp = thistime)
+                    #                               timestmp = request.utcnow)
 
             elif status == ASSET_LOG_RETURN:
                 # Set location to base location
                 asset_tracker.set_location(asset_tracker,
-                                           timestmp = thistime)
+                                           timestmp = request.utcnow)
         return
 
     # -------------------------------------------------------------------------

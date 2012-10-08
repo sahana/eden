@@ -42,8 +42,13 @@ def asset():
 
 # =============================================================================
 def supplier():
-    current.request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    """
+        REST controller
+    """
+
+    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
     return s3db.org_organisation_controller()
+
 # =============================================================================
 def item():
     """ RESTful CRUD controller """

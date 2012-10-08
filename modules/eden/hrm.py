@@ -3248,7 +3248,6 @@ def hrm_human_resource_onaccept(form):
     db = current.db
     s3db = current.s3db
     auth = current.auth
-    setting = current.deployment_settings
 
     htable = db.hrm_human_resource
     record = db(htable.id == id).select(htable.id,
@@ -3271,7 +3270,7 @@ def hrm_human_resource_onaccept(form):
     ptable = s3db.pr_person
     person_id = record.person_id
     person = Storage(id = person_id)
-    if setting.get_auth_person_realm_human_resource_site():
+    if current.deployment_settings.get_auth_person_realm_human_resource_site():
         # Set pr_person.realm_entity to the human_resource's site pe_id
         site_id = record.site_id
         entity = s3db.pr_get_pe_id("org_site", site_id)

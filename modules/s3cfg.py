@@ -230,8 +230,8 @@ class S3Config(Storage):
         return self.auth.get("realm_entity", None)
     def get_auth_person_realm_human_resource_site(self):
         """
-            Sets pr_person.realm_entity to
-            organisation.pe_id of hrm_human_resource
+            Should we set pr_person.realm_entity to that of
+            hrm_human_resource.site_id$pe_id
         """
         return self.auth.get("person_realm_human_resource_site", False)
     def get_auth_person_realm_member_org(self):
