@@ -69,7 +69,7 @@ class CreateStaffTraining(SeleniumUnitTest):
                      ( "hours",
                        "12"),
                      ( "site_id",
-                       "Bucharest RFAAT Centre (Test) (Office)",
+                       "AP Zone (Office)",
                        "option"),
                      ( "comments",
                        "Testing comments"),

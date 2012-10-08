@@ -58,7 +58,7 @@ class AddStaffToOrganisation(SeleniumUnitTest):
 
         self.create("hrm_human_resource", 
                     [( "site_id",
-                       "AP Zone (Office)",
+                       "Lori (Facility)",
                        "option"),
                      ( "first_name",
                        "Herculano",

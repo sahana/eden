@@ -67,7 +67,7 @@ class CreateStaff(SeleniumUnitTest):
                        "Warehouse Manager",
                        "option"),
                      ( "site_id",
-                       "AP Zone",
+                       "AP Zone (Office)",
                        "option",
                        3),
                      ]
