@@ -228,12 +228,12 @@ class S3Config(Storage):
     def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """
         return self.auth.get("realm_entity", None)
-    def get_auth_person_realm_human_resource_org(self):
+    def get_auth_person_realm_human_resource_site(self):
         """
             Sets pr_person.realm_entity to
             organisation.pe_id of hrm_human_resource
         """
-        return self.auth.get("person_realm_human_resource_org", False)
+        return self.auth.get("person_realm_human_resource_site", False)
     def get_auth_person_realm_member_org(self):
         """
             Sets pr_person.realm_entity to
