@@ -130,7 +130,6 @@ class S3StatsModel(S3Model):
                              )
 
         self.configure(tablename,
-                       onapprove = self.stats_data_onapprove,
                        requires_approval = True,
                        )
         #----------------------------------------------------------------------
@@ -228,23 +227,6 @@ class S3StatsModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def stats_data_onapprove(row):
-        """
-           When a stats_data record is approved then the related stats_aggregate
-           fields need to be updated so that the results are kept up to date.
-
-           This is done async as this can take some time
-
-           Where appropriate add test cases to modules/unit_tests/eden/stats.py
-        """
-
-        if not current.auth.override:
-            current.s3task.async("stats_update_time_aggregate",
-                                 args = [row.data_id],
-                                 )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
     def stats_rebuild_aggregates():
         """
             This will delete all the stats_aggregate records and then
@@ -255,10 +237,12 @@ class S3StatsModel(S3Model):
                    - should be reworked to delete old data after new data has been added?
         """
 
-        resource = current.s3db.resource("stats_aggregate")
+        s3db = current.s3db
+        resource = s3db.resource("stats_aggregate")
         resource.delete()
+        current.db(s3db.stats_group.id > 0).update(dirty=True)
 
-        current.s3task.async("stats_update_time_aggregate")
+        current.s3task.async("stats_group_clean")
 
     # ---------------------------------------------------------------------
     @classmethod
@@ -290,6 +274,7 @@ class S3StatsModel(S3Model):
         s3db = current.s3db
         dtable = s3db.stats_data
         atable = s3db.stats_aggregate
+        gis_table = s3db.gis_location
 
         stats_aggregated_period = cls.stats_aggregated_period
 
@@ -297,143 +282,130 @@ class S3StatsModel(S3Model):
             query = (dtable.deleted != True) & \
                     (dtable.approved_by != None)
             records = db(query).select()
-            for record in records:
-                cls.stats_update_time_aggregate(record)
             return
+        elif isinstance(data_id, Rows):
+            records = data_id
         elif not isinstance(data_id, Row):
-            record = db(dtable.data_id == data_id).select(limitby=(0, 1)
-                                                          ).first()
+            records = db(dtable.data_id == data_id).select(limitby=(0, 1))
         else:
-            record = data_id
-            data_id = record.data_id
+            records = [data_id]
+            data_id = data_id.data_id
 
-        location_id = record.location_id
-        parameter_id = record.parameter_id
-        # Exit if either the location or the parameter is not valid
-        if not location_id or not parameter_id:
-            return
-        (start_date, end_date) = stats_aggregated_period(record.date)
-
-        # Get all the stats_data records for this location and parameter
-        query = (dtable.location_id == location_id) & \
-                (dtable.parameter_id == parameter_id) & \
-                (dtable.deleted != True) & \
-                (dtable.approved_by != None)
-        data_rows = db(query).select()
-
-        # Get each record and store them in a dict keyed on the start date of
-        # the aggregated period. The value stored is a list containing the date
-        # the data_id and the value. If a record already exists for the
-        # reporting period then the most recent value will be stored.
-        earliest_period = start_date
-        (last_period, end_date) = stats_aggregated_period(None)
-        data = dict()
-        data[start_date]=Storage(date = record.date,
-                                 id = data_id,
-                                 value = record.value)
-        for row in data_rows:
-            if row.data_id == record.data_id:
-                continue
-            (start_date, end_date) = stats_aggregated_period(row.date)
-            if start_date in data:
-                if row.date <= data[start_date]["date"]:
-                    # The indicator on the row is of the same time period as
-                    # another which is already stored in data but it is earlier
-                    # so ignore this particular record
+        # Data Structures used for the OPTIMISATION steps
+        param_location_dict = {} # a list of locations for each parameter
+        location_dict = {} # a list of locations
+        loc_level_list = {} # a list of levels for each location
+        
+        if current.deployment_settings.has_module("vulnerability"):
+            vulnerability = True
+            vulnerability_id_list = s3db.vulnerability_ids()
+        else:
+            vulnerability = False
+            vulnerability_id_list = []
+        for record in records:
+            location_id = record.location_id
+            parameter_id = record.parameter_id
+            # Exit if either the location or the parameter is not valid
+            if not location_id or not parameter_id:
+                return
+            (start_date, end_date) = stats_aggregated_period(record.date)
+    
+            # Get all the stats_data records for this location and parameter
+            query = (dtable.location_id == location_id) & \
+                    (dtable.parameter_id == parameter_id) & \
+                    (dtable.deleted != True) & \
+                    (dtable.approved_by != None)
+            data_rows = db(query).select()
+    
+            # Get each record and store them in a dict keyed on the start date of
+            # the aggregated period. The value stored is a list containing the date
+            # the data_id and the value. If a record already exists for the
+            # reporting period then the most recent value will be stored.
+            earliest_period = start_date
+            (last_period, end_date) = stats_aggregated_period(None)
+            data = dict()
+            data[start_date]=Storage(date = record.date,
+                                     id = data_id,
+                                     value = record.value)
+            for row in data_rows:
+                if row.data_id == record.data_id:
                     continue
-                elif data[start_date]["id"] == data_id:
-                    # The newly added indicator is the one currently stored
-                    # in data but a more recent value is held on the database
-                    # This will not change any of the aggregated data
-                    return
-            if start_date < earliest_period:
-                earliest_period = start_date
-            # Store the record from the db in the data storage
-            data[start_date] = Storage(date = row.date,
-                                       id = row.data_id,
-                                       value = row.value)
-
-        # Get all the aggregate record for this parameter and location
-        query = (atable.location_id == location_id) & \
-                (atable.parameter_id == parameter_id) & \
-                (atable.deleted != True)
-        aggr_rows = db(query).select()
-
-        aggr = dict()
-        for row in aggr_rows:
-            (start_date, end_date) = stats_aggregated_period(row.date)
-            aggr[start_date] = Storage(mean = row.mean,
-                                       id = row.id,
-                                       type = row.agg_type,
-                                       end_date = row.end_date)
-
-        # Step through each period and check that aggr is correct
-        last_data_period = earliest_period
-        last_type_agg = False # The type of previous non-copy record was aggr
-        last_data_value = None # The value of the previous aggr record
-        # used to keep track of which periods the
-        # aggr record has been changed on the database
-        changed_periods = []
-        for dt in rrule(YEARLY, dtstart=earliest_period, until=last_period):
-            # calculate the end of the dt period.
-            # (it will be None if this is the last period)
-            dt = dt.date()
-            if dt != last_period:
-                (start_date, end_date) = stats_aggregated_period(dt)
-            else:
-                start_date = dt
-                end_date = None
-            if dt in aggr:
-                # The query use to update aggr records
-                query = (atable.id == aggr[dt]["id"])
-                # Check that the stored aggr data is correct
-                type = aggr[dt]["type"]
-                if type == 2:
-                    # This is built using other location aggregates
-                    # so it can be ignored because only time or copy aggregates
-                    # are being calculated in this function
-                    last_type_agg = True
-                    last_data_value = aggr[dt]["mean"]
-                    continue
-                elif type == 3:
-                    # This is a copy aggregate and can be ignored if there is
-                    # no data in the data dictionary and the last type was aggr
-                    if (dt not in data) and last_type_agg:
+                row_date = row.date
+                (start_date, end_date) = stats_aggregated_period(row_date)
+                if start_date in data:
+                    if row_date <= data[start_date]["date"]:
+                        # The indicator on the row is of the same time period as
+                        # another which is already stored in data but it is earlier
+                        # so ignore this particular record
                         continue
-                    # If there is data in the data dictionary for this period
-                    # then then aggregate record needs to be changed
-                    if dt in data:
-                        value = data[dt]["value"]
-                        last_data_value = value
-                        db(query).update(agg_type = 1, # time
-                                         reported_count = 1, # one record
-                                         ward_count = 1, # one ward
-                                         min = value,
-                                         max = value,
-                                         mean = value,
-                                         median = value,
-                                         end_date = end_date,
-                                         )
-                        changed_periods.append((start_date, end_date))
-                    # Check that the data currently stored is correct
-                    elif aggr[dt]["mean"] != last_data_value:
-                        value = last_data_value
-                        db(query).update(agg_type = 3, # copy
-                                         reported_count = 1, # one record
-                                         ward_count = 1, # one ward
-                                         min = value,
-                                         max = value,
-                                         mean = value,
-                                         median = value,
-                                         end_date = end_date,
-                                         )
-                        changed_periods.append((start_date, end_date))
-                elif type == 1:
-                    # The value in the aggr should match the value in data
-                    if dt in data:
-                        value = data[dt]["value"]
-                        last_data_value = value
-                        if aggr[dt]["mean"] != value:
+                    elif data[start_date]["id"] == data_id:
+                        # The newly added indicator is the one currently stored
+                        # in data but a more recent value is held on the database
+                        # This will not change any of the aggregated data
+                        return
+                if start_date < earliest_period:
+                    earliest_period = start_date
+                # Store the record from the db in the data storage
+                data[start_date] = Storage(date = row_date,
+                                           id = row.data_id,
+                                           value = row.value)
+    
+            # Get all the aggregate records for this parameter and location
+            query = (atable.location_id == location_id) & \
+                    (atable.parameter_id == parameter_id) & \
+                    (atable.deleted != True)
+            aggr_rows = db(query).select(atable.id,
+                                         atable.agg_type,
+                                         atable.date,
+                                         atable.end_date,
+                                         atable.mean)
+    
+            aggr = dict()
+            for row in aggr_rows:
+                (start_date, end_date) = stats_aggregated_period(row.date)
+                aggr[start_date] = Storage(mean = row.mean,
+                                           id = row.id,
+                                           type = row.agg_type,
+                                           end_date = row.end_date)
+    
+            # Step through each period and check that aggr is correct
+            last_data_period = earliest_period
+            last_type_agg = False # The type of previous non-copy record was aggr
+            last_data_value = None # The value of the previous aggr record
+            # used to keep track of which periods the
+            # aggr record has been changed on the database
+            changed_periods = []
+            for dt in rrule(YEARLY, dtstart=earliest_period, until=last_period):
+                # calculate the end of the dt period.
+                # (it will be None if this is the last period)
+                dt = dt.date()
+                if dt != last_period:
+                    (start_date, end_date) = stats_aggregated_period(dt)
+                else:
+                    start_date = dt
+                    end_date = None
+                if dt in aggr:
+                    # The query use to update aggr records
+                    query = (atable.id == aggr[dt]["id"])
+                    # Check that the stored aggr data is correct
+                    type = aggr[dt]["type"]
+                    if type == 2:
+                        # This is built using other location aggregates
+                        # so it can be ignored because only time or copy aggregates
+                        # are being calculated in this function
+                        last_type_agg = True
+                        last_data_value = aggr[dt]["mean"]
+                        continue
+                    elif type == 3:
+                        # This is a copy aggregate and can be ignored if there is
+                        # no data in the data dictionary and the last type was aggr
+                        if (dt not in data) and last_type_agg:
+                            continue
+                        # If there is data in the data dictionary for this period
+                        # then then aggregate record needs to be changed
+                        if dt in data:
+                            value = data[dt]["value"]
+                            last_data_value = value
                             db(query).update(agg_type = 1, # time
                                              reported_count = 1, # one record
                                              ward_count = 1, # one ward
@@ -444,70 +416,180 @@ class S3StatsModel(S3Model):
                                              end_date = end_date,
                                              )
                             changed_periods.append((start_date, end_date))
-                    # If the data is not there then it must have been deleted
-                    # So copy the value from the previous record
+                        # Check that the data currently stored is correct
+                        elif aggr[dt]["mean"] != last_data_value:
+                            value = last_data_value
+                            db(query).update(agg_type = 3, # copy
+                                             reported_count = 1, # one record
+                                             ward_count = 1, # one ward
+                                             min = value,
+                                             max = value,
+                                             mean = value,
+                                             median = value,
+                                             end_date = end_date,
+                                             )
+                            changed_periods.append((start_date, end_date))
+                    elif type == 1:
+                        # The value in the aggr should match the value in data
+                        if dt in data:
+                            value = data[dt]["value"]
+                            last_data_value = value
+                            if aggr[dt]["mean"] != value:
+                                db(query).update(agg_type = 1, # time
+                                                 reported_count = 1, # one record
+                                                 ward_count = 1, # one ward
+                                                 min = value,
+                                                 max = value,
+                                                 mean = value,
+                                                 median = value,
+                                                 end_date = end_date,
+                                                 )
+                                changed_periods.append((start_date, end_date))
+                        # If the data is not there then it must have been deleted
+                        # So copy the value from the previous record
+                        else:
+                            value = last_data_value
+                            db(query).update(agg_type = 3, # copy
+                                             reported_count = 1, # one record
+                                             ward_count = 1, # one ward
+                                             min = value,
+                                             max = value,
+                                             mean = value,
+                                             median = value,
+                                             end_date = end_date,
+                                             )
+                            changed_periods.append((start_date, end_date))
+                # No aggregate record for this time period exists
+                # So one needs to be inserted
+                else:
+                    if dt in data:
+                        value = data[dt]["value"]
+                        type = 1 # time
+                        last_data_value = value
                     else:
                         value = last_data_value
-                        db(query).update(agg_type = 3, # copy
-                                         reported_count = 1, # one record
-                                         ward_count = 1, # one ward
-                                         min = value,
-                                         max = value,
-                                         mean = value,
-                                         median = value,
-                                         end_date = end_date,
-                                         )
-                        changed_periods.append((start_date, end_date))
-            # No aggregate record for this time period exists
-            # So one needs to be inserted
-            else:
-                if dt in data:
-                    value = data[dt]["value"]
-                    type = 1 # time
-                    last_data_value = value
-                else:
-                    value = last_data_value
-                    type = 3 # copy
-                atable.insert(parameter_id = parameter_id,
-                              location_id = location_id,
-                              agg_type = type,
-                              reported_count = 1, # one record
-                              ward_count = 1, # one ward
-                              min = value,
-                              max = value,
-                              mean = value,
-                              median = value,
-                              date = start_date,
-                              end_date = end_date,
-                              )
-                changed_periods.append((start_date, end_date))
+                        type = 3 # copy
+                    atable.insert(parameter_id = parameter_id,
+                                  location_id = location_id,
+                                  agg_type = type,
+                                  reported_count = 1, # one record
+                                  ward_count = 1, # one ward
+                                  min = value,
+                                  max = value,
+                                  mean = value,
+                                  median = value,
+                                  date = start_date,
+                                  end_date = end_date,
+                                  )
+                    changed_periods.append((start_date, end_date))
+            # End of loop through each time period
 
+            if changed_periods == []:
+                continue
+            # The following structures are used in the OPTIMISATION steps later
+            loc_level_list[location_id] = gis_table[location_id].level
+            if parameter_id not in param_location_dict:
+                param_location_dict[parameter_id] = {location_id : changed_periods}
+            elif location_id not in param_location_dict[parameter_id]:
+                param_location_dict[parameter_id][location_id] = changed_periods
+            else:
+                # store the older of the changed periods (the end will always be None)
+                # Only need to check the start date of the first period
+                if changed_periods[0][0] < param_location_dict[parameter_id][location_id][0][0]:
+                    param_location_dict[parameter_id][location_id] = changed_periods
+            if parameter_id in vulnerability_id_list:
+                if location_id not in location_dict:
+                    location_dict[location_id] = changed_periods
+                else:
+                    # Store the older of the changed periods (the end will always be None)
+                    # Only need to check the start date of the first period
+                    if changed_periods[0][0] < location_dict[location_id][0][0]:
+                        location_dict[location_id] = changed_periods
+                
+        # End of loop through each stats_data record
+
+        # OPTIMISATION step 1
+        # The following code will get all the locations for which a parameter
+        # has been changed. This will remove duplicates which will occur when
+        # items are being imported for many communes in the same district.
+        # Take an import of 12 communes in the same district, without this the
+        # district will be updated 12 times, the province will be updated 12
+        # times and the country will be updated 12 times that is 33 unnecessary
+        # updates (for each time period) (i.e. 15 updates rather than 48)
+
+        # Now get all the parents
+        parents = {}
+        get_parents = current.gis.get_parents
+        for loc_id in location_dict.keys():
+            parents[loc_id] = get_parents(loc_id)
+        # Expand the list of locations for each parameter
+        parents_data = {}
+        for (param_id, loc_dict) in param_location_dict.items():
+            for (loc_id, periods) in loc_dict.items():
+                for p_loc_row in parents[loc_id]:
+                    p_loc_id = p_loc_row.id
+                    if param_id in parents_data:
+                        if p_loc_id in parents_data[param_id]:
+                            # store the older of the changed periods (the end will always be None)
+                            # Only need to check the start date of the first period
+                            if periods[0][0] < parents_data[param_id][p_loc_id][0][0][0]:
+                                parents_data[param_id][p_loc_id][0] = periods
+                        else:
+                            parents_data[param_id][p_loc_id] = [periods,
+                                                                loc_level_list[loc_id]
+                                                                ]
+                    else:
+                        parents_data[param_id] = {p_loc_id : [periods,
+                                                              loc_level_list[loc_id]
+                                                              ]
+                                                  }
+
+
+        # OPTIMISATION step 2
+        # The following code will get all the locations for which the
+        # resilence indicator needs to be recalculated. Without this
+        # the calculations will be triggered for each parameter and for each
+        # location unnecessarily.
+        # For example an import of 12 communes in the same district with data
+        # for the 10 parameters that make up the resilence calculation will trigger
+        # 480 updates, rather than the optimal 15, for each time period.
+        resilence_parents = {}
+        for (loc_id, periods) in location_dict.items():
+            resilence_parents[loc_id] = (periods, loc_level_list[loc_id], True)
+            for p_loc_row in parents[loc_id]:
+                p_loc_id = p_loc_row.id
+                if p_loc_id in resilence_parents:
+                    # store the older of the changed periods (the end will always be None)
+                    # Only need to check the start date of the first period
+                    if periods[0][0] < resilence_parents[p_loc_id][0][0][0]:
+                        resilence_parents[p_loc_id][0] = periods
+                else:
+                    resilence_parents[p_loc_id] = [periods, loc_level_list[loc_id], False]
+
+        #print "%s %s %s %s" % (len(location_dict), len(parents), len(parents_data), len(resilence_parents))
         # Now that the time aggregate types have been set up correctly,
         # fire off requests for the location aggregates to be calculated
-        parents = current.gis.get_parents(location_id)
         async = current.s3task.async
-        loc_level = s3db.gis_location[location_id].level
-        if current.deployment_settings.has_module("vulnerability"):
-            vulnerability = True
-        else:
-            vulnerability = False
-        for (start_date, end_date) in changed_periods:
-
-            s, e = str(start_date), str(end_date)
-
-            # Calculate the aggregates for each parent location
-            if parents:
-                for location in parents:
+        for (param_id, loc_dict) in parents_data.items():
+            for (loc_id, (changed_periods,loc_level)) in loc_dict.items():
+                for (start_date, end_date) in changed_periods:
+                    s, e = str(start_date), str(end_date)
                     async("stats_update_aggregate_location",
-                          args = [loc_level, location.id, parameter_id, s, e])
-
-            if vulnerability and \
-               (parameter_id in s3db.vulnerability_ids() or \
-                parameter_id == s3db.vulnerability_resilience_id()):
-                s3db.vulnerability_update_resilience(loc_level,
-                                                     location_id,
-                                                     start_date,
-                                                     end_date)
+                          args = [loc_level, loc_id, param_id, s, e])
+        if vulnerability:
+            # Now calculate the resilence indicators
+            vulnerability_resilience = s3db.vulnerability_resilience
+            resilience_pid = s3db.vulnerability_resilience_id()
+            for (location_id, (period, loc_level,use_location)) in resilence_parents.items():
+                for (start_date, end_date) in changed_periods:
+                    s, e = str(start_date), str(end_date)
+                    vulnerability_resilience(loc_level,
+                                             location_id,
+                                             resilience_pid,
+                                             vulnerability_id_list,
+                                             start_date,
+                                             end_date,
+                                             use_location)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -882,6 +964,7 @@ class S3StatsGroupModel(S3Model):
              "stats_group_id",
              "stats_group_type_id",
              "stats_source_id",
+             "stats_group_clean",
              ]
 
     def model(self):
@@ -994,6 +1077,13 @@ class S3StatsGroupModel(S3Model):
                                   s3_date(label = T("Date Published")),
                                   self.gis_location_id(),
                                   group_type_id(),
+                                  # Used to indicate if the record has not yet
+                                  # been used in aggregate calculations
+                                  Field("dirty", "boolean",
+                                        #label = T("Dirty"),
+                                        default=True,
+                                        readable=False,
+                                        writable=False),
                                   #Field("reliability",
                                   #      label=T("Reliability")),
                                   #Field("review",
@@ -1025,6 +1115,7 @@ class S3StatsGroupModel(S3Model):
                        stats_group_type_id = group_type_id,
                        stats_group_id = group_id,
                        stats_source_id = source_id,
+                       stats_group_clean = self.stats_group_clean,
                        )
 
     # -------------------------------------------------------------------------
@@ -1081,6 +1172,35 @@ class S3StatsGroupModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_group_clean():
+        """
+            This will get all the "dirty" approved stats_group records and from
+            the related stats_data records calculate the stats_aggregate records.
+        """
+
+        s3db = current.s3db
+        db = current.db
+        gtable = s3db.stats_group
+        dtable = s3db.stats_data
+
+        query = (gtable.deleted != True) & \
+                (gtable.dirty == True) & \
+                (gtable.approved_by != None) & \
+                (gtable.id == dtable.group_id)
+        data_list = db(query).select(dtable.id,
+                                     dtable.parameter_id,
+                                     dtable.date,
+                                     dtable.location_id,
+                                     dtable.value)
+        S3StatsModel.stats_update_time_aggregate(data_list)
+        
+        query = (gtable.deleted != True) & \
+                (gtable.dirty == True) & \
+                (gtable.approved_by != None)
+        db(query).update(dirty=False)
 
     # -------------------------------------------------------------------------
     @staticmethod

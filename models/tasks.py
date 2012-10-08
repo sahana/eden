@@ -175,6 +175,20 @@ if settings.has_module("msg"):
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 
+    def stats_group_clean(user_id=None):
+        """
+            Update the stats_aggregate table by calculating all the stats_group
+            records which have the dirty flag set to True
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task
+        result = s3db.stats_group_clean()
+        return result
+
+    tasks["stats_group_clean"] = stats_group_clean
+
     def stats_update_time_aggregate(data_id=None, user_id=None):
         """
             Update the stats_aggregate table for the given stats_data record
