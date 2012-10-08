@@ -49,7 +49,7 @@ class CreateVolunteer(SeleniumUnitTest):
 
         self.create("hrm_human_resource", 
                     [( "organisation_id",
-                       "Acme Suppliers",
+                       "International Federation of Red Cross and Red Crescent Societies (IFRC)",
                        "option"),
                      ( "first_name",
                        "John",
@@ -65,7 +65,8 @@ class CreateVolunteer(SeleniumUnitTest):
                        "option"),
                      ( "site_id",
                        "AP Zone (Office)",
-                       "option"),
+                       "option",
+                       3),
                      ]
                      )
 
