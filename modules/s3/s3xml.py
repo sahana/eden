@@ -1108,9 +1108,12 @@ class S3XML(S3Codec):
                     continue
             if f == self.APPROVED:
                 # Override default-approver:
-                if "approved_by" in table and \
-                   element.get(f, "true").lower() == "false":
-                    record["approved_by"] = None
+                if "approved_by" in table:
+                    if element.get(f, "true").lower() == "false":
+                        record["approved_by"] = None
+                    else:
+                        if table["approved_by"].default == None:
+                            auth.permission.set_default_approver(table)
                 continue
             if f in self.IGNORE_FIELDS or f in skip:
                 continue

@@ -129,7 +129,10 @@
             </xsl:choose>
         </xsl:variable>
 
-        <resource name="stats_demographic_data" approved="$approved">
+        <resource name="stats_demographic_data">
+            <xsl:attribute name="approved">
+                <xsl:value-of select="$approved"/>
+            </xsl:attribute>
             <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
             <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
             <!-- Bad to hardcode a created_by to an ID in an .xsl!
@@ -184,23 +187,26 @@
         <xsl:variable name="date" select="col[@field='Date']"/>
         <xsl:variable name="source" select="col[@field='Source Name']"/>
 
+        <xsl:variable name="approved">
+            <xsl:choose>
+                <xsl:when test="col[@field='Approved']='false'">
+                    <xsl:text>false</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>true</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
         <resource name="stats_group">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
             </xsl:attribute>
+            <xsl:attribute name="approved">
+                <xsl:value-of select="$approved"/>
+            </xsl:attribute>
             <data field="date"><xsl:value-of select="$date"/></data>
             <data field="created_by">1</data>
-            <xsl:choose>
-                <xsl:when test="$status='Pending'">
-                    <data field="approved_by">0</data>
-                </xsl:when>
-                <xsl:when test="$status='Approved'">
-                    <data field="approved_by">1</data>
-                </xsl:when>
-                <xsl:otherwise>
-                    <data field="approved_by">0</data>
-                </xsl:otherwise>
-            </xsl:choose>
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
 

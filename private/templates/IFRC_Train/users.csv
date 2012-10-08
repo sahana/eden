@@ -40,3 +40,7 @@ Assessment,Reader,survey_reader@example.com,eden,survey_reader/0,International F
 Assessment,Data Entry,survey_data_entry@example.com,eden,survey_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Editor,survey_editor@example.com,eden,survey_editor/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Super Editor,survey_super@example.com,eden,survey_super/0,International Federation of Red Cross and Red Crescent Societies
+Vulnerability,Reader,vul_reader@example.com,eden,vulnerability_reader/0,International Federation of Red Cross and Red Crescent Societies
+Vulnerability,Data Entry,vul_data_entry@example.com,eden,vulnerability_data_entry/0,International Federation of Red Cross and Red Crescent Societies
+Vulnerability,Editor,vul_editor@example.com,eden,vulnerability_editor/0,International Federation of Red Cross and Red Crescent Societies
+Vulnerability,Super Editor,vul_super@example.com,eden,vulnerability_super/0,International Federation of Red Cross and Red Crescent Societies
