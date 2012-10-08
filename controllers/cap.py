@@ -37,7 +37,7 @@ def info_prep(r):
                 area_fields_comments()
             elif r.component_name == "cap_resource":
                 resource_fields_comments()
-        elif r.tablename == "cap_info:
+        elif r.tablename == "cap_info":
             info_fields_comments()
 
         item = r.record
