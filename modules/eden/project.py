@@ -784,13 +784,12 @@ $(document).ready(function(){
         table = define_table(tablename,
                              activity_type_id(),
                              self.org_sector_id(
-                                 label = "",
-                                 requires=IS_ONE_OF(db, "org_sector.id",
-                                                    self.org_sector_represent,
-                                                    sort=True,
-                                                    filterby=filterby,
-                                                    filter_opts=filter_opts),
-                                                ),
+                                requires=IS_ONE_OF(db, "org_sector.id",
+                                                   self.org_sector_represent,
+                                                   sort=True,
+                                                   filterby=filterby,
+                                                   filter_opts=filter_opts),
+                                ),
                              *s3_meta_fields())
 
         add_component(tablename, project_activity_type="activity_type_id")
@@ -1261,10 +1260,15 @@ class S3Project3WModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              project_id(),
                              self.gis_location_id(
-                                   readable = True,
-                                   writable = True,
-                                   widget = S3LocationSelectorWidget(hide_address=True),
-                                   represent = self.gis_location_lx_represent),
+                                widget = S3LocationAutocompleteWidget(),
+                                requires = IS_LOCATION(),
+                                represent = self.gis_location_lx_represent,
+                                comment = S3AddResourceLink(c="gis",
+                                                            f="location",
+                                                            label = T("Add Location"),
+                                                            title=T("Location"),
+                                                            tooltip=T("Enter some characters to bring up a list of possible matches")),
+                                ),
                              self.project_multi_activity_type_id(
                                     # Probably want a diff deployemnt_setting, but this will do for now
                                     readable = not theme_percentages,

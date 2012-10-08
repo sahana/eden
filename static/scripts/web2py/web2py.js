@@ -47,8 +47,8 @@ function web2py_ajax_init() {
         });
     } else {
         // For other Languages
-        jQuery('input.integer').live('keyup', function(){this.value = this.value.reverse().replace(/[^0-9\-]|\-(?=.)/g, '').reverse();});
-        jQuery('input.double,input.decimal').live('keyup', function(){this.value = this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.,](?=[0-9]*[\.,])/g, '').reverse();});
+        jQuery('input.integer').live('keyup', function() {this.value = this.value.reverse().replace(/[^0-9\-]|\-(?=.)/g, '').reverse();});
+        jQuery('input.double,input.decimal').live('keyup', function() {this.value = this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.,](?=[0-9]*[\.,])/g, '').reverse();});
     }
     //try { jQuery('input.time').timeEntry(); } catch(e) {};
 };
@@ -69,12 +69,15 @@ function web2py_trap_form(action,target) {
       });
    });
 }
-function web2py_ajax_page(method,action,data,target) {
-  jQuery.ajax({'type':method,'url':action,'data':data,
+function web2py_ajax_page(method, action, data, target) {
+  jQuery.ajax({
+    'type': method,
+    'url': action,
+    'data': data,
     'beforeSend':function(xhr) {
-      xhr.setRequestHeader('web2py-component-location',document.location);
-      xhr.setRequestHeader('web2py-component-element',target);},
-    'complete':function(xhr,text){
+      xhr.setRequestHeader('web2py-component-location', document.location);
+      xhr.setRequestHeader('web2py-component-element', target);},
+    'complete': function(xhr, text) {
       var html=xhr.responseText;
       var content=xhr.getResponseHeader('web2py-component-content'); 
       var command=xhr.getResponseHeader('web2py-component-command');
@@ -90,7 +93,7 @@ function web2py_ajax_page(method,action,data,target) {
       }
     });
 }
-function web2py_component(action,target) {
+function web2py_component(action, target) {
     jQuery(document).ready(function(){ web2py_ajax_page('get', action, null, target); });
 }
 function web2py_comet(url, onmessage, onopen, onclose) {
