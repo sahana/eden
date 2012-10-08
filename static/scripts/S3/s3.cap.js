@@ -1,9 +1,9 @@
 (function($, JSON) {
 
     function get_table($form) {
-        var _formname = $form.find('[name=_formname]').val(),
-            alert_table = 'cap_alert',
-            info_table = 'cap_info';
+        var _formname = $form.find('[name=_formname]').val();
+        var alert_table = 'cap_alert';
+        var info_table = 'cap_info';
 
         if (typeof(_formname) != 'undefined') {
             if (_formname.substring(0, alert_table.length) == alert_table) {
@@ -40,7 +40,6 @@
     }
     window.fields = get_template_fields;
 
-
     // Logic for forms
     function init_cap_form($form) {
         // On change in scope
@@ -51,7 +50,7 @@
 
                 disable = function (item) {
                             item.parents('tr').eq(0).hide().prev().hide();
-                          } //XXX: hide or disable?
+                          } // @ToDo: hide or disable?
                 enable  = function (item) {
                             item.parents('tr').eq(0).show().prev().show();
                           };
@@ -77,18 +76,15 @@
                 len = p.length;
             if ($(this).val() == 'Undefined') {
                 $(this).css('border', '2px solid gray');
-
                 $form.find('[name=urgency]').val('');
                 $form.find('[name=severity]').val('');
                 $form.find('[name=certainty]').val('');
-
             }
             for (var i=0; i< len; i++) {
                 if (p[i][0] == $(this).val()) {
                     $form.find('[name=urgency]').val(p[i][1]);
                     $form.find('[name=severity]').val(p[i][2]);
                     $form.find('[name=certainty]').val(p[i][3]);
-
                     $(this).css('border', '2px solid ' + p[i][4]);
                 }
             }
@@ -101,15 +97,14 @@
                 if ($form.find('[name=urgency]').val()   == p[i][1] &&
                     $form.find('[name=severity]').val()  == p[i][2] &&
                     $form.find('[name=certainty]').val() == p[i][3]) {
-
                     $form.find('[name=priority]').val(p[i][0])
-                        .css('border', '2px solid ' + p[i][4]);
+                         .css('border', '2px solid ' + p[i][4]);
                     return;
                 }
             }
 
             $form.find('[name=priority]').val('Undefined')
-                        .css('border', '2px solid gray');
+                 .css('border', '2px solid gray');
         });
 
         function load_template_data(data, overwrite) {
@@ -120,7 +115,6 @@
             if (typeof(overwrite) == 'undefined') {
                 overwrite = false;
             }
-
 
             if (!data) {
                 values = {};
@@ -150,7 +144,7 @@
 
                             if (locked) {
                                 $f.attr('disabled', true)
-                                  // TODO: i18n
+                                  // @ToDo: i18n
                                   .attr('title', 'This field is locked by the template');
                             } else {
                                 $f.removeAttr('disabled')
@@ -187,7 +181,7 @@
                     load_template_data(data, overwrite);
                 },
                 error: function(e) {
-                    // FIXME: i18n
+                    // @ToDo: i18n
                     alert('There was an unexpected error loading template data');
                 }
             });
@@ -210,7 +204,7 @@
 
     function init_template_form($form) {
 
-        /* templates-specific stuff */
+        /* Templates-specific stuff */
         function get_settings() {
             try {
                 var settings = $.parseJSON($form.find('[name=template_settings]').val());
@@ -225,7 +219,7 @@
             $form.find('[name=template_settings]').val(JSON.stringify(settings));
         }
 
-        // set as template!
+        // Set as template
         $form.find('[name=is_template]').attr('checked', 'checked');
 
         function inheritable_flag(field, $e) {
@@ -254,8 +248,8 @@
         fields = get_template_fields(tablename);
 
         $form.find('tr').each(function () {
-            var $tr = $(this),
-                id = $tr.attr('id');
+            var $tr = $(this);
+            var id = $tr.attr('id');
 
             if (id && id.match('__row$')) {
                 // this row contains the field and comment

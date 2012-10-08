@@ -1,15 +1,7 @@
-.cap_alert_form tr {
-display: none;
-}
-.cap_alert_form.template_loaded tr {
-display: block;
-}
-
+.cap_alert_form tr {display:none;}
+.cap_alert_form.template_loaded tr {display:block;}
 #cap_alert_template_id__row1,
-#cap_alert_template_id__row {
-display: block;
-}
-
+#cap_alert_template_id__row {display:block;}
 .cap_template_form #cap_alert_template_id__row1,
 .cap_template_form #cap_alert_template_id__row,
 #cap_alert_template_settings__row1,
@@ -23,9 +15,6 @@ display: block;
 #cap_alert_is_template__row1,
 #cap_alert_is_template__row,
 #cap_alert_sent__row1,
-#cap_alert_sent__row
-{display: none}
-
+#cap_alert_sent__row{display:none}
 .cap_template_form #cap_alert_template_title__row1,
-.cap_template_form #cap_alert_template_title__row
-{display: block}
+.cap_template_form #cap_alert_template_title__row{display:block}
