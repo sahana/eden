@@ -97,6 +97,7 @@ class StatsTests(unittest.TestCase):
         resource.approve()
         resource = s3db.resource("stats_data", id=record.data_id, unapproved=True)
         resource.approve()
+        s3db.stats_update_time_aggregate(resource.select())
 
     def testStats_aggregate(self):
         """
