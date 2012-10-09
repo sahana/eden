@@ -32,6 +32,10 @@ settings.L10n.decimal_separator = "."
 settings.L10n.thousands_separator = ","
 # Default Country Code for telephone numbers
 settings.L10n.default_country_code = 1
+# Enable this to change the label for 'Mobile Phone'
+settings.ui.label_mobile_phone = "Cell Phone"
+# Enable this to change the label for 'Postcode'
+settings.ui.label_postcode = "ZIP Code"
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

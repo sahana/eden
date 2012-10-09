@@ -466,7 +466,7 @@
             <xsl:call-template name="ContactInformation"/>
 
             <!-- Address -->
-            <xsl:if test="col[@field='Home Address']!=''">
+            <xsl:if test="col[@field='Home Address'] or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
                 <xsl:call-template name="Address">
                     <xsl:with-param name="address" select="col[@field='Home Address']/text()"/>
                     <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
@@ -479,7 +479,7 @@
                 </xsl:call-template>
             </xsl:if>
 
-            <xsl:if test="col[@field='Permanent Address']!=''">
+            <xsl:if test="col[@field='Permanent Address'] or col[@field='Permanent Postcode'] or col[@field='Permanent L4'] or col[@field='Permanent L3'] or col[@field='Permanent L2'] or col[@field='Permanent L1']">
                 <xsl:call-template name="Address">
                     <xsl:with-param name="address" select="col[@field='Permanent Address']/text()"/>
                     <xsl:with-param name="postcode" select="col[@field='Permanent Postcode']/text()"/>
@@ -538,7 +538,7 @@
         </resource>
 
         <!-- Locations -->
-        <xsl:if test="col[@field='Home Address']!=''">
+        <xsl:if test="col[@field='Home Address'] or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
             <xsl:call-template name="Locations">
                 <xsl:with-param name="address" select="col[@field='Home Address']/text()"/>
                 <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
@@ -552,7 +552,7 @@
                 <xsl:with-param name="lon" select="col[@field='Home Lon']/text()"/>
             </xsl:call-template>
         </xsl:if>
-        <xsl:if test="col[@field='Permanent Address']!=''">
+        <xsl:if test="col[@field='Permanent Address'] or col[@field='Permanent Postcode'] or col[@field='Permanent L4'] or col[@field='Permanent L3'] or col[@field='Permanent L2'] or col[@field='Permanent L1']">
             <xsl:call-template name="Locations">
                 <xsl:with-param name="address" select="col[@field='Permanent Address']/text()"/>
                 <xsl:with-param name="postcode" select="col[@field='Permanent Postcode']/text()"/>

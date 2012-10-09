@@ -1188,7 +1188,8 @@ class S3Request(object):
         else:
             as_json = False
             default = "text/xml"
-        headers["Content-Type"] = manager.content_type.get(representation, default)
+        headers["Content-Type"] = manager.content_type.get(representation,
+                                                           default)
 
         # Export the resource
         output = r.resource.export_xml(start=start,

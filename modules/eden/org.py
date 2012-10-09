@@ -1235,10 +1235,11 @@ class S3SiteModel(S3Model):
                                   *s3_ownerstamp())
 
         # ---------------------------------------------------------------------
+        org_site_label = current.deployment_settings.get_org_site_label()
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
                                   #readable = True,
-                                  label=T("Office/Warehouse/Facility"),
+                                  label=org_site_label,
                                   default=auth.user.site_id if auth.is_logged_in() else None,
                                   represent=org_site_represent,
                                   orderby="org_site.name",
@@ -1246,7 +1247,7 @@ class S3SiteModel(S3Model):
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget=S3SiteAutocompleteWidget(),
                                   comment=DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Office/Warehouse/Facility"),
+                                                _title="%s|%s" % (org_site_label,
                                                                   T("Enter some characters to bring up a list of possible matches")))
                                   )
 

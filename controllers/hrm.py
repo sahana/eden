@@ -106,7 +106,7 @@ def staff():
                    "person_id",
                    "job_title_id",
                    "organisation_id",
-                   "department",
+                   "department_id",
                    "site_id",
                    #"site_contact",
                    (T("Email"), "email"),
@@ -143,7 +143,7 @@ def staff():
 
                 table = r.table
                 table.site_id.comment = DIV(DIV(_class="tooltip",
-                                                _title="%s|%s|%s" % (T("Office/Warehouse/Facility"),
+                                                _title="%s|%s|%s" % (settings.get_org_site_label(),
                                                                      T("The facility where this position is based."),
                                                                      T("Enter some characters to bring up a list of possible matches."))))
                 table.status.writable = False
@@ -693,6 +693,19 @@ def group():
 # =============================================================================
 # Jobs
 # =============================================================================
+def department():
+    """ Departments Controller """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller()
+    return output
+
 def job_role():
     """ Job Roles Controller """
 

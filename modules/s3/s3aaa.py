@@ -189,7 +189,6 @@ Thank you
         self.messages.registration_disabled = "Registration Disabled!"
         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
         self.messages.label_organisation_id = "Organization"
-        self.messages.label_site_id = "Office/Warehouse/Facility"
         self.messages.label_utc_offset = "UTC Offset"
         self.messages.label_image = "Profile Image"
         self.messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
@@ -248,175 +247,181 @@ Thank you
         db = current.db
         settings = self.settings
         messages = self.messages
+        deployment_settings = current.deployment_settings
+        define_table = db.define_table
 
         # User table
-        if not settings.table_user:
+        utable = settings.table_user
+        uname = settings.table_user_name
+        label_user_id = messages.label_user_id
+        if not utable:
             passfield = settings.password_field
             # @ToDo - remove duplicate of table definitions
             if settings.username_field:
                 # with username (not used by default in Sahana)
-                settings.table_user = db.define_table(
-                    settings.table_user_name,
-                    Field("first_name", length=128, default="",
-                          notnull = True,),
-                    Field("last_name", length=128, default="",
+                utable = define_table(uname,
+                    Field("first_name", length=128, notnull=True,
+                          default=""),
+                    Field("last_name", length=128,
+                          default="",
                           label=messages.label_last_name),
-                    Field("username", length=128, default="",
+                    Field("username", length=128,
+                          default="",
                           unique=True),
                     Field(passfield, "password", length=512,
                           requires = [ CRYPT( key = settings.hmac_key,
                                      min_length = settings.password_min_length,
                                      digest_alg = "sha512") ],
                           readable=False, label=messages.label_password),
-                    Field("email", length=512, default="",
+                    Field("email", length=512,
+                          default="",
                           label=messages.label_email),
-                    Field("language", length=16),
+                    Field("language", length=16,
+                          default = deployment_settings.get_L10n_default_language()),
                     Field("utc_offset", length=16,
                           readable=False, writable=False),
                     Field("organisation_id", "integer",
-                          writable=False, readable=False,
+                          readable=False, writable=False,
                           label=messages.label_organisation_id),
                     Field("site_id", "integer",
-                          writable=False, readable=False,
-                          label=messages.label_site_id),
+                          readable=False, writable=False,
+                          label=deployment_settings.get_org_site_label()),
                     Field("registration_key", length=512,
-                          writable=False, readable=False, default="",
+                          default="",
+                          readable=False, writable=False,
                           label=messages.label_registration_key),
                     Field("reset_password_key", length=512,
-                          writable=False, readable=False, default="",
+                          default="",
+                          readable=False, writable=False,
                           label=messages.label_registration_key),
-                    Field("deleted", "boolean", writable=False,
-                          readable=False, default=False),
-                    Field("timestmp", "datetime", writable=False,
-                          readable=False, default=""),
+                    Field("deleted", "boolean",
+                          default="",
+                          readable=False, writable=False),
+                    Field("timestmp", "datetime",
+                          default="",
+                          readable=False, writable=False),
                     s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
             else:
                 # with email-address (Sahana default)
-                settings.table_user = db.define_table(
-                    settings.table_user_name,
-                    Field("first_name", length=128, default="",
+                utable = define_table(uname,
+                    Field("first_name", length=128, notnull=True,
+                          default="",
                           label=messages.label_first_name,
                           requires = \
                           IS_NOT_EMPTY(error_message=messages.is_empty),
-                          notnull = True,),
-                    Field("last_name", length=128, default="",
+                          ),
+                    Field("last_name", length=128,
+                          default="",
                           label=messages.label_last_name),
-                    Field("email", length=512, default="",
+                    Field("email", length=512,
+                          default="",
                           label=messages.label_email,
                           unique=True),
                     Field(passfield, "password", length=512,
                           requires = [ CRYPT( key = settings.hmac_key,
                                      min_length = settings.password_min_length,
                                      digest_alg = "sha512") ],
-                          readable=False, label=messages.label_password),
-                    Field("language", length=16),
-                    Field("utc_offset", length=16,
                           readable=False,
-                          writable=False,
+                          label=messages.label_password),
+                    Field("language", length=16,
+                          default = deployment_settings.get_L10n_default_language()),
+                    Field("utc_offset", length=16,
+                          readable=False, writable=False,
                           label=messages.label_utc_offset),
                     Field("organisation_id", "integer",
-                          writable=False, readable=False,
+                          readable=False, writable=False,
                           label=messages.label_organisation_id),
                     Field("site_id", "integer",
-                          writable=False, readable=False,
-                          label=messages.label_site_id),
+                          readable=False, writable=False,
+                          label=deployment_settings.get_org_site_label()),
                     Field("registration_key", length=512,
-                          writable=False, readable=False, default="",
+                          default="",
+                          readable=False, writable=False,
                           label=messages.label_registration_key),
                     Field("reset_password_key", length=512,
-                          writable=False, readable=False, default="",
+                          default="",
+                          readable=False, writable=False,
                           label=messages.label_registration_key),
-                    Field("deleted", "boolean", writable=False,
-                          readable=False, default=False),
-                    Field("timestmp", "datetime", writable=False,
-                          readable=False, default=""),
+                    Field("deleted", "boolean",
+                          default="",
+                          readable=False, writable=False),
+                    Field("timestmp", "datetime",
+                          default="",
+                          readable=False, writable=False),
                     s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
+            settings.table_user = utable
 
         # Fields configured in configure_user_fields
 
         # Temporary User Table
         # for storing User Data that will be used to create records for
         # the user once they are approved
-        db.define_table(
-                "auth_user_temp",
-                Field("user_id", settings.table_user,
-                      label=messages.label_user_id),
-                Field("mobile"),
-                Field("image", "upload"),
-                *(s3_uid()+s3_timestamp()) )
+        define_table("auth_user_temp",
+                     Field("user_id", utable),
+                     Field("mobile"),
+                     Field("image", "upload"),
+                     *(s3_uid()+s3_timestamp()))
 
         # Group table (roles)
-        if not settings.table_group:
-            settings.table_group = db.define_table(
-                settings.table_group_name,
+        gtable = settings.table_group
+        gname = settings.table_group_name
+        label_group_id = messages.label_group_id
+        if not gtable:
+            gtable = define_table(gname,
                 # Group unique ID, must be notnull+unique:
-                Field("uuid",
-                      length=64,
-                      notnull=True,
-                      unique=True,
-                      readable=False,
-                      writable=False),
+                Field("uuid", length=64, notnull=True, unique=True,
+                      readable=False, writable=False),
                 # Group does not appear in the Role Manager:
                 # (can neither assign, nor modify, nor delete)
                 Field("hidden", "boolean",
-                      readable=False,
-                      writable=False,
+                      readable=False, writable=False,
                       default=False),
                 # Group cannot be modified in the Role Manager:
                 # (can assign, but neither modify nor delete)
                 Field("system", "boolean",
-                      readable=False,
-                      writable=False,
+                      readable=False, writable=False,
                       default=False),
                 # Group cannot be deleted in the Role Manager:
                 # (can assign and modify, but not delete)
                 Field("protected", "boolean",
-                      readable=False,
-                      writable=False,
+                      readable=False, writable=False,
                       default=False),
                 # Role name:
-                Field("role",
-                      length=512,
+                Field("role", length=512, unique=True,
                       default="",
-                      unique=True,
+                      requires = IS_NOT_IN_DB(db, "%s.role" % gname),
                       label=messages.label_role),
                 Field("description", "text",
                       label=messages.label_description),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
                 *(s3_timestamp()+s3_deletion_status()))
-            table = settings.table_group
-            table.role.requires = IS_NOT_IN_DB(db, "%s.role"
-                 % settings.table_group._tablename)
+            settings.table_group = gtable
 
         # Group membership table (user<->role)
         if not settings.table_membership:
-            settings.table_membership = db.define_table(
+            settings.table_membership = define_table(
                 settings.table_membership_name,
-                Field("user_id", settings.table_user,
-                      label=messages.label_user_id),
-                Field("group_id", settings.table_group,
-                      label=messages.label_group_id),
+                Field("user_id", utable,
+                      requires = IS_IN_DB(db, "%s.id" % uname,
+                                          "%(id)s: %(first_name)s %(last_name)s"),
+                      label=label_user_id),
+                Field("group_id", gtable,
+                      requires = IS_IN_DB(db, "%s.id" % gname,
+                                          "%(id)s: %(role)s"),
+                      label=label_group_id),
                 Field("pe_id", "integer"),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
                 *(s3_uid()+s3_timestamp()+s3_deletion_status()))
 
-            table = settings.table_membership
-            table.user_id.requires = IS_IN_DB(db, "%s.id" %
-                    settings.table_user._tablename,
-                    "%(id)s: %(first_name)s %(last_name)s")
-            table.group_id.requires = IS_IN_DB(db, "%s.id" %
-                    settings.table_group._tablename,
-                    "%(id)s: %(role)s")
-
-        security_policy = current.deployment_settings.get_security_policy()
+        security_policy = deployment_settings.get_security_policy()
         # Define Eden permission table
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
@@ -425,44 +430,42 @@ Thank you
            not settings.table_permission:
             # Permissions table (group<->permission)
             # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
-            settings.table_permission = db.define_table(
+            settings.table_permission = define_table(
                 settings.table_permission_name,
-                Field("group_id", settings.table_group,
-                      label=messages.label_group_id),
+                Field("group_id", gtable,
+                      requires = IS_IN_DB(db, "%s.id" % gname,
+                                          "%(id)s: %(role)s"),
+                      label=label_group_id),
                 Field("name", default="default", length=512,
+                      requires = IS_NOT_EMPTY(),
                       label=messages.label_name),
                 Field("table_name", length=512,
+                      # Needs to be defined after all tables created
+                      #requires = IS_IN_SET(db.tables),
                       label=messages.label_table_name),
                 Field("record_id", "integer",
+                      requires = IS_INT_IN_RANGE(0, 10 ** 9),
                       label=messages.label_record_id),
                 migrate = migrate,
                 fake_migrate=fake_migrate)
-            table = settings.table_permission
-            table.group_id.requires = IS_IN_DB(db, "%s.id" %
-                    settings.table_group._tablename,
-                    "%(id)s: %(role)s")
-            table.name.requires = IS_NOT_EMPTY()
-            table.table_name.requires = IS_IN_SET(db.tables)
-            table.record_id.requires = IS_INT_IN_RANGE(0, 10 ** 9)
 
         # Event table (auth_event)
         # Records Logins & ?
         # @ToDo: Deprecate? At least make it configurable?
         if not settings.table_event:
             request = current.request
-            settings.table_event = db.define_table(
+            settings.table_event = define_table(
                 settings.table_event_name,
                 Field("time_stamp", "datetime",
-                      default=request.now,
+                      default=request.utcnow,
                       label=messages.label_time_stamp),
                 Field("client_ip",
                       default=request.client,
                       label=messages.label_client_ip),
-                Field("user_id", settings.table_user, default=None,
-                      requires = IS_IN_DB(db, "%s.id" %
-                                          settings.table_user._tablename,
+                Field("user_id", utable, default=None,
+                      requires = IS_IN_DB(db, "%s.id" % uname,
                                           "%(id)s: %(first_name)s %(last_name)s"),
-                      label=messages.label_user_id),
+                      label=label_user_id),
                 Field("origin", default="auth", length=512,
                       label=messages.label_origin,
                       requires = IS_NOT_EMPTY()),
@@ -1263,8 +1266,8 @@ Thank you
             #site_id.widget = S3SiteAutocompleteWidget()
             # no permissions for autocomplete on registration page
             site_id.comment = DIV(_class="tooltip",
-                              _title="%s|%s" % (T("Office/Warehouse/Facility"),
-                                                   T("Enter some characters to bring up a list of possible matches")))
+                              _title="%s|%s" % (deployment_settings.get_org_site_label(),
+                                                T("Enter some characters to bring up a list of possible matches")))
 
             if not deployment_settings.get_auth_registration_site_required():
                 site_id.requires = IS_NULL_OR(site_id.requires)

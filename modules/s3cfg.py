@@ -547,6 +547,7 @@ class S3Config(Storage):
     # UI Settings
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)
+
     def get_ui_confirm(self):
         """
             For Delete actions
@@ -558,43 +559,40 @@ class S3Config(Storage):
     def get_ui_autocomplete(self):
         """ Currently Unused """
         return self.ui.get("autocomplete", False)
+
     def get_ui_read_label(self):
         """
             Label for buttons in list views which lead to a Read-opnly 'Display' view
         """
         return self.ui.get("read_label", "Open")
+
     def get_ui_update_label(self):
         """
             Label for buttons in list views which lead to a Read-opnly 'Display' view
         """
         return self.ui.get("update_label", "Open")
+
     def get_ui_cluster(self):
         """ UN-style deployment? """
         return self.ui.get("cluster", False)
+
     def get_ui_camp(self):
         """ 'Camp' instead of 'Shelter'? """
         return self.ui.get("camp", False)
+
     def get_ui_label_mobile_phone(self):
         """
             Label for the Mobile Phone field
             e.g. 'Cell Phone'
         """
-        T = current.T
-        label = self.ui.get("label_mobile_phone", T("Mobile Phone"))
-        # May need this form for Web Setup
-        #return T(label)
-        return label
+        return current.T(self.ui.get("label_mobile_phone", "Mobile Phone"))
 
     def get_ui_label_postcode(self):
         """
             Label for the Postcode field
             e.g. 'ZIP Code'
         """
-        T = current.T
-        label = self.ui.get("label_postcode", T("Postcode"))
-        # May need this form for Web Setup
-        #return T(label)
-        return label
+        return current.T(self.ui.get("label_postcode", "Postcode"))
 
     def get_ui_social_buttons(self):
         """ Display social media Buttons in the footer? """
@@ -653,75 +651,71 @@ class S3Config(Storage):
     # Alert
     def get_cap_identifier_prefix(self):
         """
-            prefix to be prepended to identifiers of cap alerts.
+            Prefix to be prepended to identifiers of CAP alerts
         """
         return self.cap.get("identifier_prefix", "")
 
     def get_cap_identifier_suffix(self):
         """
-            suffix to be appended to identifiers of cap alerts.
+            Suffix to be appended to identifiers of CAP alerts
         """
         return self.cap.get("identifier_suffix", "")
 
     def get_cap_codes(self):
         """
-            default codes for cap alert.
+            Default codes for CAP alerts
 
             should return a list of dicts:
             [ {"key": "<ValueName>, "value": "<Value>",
                "comment": "<Help string>", "mutable": True|False},
               ...]
-
         """
         return self.cap.get("codes", [])
 
     def get_cap_event_codes(self):
         """
-            default alert codes for cap info.
+            Default alert codes for CAP info segments
 
             should return a list of dicts:
             [ {"key": "<ValueName>, "value": "<Value>",
                "comment": "<Help string>", "mutable": True|False},
               ...]
-
         """
         return self.cap.get("event_codes", [])
 
     def get_cap_parameters(self):
         """
-            default parameters for cap info.
+            Default parameters for CAP info segments
 
             should return a list of dicts:
             [ {"key": "<ValueName>, "value": "<Value>",
                "comment": "<Help string>", "mutable": True|False},
               ...]
-
         """
         return self.cap.get("parameters", [])
 
     def get_cap_geocodes(self):
         """
-            default geocodes.
+            Default geocodes.
 
             should return a list of dicts:
             [ {"key": "<ValueName>, "value": "<Value>",
                "comment": "<Help string>", "mutable": True|False},
               ...]
-
         """
         return self.cap.get("geocodes", [])
 
     def get_cap_base64(self):
         """
-            Should cap resources be base64 encoded and embedded in the alert message?
-
+            Should CAP resources be base64 encoded and embedded in the alert message?
         """
         return self.cap.get("base64", False)
 
     def get_cap_languages(self):
         """
-            Languages for cap info. This gets filled in the drop-down for
-            selecting languages. These values should conform to RFC 3066.
+            Languages for CAP info segments.
+            This gets filled in the drop-down for selecting languages.
+            These values should conform to RFC 3066.
 
             For a full list of languages and their codes, see:
                 http://www.i18nguy.com/unicode/language-identifiers.html
@@ -739,7 +733,7 @@ class S3Config(Storage):
 
     def get_cap_priorities(self):
         """
-            settings for priorities.
+            Settings for CAP priorities
 
             Should be an ordered dict of the format
             OrderedDict([
@@ -861,7 +855,7 @@ class S3Config(Storage):
         """
             Label for Organisations in Human Resources
         """
-        return self.hrm.get("organisation_label", current.T("Organization"))
+        return current.T(self.hrm.get("organisation_label", "Organization"))
 
     # -------------------------------------------------------------------------
     # Inventory Management Settings
@@ -946,6 +940,12 @@ class S3Config(Storage):
             Length of auto-generated Codes for Facilities (org_site)
         """
         return self.org.get("site_code_len", 10)
+
+    def get_org_site_label(self):
+        """
+            Label for site_id fields
+        """
+        return current.T(self.org.get("site_label", "Facility"))
 
     def get_org_summary(self):
         """

@@ -3060,8 +3060,8 @@ class S3PersonDescription(S3Model):
                         (ttable.timestmp == note.timestmp)
         if note.location_id:
             tracker = S3Tracker()
-            tracker(query).set_location(note.location_id,
-                                        timestmp=note.timestmp)
+            tracker(query=query).set_location(note.location_id,
+                                              timestmp=note.timestmp)
         return
 
 # =============================================================================
