@@ -290,6 +290,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
+                    M("Department Catalog", c="hrm", f="department",
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
                     M("Job Role Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("New Job Role", m="create"),
@@ -379,6 +384,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Teams", f="group",
                       check=[manager_mode, use_teams])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Department Catalog", f="department",
+                      check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
                     ),

@@ -709,6 +709,19 @@ def group():
 # =============================================================================
 # Jobs
 # =============================================================================
+def department():
+    """ Departments Controller """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller()
+    return output
+
 def job_role():
     """ Job Roles Controller """
 

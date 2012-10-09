@@ -39,6 +39,7 @@
 'Delete Organization': 'Delete Organisation',
 'Delete Organization Domain': 'Delete Organisation Domain',
 'Delete Organization Type': 'Delete Organisation Type',
+'Department Catalog': 'Department Catalogue',
 'Edit Catalog': 'Edit Catalogue',
 'Edit Catalog Item': 'Edit Catalogue Item',
 'Edit Organization': 'Edit Organisation',

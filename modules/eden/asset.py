@@ -49,8 +49,8 @@ ASSET_TYPE_OTHER     = 4   # => No extra Tabs
 # To pass to global scope
 asset_types = {
                 "VEHICLE"    : ASSET_TYPE_VEHICLE,
-                "RADIO"     : ASSET_TYPE_RADIO,
-                "TELEPHONE" : ASSET_TYPE_TELEPHONE,
+                "RADIO"      : ASSET_TYPE_RADIO,
+                "TELEPHONE"  : ASSET_TYPE_TELEPHONE,
                 "OTHER"      : ASSET_TYPE_OTHER,
                }
 
@@ -104,7 +104,9 @@ class S3AssetModel(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        vehicle = current.deployment_settings.has_module("vehicle")
+        settings = current.deployment_settings
+        org_site_label = settings.get_org_site_label()
+        vehicle = settings.has_module("vehicle")
 
         # Shortcuts
         add_component = self.add_component
@@ -169,7 +171,7 @@ $(document).ready(function(){
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
-                                        label = T("Office/Warehouse/Facility"),
+                                        label = org_site_label,
                                         default = auth.user.site_id if auth.is_logged_in() else None,
                                         readable = True,
                                         writable = True,
@@ -288,7 +290,7 @@ $(document).ready(function(){
                          "number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
-                         (T("Office/Warehouse/Facility"), "site"),
+                         (org_site_label, "site"),
                          "L1",
                          "L2",
                          ]
@@ -366,7 +368,7 @@ $(document).ready(function(){
         # Asset Log
         #
 
-        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Office/Warehouse/Facility Set"),
+        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base %(facility)s Set") % org_site_label,
                                  ASSET_LOG_ASSIGN   : T("Assigned"),
                                  ASSET_LOG_RETURN   : T("Returned"),
                                  ASSET_LOG_CHECK    : T("Checked"),
@@ -431,7 +433,7 @@ $(document).ready(function(){
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
-                                        label = T("Warehouse/Facility/Office"),
+                                        label = org_site_label,
                                         #filterby = "site_id",
                                         #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                         instance_types = auth.org_site_types,

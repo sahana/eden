@@ -212,13 +212,73 @@ settings.L10n.decimal_separator = "."
 # Enable this to use the label 'Camp' instead of 'Shelter'
 #settings.ui.camp = True
 # Enable this to change the label for 'Mobile Phone'
-#settings.ui.label_mobile_phone = T("Cell Phone")
+#settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
-#settings.ui.label_postcode = T("ZIP Code")
+#settings.ui.label_postcode = "ZIP Code"
 # Enable Social Media share buttons
 #settings.ui.social_buttons = True
 
-# Request
+# Organisation Management
+# Set the length of the auto-generated org/site code the default is 10
+#settings.org.site_code_len = 3
+# Set the label for Sites
+#settings.org.site_label = "Facility"
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+#settings.org.summary = True
+
+# Human Resource Management
+# Uncomment to allow Staff & Volunteers to be registered without an email address
+#settings.hrm.email_required = False
+# Uncomment to allow HR records to be deletable rather than just marking them as obsolete
+#settings.hrm.deletable = True
+# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
+#settings.hrm.job_roles = True
+# Uncomment to hide the Staff resource
+#settings.hrm.show_staff = False
+# Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
+#settings.hrm.skill_types = True
+# Uncomment to disable Staff experience
+#settings.hrm.staff_experience = False
+# Uncomment to disable Volunteer experience
+#settings.hrm.vol_experience = False
+# Uncomment to show the Organisation name in HR represents
+#settings.hrm.show_organisation = True
+# Uncomment to disable the use of HR Certificates
+#settings.hrm.use_certificates = False
+# Uncomment to disable the use of HR Credentials
+#settings.hrm.use_credentials = False
+# Uncomment to disable the use of HR Description
+#settings.hrm.use_description = False
+# Uncomment to enable the use of HR Education
+#settings.hrm.use_education = True
+# Uncomment to disable the use of HR ID
+#settings.hrm.use_id = False
+# Uncomment to disable the use of HR Skills
+#settings.hrm.use_skills = False
+# Uncomment to disable the use of HR Teams
+#settings.hrm.use_teams = False
+# Uncomment to disable the use of HR Trainings
+#settings.hrm.use_trainings = False
+
+# Inventory Management
+#settings.inv.collapse_tabs = False
+# Use the term 'Order' instead of 'Shipment'
+#settings.inv.shipment_name = "order"
+#settings.inv.send_form_name = "Tally Out Sheet"
+#settings.inv.send_short_name = "TO"
+#settings.inv.send_ref_field_name = "Tally Out Number"
+#settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
+#settings.inv.recv_shortname = "ARDR"
+#settings.inv.shipment_types = {
+#         0: T("-"),
+#         1: T("Other Warehouse"),
+#         2: T("Donation"),
+#         3: T("Foreign Donation"),
+#         4: T("Local Purchases"),
+#         5: T("Confiscated Goods from Bureau Of Customs")
+#    }
+
+# Requests Management
 #settings.req.type_inv_label = T("Donations")
 #settings.req.type_hrm_label = T("Volunteers")
 # Allow the status for requests to be set manually,
@@ -272,68 +332,10 @@ settings.L10n.decimal_separator = "."
 #    msg_record_deleted = T("Request for Volunteers Canceled"),
 #    msg_list_empty = T("No Requests for Volunteers"))
 
-# Inventory Management
-#settings.inv.collapse_tabs = False
-# Use the term 'Order' instead of 'Shipment'
-#settings.inv.shipment_name = "order"
-#settings.inv.send_form_name = "Tally Out Sheet"
-#settings.inv.send_short_name = "TO"
-#settings.inv.send_ref_field_name = "Tally Out Number"
-#settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
-#settings.inv.recv_shortname = "ARDR"
-#settings.inv.shipment_types = {
-#         0: T("-"),
-#         1: T("Other Warehouse"),
-#         2: T("Donation"),
-#         3: T("Foreign Donation"),
-#         4: T("Local Purchases"),
-#         5: T("Confiscated Goods from Bureau Of Customs")
-#    }
-
 # Supply
 #settings.supply.use_alt_name = False
 # Do not edit after deployment
 #settings.supply.catalog_default = T("Default")
-
-# Organisation Management
-# Set the length of the auto-generated org/site code the default is 10
-#settings.org.site_code_len = 3
-# Uncomment to add summary fields for Organisations/Offices for # National/International staff
-#settings.org.summary = True
-
-# Human Resource Management
-# Uncomment to allow Staff & Volunteers to be registered without an email address
-#settings.hrm.email_required = False
-# Uncomment to allow HR records to be deletable rather than just marking them as obsolete
-#settings.hrm.deletable = True
-# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
-#settings.hrm.job_roles = True
-# Uncomment to hide the Staff resource
-#settings.hrm.show_staff = False
-# Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
-#settings.hrm.skill_types = True
-# Uncomment to disable Staff experience
-#settings.hrm.staff_experience = False
-# Uncomment to disable Volunteer experience
-#settings.hrm.vol_experience = False
-# Uncomment to show the Organisation name in HR represents
-#settings.hrm.show_organisation = True
-# Uncomment to disable the use of HR Certificates
-#settings.hrm.use_certificates = False
-# Uncomment to disable the use of HR Credentials
-#settings.hrm.use_credentials = False
-# Uncomment to disable the use of HR Description
-#settings.hrm.use_description = False
-# Uncomment to enable the use of HR Education
-#settings.hrm.use_education = True
-# Uncomment to disable the use of HR ID
-#settings.hrm.use_id = False
-# Uncomment to disable the use of HR Skills
-#settings.hrm.use_skills = False
-# Uncomment to disable the use of HR Teams
-#settings.hrm.use_teams = False
-# Uncomment to disable the use of HR Trainings
-#settings.hrm.use_trainings = False
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)

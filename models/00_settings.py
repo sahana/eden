@@ -214,12 +214,12 @@ No action is required.""" \
 %(email)s""")
 
 _messages["confirmation_email_subject"] = "%s %s" % (settings.get_system_name(),
-                                                    T("access granted"))
+                                                     T("access granted"))
 _messages["confirmation_email"] = "%s %s %s %s. %s." % (T("Welcome to the"),
-                                                       settings.get_system_name(),
-                                                       T("Portal at"),
-                                                       s3.base_url,
-                                                       T("Thanks for your assistance"))
+                                                        settings.get_system_name(),
+                                                        T("Portal at"),
+                                                        s3.base_url,
+                                                        T("Thanks for your assistance"))
 
 # We don't wish to clutter the groups list with 1 per user.
 _settings.create_user_groups = False
@@ -229,19 +229,16 @@ _settings.allow_basic_login = True
 _settings.logout_onlogout = s3_auth_on_logout
 _settings.login_onaccept = s3_auth_on_login
 _settings.login_next = settings.get_auth_login_next()
-if settings.get_auth_registration_volunteer() and \
-   settings.has_module("vol"):
+if settings.has_module("vol") and \
+   settings.get_auth_registration_volunteer():
     _settings.register_next = URL(c="vol", f="person")
 
-# Default Language for authenticated users
-_settings.table_user.language.default = settings.get_L10n_default_language()
-
 # Languages available in User Profiles
-field = _settings.table_user.language
 if len(s3.l10n_languages) > 1:
-    field.requires = IS_IN_SET(s3.l10n_languages,
-                               zero=None)
+    _settings.table_user.language.requires = IS_IN_SET(s3.l10n_languages,
+                                                       zero=None)
 else:
+    field = _settings.table_user.language
     field.default = s3.l10n_languages.keys()[0]
     field.readable = False
     field.writable = False

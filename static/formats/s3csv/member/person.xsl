@@ -280,7 +280,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="HomeAddress">
 
-        <xsl:if test="col[@field='Home Address']!=''">
+        <xsl:if test="col[@field='Home Address'] or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
             <resource name="pr_address">
                 <!-- Link to Location -->
                 <xsl:call-template name="LocationReference"/>
@@ -549,55 +549,53 @@
         </xsl:if>
 
         <!-- Address Location -->
-        <xsl:if test="$Address!=''">
-            <resource name="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$l5id"/>
-                </xsl:attribute>
-                <xsl:choose>
-                    <xsl:when test="$l4!=''">
-                        <reference field="parent" resource="gis_location">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l4id"/>
-                            </xsl:attribute>
-                        </reference>
-                    </xsl:when>
-                    <xsl:when test="$l3!=''">
-                        <reference field="parent" resource="gis_location">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l3id"/>
-                            </xsl:attribute>
-                        </reference>
-                    </xsl:when>
-                    <xsl:when test="$l2!=''">
-                        <reference field="parent" resource="gis_location">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l2id"/>
-                            </xsl:attribute>
-                        </reference>
-                    </xsl:when>
-                    <xsl:when test="$l1!=''">
-                        <reference field="parent" resource="gis_location">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l1id"/>
-                            </xsl:attribute>
-                        </reference>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <reference field="parent" resource="gis_location">
-                            <xsl:attribute name="uuid">
-                                <xsl:value-of select="$country"/>
-                            </xsl:attribute>
-                        </reference>
-                    </xsl:otherwise>
-                </xsl:choose>
-                <data field="name"><xsl:value-of select="$Address"/></data>
-                <data field="addr_street"><xsl:value-of select="$Address"/></data>
-                <data field="addr_postcode"><xsl:value-of select="col[@field='Home Postcode']"/></data>
-                <data field="lat"><xsl:value-of select="col[@field='Home Lat']"/></data>
-                <data field="lon"><xsl:value-of select="col[@field='Home Lon']"/></data>
-            </resource>
-        </xsl:if>
+        <resource name="gis_location">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$l5id"/>
+            </xsl:attribute>
+            <xsl:choose>
+                <xsl:when test="$l4!=''">
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$l4id"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$l3!=''">
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$l3id"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$l2!=''">
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$l2id"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$l1!=''">
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$l1id"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:otherwise>
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="$country"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:otherwise>
+            </xsl:choose>
+            <data field="name"><xsl:value-of select="$Address"/></data>
+            <data field="addr_street"><xsl:value-of select="$Address"/></data>
+            <data field="addr_postcode"><xsl:value-of select="col[@field='Home Postcode']"/></data>
+            <data field="lat"><xsl:value-of select="col[@field='Home Lat']"/></data>
+            <data field="lon"><xsl:value-of select="col[@field='Home Lon']"/></data>
+        </resource>
 
     </xsl:template>
 
