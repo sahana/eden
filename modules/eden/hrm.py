@@ -127,8 +127,8 @@ class S3HRModel(S3Model):
                                     widget = None,
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
-                                    empty=False,
-                                    required = True,
+                                    empty = False,
+                                    # Limit Sites to those belonging to the Organisation
                                     script = SCRIPT('''
 $(document).ready(function(){
  S3FilterFieldChange({
@@ -161,7 +161,7 @@ $(document).ready(function(){
                                         requires = IS_IN_SET(hrm_type_opts,
                                                              zero=None),
                                         default = 1,
-                                        label = T("Type"),
+                                        #label = T("Type"),
                                         # Always set via the Controller we create from
                                         readable=False,
                                         writable=False,
@@ -427,6 +427,7 @@ $(document).ready(function(){
 
         self.configure(tablename,
                        super_entity = "sit_trackable",
+                       mark_required = ["organisation_id"],
                        deletable = current.deployment_settings.get_hrm_deletable(),
                        search_method = human_resource_search,
                        onaccept = hrm_human_resource_onaccept,
@@ -3330,7 +3331,6 @@ def hrm_human_resource_onaccept(form):
         # e.g. Coming from s3_register callback
         vars = form
 
-    # Get the full record
     id = vars.id
     if not id:
         return
@@ -3339,6 +3339,7 @@ def hrm_human_resource_onaccept(form):
     s3db = current.s3db
     auth = current.auth
 
+    # Get the full record
     htable = db.hrm_human_resource
     record = db(htable.id == id).select(htable.id,
                                         htable.type,
@@ -3353,6 +3354,8 @@ def hrm_human_resource_onaccept(form):
                                         limitby=(0, 1)).first()
     data = Storage()
 
+    site_id = record.site_id
+
     # Affiliation, record ownership and component ownership
     s3db.pr_update_affiliations(htable, record)
 
@@ -3362,14 +3365,12 @@ def hrm_human_resource_onaccept(form):
     person = Storage(id = person_id)
     if current.deployment_settings.get_auth_person_realm_human_resource_site():
         # Set pr_person.realm_entity to the human_resource's site pe_id
-        site_id = record.site_id
         entity = s3db.pr_get_pe_id("org_site", site_id)
         if entity:
             auth.set_realm_entity(ptable, person,
                                   entity = entity,
                                   force_update = True)
 
-    site_id = record.site_id
     site_contact = record.site_contact
     if record.type == 1:
         # Staff

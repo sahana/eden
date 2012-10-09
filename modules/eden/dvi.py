@@ -434,14 +434,17 @@ class S3DVIModel(S3Model):
     def body_onaccept(form):
         """ Update body presence log """
 
-        try:
-            body = current.db.dvi_body[form.vars.id]
-        except:
-            return
+        db = current.db
+        table = db.dvi_body
+        body = db(table.id == form.vars.id).select(table.uuid,
+                                                   table.location_id,
+                                                   table.track_id,
+                                                   table.date_of_recovery,
+                                                   limitby=(0, 1)).first()
         if body and body.location_id:
             tracker = S3Tracker()
-            tracker(body).set_location(body.location_id,
-                                       timestmp=body.date_of_recovery)
+            tracker(record=body).set_location(body.location_id,
+                                              timestmp=body.date_of_recovery)
 
     # -------------------------------------------------------------------------
     @staticmethod

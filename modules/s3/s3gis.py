@@ -2028,7 +2028,7 @@ class GIS(object):
             # Use S3Track
             ids = resource._ids
             try:
-                tracker = S3Trackable(table, record_id=ids)
+                tracker = S3Trackable(table, record_ids=ids)
             except SyntaxError:
                 # This table isn't trackable
                 pass

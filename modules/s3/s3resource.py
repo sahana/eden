@@ -1929,7 +1929,7 @@ class S3Resource(object):
             duration = end - _start
             duration = '{:.2f}'.format(duration.total_seconds())
             _debug("export_resource of referenced resources and their components completed in %s seconds" % \
-                duration)
+                   duration)
 
         # Complete the tree
         tree = xml.tree(None,

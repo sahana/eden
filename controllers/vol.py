@@ -202,8 +202,8 @@ def volunteer():
                 _location.readable = True
                 table.code.writable = False
                 table.code.readable = False
-                table.department.writable = False
-                table.department.readable = False
+                table.department_id.writable = False
+                table.department_id.readable = False
                 table.essential.writable = False
                 table.essential.readable = False
                 table.site_contact.writable = False
@@ -431,8 +431,8 @@ def person():
                     table = r.component.table
                     table.code.writable = False
                     table.code.readable = False
-                    table.department.writable = False
-                    table.department.readable = False
+                    table.department_id.writable = False
+                    table.department_id.readable = False
                     table.essential.writable = False
                     table.essential.readable = False
                     #table.location_id.readable = True

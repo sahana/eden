@@ -106,7 +106,7 @@ def staff():
                    "person_id",
                    "job_title_id",
                    "organisation_id",
-                   "department",
+                   "department_id",
                    "site_id",
                    #"site_contact",
                    (T("Email"), "email"),
