@@ -791,7 +791,19 @@ class S3XML(S3Codec):
                 # off remote Sahana instances
                 # (make this optional to keep filesize small when not
                 #  needed?)
-                url = URL(request.controller, request.function).split(".", 1)[0]
+
+                # This is probably wrong: the controller/function does not
+                # necessarily represent the resource we're encoding here:
+                #url = URL(request.controller, request.function).split(".", 1)[0]
+
+                # This may be better, even though not fully bullet-proof either:
+                # assume that this resource has a native controller:
+                url = URL(resource.prefix, resource.name).split(".", 1)[0]
+
+                # Alternatively, we could simply take the URL of the parent
+                # element of the reference (which is never local, though)
+                #url = r.element.getparent().get(ATTRIBUTE.url, None)
+
                 if format == "geojson":
                     # Assume being used within the Sahana Mapping client so use local URLs
                     # to keep filesize down
