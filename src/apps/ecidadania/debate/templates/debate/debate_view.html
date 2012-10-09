@@ -71,7 +71,7 @@
                                     <td headers="{{ td_id }}-{{ row_id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
                                             {% if note.column_id == td_id and note.row_id == row_id %}
-                                                <div id="{{ note.id }}" class="note {% if note.author == request_user %}mine{% endif %} {% if note.author == request_user or request_user.is_staff %}{% else %}disabled{% endif %}">
+                                                <div id="{{ note.id }}" class="note {% if note.author == request_user %}mine{% endif %} {% if note.author == request_user or request_user.is_staff %}{% else %}disabled{% endif %}" rel="popover" data-title="{{note.title}}" data-content="<span style='font-weight:bold;line-height:1.5em;'>Author: {{note.author}}</span><br/>{{note.message|truncatechars:350}}">
                                                     <div class="handler">
                                                         {% if note.author == request_user and perms.note.delete_note or request_user.is_staff %}
                                                             <div class="deletenote hidden"><a href="#" onclick="deleteNote(this)" id="deletenote" title="{% trans 'Delete note' %}">x</a></div>
@@ -147,6 +147,7 @@
                     </div>
                     <div class="modal-body">
                         <p id="view-note-desc"></p>
+                        {% trans "Author:" %}  <span id="view-note-author"></span>
                         <span id="num-comments"></span>
                         <div id="comments"></div>
                     </div>
@@ -174,5 +175,14 @@
     </div>
 
     <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
+    <script>
+        $(function() {
+            $(".note").popover({
+                placement : 'top',
+                trigger: 'hover',
+                delay: { show: 500, hide: 100 }
+            });
+        });
+</script>
 {% endwith %}
 {% endblock %}

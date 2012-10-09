@@ -200,6 +200,7 @@ def update_note(request, space_url):
         response_data = {}
         response_data['title'] = note.title
         response_data['message'] = note.message
+        response_data['author'] = { 'name': note.author.username }
         response_data['comments'] = [ {'username': c.user.username, 'comment': c.comment, 'submit_date': c.submit_date} for c in latest_comments]
         response_data["form_html"] = form.as_p()
 

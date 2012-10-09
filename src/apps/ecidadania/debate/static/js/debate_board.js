@@ -101,6 +101,7 @@ function viewNote(obj) {
     request.done(function(note) {
         $('h3#view-note-title').text(note.title);
         $('p#view-note-desc').html(note.message);
+        $('span#view-note-author').text(note.author.name);
 
         var html = '';
         var comment_count = "<h5 class='note-comment-title'>Comments (" + note.comments.length + ")</h5>";
