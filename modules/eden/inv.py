@@ -279,7 +279,7 @@ class S3WarehouseModel(S3Model):
                                "organisation_id",   # Filtered in Component views
                                #"type",
                                #(T("Address"), "location_id$addr_street"),
-                               (T("Country"), "location_id$L0"),
+                               (messages.COUNTRY, "location_id$L0"),
                                "location_id$L1",
                                "location_id$L2",
                                "location_id$L3",
@@ -350,16 +350,11 @@ class S3WarehouseModel(S3Model):
     @staticmethod
     def inv_warehouse_onaccept(form):
         """
-            * Update Affiliation and Realms
+            Update Affiliation, record ownership and component ownership
         """
 
-        auth = current.auth
         s3db = current.s3db
-        wtable = s3db.inv_warehouse
-        vars = form.vars
-
-        # Affiliation, record ownership and component ownership
-        s3db.pr_update_affiliations(wtable, vars)
+        s3db.pr_update_affiliations(s3db.inv_warehouse, form.vars)
 
     # ---------------------------------------------------------------------
     @staticmethod

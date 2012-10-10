@@ -169,6 +169,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
+    # Reports
+    print "Compressing Reports"
+    sourceDirectoryReport = ".."
+    configFilenameReport = "sahana.js.report.cfg"
+    outputFilenameReport = "s3.report.min.js"
+    mergedReport = mergejs.run(sourceDirectoryReport,
+                               None,
+                               configFilenameReport)
+    minimizedReport = minimize(mergedReport)
+    open(outputFilenameReport, "w").write(minimizedReport)
+    try:
+        os.remove("../S3/%s" % outputFilenameReport)
+    except:
+        pass
+    shutil.move(outputFilenameReport, "../S3")
+
     # Vulnerability
     print "Compressing Vulnerability"
     sourceDirectoryVulnerability = ".."
@@ -206,7 +222,6 @@ def dojs(dogis = False, warnings = True):
                      "inline_component",
                      "locationselector.widget",
                      "popup",
-                     "report",
                      "select_person",
                      "timeline",
                      ]:

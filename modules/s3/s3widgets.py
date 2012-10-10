@@ -463,11 +463,13 @@ class S3LocationAutocompleteWidget(FormWidget):
             - needs to have deployment_settings passed-in
             - excludes unreliable imported records (Level 'XX')
 
-        Currently used for selecting the region location in gis_config.
         Appropriate when the location has been previously created (as is the
         case for location groups or other specialized locations that need
         the location create form).
         S3LocationSelectorWidget may be more appropriate for specific locations.
+
+        Currently used for selecting the region location in gis_config
+        and for project/location.
 
         @todo: .represent for the returned data
         @todo: Refreshes any dropdowns as-necessary (post_process)
@@ -509,22 +511,26 @@ class S3LocationAutocompleteWidget(FormWidget):
                           args="search.json",
                           vars={"filter":"~",
                                 "field":fieldname,
-                                "level":levels})
+                                "level":levels,
+                                "simple":1,
+                                })
             else:
                 url = URL(c=self.prefix,
                           f=self.resourcename,
                           args="search.json",
                           vars={"filter":"~",
                                 "field":fieldname,
-                                "level":level})
+                                "level":level,
+                                "simple":1,
+                                })
         else:
             url = URL(c=self.prefix,
                       f=self.resourcename,
                       args="search.json",
                       vars={"filter":"~",
                             "field":fieldname,
-                            "exclude_field":"level",
-                            "exclude_value":"XX"})
+                            "simple":1,
+                            })
 
         # Which Levels do we have in our hierarchy & what are their Labels?
         #location_hierarchy = current.deployment_settings.gis.location_hierarchy
@@ -534,6 +540,16 @@ class S3LocationAutocompleteWidget(FormWidget):
         #except:
         #    pass
 
+        # @ToDo: Something nicer (i.e. server-side formatting within S3LocationSearch)
+        name_getter = \
+'''function(item){
+if(item.level=="L0"){return item.name+" (%(country)s)"
+}else if(item.level=="L1"){return item.name+" ("+item.L0+")"
+}else if(item.level=="L2"){return item.name+" ("+item.L1+","+item.L0+")"
+}else if(item.level=="L3"){return item.name+" ("+item.L2+","+item.L1+","+item.L0+")"
+}else if(item.level=="L4"){return item.name+" ("+item.L3+","+item.L2+","+item.L1+","+item.L0+")"
+}else{return item.name}}''' % dict(country = current.messages.COUNTRY)
+
         return S3GenericAutocompleteTemplate(
             self.post_process,
             self.delay,
@@ -542,6 +558,7 @@ class S3LocationAutocompleteWidget(FormWidget):
             value,
             attributes,
             source = repr(url),
+            name_getter = name_getter,
         )
 
 # =============================================================================
@@ -1298,6 +1315,7 @@ class S3LocationSelectorWidget(FormWidget):
 
         Designed for use for Resources which require a Specific Location, such as Sites, Persons, Assets, Incidents, etc
         Not currently suitable for Resources which require a Hierarchical Location, such as Projects, Assessments, Plans, etc
+        - S3LocationAutocompleteWidget is more appropriate for these.
 
         Can also be used to transparently wrap simple sites (such as project_site) using the IS_SITE_SELECTOR() validator
 

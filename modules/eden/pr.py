@@ -1440,6 +1440,7 @@ class S3PersonAddressModel(S3Model):
     def model(self):
 
         T = current.T
+        messages = current.messages
         settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
@@ -1463,7 +1464,7 @@ class S3PersonAddressModel(S3Model):
                                         label = T("Address Type"),
                                         represent = lambda opt: \
                                                     pr_address_type_opts.get(opt,
-                                                        current.messages.UNKNOWN_OPT)),
+                                                        messages.UNKNOWN_OPT)),
                                   self.gis_location_id(),
                                   s3_comments(),
                                   *s3_meta_fields())
@@ -1503,7 +1504,7 @@ class S3PersonAddressModel(S3Model):
                                       "location_id$L3",
                                       "location_id$L2",
                                       "location_id$L1",
-                                      (T("Country"), "location_id$L0"),
+                                      (messages.COUNTRY, "location_id$L0"),
                                       ])
 
         # ---------------------------------------------------------------------

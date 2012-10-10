@@ -39,6 +39,7 @@ def index():
 def station():
     """ Fire Station """
 
+    # CSV column headers, so no T()
     csv_extra_fields = [
         dict(label="Country",
              field=s3db.gis_country_id()),

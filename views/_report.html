@@ -3,61 +3,50 @@
 {{else:}}
 <link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-{{try:}}{{=H2(title)}}
-{{except:}}{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='rheader'>
-{{try:}}{{=XML(rheader)}}
+{{try:}}{{=XML(rheader)}}</div><div id='component'>
+{{except:}}</div><div>{{pass}}
+<div class='form-container'>
+{{try:}}{{=form}}
+{{except:}}{{pass}}
 </div>
-<div id='component'>
-{{except:}}
+<div id='map'></div>
+{{try:}}{{items = items}}
+  {{try:}}
+    {{if report_data is not None:}}
+    {{s3.actions=None}}
+    <div id='chart-opts' style='padding-bottom:10px;'>
+      {{=report_data.layer_label}}
+      {{if report_data.row_label:}}
+        <a href="#" id="pie_chart_rows"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
+        <a href="#" id="vbar_chart_rows"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
+        {{=report_data.row_label}}
+      {{pass}}
+      {{if report_data.col_label:}}
+        <a href="#" id="pie_chart_cols"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
+        <a href="#" id="vbar_chart_cols"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
+        {{=report_data.col_label}}
+      {{pass}}
+    </div>
+  {{pass}}
+{{except:}}{{pass}}
+<div id='chart-container' class='hide'>
+  {{=A(T("Hide Chart"), _href="#", _id="hide-chart", _class="action-lnk")}}
+  <div id='chart' style='height:400px;'></div>
 </div>
-<div>
-{{pass}}
-  <div class='form-container'>
-  {{try:}}{{=form}}
-  {{except:}}{{pass}}
-  </div>
-  <div id='map'></div>
-  {{try:}}{{items = items}}
-    {{try:}}
-        {{if report_data is not None:}}
-        {{s3.actions=None}}
-        <div id='chart-opts' style='padding-bottom:10px;'>
-            {{=report_data.layer_label}}
-            {{if report_data.row_label:}}
-                <a href="#" id="pie_chart_rows"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
-                <a href="#" id="vbar_chart_rows"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
-                {{=report_data.row_label}}
-            {{pass}}
-            {{if report_data.col_label:}}
-                <a href="#" id="pie_chart_cols"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
-                <a href="#" id="vbar_chart_cols"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
-                {{=report_data.col_label}}
-            {{pass}}
-        </div>
-        {{pass}}
-  {{except:}}{{pass}}
-  <div id='chart-container' class='hide'>
-      {{=A(T("Hide Chart"), _href="#", _id="hide-chart", _class="action-lnk")}}
-      <div id='chart' style='height:400px;'></div>
-  </div>
-  <div id='table-container'>
-      {{=items}}
-  </div>
+<div id='table-container'>
+  {{=items}}
+</div>
 {{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
 {{try:}}
-{{if report_data:}}
-  var json_data = {{=XML(report_data.json_data)}};
-{{else:}}
-  var json_data = {cols:null, rows:null};
-{{pass}}
-{{except:}}
-var json_data = {cols:null, rows:null};
-{{pass}}
+{{if report_data:}}var json_data={{=XML(report_data.json_data)}}
+{{else:}}var json_data={cols:null, rows:null}{{pass}}
+{{except:}}var json_data={cols:null, rows:null}{{pass}}
 //]]></script>
 {{if s3.debug:}}
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.js"></script>
@@ -70,13 +59,5 @@ var json_data = {cols:null, rows:null};
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.highlighter.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.js"></script>
 {{else:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.barRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.categoryAxisRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pointLabels.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasTextRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.highlighter.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.min.js"></script>
 {{pass}}

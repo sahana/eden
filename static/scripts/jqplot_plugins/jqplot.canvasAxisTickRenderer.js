@@ -2,9 +2,10 @@
  * jqPlot
  * Pure JavaScript plotting plugin using jQuery
  *
- * Version: 1.0.0b2_r1012
+ * Version: 1.0.4
+ * Revision: 1121
  *
- * Copyright (c) 2009-2011 Chris Leonello
+ * Copyright (c) 2009-2012 Chris Leonello
  * jqPlot is currently available for use in all personal or commercial projects 
  * under both the MIT (http://www.opensource.org/licenses/mit-license.php) and GPL 
  * version 2.0 (http://www.gnu.org/licenses/gpl-2.0.html) licenses. This means that you can 
@@ -118,10 +119,10 @@
         // 3.5 and Safari 4 since they do not provide a method to determine the font height.
         this.pt2px = null;
         
-        this._elem;
-        this._ctx;
-        this._plotWidth;
-        this._plotHeight;
+        //this._elem;
+        //this._ctx;
+        //this._plotWidth;
+        //this._plotHeight;
         this._plotDimensions = {height:null, width:null};
         
         $.extend(true, this, options);

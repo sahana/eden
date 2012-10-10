@@ -1245,6 +1245,7 @@ class S3Project3WModel(S3Model):
         project_id = self.project_project_id
 
         NONE = current.messages.NONE
+        COUNTRY = current.messages.COUNTRY
 
         add_component = self.add_component
         configure = self.configure
@@ -1383,7 +1384,7 @@ class S3Project3WModel(S3Model):
                 name = "project_location_search_L0",
                 #field="L0",
                 field = "location_id$L0",
-                label = T("Country"),
+                label = COUNTRY,
                 cols = 3
             ),
             S3SearchOptionsWidget(
@@ -1415,22 +1416,21 @@ class S3Project3WModel(S3Model):
         )
 
         # Resource Configuration
-        report_fields = [#(T("Location"), "location_id"),
-                         (T("Country"), "L0"),
-                         "L1",
-                         "L2",
-                         "L3",
-                         "L4",
+        report_fields = [(COUNTRY, "location_id$L0"),
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         "location_id$L4",
                          (T("Organization"), "organisation"),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
                         ]
         list_fields = ["location_id",
-                       (T("Country"), "L0"),
-                         "L1",
-                         "L2",
-                         "L3",
-                         "L4",
+                       (COUNTRY, "location_id$L0"),
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
                        "project_id",
                        ]
         if theme_percentages:
@@ -1446,13 +1446,11 @@ class S3Project3WModel(S3Model):
                   search_method=project_location_search,
                   #onaccept=self.project_location_onaccept,
                   deduplicate=self.project_location_deduplicate,
-                  report_options=Storage(
-                                         search = advanced_search,
+                  report_options=Storage(search = advanced_search,
                                          rows=report_fields,
                                          cols=report_fields,
                                          facts=report_fields,
-                                         defaults=Storage(
-                                                          rows="location.L1",
+                                         defaults=Storage(rows="location.location_id$L1",
                                                           cols="location.project_id",
                                                           fact="location.multi_activity_type_id",
                                                           aggregate="list",
@@ -1685,15 +1683,17 @@ class S3Project3WModel(S3Model):
                       "project_id$multi_hazard_id",
                       "project_id$multi_theme_id",
                       #"activity_id$multi_activity_type_id"
-                      (T("Country"), "L0"),
-                      "L1",
-                      "L2",
-                      "L3",
-                      "L4",
+                      #(COUNTRY, "L0"),
+                      #"L1",
+                      #"L2",
+                      #"L3",
+                      #"L4",
+                      (COUNTRY, "location_id$L0"),
+                      "location_id$L1",
+                      "location_id$L2",
+                      "location_id$L3",
+                      "location_id$L4",
                       ]
-        #lh = current.gis.get_location_hierarchy()
-        #lh = [(lh[opt], opt) for opt in lh]
-        #report_fields.extend(lh)
 
         # ---------------------------------------------------------------------
         def year_options():
@@ -1749,7 +1749,9 @@ class S3Project3WModel(S3Model):
         def beneficiary_L1_opts():
             """
                 Provide the options for the L1 search filter
+                - unused since we're now a Join
                 @ToDo: Limit to just those project_location records to which the user has access
+                - automatic now that we're using s3resource for this
             """
             table = self.project_location
             ltable = self.gis_location
@@ -1787,9 +1789,9 @@ class S3Project3WModel(S3Model):
                         ),
                         S3SearchOptionsWidget(
                             name = "beneficiary_search_L1",
-                            field = "L1",
+                            field = "location_id$L1",
                             location_level = "L1",
-                            options = beneficiary_L1_opts,
+                            #options = beneficiary_L1_opts,
                             cols = 3,
                         ),
                     ],
@@ -1797,12 +1799,12 @@ class S3Project3WModel(S3Model):
                     cols=report_fields,
                     facts=["value"],
                     methods=["sum"],
-                    defaults=Storage( rows="beneficiary.project_id",
-                                      cols="beneficiary.parameter_id",
-                                      fact="beneficiary.value",
-                                      aggregate="sum",
-                                      totals=True
-                                      )
+                    defaults=Storage(rows="beneficiary.project_id",
+                                     cols="beneficiary.parameter_id",
+                                     fact="beneficiary.value",
+                                     aggregate="sum",
+                                     totals=True
+                                     )
                   )
                  )
 
@@ -1816,9 +1818,9 @@ class S3Project3WModel(S3Model):
                                          represent = self.project_beneficiary_represent,
                                          label = T("Beneficiaries"),
                                          comment = S3AddResourceLink(c="project",
-                                                                     f="beneficiary",
-                                                                     title=ADD_BNF,
-                                                                     tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+                                            f="beneficiary",
+                                            title=ADD_BNF,
+                                            tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
                                          ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
@@ -2893,6 +2895,7 @@ class S3ProjectTaskModel(S3Model):
     """
 
     names = ["project_milestone",
+             "project_milestone_represent",
              "project_task",
              "project_time",
              "project_comment",
@@ -3448,6 +3451,7 @@ class S3ProjectTaskModel(S3Model):
         return dict(
             project_task_id = task_id,
             project_task_active_statuses = project_task_active_statuses,
+            project_milestone_represent = self.milestone_represent,
         )
 
     # -------------------------------------------------------------------------
@@ -3459,7 +3463,9 @@ class S3ProjectTaskModel(S3Model):
                                 writable=False)
 
         return Storage(
-            project_task_id = lambda: dummy("task_id")
+            project_task_id = lambda: dummy("task_id"),
+            project_task_active_statuses = [],
+            project_milestone_represent = lambda id: current.messages.NONE,
         )
 
     # -------------------------------------------------------------------------
@@ -4280,7 +4286,9 @@ class S3ProjectOrganisationFundingVirtualFields:
 
 # =============================================================================
 class S3ProjectBudgetVirtualFields:
-    """ Virtual fields for the project_project table when multi_budgets=True """
+    """
+        Virtual fields for the project_project table when multi_budgets=True
+    """
 
     # -------------------------------------------------------------------------
     def total_annual_budget(self):
@@ -4296,7 +4304,9 @@ class S3ProjectBudgetVirtualFields:
 class S3ProjectLocationVirtualFields:
     """ Virtual fields for the project_location table """
 
-    extra_fields = ["project_id", "location_id"]
+    extra_fields = ["project_id",
+                    "location_id"
+                    ]
 
     # -------------------------------------------------------------------------
     def organisation(self):
@@ -4323,65 +4333,65 @@ class S3ProjectLocationVirtualFields:
         else:
             return None
 
-    def L0(self):
-        parents = Storage()
-        try:
-            parents = current.gis.get_parent_per_level(parents,
-                                                       self.project_location.location_id,
-                                                       ids=False,
-                                                       names=True)
-        except AttributeError:
-            pass
+    # def L0(self):
+        # parents = Storage()
+        # try:
+            # parents = current.gis.get_parent_per_level(parents,
+                                                       # self.project_location.location_id,
+                                                       # ids=False,
+                                                       # names=True)
+        # except AttributeError:
+            # pass
 
-        if "L0" in parents:
-            return parents["L0"]
-        else:
-            return None
+        # if "L0" in parents:
+            # return parents["L0"]
+        # else:
+            # return None
 
-    def L1(self):
-        parents = Storage()
-        try:
-            parents = current.gis.get_parent_per_level(parents,
-                                                       self.project_location.location_id,
-                                                       ids=False,
-                                                       names=True)
-        except AttributeError:
-            pass
+    # def L1(self):
+        # parents = Storage()
+        # try:
+            # parents = current.gis.get_parent_per_level(parents,
+                                                       # self.project_location.location_id,
+                                                       # ids=False,
+                                                       # names=True)
+        # except AttributeError:
+            # pass
 
-        if "L1" in parents:
-            return parents["L1"]
-        else:
-            return None
+        # if "L1" in parents:
+            # return parents["L1"]
+        # else:
+            # return None
 
-    def L2(self):
-        parents = Storage()
-        try:
-            parents = current.gis.get_parent_per_level(parents,
-                                                       self.project_location.location_id,
-                                                       ids=False,
-                                                       names=True)
-        except AttributeError:
-            pass
+    # def L2(self):
+        # parents = Storage()
+        # try:
+            # parents = current.gis.get_parent_per_level(parents,
+                                                       # self.project_location.location_id,
+                                                       # ids=False,
+                                                       # names=True)
+        # except AttributeError:
+            # pass
 
-        if "L2" in parents:
-            return parents["L2"]
-        else:
-            return None
+        # if "L2" in parents:
+            # return parents["L2"]
+        # else:
+            # return None
 
-    def L3(self):
-        parents = Storage()
-        try:
-            parents = current.gis.get_parent_per_level(parents,
-                                                       self.project_location.location_id,
-                                                       ids=False,
-                                                       names=True)
-        except AttributeError:
-            pass
+    # def L3(self):
+        # parents = Storage()
+        # try:
+            # parents = current.gis.get_parent_per_level(parents,
+                                                       # self.project_location.location_id,
+                                                       # ids=False,
+                                                       # names=True)
+        # except AttributeError:
+            # pass
 
-        if "L3" in parents:
-            return parents["L3"]
-        else:
-            return None
+        # if "L3" in parents:
+            # return parents["L3"]
+        # else:
+            # return None
 
     # -------------------------------------------------------------------------
     # def themes(self):
@@ -4444,145 +4454,98 @@ class S3ProjectLocationVirtualFields:
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["project_location_id$location_id",
-                    "project_id",
+    extra_fields = ["project_id",
+                    #"location_id",
                     "date",
                     "end_date"]
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _get_project_location(id):
-        """
-            Get the location from the database for this project_location and
-            return the location tree
-        """
-
-        db = current.db
-        table = db.project_location
-        r = db(table.id == id).select(table.location_id,
-                                      limitby=(0,1),
-                                      cache=current.s3db.cache).first()
-
-        parents = Storage()
-        if r:
-            parents = current.gis.get_parent_per_level(parents,
-                                                       r.location_id,
-                                                       ids=False,
-                                                       names=True)
-
-        return parents
-
-    # -------------------------------------------------------------------------
-    def L0(self):
-        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
-        #if "L0" in parents:
-        #    return parents["L0"]
-        #else:
-        #    return current.messages.NONE
-        try:
-            id = self.project_beneficiary.project_location_id
-        except:
-             return current.messages.NONE
-        else:
-            db = current.db
-            table = db.project_location
-            ltable = db.gis_location
-            query = (table.id == id) & \
-                    (table.location_id == ltable.id)
-            r = db(query).select(ltable.L0,
-                                 ltable.L1,
-                                 ltable.L2,
-                                 ltable.L3,
-                                 cache=current.s3db.cache,
-                                 limitby=(0, 1)).first()
-            try:
-                return r.L0
-            except:
-                return current.messages.UNKNOWN_OPT
+    # def L0(self):
+        # try:
+            # id = self.project_beneficiary.location_id
+        # except:
+             # return current.messages.NONE
+        # else:
+            # db = current.db
+            # table = db.gis_location
+            # query = (table.id == id)
+            ##Get all the fields as we'll cache these for the other VFs
+            # r = db(query).select(table.L0,
+                                 # table.L1,
+                                 # table.L2,
+                                 # table.L3,
+                                 # cache=current.s3db.cache,
+                                 # limitby=(0, 1)).first()
+            # try:
+                # return r.L0
+            # except:
+                # return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
-    def L1(self):
-        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
-        #if "L1" in parents:
-        #    return parents["L1"]
-        #else:
-        #    return current.messages.NONE
-        try:
-            id = self.project_beneficiary.project_location_id
-        except:
-             return current.messages.NONE
-        else:
-            db = current.db
-            table = db.project_location
-            ltable = db.gis_location
-            query = (table.id == id) & \
-                    (table.location_id == ltable.id)
-            r = db(query).select(ltable.L0,
-                                 ltable.L1,
-                                 ltable.L2,
-                                 ltable.L3,
-                                 cache=current.s3db.cache,
-                                 limitby=(0, 1)).first()
-            try:
-                return r.L1
-            except:
-                return current.messages.UNKNOWN_OPT
+    # def L1(self):
+        # try:
+            # id = self.project_beneficiary.location_id
+        # except:
+             # return current.messages.NONE
+        # else:
+            # db = current.db
+            # table = db.gis_location
+            # query = (table.id == id)
+            ##Get all the fields as we'll cache these for the other VFs
+            # r = db(query).select(table.L0,
+                                 # table.L1,
+                                 # table.L2,
+                                 # table.L3,
+                                 # cache=current.s3db.cache,
+                                 # limitby=(0, 1)).first()
+            # try:
+                # return r.L1
+            # except:
+                # return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
-    def L2(self):
-        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
-        #if "L2" in parents:
-        #    return parents["L2"]
-        #else:
-        #    return current.messages.NONE
-        try:
-            id = self.project_beneficiary.project_location_id
-        except:
-             return current.messages.NONE
-        else:
-            db = current.db
-            table = db.project_location
-            ltable = db.gis_location
-            query = (table.id == id) & \
-                    (table.location_id == ltable.id)
-            r = db(query).select(ltable.L0,
-                                 ltable.L1,
-                                 ltable.L2,
-                                 ltable.L3,
-                                 cache=current.s3db.cache,
-                                 limitby=(0, 1)).first()
-            try:
-                return r.L2
-            except:
-                return current.messages.UNKNOWN_OPT
+    # def L2(self):
+        # try:
+            # id = self.project_beneficiary.location_id
+        # except:
+             # return current.messages.NONE
+        # else:
+            # db = current.db
+            # table = db.gis_location
+            # query = (table.id == id)
+            ##Get all the fields as we'll cache these for the other VFs
+            # r = db(query).select(table.L0,
+                                 # table.L1,
+                                 # table.L2,
+                                 # table.L3,
+                                 # cache=current.s3db.cache,
+                                 # limitby=(0, 1)).first()
+            # try:
+                # return r.L2
+            # except:
+                # return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
-    def L3(self):
-        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
-        #if "L3" in parents:
-        #    return parents["L3"]
-        #else:
-        #    return current.messages.NONE
-        try:
-            id = self.project_beneficiary.project_location_id
-        except:
-             return current.messages.NONE
-        else:
-            db = current.db
-            table = db.project_location
-            ltable = db.gis_location
-            query = (table.id == id) & \
-                    (table.location_id == ltable.id)
-            r = db(query).select(ltable.L0,
-                                 ltable.L1,
-                                 ltable.L2,
-                                 ltable.L3,
-                                 cache=current.s3db.cache,
-                                 limitby=(0, 1)).first()
-            try:
-                return r.L3
-            except:
-                return current.messages.UNKNOWN_OPT
+    # def L3(self):
+        # try:
+            # id = self.project_beneficiary.location_id
+        # except:
+             # return current.messages.NONE
+        # else:
+            # db = current.db
+            # table = db.gis_location
+            # query = (table.id == id)
+            ##Get all the fields as we'll cache these for the other VFs
+            # r = db(query).select(table.L0,
+                                 # table.L1,
+                                 # table.L2,
+                                 # table.L3,
+                                 # cache=current.s3db.cache,
+                                 # limitby=(0, 1)).first()
+            # try:
+                # return r.L3
+            # except:
+                # return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def year(self):
@@ -4601,7 +4564,11 @@ class S3ProjectBeneficiaryVirtualFields:
             end_date = None
 
         if not date or not end_date:
-            project = current.s3db.project_project[project_id]
+            table = current.s3db.project_project
+            project = current.db(table.id == project_id).select(table.date,
+                                                                table.end_date,
+                                                                limitby=(0, 1)
+                                                                ).first()
             if project:
                 if not date:
                     date = project.date

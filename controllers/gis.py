@@ -124,7 +124,7 @@ def location():
             s3base.S3SearchOptionsWidget(
                 name="location_search_L0",
                 field="L0",
-                label = T("Country"),
+                label = COUNTRY,
                 cols = 3,
             ),
             s3base.S3SearchOptionsWidget(
@@ -148,7 +148,7 @@ def location():
             # NB This currently only works for locations with the country as direct parent (i.e. mostly L1s)
             #s3base.S3SearchOptionsWidget(
             #    name = "location_search_country",
-            #    label = T("Country"),
+            #    label = COUNTRY,
             #    field = "parent",
             #    cols = 2
             #),
@@ -352,7 +352,7 @@ def location():
         table.addr_street.readable = table.addr_street.writable = False
 
     country = S3ReusableField("country", "string", length=2,
-                              label = T("Country"),
+                              label = COUNTRY,
                               requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                     lambda: gis.get_countries(key_type="code"),
                                     zero = SELECT_LOCATION)),
@@ -360,6 +360,7 @@ def location():
                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT)
 
     output = s3_rest_controller(rheader=s3db.gis_rheader,
+                                # CSV column headers, so no T()
                                 csv_extra_fields = [
                                     dict(label="Country",
                                          field=country())
@@ -1859,6 +1860,7 @@ def theme_data():
     """ RESTful CRUD controller """
 
     output = s3_rest_controller(csv_extra_fields = [
+                                    # CSV column headers, so no T()
                                     dict(label="Layer",
                                          field=s3db.gis_layer_theme_id())
                                 ])

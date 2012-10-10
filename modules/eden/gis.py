@@ -244,7 +244,7 @@ class S3LocationModel(S3Model):
 
         country_id = S3ReusableField("country_id", table,
                                      sortby = "name",
-                                     label = T("Country"),
+                                     label = messages.COUNTRY,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "gis_location.id",
                                                               self.country_represent,
@@ -613,8 +613,7 @@ class S3LocationModel(S3Model):
         if not level:
             return current.messages.NONE
         elif level == "L0":
-            T = current.T
-            return T("Country")
+            return current.messages.COUNTRY
         else:
             gis = current.gis
             config = gis.get_config()
@@ -3677,7 +3676,7 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
         # We aren't going to use the represent, so skip making it.
         represent_text = current.T("Show on Map")
     elif row.level == "L0":
-        represent_text = "%s (%s)" % (row.name, current.T("Country"))
+        represent_text = "%s (%s)" % (row.name, current.messages.COUNTRY)
     else:
         s3db = current.s3db
         cache = s3db.cache

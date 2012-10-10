@@ -83,27 +83,31 @@ class CreateProject(SeleniumUnitTest):
         self.browser.find_element_by_id("rheader_tab_location").click()
 
         self.create("project_location", 
-                    [( "L0",
-                       "Timor-Leste",
-                       "gis_location" ),
-                     ( "L1",
-                       "Aileu",
-                       "gis_location"),
-                     ( "L2",
+                    [( "location_id",
                        "Aileu Vila",
-                       "gis_location"),
-                     ( "L3",
-                       "Saboria", #"Aisirimou"
-                       "gis_location"),
-                     ( "L4",
-                       "Aileu",
-                       "gis_location"),
-                     ( "lat",
-                       "0",
-                       "gis_location"),
-                     ( "lon",
-                       "0",
-                       "gis_location")
+                       "autocomplete"),
+                     # If using LocationSelector:
+                     #( "L0",
+                     #  "Timor-Leste",
+                     #  "gis_location" ),
+                     #( "L1",
+                     #  "Aileu",
+                     #  "gis_location"),
+                     #( "L2",
+                     #  "Aileu Vila",
+                     #  "gis_location"),
+                     #( "L3",
+                     #  "Saboria", #"Aisirimou"
+                     #  "gis_location"),
+                     #( "L4",
+                     #  "Aileu",
+                     #  "gis_location"),
+                     #( "lat",
+                     #  "0",
+                     #  "gis_location"),
+                     #( "lon",
+                     #  "0",
+                     #  "gis_location")
                      # @ToDo: Activities - Community Organisation, Contingency Planning, Logistics
                      ]
                      )

@@ -70,7 +70,7 @@ class S3CAPModel(S3Model):
 
         # ---------------------------------------------------------------------
         # List of Incident Categories -- copied from irs module <--
-        # FIXME: Move to a pre-populated Table irs_incident_type
+        # @ToDo: Switch to using event_incident_type
         #
         # The keys are based on the Canadian ems.incident hierarchy, with a few extra general versions added to 'other'
         # The values are meant for end-users, so can be customised as-required
@@ -234,7 +234,6 @@ class S3CAPModel(S3Model):
             ("Private", T("Private - only to specified addresses (mentioned as recipients)"))
         ])
 
-        # @ToDo: i18n: Need label=T("")
         tablename = "cap_alert"
         table = define_table(tablename,
                              Field("is_template", "boolean",
@@ -250,26 +249,34 @@ class S3CAPModel(S3Model):
                                       label = T("Template"),
                                       comment = T("Apply a template"),
                                       ondelete = "RESTRICT"),
-                             Field("template_title"),
+                             Field("template_title",
+                                   label = T("Template Title")),
                              Field("template_settings", "text",
                                    readable=False,
                                    default="{}"),
                              Field("identifier", unique=True,
+                                   label = T("Identifier"),
                                    default = self.generate_identifier),
                              Field("sender",
+                                   label = T("Sender"),
                                    default = self.generate_sender),
                              Field("sent", "datetime",
                                    writable=False,
                                    readable=True),
                              Field("status",
+                                   label = T("Status"),
                                    requires=IS_IN_SET(cap_alert_status_code_opts)),
                              Field("msg_type",
                                    label = T("Message Type"),
                                    requires=IS_IN_SET(cap_alert_msgType_code_opts)),
-                             Field("source"),
+                             Field("source",
+                                   label = T("Source")),
                              Field("scope",
+                                   label = T("Scope"),
                                    requires=IS_IN_SET(cap_alert_scope_code_opts)),
-                             Field("restriction", "text"), # text decribing the restriction for scope=restricted
+                             # Text decribing the restriction for scope=restricted
+                             Field("restriction", "text",
+                                   label = T("Restriction")),
                              Field("addresses", "list:string",
                                    label = T("Recipients"),
                                    #@ToDo: provide a better way to add multiple addresses, do not ask the user to delimit it themselves
@@ -277,31 +284,36 @@ class S3CAPModel(S3Model):
                                    #widget = S3CAPAddressesWidget,
                                    represent=self.list_string_represent),
                              Field("codes", "text",
+                                   label = T("Codes"),
                                    widget = S3KeyValueWidget(),
                                    represent = S3KeyValueWidget.represent,
                                    default = settings.get_cap_codes()
                                    ),
-                             Field("note", "text"),
+                             Field("note", "text",
+                                   label = T("Note")),
                              Field("reference", "list:reference cap_alert",
+                                   label = T("Reference"),
                                    # @ToDo: This should not be manually entered, needs a widget
                                    #widget = S3ReferenceWidget(table, one_to_many=True, allow_create=False),
                                    represent=self.alert_reference_represent),
+                             # @ToDo: Switch to using event_incident_type_id
                              Field("incidents",
+                                   label = T("Incidents"),
                                    requires=IS_IN_SET(cap_incident_type_opts,
                                                       multiple=True),
                                    represent = self.list_string_represent),
                              *s3_meta_fields())
 
-        cap_search = S3CAPSearch(
+        cap_search = S3Search(
                  simple = (S3SearchSimpleWidget(
                      name="org_search_text_simple",
                      label = T("Search"),
-                     comment = T("Search for an Organization by name or acronym."),
-                     field = [ "sender",
-                               "incidents",
-                               "cap_info$headline",
-                               "cap_info$event"
-                             ]
+                     comment = T("Search for an Alert by sender, incident, headline or event."),
+                     field = ["sender",
+                              "incidents",
+                              "cap_info$headline",
+                              "cap_info$event"
+                              ]
                      )
                  ),
             )

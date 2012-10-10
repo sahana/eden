@@ -44,7 +44,8 @@ def inline():
                         label=T("Participating Organisations"),
                         fields=["organisation_id",
                                 "role",
-                                "amount"],
+                                "amount"
+                                ],
                     ),
                 )
 
@@ -152,12 +153,13 @@ def project():
                     set_project_multi_activity_type_id_requires(sector_ids)
                     #@ToDo: Do this for project_activity too.
                 elif r.component_name == "task":
-                    r.component.table.milestone_id.requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                "project_milestone.id",
-                                                                "%(name)s",
-                                                                filterby="project_id",
-                                                                filter_opts=(r.id,),
-                                                                ))
+                    r.component.table.milestone_id.requires = IS_NULL_OR(
+                                                                IS_ONE_OF(db,
+                                                                          "project_milestone.id",
+                                                                          s3db.project_milestone_represent,
+                                                                          filterby="project_id",
+                                                                          filter_opts=(r.id,),
+                                                                          ))
                     if "open" in request.get_vars:
                         # Show only the Open Tasks for this Project
                         statuses = s3.project_task_active_statuses
@@ -165,13 +167,12 @@ def project():
                         r.resource.add_component_filter("task", filter)
                 elif r.component_name == "beneficiary":
                     db.project_beneficiary.project_location_id.requires = IS_NULL_OR(
-                        IS_ONE_OF(db,
-                                  "project_location.id",
+                        IS_ONE_OF(db, "project_location.id",
                                   s3db.project_location_represent,
                                   sort=True,
                                   filterby="project_id",
                                   filter_opts=[r.id])
-                                )
+                                  )
                 elif r.component_name == "human_resource":
                     # We can pass the human resource type filter in the URL
                     group = r.vars.get("group", None)

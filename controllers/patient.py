@@ -61,7 +61,7 @@ def patient():
                               "person_id$local_name"]),
                     s3base.S3SearchOptionsWidget(
                         name = "patient_search_country",
-                        label = T("Country"),
+                        label = COUNTRY,
                         field = "country",
                         cols = 2
                     ),
@@ -135,7 +135,7 @@ def patient_rheader(r, tabs=[]):
             TR(
                 TH("%s: " % T("Patient")),
                 name,
-                TH("%s: " % T("Country")),
+                TH("%s: " % COUNTRY),
                 country),
             TR(
                 TH(),

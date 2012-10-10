@@ -840,7 +840,7 @@ S3FilterFieldChange({
                       ),
                       #S3SearchOptionsWidget(
                       #  name="item_entity_search_country",
-                      #  label=T("Country"),
+                      #  label=current.messages.COUNTRY,
                       #  field="country",
                       #  represent ="%(name)s",
                       #  comment=T("If none are selected, then all are searched."),
@@ -1710,7 +1710,7 @@ def supply_item_entity_controller():
                                   "quantity",
                                   (T("Unit of Measure"), "item_pack_id"),
                                   (T("Status"), "status"),
-                                  (T("Country"), "country"),
+                                  (current.messages.COUNTRY, "country"),
                                   (T("Organization"), "organisation"),
                                   #(T("Office"), "site"),
                                   (T("Contacts"), "contacts"),

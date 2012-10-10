@@ -31,7 +31,6 @@
 
 __all__ = ["S3Report", "S3ContingencyTable"]
 
-import sys
 import datetime
 
 try:
@@ -47,7 +46,7 @@ from gluon.html import *
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 
-from s3resource import S3TypeConverter, S3Pivottable
+from s3resource import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode
@@ -85,10 +84,14 @@ class S3Report(S3CRUD):
         return output
 
     # -------------------------------------------------------------------------
-    def _process_report_options(self, form):
-        dupe = form.vars.rows == form.vars.cols
-        if dupe:
-           form.errors.cols = "Duplicate label selected"
+    @staticmethod
+    def _process_report_options(form):
+        """
+            Onvalidation
+        """
+
+        if form.vars.rows == form.vars.cols:
+           form.errors.cols = current.T("Duplicate label selected")
 
     # -------------------------------------------------------------------------
     def report(self, r, **attr):
@@ -104,55 +107,55 @@ class S3Report(S3CRUD):
         session = current.session
         s3 = session.s3
 
-        table = self.table
         tablename = self.tablename
-
-        # Report options  -----------------------------------------------------
-        #
-
-        # Get the session options
-        session_options = s3.report_options
-        if session_options and tablename in session_options:
-            session_options = session_options[tablename]
-        else:
-            session_options = Storage()
-
-        # Get the default options
-        report_options = self._config("report_options", Storage())
-        if report_options and "defaults" in report_options:
-            default_options = report_options["defaults"]
-        else:
-            default_options = Storage()
-
-        # Get the URL options
-        url_options = Storage([(k, v) for k, v in
-                               r.get_vars.iteritems() if v])
 
         # Figure out which set of form values to use
         # POST > GET > session > table defaults > list view
         if r.http == "POST":
+            # POST
             form_values = r.post_vars
 
             # The totals option is used to turn OFF the totals cols/rows but
             # post vars only contain checkboxes that are enabled and checked.
             if "totals" not in r.post_vars:
                 form_values["totals"] = "off"
-        elif url_options:
-            form_values = url_options
-            # Without the _formname the form won't validate
-            # we put it in here so that URL query strings don't need to
-            if not form_values._formname:
-                form_values._formname = "report"
-        elif session_options:
-            form_values = session_options
-        elif default_options:
-            form_values = default_options
-            # Without the _formname the form won't validate
-            # we put it in here so that URL query strings don't need to
-            if not form_values._formname:
-                form_values._formname = "report"
         else:
-            form_values = Storage()
+            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            if url_options:
+                # GET
+                form_values = url_options
+                # Without the _formname the form won't validate
+                # we put it in here so that URL query strings don't need to
+                if not form_values._formname:
+                    form_values._formname = "report"
+            else:
+                session_options = s3.report_options
+                if session_options and tablename in session_options:
+                    session_options = session_options[tablename]
+                else:
+                    session_options = Storage()
+                if session_options:
+                    form_values = session_options
+                else:
+                    report_options = self._config("report_options", Storage())
+                    if report_options and "defaults" in report_options:
+                        default_options = report_options["defaults"]
+                    else:
+                        default_options = Storage()
+                    if default_options:
+                        form_values = default_options
+                        # Without the _formname the form won't validate
+                        # we put it in here so that URL query strings don't need to
+                        if not form_values._formname:
+                            form_values._formname = "report"
+                    else:
+                        form_values = Storage()
+
+        # Remove the existing session filter if this is a new
+        # search (@todo: do not store the filter in session)
+        if r.http == "GET" and r.representation != "aadata":
+            if "filter" in s3:
+                del s3["filter"]
 
         # Generate the report and resource filter form
         show_form = attr.get("interactive_report", True)
@@ -208,6 +211,7 @@ class S3Report(S3CRUD):
         layers = []
 
         if not fact:
+            table = self.table
             if "name" in table:
                 fact = "name"
             else:
@@ -226,8 +230,7 @@ class S3Report(S3CRUD):
                         layer = l
                     layers.append((layer, method))
 
-        # Apply method --------------------------------------------------------
-        #
+        # Apply method
         _show = "%s hide"
         _hide = "%s"
 
@@ -235,13 +238,12 @@ class S3Report(S3CRUD):
         representation = r.representation
 
         if not form.errors and self.method == "report":
-
-            # Generate the report ---------------------------------------------
-            #
+            # Generate the report
             try:
                 report = resource.pivottable(rows, cols, layers)
             except ImportError:
                 msg = T("S3Pivottable unresolved dependencies")
+                import sys
                 e = sys.exc_info()[1]
                 if hasattr(e, "message"):
                     e = e.message
@@ -252,6 +254,7 @@ class S3Report(S3CRUD):
             except:
                 raise
                 msg = T("Could not generate report")
+                import sys
                 e = sys.exc_info()[1]
                 if hasattr(e, "message"):
                     e = e.message
@@ -260,8 +263,7 @@ class S3Report(S3CRUD):
                 msg = "%s: %s" % (msg, e)
                 r.error(400, msg, next=r.url(vars=[]))
 
-            # Represent the report --------------------------------------------
-            #
+            # Represent the report
             if representation in ("html", "iframe"):
                 report_data = None
                 if not report.empty:
@@ -271,13 +273,12 @@ class S3Report(S3CRUD):
                                                _class="dataTable display report")
                     report_data = items.report_data
                 else:
-                    items = self.crud_string(self.tablename, "msg_no_match")
+                    items = self.crud_string(tablename, "msg_no_match")
 
                 output = dict(items=items,
                               report_data=report_data)
 
-                # Other output options ----------------------------------------
-                #
+                # Other output options
                 s3 = response.s3
                 s3.dataTable_iDisplayLength = 50
                 s3.no_formats = True
@@ -293,34 +294,28 @@ class S3Report(S3CRUD):
                 r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         elif representation in ("html", "iframe"):
-
-                # Fallback to list view ---------------------------------------
-                #
-                current.s3db.configure(self.tablename, insertable=False)
+                # Fallback to list view
+                current.s3db.configure(tablename, insertable=False)
                 output = self.select(r, **attr)
                 response.s3.actions = [
                         dict(url=r.url(method="", id="[id]", vars=r.get_vars),
                              _class="action-btn",
                              label = str(T("Details")))
-                ]
+                        ]
         else:
             r.error(501, current.manager.ERROR.BAD_METHOD)
 
-        # Complete the page ---------------------------------------------------
-        #
         if representation in ("html", "iframe"):
+            # Complete the page
             crud_string = self.crud_string
-            title = crud_string(self.tablename, "title_report")
+            title = crud_string(tablename, "title_report")
             if not title:
-                title = crud_string(self.tablename, "title_list")
+                title = crud_string(tablename, "title_list")
 
             if form is not None:
-                form = DIV(
-                    DIV(form,
-                        _id="reportform"
-                    ),
-                    _style="margin-bottom: 5px;"
-                )
+                form = DIV(DIV(form,
+                               _id="reportform"),
+                           _style="margin-bottom: 5px;")
             else:
                 form = ""
 
@@ -381,14 +376,17 @@ class S3Report(S3CRUD):
 
         form = FORM()
 
+        SHOW = T("Show")
+        HIDE = T("Hide")
+
         # Append filter widgets, if configured
         filter_widgets = self._build_filter_widgets(form_values)
         if filter_widgets:
             form.append(
                 FIELDSET(
-                    LEGEND("Filter Options ",
-                        BUTTON("Show", _type="button", _class="toggle-text", _style="display:none"),
-                        BUTTON("Hide", _type="button", _class="toggle-text")
+                    LEGEND(T("Filter Options"),
+                        BUTTON(SHOW, _type="button", _class="toggle-text", _style="display:none"),
+                        BUTTON(HIDE, _type="button", _class="toggle-text")
                     ),
                     TABLE(filter_widgets),
                     _id="filter_options"
@@ -397,29 +395,29 @@ class S3Report(S3CRUD):
 
         # Append report options, always
         form_report_options = FIELDSET(
-                LEGEND("Report Options ",
-                    BUTTON("Show", _type="button", _class="toggle-text"),
-                    BUTTON("Hide", _type="button", _class="toggle-text", _style="display:none")
+                LEGEND(T("Report Options"),
+                    BUTTON(SHOW, _type="button", _class="toggle-text"),
+                    BUTTON(HIDE, _type="button", _class="toggle-text", _style="display:none")
                 ),
                 TABLE(
                     TR(
-                        TD(LABEL("Rows:", _for="report-rows"), _class="w2p_fl"),
+                        TD(LABEL("%s:" % T("Rows"), _for="report-rows"), _class="w2p_fl"),
                         TD(select_rows),
                     ),
                     TR(
-                        TD(LABEL("Columns:", _for="report-cols"), _class="w2p_fl"),
+                        TD(LABEL("%s:" % T("Columns"), _for="report-cols"), _class="w2p_fl"),
                         TD(select_cols),
                     ),
                     TR(
-                        TD(LABEL("Value:", _for="report-fact"), _class="w2p_fl"),
+                        TD(LABEL("%s:" % T("Value"), _for="report-fact"), _class="w2p_fl"),
                         TD(select_fact),
                     ),
                     TR(
-                        TD(LABEL("Function for Value:", _for="report-aggregate"), _class="w2p_fl"),
+                        TD(LABEL("%s:" % T("Function for Value"), _for="report-aggregate"), _class="w2p_fl"),
                         TD(select_method),
                     ),
                     TR(
-                        TD(LABEL("Show totals:", _for="report-totals"), _class="w2p_fl"),
+                        TD(LABEL("%s:" % T("Show totals"), _for="report-totals"), _class="w2p_fl"),
                         TD(show_totals)
                     ),
                 ),
@@ -461,11 +459,12 @@ class S3Report(S3CRUD):
             if hasattr(widget, "attr"):
                 label = widget.attr.get("label", label)
                 comment = widget.attr.get("comment", comment)
-            tr = TR(TD("%s: " % label, _class="w2p_fl"),
-                    widget.widget(resource, vars))
             if comment:
-                tr.append(DIV(DIV(_class="tooltip",
-                                  _title="%s|%s" % (label, comment))))
+                comment = DIV(_class="tooltip",
+                              _title="%s|%s" % (label, comment))
+            tr = TR(TD("%s: " % label, _class="w2p_fl"),
+                    TD(widget.widget(resource, vars)),
+                    TD(comment))
             trows.append(tr)
         return trows
 
@@ -491,13 +490,14 @@ class S3Report(S3CRUD):
         if not filter_widgets:
             return (None, None)
 
+        resource = self.resource
         for widget in filter_widgets:
             if hasattr(widget, "name"):
                 name = widget.name
             else:
                 name = widget.attr.get("_name", None)
 
-            query, errors = S3Search._build_widget_query(self.resource,
+            query, errors = S3Search._build_widget_query(resource,
                                                          name,
                                                          widget,
                                                          form,
@@ -536,7 +536,8 @@ class S3Report(S3CRUD):
         return OptionsWidget.widget(dummy_field, value, **attr)
 
     # -------------------------------------------------------------------------
-    def _select_method(self, methods, form_values=None, **attr):
+    @staticmethod
+    def _select_method(methods, form_values=None, **attr):
         """
             Returns a SELECT of aggregation methods
 
@@ -544,7 +545,7 @@ class S3Report(S3CRUD):
             @param attr: the HTML attributes for the SELECT
         """
 
-        supported_methods = self.METHODS
+        supported_methods = S3Report.METHODS
         if methods:
             methods = [(m, supported_methods[m])
                        for m in methods
@@ -579,12 +580,11 @@ class S3Report(S3CRUD):
         """
 
         methods = S3Report.METHODS
-        T = current.T
 
         if code is None:
             code = "list"
         if code in methods:
-            return T(methods[code])
+            return current.T(methods[code])
         else:
             return None
 
