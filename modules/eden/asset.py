@@ -125,8 +125,8 @@ class S3AssetModel(S3Model):
                             ASSET_TYPE_OTHER      : T("Other")
                            }
 
-        asset_item_represent = lambda id: self.supply_item_represent(id,
-                                                                     show_um = False)
+        asset_item_represent = lambda id: \
+            self.supply_item_represent(id, show_um = False)
 
         ctable = self.supply_item_category
         itable = self.supply_item
@@ -200,7 +200,8 @@ $(document).ready(function(){
                                      ),
                              Field("purchase_price", "double",
                                    #default=0.00,
-                                   represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                                   represent=lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3_currency("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
                              location_id(readable=False,
@@ -242,7 +243,7 @@ $(document).ready(function(){
                                    represent = self.asset_represent,
                                    label = T("Asset"),
                                    comment = S3AddResourceLink(c="asset", f="asset",
-                                                tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Add Asset'.")),
+                                    tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Add Asset'.")),
                                    ondelete = "CASCADE")
 
         table.virtualfields.append(AssetVirtualFields())
