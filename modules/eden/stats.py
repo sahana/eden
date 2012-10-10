@@ -241,11 +241,34 @@ class S3StatsModel(S3Model):
                    - should be reworked to delete old data after new data has been added?
         """
 
+        # Check to see whether an existing task is running and if it is then kill it
+        db = current.db
+        ttable = db.scheduler_task
+        rtable = db.scheduler_run
+        wtable = db.scheduler_worker
+        query = (ttable.task_name == "stats_group_clean") & \
+                (rtable.scheduler_task == ttable.id) & \
+                (rtable.status == "RUNNING")
+        rows = db(query).select(rtable.id,
+                                rtable.scheduler_task,
+                                rtable.worker_name)
+        now = current.request.utcnow
+        for row in rows:
+            db(wtable.worker_name == row.worker_name).update(status="KILL")
+            db(rtable.id == row.id).update(stop_time=now,
+                                           status="STOPPED")
+            db(ttable.id == row.scheduler_task).update(stop_time=now,
+                                                       status="STOPPED")
+
+        # Mark all stats_group records as needing to be updated
         s3db = current.s3db
+        db(s3db.stats_group.deleted != True).update(dirty=True)
+
+        # Delete the existing data
         resource = s3db.resource("stats_aggregate")
         resource.delete()
-        current.db(s3db.stats_group.id > 0).update(dirty=True)
 
+        # Fire off a rebuild task
         current.s3task.async("stats_group_clean")
 
     # ---------------------------------------------------------------------
@@ -285,11 +308,21 @@ class S3StatsModel(S3Model):
         if not data_id:
             query = (dtable.deleted != True) & \
                     (dtable.approved_by != None)
-            records = db(query).select()
+            records = db(query).select(dtable.location_id,
+                                       dtable.parameter_id,
+                                       dtable.data_id,
+                                       dtable.date,
+                                       dtable.value,
+                                       )
         elif isinstance(data_id, Rows):
             records = data_id
         elif not isinstance(data_id, Row):
-            records = db(dtable.data_id == data_id).select(limitby=(0, 1))
+            records = db(dtable.data_id == data_id).select(dtable.location_id,
+                                                           dtable.parameter_id,
+                                                           dtable.data_id,
+                                                           dtable.date,
+                                                           dtable.value,
+                                                           limitby=(0, 1))
         else:
             records = [data_id]
             data_id = data_id.data_id
@@ -490,7 +523,9 @@ class S3StatsModel(S3Model):
             if changed_periods == []:
                 continue
             # The following structures are used in the OPTIMISATION steps later
-            loc_level_list[location_id] = gis_table[location_id].level
+            loc_level_list[location_id] = db(gis_table.id == location_id).select(gis_table.level,
+                                                                                 limitby=(0, 1)
+                                                                                 ).first().level
             if parameter_id not in param_location_dict:
                 param_location_dict[parameter_id] = {location_id : changed_periods}
             elif location_id not in param_location_dict[parameter_id]:
@@ -583,7 +618,7 @@ class S3StatsModel(S3Model):
             # Now calculate the resilence indicators
             vulnerability_resilience = s3db.vulnerability_resilience
             resilience_pid = s3db.vulnerability_resilience_id()
-            for (location_id, (period, loc_level,use_location)) in resilence_parents.items():
+            for (location_id, (period, loc_level, use_location)) in resilence_parents.items():
                 for (start_date, end_date) in changed_periods:
                     s, e = str(start_date), str(end_date)
                     vulnerability_resilience(loc_level,
@@ -725,8 +760,9 @@ class S3StatsModel(S3Model):
 
         if data_date is None:
             data_date = date.today()
-        soap = date(data_date.year, 1, 1)
-        eoap = date(data_date.year, 12, 31)
+        year = data_date.year
+        soap = date(year, 1, 1)
+        eoap = date(year, 12, 31)
         return (soap, eoap)
 
 # =============================================================================
@@ -877,6 +913,9 @@ class S3StatsGroupModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
+        configure = self.configure
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Document-source entities
@@ -898,7 +937,7 @@ class S3StatsGroupModel(S3Model):
         # Reusable Field
         source_id = S3ReusableField("source_id", table,
                                     requires = IS_NULL_OR(
-                                                IS_ONE_OF(current.db,
+                                                IS_ONE_OF(db,
                                                           "stats_source.source_id",
                                                           stats_source_represent)),
                                     represent = stats_source_represent,
@@ -942,64 +981,64 @@ class S3StatsGroupModel(S3Model):
 
         # Components
         self.add_component("stats_group", stats_source=self.super_key(table))
-        self.configure("stats_source",
-                       deduplicate = self.stats_source_duplicate,
-                       )
+        configure("stats_source",
+                  deduplicate = self.stats_source_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # The type of document held as a stats_group.
         #
         tablename = "stats_group_type"
-        table = self.define_table(tablename,
-                                  Field("stats_group_instance",
-                                        label=T("Instance Type")),
-                                  Field("name",
-                                        label=T("Name")),
-                                  Field("display",
-                                        label=T("Display")),
-                                  *s3_meta_fields()
-                                  )
+        table = define_table(tablename,
+                             Field("stats_group_instance",
+                                   label=T("Instance Type")),
+                             Field("name",
+                                   label=T("Name")),
+                             Field("display",
+                                   label=T("Display")),
+                             *s3_meta_fields()
+                             )
         # Reusable Field
         group_type_id = S3ReusableField("group_type_id", table,
-                                    requires = IS_NULL_OR(
-                                                IS_ONE_OF(current.db,
-                                                          "stats_group_type.id",
-                                                          stats_group_type_represent)),
-                                    represent = stats_group_type_represent,
-                                    label = T("Source Type"),
-                                    ondelete = "CASCADE")
+                            requires = IS_NULL_OR(
+                                        IS_ONE_OF(db,
+                                                  "stats_group_type.id",
+                                                  stats_group_type_represent)),
+                            represent = stats_group_type_represent,
+                            label = T("Source Type"),
+                            ondelete = "CASCADE")
         # Resource Configuration
-        self.configure("stats_group_type",
-                       deduplicate=self.stats_group_type_duplicate,
-                       )
+        configure("stats_group_type",
+                  deduplicate=self.stats_group_type_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Container for documents and stats records
         #
         tablename = "stats_group"
-        table = self.define_table(tablename,
-                                  # This is a component, so needs to be a super_link
-                                  # - can't override field name, ondelete or requires
-                                  self.super_link("source_id", "stats_source"),
-                                  s3_date(label = T("Date Published")),
-                                  self.gis_location_id(),
-                                  group_type_id(),
-                                  # Used to indicate if the record has not yet
-                                  # been used in aggregate calculations
-                                  Field("dirty", "boolean",
-                                        #label = T("Dirty"),
-                                        default=True,
-                                        readable=False,
-                                        writable=False),
-                                  #Field("reliability",
-                                  #      label=T("Reliability")),
-                                  #Field("review",
-                                  #      label=T("Review")),
-                                  *s3_meta_fields()
-                                  )
+        table = define_table(tablename,
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             self.super_link("source_id", "stats_source"),
+                             s3_date(label = T("Date Published")),
+                             self.gis_location_id(),
+                             group_type_id(),
+                             # Used to indicate if the record has not yet
+                             # been used in aggregate calculations
+                             Field("dirty", "boolean",
+                                   #label = T("Dirty"),
+                                   default=True,
+                                   readable=False,
+                                   writable=False),
+                             #Field("reliability",
+                             #      label=T("Reliability")),
+                             #Field("review",
+                             #      label=T("Review")),
+                             *s3_meta_fields()
+                             )
         # Reusable Field
         group_id = S3ReusableField("group_id", table,
-                                    requires = IS_ONE_OF(current.db,
+                                    requires = IS_ONE_OF(db,
                                                          "stats_group.id",
                                                          stats_group_represent),
                                     represent = stats_group_represent,
@@ -1008,10 +1047,10 @@ class S3StatsGroupModel(S3Model):
 
         table.virtualfields.append(StatsGroupVirtualFields())
         # Resource Configuration
-        self.configure("stats_group",
-                       deduplicate=self.stats_group_duplicate,
-                       requires_approval = True,
-                       )
+        configure("stats_group",
+                  deduplicate=self.stats_group_duplicate,
+                  requires_approval = True,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3

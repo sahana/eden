@@ -19,9 +19,8 @@ def gis_download_kml(record_id, filename, user_id=None):
     if user_id:
         # Authenticate
         auth.s3_impersonate(user_id)
-    # Run the Task
-    result = gis.download_kml(record_id, filename)
-    return result
+    # Run the Task & return the result
+    return gis.download_kml(record_id, filename)
 
 tasks["gis_download_kml"] = gis_download_kml
 
@@ -37,10 +36,9 @@ def gis_update_location_tree(feature, user_id=None):
     if user_id:
         # Authenticate
         auth.s3_impersonate(user_id)
-    # Run the Task
+    # Run the Task & return the result
     feature = json.loads(feature)
-    result = gis.update_location_tree(feature)
-    return result
+    return gis.update_location_tree(feature)
 
 tasks["gis_update_location_tree"] = gis_update_location_tree
 
@@ -121,9 +119,8 @@ if settings.has_module("msg"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
-        # Run the Task
-        result = msg.process_outbox(contact_method)
-        return result
+        # Run the Task & return the result
+        return msg.process_outbox(contact_method)
 
     tasks["msg_process_outbox"] = msg_process_outbox
 
@@ -135,9 +132,8 @@ if settings.has_module("msg"):
             @param username: email address of the email source to read from.
             This uniquely identifies one inbound email task.
         """
-        # Run the Task
-        result = msg.fetch_inbound_email(username)
-        return result
+        # Run the Task & return the result
+        return msg.fetch_inbound_email(username)
 
     tasks["msg_process_inbound_email"] = msg_process_inbound_email
 
@@ -149,9 +145,8 @@ if settings.has_module("msg"):
             @param account: account name for the SMS source to read from.
             This uniquely identifies one inbound SMS task.
         """
-        # Run the Task
-        result = msg.twilio_inbound_sms(account)
-        return result
+        # Run the Task & return the result
+        return msg.twilio_inbound_sms(account)
 
     tasks["msg_twilio_inbound_sms"] = msg_twilio_inbound_sms
 
@@ -160,15 +155,18 @@ if settings.has_module("msg"):
         """
             Processes the msg_log for unparsed messages.
         """
-        # Run the Task
-        result = msg.parse_import(workflow, source)
-        return result
+        # Run the Task & return the result
+        return msg.parse_import(workflow, source)
 
     tasks["msg_parse_workflow"] = msg_parse_workflow
 
     # --------------------------------------------------------------------------
     def msg_search_subscription_notifications(frequency):
-        return eden.msg.search_subscription_notifications(frequency=frequency)
+        """
+            Search Subscriptions & send Notifications.
+        """
+        # Run the Task & return the result
+        return s3db.msg_search_subscription_notifications(frequency=frequency)
 
     tasks["msg_search_subscription_notifications"] = msg_search_subscription_notifications
 
@@ -183,9 +181,8 @@ if settings.has_module("stats"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
-        # Run the Task
-        result = s3db.stats_group_clean()
-        return result
+        # Run the Task & return the result
+        return s3db.stats_group_clean()
 
     tasks["stats_group_clean"] = stats_group_clean
 
@@ -199,9 +196,8 @@ if settings.has_module("stats"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
-        # Run the Task
-        result = s3db.stats_update_time_aggregate(data_id)
-        return result
+        # Run the Task & return the result
+        return s3db.stats_update_time_aggregate(data_id)
 
     tasks["stats_update_time_aggregate"] = stats_update_time_aggregate
 
@@ -224,14 +220,13 @@ if settings.has_module("stats"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
-        # Run the Task
-        result = s3db.stats_update_aggregate_location(location_level,
-                                                      root_location_id,
-                                                      parameter_id,
-                                                      start_date,
-                                                      end_date,
-                                                      )
-        return result
+        # Run the Task & return the result
+        return s3db.stats_update_aggregate_location(location_level,
+                                                    root_location_id,
+                                                    parameter_id,
+                                                    start_date,
+                                                    end_date,
+                                                    )
 
     tasks["stats_update_aggregate_location"] = stats_update_aggregate_location
 

@@ -35,6 +35,7 @@ __all__ = ["S3MessagingModel",
            "S3TwitterModel",
            "S3XFormsModel",
            "S3ParsingModel",
+           "msg_search_subscription_notifications",
            ]
 
 from gluon import *
@@ -814,7 +815,7 @@ class S3ParsingModel(S3Model):
             return repr
 
 # =============================================================================
-def search_subscription_notifications(frequency):
+def msg_search_subscription_notifications(frequency):
     """
         Send Notifications for all Subscriptions
     """
