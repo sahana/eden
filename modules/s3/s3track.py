@@ -580,7 +580,7 @@ class S3Trackable(object):
         if isinstance(location, Rows):
             location = location.first()
         if isinstance(location, Row):
-            location = location.id
+            location.get("id",None)
 
         if not location or not str(location).isdigit():
             # Location not found

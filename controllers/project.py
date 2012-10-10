@@ -108,7 +108,7 @@ def project():
         
         # Filter Themes based on Sector
         if r.record:
-            sector_ids = r.record.sector_id
+            sector_ids = r.record.multi_sector_id
         else:
             sector_ids = []
         set_project_multi_theme_id_requires(sector_ids)
@@ -255,9 +255,10 @@ def set_project_multi_theme_id_requires(sector_ids):
     rows = db().select(ttable.id,
                        tstable.sector_id,
                        left=tstable.on(ttable.id == tstable.theme_id))
+    sector_ids = sector_ids or []
     theme_ids = [row.project_theme.id for row in rows 
                  if not row.project_theme_sector.sector_id or 
-                    row.project_theme_sector.sector_id[0] in sector_ids]
+                    row.project_theme_sector.sector_id in sector_ids]
     table.multi_theme_id.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, 
                                                   "project_theme.id",
@@ -286,7 +287,7 @@ def set_project_multi_activity_type_id_requires(sector_ids):
                        left=atstable.on(attable.id == atstable.activity_type_id))
     activity_type_ids = [row.project_activity_type.id for row in rows 
                  if not row.project_activity_type_sector.sector_id or 
-                    row.project_activity_type_sector.sector_id[0] in sector_ids]
+                    row.project_activity_type_sector.sector_id in sector_ids]
     table.multi_activity_type_id.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, 
                                                   "project_activity_type.id",
@@ -458,7 +459,7 @@ def location():
     def prep(r):
         if r.interactive:
             if r.record and r.record.project_id:
-                sector_ids = s3db.project_project[r.record.project_id].sector_id
+                sector_ids = s3db.project_project[r.record.project_id].multi_sector_id
             else:
                 sector_ids = []
             set_project_multi_activity_type_id_requires(sector_ids)

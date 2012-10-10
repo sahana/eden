@@ -1495,10 +1495,13 @@ class S3OptionsMenu(object):
                         M("Search", m="search"),
                      )
                     )
+            check_stats_module = lambda i: settings.has_module("stats")
             menu(
                  M("Reports", f="location", m="report")(
                     M("3W", f="location", m="report"),
-                    M("Beneficiaries", f="beneficiary", m="report"),
+                    M("Beneficiaries", f="beneficiary", m="report",
+                      check = check_stats_module,
+                      ),
                     M("Funding", f="organisation", args="report"),
                  ),
                  M("Import", f="index", p="create")(
@@ -1524,7 +1527,8 @@ class S3OptionsMenu(object):
                     M("List All"),
                     #M("Search", m="search")
                  ),
-                 M("Beneficiary Types", f="beneficiary_type")(
+                 M("Beneficiary Types", f="beneficiary_type",
+                   check = check_stats_module,)(
                     M("New", m="create"),
                     M("List All"),
                  ),

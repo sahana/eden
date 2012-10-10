@@ -1875,14 +1875,17 @@ def req_rheader(r, check_page = False):
                 else:
                     transit_status_cells = ("", "")
 
-                table = r.table
-                site_id = record.site_id
-                org_id = s3db.org_site[site_id].organisation_id
-                logo = s3db.org_organisation_logo(org_id)
                 headerTR = TR(TD(settings.get_req_form_name(),
                                  _colspan=2, _class="pdf_title"),
-                              TD(logo, _colspan=2),
                               )
+                table = r.table
+                site_id = record.site_id
+
+                if site_id:
+                    org_id = s3db.org_site[site_id].organisation_id
+                    logo = s3db.org_organisation_logo(org_id)
+                    headerTR.append(TD(logo, _colspan=2))
+
                 if settings.get_req_use_req_number():
                     headerTR = DIV(TR(
                                      TH("%s: " % table.req_ref.label),

@@ -494,7 +494,7 @@ class S3InventoryModel(S3Model):
                                         ),
                                   # Organisation that owns this item
                                   organisation_id(name = "owner_org_id",
-                                                  label = T("Organization/Department"),
+                                                  label = T("Owned By (Organization/Branch)"),
                                                   ondelete = "SET NULL"),
                                   # Original donating Organisation
                                   organisation_id(name = "supply_org_id",
