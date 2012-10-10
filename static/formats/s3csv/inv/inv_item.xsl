@@ -43,7 +43,7 @@
          Bin....................bin
          Expiry Date............expiry_date
          Supplier/Donor.........supply_org_id
-         Organisation/Department. organisation_id
+         Owned By (Organization/Branch). organisation_id
          Quantity...............inv_inv_item.quantity
          Unit Value.............pack_value
          Currency...............currency
@@ -58,7 +58,7 @@
     <xsl:key name="item_category" match="row" use="col[@field='Category']"/>
     <xsl:key name="supply_item" match="row" use="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
     <xsl:key name="brand" match="row" use="col[@field='Brand']"/>
-    <xsl:key name="owner_organisation" match="row" use="col[@field='Organisation/Department']"/>
+    <xsl:key name="owner_organisation" match="row" use="col[@field='Owned By (Organization/Branch)']"/>
     <xsl:key name="supplier_organisation" match="row" use="col[@field='Supplier/Donor']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 
@@ -83,9 +83,9 @@
                     <xsl:with-param name="OrgName" select="col[@field='Warehouse Organisation']"/>
                 </xsl:call-template>
             </xsl:for-each>
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('owner_organisation', col[@field='Organisation/Department'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('owner_organisation', col[@field='Owned By (Organization/Branch)'])[1])]">
                 <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName" select="col[@field='Organisation/Department']"/>
+                    <xsl:with-param name="OrgName" select="col[@field='Owned By (Organization/Branch)']"/>
                 </xsl:call-template>
             </xsl:for-each>
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('supplier_organisation', col[@field='Supplier/Donor'])[1])]">
@@ -154,10 +154,10 @@
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
-            <xsl:if test="col[@field='Organisation/Department']!=''">
+            <xsl:if test="col[@field='Owned By (Organization/Branch)']!=''">
                 <reference field="owner_org_id" resource="org_organisation">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="col[@field='Organisation/Department']/text()"/>
+                        <xsl:value-of select="col[@field='Owned By (Organization/Branch)']/text()"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>

@@ -1821,22 +1821,22 @@ def req_rheader(r, check_page = False):
                     site_name = s3db.org_site_represent(site_id, show_link = False)
                     commit_btn = TAG[""](
 # Removed to try and simplify the workflow - GF
-#                                A( T("Commit from %s") % site_name,
-#                                    _href = URL(c = "req",
-#                                                f = "commit_req",
-#                                                args = [r.id],
-#                                                vars = dict(site_id = site_id)
-#                                                ),
-#                                    _class = "action-btn"
-#                                   ),
-                                A( T("Send from %s") % site_name,
-                                    _href = URL(c = "req",
-                                                f = "send_req",
-                                                args = [r.id],
-                                                vars = dict(site_id = site_id)
-                                                ),
-                                    _class = "action-btn"
-                                   )
+#                                A(T("Commit from %s") % site_name,
+#                                   _href = URL(c = "req",
+#                                               f = "commit_req",
+#                                               args = [r.id],
+#                                               vars = dict(site_id = site_id)
+#                                               ),
+#                                   _class = "action-btn"
+#                                  ),
+                                A(T("Send from %s") % site_name,
+                                  _href = URL(c = "req",
+                                              f = "send_req",
+                                              args = [r.id],
+                                              vars = dict(site_id = site_id)
+                                              ),
+                                  _class = "action-btn"
+                                  )
                                 )
                 #else:
                 #    commit_btn = A( T("Commit"),
@@ -1849,25 +1849,33 @@ def req_rheader(r, check_page = False):
                 #                   )
                     s3.rfooter = commit_btn
 
+                site_id = record.site_id
+                if site_id:
+                    db = current.db
+                    stable = s3db.org_site
                 if settings.get_req_show_quantity_transit():
                     transit_status = req_status_opts.get(record.transit_status, "")
                     try:
-                        if record.transit_status in [REQ_STATUS_PARTIAL,REQ_STATUS_COMPLETE] and \
+                        if site_id and \
+                           record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
                            record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
-                            site_record = s3db.org_site[record.site_id]
-                            table = s3db[site_record.instance_type]
+                            site_record = db(stable.site_id == site_id).select(stable.uuid,
+                                                                               stable.instance_type,
+                                                                               limitby=(0, 1)).first()
+                            instance_type = site_record.instance_type
+                            table = s3db[instance_type]
                             query = (table.uuid == site_record.uuid)
                             id = db(query).select(table.id,
                                                   limitby=(0, 1)).first().id
-                            transit_status = SPAN( transit_status,
-                                                   "           ",
-                                                   A(T("Incoming Shipments"),
-                                                     _href = URL(c = site_record.instance_type.split("_")[0],
-                                                                 f = "incoming",
-                                                                 vars = {"viewing" : "%s.%s" % (site_record.instance_type, id)}
-                                                                 )
-                                                     )
-                                                   )
+                            transit_status = SPAN(transit_status,
+                                                  "           ",
+                                                  A(T("Incoming Shipments"),
+                                                    _href = URL(c = instance_type.split("_")[0],
+                                                                f = "incoming",
+                                                                vars = {"viewing" : "%s.%s" % (instance_type, id)}
+                                                                )
+                                                    )
+                                                  )
                     except:
                         pass
                     transit_status_cells = (TH( "%s: " % T("Transit Status")),
@@ -1875,53 +1883,50 @@ def req_rheader(r, check_page = False):
                 else:
                     transit_status_cells = ("", "")
 
-                table = r.table
-                site_id = record.site_id
-                org_id = s3db.org_site[site_id].organisation_id
-                logo = s3db.org_organisation_logo(org_id)
                 headerTR = TR(TD(settings.get_req_form_name(),
                                  _colspan=2, _class="pdf_title"),
-                              TD(logo, _colspan=2),
                               )
+                table = r.table
+
+                if site_id:
+                    org_id = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                                  limitby=(0, 1)
+                                                                  ).first().organisation_id
+                    logo = s3db.org_organisation_logo(org_id)
+                    headerTR.append(TD(logo, _colspan=2))
+
                 if settings.get_req_use_req_number():
-                    headerTR = DIV(TR(
-                                     TH("%s: " % table.req_ref.label),
-                                     TD(table.req_ref.represent(record.req_ref))
-                                    )
-                                  )
+                    headerTR = DIV(TR(TH("%s: " % table.req_ref.label),
+                                      TD(table.req_ref.represent(record.req_ref))
+                                      )
+                                   )
                 if use_commit:
-                    row = TR(
-                                TH("%s: " % table.date_required.label),
-                                table.date_required.represent(record.date_required),
-                                TH( "%s: " % table.commit_status.label),
-                                table.commit_status.represent(record.commit_status),
-                                )
+                    row = TR(TH("%s: " % table.date_required.label),
+                             table.date_required.represent(record.date_required),
+                             TH("%s: " % table.commit_status.label),
+                             table.commit_status.represent(record.commit_status),
+                             )
                 else:
-                    row = TR(
-                                TH("%s: " % table.date_required.label),
-                                table.date_required.represent(record.date_required),
-                                )
-                rData = TABLE(
-                               headerTR,
-                               row,
-                               TR(
-                                TH( "%s: " % table.date.label),
-                                table.date.represent(record.date),
-                                *transit_status_cells
-                                ),
-                               TR(
-                                TH( "%s: " % table.site_id.label),
-                                table.site_id.represent(record.site_id),
-                                TH( "%s: " % table.fulfil_status.label),
-                                table.fulfil_status.represent(record.fulfil_status)
-                                ),
-                               TR(
-                                TH( "%s: " % table.comments.label),
-                                TD(record.comments or "", _colspan=3)
-                                ),
-                               )
-                rheader = DIV (rData,
-                               rheader_tabs,
+                    row = TR(TH("%s: " % table.date_required.label),
+                             table.date_required.represent(record.date_required),
+                             )
+                rData = TABLE(headerTR,
+                              row,
+                              TR(TH( "%s: " % table.date.label),
+                                 table.date.represent(record.date),
+                                 *transit_status_cells
+                                 ),
+                              TR(TH( "%s: " % table.site_id.label),
+                                 table.site_id.represent(site_id),
+                                 TH( "%s: " % table.fulfil_status.label),
+                                 table.fulfil_status.represent(record.fulfil_status)
+                                 ),
+                              TR(TH( "%s: " % table.comments.label),
+                                 TD(record.comments or "", _colspan=3)
+                                 ),
+                              )
+                rheader = DIV(rData,
+                              rheader_tabs,
                               )
                 return rheader
             #else:

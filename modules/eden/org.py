@@ -71,6 +71,7 @@ class S3OrganisationModel(S3Model):
 
     names = ["org_sector",
              "org_sector_id",
+             "org_multi_sector_id",
              "org_sector_opts",
              #"org_subsector",
              "org_organisation_type",
@@ -94,6 +95,7 @@ class S3OrganisationModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         NONE = messages.NONE
+        ORGANISATION = messages.ORGANISATION
 
         location = current.session.s3.location_filter
         if location:
@@ -161,8 +163,13 @@ class S3OrganisationModel(S3Model):
                 msg_list_empty=T("No Sectors currently registered"))
 
         configure("org_sector", deduplicate=self.org_sector_duplicate)
+        
+        sector_comment = S3AddResourceLink(c="org", f="sector",
+                                           label=ADD_SECTOR,
+                                           title=SECTOR,
+                                           tooltip=help)
 
-        sector_id = S3ReusableField("sector_id", "list:reference org_sector",
+        sector_id = S3ReusableField("sector_id", "reference org_sector",
                                     sortby="abrv",
                                     requires=IS_NULL_OR(
                                                 IS_ONE_OF(db, "org_sector.id",
@@ -170,13 +177,26 @@ class S3OrganisationModel(S3Model):
                                                           sort=True,
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
-                                                          multiple=True)),
+                                                          )
+                                                        ),
                                     represent=self.org_sector_multirepresent,
-                                    comment=S3AddResourceLink(c="org",
-                                                f="sector",
-                                                label=ADD_SECTOR,
-                                                title=SECTOR,
-                                                tooltip=help),
+                                    comment=sector_comment,
+                                    label=SECTOR,
+                                    ondelete="SET NULL")
+
+        multi_sector_id = S3ReusableField("multi_sector_id", "list:reference org_sector",
+                                    sortby="abrv",
+                                    requires=IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_sector.id",
+                                                          self.org_sector_represent,
+                                                          sort=True,
+                                                          filterby=filterby,
+                                                          filter_opts=filter_opts,
+                                                          multiple=True
+                                                          )
+                                                        ),
+                                    represent=self.org_sector_multirepresent,
+                                    comment=sector_comment,
                                     label=SECTOR,
                                     ondelete="SET NULL")
 
@@ -312,14 +332,12 @@ class S3OrganisationModel(S3Model):
                                    comment=DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Acronym"),
                                                                    T("Acronym of the organization's name, eg. IFRC.")))),
-                             organisation_type_id(
-                                                  #readable = False,
+                             organisation_type_id(#readable = False,
                                                   #writable = False,
-                                                ),
-                             sector_id(
-                                       #readable = False,
-                                       #writable = False,
-                                      ),
+                                                  ),
+                             multi_sector_id(#readable = False,
+                                             #writable = False,
+                                             ),
                              #Field("registration", label=T("Registration")),    # Registration Number
                              Field("region",
                                    label=T("Region"),
@@ -421,14 +439,14 @@ class S3OrganisationModel(S3Model):
         organisation_comment = S3AddResourceLink(c="org",
                                                  f="organisation",
                                                  label=ADD_ORGANIZATION,
-                                                 title=T("Organization"),
+                                                 title=ORGANISATION,
                                                  tooltip=help)
 
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
                                                       vars=dict(child="from_organisation_id"),
                                                       label=ADD_ORGANIZATION,
-                                                      title=T("Organization"),
+                                                      title=ORGANISATION,
                                                       tooltip=help)
 
         auth = current.auth
@@ -437,10 +455,10 @@ class S3OrganisationModel(S3Model):
                                           default = auth.user.organisation_id if auth.is_logged_in() else None,
                                           requires=org_organisation_requires(),
                                           represent=org_organisation_represent,
-                                          label=T("Organization"),
+                                          label=ORGANISATION,
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget=None, #widget
+                                          widget = SQLFORM.widgets.options.widget,
                                          )
 
         organisations_id = S3ReusableField("organisations_id",
@@ -488,7 +506,7 @@ class S3OrganisationModel(S3Model):
                     S3SearchOptionsWidget(
                         name="org_search_sector",
                         label=SECTOR,
-                        field="sector_id",
+                        field="multi_sector_id",
                         options=self.org_sector_opts,
                         cols=3
                     ),
@@ -514,7 +532,7 @@ class S3OrganisationModel(S3Model):
                                  "name",
                                  "acronym",
                                  "organisation_type_id",
-                                 "sector_id",
+                                 "multi_sector_id",
                                  "country",
                                  "website"
                                 ])
@@ -686,6 +704,7 @@ class S3OrganisationModel(S3Model):
         #
         return Storage(
                     org_sector_id=sector_id,
+                    org_multi_sector_id=multi_sector_id,
                     org_sector_opts=self.org_sector_opts,
                     org_sector_represent = self.org_sector_represent,
                     org_organisation_type_id=organisation_type_id,
@@ -1823,7 +1842,8 @@ class S3OfficeModel(S3Model):
                                    ),
                              self.org_organisation_id(
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                                 requires = self.org_organisation_requires(updateable=True)
+                                 requires = self.org_organisation_requires(updateable=True),
+                                 required = True,
                                  ),
                              office_type_id(
                                             #readable = False,
@@ -1882,7 +1902,7 @@ class S3OfficeModel(S3Model):
                       ),
                       S3SearchOptionsWidget(
                         name="office_search_org",
-                        label=T("Organization"),
+                        label=messages.ORGANISATION,
                         comment=T("Search for office by organization."),
                         field="organisation_id",
                         represent="%(name)s",
@@ -2415,13 +2435,13 @@ def org_rheader(r, tabs=[]):
                    ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        if table.sector_id.readable and record.sector_id:
+        if table.multi_sector_id.readable and record.multi_sector_id:
             if settings.get_ui_cluster():
                 sector_label = T("Cluster(s)")
             else:
                 sector_label = T("Sector(s)")
             sectors = TR(TH("%s: " % sector_label),
-                         table.sector_id.represent(record.sector_id))
+                         table.multi_sector_id.represent(record.multi_sector_id))
         else:
             sectors = ""
 
@@ -2564,7 +2584,7 @@ def org_organisation_controller():
                 otable = r.table
                 record = r.record
                 otable.organisation_type_id.default = record.organisation_type_id
-                otable.sector_id.default = record.sector_id
+                otable.multi_sector_id.default = record.multi_sector_id
                 otable.country.default = record.country
                 # Represent orgs without the parent prefix as we have that context already
                 s3db.org_organisation_branch.branch_id.represent = lambda val: \

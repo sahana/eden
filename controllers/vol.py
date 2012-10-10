@@ -719,7 +719,7 @@ def department():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 def job_role():

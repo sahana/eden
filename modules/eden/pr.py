@@ -130,9 +130,10 @@ class S3PersonEntity(S3Model):
         super_key = self.super_key
         super_link = self.super_link
 
-        YES = T("yes") #current.messages.YES
-        NO = T("no") #current.messages.NO
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        YES = T("yes") #messages.YES
+        NO = T("no") #messages.NO
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # Person Super-Entity
@@ -143,7 +144,7 @@ class S3PersonEntity(S3Model):
         #    shelter = T("Shelter")
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
-                           org_organisation = T("Organization"),
+                           org_organisation = messages.ORGANISATION,
                            org_office = T("Office"),
                            inv_warehouse = T("Warehouse"),
                            # If we want these, then pe_id needs adding to their
@@ -740,7 +741,7 @@ class S3PersonModel(S3Model):
                                        #"picture",
                                        "gender",
                                        "age_group",
-                                       (T("Organization"), "hrm_human_resource:organisation_id$name")
+                                       (messages.ORGANISATION, "hrm_human_resource:organisation_id$name")
                                        ],
                         onvalidation=self.pr_person_onvalidation,
                         onaccept=self.pr_person_onaccept,
@@ -2370,19 +2371,20 @@ class S3PersonPresence(S3Model):
         person_id = self.pr_person_id
         location_id = self.gis_location_id
 
-        ADD_LOCATION = current.messages.ADD_LOCATION
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        ADD_LOCATION = messages.ADD_LOCATION
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         crud_strings = current.response.s3.crud_strings
 
         # Trackable types
         pr_trackable_types = {
-            1:current.T("Person"),          # an individual
-            2:current.T("Group"),           # a group
-            3:current.T("Body"),            # a dead body or body part
-            4:current.T("Object"),          # other objects belonging to persons
-            5:current.T("Organization"),    # an organisation
-            6:current.T("Office"),          # an office
+            1: T("Person"),           # an individual
+            2: T("Group"),            # a group
+            3: T("Body"),             # a dead body or body part
+            4: T("Object"),           # other objects belonging to persons
+            5: messages.ORGANISATION, # an organisation
+            6: T("Office"),           # an office
         }
         pr_default_trackable = 1
 

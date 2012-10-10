@@ -299,6 +299,7 @@ $(document).ready(function(){
         # Resource Configuration
         configure(tablename,
                   super_entity = ("supply_item_entity", "sit_trackable"),
+                  mark_required = ["organisation_id"],
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   onaccept=self.asset_onaccept,
@@ -369,7 +370,7 @@ $(document).ready(function(){
         # Asset Log
         #
 
-        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base %(facility)s Set") % org_site_label,
+        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base %(facility)s Set") % dict(facility = org_site_label),
                                  ASSET_LOG_ASSIGN   : T("Assigned"),
                                  ASSET_LOG_RETURN   : T("Returned"),
                                  ASSET_LOG_CHECK    : T("Checked"),
@@ -960,15 +961,12 @@ def asset_rheader(r):
                                     ltable.person_id.represent(current_log.person_id),
                                     TH("%s: " % ltable.site_id.label),
                                     ltable.site_id.represent(current_log.site_id),
-                                   #TH("%s: " %  ltable.location_id.label),
-                                   # ltable.location_id.represent(current_log.location_id),
                                   ),
                                ),
                           DIV(_style = "margin-top:5px;",
                               *asset_action_btns
                               ),
-                          rheader_tabs
-                         )
+                          rheader_tabs)
             return rheader
     return None
 

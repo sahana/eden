@@ -572,15 +572,12 @@ class S3Trackable(object):
             @note: instance tables without a location_id field will be ignored
         """
 
-        db = current.db
-        s3db = current.s3db
-
         if isinstance(location, S3Trackable):
             location = location.get_base_location()
         if isinstance(location, Rows):
             location = location.first()
         if isinstance(location, Row):
-            location = location.id
+            location.get("id", None)
 
         if not location or not str(location).isdigit():
             # Location not found
@@ -597,6 +594,9 @@ class S3Trackable(object):
                     r.update_record(**data)
                 else:
                     raise SyntaxError("Cannot relate record to a table.")
+
+        db = current.db
+        s3db = current.s3db
 
         # Update records with track ID
         # => this can happen table-wise = less queries

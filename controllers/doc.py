@@ -44,7 +44,7 @@ def document_rheader(r):
                                 TH("%s: " % T("URL")), table.url.represent( doc_document.url ),
                                 ),
                                 TR(
-                                TH("%s: " % T("Organization")), table.organisation_id.represent( doc_document.organisation_id ),
+                                TH("%s: " % ORGANISATION), table.organisation_id.represent( doc_document.organisation_id ),
                                 TH("%s: " % T("Person")), table.person_id.represent( doc_document.organisation_id ),
                                 ),
                             ),

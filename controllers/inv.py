@@ -334,10 +334,11 @@ def warehouse():
                                 csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
-                                csv_extra_fields = [
-                                    dict(label="Organisation",
-                                         field=s3db.org_organisation_id(comment=None))
-                                ])
+                                #csv_extra_fields = [
+                                #         dict(label="Organisation",
+                                #         field=s3db.org_organisation_id(comment=None))
+                                #]
+                                )
     if "add_btn" in output:
         del output["add_btn"]
     return output
@@ -464,11 +465,9 @@ def inv_item():
                        )
 
     output = s3_rest_controller(rheader=s3db.inv_warehouse_rheader,
-                                csv_extra_fields = [
-                                                    dict(label="Organisation",
-                                                         field=s3db.org_organisation_id(comment=None)
-                                                         )
-                                                    ],
+                                #csv_extra_fields = [dict(label="Organisation",
+                                #                         field=s3db.org_organisation_id(comment=None))
+                                #                    ],
                                 pdf_paper_alignment = "Landscape",
                                 pdf_table_autogrow = "B",
                                 pdf_groupby = "site_id, item_id",

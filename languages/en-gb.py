@@ -108,6 +108,7 @@
 'Organization/Supplier': 'Organisation/Supplier',
 'Organizational Development': 'Organisational Development',
 'Organizations': 'Organisations',
+'Owned By (Organization/Branch)': 'Owned By (Organisation/Branch)',
 "Phone number to donate to this organization's relief efforts.": "Phone number to donate to this organisation's relief efforts.",
 'Position Catalog': 'Position Catalogue',
 'Project Details including organizations': 'Project Details including organisations',

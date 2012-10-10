@@ -57,6 +57,7 @@ messages["ADD_PERSON"] = "Add Person"
 messages["ADD_LOCATION"] = "Add Location"
 messages["SELECT_LOCATION"] = "Select a location"
 messages["COUNTRY"] = "Country"
+messages["ORGANISATION"] = "Organization"
 
 for u in messages:
     if isinstance(messages[u], str):

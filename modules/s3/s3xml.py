@@ -787,20 +787,11 @@ class S3XML(S3Codec):
 
             if LatLon or polygon:
                 # Build the URL for the onClick Popup contents
-                # @ToDo: add the Public URL so that layers can be loaded
-                # off remote Sahana instances
-                # (make this optional to keep filesize small when not
-                #  needed?)
                 url = URL(request.controller, request.function).split(".", 1)[0]
-
                 if format == "geojson":
                     # Assume being used within the Sahana Mapping client so use local URLs
                     # to keep filesize down
-                    try:
-                        url = "%s/%i.plain" % (url, record[pkey])
-                    except:
-                        # This is a Super-Entity without an id
-                        url = ""
+                    url = "%s/%i.plain" % (url, record[pkey])
                 else:
                     # Assume being used outside the Sahana Mapping client so use public URLs
                     url = "%s%s/%i" % (settings.get_base_public_url(), url, record[pkey])

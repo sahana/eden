@@ -81,6 +81,7 @@ class S3HRModel(S3Model):
 
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        ORGANISATION = messages.ORGANISATION
 
         crud_strings = current.response.s3.crud_strings
         super_link = self.super_link
@@ -128,17 +129,6 @@ class S3HRModel(S3Model):
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
                                     empty = False,
-                                    # Limit Sites to those belonging to the Organisation
-                                    script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldID':'site_id',
-  'FieldResource':'site',
-  'FieldPrefix':'org',
- })
-})'''),
                                     ),
                                   super_link("site_id", "org_site",
                                              label=settings.get_org_site_label(),
@@ -346,7 +336,7 @@ $(document).ready(function(){
                       ),
                       S3SearchOptionsWidget(
                         name="human_resource_search_org",
-                        label=T("Organization"),
+                        label=ORGANISATION,
                         field="organisation_id",
                         represent = self.org_organisation_represent,
                         cols = 3,
@@ -437,7 +427,7 @@ $(document).ready(function(){
                             search=[
                                   S3SearchOptionsWidget(
                                     name="human_resource_search_org",
-                                    label=T("Organization"),
+                                    label=ORGANISATION,
                                     field="organisation_id",
                                     represent = self.org_organisation_represent,
                                     cols = 3
@@ -1905,7 +1895,7 @@ class S3HRSkillModel(S3Model):
                     # Needs options lookup function for virtual field
                     #S3SearchOptionsWidget(
                     #    name="training_search_organisation",
-                    #    label=T("Organization"),
+                    #    label=ORGANISATION,
                     #    field="organisation"
                     #),
                     # Needs a Virtual Field
@@ -1933,7 +1923,7 @@ class S3HRSkillModel(S3Model):
                          "training_event_id",
                          "person_id",
                          "course_id",
-                         (T("Organization"), "organisation"),
+                         (messages.ORGANISATION, "organisation"),
                          (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
                          "person_id$L1",
@@ -4598,7 +4588,7 @@ def hrm_training_event_controller():
             # Suitable list_fields
             list_fields = ["person_id",
                            (T("Job Title"), "job_title"),
-                           (T("Organization"), "organisation"),
+                           (current.messages.ORGANISATION, "organisation"),
                            ]
             current.s3db.configure("hrm_training",
                                    list_fields=list_fields)
@@ -4637,7 +4627,7 @@ def hrm_training_controller():
             list_fields = ["course_id",
                            "person_id",
                            (T("Job Title"), "job_title"),
-                           (T("Organization"), "organisation"),
+                           (current.messages.ORGANISATION, "organisation"),
                            "date",
                            ]
             current.s3db.configure("hrm_training",

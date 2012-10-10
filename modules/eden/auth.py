@@ -66,7 +66,7 @@ class S3AuthModel(S3Model):
         table = self.define_table(tablename,
                                   self.org_organisation_id(
                                         comment=DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Organization"),
+                                                    _title="%s|%s" % (current.messages.ORGANISATION,
                                                                       ORG_HELP))),
                                   Field("domain",
                                         label=T("Domain"),

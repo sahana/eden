@@ -146,7 +146,7 @@
             </xsl:if>
 
             <xsl:if test="$sector!=''">
-                <reference field="sector_id" resource="org_sector">
+                <reference field="multi_sector_id" resource="org_sector">
                     <xsl:variable name="qlist">
                         <xsl:call-template name="quoteList">
                             <xsl:with-param name="list" select="$sector"/>
