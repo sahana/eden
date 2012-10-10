@@ -282,7 +282,6 @@ class S3StatsModel(S3Model):
             query = (dtable.deleted != True) & \
                     (dtable.approved_by != None)
             records = db(query).select()
-            return
         elif isinstance(data_id, Rows):
             records = data_id
         elif not isinstance(data_id, Row):
@@ -307,7 +306,7 @@ class S3StatsModel(S3Model):
             parameter_id = record.parameter_id
             # Exit if either the location or the parameter is not valid
             if not location_id or not parameter_id:
-                return
+                continue
             (start_date, end_date) = stats_aggregated_period(record.date)
     
             # Get all the stats_data records for this location and parameter
@@ -342,7 +341,7 @@ class S3StatsModel(S3Model):
                         # The newly added indicator is the one currently stored
                         # in data but a more recent value is held on the database
                         # This will not change any of the aggregated data
-                        return
+                        break
                 if start_date < earliest_period:
                     earliest_period = start_date
                 # Store the record from the db in the data storage
@@ -526,23 +525,24 @@ class S3StatsModel(S3Model):
         parents_data = {}
         for (param_id, loc_dict) in param_location_dict.items():
             for (loc_id, periods) in loc_dict.items():
-                for p_loc_row in parents[loc_id]:
-                    p_loc_id = p_loc_row.id
-                    if param_id in parents_data:
-                        if p_loc_id in parents_data[param_id]:
-                            # store the older of the changed periods (the end will always be None)
-                            # Only need to check the start date of the first period
-                            if periods[0][0] < parents_data[param_id][p_loc_id][0][0][0]:
-                                parents_data[param_id][p_loc_id][0] = periods
+                if loc_id in parents: # There won't be a parent if this is a L0
+                    for p_loc_row in parents[loc_id]:
+                        p_loc_id = p_loc_row.id
+                        if param_id in parents_data:
+                            if p_loc_id in parents_data[param_id]:
+                                # store the older of the changed periods (the end will always be None)
+                                # Only need to check the start date of the first period
+                                if periods[0][0] < parents_data[param_id][p_loc_id][0][0][0]:
+                                    parents_data[param_id][p_loc_id][0] = periods
+                            else:
+                                parents_data[param_id][p_loc_id] = [periods,
+                                                                    loc_level_list[loc_id]
+                                                                    ]
                         else:
-                            parents_data[param_id][p_loc_id] = [periods,
-                                                                loc_level_list[loc_id]
-                                                                ]
-                    else:
-                        parents_data[param_id] = {p_loc_id : [periods,
-                                                              loc_level_list[loc_id]
-                                                              ]
-                                                  }
+                            parents_data[param_id] = {p_loc_id : [periods,
+                                                                  loc_level_list[loc_id]
+                                                                  ]
+                                                      }
 
 
         # OPTIMISATION step 2
@@ -566,7 +566,6 @@ class S3StatsModel(S3Model):
                 else:
                     resilence_parents[p_loc_id] = [periods, loc_level_list[loc_id], False]
 
-        #print "%s %s %s %s" % (len(location_dict), len(parents), len(parents_data), len(resilence_parents))
         # Now that the time aggregate types have been set up correctly,
         # fire off requests for the location aggregates to be calculated
         async = current.s3task.async
