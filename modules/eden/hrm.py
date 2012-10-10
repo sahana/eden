@@ -128,17 +128,6 @@ class S3HRModel(S3Model):
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
                                     empty = False,
-                                    # Limit Sites to those belonging to the Organisation
-                                    script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldID':'site_id',
-  'FieldResource':'site',
-  'FieldPrefix':'org',
- })
-})'''),
                                     ),
                                   super_link("site_id", "org_site",
                                              label=settings.get_org_site_label(),

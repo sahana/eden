@@ -30,16 +30,6 @@ settings.auth.registration_roles = {"site_id": ["asset_reader",
                                                 "survey_reader",
                                                 "vulnerability_reader",
                                                 ],
-                                    "organisation_id": ["asset_reader",
-                                                        "inv_reader",
-                                                        "irs_reader",
-                                                        "member_reader",
-                                                        "project_reader",
-                                                        "staff_reader",
-                                                        "vol_reader",
-                                                        "survey_reader",
-                                                        "vulnerability_reader",
-                                                        ]
                                     }
 
 # -----------------------------------------------------------------------------

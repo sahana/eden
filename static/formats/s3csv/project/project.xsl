@@ -146,7 +146,7 @@
 
             <!-- Project Sectors -->
             <xsl:if test="$Sectors!=''">
-                <reference field="sector_id" resource="org_sector">
+                <reference field="multi_sector_id" resource="org_sector">
                     <xsl:attribute name="tuid">
                         <xsl:variable name="SectorList">
                             <xsl:call-template name="quoteList">

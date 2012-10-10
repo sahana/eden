@@ -499,14 +499,14 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         resource = current.s3db.resource("org_organisation")
         FS = S3FieldSelector
-        q = FS("sector_id").contains([1, 2])
+        q = FS("multi_sector_id").contains([1, 2])
         query = q.query(resource)
-        self.assertEqual(str(query), "((org_organisation.sector_id LIKE '%|1|%') AND "
-                                     "(org_organisation.sector_id LIKE '%|2|%'))")
-        q = FS("sector_id").anyof([1, 2])
+        self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE '%|1|%') AND "
+                                     "(org_organisation.multi_sector_id LIKE '%|2|%'))")
+        q = FS("multi_sector_id").anyof([1, 2])
         query = q.query(resource)
-        self.assertEqual(str(query), "((org_organisation.sector_id LIKE '%|1|%') OR "
-                                     "(org_organisation.sector_id LIKE '%|2|%'))")
+        self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE '%|1|%') OR "
+                                     "(org_organisation.multi_sector_id LIKE '%|2|%'))")
 
     # -------------------------------------------------------------------------
     def tearDown(self):

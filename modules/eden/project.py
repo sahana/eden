@@ -73,7 +73,7 @@ class S3ProjectModel(S3Model):
          - 'task':  Suitable for use by a smaller organsiation tracking tasks
                     within projects
 
-        Theer are also a number of other deployment_settings to control behaviour
+        There are also a number of other deployment_settings to control behaviour
 
         This class contains the tables common to both uses
         There are additional tables in S3Project3WModel and S3ProjectTaskModel
@@ -104,6 +104,7 @@ class S3ProjectModel(S3Model):
         countries_id = self.gis_countries_id
         organisation_id = self.org_organisation_id
         sector_id = self.org_sector_id
+        multi_sector_id = self.org_multi_sector_id
         human_resource_id = self.hrm_human_resource_id
 
         messages = current.messages
@@ -259,11 +260,6 @@ class S3ProjectModel(S3Model):
                              theme_id(),
                              self.org_sector_id(
                                 label = "",
-                                requires=IS_ONE_OF(db, "org_sector.id",
-                                                   self.org_sector_represent,
-                                                   sort=True,
-                                                   filterby=filterby,
-                                                   filter_opts=filter_opts),
                                 ),
                              *s3_meta_fields())
 
@@ -392,7 +388,7 @@ class S3ProjectModel(S3Model):
                                             readable = mode_drr,
                                             writable = mode_drr
                                             ),
-                             sector_id(
+                             multi_sector_id(
                                        readable = use_sectors,
                                        writable = use_sectors,
                                        widget = lambda f, v: \
@@ -406,7 +402,7 @@ class S3ProjectModel(S3Model):
                                             script = SCRIPT('''
 $(document).ready(function(){
  S3FilterFieldChange({
-  'FilterField':'sector_id',
+  'FilterField':'multi_sector_id',
   'Field':'multi_theme_id',
   'Widget':'multi_theme_id_widget',
   'FieldResource':'theme',
@@ -489,7 +485,7 @@ $(document).ready(function(){
             append(S3SearchOptionsWidget(
                         name = "project_search_sector",
                         label = sector,
-                        field = "sector_id",
+                        field = "multi_sector_id",
                         options = self.org_sector_opts,
                         cols = 4
                     ))
@@ -553,7 +549,7 @@ $(document).ready(function(){
             append("name")
             append("organisation_id")
             if use_sectors:
-                append("sector_id")
+                append("multi_sector_id")
             if mode_3w:
                 append("countries_id")
             if mode_drr:
@@ -761,7 +757,7 @@ $(document).ready(function(){
                                                  represent = lambda opt, row=None: \
                                                     multiref_represent(opt, "project_activity_type"),
                                                  widget = lambda f, v: \
-                                                    CheckboxesWidgetS3.widget(f, v, cols=3),
+                                                    s3_grouped_checkboxes_widget(f, v, cols=3),
                                                  ondelete = "RESTRICT")
 
         crud_form = s3forms.S3SQLCustomForm(
@@ -784,12 +780,8 @@ $(document).ready(function(){
         table = define_table(tablename,
                              activity_type_id(),
                              self.org_sector_id(
-                                requires=IS_ONE_OF(db, "org_sector.id",
-                                                   self.org_sector_represent,
-                                                   sort=True,
-                                                   filterby=filterby,
-                                                   filter_opts=filter_opts),
-                                ),
+                                 label = "",
+                                 ),
                              *s3_meta_fields())
 
         add_component(tablename, project_activity_type="activity_type_id")
@@ -1560,266 +1552,268 @@ class S3Project3WModel(S3Model):
                                (T("Project"), "project_location_id$project_id"),
                                ])
 
-        # ---------------------------------------------------------------------
-        # Project Beneficiary Type
-        #
-        tablename = "project_beneficiary_type"
-        table = define_table(tablename,
-                             super_link("parameter_id", "stats_parameter"),
-                             Field("name", length=128, unique=True,
-                                   requires = IS_NOT_IN_DB(db,
-                                                           "project_beneficiary_type.name")),
-                             s3_comments("description",
-                                         label = T("Description")),
-                             *s3_meta_fields())
-
-        # Field configuration?
-
-        # CRUD Strings
-        ADD_BNF_TYPE = T("Add Beneficiary Type")
-        crud_strings[tablename] = Storage(
-            title_create = ADD_BNF_TYPE,
-            title_display = T("Beneficiary Type"),
-            title_list = T("Beneficiary Types"),
-            title_update = T("Edit Beneficiary Type"),
-            title_search = T("Search Beneficiary Types"),
-            subtitle_create = T("Add New Beneficiary Type"),
-            label_list_button = T("List Beneficiary Types"),
-            label_create_button = ADD_BNF_TYPE,
-            msg_record_created = T("Beneficiary Type Added"),
-            msg_record_modified = T("Beneficiary Type Updated"),
-            msg_record_deleted = T("Beneficiary Type Deleted"),
-            msg_list_empty = T("No Beneficiary Types Found")
-        )
-
-        # Search Method?
-
-        # Resource Configuration
-        configure(tablename,
-                  super_entity = "stats_parameter",
-                  )
-                  
-
-        # Reusable Field
-        beneficiary_type_param_id = S3ReusableField("parameter_id", table,
-                                   sortby="name",
-                                   requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
-                                                        self.stats_parameter_represent,
-                                                        orderby="stats_parameter.name",
-                                                        filterby = "instance_type",
-                                                        filter_opts = ["project_beneficiary_type"],
-                                                        sort=True),
-                                   represent = self.stats_parameter_represent,
-                                   label = T("Beneficiary Type"),
-                                   comment = S3AddResourceLink(c="project",
-                                        f="beneficiary_type",
-                                        vars = dict(child = "parameter_id"),
-                                        title=ADD_BNF_TYPE,
-                                        tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
-                                   ondelete = "CASCADE"
-                                   )
-
-        # ---------------------------------------------------------------------
-        # Project Beneficiary
-        #
-        tablename = "project_beneficiary"
-        table = define_table(tablename,
-                             # Link Fields
-                             # populated automatically
-                             project_id(readable=False,
-                                        writable=False),
-                             project_location_id(comment=None),
-                             
-                             # stats_data Fields
-                             super_link("data_id", "stats_data"),
-                             beneficiary_type_param_id(),
-                             # populated automatically
-                             self.gis_location_id(readable = False,
-                                                  writable = False),
-                             self.stats_group_id(readable = False,
-                                                 writable = False),
-                             Field("value", "double",
-                                   label = T("Quantity"),
-                                   requires = IS_INT_IN_RANGE(0, 99999999),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             s3_date("date",
-                                     label = T("Start Date"),
-                                     #empty = False,
-                                     ),
-                             s3_date("end_date",
-                                     label = T("End Date"),
-                                     #empty = False,
-                                     ),
-                             s3_comments(),
-                             *s3_meta_fields())
-
-        # CRUD Strings
-        ADD_BNF = T("Add Beneficiaries")
-        crud_strings[tablename] = Storage(
-            title_create = ADD_BNF,
-            title_display = T("Beneficiaries Details"),
-            title_list = T("Beneficiaries"),
-            title_update = T("Edit Beneficiaries"),
-            title_search = T("Search Beneficiaries"),
-            title_report = T("Beneficiary Report"),
-            subtitle_create = T("Add New Beneficiaries"),
-            label_list_button = T("List Beneficiaries"),
-            label_create_button = ADD_BNF,
-            msg_record_created = T("Beneficiaries Added"),
-            msg_record_modified = T("Beneficiaries Updated"),
-            msg_record_deleted = T("Beneficiaries Deleted"),
-            msg_list_empty = T("No Beneficiaries Found")
-        )
-
-        table.virtualfields.append(S3ProjectBeneficiaryVirtualFields())
-
-        # Search Method?
-
-        # Resource Configuration
-        report_fields=[
-                      #"activity_id",
-                      "project_location_id",
-                      (T("Beneficiary Type"), "parameter_id"),
-                      "project_id",
-                      (T("Year"), "year"),
-                      "project_id$multi_hazard_id",
-                      "project_id$multi_theme_id",
-                      #"activity_id$multi_activity_type_id"
-                      (T("Country"), "L0"),
-                      "L1",
-                      "L2",
-                      "L3",
-                      "L4",
-                      ]
-        #lh = current.gis.get_location_hierarchy()
-        #lh = [(lh[opt], opt) for opt in lh]
-        #report_fields.extend(lh)
-
-        # ---------------------------------------------------------------------
-        def year_options():
-            """
-                returns a dict of the options for the year virtual field
-                used by the search widget
-
-                orderby needed for postgres
-            """
-
-            ptable = db.project_project
-            pbtable = db.project_beneficiary
-            pquery = (ptable.deleted == False)
-            pbquery = (pbtable.deleted == False)
-            pmin = ptable.start_date.min()
-            pbmin = pbtable.date.min()
-            p_start_date_min = db(pquery).select(pmin,
-                                                 orderby=pmin,
-                                                 limitby=(0, 1)).first()[pmin]
-            pb_date_min = db(pbquery).select(pbmin,
-                                                   orderby=pbmin,
-                                                   limitby=(0, 1)).first()[pbmin]
-            if p_start_date_min and pb_date_min:
-                start_year = min(p_start_date_min,
-                                 pb_date_min).year
-            else:
-                start_year = (p_start_date_min and p_start_date_min.year) or \
-                             (pb_date_min and pb_date_min.year)
-
-            pmax = ptable.end_date.max()
-            pbmax = pbtable.end_date.max()
-            p_end_date_max = db(pquery).select(pmax,
-                                               orderby=pmax,
-                                               limitby=(0, 1)).first()[pmax]
-            pb_end_date_max = db(pbquery).select(pbmax,
-                                                 orderby=pbmax,
-                                                 limitby=(0, 1)).first()[pbmax]
-            if p_end_date_max and pb_end_date_max:
-                end_year = max(p_end_date_max,
-                               pb_end_date_max).year
-            else:
-                end_year = (p_end_date_max and p_end_date_max.year) or \
-                           (pb_end_date_max and pb_end_date_max.year)
-
-            if not start_year or not end_year:
-                return {start_year:start_year} or {end_year:end_year}
-            years = {}
-            for year in xrange(start_year, end_year + 1):
-                years[year] = year
-            return years
-
-        # ---------------------------------------------------------------------
-        def beneficiary_L1_opts():
-            """
-                Provide the options for the L1 search filter
-                @ToDo: Limit to just those project_location records to which the user has access
-            """
-            table = self.project_location
-            ltable = self.gis_location
-            query = (table.deleted == False) & \
-                    (table.location_id == ltable.id)
-            opts = db(query).select(ltable.L1,
-                                    orderby=ltable.L1)
-            od = OrderedDict()
-            for opt in opts:
-                od[opt.L1] = opt.L1
-            return od
-
-        configure(tablename,
-                  super_entity = "stats_data",
-                  onaccept=self.project_beneficiary_onaccept,
-                  deduplicate=self.project_beneficiary_deduplicate,
-                  report_options=Storage(
-                    search=[
-                        S3SearchOptionsWidget(
-                            field="project_id",
-                            name="project",
-                            label=T("Project")
-                        ),
-                        S3SearchOptionsWidget(
-                            field="parameter_id",
-                            name="parameter_id",
-                            label=T("Beneficiary Type")
-                        ),
-                        # @ToDo: These do now work - no results are returned
-                        S3SearchOptionsWidget(
-                            field="year",
-                            name="year",
-                            label=T("Year"),
-                            options = year_options
-                        ),
-                        S3SearchOptionsWidget(
-                            name = "beneficiary_search_L1",
-                            field = "L1",
-                            location_level = "L1",
-                            options = beneficiary_L1_opts,
-                            cols = 3,
-                        ),
-                    ],
-                    rows=report_fields,
-                    cols=report_fields,
-                    facts=["value"],
-                    methods=["sum"],
-                    defaults=Storage( rows="beneficiary.project_id",
-                                      cols="beneficiary.parameter_id",
-                                      fact="beneficiary.value",
-                                      aggregate="sum",
-                                      totals=True
-                                      )
-                  )
-                 )
-
-        # Reusable Field
-        beneficiary_id = S3ReusableField("beneficiary_id", table,
-                                         sortby="name",
-                                         requires = IS_NULL_OR(
-                                                        IS_ONE_OF(db, "project_beneficiary.id",
-                                                                  self.project_beneficiary_represent,
-                                                                  sort=True)),
-                                         represent = self.project_beneficiary_represent,
-                                         label = T("Beneficiaries"),
-                                         comment = S3AddResourceLink(c="project",
-                                                                     f="beneficiary",
-                                                                     title=ADD_BNF,
-                                                                     tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
-                                         ondelete = "SET NULL")
+        #Stats Module required for Beneficiary Functionality 
+        if settings.has_module("stats"):
+            # ---------------------------------------------------------------------
+            # Project Beneficiary Type
+            #
+            tablename = "project_beneficiary_type"
+            table = define_table(tablename,
+                                 super_link("parameter_id", "stats_parameter"),
+                                 Field("name", length=128, unique=True,
+                                       requires = IS_NOT_IN_DB(db,
+                                                               "project_beneficiary_type.name")),
+                                 s3_comments("description",
+                                             label = T("Description")),
+                                 *s3_meta_fields())
+    
+            # Field configuration?
+    
+            # CRUD Strings
+            ADD_BNF_TYPE = T("Add Beneficiary Type")
+            crud_strings[tablename] = Storage(
+                title_create = ADD_BNF_TYPE,
+                title_display = T("Beneficiary Type"),
+                title_list = T("Beneficiary Types"),
+                title_update = T("Edit Beneficiary Type"),
+                title_search = T("Search Beneficiary Types"),
+                subtitle_create = T("Add New Beneficiary Type"),
+                label_list_button = T("List Beneficiary Types"),
+                label_create_button = ADD_BNF_TYPE,
+                msg_record_created = T("Beneficiary Type Added"),
+                msg_record_modified = T("Beneficiary Type Updated"),
+                msg_record_deleted = T("Beneficiary Type Deleted"),
+                msg_list_empty = T("No Beneficiary Types Found")
+            )
+    
+            # Search Method?
+    
+            # Resource Configuration
+            configure(tablename,
+                      super_entity = "stats_parameter",
+                      )
+                      
+    
+            # Reusable Field
+            beneficiary_type_param_id = S3ReusableField("parameter_id", table,
+                                       sortby="name",
+                                       requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
+                                                            self.stats_parameter_represent,
+                                                            orderby="stats_parameter.name",
+                                                            filterby = "instance_type",
+                                                            filter_opts = ["project_beneficiary_type"],
+                                                            sort=True),
+                                       represent = self.stats_parameter_represent,
+                                       label = T("Beneficiary Type"),
+                                       comment = S3AddResourceLink(c="project",
+                                            f="beneficiary_type",
+                                            vars = dict(child = "parameter_id"),
+                                            title=ADD_BNF_TYPE,
+                                            tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
+                                       ondelete = "CASCADE"
+                                       )
+    
+            # ---------------------------------------------------------------------
+            # Project Beneficiary
+            #
+            tablename = "project_beneficiary"
+            table = define_table(tablename,
+                                 # Link Fields
+                                 # populated automatically
+                                 project_id(readable=False,
+                                            writable=False),
+                                 project_location_id(comment=None),
+                                 
+                                 # stats_data Fields
+                                 super_link("data_id", "stats_data"),
+                                 beneficiary_type_param_id(),
+                                 # populated automatically
+                                 self.gis_location_id(readable = False,
+                                                      writable = False),
+                                 self.stats_group_id(readable = False,
+                                                     writable = False),
+                                 Field("value", "double",
+                                       label = T("Quantity"),
+                                       requires = IS_INT_IN_RANGE(0, 99999999),
+                                       represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                                 s3_date("date",
+                                         label = T("Start Date"),
+                                         #empty = False,
+                                         ),
+                                 s3_date("end_date",
+                                         label = T("End Date"),
+                                         #empty = False,
+                                         ),
+                                 s3_comments(),
+                                 *s3_meta_fields())
+    
+            # CRUD Strings
+            ADD_BNF = T("Add Beneficiaries")
+            crud_strings[tablename] = Storage(
+                title_create = ADD_BNF,
+                title_display = T("Beneficiaries Details"),
+                title_list = T("Beneficiaries"),
+                title_update = T("Edit Beneficiaries"),
+                title_search = T("Search Beneficiaries"),
+                title_report = T("Beneficiary Report"),
+                subtitle_create = T("Add New Beneficiaries"),
+                label_list_button = T("List Beneficiaries"),
+                label_create_button = ADD_BNF,
+                msg_record_created = T("Beneficiaries Added"),
+                msg_record_modified = T("Beneficiaries Updated"),
+                msg_record_deleted = T("Beneficiaries Deleted"),
+                msg_list_empty = T("No Beneficiaries Found")
+            )
+    
+            table.virtualfields.append(S3ProjectBeneficiaryVirtualFields())
+    
+            # Search Method?
+    
+            # Resource Configuration
+            report_fields=[
+                          #"activity_id",
+                          "project_location_id",
+                          (T("Beneficiary Type"), "parameter_id"),
+                          "project_id",
+                          (T("Year"), "year"),
+                          "project_id$multi_hazard_id",
+                          "project_id$multi_theme_id",
+                          #"activity_id$multi_activity_type_id"
+                          (T("Country"), "L0"),
+                          "L1",
+                          "L2",
+                          "L3",
+                          "L4",
+                          ]
+            #lh = current.gis.get_location_hierarchy()
+            #lh = [(lh[opt], opt) for opt in lh]
+            #report_fields.extend(lh)
+    
+            # ---------------------------------------------------------------------
+            def year_options():
+                """
+                    returns a dict of the options for the year virtual field
+                    used by the search widget
+    
+                    orderby needed for postgres
+                """
+    
+                ptable = db.project_project
+                pbtable = db.project_beneficiary
+                pquery = (ptable.deleted == False)
+                pbquery = (pbtable.deleted == False)
+                pmin = ptable.start_date.min()
+                pbmin = pbtable.date.min()
+                p_start_date_min = db(pquery).select(pmin,
+                                                     orderby=pmin,
+                                                     limitby=(0, 1)).first()[pmin]
+                pb_date_min = db(pbquery).select(pbmin,
+                                                       orderby=pbmin,
+                                                       limitby=(0, 1)).first()[pbmin]
+                if p_start_date_min and pb_date_min:
+                    start_year = min(p_start_date_min,
+                                     pb_date_min).year
+                else:
+                    start_year = (p_start_date_min and p_start_date_min.year) or \
+                                 (pb_date_min and pb_date_min.year)
+    
+                pmax = ptable.end_date.max()
+                pbmax = pbtable.end_date.max()
+                p_end_date_max = db(pquery).select(pmax,
+                                                   orderby=pmax,
+                                                   limitby=(0, 1)).first()[pmax]
+                pb_end_date_max = db(pbquery).select(pbmax,
+                                                     orderby=pbmax,
+                                                     limitby=(0, 1)).first()[pbmax]
+                if p_end_date_max and pb_end_date_max:
+                    end_year = max(p_end_date_max,
+                                   pb_end_date_max).year
+                else:
+                    end_year = (p_end_date_max and p_end_date_max.year) or \
+                               (pb_end_date_max and pb_end_date_max.year)
+    
+                if not start_year or not end_year:
+                    return {start_year:start_year} or {end_year:end_year}
+                years = {}
+                for year in xrange(start_year, end_year + 1):
+                    years[year] = year
+                return years
+    
+            # ---------------------------------------------------------------------
+            def beneficiary_L1_opts():
+                """
+                    Provide the options for the L1 search filter
+                    @ToDo: Limit to just those project_location records to which the user has access
+                """
+                table = self.project_location
+                ltable = self.gis_location
+                query = (table.deleted == False) & \
+                        (table.location_id == ltable.id)
+                opts = db(query).select(ltable.L1,
+                                        orderby=ltable.L1)
+                od = OrderedDict()
+                for opt in opts:
+                    od[opt.L1] = opt.L1
+                return od
+    
+            configure(tablename,
+                      super_entity = "stats_data",
+                      onaccept=self.project_beneficiary_onaccept,
+                      deduplicate=self.project_beneficiary_deduplicate,
+                      report_options=Storage(
+                        search=[
+                            S3SearchOptionsWidget(
+                                field="project_id",
+                                name="project",
+                                label=T("Project")
+                            ),
+                            S3SearchOptionsWidget(
+                                field="parameter_id",
+                                name="parameter_id",
+                                label=T("Beneficiary Type")
+                            ),
+                            # @ToDo: These do now work - no results are returned
+                            S3SearchOptionsWidget(
+                                field="year",
+                                name="year",
+                                label=T("Year"),
+                                options = year_options
+                            ),
+                            S3SearchOptionsWidget(
+                                name = "beneficiary_search_L1",
+                                field = "L1",
+                                location_level = "L1",
+                                options = beneficiary_L1_opts,
+                                cols = 3,
+                            ),
+                        ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=["value"],
+                        methods=["sum"],
+                        defaults=Storage( rows="beneficiary.project_id",
+                                          cols="beneficiary.parameter_id",
+                                          fact="beneficiary.value",
+                                          aggregate="sum",
+                                          totals=True
+                                          )
+                      )
+                     )
+    
+            # Reusable Field
+            beneficiary_id = S3ReusableField("beneficiary_id", table,
+                                             sortby="name",
+                                             requires = IS_NULL_OR(
+                                                            IS_ONE_OF(db, "project_beneficiary.id",
+                                                                      self.project_beneficiary_represent,
+                                                                      sort=True)),
+                                             represent = self.project_beneficiary_represent,
+                                             label = T("Beneficiaries"),
+                                             comment = S3AddResourceLink(c="project",
+                                                                         f="beneficiary",
+                                                                         title=ADD_BNF,
+                                                                         tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+                                             ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
         # Project Organisations
@@ -2265,7 +2259,7 @@ class S3ProjectActivityModel(S3Model):
         append((T("Activity"), "name"))
         append((T("Activity Type"), "multi_activity_type_id"))
         if settings.get_project_sectors():
-            append((T("Sector"), "project_id$sector_id"))
+            append((T("Sector"), "project_id$multi_sector_id"))
         if not settings.get_project_theme_percentages():
             append((T("Theme"), "project_id$multi_theme_id"))
         if settings.get_project_mode_drr():
