@@ -2953,7 +2953,10 @@ class S3DataTable(object):
                                "alert" : [2,10,13]}
                    dt_text_maximum_len: The maximum length of text before it is condensed
                    dt_text_condense_len: The length displayed text is condensed down to
-                   dt_shrink_groups: If true then the rows within a group will be hidden
+                   dt_shrink_groups: If set then the rows within a group will be hidden
+                                     two types are supported, 'individulal' and 'accordion'
+                   dt_group_types: The type of indicator for groups that can be 'shrunk'
+                                   Permitted valies are: 'icon' (the default) 'text' and 'none'
             @global current.response.s3.actions used to get the RowActions
         """
 
@@ -3028,6 +3031,7 @@ class S3DataTable(object):
         config.textMaxLength = attr.get("dt_text_maximum_len", 80)
         config.textShrinkLength = attr.get("dt_text_condense_len", 75)
         config.shrinkGroupedRows = attr.get("dt_shrink_groups", "false")
+        config.groupIcon = attr.get("dt_group_types", [])
         # Wrap the table in a form and add some data in hidden fields
         form = FORM()
         if not s3.no_formats and len(html) > 0:
