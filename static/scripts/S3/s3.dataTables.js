@@ -30,6 +30,8 @@ function hideSubRows(groupid){
     // Close all the arrows
     $('.arrow_e' + groupid).show();
     $('.arrow_s' + groupid).hide();
+    $('.ui-icon-triangle-1-e').show();
+    $('.ui-icon-triangle-1-s').hide();
     // Remove any active row class
     $('.' + groupid).removeClass('activeRow');
 }
@@ -58,6 +60,8 @@ function showSubRows(groupid){
     // Open the arrow
     $('.arrow_e' + groupid).hide();
     $('.arrow_s' + groupid).show();
+    $('#' + groupid + '_closed').hide();
+    $('#' + groupid + '_open').show();
     // Add the active row class
     $('.' + groupid).addClass('activeRow');
     // Display the spacer of open groups
@@ -81,6 +85,8 @@ function toggleRow(groupid) {
         // Close all sublevels and change the icon to collapsed
         hideSubRows(groupid);
         $(sublevel).hide();
+        $('#' + groupid + '_closed').show();
+        $('#' + groupid + '_open').hide();
         $('#' + groupid + '_in').show();
         $('#' + groupid + '_out').hide();
     // Display the spacer of open groups
@@ -88,6 +94,8 @@ function toggleRow(groupid) {
     } else {
         // Open the immediate sublevel and change the icon to expanded
         $(sublevel).show();
+        $('#' + groupid + '_closed').hide();
+        $('#' + groupid + '_open').show();
         $('#' + groupid + '_in').hide();
         $('#' + groupid + '_out').show();
     }
@@ -534,6 +542,7 @@ $(document).ready(function() {
                          groupPrefix,
                          groupTitle,
                          addIcons,
+                         iconGroupType,
                          insertSpace,
                          shrink,
                          accordion,
@@ -543,13 +552,15 @@ $(document).ready(function() {
                          )
     {
         var levelClass = 'level_' + level;
+        var groupClass = 'group_' + t + level + groupCnt;
         // Add an indentation of the grouping depth
         var levelDisplay = '';
         for (var lvl=1; lvl<level; lvl++) {
             levelDisplay += "<div style='float:left; width:10px;'>&nbsp;</div>";
         }
         if (level > 1) {
-            levelDisplay += "<div class='ui-icon ui-icon-play' style='float:left;'></div>";
+            levelDisplay += '<div id="' + groupClass + '_closed" class="ui-icon ui-icon-triangle-1-e" style="float:left;"></div>';
+            levelDisplay += '<div id="' + groupClass + '_open" class="ui-icon ui-icon-triangle-1-s" style="float:left; display:none;"></div>';
         }
         // Add the subtotal counts (if provided)
         var groupCount = '';
@@ -566,7 +577,6 @@ $(document).ready(function() {
         nGroup.className = 'group';
         var nCell = document.createElement('td');
         if (shrink || accordion) {
-            var groupClass = 'group_' + t + level + groupCnt;
             $(nGroup).addClass('headerRow');
             $(nGroup).addClass(groupClass);
             $(nGroup).addClass(levelClass);
@@ -577,12 +587,31 @@ $(document).ready(function() {
         }
         if (addIcons) {
             $(nGroup).addClass('expandable');
+            var iconClassOpen = '';
+            var iconClassClose = '';
+            var iconTextOpen = '';
+            var iconTextClose = '';
+            if (iconGroupType == 'text') {
+                iconTextOpen = '→';
+                iconTextClose = '↓';
+            }
             if (shrink) {
-                var iconin = '<a id="' + groupClass + '_in" href="javascript:toggleRow(\'' + groupClass + '\');" class="ui-icon ui-icon-arrowthick-1-e" style="float:right"></a>';
-                var iconout = '<a id="' + groupClass + '_out" href="javascript:toggleRow(\'' + groupClass + '\');" class="ui-icon ui-icon-arrowthick-1-s" style="float:right; display:none"></a>';
+                if (iconGroupType == 'icon') {
+                    iconClassOpen = 'class="ui-icon ui-icon-arrowthick-1-e" ';
+                    iconClassClose = 'class="ui-icon ui-icon-arrowthick-1-s" ';
+                }
+                var iconin = '<a id="' + groupClass + '_in" href="javascript:toggleRow(\'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
+                var iconout = '<a id="' + groupClass + '_out" href="javascript:toggleRow(\'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
             } else {
-                var iconin = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" class="ui-icon ui-icon-arrowthick-1-e arrow_e'+groupClass+'" style="float:right"></a>';
-                var iconout = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" class="ui-icon ui-icon-arrowthick-1-s arrow_s'+groupClass+'" style="float:right; display:none"></a>';
+                if (iconGroupType == 'icon') {
+                    iconClassOpen = 'class="ui-icon ui-icon-arrowthick-1-e arrow_e'+groupClass+'" ';
+                    iconClassClose = 'class="ui-icon ui-icon-arrowthick-1-s arrow_s'+groupClass+'" ';
+                } else {
+                    iconClassOpen = 'class="arrow_e'+groupClass+'" ';
+                    iconClassClose = 'class="arrow_s'+groupClass+'" ';
+                }
+                var iconin = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
+                var iconout = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
             }
             htmlText = groupTitle + groupCount+ iconin + iconout;
         } else {
@@ -625,6 +654,13 @@ $(document).ready(function() {
         var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
         var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
         var insertSpace = aoTableConfig[t]['groupSpacing'];
+        var iconGroupTypeList = aoTableConfig[t]['groupIcon'];
+        var iconGroupType
+        if (iconGroupTypeList.length >= level) {
+            iconGroupType = iconGroupTypeList[level-1];
+        } else {
+            iconGroupType = 'icon';
+        }
         var nTrs = $(tableId[t] + ' tbody tr');
         var iColspan = $(tableId[t] + ' thead tr')[0].getElementsByTagName('th').length;
         var sLastGroup = '';
@@ -656,16 +692,16 @@ $(document).ready(function() {
             if ( sGroup != sLastGroup ) {  // New group
                 while (groupTitles.length > groupTitleCnt && sGroup != groupTitles[groupTitleCnt][0]) {
                     title = groupTitles[groupTitleCnt][1]
-                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                     groupTitleCnt++;
                     groupCnt++;
                 }
                 if (groupTitles.length > groupTitleCnt){
                     title = groupTitles[groupTitleCnt][1]
-                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                     groupTitleCnt++;
                 } else {
-                    addNewGroup(t, sGroup, level, sublevel, iColspan, groupTotals, groupPrefix, sGroup, true, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, sGroup, level, sublevel, iColspan, groupTotals, groupPrefix, sGroup, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                 }
                 groupCnt++;
                 sLastGroup = sGroup;
@@ -679,7 +715,7 @@ $(document).ready(function() {
         // add any empty groups not yet added to at the end of the table
         while (groupTitles.length > groupTitleCnt) {
             title = groupTitles[groupTitleCnt][1]
-            addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, insertSpace, shrink, accordion, groupCnt, nTrs[nTrs.length-1],false);
+            addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[nTrs.length-1],false);
             groupTitleCnt++;
             groupCnt++;
         }
