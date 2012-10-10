@@ -108,7 +108,8 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
                                                _for="id-human_resource_search_select_virtual_field-1")
                                          )
                                       ),
-                                   _class="s3-checkboxes-widget")))
+                                   _class="s3-checkboxes-widget",
+                                   _name="human_resource_search_select_virtual_field_widget")))
 
 # =============================================================================
 class TestS3SearchMinMaxWidget(unittest.TestCase):

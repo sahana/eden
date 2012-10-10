@@ -240,7 +240,7 @@ class S3ProjectModel(S3Model):
                             fields=["sector_id"],
                         ),
                     )
-    
+
         configure(tablename,
                   crud_form=crud_form)
 
@@ -773,7 +773,7 @@ $(document).ready(function(){
                             fields=["sector_id"],
                         ),
                     )
-    
+
         configure(tablename,
                   crud_form=crud_form)
 
@@ -1596,7 +1596,7 @@ class S3Project3WModel(S3Model):
         configure(tablename,
                   super_entity = "stats_parameter",
                   )
-                  
+
 
         # Reusable Field
         beneficiary_type_param_id = S3ReusableField("parameter_id", table,
@@ -1627,7 +1627,7 @@ class S3Project3WModel(S3Model):
                              project_id(readable=False,
                                         writable=False),
                              project_location_id(comment=None),
-                             
+
                              # stats_data Fields
                              super_link("data_id", "stats_data"),
                              beneficiary_type_param_id(),
@@ -1978,7 +1978,7 @@ class S3Project3WModel(S3Model):
     @staticmethod
     def project_beneficiary_onaccept(form):
         """
-            Update project_beneficiary project & location from project_location_id 
+            Update project_beneficiary project & location from project_location_id
         """
 
         db = current.db
@@ -4843,7 +4843,7 @@ def project_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
-    
+
     # Need to use this as otherwise demographic_data?viewing=project_location.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
@@ -4851,9 +4851,9 @@ def project_rheader(r, tabs=[]):
         return None
     s3db = current.s3db
     table = s3db.table(tablename)
-    
+
     resourcename = r.name
-    
+
     T = current.T
     auth = current.auth
     settings = current.deployment_settings

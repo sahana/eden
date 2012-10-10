@@ -792,6 +792,7 @@ class S3XML(S3Codec):
                 # (make this optional to keep filesize small when not
                 #  needed?)
                 url = URL(request.controller, request.function).split(".", 1)[0]
+
                 if format == "geojson":
                     # Assume being used within the Sahana Mapping client so use local URLs
                     # to keep filesize down

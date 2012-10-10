@@ -453,7 +453,8 @@ class TestS3CheckboxesWidget(unittest.TestCase):
                                                _value="2"),
                                          LABEL("Two",
                                                _for="id-f-1"))),
-                                   _class="s3-checkboxes-widget")))
+                                   _class="s3-checkboxes-widget",
+                                   _name="f_widget")))
 
         widget = s3_checkboxes_widget(field,
                                       [1,])
@@ -471,7 +472,8 @@ class TestS3CheckboxesWidget(unittest.TestCase):
                                                _value="2"),
                                          LABEL("Two",
                                                _for="id-f-1"))),
-                                   _class="s3-checkboxes-widget")))
+                                   _class="s3-checkboxes-widget",
+                                   _name="f_widget")))
 
         widget = s3_checkboxes_widget(field,
                                       [1,],
@@ -492,7 +494,8 @@ class TestS3CheckboxesWidget(unittest.TestCase):
                                                _value="2"),
                                          LABEL("Two",
                                                _for="id-f-6"))),
-                                   _class="myclass")))
+                                   _class="myclass",
+                                   _name="f_widget")))
 
 
 # =============================================================================
