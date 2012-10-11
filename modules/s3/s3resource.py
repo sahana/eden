@@ -1739,13 +1739,13 @@ class S3Resource(object):
     def export_tree(self,
                     start=0,
                     limit=None,
-                    skip=[],
-                    fields=None,
                     msince=None,
+                    fields=None,
+                    skip=[],
+                    references=None,
                     dereference=True,
                     mcomponents=None,
                     rcomponents=None,
-                    references=None,
                     maxbounds=False):
         """
             Export the resource as element tree
@@ -1753,15 +1753,18 @@ class S3Resource(object):
             @param start: index of the first record to export
             @param limit: maximum number of records to export
             @param msince: minimum modification date of the records
+            @param fields: data fields to include (default: all)
             @param skip: list of fieldnames to skip
-            @param show_urls: show record URLs in the export
+            @param references: foreign keys to include (default: all)
+            @param dereference: also export referenced records
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
                                 for all
             @param rcomponents: components of referenced resources to
                                 include (list of tablenames), empty list
                                 for all
-            @param dereference: also export referenced records
+            @param maxbounds: include lat/lon boundaries in the top
+                              level element (off by default)
 
         """
 
@@ -1918,6 +1921,7 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               skip=skip,
+                                              master=False,
                                               marker=marker,
                                               locations=locations)
 
@@ -1958,11 +1962,9 @@ class S3Resource(object):
                           components=None,
                           skip=[],
                           msince=None,
+                          master=True,
                           marker=None,
-                          locations=None,
-                          popup_label=None,
-                          popup_fields=None
-                          ):
+                          locations=None):
         """
             Add a <resource> to the element tree
 
@@ -1977,6 +1979,7 @@ class S3Resource(object):
                                resources (tablenames)
             @param skip: fields to skip
             @param msince: the minimum update datetime for exported records
+            @param master: True of this is the master resource
             @param marker: the marker for GIS encoding
             @param locations: the locations for GIS encoding
         """
@@ -2003,6 +2006,7 @@ class S3Resource(object):
                                export_map=export_map,
                                url=record_url,
                                msince=msince,
+                               master=master,
                                marker=marker,
                                locations=locations)
         if element is not None:
@@ -2060,7 +2064,8 @@ class S3Resource(object):
                                              parent=element,
                                              export_map=export_map,
                                              url=crecord_url,
-                                             msince=msince)
+                                             msince=msince,
+                                             master=False)
                     if celement is not None:
                         add = True # keep the parent record
 
@@ -2092,9 +2097,9 @@ class S3Resource(object):
                         export_map=None,
                         url=None,
                         msince=None,
+                        master=True,
                         marker=None,
-                        locations=None
-                        ):
+                        locations=None):
         """
             Exports a single record to the element tree.
 
@@ -2105,7 +2110,9 @@ class S3Resource(object):
             @param export_map: the export map of the current request
             @param url: URL of the record
             @param msince: minimum last update time
+            @param master: True if this is a record in the master resource
             @param marker: the marker for GIS encoding
+            @param locations: the locations for GIS encoding
         """
 
         s3db = current.s3db
@@ -2167,7 +2174,7 @@ class S3Resource(object):
 
         # GIS-encode the element
         xml.gis_encode(self, record, element, rmap,
-                       marker=marker, locations=locations)
+                       marker=marker, locations=locations, master=master)
 
         return (element, rmap)
 

@@ -279,9 +279,9 @@
                                 <xsl:value-of select="reference[@field='location_id']/@popup"/>
                             </popup>
                         </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@url!=''">
+                        <xsl:if test="reference[@field='location_id']/@popup_url!=''">
                             <url>
-                                <xsl:value-of select="reference[@field='location_id']/@url"/>
+                                <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
                             </url>
                         </xsl:if>
                     </properties>
@@ -383,9 +383,9 @@
                                 <xsl:value-of select="reference[@field='location_id']/@popup"/>
                             </popup>
                         </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@url!=''">
+                        <xsl:if test="reference[@field='location_id']/@popup_url!=''">
                             <url>
-                                <xsl:value-of select="reference[@field='location_id']/@url"/>
+                                <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
                             </url>
                         </xsl:if>
                     </properties>
@@ -417,7 +417,7 @@
                             <xsl:value-of select="reference[@field='location_id']/@popup"/>
                         </popup>
                         <url>
-                            <xsl:value-of select="reference[@field='location_id']/@url"/>
+                            <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
                         </url>
                     </properties>
                 </xsl:when>
