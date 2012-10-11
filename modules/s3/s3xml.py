@@ -161,8 +161,9 @@ class S3XML(S3Codec):
         lonmin="lonmin",
         lonmax="lonmax",
         marker="marker",
-        popup="popup",  # for GIS Feature Layers/Queries
-        sym="sym",      # For GPS
+        popup="popup",         # for GIS Feature Layers/Queries
+        popup_url="popup_url", # for map popups
+        sym="sym",             # for GPS
         type="type",
         readable="readable",
         writable="writable",
@@ -621,6 +622,7 @@ class S3XML(S3Codec):
                    rmap,
                    marker=None,
                    locations=None,
+                   master=True,
                    ):
         """
             GIS-encodes location references
@@ -631,6 +633,7 @@ class S3XML(S3Codec):
             @param rmap: list of references to encode
             @param marker: marker dict
             @param locations: locations dict
+            @param master: True if this is the master resource
         """
 
         db = current.db
@@ -786,16 +789,23 @@ class S3XML(S3Codec):
                     attr[ATTRIBUTE.sym] = symbol
 
             if LatLon or polygon:
-                # Build the URL for the onClick Popup contents
-                url = URL(request.controller, request.function).split(".", 1)[0]
-                if format == "geojson":
-                    # Assume being used within the Sahana Mapping client so use local URLs
-                    # to keep filesize down
-                    url = "%s/%i.plain" % (url, record[pkey])
-                else:
-                    # Assume being used outside the Sahana Mapping client so use public URLs
-                    url = "%s%s/%i" % (settings.get_base_public_url(), url, record[pkey])
-                attr[ATTRIBUTE.url] = url
+                # Build the URL for the onClick Popup contents => only for
+                # the master resource of the export
+                if master:
+                    # Use the current controller for map popup URLs to get
+                    # the controller settings applied even for map popups
+                    url = URL(request.controller,
+                              request.function).split(".", 1)[0]
+                    if format == "geojson":
+                        # Assume being used within the Sahana Mapping client
+                        # so use local URLs to keep filesize down
+                        url = "%s/%i.plain" % (url, record[pkey])
+                    else:
+                        # Assume being used outside the Sahana Mapping client
+                        # so use public URLs
+                        url = "%s%s/%i" % (settings.get_base_public_url(),
+                                           url, record[pkey])
+                    attr[ATTRIBUTE.popup_url] = url
 
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
