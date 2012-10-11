@@ -100,7 +100,6 @@ class S3Task(object):
         """
 
         T = current.T
-
         db = current.db
         tablename = self.TASK_TABLENAME
         table = db[tablename]
@@ -108,48 +107,54 @@ class S3Task(object):
         if not task:
             import uuid
             task = str(uuid.uuid4())
-        table.task_name.default = task
-        table.task_name.readable = False
-        table.task_name.writable = False
+        field = table.task_name
+        field.default = task
+        field.readable = False
+        field.writable = False
 
         if function:
-            table.function_name.default = function
-            table.function_name.readable = False
-            table.function_name.writable = False
+            field = table.function_name
+            field.default = function
+            field.readable = False
+            field.writable = False
 
-        table.args.default = json.dumps(args)
-        table.args.readable = False
-        table.args.writable = False
+        field.default = json.dumps(args)
+        field.readable = False
+        field.writable = False
 
-        table.repeats.label = T("Repeat")
-        table.repeats.comment = T("times (0 = unlimited)")
-        table.repeats.default = 0
-        table.repeats.represent = lambda opt: opt and "%s %s" % (opt, T("times")) or \
+        field = table.repeats
+        field.label = T("Repeat")
+        field.comment = T("times (0 = unlimited)")
+        field.default = 0
+        field.represent = lambda opt: opt and "%s %s" % (opt, T("times")) or \
                                               opt == 0 and T("unlimited") or \
                                               "-"
 
-        table.period.label = T("Run every")
-        table.period.widget = S3TimeIntervalWidget.widget
-        table.period.requires = IS_TIME_INTERVAL_WIDGET(table.period)
-        table.period.represent = S3TimeIntervalWidget.represent
-        table.period.comment = None
+        field = table.period
+        field.label = T("Run every")
+        field.widget = S3TimeIntervalWidget.widget
+        field.requires = IS_TIME_INTERVAL_WIDGET(table.period)
+        field.represent = S3TimeIntervalWidget.represent
+        field.comment = None
 
         table.timeout.default = 600
         table.timeout.represent = lambda opt: opt and "%s %s" % (opt, T("seconds")) or \
                                               opt == 0 and T("unlimited") or \
                                               "-"
 
-        table.vars.default = json.dumps(vars)
-        table.vars.readable = False
-        table.vars.writable = False
+        field = table.vars
+        field.default = json.dumps(vars)
+        field.readable = False
+        field.writable = False
 
         # Always use "default" controller (web2py uses current controller),
         # otherwise the anonymous worker does not pass the controller
         # permission check and gets redirected to login before it reaches
         # the task function which does the s3_impersonate
-        table.application_name.default = "%s/default" % current.request.application
-        table.application_name.readable = False
-        table.application_name.writable = False
+        field = table.application_name
+        field.default = "%s/default" % current.request.application
+        field.readable = False
+        field.writable = False
 
         table.group_name.readable = False
         table.group_name.writable = False
@@ -167,15 +172,16 @@ class S3Task(object):
         table.assigned_worker_name.writable = False
 
         current.s3db.configure(tablename,
-                          list_fields=["id",
-                                       "enabled",
-                                       "start_time",
-                                       "repeats",
-                                       "period",
-                                       (T("Last run"), "last_run_time"),
-                                       (T("Last status"), "status"),
-                                       (T("Next run"), "next_run_time"),
-                                       "stop_time"])
+                               list_fields=["id",
+                                            "enabled",
+                                            "start_time",
+                                            "repeats",
+                                            "period",
+                                            (T("Last run"), "last_run_time"),
+                                            (T("Last status"), "status"),
+                                            (T("Next run"), "next_run_time"),
+                                            "stop_time"
+                                            ])
 
         response = current.response
         if response:

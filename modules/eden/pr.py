@@ -644,12 +644,12 @@ class S3PersonModel(S3Model):
                                    label = T("Name of Father"),
                                    #readable = False,
                                    #writable = False,
-                                  ),
+                                   ),
                              Field("mother_name",
                                    label = T("Name of Mother"),
                                    #readable = False,
                                    #writable = False,
-                                  ),
+                                   ),
                              pr_gender(label = T("Gender")),
                              pr_marital_status(),
                              s3_date("date_of_birth",
@@ -657,8 +657,8 @@ class S3PersonModel(S3Model):
                                      past = 1320,  # Months, so 110 years
                                      ),
                              pr_age_group(
-                                     readable = False,
-                                     writable = False,
+                                    readable = False,
+                                    writable = False,
                                     ),
                              Field("nationality",
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(

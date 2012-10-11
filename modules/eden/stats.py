@@ -73,7 +73,6 @@ class S3StatsModel(S3Model):
                            stats_demographic = T("Demographic"),
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            #survey_question_type = T("Survey Question Type"),
-
                            #climate_parameter = T("Climate Parameter"),
                           )
 
@@ -242,23 +241,24 @@ class S3StatsModel(S3Model):
         """
 
         # Check to see whether an existing task is running and if it is then kill it
-        db = current.db
-        ttable = db.scheduler_task
-        rtable = db.scheduler_run
-        wtable = db.scheduler_worker
-        query = (ttable.task_name == "stats_group_clean") & \
-                (rtable.scheduler_task == ttable.id) & \
-                (rtable.status == "RUNNING")
-        rows = db(query).select(rtable.id,
-                                rtable.scheduler_task,
-                                rtable.worker_name)
-        now = current.request.utcnow
-        for row in rows:
-            db(wtable.worker_name == row.worker_name).update(status="KILL")
-            db(rtable.id == row.id).update(stop_time=now,
-                                           status="STOPPED")
-            db(ttable.id == row.scheduler_task).update(stop_time=now,
-                                                       status="STOPPED")
+        # - this is only run during prepop (fast) & postpop, so shouldn't be needed
+        # db = current.db
+        # ttable = db.scheduler_task
+        # rtable = db.scheduler_run
+        # wtable = db.scheduler_worker
+        # query = (ttable.task_name == "stats_group_clean") & \
+                # (rtable.scheduler_task == ttable.id) & \
+                # (rtable.status == "RUNNING")
+        # rows = db(query).select(rtable.id,
+                                # rtable.scheduler_task,
+                                # rtable.worker_name)
+        # now = current.request.utcnow
+        # for row in rows:
+            # db(wtable.worker_name == row.worker_name).update(status="KILL")
+            # db(rtable.id == row.id).update(stop_time=now,
+                                           # status="STOPPED")
+            # db(ttable.id == row.scheduler_task).update(stop_time=now,
+                                                       # status="STOPPED")
 
         # Mark all stats_group records as needing to be updated
         s3db = current.s3db
@@ -269,7 +269,9 @@ class S3StatsModel(S3Model):
         resource.delete()
 
         # Fire off a rebuild task
-        current.s3task.async("stats_group_clean")
+        current.s3task.async("stats_group_clean",
+                             timeout=21600 # 6 hours
+                             ) 
 
     # ---------------------------------------------------------------------
     @classmethod
@@ -613,7 +615,9 @@ class S3StatsModel(S3Model):
                 for (start_date, end_date) in changed_periods:
                     s, e = str(start_date), str(end_date)
                     async("stats_update_aggregate_location",
-                          args = [loc_level, loc_id, param_id, s, e])
+                          args = [loc_level, loc_id, param_id, s, e],
+                          timeout = 1800 # 30m
+                          )
         if vulnerability:
             # Now calculate the resilence indicators
             vulnerability_resilience = s3db.vulnerability_resilience

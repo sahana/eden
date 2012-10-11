@@ -1,149 +1,143 @@
 # Tests for each migrations made in the migration_scripts file
 # has been made in order to call the tests just run the this script 
 # using
-# python <path_to_this_file>/test_migrations.py 
+# cd web2py
+# python web2py.py -S eden -R applications/eden/tests/dbmigration/test_migrations.py 
 # 
-# Choose from the menu whatever migration methos you want to test,
+# Choose from the menu whatever migration methods you want to test,
 
-import os
-import sys
+s3migration = local_import("s3migration")
+s3migrate = s3migration.S3Migration()
+db = s3migrate.db
 
-own_path = os.path.realpath(__file__)
-own_path = own_path.split(os.path.sep)
-index_application = own_path.index("applications")
-CURRENT_APP_PATH  = (os.path.sep).join(own_path[0:index_application+2])
-WEB2PY_PATH = (os.path.sep).join(own_path[0:index_application])
-APP = "eden"
+class mapping_function():
 
-def get_old_db():        
-    """
-    This function let up view how the database was before the 
-    migration scripts were called , the relevant data is displayed 
-    during the tests
-    """
-    os.chdir(WEB2PY_PATH)
-    sys.path.append(WEB2PY_PATH)
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def fields(db):    
+        """
+            This function specify the fields that are needed for the select query
+        """
 
-    from gluon.custom_import import custom_import_install
-    custom_import_install(WEB2PY_PATH)
-    from gluon.shell import env
-    from gluon import DAL, Field
-    old_env = env(APP, c=None, import_models=True)
-    old_str ='''
-try:
-    s3db.load_all_models()
-except NameError:
-    print "s3db not defined"
-    '''
-    globals().update(**old_env)
-    exec old_str in globals(), locals()
-    return db
+        fields = []
+        fields.append(db["org_organisation"].ALL)
+        return fields
 
-def get_migrated_db():
-    """
-    This function let up view how the database was after the 
-    migration scripts were called , this lets us compare the 2 databases
-    the one before and the one after the migrations
-    """
-    os.chdir(WEB2PY_PATH)
-    sys.path.append(WEB2PY_PATH)
-    from gluon import DAL, Field
-    database_string = "sqlite://storage.db"
-    old_database_folder = "%s/applications/%s/databases" % (WEB2PY_PATH, APP)
-    db = DAL( database_string, folder = old_database_folder, auto_import = True, migrate_enabled=True ,migrate = True)
-    return db
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def query(db):    
+        """
+            This function specify the query for the select query
+        """
 
-#import the migration_script to get all the functions 
-migration_sample_path = (os.path.sep).join([CURRENT_APP_PATH,"static","scripts","Database_migration"])
-sys.path.insert(0, migration_sample_path)
-import migration_scripts
+        query = (db.org_organisation.organisation_type_id == db.org_organisation_type.id)
+        return query
 
-def list_field_to_reference(web2py_path,app):
-    """
-    Tets for list_field_to_reference function in migration_script
-    """
-    new_table_name = "sector_id_reference"
-    new_list_field = list_field_name = "sector_id"
-    old_table_id_field = "id"
-    old_table = "org_organisation"
-    db = get_old_db()
-    for a in range(2,10):
-        db[old_table].insert(name = "test_%s" %(str(a)), organisation_type_id = a%5 , uuid = "%s%s" %(db[old_table]["uuid"].default,str(a)),sector_id = [a-2,a-1,a])
-    db.commit()
-    migration_scripts.list_field_to_reference(web2py_path,app,new_table_name , new_list_field , list_field_name , old_table_id_field , old_table)
-    db = get_migrated_db()
-    print old_table
-    for row in db(db[old_table]).select():
-        print "id = ",row[old_table_id_field],"sector_id = ",row[list_field_name]
-    print new_table_name
-    for row in db(db[new_table_name]).select():
-        print "id = ",row["%s_%s" %(old_table,old_table_id_field)],"sector_id = ",row[new_list_field]
-    
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def mapping(row):
+        """
+            @param row : The row which is generated as a result of the select query done
 
-def renaming_field(web2py_path,app):
-    """
-    Tets for migration_renaming_field function in migration_script
-    """
-    db = get_old_db()
-    old_table = "pr_person"
-    print old_table
-    for row in db(db[old_table]).select():
-        print "id = ",row["id"],"first_name = ",row["first_name"]
-    attributes_to_copy = ["type","length","default","required","requires","ondelete","notnull","unique",
-            "uploadfield","widget","label","comment","writable","readable","update","authorize",
-            "autodelete","represent","uploadfolder","uploadseparate","uploadfs","compute","custom_store",
-            "custom_retrieve","custom_retrieve_file_properties","custom_delete","filter_in","filter_out"]        
-    migration_scripts.migration_renaming_field(web2py_path, app, old_table, "first_name", "pr_first_name",attributes_to_copy)
-    db = get_migrated_db()
-    print old_table
-    for row in db(db[old_table]).select():
-        print "id = ",row["id"],"first_name_pr = ",row["first_name_pr"]
-    
+            The new values are returned which are are generarated for each row .
+        """
 
-def renaming_table(web2py_path,app):
-    """
-    Tets for migration_renaming_table function in migration_script
-    """
-    migration_scripts.migration_renaming_table(web2py_path,app,"vehicle_vehicle","rename_vehicle")
-    print "renamed vehicle_vehicle to renmae_vehicle"
-    
+        return row["id"]
 
-def adding_new_field(web2py_path,app):
+# -----------------------------------------------------------------------------
+def rename_field():
     """
-    Tets for migrating_to_unique_field function in migration_script
+        Test for S3Migrate().rename_field function
     """
+
+    tablename = "pr_person"
+    print "Testing table: %s" % tablename
+    table = db[tablename]
+    for row in db(table.id > 0).select():
+        print "id: %s, first_name: %s" % (row["id"], row["first_name"])
+    attributes_to_copy = ["type", "length", "default", "required", "requires", "ondelete", "notnull", "unique",
+        "uploadfield", "widget", "label", "comment", "writable", "readable", "update", "authorize",
+        "autodelete", "represent", "uploadfolder", "uploadseparate", "uploadfs", "compute", "custom_store",
+        "custom_retrieve", "custom_retrieve_file_properties", "custom_delete", "filter_in", "filter_out"]        
+    s3migrate.rename_field(tablename, "first_name", "first_name_test", attributes_to_copy)
+    print "Migrated data:"
+    for row in db(table.id > 0).select():
+        print "id: %s, first_name_test: %s" % (row["id"], row["first_name_test"])
+
+# -----------------------------------------------------------------------------
+def rename_table():
+    """
+        Test for S3Migrate().rename_table function
+    """
+
+    s3migrate.rename_table("vehicle_vehicle", "rename_vehicle")
+    print "renamed vehicle_vehicle to rename_vehicle"
+
+# -----------------------------------------------------------------------------
+def add_new_field():
+    """
+        Test for S3Migrate().migrate_to_unique_field function
+    """
+
     field_to_update = "new_field2"
-    changed_table = "org_organisation"
-    import mapping_function
-    migration_scripts.migrating_to_unique_field(web2py_path,app,field_to_update,changed_table,mapping_function,["org_organisation_type","org_sector"])
-    db = get_migrated_db()
-    for row in db().select(db[changed_table]["id"],db[changed_table][field_to_update]):
-        print "id = ",row["id"],field_to_update," = ",row[field_to_update]
-    
+    tablename = "org_organisation"
+    s3migrate.migrate_to_unique_field(tablename, field_to_update, mapping_function(),
+                                      ["org_organisation_type", "org_sector"])
+    table = db[tablename]
+    for row in db(table.id > 0).select(["id"], table[field_to_update]):
+        print "id = ", row["id"], field_to_update, " = ", row[field_to_update]
 
+# -----------------------------------------------------------------------------
+def list_field_to_reference():
+    """
+        Test for S3Migrate().list_field_to_reference function
+    """
 
-#The menu with all the options of migration for test
+    tablename_new = "sector_id_reference"
+    new_list_field = list_field_name = "multi_sector_id"
+    tablename_old_id_field = "id"
+    tablename_old = "org_organisation"
+    table_old = db[tablename_old]
+    for a in range(2,10):
+        db[tablename_old].insert(name = "test_%s" % str(a),
+                                 organisation_type_id = a%5,
+                                 uuid = "%s%s" % (table_old["uuid"].default, str(a)),
+                                 multi_sector_id = [a-2, a-1, a]
+                                 )
+    db.commit()
+    s3migrate.list_field_to_reference(tablename_new,
+                                      new_list_field,
+                                      list_field_name,
+                                      tablename_old_id_field,
+                                      tablename_old)
+    print tablename_old
+    for row in db(table_old).select():
+        print "id: ", row[tablename_old_id_field], "sector_id: ", row[list_field_name]
+    print tablename_new
+    for row in db(db[tablename_new]).select():
+        print "id: ", row["%s_%s" % (tablename_old, tablename_old_id_field)], "sector_id: ", row[new_list_field]
 
+# -----------------------------------------------------------------------------
+# The menu with all the options of migration for test
 prt_str = '''
-Select the migration that you wanto test
-1.List field to table
-2.Renaming field
-3.Renaming Table
-4.Addding a unique field
-
-to test specific migration script call TestMigration.py   
+Select the migration that you want to test:
+1. Renaming a field
+2. Renaming a table
+3. Addding a unique field
+4. List field to table
 '''
 print prt_str
 option_chosen = int(raw_input())
 if option_chosen == 1:
-    list_field_to_reference(WEB2PY_PATH,APP)
+    rename_field()
 
 elif option_chosen == 2:
-    renaming_field(WEB2PY_PATH,APP)
+    rename_table()
 
 elif option_chosen == 3:
-    renaming_table(WEB2PY_PATH,APP)
+    add_new_field()
 
 elif option_chosen == 4:
-    adding_new_field(WEB2PY_PATH,APP)
+    list_field_to_reference()
 
+# END =========================================================================
