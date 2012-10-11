@@ -759,7 +759,7 @@ class S3Config(Storage):
         """
             If set to True then HRM records are deletable rather than just being able to be marked as obsolete
         """
-        return self.hrm.get("deletable", False)
+        return self.hrm.get("deletable", True)
 
     def get_hrm_job_roles(self):
         """
