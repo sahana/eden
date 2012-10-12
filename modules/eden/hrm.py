@@ -4330,17 +4330,24 @@ def hrm_rheader(r, tabs=[],
                                 programme_hours_month += hours
 
                 # Already formatted as HTML
-                active = TD(record.active)
-                tooltip = SPAN(_class="tooltip",
-                               _title="%s|%s" % \
-                    (T("Active"),
-                     T("A volunteer is defined as active if they've participated in an average of 8 or more hours of Programme work or Trainings per month in the last year")),
-                               _style="display:inline-block"
-                               )
+                enable_active_field = settings.set_org_dependent_field(None,
+                                                                       tablename = "vol_volunteer",
+                                                                       fieldname = "active")
+                if enable_active_field:
+                    active = TD(record.active)
+                    tooltip = SPAN(_class="tooltip",
+                                   _title="%s|%s" % \
+                        (T("Active"),
+                         T("A volunteer is defined as active if they've participated in an average of 8 or more hours of Programme work or Trainings per month in the last year")),
+                                   _style="display:inline-block"
+                                   )
+                    active_cells = [TH("%s:" % T("Active?"), tooltip),
+                                    active]
+                else:
+                    active_cells = []
                 row1 = TR(TH("%s:" % T("Programme")),
                           record.programme,
-                          TH("%s:" % T("Active?"), tooltip),
-                          active
+                          *active_cells
                           )
                 row2 = TR(TH("%s:" % T("Programme Hours (Month)")),
                           str(programme_hours_month),
