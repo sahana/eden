@@ -954,7 +954,7 @@ class S3Config(Storage):
         """
         return self.org.get("summary", False)
 
-    def set_org_dependent_field(self, 
+    def set_org_dependent_field(self,
                                 field, # None for Virtual Fields
                                 tablename=None,
                                 fieldname=None):
@@ -969,7 +969,7 @@ class S3Config(Storage):
             tablename = field.tablename
             fieldname = field.name
 
-        dependent_fields = self.org.get(dependent_fields, None)
+        dependent_fields = self.org.get("dependent_fields", None)
         if not dependent_fields:
             if field:
                 field.readable = enabled
