@@ -1247,7 +1247,7 @@ class ResourceExportTests(unittest.TestCase):
             last = resource._rows[1]["uuid"]
 
             import time
-            time.sleep(1) # Wait 2 seconds to change mtime
+            time.sleep(2) # Wait 2 seconds to change mtime
             resource._rows[0].update_record(name="OrderTestHospital1")
 
             msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
