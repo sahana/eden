@@ -983,7 +983,8 @@ class S3Config(Storage):
                                                  None)
 
             if org_name_list:
-                otable = current.s3db.org_organisation
+                s3db = current.s3db
+                otable = s3db.org_organisation
                 root_org_id = auth.root_org()
                 root_org = current.db(
                                 otable.id == root_org_id
