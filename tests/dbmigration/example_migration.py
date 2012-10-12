@@ -29,31 +29,37 @@ except NameError:
 globals().update(**old_env)
 exec old_str in globals(), locals()
 
-
 database_string = "sqlite://storage.db"
 old_database_folder = "%s/applications/%s/databases" % (WEB2PY_PATH, APP)
-temp_db = DAL( database_string, folder = old_database_folder, migrate_enabled=True ,migrate = True)
+temp_db = DAL(database_string,
+              folder=old_database_folder,
+              migrate_enabled=True,
+              migrate=True)
 
-#MIGRATION SCRIPT
-
+# Migration Script
 list_of_fields = []
-list_of_fields.append(Field(new_field,"integer"))
+list_of_fields.append(Field(new_field, "integer"))
 
 list_of_new_table_fields = []
-list_of_new_table_fields.append(Field(new_table_field,"integer"))
+list_of_new_table_fields.append(Field(new_table_field, "integer"))
 
 try:
 	db[changed_table]._primarykey
 except KeyError:
 	db[changed_table]._primarykey = None
 
-temp_db.define_table(changed_table ,db[changed_table],*list_of_fields,primarykey = db[changed_table]._primarykey)
-temp_db.define_table(new_table , *list_of_new_table_fields)
+temp_db.define_table(changed_table,
+                     db[changed_table],
+                     *list_of_fields,
+                     primarykey = db[changed_table]._primarykey
+                     )
+temp_db.define_table(new_table,
+                     *list_of_new_table_fields
+                     )
 
 temp_db.commit()
 
-#Adding a new field of int type in a class
-
+# Add a new field of int type in a class
 for old_row in temp_db().select(temp_db[changed_table][old_field]):
     if (len(temp_db(temp_db[new_table][new_table_field] == old_row[old_field]).select()) == 0):
         row = temp_db[new_table].insert(name = old_row[old_field])
@@ -61,3 +67,5 @@ for old_row in temp_db().select(temp_db[changed_table][old_field]):
         temp_db(temp_db[changed_table][old_field] == old_row[old_field]).update(type_id = new_id)
     
 temp_db.commit()
+
+# END =========================================================================

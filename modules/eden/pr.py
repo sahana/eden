@@ -36,6 +36,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonImageModel",
            "S3PersonIdentityModel",
            "S3PersonEducationModel",
+           "S3PersonDetailsModel",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
@@ -640,25 +641,15 @@ class S3PersonModel(S3Model):
                                     comment = DIV(DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Local Name"),
                                                                         T("Name of the person in local language and script (optional)."))))),
-                             Field("father_name",
-                                   label = T("Name of Father"),
-                                   #readable = False,
-                                   #writable = False,
-                                  ),
-                             Field("mother_name",
-                                   label = T("Name of Mother"),
-                                   #readable = False,
-                                   #writable = False,
-                                  ),
-                             pr_gender(label = T("Gender")),
+                             pr_gender(label = T("Sex")),
                              pr_marital_status(),
                              s3_date("date_of_birth",
                                      label = T("Date of Birth"),
                                      past = 1320,  # Months, so 110 years
                                      ),
                              pr_age_group(
-                                     readable = False,
-                                     writable = False,
+                                    readable = False,
+                                    writable = False,
                                     ),
                              Field("nationality",
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(
@@ -730,6 +721,25 @@ class S3PersonModel(S3Model):
                                        "identity.value"
                                       ])
 
+        # Custom Form
+        crud_form = s3forms.S3SQLCustomForm("first_name",
+                                            "last_name",
+                                            "age_group",
+                                            "date_of_birth",
+                                            "initials",
+                                            "preferred_name",
+                                            "local_name",
+                                            "gender",
+                                            "marital_status",
+                                            "age_group",
+                                            "nationality",
+                                            "religion",
+                                            "person_details.mother_name",
+                                            "person_details.father_name",
+                                            "person_details.company",
+                                            "person_details.affiliations",
+                                            "comments",
+                                            )
 
         # Resource configuration
         self.configure(tablename,
@@ -743,6 +753,7 @@ class S3PersonModel(S3Model):
                                        "age_group",
                                        (messages.ORGANISATION, "hrm_human_resource:organisation_id$name")
                                        ],
+                        crud_form = crud_form,
                         onvalidation=self.pr_person_onvalidation,
                         onaccept=self.pr_person_onaccept,
                         search_method=pr_person_search,
@@ -775,6 +786,8 @@ class S3PersonModel(S3Model):
         add_component("pr_group_membership", pr_person="person_id")
         add_component("pr_identity", pr_person="person_id")
         add_component("pr_education", pr_person="person_id")
+        add_component("pr_person_details", pr_person=dict(joinby="person_id",
+                                                          multiple=False))
         add_component("pr_save_search", pr_person="person_id")
         add_component("msg_subscription", pr_person="person_id")
 
@@ -2069,6 +2082,63 @@ class S3PersonEducationModel(S3Model):
         #
         return Storage()
 
+# =============================================================================
+class S3PersonDetailsModel(S3Model):
+    """ Extra details for People """
+
+    names = ["pr_person_details",
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Details
+        tablename = "pr_person_details"
+        table = self.define_table(tablename,
+                                  self.pr_person_id(label = T("Person"),
+                                                    ondelete="CASCADE"),
+                                  Field("father_name",
+                                        label = T("Name of Father"),
+                                        ),
+                                  Field("mother_name",
+                                        label = T("Name of Mother"),
+                                        ),
+                                  Field("company",
+                                        label = T("Company"),
+                                        # @ToDo: Autofill from hrm_human_resource Staff Organisation
+                                        ),
+                                  Field("affiliations",
+                                        label = T("Affiliations"),
+                                        # @ToDo: Autofill from hrm_human_resource Volunteer Organisation
+                                        ),
+                                  *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_ADDRESS = T("Add Person's Details")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_ADDRESS,
+            title_display = T("Person's Details"),
+            title_list = T("Persons' Details"),
+            title_update = T("Edit Person's Details"),
+            title_search = T("Search Person's Details"),
+            subtitle_create = T("Add New Person's Details"),
+            label_list_button = T("List Persons' Details"),
+            label_create_button = ADD_ADDRESS,
+            msg_record_created = T("Person's Details added"),
+            msg_record_modified = T("Person's Details updated"),
+            msg_record_deleted = T("Person's Details deleted"),
+            msg_list_empty = T("There are no details for this person yet. Add Person's Details."))
+
+        # Resource configuration
+        #self.configure(tablename,
+        #               )
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to s3db.*
+        #
+        return Storage()
 
 # =============================================================================
 class S3SavedSearch(S3Model):

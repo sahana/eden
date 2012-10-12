@@ -221,6 +221,17 @@ settings.save_search.widget = False
 settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Warehouse/Facility"
+# Enable certain fields just for specific Organisations
+settings.org.dependent_fields = \
+    {"pr_person_details.mother_name"   : ["Bangladesh Red Crescent Society"],
+     "pr_person_details.father_name"   : ["Bangladesh Red Crescent Society"],
+     "pr_person_details.company"       : ["Philippine Red Cross"],
+     "pr_person_details.affiliations"  : ["Philippine Red Cross"],
+     "vol_volunteer.active"            : ["Timor-Leste Red Cross Society"],
+     "vol_volunteer_cluster.cluster_id": ["Philippine Red Cross"],
+     "vol_volunteer_group.group_id"    : ["Philippine Red Cross"],
+     "vol_volunteer_group.position_id" : ["Philippine Red Cross"],
+     }
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

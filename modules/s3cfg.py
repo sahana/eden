@@ -954,6 +954,49 @@ class S3Config(Storage):
         """
         return self.org.get("summary", False)
 
+    def set_org_dependent_field(self, 
+                                field, # None for Virtual Fields
+                                tablename=None,
+                                fieldname=None):
+        """
+            Enables/Disables optional fields according to a user's Organisation
+        """
+
+        # Default to disabled
+        enabled = False
+
+        if field:
+            tablename = field.tablename
+            fieldname = field.name
+
+        dependent_fields = self.org.get(dependent_fields, None)
+        if not dependent_fields:
+            if field:
+                field.readable = enabled
+                field.writable = enabled
+            return enabled
+
+        org_name_list = dependent_fields["%s.%s" % (tablename, fieldname)]
+
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        root_org_id = current.auth.root_org()
+        root_org = current.db(otable.id == root_org_id).select(otable.name,
+                                                               limitby=(0, 1),
+                                                               cache=s3db.cache
+                                                               ).first()
+        if root_org:
+            root_org_name = root_org.name
+            for org_name in org_name_list:
+                if org_name == root_org_name:
+                    enabled = True
+                    break
+
+        if field:
+            field.readable = enabled
+            field.writable = enabled
+        return enabled
+
     # -------------------------------------------------------------------------
     # Proc
     def get_proc_form_name(self):

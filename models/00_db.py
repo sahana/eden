@@ -26,9 +26,6 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-# All dates should be stored in UTC for Sync to work reliably
-request.utcnow = datetime.datetime.utcnow()
-
 ########################
 # Database Configuration
 ########################

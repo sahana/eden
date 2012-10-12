@@ -225,6 +225,12 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_label = "Facility"
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True
+# Enable certain fields just for specific Organisations
+# Requires a call to settings.set_org_dependent_field(field)
+#settings.org.dependent_fields = \
+#    {"<table name>.<field name>"  : ["<Organisation Name>"],
+#    ...
+#     }
 
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address
