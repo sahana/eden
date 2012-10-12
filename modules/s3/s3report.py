@@ -178,11 +178,13 @@ class S3Report(S3CRUD):
                     s3.report_options = Storage()
 
                 s3.report_options[tablename] = Storage([(k, v) for k, v in
-                                                        form_values.iteritems() if v])
+                                                        form_values.iteritems() if v and not k[0] == "_"])
+
+            elif not form.errors:
+                form.vars = form_values
 
             # Use the values to generate the query filter
             query, errors = self._process_filter_options(form)
-
             if not errors:
                 self.resource.add_filter(query)
         else:
