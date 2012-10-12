@@ -10,24 +10,28 @@ from gluon.dal import Query
 
 # =============================================================================
 class S3ConfigTests(unittest.TestCase):
+    """ Deployment settings tests """
 
     def testSetOrgDependentFields(self):
+        """ Test organisation-dependent accessibility of fields """
 
         auth = current.auth
         settings = current.deployment_settings
 
+        table = s3db.pr_person_details
         s = settings.org.get("dependent_fields", None)
+
         settings.org.dependent_fields = \
             {"pr_person_details.mother_name" : ["Example Root Org"]}
 
-        table = s3db.pr_person_details
-
+        # Admin does always see the field
         auth.s3_impersonate("admin@example.com")
         check = settings.set_org_dependent_field(table.mother_name)
         self.assertTrue(check)
         self.assertTrue(table.mother_name.readable)
         self.assertTrue(table.mother_name.writable)
 
+        # Anonymous doesn't belong to an org thus can't see the field
         auth.s3_impersonate(None)
         check = settings.set_org_dependent_field(table.mother_name)
         self.assertFalse(check)
@@ -35,6 +39,7 @@ class S3ConfigTests(unittest.TestCase):
         self.assertFalse(table.mother_name.writable)
 
         try:
+            # Create a fake org
             auth.override = True
             xmlstr = """
 <s3xml>
@@ -52,19 +57,28 @@ class S3ConfigTests(unittest.TestCase):
             resource = s3db.resource("org_organisation", uid="ExampleRootOrg")
             org = resource.select()[0]
             auth.override = False
-            auth.s3_impersonate("normaluser@example.com")
 
+            # Normal user can't see the field by default
+            auth.s3_impersonate("normaluser@example.com")
             check = settings.set_org_dependent_field(table.mother_name)
             self.assertFalse(check)
             self.assertFalse(table.mother_name.readable)
             self.assertFalse(table.mother_name.writable)
 
+            # User can see the field if belonging to that org
             auth.user.organisation_id = org.id
             self.assertEqual(auth.root_org(), org.id)
             check = settings.set_org_dependent_field(table.mother_name)
             self.assertTrue(check)
             self.assertTrue(table.mother_name.readable)
             self.assertTrue(table.mother_name.writable)
+
+            # ...but not if we haven't configured it
+            settings.org.dependent_fields = None
+            check = settings.set_org_dependent_field(table.mother_name)
+            self.assertFalse(check)
+            self.assertFalse(table.mother_name.readable)
+            self.assertFalse(table.mother_name.writable)
 
         finally:
             current.db.rollback()
