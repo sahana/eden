@@ -119,15 +119,20 @@ def volunteer():
     # Remove Facility
     human_resource_search.advanced.pop(5)
     if settings.get_hrm_vol_experience() == "programme":
+        enable_active_field = settings.set_org_dependent_field(None,
+                                                               tablename = "vol_volunteer",
+                                                               fieldname = "active")
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
         # Add VF to List Fields
-        list_fields.insert(4, (T("Active?"), "active"))
+        if enable_active_field:
+            list_fields.insert(4, (T("Active?"), "active"))
         list_fields.insert(6, (T("Programme"), "programme"))
         # Add VF to Report Options
         report_fields = report_options.rows
         report_fields.append((T("Programme"), "programme"))
-        report_fields.append((T("Active?"), "active"))
+        if enable_active_field:
+            report_fields.append((T("Active?"), "active"))
         report_options.rows = report_fields
         report_options.cols = report_fields
         report_options.facts = report_fields
@@ -136,18 +141,19 @@ def volunteer():
         human_resource_search.advanced.pop(1)
         table.status.readable = False
         table.status.writable = False
-        widget = s3base.S3SearchOptionsWidget(
-                            name="human_resource_search_active",
-                            label=T("Active?"),
-                            field="active",
-                            cols = 2,
-                            options = {
-                                    T("Yes"):  T("Yes"),
-                                    T("No"): T("No")
-                                }
-                          ),
-        search_widget = ("human_resource_search_active", widget[0])
-        human_resource_search.advanced.insert(1, search_widget)
+        if enable_active_field:
+            widget = s3base.S3SearchOptionsWidget(
+                                name="human_resource_search_active",
+                                label=T("Active?"),
+                                field="active",
+                                cols = 2,
+                                options = {
+                                        T("Yes"):  T("Yes"),
+                                        T("No"): T("No")
+                                    }
+                              ),
+            search_widget = ("human_resource_search_active", widget[0])
+            human_resource_search.advanced.insert(1, search_widget)
 
         def hrm_programme_opts():
             """
@@ -426,7 +432,28 @@ def person():
         if r.representation == "s3json":
             s3mgr.show_ids = True
         elif r.interactive and r.method != "import":
-            if r.component:
+            if not r.component:
+                table = r.table
+                # Assume volunteers only between 12-81
+                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                table.occupation.label = T("Normal Job")
+                table.pe_label.readable = False
+                table.pe_label.writable = False
+                table.missing.readable = False
+                table.missing.writable = False
+                table.age_group.readable = False
+                table.age_group.writable = False
+
+                # Organisation Dependent Fields
+                set_org_dependent_field = deployment_settings.set_org_dependent_field
+                
+                person_details_table = s3db.pr_person_details
+                
+                set_org_dependent_field(person_details_table.father_name)
+                set_org_dependent_field(person_details_table.mother_name)
+                set_org_dependent_field(person_details_table.affiliations)
+                set_org_dependent_field(person_details_table.company)
+            else:
                 if r.component_name == "human_resource":
                     table = r.component.table
                     table.code.writable = False
@@ -473,20 +500,6 @@ def person():
                               insertable = False,
                               editable = False,
                               deletable = False)
-            elif r.method == "contacts":
-                #s3.js_global.append('''controller="vol"''')
-                pass
-            else:
-                table = r.table
-                # Assume volunteers only between 12-81
-                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
-                table.occupation.label = T("Normal Job")
-                table.pe_label.readable = False
-                table.pe_label.writable = False
-                table.missing.readable = False
-                table.missing.writable = False
-                table.age_group.readable = False
-                table.age_group.writable = False
 
             resource = r.resource
             if mode is not None:
