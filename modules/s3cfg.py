@@ -962,39 +962,40 @@ class S3Config(Storage):
             Enables/Disables optional fields according to a user's Organisation
         """
 
-        # Default to disabled
-        enabled = False
+        auth = current.auth
+        if auth.s3_has_role(auth.get_system_roles().ADMIN):
+            # Admins see all fields
+            enabled = True
+        else:
+            # Default to disabled
+            enabled = False
 
         if field:
             tablename = field.tablename
             fieldname = field.name
+        elif not tablename or not fieldname:
+            return False
 
         dependent_fields = self.org.get("dependent_fields", None)
-        if not dependent_fields:
-            if field:
-                field.readable = enabled
-                field.writable = enabled
-            return enabled
+        if dependent_fields and not enabled:
+            org_name_list = dependent_fields.get("%s.%s" % (tablename,
+                                                            fieldname),
+                                                 None)
 
-        org_name_list = dependent_fields["%s.%s" % (tablename, fieldname)]
-
-        s3db = current.s3db
-        otable = s3db.org_organisation
-        root_org_id = current.auth.root_org()
-        root_org = current.db(otable.id == root_org_id).select(otable.name,
-                                                               limitby=(0, 1),
-                                                               cache=s3db.cache
-                                                               ).first()
-        if root_org:
-            root_org_name = root_org.name
-            for org_name in org_name_list:
-                if org_name == root_org_name:
-                    enabled = True
-                    break
+            if org_name_list:
+                otable = current.s3db.org_organisation
+                root_org_id = auth.root_org()
+                root_org = current.db(
+                                otable.id == root_org_id
+                            ).select(otable.name,
+                                     limitby=(0, 1), cache=s3db.cache).first()
+                if root_org:
+                    enabled = root_org.name in org_name_list
 
         if field:
             field.readable = enabled
             field.writable = enabled
+
         return enabled
 
     # -------------------------------------------------------------------------

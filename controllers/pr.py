@@ -112,16 +112,15 @@ def person():
                 #(s3db.auth_user.id == s3db.pr_person_user.user_id) & \
                 #(s3db.auth_user.registration_key != "disabled")
 
+    person_details_table = s3db.pr_person_details
+
     # Organisation Dependent Fields
     set_org_dependent_field = deployment_settings.set_org_dependent_field
-    
-    person_details_table = s3db.pr_person_details
-    
     set_org_dependent_field(person_details_table.father_name)
     set_org_dependent_field(person_details_table.mother_name)
-    set_org_dependent_field(person_details_table.affliation)
+    set_org_dependent_field(person_details_table.affiliations)
     set_org_dependent_field(person_details_table.company)
-    
+
     # Custom Method for Contacts
     s3db.set_method(module, resourcename,
                     method="contacts",
