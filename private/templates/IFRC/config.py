@@ -221,6 +221,7 @@ settings.save_search.widget = False
 settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Warehouse/Facility"
+# Enable certain fields just for specific Organisations
 settings.org.dependent_fields = \
     {"pr_person_details.mother_name"   : ["Bangladesh Red Crescent Society"],
      "pr_person_details.father_name"   : ["Bangladesh Red Crescent Society"],

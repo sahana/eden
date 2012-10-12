@@ -2092,8 +2092,6 @@ class S3PersonDetailsModel(S3Model):
     def model(self):
 
         T = current.T
-        messages = current.messages
-        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Details
@@ -2103,14 +2101,16 @@ class S3PersonDetailsModel(S3Model):
                                                     ondelete="CASCADE"),
                                   Field("father_name",
                                         label = T("Name of Father"),
-                                   ),
+                                        ),
                                   Field("mother_name",
                                         label = T("Name of Mother"),
                                         ),
                                   Field("company",
+                                        label = T("Company"),
                                         # @ToDo: Autofill from hrm_human_resource Staff Organisation
                                         ),
                                   Field("affiliations",
+                                        label = T("Affiliations"),
                                         # @ToDo: Autofill from hrm_human_resource Volunteer Organisation
                                         ),
                                   *s3_meta_fields())

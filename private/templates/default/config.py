@@ -225,8 +225,8 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_label = "Facility"
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True
-# Only enable specific field for specific Organisations 
-# Requires a call to s3db.deployment_settings.set_org_dependent_field(<field>)
+# Enable certain fields just for specific Organisations
+# Requires a call to settings.set_org_dependent_field(field)
 #settings.org.dependent_fields = \
 #    {"<table name>.<field name>"  : ["<Organisation Name>"],
 #    ...

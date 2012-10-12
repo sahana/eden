@@ -262,8 +262,7 @@ class S3StatsModel(S3Model):
 
         # Mark all stats_group records as needing to be updated
         s3db = current.s3db
-        db = current.db
-        db(s3db.stats_group.deleted != True).update(dirty=True)
+        current.db(s3db.stats_group.deleted != True).update(dirty=True)
 
         # Delete the existing data
         resource = s3db.resource("stats_aggregate")

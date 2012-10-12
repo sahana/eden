@@ -955,40 +955,46 @@ class S3Config(Storage):
         return self.org.get("summary", False)
 
     def set_org_dependent_field(self, 
-                                field,
-                                tablename = None,
-                                fieldname = None):
+                                field, # None for Virtual Fields
+                                tablename=None,
+                                fieldname=None):
         """
-            Enables disables fields' according to a user's organisation 
+            Enables/Disables optional fields according to a user's Organisation
         """
-        s3db = current.s3db
-        db = current.db
-        otable = s3db.org_organisation
-        
+
+        # Default to disabled
         enabled = False
-        
+
         if field:
             tablename = field.tablename
             fieldname = field.name
-        
-        org_name_list = self.org.dependent_fields["%s.%s" % (tablename, fieldname)]
+
+        dependent_fields = self.org.get(dependent_fields, None)
+        if not dependent_fields:
+            if field:
+                field.readable = enabled
+                field.writable = enabled
+            return enabled
+
+        org_name_list = dependent_fields["%s.%s" % (tablename, fieldname)]
+
+        s3db = current.s3db
+        otable = s3db.org_organisation
         root_org_id = current.auth.root_org()
-        root_org = db(otable.id == root_org_id
-                      ).select(otable.name,
-                               limitby=(0, 1),
-                                cache=s3db.cache).first()
+        root_org = current.db(otable.id == root_org_id).select(otable.name,
+                                                               limitby=(0, 1),
+                                                               cache=s3db.cache
+                                                               ).first()
         if root_org:
             root_org_name = root_org.name
             for org_name in org_name_list:
                 if org_name == root_org_name:
                     enabled = True
                     break
-        try:
+
+        if field:
             field.readable = enabled
             field.writable = enabled
-        except:
-            pass
-
         return enabled
 
     # -------------------------------------------------------------------------

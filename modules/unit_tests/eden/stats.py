@@ -12,6 +12,8 @@ from gluon import *
 from gluon.storage import Storage
 
 # =============================================================================
+# Stats_aggregate takes too long to test on a populated database
+#@unittest.skip
 @unittest.skipIf(not current.deployment_settings.has_module("vulnerability"),
                  "Vulnerability module deactivated")
 class StatsTests(unittest.TestCase):
