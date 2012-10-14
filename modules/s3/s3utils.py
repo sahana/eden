@@ -3021,12 +3021,12 @@ class S3DataTable(object):
         config.groupTotals = attr.get("dt_group_totals", [])
         config.groupTitles = attr.get("dt_group_titles", [])
         config.groupSpacing = attr.get("dt_group_space", "false")
-        if bulkActions:
-            for order in orderby:
+        for order in orderby:
+            if bulkActions:
                 if config.bulkCol <= order[0]:
                     order[0] += 1
-                if action_col >= order[0]:
-                    order[0] -= 1
+            if action_col >= order[0]:
+                order[0] -= 1
         config.aaSort = orderby
         config.textMaxLength = attr.get("dt_text_maximum_len", 80)
         config.textShrinkLength = attr.get("dt_text_condense_len", 75)

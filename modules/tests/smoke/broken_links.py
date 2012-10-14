@@ -46,6 +46,7 @@ class BrokenLinkTest(Web2UnitTest):
         self.strip_url = ("?_next=",
                           )
         self.maxDepth = 16 # sanity check
+        self.threshold = 10
         self.setUser("test@example.com/eden")
         self.linkDepth = []
 
@@ -106,6 +107,8 @@ class BrokenLinkTest(Web2UnitTest):
             The test can also display an histogram depicting the number of
             links found at each depth.
         """
+        self.threasholdLink = []
+        self.linktimes = []
         for user in self.credentials:
             self.clearRecord()
             if self.login(user):
@@ -125,7 +128,9 @@ class BrokenLinkTest(Web2UnitTest):
             to_visit = self.visit(to_visit, depth)
             msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
             self.reporter(msg)
-            if self.config.verbose == 2:
+            if self.config.verbose >= 2:
+                if self.config.verbose >= 3:
+                    print >> self.stdout
                 if self.stdout.isatty(): # terminal should support colour
                     msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
                 print >> self.stdout, msg
@@ -161,14 +166,28 @@ class BrokenLinkTest(Web2UnitTest):
                     break
             try:
                 if open_novisit:
+                    visit_start = time()
                     self.b._journey("open_novisit", visited_url)
                     http_code = self.b.get_code()
                     if http_code != 200: # an error situation
                         self.b.go(visited_url)
                         http_code = self.b.get_code()
+                    duration = time() - visit_start
+                    self.linktimes.append(duration)
+                    if duration > self.threshold:
+                        self.threasholdLink.append((visited_url, duration))
+                        if self.config.verbose >= 3:
+                            print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
                 else:
+                    visit_start = time()
                     self.b.go(visited_url)
                     http_code = self.b.get_code()
+                    duration = time() - visit_start
+                    self.linktimes.append(duration)
+                    if duration > self.threshold:
+                        self.threasholdLink.append((visited_url, duration))
+                        if self.config.verbose >= 3:
+                            print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
             except Exception as e:
                 import traceback
                 print traceback.format_exc()
@@ -256,6 +275,16 @@ class BrokenLinkTest(Web2UnitTest):
                                                   )
                 )
             n += 1
+        for (visited_url, duration) in self.threasholdLink:
+            self.reporter( "%s took %.3f seconds" % (visited_url, duration))
+
+        import numpy
+        self.reporter("Time Analysis")
+        total = len(self.linktimes)
+        average = numpy.mean(self.linktimes)
+        std = numpy.std(self.linktimes)
+        msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
+        self.reporter(msg)
 
     def report_link_depth(self):
         """
