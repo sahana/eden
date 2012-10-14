@@ -932,6 +932,9 @@ $(document).ready(function() {
                         if (accordion) {
                             accordionRow(t, 'level_1', 'group_' + t + '11');
                         }
+                        $('.expandable').click(function() {
+                            thisAccordionRow(t, this);
+                        });
                    } // end of collapsable rows
                 }
                 if (Math.ceil((oSettings.fnRecordsDisplay()) / oSettings._iDisplayLength) > 1)  {
