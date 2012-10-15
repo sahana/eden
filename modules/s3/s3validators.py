@@ -1503,6 +1503,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
             person_id = None
 
         ptable = db.pr_person
+        pdtable = db.pr_person_details
         ctable = db.pr_contact
 
         def email_validate(value, person_id):
@@ -1569,7 +1570,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 if data:
                     db(query).update(**data)
 
-                # Update the contact information
+                # Update the contact information & details
                 record = db(query).select(ptable.pe_id, limitby=(0, 1)).first()
                 if record:
                     pe_id = record.pe_id
@@ -1593,6 +1594,17 @@ class IS_ADD_PERSON_WIDGET(Validator):
                             ctable.insert(pe_id=pe_id,
                                           contact_method="SMS",
                                           value=mobile)
+                    
+                    occupation = _vars.occupation
+                    record = pdtable(person_id=person_id)
+                    if record: # update
+                        if occupation != record.occupation:
+                            db(pdtable.id == record.id).update(occupation=occupation)
+                    else: # insert
+                        if occupation: # Don't insert an empty occupation
+                            ctable.insert(person_id=person_id,
+                                          occupation=occupation)
+
 
             else:
                 # Create a new person record
@@ -1638,6 +1650,9 @@ class IS_ADD_PERSON_WIDGET(Validator):
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="SMS",
                                       value=_vars.mobile_phone)
+                    if _vars.occupation:
+                        pdtable.insert(person_id = person_id,
+                                       occupation = occupation)
                 else:
                     # Something went wrong
                     return (person_id, self.error_message or \

@@ -611,6 +611,26 @@ def s3_auth_group_represent(opt):
     if not roles:
         return current.messages.NONE
     return ", ".join(roles)
+# =============================================================================
+def s3_id_represent(table,
+                            represent_field = "name",):
+    def represent( id, row=None):
+        """ FK representation """
+    
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+    
+        db = current.db
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return current.T(r.name)
+        except:
+            return current.messages.UNKNOWN_OPT
+    
+    return represent
 
 # =============================================================================
 def s3_include_debug_css():
