@@ -88,4 +88,3 @@ class CreateOrganisation(SeleniumUnitTest):
             # Create a record using the data
             result = self.create(tablename, _data)
 
-            

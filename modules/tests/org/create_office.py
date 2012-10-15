@@ -34,7 +34,7 @@ class CreateOffice(SeleniumUnitTest):
             Create an Office
             @case: org002
             @param items: Office(s) to create from the data
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -89,7 +89,7 @@ class CreateOffice(SeleniumUnitTest):
             query = (table[fieldname] == value) & (table.deleted == "F")
             record = db(query).select(table.id,
                                       limitby=(0, 1)).first()
-            
+
             if record:
                 print "org_create_office skipped as %s already exists in the db\n" % value
                 return False
