@@ -315,12 +315,12 @@ class S3HRModel(S3Model):
         # Hours
         #self.add_component("hrm_hours",
         #                   hrm_human_resource="human_resource_id")
-        
-        #Volunteer Cluster 
+
+        # Volunteer Cluster
         self.add_component("vol_volunteer_cluster",
                            hrm_human_resource=dict(joinby="human_resource_id",
                                                     multiple=False))
-        #Volunteer Group 
+        # Volunteer Group
         self.add_component("vol_volunteer_group",
                            hrm_human_resource=dict(joinby="human_resource_id",
                                                     multiple=False))

@@ -218,20 +218,17 @@ def volunteer():
                 table.site_contact.readable = False
                 table.status.writable = False
                 table.status.readable = False
-                
+
                 person_details_table = s3db.pr_person_details
-                
                 person_details_table.occupation.label = T("Normal Job")
-                
+
                 # Organisation Dependent Fields
                 set_org_dependent_field = deployment_settings.set_org_dependent_field
-                
                 set_org_dependent_field(person_details_table.father_name)
                 set_org_dependent_field(person_details_table.mother_name)
                 set_org_dependent_field(person_details_table.affiliations)
                 set_org_dependent_field(person_details_table.company)
-                volunteer_cluster_table = s3db.vol_volunteer_cluster
-                set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
+                set_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_id)
                 volunteer_group_table = s3db.vol_volunteer_group
                 set_org_dependent_field(volunteer_group_table.vol_group_id)
                 set_org_dependent_field(volunteer_group_table.vol_group_position_id)
@@ -241,12 +238,10 @@ def volunteer():
                 pass
             elif r.id:
                 # Redirect to person controller
-                vars = {
-                    "human_resource.id": r.id,
-                    "group": "volunteer"
-                }
                 redirect(URL(f="person",
-                             vars=vars))
+                             vars={"human_resource.id": r.id,
+                                   "group": "volunteer"
+                                   }))
         return True
     s3.prep = prep
 
@@ -462,13 +457,11 @@ def person():
                 table.age_group.readable = False
                 table.age_group.writable = False
 
-                s3db.pr_person_details.occupation.label = T("Normal Job")
+                person_details_table = s3db.pr_person_details
+                person_details_table.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = deployment_settings.set_org_dependent_field
-                
-                person_details_table = s3db.pr_person_details
-                
                 set_org_dependent_field(person_details_table.father_name)
                 set_org_dependent_field(person_details_table.mother_name)
                 set_org_dependent_field(person_details_table.affiliations)
@@ -498,13 +491,11 @@ def person():
 
                     # Organisation Dependent Fields
                     set_org_dependent_field = deployment_settings.set_org_dependent_field
-                
-                    volunteer_cluster_table = s3db.vol_volunteer_cluster
-                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
+                    set_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_id)
                     volunteer_group_table = s3db.vol_volunteer_group
                     set_org_dependent_field(volunteer_group_table.vol_group_id)
                     set_org_dependent_field(volunteer_group_table.vol_group_position_id)
-                
+
                 elif r.component_name == "hours":
                     filter = (r.component.table.hours != None)
                     r.resource.add_component_filter("hours", filter)
@@ -946,7 +937,7 @@ def staff_org_site_json():
 
 # =============================================================================
 def programme():
-    """ Volunteer Programmes Controller """
+    """ Volunteer Programmes controller """
 
     mode = session.s3.hrm.mode
     if mode is not None:
@@ -960,7 +951,7 @@ def programme():
 # -----------------------------------------------------------------------------
 def programme_hours():
     """
-        Volunteer Programme Hours Controller
+        Volunteer Programme Hours controller
         - just meant for Imports
     """
 
@@ -973,10 +964,26 @@ def programme_hours():
     return output
 
 # =============================================================================
+def cluster():
+    """ Volunteer Clusters controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
+def group():
+    """ Volunteer Groups controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def group_position():
+    """ Volunteer Group Positions controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
 def task():
-    """
-        Tasks controller
-    """
+    """ Tasks controller """
 
     return s3db.project_task_controller()
 
@@ -987,20 +994,5 @@ def compose():
     """ Send message to people/teams """
 
     return s3db.hrm_compose()
-# =============================================================================
-def cluster():
-    """ Volunteer Cluster """
-    output = s3_rest_controller()
-    return output
-# =============================================================================
-def group():
-    """ Volunteer Group """
-    output = s3_rest_controller()
-    return output
-# =============================================================================
-def group_position():
-    """ Volunteer Group Position """
-    output = s3_rest_controller()
-    return output
 
 # END =========================================================================

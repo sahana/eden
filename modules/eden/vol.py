@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
     Sahana Eden Volunteers Management 
-    (Also refer to modules/eden/hrm.py)
+    (Extends modules/eden/hrm.py)
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,7 +29,8 @@
 """
 
 __all__ = ["S3VolClusterDataModel",
-           "S3VolGroupDataModel",]
+           "S3VolGroupDataModel",
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -40,7 +41,8 @@ from eden.layouts import S3AddResourceLink
 class S3VolClusterDataModel(S3Model):
 
     names = ["vol_cluster",
-             "vol_volunteer_cluster"]
+             "vol_volunteer_cluster"
+             ]
 
     def model(self):
 
@@ -48,14 +50,13 @@ class S3VolClusterDataModel(S3Model):
         T = current.T
         
         crud_strings = current.response.s3.crud_strings
-        settings = current.deployment_settings
 
-        # =====================================================================
+        # ---------------------------------------------------------------------
         # Volunteer Cluster
         tablename = "vol_cluster"
         table = self.define_table(tablename,
-                                  Field("name",
-                                        unique = True),
+                                  Field("name", unique=True,
+                                        label = T("Name")),
                                   *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -82,9 +83,10 @@ class S3VolClusterDataModel(S3Model):
 
         vol_cluster_id = S3ReusableField("vol_cluster_id", table,
                                          label = T("Volunteer Cluster"),
-                                         requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                        "vol_cluster.id",
-                                                                        s3_id_represent(table))),
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "vol_cluster.id",
+                                                                  s3_id_represent(table))),
                                          represent = s3_id_represent(table),
                                          comment = comment
                                          )
@@ -94,14 +96,14 @@ class S3VolClusterDataModel(S3Model):
         tablename = "vol_volunteer_cluster"
         table = self.define_table(tablename,
                                   self.hrm_human_resource_id(),
-                                  vol_cluster_id(readable = False,
-                                                 writable = False),
+                                  vol_cluster_id(readable=False,
+                                                 writable=False),
                                   *s3_meta_fields())
 
         # Return names to response.s3
         return Storage(
-            vol_cluster_id=vol_cluster_id,
-        )
+                vol_cluster_id = vol_cluster_id,
+            )
 
     # =====================================================================
     @staticmethod
@@ -113,11 +115,10 @@ class S3VolClusterDataModel(S3Model):
         """
 
         return Storage(
-            vol_cluster_id = S3ReusableField("vol_cluster_id",
-                                             "integer",
-                                              readable=False,
-                                              writable=False),
-        )
+            vol_cluster_id = S3ReusableField("vol_cluster_id", "integer",
+                                             readable=False,
+                                             writable=False),
+            )
 
 # =============================================================================
 class S3VolGroupDataModel(S3Model):
@@ -132,14 +133,14 @@ class S3VolGroupDataModel(S3Model):
         T = current.T
         
         crud_strings = current.response.s3.crud_strings
-        settings = current.deployment_settings
 
-        # =====================================================================
+        # ---------------------------------------------------------------------
         # Volunteer Group
+        #
         tablename = "vol_group"
         table = self.define_table(tablename,
-                                  Field("name",
-                                        unique = True),
+                                  Field("name", unique=True,
+                                        label = T("Name")),
                                   *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -165,20 +166,22 @@ class S3VolGroupDataModel(S3Model):
                                     )
 
         vol_group_id = S3ReusableField("vol_group_id", table,
-                                         label = T("Volunteer Group"),
-                                         requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                          "vol_group.id",
-                                                                          s3_id_represent(table))),
-                                         represent = s3_id_represent(table),
-                                         comment = comment
-                                         )
+                                       label = T("Volunteer Group"),
+                                       requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "vol_group.id",
+                                                              s3_id_represent(table))),
+                                       represent = s3_id_represent(table),
+                                       comment = comment
+                                       )
 
-        # =====================================================================
-        # Volunteer Group
+        # ---------------------------------------------------------------------
+        # Volunteer Group Position
+        #
         tablename = "vol_group_position"
         table = self.define_table(tablename,
-                                  Field("name",
-                                        unique = True),
+                                  Field("name", unique=True,
+                                        label = T("Name")),
                                   *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -205,22 +208,24 @@ class S3VolGroupDataModel(S3Model):
 
         vol_group_position_id = S3ReusableField("vol_group_position_id", table,
                                                 label = T("Volunteer Group Postion"),
-                                                requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                                "vol_group_position.id",
-                                                                                s3_id_represent(table))),
+                                                requires = IS_NULL_OR(
+                                                            IS_ONE_OF(db,
+                                                                      "vol_group_position.id",
+                                                                      s3_id_represent(table))),
                                                 represent = s3_id_represent(table),
                                                 comment = comment
                                                 )
 
-        # =====================================================================
+        # ---------------------------------------------------------------------
         # Volunteer Group Link Table
+        #
         tablename = "vol_volunteer_group"
         table = self.define_table(tablename,
                                   self.hrm_human_resource_id(),
-                                  vol_group_id(readable = False,
-                                               writable = False),
-                                  vol_group_position_id(readable = False,
-                                                        writable = False),
+                                  vol_group_id(readable=False,
+                                               writable=False),
+                                  vol_group_position_id(readable=False,
+                                                        writable=False),
                                   *s3_meta_fields())
 
         # Return names to response.s3
@@ -238,10 +243,9 @@ class S3VolGroupDataModel(S3Model):
         """
 
         return Storage(
-            vol_group_id = S3ReusableField("vol_group_id",
-                                             "integer",
-                                              readable=False,
-                                              writable=False),
-        )
+                vol_group_id = S3ReusableField("vol_group_id", "integer",
+                                               readable=False,
+                                               writable=False),
+                )
 
 # END =========================================================================

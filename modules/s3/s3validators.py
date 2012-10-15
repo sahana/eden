@@ -1545,20 +1545,17 @@ class IS_ADD_PERSON_WIDGET(Validator):
         if request.env.request_method == "POST":
             _vars = request.post_vars
             mobile = _vars["mobile_phone"]
-
-            # Validate the phone number
-            if _vars.mobile_phone:
+            if mobile:
+                # Validate the phone number
                 regex = re.compile(single_phone_number_pattern)
-                if not regex.match(_vars.mobile_phone):
+                if not regex.match(mobile):
                     error = T("Invalid phone number")
                     return (person_id, error)
 
             validate = current.manager.validate
             if person_id:
-                # Update the person record
-                query = (ptable.id == person_id)
-
                 # Validate and update the person record
+                query = (ptable.id == person_id)
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
                     value, error = validate(ptable, None, f, _vars[f])
@@ -1575,36 +1572,48 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 if record:
                     pe_id = record.pe_id
 
-                    record = ctable(pe_id=pe_id, contact_method="EMAIL")
+                    r = ctable(pe_id=pe_id, contact_method="EMAIL")
                     email = _vars["email"]
-                    if record and email: # update
-                        if email != record.value:
-                            db(ctable.id == record.id).update(value=email)
-                    else: # insert
-                        ctable.insert(pe_id=pe_id,
-                                      contact_method="EMAIL",
-                                      value=email)
+                    if email:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "EMAIL") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if email != r.value:
+                                db(query).update(value=email)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="EMAIL",
+                                          value=email)
 
-                    record = ctable(pe_id=pe_id, contact_method="SMS")
-                    if record: # update
-                        if mobile != record.value:
-                            db(ctable.id == record.id).update(value=mobile)
-                    else: # insert
-                        if mobile: # Don't insert an empty number
+                    if mobile:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "SMS") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if mobile != r.value:
+                                db(query).update(value=mobile)
+                        else: # insert
                             ctable.insert(pe_id=pe_id,
                                           contact_method="SMS",
                                           value=mobile)
-                    
-                    occupation = _vars.occupation
-                    record = pdtable(person_id=person_id)
-                    if record: # update
-                        if occupation != record.occupation:
-                            db(pdtable.id == record.id).update(occupation=occupation)
-                    else: # insert
-                        if occupation: # Don't insert an empty occupation
-                            ctable.insert(person_id=person_id,
-                                          occupation=occupation)
 
+                    occupation = _vars["occupation"]
+                    if occupation:
+                        query = (pdtable.person_id == person_id) & \
+                                (pdtable.deleted != True)
+                        r = db(query).select(pdtable.occupation,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if occupation != r.occupation:
+                                db(query).update(occupation=occupation)
+                        else: # insert
+                            pdtable.insert(person_id=person_id,
+                                           occupation=occupation)
 
             else:
                 # Create a new person record
@@ -1646,7 +1655,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="EMAIL",
                                       value=_vars.email)
-                    if _vars.mobile_phone:
+                    if mobile:
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="SMS",
                                       value=_vars.mobile_phone)

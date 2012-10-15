@@ -2052,10 +2052,10 @@ class S3PersonDetailsModel(S3Model):
     def model(self):
 
         T = current.T
+        gis = current.gis
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
-        gis = current.gis
-        
+
         pr_marital_status_opts = {
             1:T("unknown"),
             2:T("single"),
@@ -2067,11 +2067,12 @@ class S3PersonDetailsModel(S3Model):
         }
 
         pr_marital_status = S3ReusableField("marital_status", "integer",
-                                            requires = IS_IN_SET(pr_marital_status_opts, zero=None),
+                                            requires = IS_IN_SET(pr_marital_status_opts,
+                                                                 zero=None),
                                             default = 1,
                                             label = T("Marital Status"),
                                             represent = lambda opt: \
-                                                        pr_marital_status_opts.get(opt, UNKNOWN_OPT))
+                                                pr_marital_status_opts.get(opt, UNKNOWN_OPT))
 
         pr_religion_opts = current.deployment_settings.get_L10n_religions()
 
@@ -2082,23 +2083,22 @@ class S3PersonDetailsModel(S3Model):
                                   self.pr_person_id(label = T("Person"),
                                                     ondelete="CASCADE"),
                                   Field("nationality",
-                                        requires = IS_NULL_OR(IS_IN_SET_LAZY(
-                                                     lambda: gis.get_countries(key_type="code"),
-                                                     zero = messages.SELECT_LOCATION)),
+                                        requires = IS_NULL_OR(
+                                                    IS_IN_SET_LAZY(lambda: \
+                                                        gis.get_countries(key_type="code"),
+                                                        zero = messages.SELECT_LOCATION)),
                                         label = T("Nationality"),
-                                        comment = DIV(DIV(_class="tooltip",
-                                                          _title="%s|%s" % (T("Nationality"),
-                                                                            T("Nationality of the person.")))),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Nationality"),
+                                                                        T("Nationality of the person."))),
                                         represent = lambda code: \
-                                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                                            gis.get_country(code, key_type="code") or UNKNOWN_OPT),
                                   pr_marital_status(),
                                   Field("religion", length=128,
                                         label = T("Religion"),
                                         requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
                                         represent = lambda opt: \
-                                         pr_religion_opts.get(opt, UNKNOWN_OPT),
-                                        #readable=False,
-                                        #writable=False,
+                                            pr_religion_opts.get(opt, UNKNOWN_OPT),
                                         ),
                                   Field("father_name",
                                         label = T("Name of Father"),
@@ -3427,14 +3427,13 @@ def pr_rheader(r, tabs=[]):
                 if image:
                     image = TD(itable.image.represent(image.image),
                                _rowspan=3)
-
                 else:
                     image = ""
 
                 pdtable = s3db.pr_person_details
                 query = (pdtable.person_id == record.id)
-                details =  db(query).select(pdtable.nationality,
-                                            limitby=(0, 1)).first()
+                details = db(query).select(pdtable.nationality,
+                                           limitby=(0, 1)).first()
                 if details:
                     nationality = details.nationality
                 else:
@@ -3453,9 +3452,7 @@ def pr_rheader(r, tabs=[]):
                                                       T("unknown"))),
 
                     TR(TH("%s: " % T("Nationality")),
-                       "%s" % (current.gis.get_country(nationality,
-                                                       key_type="code") or \
-                               T("unknown")),
+                       "%s" % (pdtable.nationality.represent(nationality)),
                        TH("%s: " % T("Age Group")),
                        "%s" % s3db.pr_age_group_opts.get(record.age_group,
                                                          T("unknown"))),

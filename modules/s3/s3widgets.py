@@ -2631,7 +2631,6 @@ class S3AddPersonWidget(FormWidget):
         # Embedded Form
         s3db = current.s3db
         ptable = s3db.pr_person
-        pdtable = s3db.pr_person_details
         ctable = s3db.pr_contact
         fields = [ptable.first_name,
                   ptable.middle_name,
@@ -2642,7 +2641,7 @@ class S3AddPersonWidget(FormWidget):
         if controller == "hrm":
             emailRequired = current.deployment_settings.get_hrm_email_required()
         elif controller == "vol":
-            fields.append(pdtable.occupation)
+            fields.append(s3db.pr_person_details.occupation)
             emailRequired = current.deployment_settings.get_hrm_email_required()
         else:
             emailRequired = False

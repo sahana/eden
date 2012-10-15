@@ -31,7 +31,7 @@
 __all__ = ["SkeletonDataModel",
            "skeleton_example_represent"]
 
-# The follwoing import statements are needed in every model
+# The following import statements are needed in almost every model
 # (you may need more than this in your particular case). To
 # import classes from s3, use from + relative path like below
 #
