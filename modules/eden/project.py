@@ -4222,8 +4222,10 @@ def task_notify(form):
             subject = "%s: Task assigned to you" % settings.get_system_name_short()
             url = "%s%s" % (settings.get_base_public_url(),
                             URL(c="project", f="task", args=vars.id))
-            message = "You have been assigned a Task:\n\n%s\n\n%s\n\n%s" % \
+            priority = current.s3db.project_task.priority.represent(vars.priority)
+            message = "You have been assigned a Task:\n\n%s\n\n%s\n\n%s\n\n%s" % \
                 (url,
+                 "%s priority" % priority,
                  vars.name,
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
@@ -4319,95 +4321,6 @@ class S3ProjectLocationVirtualFields:
         else:
             return None
 
-    # def L0(self):
-        # parents = Storage()
-        # try:
-            # parents = current.gis.get_parent_per_level(parents,
-                                                       # self.project_location.location_id,
-                                                       # ids=False,
-                                                       # names=True)
-        # except AttributeError:
-            # pass
-
-        # if "L0" in parents:
-            # return parents["L0"]
-        # else:
-            # return None
-
-    # def L1(self):
-        # parents = Storage()
-        # try:
-            # parents = current.gis.get_parent_per_level(parents,
-                                                       # self.project_location.location_id,
-                                                       # ids=False,
-                                                       # names=True)
-        # except AttributeError:
-            # pass
-
-        # if "L1" in parents:
-            # return parents["L1"]
-        # else:
-            # return None
-
-    # def L2(self):
-        # parents = Storage()
-        # try:
-            # parents = current.gis.get_parent_per_level(parents,
-                                                       # self.project_location.location_id,
-                                                       # ids=False,
-                                                       # names=True)
-        # except AttributeError:
-            # pass
-
-        # if "L2" in parents:
-            # return parents["L2"]
-        # else:
-            # return None
-
-    # def L3(self):
-        # parents = Storage()
-        # try:
-            # parents = current.gis.get_parent_per_level(parents,
-                                                       # self.project_location.location_id,
-                                                       # ids=False,
-                                                       # names=True)
-        # except AttributeError:
-            # pass
-
-        # if "L3" in parents:
-            # return parents["L3"]
-        # else:
-            # return None
-
-    # -------------------------------------------------------------------------
-    # def themes(self):
-        # """ Themes of the project """
-
-        # s3db = current.s3db
-        # ttable = s3db.project_theme
-        # themes = None
-        # if current.deployment_settings.get_project_theme_percentages():
-            # tptable = s3db.project_theme_percentage
-            # query = (tptable.project_id == self.project_location.project_id) & \
-                    # (ttable.id == tptable.theme_id)
-            # themes = current.db(query).select(ttable.name)
-        # else:
-            # db = current.db
-            # # 1st pull-back the themes
-            # ptable = s3db.project_project
-            # query = (ptable.id == self.project_location.project_id)
-            # project = db(query).select(ptable.multi_theme_id,
-                                       # limitby=(0, 1)).first()
-            # if project and project.multi_theme_id:
-                # theme_ids = [theme_id for theme_id in project.multi_theme_id]
-                # query = (ttable.id.belongs(theme_ids))
-                # themes = db(query).select(ttable.name)
-
-        # if themes:
-            # return [theme.name for theme in themes]
-        # else:
-            # return None
-
     # -------------------------------------------------------------------------
     def name(self):
         """
@@ -4441,107 +4354,8 @@ class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
     extra_fields = ["project_id",
-                    #"location_id",
                     "date",
                     "end_date"]
-
-    # -------------------------------------------------------------------------
-    # def L0(self):
-        # try:
-            # id = self.project_beneficiary.location_id
-        # except:
-             # return current.messages.NONE
-        # else:
-            # db = current.db
-            # table = db.gis_location
-            # query = (table.id == id)
-            ##Get all the fields as we'll cache these for the other VFs
-            # r = db(query).select(table.L0,
-                                 # table.L1,
-                                 # table.L2,
-                                 # table.L3,
-                                 # cache=current.s3db.cache,
-                                 # limitby=(0, 1)).first()
-            # try:
-                # return r.L0
-            # except:
-                # return current.messages.UNKNOWN_OPT
-
-
-
-
-
-
-
-
-
-
-
-    # -------------------------------------------------------------------------
-    # def L1(self):
-        # try:
-            # id = self.project_beneficiary.location_id
-        # except:
-             # return current.messages.NONE
-        # else:
-            # db = current.db
-            # table = db.gis_location
-            # query = (table.id == id)
-            ##Get all the fields as we'll cache these for the other VFs
-            # r = db(query).select(table.L0,
-                                 # table.L1,
-                                 # table.L2,
-                                 # table.L3,
-                                 # cache=current.s3db.cache,
-                                 # limitby=(0, 1)).first()
-            # try:
-                # return r.L1
-            # except:
-                # return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    # def L2(self):
-        # try:
-            # id = self.project_beneficiary.location_id
-        # except:
-             # return current.messages.NONE
-        # else:
-            # db = current.db
-            # table = db.gis_location
-            # query = (table.id == id)
-            ##Get all the fields as we'll cache these for the other VFs
-            # r = db(query).select(table.L0,
-                                 # table.L1,
-                                 # table.L2,
-                                 # table.L3,
-                                 # cache=current.s3db.cache,
-                                 # limitby=(0, 1)).first()
-            # try:
-                # return r.L2
-            # except:
-                # return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    # def L3(self):
-        # try:
-            # id = self.project_beneficiary.location_id
-        # except:
-             # return current.messages.NONE
-        # else:
-            # db = current.db
-            # table = db.gis_location
-            # query = (table.id == id)
-            ##Get all the fields as we'll cache these for the other VFs
-            # r = db(query).select(table.L0,
-                                 # table.L1,
-                                 # table.L2,
-                                 # table.L3,
-                                 # cache=current.s3db.cache,
-                                 # limitby=(0, 1)).first()
-            # try:
-                # return r.L3
-            # except:
-                # return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def year(self):

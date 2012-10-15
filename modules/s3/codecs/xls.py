@@ -144,6 +144,7 @@ class S3XLS(S3Codec):
                                    or a string which matches a value in the heading
                  * use_colour:     True to add colour to the cells. default False
         """
+
         import datetime
         try:
             import xlwt
@@ -157,11 +158,13 @@ class S3XLS(S3Codec):
         except ImportError:
             current.session.error = self.ERROR.XLRD_ERROR
             redirect(URL(extension=""))
-        # Environment
+
         request = current.request
 
         # The xlwt library supports a maximum of 182 character in a single cell
         max_cell_size = 182
+
+        COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
 
         # Get the attributes
         title = attr.get("title")
@@ -175,9 +178,9 @@ class S3XLS(S3Codec):
             types = data_source[1]
             items = data_source[2:]
         else:
-            (title, types, lfields,  headers, items) = self.extractResource(data_source,
-                                                                  list_fields,
-                                                                  report_groupby)
+            (title, types, lfields, headers, items) = self.extractResource(data_source,
+                                                                           list_fields,
+                                                                           report_groupby)
         report_groupby = lfields[group] if group else None
         if len(items) > 0 and len(headers) != len(items[0]):
             from ..s3utils import s3_debug
@@ -214,7 +217,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
 
         styleNotes = xlwt.XFStyle()
         styleNotes.font.italic = True
-        styleNotes.font.height = 160 # 160 Twips = 8point
+        styleNotes.font.height = 160 # 160 Twips = 8 point
         styleNotes.num_format_str = datetime_format
 
         styleHeader = xlwt.XFStyle()
@@ -243,18 +246,19 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         # Header row
         colCnt = -1
         headerRow = sheet1.row(2)
-        fieldWidth=[]
+        fieldWidth = []
         for selector in lfields:
             if selector == report_groupby:
                 continue
             label = headers[selector]
             if label == "Id":
+                fieldWidth.append(0)
                 continue
             if label == "Sort":
                 continue
             colCnt += 1
             headerRow.write(colCnt, str(label), styleHeader)
-            width = len(label) * S3XLS.COL_WIDTH_MULTIPLIER
+            width = len(label) * COL_WIDTH_MULTIPLIER
             fieldWidth.append(width)
             sheet1.col(colCnt).width = width
         # Title row
@@ -266,8 +270,8 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         currentRow = sheet1.row(1)
         currentRow.write(colCnt, request.now, styleNotes)
         # fix the size of the last column to display the date
-        if 16 * S3XLS.COL_WIDTH_MULTIPLIER > width:
-            sheet1.col(colCnt).width = 16 * S3XLS.COL_WIDTH_MULTIPLIER
+        if 16 * COL_WIDTH_MULTIPLIER > width:
+            sheet1.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
         totalCols = colCnt
@@ -312,9 +316,10 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 if label == groupby_label:
                     continue
                 if label == "Id":
+                    colCnt += 1
                     continue
                 represent = item[field]
-                coltype=types[colCnt]
+                coltype = types[colCnt]
                 if coltype == "sort":
                     continue
                 if type(represent) is not str:
@@ -340,8 +345,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                                                                    format)
                         date_tuple = (cell_datetime.year,
                                       cell_datetime.month,
-                                      cell_datetime.day
-                                     )
+                                      cell_datetime.day)
                         value = xldate_from_date_tuple(date_tuple, 0)
                         style.num_format_str = date_format
                     except:
@@ -356,8 +360,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                                       cell_datetime.day,
                                       cell_datetime.hour,
                                       cell_datetime.minute,
-                                      cell_datetime.second,
-                                     )
+                                      cell_datetime.second)
                         value = xldate_from_datetime_tuple(date_tuple, 0)
                         style.num_format_str = datetime_format
                     except:
@@ -369,8 +372,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                                                                    format)
                         date_tuple = (cell_datetime.hour,
                                       cell_datetime.minute,
-                                      cell_datetime.second,
-                                     )
+                                      cell_datetime.second)
                         value = xldate_from_time_tuple(date_tuple)
                         style.num_format_str = time_format
                     except:
@@ -387,8 +389,8 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                         style.num_format_str = "0.00"
                     except:
                         pass
-                currentRow.write(colCnt, value, style)
-                width = len(represent) * S3XLS.COL_WIDTH_MULTIPLIER
+                currentRow.write(colCnt - 1, value, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > fieldWidth[colCnt]:
                     fieldWidth[colCnt] = width
                     sheet1.col(colCnt).width = width
