@@ -38,7 +38,7 @@ settings.security.policy = 8 # Delegations
 settings.security.map = True
 
 # Owner Entity
-settings.auth.person_realm_human_resource_site = True
+settings.auth.person_realm_human_resource_site_then_org = True
 settings.auth.person_realm_member_org = True
 
 def ifrc_realm_entity(table, row):
@@ -223,14 +223,14 @@ settings.org.site_code_len = 3
 settings.org.site_label = "Office/Warehouse/Facility"
 # Enable certain fields just for specific Organisations
 settings.org.dependent_fields = \
-    {"pr_person_details.mother_name"   : ["Bangladesh Red Crescent Society"],
-     "pr_person_details.father_name"   : ["Bangladesh Red Crescent Society"],
-     "pr_person_details.company"       : ["Philippine Red Cross"],
-     "pr_person_details.affiliations"  : ["Philippine Red Cross"],
-     "vol_volunteer.active"            : ["Timor-Leste Red Cross Society"],
-     "vol_volunteer_cluster.cluster_id": ["Philippine Red Cross"],
-     "vol_volunteer_group.group_id"    : ["Philippine Red Cross"],
-     "vol_volunteer_group.position_id" : ["Philippine Red Cross"],
+    {"pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
+     "pr_person_details.father_name"             : ["Bangladesh Red Crescent Society"],
+     "pr_person_details.company"                 : ["Philippine Red Cross"],
+     "pr_person_details.affiliations"            : ["Philippine Red Cross"],
+     "vol_volunteer.active"                      : ["Timor-Leste Red Cross Society"],
+     "vol_volunteer_cluster.vol_cluster_id"      : ["Philippine Red Cross"],
+     "vol_volunteer_group.vol_group_id"          : ["Philippine Red Cross"],
+     "vol_volunteer_group.vol_group_position_id" : ["Philippine Red Cross"],
      }
 
 # -----------------------------------------------------------------------------

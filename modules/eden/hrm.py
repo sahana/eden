@@ -315,6 +315,15 @@ class S3HRModel(S3Model):
         # Hours
         #self.add_component("hrm_hours",
         #                   hrm_human_resource="human_resource_id")
+        
+        #Volunteer Cluster 
+        self.add_component("vol_volunteer_cluster",
+                           hrm_human_resource=dict(joinby="human_resource_id",
+                                                    multiple=False))
+        #Volunteer Group 
+        self.add_component("vol_volunteer_group",
+                           hrm_human_resource=dict(joinby="human_resource_id",
+                                                    multiple=False))
 
         hrm_autocomplete_search = S3HRSearch()
         human_resource_search = S3Search(
@@ -415,7 +424,23 @@ class S3HRModel(S3Model):
             # Being added as a component to Org, Site or Project
             hrm_url = None
 
+        # Custom Form
+        crud_form = s3forms.S3SQLCustomForm("organisation_id",
+                                            "site_id",
+                                            "person_id",
+                                            "job_title_id",
+                                            "job_role_id",
+                                            "department_id",
+                                            "volunteer_cluster.vol_cluster_id",
+                                            "volunteer_group.vol_group_id",
+                                            "volunteer_group.vol_group_position_id",
+                                            "start_date",
+                                            "end_date",
+                                            "status",
+                                            )
+
         self.configure(tablename,
+                       crud_form = crud_form,
                        super_entity = "sit_trackable",
                        mark_required = ["organisation_id"],
                        deletable = current.deployment_settings.get_hrm_deletable(),
@@ -3345,6 +3370,7 @@ def hrm_human_resource_onaccept(form):
     data = Storage()
 
     site_id = record.site_id
+    organisation_id = record.organisation_id
 
     # Affiliation, record ownership and component ownership
     s3db.pr_update_affiliations(htable, record)
@@ -3353,9 +3379,11 @@ def hrm_human_resource_onaccept(form):
     ptable = s3db.pr_person
     person_id = record.person_id
     person = Storage(id = person_id)
-    if current.deployment_settings.get_auth_person_realm_human_resource_site():
+    if current.deployment_settings.get_auth_person_realm_human_resource_site_then_org():
         # Set pr_person.realm_entity to the human_resource's site pe_id
-        entity = s3db.pr_get_pe_id("org_site", site_id)
+        entity = s3db.pr_get_pe_id("org_site", site_id) or \
+                 s3db.pr_get_pe_id("org_organisation", organisation_id) 
+            
         if entity:
             auth.set_realm_entity(ptable, person,
                                   entity = entity,

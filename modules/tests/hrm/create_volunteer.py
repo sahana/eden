@@ -63,10 +63,6 @@ class CreateVolunteer(SeleniumUnitTest):
                      ( "job_title_id",
                        "Security",
                        "option"),
-                     ( "site_id",
-                       "AP Zone (Office)",
-                       "option",
-                       3),
                      ]
                      )
 

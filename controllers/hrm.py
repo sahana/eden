@@ -345,8 +345,8 @@ def person():
             if not r.component:
                 table = r.table
                 # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
-                table.occupation.readable = False
-                table.occupation.writable = False
+                s3db.pr_person_details.occupation.readable = False
+                s3db.pr_person_details.occupation.writable = False
                 table.pe_label.readable = False
                 table.pe_label.writable = False
                 table.missing.readable = False
