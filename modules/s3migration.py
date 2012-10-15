@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Database Migration Helpers
+""" Database Migration Toolkit
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
@@ -32,22 +32,64 @@
 
 __all__ = ["S3Migration"]
 
+import os
+
 from gluon import current, DAL, Field
+from gluon.cfs import getcfs
+from gluon.compileapp import build_environment
+from gluon.restricted import restricted
+from gluon.storage import Storage
 
 class S3Migration(object):
     """
-        Database Migration Helper Class
+        Database Migration Toolkit
+        - will be useful to migrate both a production database on a server
+          and also an offline client
+
+        Normally run from a script in web2py context, but without models loaded:
+        cd web2py
+        python web2py.py -S eden -R <script.py>
+
+        Where script looks like:
+        m = local_import("s3migration")
+        migrate = m.S3Migration()
+        migrate.prep()
+        migrate.migrate()
+        migrate.post()
     """
 
     def __init__(self):
 
-        # Read settings
-        name = "applications.%s.modules.s3cfg" % current.request.application
+        request= current.request
+
+        # Load s3cfg
+        name = "applications.%s.modules.s3cfg" % request.application
         s3cfg = __import__(name)
         for item in name.split(".")[1:]:
             # Remove the dot
             s3cfg = getattr(s3cfg, item)
         settings = s3cfg.S3Config()
+        # Pass into template
+        current.deployment_settings = settings
+
+        # Read settings
+        model = "%s/models/000_config.py" % request.folder
+        code = getcfs(model, model, None)
+        environment = build_environment(request, current.response,
+                                        current.session)
+        environment["settings"] = settings
+        def template_path():
+            " Return the path of the Template config.py to load "
+            path = os.path.join(request.folder,
+                                "private", "templates",
+                                settings.get_template(),
+                                "config.py")
+            return path
+        environment["template_path"] = template_path
+        environment["os"] = os
+        environment["Storage"] = Storage
+        restricted(code, environment, layer=model)
+
         self.db_engine = settings.get_database_type()
         (db_string, pool_size) = settings.get_database_string()
 
@@ -55,10 +97,146 @@ class S3Migration(object):
         self.db = DAL(db_string,
                       #folder="%s/databases" % request.folder,
                       auto_import=True,
+                      # @ToDo: Set to False until we migrate
                       migrate_enabled=True,
-                      migrate=True
                       )
 
+    # -------------------------------------------------------------------------
+    def prep(self, uniques=[]):
+        """
+            Preparation before migration
+
+            @param uniques : List of tuples (tablename, fieldname) to have the unique indices removed
+        """
+
+        # Backup current database
+        self.backup()
+
+        # Remove Unique indices which need to go in next code
+        for tablename, fieldname in uniques:
+            self.remove_unique(tablename, fieldname)
+
+        self.db.commit()
+
+    # -------------------------------------------------------------------------
+    def post(self):
+        """
+            Cleanup after migration
+            @ToDo
+        """
+
+        # Do prepops of new tables
+        # Copy data
+        pass
+
+    # -------------------------------------------------------------------------
+    def migrate(self):
+        """
+            Perform the migration
+            @ToDo
+        """
+
+        # Update code: git pull
+        # run_models_in(environment)
+        # or
+        # Set migrate=True in models/000_config.py
+        # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
+        # Set migrate=False in models/000_config.py
+        pass
+
+    # -------------------------------------------------------------------------
+    def backup(self):
+        """
+            Backup the database to a local SQLite database
+        """
+
+        import os
+
+        db = self.db
+        folder = "%s/databases/backup" % current.request.folder
+
+        # Create clean folder for the backup
+        if os.path.exists(folder):
+            import shutil
+            shutil.rmtree(folder)
+            import time
+            time.sleep(1)
+        os.mkdir(folder)
+
+        # Setup backup database
+        db_bak = DAL("sqlite://backup.db", folder=folder)
+
+        # Copy Table structure
+        for tablename in db.tables:
+            if tablename == "gis_location":
+                table = db[tablename]
+                fields = [table[field] for field in table.fields if field != "the_geom"]
+                db_bak.define_table(tablename, *fields)
+            else:
+                db_bak.define_table(tablename, db[tablename])
+
+        # Copy Data
+        import csv
+        csv.field_size_limit(2**20 * 100)  # 100 megs
+        filename = "%s/data.csv" % folder
+        file = open(filename, "w")
+        db.export_to_csv_file(file)
+        file.close()
+        file = open(filename, "r")
+        db_bak.import_from_csv_file(file)
+        file.close()
+        db_bak.commit()
+
+        # Pass handle back to other functions
+        self.db_bak = db_bak
+
+    # -------------------------------------------------------------------------
+    def remove_unique(self, tablename, fieldname):
+        """
+            Remove a Unique Index from a table
+            - removing not_null will be very similar
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+
+        # Modify the database
+        if db_engine == "sqlite":
+            # @ToDo: Check Syntax
+            sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+        elif db_engine == "mysql":
+            # @ToDo: Check Syntax
+            sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+        elif db_engine == "postgres":
+            sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        try:
+            db.executesql(sql)
+        except:
+            import sys
+            e = sys.exc_info()[1]
+            print >> sys.stderr, e
+
+        # Modify the .table file
+        table = db[tablename]
+        fields = []
+        for fn in table.fields:
+            field = table[fn]
+            if fn == fieldname:
+                field.unique = False
+            fields.append(field)
+        db.__delattr__(tablename)
+        db.tables.remove(tablename)
+        db.define_table(tablename, *fields,
+                        # Rebuild the .table file from this definition
+                        fake_migrate=True)
+
+    # =========================================================================
+    # OLD CODE below here
+    # - There are tests for this in /tests/dbmigration
     # -------------------------------------------------------------------------
     def rename_field(self,
                      tablename,

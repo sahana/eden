@@ -83,12 +83,9 @@ class S3Config(Storage):
         """
             Execute the template
         """
-        #from gluon.compileapp import build_environment
         from gluon.fileutils import read_file
         from gluon.restricted import restricted
-        #environment = build_environment(request, response, session)
         code = read_file(path)
-        #restricted(code, environment, layer=path)
         restricted(code, layer=path)
         return
 
@@ -111,7 +108,7 @@ class S3Config(Storage):
     # Auth settings
     def get_auth_hmac_key(self):
         """
-            salt to encrypt passwords - normally randmosied during 1st run
+            salt to encrypt passwords - normally randomised during 1st run
         """
         return self.auth.get("hmac_key", "akeytochange")
 
@@ -960,6 +957,8 @@ class S3Config(Storage):
                                 fieldname=None):
         """
             Enables/Disables optional fields according to a user's Organisation
+            - must specify either field or tablename/fieldname
+                                           (e.g. for virtual fields)
         """
 
         auth = current.auth
@@ -973,8 +972,8 @@ class S3Config(Storage):
         if field:
             tablename = field.tablename
             fieldname = field.name
-        elif not tablename or not fieldname:
-            return False
+        #elif not tablename or not fieldname:
+        #    raise SyntaxError
 
         dependent_fields = self.org.get("dependent_fields", None)
         if dependent_fields and not enabled:
@@ -985,10 +984,10 @@ class S3Config(Storage):
             if org_name_list:
                 otable = current.s3db.org_organisation
                 root_org_id = auth.root_org()
-                root_org = current.db(
-                                otable.id == root_org_id
-                            ).select(otable.name,
-                                     limitby=(0, 1), cache=s3db.cache).first()
+                root_org = current.db(otable.id == root_org_id).select(otable.name,
+                                                                       limitby=(0, 1),
+                                                                       cache=s3db.cache
+                                                                       ).first()
                 if root_org:
                     enabled = root_org.name in org_name_list
 

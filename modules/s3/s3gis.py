@@ -283,8 +283,10 @@ class GIS(object):
 
         layer = KMLLayer()
 
-        query = (layer.table.id == record_id)
-        record = current.db(query).select(limitby=(0, 1)).first()
+        table = layer.table
+        record = current.db(table.id == record_id).select(table.url,
+                                                          limitby=(0, 1)
+                                                          ).first()
         url = record.url
 
         cachepath = layer.cachepath
