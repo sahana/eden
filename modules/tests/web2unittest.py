@@ -35,8 +35,6 @@ class Web2UnitTest(unittest.TestCase):
     def reporter(self, msg, verbose_level = 1):
         if self.config.verbose >= verbose_level:
             print >> sys.stderr, msg
-            if self.config.verbose > 2:
-                print >> self.stdout, msg
 
 # =============================================================================
 class SeleniumUnitTest(Web2UnitTest):

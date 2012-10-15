@@ -158,6 +158,15 @@ parser.add_argument("--force-debug",
                     const=True,
                     help = desc
                    )
+desc = """Set a threshold in second.
+
+If takes longer than this to get the link then it will be reported.
+"""
+parser.add_argument("--threshold",
+                    type = int,
+                    default = 10,
+                    help = desc
+                   )
 argsObj = parser.parse_args()
 args = argsObj.__dict__
 
@@ -222,6 +231,7 @@ elif args["suite"] == "smoke":
         from tests.smoke import *
         broken_links = BrokenLinkTest()
         broken_links.setDepth(args["link_depth"])
+        broken_links.threshold = args["threshold"]
         broken_links.setUser(args["user_password"])
         suite = unittest.TestSuite()
         suite.addTest(broken_links)
@@ -256,6 +266,7 @@ elif args["suite"] == "complete":
         from tests.smoke import *
         broken_links = BrokenLinkTest()
         broken_links.setDepth(args["link_depth"])
+        broken_links.threshold = args["threshold"]
         broken_links.setUser(args["user_password"])
         suite.addTest(broken_links)
     except NameError as msg:

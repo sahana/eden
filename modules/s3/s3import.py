@@ -384,6 +384,8 @@ class S3Importer(S3CRUD):
 
             extension = ofilename.rsplit(".", 1).pop()
             if extension not in ("csv", "xls"):
+                if self.ajax:
+                    return {"Error": self.messages.invalid_file_format}
                 response.flash = None
                 response.error = self.messages.invalid_file_format
                 return self.upload(r, **attr)
