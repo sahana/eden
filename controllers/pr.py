@@ -139,6 +139,10 @@ def person():
                 r.table.pe_label.writable = False
                 r.table.missing.readable = False
                 r.table.missing.writable = False
+                
+                #S3SQLCustomForm breaks popup retrun
+                s3db.clear_config("pr_person",
+                                  "crud_form")
 
             if r.component_name == "config":
                 _config = s3db.gis_config

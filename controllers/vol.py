@@ -206,6 +206,8 @@ def volunteer():
                 _type.default = 2
                 _location.writable = True
                 _location.readable = True
+                table.site_id.writable = False
+                table.site_id.readable = False
                 table.code.writable = False
                 table.code.readable = False
                 table.department_id.writable = False
@@ -216,6 +218,23 @@ def volunteer():
                 table.site_contact.readable = False
                 table.status.writable = False
                 table.status.readable = False
+                
+                person_details_table = s3db.pr_person_details
+                
+                person_details_table.occupation.label = T("Normal Job")
+                
+                # Organisation Dependent Fields
+                set_org_dependent_field = deployment_settings.set_org_dependent_field
+                
+                set_org_dependent_field(person_details_table.father_name)
+                set_org_dependent_field(person_details_table.mother_name)
+                set_org_dependent_field(person_details_table.affiliations)
+                set_org_dependent_field(person_details_table.company)
+                volunteer_cluster_table = s3db.vol_volunteer_cluster
+                set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
+                volunteer_group_table = s3db.vol_volunteer_group
+                set_org_dependent_field(volunteer_group_table.vol_group_id)
+                set_org_dependent_field(volunteer_group_table.vol_group_position_id)
 
             elif r.method == "delete":
                 # Don't redirect
@@ -436,13 +455,14 @@ def person():
                 table = r.table
                 # Assume volunteers only between 12-81
                 table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
-                table.occupation.label = T("Normal Job")
                 table.pe_label.readable = False
                 table.pe_label.writable = False
                 table.missing.readable = False
                 table.missing.writable = False
                 table.age_group.readable = False
                 table.age_group.writable = False
+
+                s3db.pr_person_details.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = deployment_settings.set_org_dependent_field
@@ -453,6 +473,7 @@ def person():
                 set_org_dependent_field(person_details_table.mother_name)
                 set_org_dependent_field(person_details_table.affiliations)
                 set_org_dependent_field(person_details_table.company)
+
             else:
                 if r.component_name == "human_resource":
                     table = r.component.table
@@ -474,6 +495,16 @@ def person():
                         field.default = org
                         field.readable = False
                         field.writable = False
+
+                    # Organisation Dependent Fields
+                    set_org_dependent_field = deployment_settings.set_org_dependent_field
+                
+                    volunteer_cluster_table = s3db.vol_volunteer_cluster
+                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
+                    volunteer_group_table = s3db.vol_volunteer_group
+                    set_org_dependent_field(volunteer_group_table.vol_group_id)
+                    set_org_dependent_field(volunteer_group_table.vol_group_position_id)
+                
                 elif r.component_name == "hours":
                     filter = (r.component.table.hours != None)
                     r.resource.add_component_filter("hours", filter)
@@ -956,5 +987,20 @@ def compose():
     """ Send message to people/teams """
 
     return s3db.hrm_compose()
+# =============================================================================
+def cluster():
+    """ Volunteer Cluster """
+    output = s3_rest_controller()
+    return output
+# =============================================================================
+def group():
+    """ Volunteer Group """
+    output = s3_rest_controller()
+    return output
+# =============================================================================
+def group_position():
+    """ Volunteer Group Position """
+    output = s3_rest_controller()
+    return output
 
 # END =========================================================================

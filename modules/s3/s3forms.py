@@ -942,10 +942,10 @@ class S3SQLCustomForm(S3SQLForm):
             accept_id = table.insert(**data)
             if not accept_id:
                 raise RuntimeError("Could not create record")
-            data[table._id.name] = accept_id
             onaccept = get_config(tablename, "create_onaccept",
                        get_config(tablename, "onaccept", None))
 
+        data[table._id.name] = accept_id
         prefix, name = tablename.split("_", 1)
         form = Storage(vars=Storage(data))
 
@@ -969,7 +969,7 @@ class S3SQLCustomForm(S3SQLForm):
                 # Update realm
                 update_realm = s3db.get_config(table, "update_realm")
                 if update_realm:
-                    auth.set_realm_entity(table, vars,
+                    auth.set_realm_entity(table, Storage(data),
                                           force_update=True)
 
             # Store session vars
@@ -1104,11 +1104,12 @@ class S3SQLField(S3SQLFormElement):
         # Import S3ResourceField only here, to avoid circular dependency
         from s3resource import S3ResourceField
 
+        rfield = S3ResourceField(resource, self.selector)
+
         subtables = Storage([(c.tablename, c.alias)
                              for c in resource.components.values()
                              if not c.multiple])
 
-        rfield = S3ResourceField(resource, self.selector)
         tname = rfield.tname
         if rfield.field is not None:
 

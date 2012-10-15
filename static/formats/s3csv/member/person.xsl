@@ -10,6 +10,7 @@
          Organisation...................required.....organisation name
          Branch.........................required.....branch name
          Type...........................optional.....Membership type
+         Member ID......................optional.....Membership code
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
          Last Name......................optional.....person last name (required in some deployments)
@@ -212,6 +213,7 @@
         <resource name="member_membership">
 
             <!-- Membership data -->
+            <data field="code"><xsl:value-of select="col[@field='Member ID']"/></data>
             <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             <data field="membership_fee"><xsl:value-of select="col[@field='Membership Fee']"/></data>
             <data field="membership_paid">

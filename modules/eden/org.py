@@ -458,7 +458,7 @@ class S3OrganisationModel(S3Model):
                                           label=ORGANISATION,
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget = SQLFORM.widgets.options.widget,
+                                          widget = None #SQLFORM.widgets.options.widget,
                                          )
 
         organisations_id = S3ReusableField("organisations_id",

@@ -593,9 +593,6 @@ def person():
                     table.other_details.readable = True
             else:
                 table = r.table
-                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
-                table.occupation.readable = False
-                table.occupation.writable = False
                 table.pe_label.readable = False
                 table.pe_label.writable = False
                 table.missing.readable = False

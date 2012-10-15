@@ -1510,7 +1510,7 @@ $(document).ready(function(){
                                              ondelete = "SET NULL"),
                              # which org owns this item
                              organisation_id(name = "owner_org_id",
-                                             label = T("Organization/Department"),
+                                             label = T("Owned By (Organization/Branch)"),
                                              ondelete = "SET NULL"),
                              Field("inv_item_status", "integer",
                                    label = T("Item Status"),
@@ -3179,12 +3179,12 @@ class S3AdjustModel(S3Model):
                                    ),
                              # Organisation that owned this item before
                              organisation_id(name = "old_owner_org_id",
-                                             label = T("Current owning Organization"),
+                                             label = T("Current Owned By (Organization/Branch)"),
                                              ondelete = "SET NULL",
                                              writable = False),
                              # Organisation that owns this item now
                              organisation_id(name = "new_owner_org_id",
-                                             label = T("Transfer ownership to Organization"),
+                                             label = T("Transfer Ownership To (Organization/Branch)"),
                                              ondelete = "SET NULL"),
                              adj_id(),
                              s3_comments(),
