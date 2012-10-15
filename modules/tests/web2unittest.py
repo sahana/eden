@@ -31,7 +31,7 @@ class Web2UnitTest(unittest.TestCase):
         self.user = "admin"
         self.stdout = sys.stdout
         self.stderr = sys.stderr
-        
+
     def reporter(self, msg, verbose_level = 1):
         if self.config.verbose >= verbose_level:
             print >> sys.stderr, msg
@@ -56,7 +56,7 @@ class SeleniumUnitTest(Web2UnitTest):
             this can be modified by the callback function
         """
 
-        query = (table.deleted == "F")
+        query = (table.deleted != True)
         for details in data:
             query = query & (table[details[0]] == details[1])
         rows = current.db(query).select(orderby=~table.id)
@@ -89,7 +89,7 @@ class SeleniumUnitTest(Web2UnitTest):
         result = {}
         id_data = []
         table = current.s3db[tablename]
-        
+
         date_format = str(current.deployment_settings.get_L10n_date_format())
         datetime_format = str(current.deployment_settings.get_L10n_datetime_format())
         # if the logged in confirm is shown then try and clear it.
@@ -155,7 +155,7 @@ class SeleniumUnitTest(Web2UnitTest):
                     el = browser.find_element_by_id(el_id)
                     el.send_keys(el_value)
                     raw_value = None
-                
+
             else:
                 # Normal Input field
                 el = browser.find_element_by_id(el_id)
@@ -170,14 +170,14 @@ class SeleniumUnitTest(Web2UnitTest):
                     el.send_keys(el_value)
                     #raw_value = el_value_datetime
                     raw_value = el_value
-                    # @ToDo: Fix hack to stop checking datetime field. This is because the field does not support data entry by key press  
+                    # @ToDo: Fix hack to stop checking datetime field. This is because the field does not support data entry by key press
                     # Use the raw value to check that the record was added succesfully
                 else:
                     el.clear()
                     el.send_keys(el_value)
                     raw_value = el_value
 
-            if raw_value: 
+            if raw_value:
                 id_data.append([details[0], raw_value])
 
         result["before"] = self.getRows(table, id_data, dbcallback)
@@ -201,7 +201,8 @@ class SeleniumUnitTest(Web2UnitTest):
             except NoSuchElementException:
                 pass
         self.assertTrue(confirm == success,
-                        "Unexpected create success of %s" % confirm)
+                        "Unexpected %s to create record" %
+                        (confirm and "success" or "failure"))
         result["after"] = self.getRows(table, id_data, dbcallback)
         successMsg = "Record added to database"
         failMsg = "Record not added to database"

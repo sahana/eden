@@ -233,7 +233,7 @@ elif args["suite"] == "roles":
     from tests.roles import *
     #suite = unittest.TestSuite()
     suite = test_roles()
-    
+
     #test_role = TestRole()
     #test_role.set(org = "Org-A",
     #              user = "asset_reader@Org-A.com",
@@ -282,7 +282,7 @@ else:
         # Windows compatibility
         filename = filename.replace(":", "-")
         fullname = os.path.join(path,filename)
-        fp = file(fullname, "wb")
+        fp = open(fullname, "wb")
 
         config.html = True
         from tests.runner import EdenHTMLTestRunner
