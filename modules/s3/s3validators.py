@@ -1494,6 +1494,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
         T = current.T
         db = current.db
+        s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
 
@@ -1502,9 +1503,9 @@ class IS_ADD_PERSON_WIDGET(Validator):
         except:
             person_id = None
 
-        ptable = db.pr_person
-        pdtable = db.pr_person_details
-        ctable = db.pr_contact
+        ptable = s3db.pr_person
+        pdtable = s3db.pr_person_details
+        ctable = s3db.pr_contact
 
         def email_validate(value, person_id):
             """ Validate the email address """
