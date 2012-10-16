@@ -81,6 +81,9 @@ s3.jquery_ready = []
 # Languages
 ###########
 
+#if settings.get_L10n_languages_readonly():
+#    request.global_settings.languages_readonly = True
+
 s3.l10n_languages = settings.get_L10n_languages()
 
 # Default strings are in US English

@@ -186,15 +186,9 @@ $(document).ready(function(){
                                         ),
                              Field("sn",
                                    label = T("Serial Number")),
-                             organisation_id(name = "supply_org_id",
+                             organisation_id("supply_org_id",
                                              label = T("Supplier/Donor"),
                                              ondelete = "SET NULL"),
-                             # @ToDo: Remove after data is migrated
-                             Field("supplier",
-                                   label = T("Supplier"),
-                                   readable = False,
-                                   writable = False,
-                                   ),
                              s3_date("purchase_date",
                                      label = T("Purchase Date")
                                      ),

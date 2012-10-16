@@ -507,6 +507,8 @@ class S3Config(Storage):
             - %f -- Degrees in decimal (double)
         """
         return self.L10n.get("lat_lon_display_format", "%f")
+    def get_L10n_languages_readonly(self):
+        return self.L10n.get("languages_readonly", True)
     def get_L10n_mandatory_lastname(self):
         return self.L10n.get("mandatory_lastname", False)
     def get_L10n_thousands_separator(self):

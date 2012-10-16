@@ -136,6 +136,10 @@
                         </tag>
                         <tag>
                             <xsl:choose>
+                                <xsl:when test="@name='cr_shelter'">
+                                    <xsl:attribute name="k">refugee</xsl:attribute>
+                                    <xsl:attribute name="v">yes</xsl:attribute>
+                                </xsl:when>
                                 <xsl:when test="@name='hms_hospital'">
                                     <xsl:attribute name="k">amenity</xsl:attribute>
                                     <xsl:attribute name="v">hospital</xsl:attribute>

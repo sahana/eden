@@ -55,7 +55,7 @@ settings.base.template = "default"
 # Switch to "False" in Production for a Performance gain
 # (need to set to "True" again when Table definitions are changed)
 settings.base.migrate = True
-# To just create the .table files:
+# To just create the .table files (also requires migrate=True):
 #settings.base.fake_migrate = True
 
 # Set this to True to switch to Debug mode
@@ -105,6 +105,9 @@ settings.frontpage.rss = [
 
 # Enable session store in Memcache to allow sharing of sessions across instances
 #settings.base.session_memcache = '127.0.0.1:11211'
+
+# Allow language files to be updated automatically
+#settings.L10n.languages_readonly = False
 
 # Fill these to allow users to Login using Facebook
 # https://developers.facebook.com/apps
