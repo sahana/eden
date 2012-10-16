@@ -56,10 +56,10 @@ class AddDocument(FormView):
     
     def get_context_data(self, **kwargs):
         context = super(AddDocument, self).get_context_data(**kwargs)
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        context['get_place'] = self.space
-        context['user_is_admin'] = (self.request.user in place.admins.all()
-            or self.request.user in place.mods.all()
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = space
+        context['user_is_admin'] = (self.request.user in space.admins.all()
+            or self.request.user in space.mods.all()
             or self.request.user.is_staff or self.request.user.is_superuser) 
         return context
         

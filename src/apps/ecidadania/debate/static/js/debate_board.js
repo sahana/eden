@@ -68,8 +68,8 @@ function createNote() {
         var newNote = $("#sortable-dispatcher").append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
             "<div class='handler'><div class='deletenote hidden'>" + "<a href='#' onclick='deleteNote(this)'" +
             " id='deletenote'>x</a></div></div><p class='note-text'>" + note.title + "</p>" +
-            "<span id='view-note' class='label hidden'><a href='#' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note'>" + viewString + "</a></span>" +
-            "<span id='edit-note' class='label hidden'><a href='#' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note'>" + editString + "</a></span></div>");
+            "<span id='view-note' class='label'><a href='#' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note'>" + viewString + "</a></span>" +
+            "<span id='edit-note' class='label'><a href='#' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note'>" + editString + "</a></span></div>");
         newNote.show("slow");
         showControls();
     });

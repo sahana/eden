@@ -637,7 +637,3 @@
         <a href="/{{ p.uri }}" title="{{ p.name }}">{{ p.name }}</a><br /> |
     {% endfor %}
 {% endblock %}
-
-{% block extrainfo %}
-    <p>{% trans "Space created by:" %} {{ get_place.author }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
-{% endblock %}

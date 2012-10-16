@@ -89,16 +89,17 @@ hr { /* This hr replaces the bootstrap one */
 }
 
 .mainfooter {
-    position: absolute;
+    position: fixed;
     bottom: 0;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     width: 100%;
     margin: auto;
     color: #EEE;
     background: #000;
     opacity: 0.8;
     border: none;
+    font-size: 10px;
 }
 
 .mainfooter a {
