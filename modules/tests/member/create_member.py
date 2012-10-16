@@ -27,7 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
 class CreateMember(SeleniumUnitTest):
@@ -37,14 +36,10 @@ class CreateMember(SeleniumUnitTest):
             @description: Create Member
 
         """
+
         print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+
+        today = self.today()
 
         self.login(account="admin", nexturl="member/membership/create")
         self.create("member_membership", 
@@ -77,12 +72,8 @@ class CreateMember(SeleniumUnitTest):
 #        """
 #        print "\n"   
 #                    
-#        import datetime
-#        from dateutil.relativedelta import relativedelta
-#        today = datetime.date.today().strftime("%Y-%m-%d")
-#        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-#        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+#        today = self.today()
+#
 #        self.login(account="admin", nexturl="member/membership/create")
 #        self.browser.find_element_by_id("select_from_registry").click()
 #        

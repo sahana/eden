@@ -25,15 +25,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
-import unittest
-from tests.web2unittest import SeleniumUnitTest
-from selenium.common.exceptions import NoSuchElementException
-from s3 import s3_debug
 from helper import InvTestFunctions
 
 class SendReceiveItem(InvTestFunctions):
-
     """
             Inventory Test - Send-Receive Workflow (Send-Receive items)
             @Case: INV003
@@ -47,6 +41,7 @@ class SendReceiveItem(InvTestFunctions):
 
     def test_inv003_send_receive_items(self):
         """ Tests for Send-Receive - Receive Workflow """
+
         user = "admin"
         method = "search"
         send_data = [("site_id",

@@ -27,7 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
 class Asset(SeleniumUnitTest):
@@ -38,17 +37,14 @@ class Asset(SeleniumUnitTest):
             
             * RENE: Insert instructions
         """
-        print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
 
-        #@ToDo: Move these into we2unittest
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
+        print "\n"
+
+        today = self.today()
+        now = self.now()
+        now_1_day = self.now_1_day()
+        now_1_week = self.now_1_week()
+
         # Login, if not-already done so
         self.login(account="normal", nexturl="asset/asset/create")
         

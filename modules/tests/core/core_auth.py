@@ -1,11 +1,13 @@
-__all__ = ["login", "logout", "register"]
+__all__ = ["login",
+           "logout",
+           "register"
+           ]
 
-# Selenium WebDriver
-from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-#from selenium.webdriver.common.keys import Keys
+
 from gluon import current
 from gluon.storage import Storage
+
 from .core_utils import *
 
 current.data = Storage()

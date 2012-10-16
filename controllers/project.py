@@ -277,19 +277,21 @@ def set_project_multi_activity_type_id_requires(sector_ids):
         Filters the multi_activity_type_id based on the sector_id
     """
 
-    # @ToDo: merge with set_project_multi_theme_id_requires?
-    table = s3db.project_location
-    attable = s3db.project_activity_type
-    atstable = s3db.project_activity_type_sector
+    if sector_ids:
+        # @ToDo: merge with set_project_multi_theme_id_requires?
+        attable = s3db.project_activity_type
+        atstable = s3db.project_activity_type_sector
 
-    # All activity_types linked to the projects sectors or to no sectors 
-    rows = db().select(attable.id,
-                       atstable.sector_id,
-                       left=atstable.on(attable.id == atstable.activity_type_id))
-    activity_type_ids = [row.project_activity_type.id for row in rows 
-                 if not row.project_activity_type_sector.sector_id or 
-                    row.project_activity_type_sector.sector_id in sector_ids]
-    table.multi_activity_type_id.requires = IS_NULL_OR(
+        # All activity_types linked to the projects sectors or to no sectors 
+        rows = db().select(attable.id,
+                           atstable.sector_id,
+                           left=atstable.on(attable.id == atstable.activity_type_id))
+        activity_type_ids = [row.project_activity_type.id for row in rows 
+                     if not row.project_activity_type_sector.sector_id or 
+                        row.project_activity_type_sector.sector_id in sector_ids]
+    else:
+        activity_type_ids = []
+    s3db.project_location.multi_activity_type_id.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, 
                                                   "project_activity_type.id",
                                                   s3db.project_activity_type_represent,

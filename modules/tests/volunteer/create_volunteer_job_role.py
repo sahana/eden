@@ -25,14 +25,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
-import unittest
 from tests.web2unittest import SeleniumUnitTest
-from selenium.common.exceptions import NoSuchElementException
-from s3 import s3_debug
-from tests import *
-#import unittest, re, time
-import time
 
 class CreateVolunteerJobRole(SeleniumUnitTest):
     def test_hrm001_create_volunteer_job_role(self):

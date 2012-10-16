@@ -25,6 +25,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import csv
 import os
 
 from gluon import current
@@ -33,16 +34,13 @@ from gluon.storage import Storage
 import unittest
 from tests.web2unittest import SeleniumUnitTest
 from tests.roles.create_role_test_data import *
-#import unittest, re, time
-
 
 #----------------------------------------------------------------------
 # Test Permissions against Role Matrix File
 def test_roles():
-    import csv
 
-    s3db = current.s3db
     db = current.db
+    s3db = current.s3db
 
     suite = unittest.TestSuite()
     
@@ -51,10 +49,11 @@ def test_roles():
             "Org-B",
             "Org-C",
             ]
-    branches = [ None,
-                 "Branch-A"]
+    branches = [None,
+                "Branch-A"
+                ]
 
-    create_role_test_data(orgs,branches)
+    create_role_test_data(orgs, branches)
 
     orgs = ["Org-A"]
     table_lookup = {"hrm_staff":"hrm_human_resource",
@@ -93,7 +92,8 @@ def test_roles():
                 #print "%s, %s, %s, %s" % (table,c,f, uuid)
                 #print uuid
                 record_id = db(db_table.uuid==uuid).select(db_table._id,
-                                                           limitby=(0, 1)).first()[db_table._id]
+                                                           limitby=(0, 1)
+                                                           ).first()[db_table._id]
             else:
                 record_id = None
 
@@ -121,14 +121,15 @@ class TestRole(SeleniumUnitTest):
     def set(self,
             org,
             row_num,
-                 user,
-                 method,
-                 table,
-                 c,
-                 f,
-                 record_id,
-                 uuid,
-                 permission):
+            user,
+            method,
+            table,
+            c,
+            f,
+            record_id,
+            uuid,
+            permission):
+
         self.org = org
         self.row_num = row_num
         self.user = user
@@ -156,10 +157,10 @@ class TestRole(SeleniumUnitTest):
 
         auth.s3_impersonate(user)
         permitted = auth.permission.has_permission(method = method,
-                                           t = table,
-                                           c = c,
-                                           f = f,
-                                           record = record_id)
+                                                   t = table,
+                                                   c = c,
+                                                   f = f,
+                                                   record = record_id)
         msg = """Permission Error
 Organisation:%s (Row:%s)
 user:%s
@@ -172,8 +173,8 @@ Expected: %s\t Actual: %s
        )
         self.assertEqual(permission == "Yes", permitted, msg)
         print msg
-        #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def dummy_code(self):
         #resource = current.s3db.resource("org_organisation", uid="Org-A")
         #resource.load()
@@ -200,14 +201,12 @@ Expected: %s\t Actual: %s
         self.assertEqual(record.name, "Item-A")
 
         #for org in orgs:
-
         #    data_ids[org] = Storage()
         #    for table_name, value in org_data:
         #        # Unique name for each Org
         #        value = "%s %s" % (org, value)
         #        field_name = "name"
         #        values = {field_name: value}
-
         #        if not id:
         #            table = db[table_name]
         #            field = table[field_name]
@@ -215,3 +214,5 @@ Expected: %s\t Actual: %s
         #        data_ids[org][value] = id
         #print data_ids
         #db.commit()
+
+# END =========================================================================

@@ -24,14 +24,8 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-from gluon import current
-import unittest
+
 from tests.web2unittest import SeleniumUnitTest
-from selenium.common.exceptions import NoSuchElementException
-from s3 import s3_debug
-from tests import *
-#import unittest, re, time
-import time
 
 class AddStaffToOrganisation(SeleniumUnitTest):
     def test_hrm005_add_staff_to_organization(self):

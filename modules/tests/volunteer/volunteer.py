@@ -27,7 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
 class Volunteer(SeleniumUnitTest):
@@ -38,11 +37,12 @@ class Volunteer(SeleniumUnitTest):
             
             * RENE: Insert instructions
         """
+
         print "\n"
-        
-                # Login, if not-already done so
+
+        # Login, if not-already done so
         self.login(account="normal", nexturl="hrm/volunteer/create")
-        
+
         self.create("hrm_human_resource", 
                     [("Timor-Leste Red Cross Society",
                       "organisation_id",
@@ -62,7 +62,7 @@ class Volunteer(SeleniumUnitTest):
                       ),
                      ]
                     )
-        
+
         browser = self.browser
         #browser.find_element_by_link_text("Staff & Volunteers").click()
         browser.get("%s/hrm" % self.config.url)

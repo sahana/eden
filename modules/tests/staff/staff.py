@@ -27,7 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
 class Staff(SeleniumUnitTest):

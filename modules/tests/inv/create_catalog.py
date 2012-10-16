@@ -27,9 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
 from tests.web2unittest import SeleniumUnitTest
-
 
 class CreateCatalog(SeleniumUnitTest):
     def test_inv006_create_catalog(self):

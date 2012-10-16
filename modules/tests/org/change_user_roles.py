@@ -25,23 +25,17 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from selenium import webdriver
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import NoSuchElementException
-#from selenium.webdriver.common.keys import Keys
-from gluon import current
-from s3 import s3_debug
-from tests import *
 
 from gluon import current
+
 from tests.web2unittest import SeleniumUnitTest
 
 class ChangeUserRole(SeleniumUnitTest):
-    
     """ 
-    Desc: Change User Roles
-    Case: ORG010
-    TO DO: Check if works and upgrade to new test system framework.
+        Desc: Change User Roles
+        Case: ORG010
+        TO DO: Check if works and upgrade to new test system framework.
     """
     def org010():
         """
@@ -60,8 +54,9 @@ class ChangeUserRole(SeleniumUnitTest):
     
     def as_admin():
         """
-        Run the tests as an administrator
+            Run the tests as an administrator
         """
+
         config = current.test_config
         browser = config.browser
         driver = browser
@@ -80,8 +75,9 @@ class ChangeUserRole(SeleniumUnitTest):
     
     def as_orgadmin():
         """
-        Run the tests as an org admin
+            Run the tests as an org admin
         """
+
         config = current.test_config
         browser = config.browser
         driver = browser

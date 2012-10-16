@@ -3,21 +3,15 @@ __all__ = ["w_autocomplete",
            "w_supply_select",
            "w_facility_select",
            "w_gis_location",
-          ]
+           ]
 
-# @todo Their are performance issues need to profile and find out in which functions are the bottlenecks
- 
-# Selenium WebDriver
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-#from selenium.webdriver.common.keys import Keys
-
-from gluon import current
-
-from s3 import s3_debug
+# @todo There are performance issues need to profile and find out in which functions are the bottlenecks
 
 import time
 
+from gluon import current
+
+# -----------------------------------------------------------------------------
 def _autocomple_finish(el_id, browser):
     giveup = 0.0
     sleeptime = 0.2
@@ -32,6 +26,7 @@ def _autocomple_finish(el_id, browser):
         # The pack drop down hasn't been populated yet so sleep
         time.sleep(sleeptime)
         giveup += sleeptime
+
 # -----------------------------------------------------------------------------
 def w_autocomplete(search,
                    autocomplete,

@@ -24,14 +24,9 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-import os
-import time
-
-from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 
-from s3 import s3_debug
 from tests.web2unittest import SeleniumUnitTest
 
 class CreateOrganisation(SeleniumUnitTest):
@@ -67,12 +62,12 @@ class CreateOrganisation(SeleniumUnitTest):
     ],
 ]
 
+        db = current.db
+        s3db = current.s3db
+        table = s3db[tablename]
         for item in items:
             _data = data[item]
             # Check whether the data already exists
-            s3db = current.s3db
-            db = current.db
-            table = s3db[tablename]
             fieldname = _data[0][0]
             value = _data[0][1]
             query = (table[fieldname] == value) & (table.deleted == "F")

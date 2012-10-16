@@ -26,12 +26,9 @@
 """
 
 from tests.web2unittest import SeleniumUnitTest
-from tests import *
-#import unittest, re, time
 
 class AddStaffToOffice(SeleniumUnitTest):
     def test_hrm006_add_staff_to_office(self):
-        
         """
             @case: HRM006
             @description: Add a premade made staff to an Office
@@ -39,6 +36,7 @@ class AddStaffToOffice(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
+
         browser = self.browser
         config = self.config
         self.login(account="admin", nexturl="org/office")

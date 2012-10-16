@@ -271,7 +271,7 @@ class S3StatsModel(S3Model):
         # Fire off a rebuild task
         current.s3task.async("stats_group_clean",
                              timeout=21600 # 6 hours
-                             ) 
+                             )
 
     # ---------------------------------------------------------------------
     @classmethod

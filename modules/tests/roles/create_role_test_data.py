@@ -26,13 +26,17 @@
 """
 
 import os
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
+
+from lxml import etree
 
 from gluon import current
 from gluon.storage import Storage
 
 def create_role_test_data(orgs, branches):
-    from lxml import etree
-    import StringIO
 
     db = current.db
     s3db = current.s3db
@@ -45,9 +49,9 @@ def create_role_test_data(orgs, branches):
     auth.override = True
     s3db.load_all_models()
 
-    test_dir = os.path.join( current.request.folder,"modules",
-                             "tests", "roles",
-                             current.deployment_settings.base.template)
+    test_dir = os.path.join(current.request.folder, "modules",
+                            "tests", "roles",
+                            current.deployment_settings.base.template)
 
     org_file = open(os.path.join(test_dir, "org_organisation.xml"), "rb")
     org_template_string = org_file.read()
@@ -62,18 +66,18 @@ def create_role_test_data(orgs, branches):
     user_template_string = user_file.read()
 
     # Ensure that the users are imported correctly
-    s3db.configure( "auth_user",
-                    onaccept = lambda form: auth.s3_link_user(form.vars))
+    s3db.configure("auth_user",
+                   onaccept = lambda form: auth.s3_link_user(form.vars))
     s3db.add_component("auth_membership", auth_user="user_id")
     s3mgr.import_prep = auth.s3_membership_import_prep
 
     user_resource = s3db.resource("auth_user")
     hr_resource = s3db.resource("pr_person")
 
-    user_file = StringIO.StringIO()
-    user_stylesheet = os.path.join(current.request.folder,"static", "formats",
+    user_file = StringIO()
+    user_stylesheet = os.path.join(current.request.folder, "static", "formats",
                                    "s3csv", "auth", "user.xsl")
-    hr_stylesheet = os.path.join(current.request.folder,"static", "formats", "s3csv", "hrm", "person.xsl")
+    hr_stylesheet = os.path.join(current.request.folder, "static", "formats", "s3csv", "hrm", "person.xsl")
 
     for org in orgs:
         for branch in branches:
@@ -109,11 +113,11 @@ def create_role_test_data(orgs, branches):
             # Create Users for each Organisation
             user_string = user_template_string % dict(org = orgx,
                                                       org_lower = orgx.lower())
-            user_file = StringIO.StringIO(user_string)
+            user_file = StringIO(user_string)
             success = user_resource.import_xml(user_file,
                                                format="csv",
                                                stylesheet=user_stylesheet)
-            user_file = StringIO.StringIO(user_string)
+            user_file = StringIO(user_string)
             hr_resource.import_xml(user_file, format="csv", stylesheet=hr_stylesheet)
             
             if branch:
@@ -136,3 +140,5 @@ def create_role_test_data(orgs, branches):
         
     db.commit()
     auth.override = False
+
+# END =========================================================================

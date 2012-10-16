@@ -9,15 +9,10 @@ __all__ = ["dt_filter",
 
 # @ToDo: There are performance issues
 #        - need to profile and find out in which functions are the bottlenecks
- 
-# Selenium WebDriver
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-#from selenium.webdriver.common.keys import Keys
-
-from gluon import current
 
 import time
+
+from gluon import current
 
 # -----------------------------------------------------------------------------
 def convert_repr_number (number):

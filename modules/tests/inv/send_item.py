@@ -25,15 +25,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current
-import unittest
-from tests.web2unittest import SeleniumUnitTest
-from selenium.common.exceptions import NoSuchElementException
-from s3 import s3_debug
 from helper import InvTestFunctions
 
 class SendItem(InvTestFunctions):
-
     """
             Inventory Test - Send Workflow (Send items)
             
@@ -49,6 +43,7 @@ class SendItem(InvTestFunctions):
     # -------------------------------------------------------------------------
     def test_inv001_send_items(self):
         """ Tests for Send Workflow """
+
         user = "admin"
         self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",

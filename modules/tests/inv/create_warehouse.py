@@ -24,14 +24,9 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-import os
-import time
-
-from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 
-from s3 import s3_debug
 from tests.web2unittest import SeleniumUnitTest
 
 class CreateWarehouse(SeleniumUnitTest):

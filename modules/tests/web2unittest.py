@@ -1,19 +1,43 @@
-import unittest
-import sys
-import datetime
-import time
+""" Sahana Eden Test Framework
 
-# Selenium WebDriver
-from selenium import webdriver
+    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+import datetime
+import sys
+import time
+import unittest
+
+from dateutil.relativedelta import relativedelta
 from selenium.common.exceptions import NoSuchElementException
-#from selenium.webdriver.common.keys import Keys
 
 from gluon import current
 
-from s3 import s3_debug
 from s3.s3widgets import *
 
-from tests import *
+from tests.core import *
 
 # =============================================================================
 class Web2UnitTest(unittest.TestCase):
@@ -32,6 +56,27 @@ class Web2UnitTest(unittest.TestCase):
         self.stdout = sys.stdout
         self.stderr = sys.stderr
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def today():
+        return datetime.date.today().strftime("%Y-%m-%d")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def now():
+        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def now_1_day():
+        return (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def now_1_week():
+        return (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+
+    # -------------------------------------------------------------------------
     def reporter(self, msg, verbose_level = 1):
         if self.config.verbose >= verbose_level:
             print >> sys.stderr, msg
@@ -70,7 +115,7 @@ class SeleniumUnitTest(Web2UnitTest):
                data,
                success = True,
                dbcallback = None
-              ):
+               ):
         """
             Generic method to create a record from the data passed in
 
@@ -244,7 +289,7 @@ class SeleniumUnitTest(Web2UnitTest):
                 cellList = None,
                 tableID = "list",
                 first = False,
-               ):
+                ):
 
         return dt_find(search, row, column, cellList, tableID, first)
 
@@ -253,7 +298,7 @@ class SeleniumUnitTest(Web2UnitTest):
                  row = 1,
                  tableID = "list",
                  quiet = True
-                ):
+                 ):
 
         return dt_links(self.reporter, row, tableID, quiet)
 
@@ -263,7 +308,7 @@ class SeleniumUnitTest(Web2UnitTest):
                   action = None,
                   column = 1,
                   tableID = "list",
-                 ):
+                  ):
 
         return dt_action(row, action, column, tableID)
 
@@ -273,7 +318,7 @@ class SeleniumUnitTest(Web2UnitTest):
                        autocomplete,
                        needle = None,
                        quiet = True,
-                      ):
+                       ):
 
         return w_autocomplete(search, autocomplete, needle, quiet)
 
@@ -283,26 +328,26 @@ class SeleniumUnitTest(Web2UnitTest):
                           tablename,
                           field,
                           quiet = True,
-                         ):
+                          ):
 
         return w_inv_item_select(item_repr, tablename, field, quiet)
 
     # -------------------------------------------------------------------------
     def w_gis_location(self,
-                      item_repr,
-                      field,
-                      quiet = True,
-                     ):
+                       item_repr,
+                       field,
+                       quiet = True,
+                       ):
 
         return w_gis_location(item_repr, field, quiet)
 
     # -------------------------------------------------------------------------
     def w_supply_select(self,
-                       item_repr,
-                       tablename,
-                       field,
-                       quiet = True,
-                      ):
+                        item_repr,
+                        tablename,
+                        field,
+                        quiet = True,
+                        ):
 
         return w_supply_select(item_repr, tablename, field, quiet)
 
@@ -312,7 +357,7 @@ class SeleniumUnitTest(Web2UnitTest):
                           tablename,
                           field,
                           quiet = True,
-                         ):
+                          ):
 
         return w_facility_select(org_repr, tablename, field, quiet)
 
