@@ -46,9 +46,19 @@ def ifrc_realm_entity(table, row):
         Assign a Realm Entity to records
     """
 
+    tablename = table._tablename
+
+    # Do not apply realms for Master Data
+    # @ToDo: Restore Realms and add a role /fucntionality support for Master Data  
+    if tablename in ["hrm_department",
+                     "hrm_job_role",
+                     "hrm_job_title",
+                     "hrm_course",
+                     "hrm_programme"]:
+        return None
+
     db = current.db
     s3db = current.s3db
-    tablename = table._tablename
 
     # Entity reference fields
     EID = "pe_id"
