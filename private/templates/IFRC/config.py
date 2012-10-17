@@ -49,7 +49,7 @@ def ifrc_realm_entity(table, row):
     tablename = table._tablename
 
     # Do not apply realms for Master Data
-    # @ToDo: Restore Realms and add a role /fucntionality support for Master Data  
+    # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in ["hrm_department",
                      "hrm_job_role",
                      "hrm_job_title",

@@ -3927,6 +3927,21 @@ Thank you
                     time_expire=120
                 )
 
+    # -------------------------------------------------------------------------
+    def filter_by_root_org(self, table):
+    """
+        Function to return a query to filter a table to only display results
+        for the user's root org OR record with no root org
+        @ToDo: Restore Realms and add a role/functionality support for Master Data
+               Then this function is redundant
+    """
+
+        root_org = self.root_org()
+        if root_org:
+            return (table.organisation_id == root_org) | (table.organisation_id == None)
+        else:
+            return (table.organisation_id == None)
+
 # =============================================================================
 class S3Permission(object):
     """ S3 Class to handle permissions """

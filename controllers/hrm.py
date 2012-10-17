@@ -709,7 +709,7 @@ def department():
         return True
     s3.prep = prep
 
-    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_department)
+    s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
     output = s3_rest_controller()
     return output
@@ -724,7 +724,7 @@ def job_role():
         return True
     s3.prep = prep
     
-    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_job_role)
+    s3.filter = auth.filter_by_root_org(s3db.hrm_job_role)
 
     output = s3_rest_controller()
     return output
@@ -739,7 +739,7 @@ def job_title():
         return True
     s3.prep = prep
 
-    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_job_title)
+    s3.filter = auth.filter_by_root_org(s3db.hrm_job_title)
 
     output = s3_rest_controller()
     return output
@@ -803,7 +803,7 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_job_title)
+    s3.filter = auth.filter_by_root_org(s3db.hrm_job_title)
 
     output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output

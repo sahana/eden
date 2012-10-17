@@ -6,6 +6,9 @@
     Instantiate Classes
 """
 
+if settings.get_L10n_languages_readonly():
+    T.is_writable = False
+
 # Are we running in debug mode?
 s3.debug = request.vars.get("debug", None) or \
                     settings.get_base_debug()

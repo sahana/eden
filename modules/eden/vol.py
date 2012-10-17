@@ -172,8 +172,6 @@ class S3VolGroupDataModel(S3Model):
                                                               "vol_group.id",
                                                               s3_represent_name(table))),
                                        represent = s3_represent_name(table),
-                                                              "%(name)s")),
-                                       represent = s3_id_represent(table),
                                        comment = comment
                                        )
 
@@ -215,8 +213,6 @@ class S3VolGroupDataModel(S3Model):
                                                                       "vol_group_position.id",
                                                                       s3_represent_name(table))),
                                                 represent = s3_represent_name(table),
-                                                                      "%(name)s")),
-                                                represent = s3_id_represent(table),
                                                 comment = comment
                                                 )
 
