@@ -3390,11 +3390,12 @@ Thank you
     # -------------------------------------------------------------------------
     def s3_update_record_owner(self, table, record, update=False, **fields):
         """
-            Update the ownership for a record
+            Update ownership fields in a record (DRY helper method for
+            s3_set_record_owner and set_realm_entity)
 
             @param table: the table
             @param record: the record or record ID
-            @param update: True to update realm of all components
+            @param update: True to update realm_entity in all realm-components
             @param fields: dict of {ownership_field:value}
         """
 
@@ -3449,12 +3450,31 @@ Thank you
                             force_update=False,
                             **fields):
         """
-            Update the record owned_by_user, owned_by_group and realm_entity
-            To be called from CRUD and Importer
+            Set the record owned_by_user, owned_by_group and realm_entity
+            for a record (auto-detect values).
+
+            To be called by CRUD and Importer during record creation.
 
             @param table: the Table (or table name)
             @param record: the record (or record ID)
-            @param force_update: True to update the components of the record
+            @param force_update: True to update all fields regardless of
+                                 the current value in the record, False
+                                 to only update if current value is None
+            @param fields: override auto-detected values, see keywords
+            @keyword owned_by_user: the auth_user ID of the owner user
+            @keyword owned_by_group: the auth_group ID of the owner group
+            @keyword realm_entity: the pe_id of the realm entity, or a tuple
+                                   (instance_type, instance_id) to lookup the
+                                   pe_id, e.g. ("org_organisation", 2)
+
+            @note: Only use with force_update for deliberate owner changes (i.e.
+                   with explicit owned_by_user/owned_by_group) - autodetected
+                   values can have undesirable side-effects. For mere realm
+                   updates use set_realm_entity instead.
+
+            @note: If used with force_update, this will also update the
+                   realm_entity in all configured realm_components, i.e.
+                   no separate call to set_realm_entity required.
         """
 
         s3db = current.s3db
@@ -3577,7 +3597,12 @@ Thank you
     # -------------------------------------------------------------------------
     def set_realm_entity(self, table, records, entity=0, force_update=False):
         """
-            Update the realm entity for records.
+            Update the realm entity for records, will also update the
+            realm in all configured realm-entities, see:
+
+            http://eden.sahanafoundation.org/wiki/S3AAA/OrgAuth#Realms1
+
+            To be called by CRUD and Importer during record update.
 
             @param table: the table (or tablename)
             @param records: - a single record
