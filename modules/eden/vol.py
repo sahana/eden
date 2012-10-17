@@ -86,8 +86,8 @@ class S3VolClusterDataModel(S3Model):
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db,
                                                                   "vol_cluster.id",
-                                                                  s3_id_represent(table))),
-                                         represent = s3_id_represent(table),
+                                                                  s3_represent_name(table))),
+                                         represent = s3_represent_name(table),
                                          comment = comment
                                          )
 
@@ -170,8 +170,8 @@ class S3VolGroupDataModel(S3Model):
                                        requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
                                                               "vol_group.id",
-                                                              s3_id_represent(table))),
-                                       represent = s3_id_represent(table),
+                                                              s3_represent_name(table))),
+                                       represent = s3_represent_name(table),
                                        comment = comment
                                        )
 
@@ -211,8 +211,8 @@ class S3VolGroupDataModel(S3Model):
                                                 requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_group_position.id",
-                                                                      s3_id_represent(table))),
-                                                represent = s3_id_represent(table),
+                                                                      s3_represent_name(table))),
+                                                represent = s3_represent_name(table),
                                                 comment = comment
                                                 )
 

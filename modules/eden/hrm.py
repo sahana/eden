@@ -83,6 +83,7 @@ class S3HRModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         ORGANISATION = messages.ORGANISATION
 
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
         super_link = self.super_link
 
@@ -310,20 +311,20 @@ class S3HRModel(S3Model):
 
         # Components
         # Availability
-        #self.add_component("hrm_availability",
-        #                   hrm_human_resource="human_resource_id")
+        #add_component("hrm_availability",
+        #              hrm_human_resource="human_resource_id")
         # Hours
-        #self.add_component("hrm_hours",
-        #                   hrm_human_resource="human_resource_id")
+        #add_component("hrm_hours",
+        #              hrm_human_resource="human_resource_id")
 
         # Volunteer Cluster
-        self.add_component("vol_volunteer_cluster",
-                           hrm_human_resource=dict(joinby="human_resource_id",
-                                                    multiple=False))
+        add_component("vol_volunteer_cluster",
+                      hrm_human_resource=dict(joinby="human_resource_id",
+                                              multiple=False))
         # Volunteer Group
-        self.add_component("vol_volunteer_group",
-                           hrm_human_resource=dict(joinby="human_resource_id",
-                                                    multiple=False))
+        add_component("vol_volunteer_group",
+                      hrm_human_resource=dict(joinby="human_resource_id",
+                                              multiple=False))
 
         hrm_autocomplete_search = S3HRSearch()
         human_resource_search = S3Search(
@@ -406,8 +407,7 @@ class S3HRModel(S3Model):
             )
         )
 
-        report_fields = [
-                         "organisation_id",
+        report_fields = ["organisation_id",
                          "person_id",
                          "site_id",
                          (T("Training"), "course"),

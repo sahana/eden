@@ -3394,6 +3394,7 @@ Thank you
 
             @param table: the table
             @param record: the record or record ID
+            @param update: True to update realm of all components
             @param fields: dict of {ownership_field:value}
         """
 
@@ -3445,18 +3446,15 @@ Thank you
     def s3_set_record_owner(self,
                             table,
                             record,
-                            force_update = False,
+                            force_update=False,
                             **fields):
         """
-            Update the record owner, to be called from CRUD and Importer
+            Update the record owned_by_user, owned_by_group and realm_entity
+            To be called from CRUD and Importer
 
-            @param table: the table (or table name)
+            @param table: the Table (or table name)
             @param record: the record (or record ID)
-            @keyword owned_by_user: the auth_user ID of the owner user
-            @keyword owned_by_group: the auth_group ID of the owner group
-            @keyword realm_entity: the pe_id of the realm entity, or a tuple
-                                   (instance_type, instance_id) to lookup the
-                                   pe_id from
+            @param force_update: True to update the components of the record
         """
 
         s3db = current.s3db

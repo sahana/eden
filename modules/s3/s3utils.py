@@ -613,7 +613,30 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_id_represent(table):
+def s3_represent_name(table):
+    """
+        Returns a represent function for the common case where we return
+        the name of the record.
+    """
+
+    def represent(id, row=None):
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        r = current.db(table._id == id).select(table.name,
+                                               limitby=(0, 1)
+                                               ).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    return represent
+
+# =============================================================================
+def s3_represent_name_translate(table):
     """
         Returns a represent function for the common case where we return
         a translated version of the name of the record.

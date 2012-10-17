@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-#from gluon import *
-#from s3 import *
+import datetime
+
+from gluon import current
 
 # =============================================================================
 class Daily():
@@ -9,8 +10,18 @@ class Daily():
 
     def __call__(self):
 
-        # @ToDo: cleanup scheduler logs
+        db = current.db
+        s3db = current.s3db
 
-        return
+        now = current.request.utcnow
+        month_past = now - datetime.timedelta(weeks=4)
+
+        # Cleanup Scheduler logs
+        table = s3db.scheduler_run
+        db(table.start_time < month_past).delete()
+
+        # Cleanup Sync logs
+        table = s3db.sync_log
+        db(table.timestmp < month_past).delete()
 
 # END =========================================================================

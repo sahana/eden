@@ -547,13 +547,14 @@ class IS_ONE_OF_EMPTY(Validator):
                 orderby = self.orderby or \
                           reduce(lambda a, b: a|b, (f for f in fields
                                                     if not f.name == "id"))
+                # Caching breaks Colorbox dropdown refreshes
                 #dd = dict(orderby=orderby, cache=(current.cache.ram, 60))
                 dd = dict(orderby=orderby)
                 records = dbset.select(db[self.ktable].ALL, **dd)
             self.theset = [str(r[self.kfield]) for r in records]
-            #labels = []
             label = self.label
             try:
+                # Is a function
                 labels = map(label, records)
             except TypeError:
                 if isinstance(label, str):
@@ -562,9 +563,6 @@ class IS_ONE_OF_EMPTY(Validator):
                     labels = map(lambda r: \
                                  " ".join([r[l] for l in label if l in r]),
                                  records)
-                elif callable(label):
-                    # Is a function
-                    labels = map(label, records)
                 elif "name" in table:
                     labels = map(lambda r: r.name, records)
                 else:
@@ -1504,7 +1502,6 @@ class IS_ADD_PERSON_WIDGET(Validator):
             person_id = None
 
         ptable = db.pr_person
-        pdtable = s3db.pr_person_details
         ctable = db.pr_contact
 
         def email_validate(value, person_id):
@@ -1605,6 +1602,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                     occupation = _vars["occupation"]
                     if occupation:
+                        pdtable = s3db.pr_person_details
                         query = (pdtable.person_id == person_id) & \
                                 (pdtable.deleted != True)
                         r = db(query).select(pdtable.occupation,
@@ -1661,8 +1659,8 @@ class IS_ADD_PERSON_WIDGET(Validator):
                                       contact_method="SMS",
                                       value=_vars.mobile_phone)
                     if _vars.occupation:
-                        pdtable.insert(person_id = person_id,
-                                       occupation = occupation)
+                        s3db.pr_person_details.insert(person_id = person_id,
+                                                      occupation = occupation)
                 else:
                     # Something went wrong
                     return (person_id, self.error_message or \
