@@ -194,7 +194,6 @@ class S3Trackable(object):
 
         return "instance_type" in keys
 
-
     # -------------------------------------------------------------------------
     def __get_fields(self, trackable, super_entity=True):
         """
@@ -226,7 +225,6 @@ class S3Trackable(object):
         except:
             pass
         return None
-
 
     # -------------------------------------------------------------------------
     def get_location(self,
@@ -308,7 +306,6 @@ class S3Trackable(object):
         else:
             return locations
 
-
     # -------------------------------------------------------------------------
     def set_location(self, location, timestmp=None):
         """
@@ -352,7 +349,6 @@ class S3Trackable(object):
                 data.update({TRACK_ID:r[TRACK_ID]})
                 ptable.insert(**data)
                 self.__update_timestamp(r[TRACK_ID], timestmp)
-
 
     # -------------------------------------------------------------------------
     def check_in(self, table, record, timestmp=None):
@@ -416,7 +412,6 @@ class S3Trackable(object):
                 data.update({TRACK_ID:r[TRACK_ID]})
                 ptable.insert(**data)
                 self.__update_timestamp(r[TRACK_ID], timestmp)
-
 
     # -------------------------------------------------------------------------
     def check_out(self, table=None, record=None, timestmp=None):
@@ -485,7 +480,6 @@ class S3Trackable(object):
                 ptable.insert(**data)
                 self.__update_timestamp(r[TRACK_ID], timestmp)
 
-
     # -------------------------------------------------------------------------
     def remove_location(self, location=None):
         """
@@ -494,7 +488,6 @@ class S3Trackable(object):
             @todo: implement
         """
         raise NotImplementedError
-
 
     # -------------------------------------------------------------------------
     def get_base_location(self,
@@ -559,7 +552,6 @@ class S3Trackable(object):
         else:
             return locations
 
-
     # -------------------------------------------------------------------------
     def set_base_location(self, location=None):
         """
@@ -622,7 +614,6 @@ class S3Trackable(object):
         for r in self.records:
             if LOCATION_ID in r:
                 r[LOCATION_ID] = location
-
 
     # -------------------------------------------------------------------------
     def __update_timestamp(self, track_id, timestamp):

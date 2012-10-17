@@ -117,7 +117,8 @@ def volunteer():
     human_resource_search = get_config(tablename,
                                        "search_method")
     # Remove Facility
-    human_resource_search.advanced.pop(5)
+    #human_resource_search.advanced.pop(8)
+    human_resource_search.advanced.pop(7)
     if settings.get_hrm_vol_experience() == "programme":
         enable_active_field = settings.set_org_dependent_field(None,
                                                                tablename = "vol_volunteer",

@@ -369,17 +369,17 @@ class S3HRModel(S3Model):
                         location_level="L3",
                         cols = 3,
                       ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_L4",
-                        field="location_id$L4",
-                        location_level="L4",
-                        cols = 3,
-                      ),
+                      #S3SearchOptionsWidget(
+                      #  name="human_resource_search_L4",
+                      #  field="location_id$L4",
+                      #  location_level="L4",
+                      #  cols = 3,
+                      #),
                       S3SearchLocationWidget(
                         name="human_resource_search_map",
                         label=T("Map"),
                       ),
-                      # Don't change the order of this without updating controllers/hrm/volunteer()
+                      # Don't change the order of this without updating controllers/vol/volunteer()
                       S3SearchOptionsWidget(
                         name="human_resource_search_site",
                         label=T("Facility"),

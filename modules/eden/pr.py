@@ -1500,58 +1500,60 @@ class S3PersonAddressModel(S3Model):
 
         vars = form.vars
         location_id = vars.location_id
-        pe_id = vars.pe_id
+        if not location_id:
+            return
 
-        if location_id:
-            db = current.db
-            s3db = current.s3db
-            requestvars = current.request.vars
-            settings = current.deployment_settings
-            person = None
-            table = s3db.pr_person
-            if "base_location" in requestvars and \
-               requestvars.base_location == "on":
-                # Specifically requested
+        db = current.db
+        s3db = current.s3db
+        atable = db.pr_address
+        pe_id = db(atable.id == vars.id).select(atable.pe_id,
+                                                limitby=(0, 1)).first().pe_id
+        requestvars = current.request.vars
+        settings = current.deployment_settings
+        person = None
+        table = s3db.pr_person
+        if "base_location" in requestvars and \
+           requestvars.base_location == "on":
+            # Specifically requested
+            S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
+            person = db(table.pe_id == pe_id).select(table.id,
+                                                     limitby=(0, 1)).first()
+            if person:
+                # Update the Lx fields
+                s3_lx_update(table, person.id)
+        else:
+            # Check if a base location already exists
+            query = (table.pe_id == pe_id)
+            person = db(query).select(table.id,
+                                      table.location_id).first()
+            if person and not person.location_id:
+                # Hasn't yet been set so use this
                 S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
-                person = db(table.pe_id == pe_id).select(table.id,
-                                                         limitby=(0, 1)).first()
-                if person:
-                    # Update the Lx fields
-                    s3_lx_update(table, person.id)
-            else:
-                # Check if a base location already exists
-                query = (table.pe_id == pe_id)
-                person = db(query).select(table.id,
-                                          table.location_id).first()
-                if person and not person.location_id:
-                    # Hasn't yet been set so use this
-                    S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
-                    # Update the Lx fields
-                    s3_lx_update(table, person.id)
+                # Update the Lx fields
+                s3_lx_update(table, person.id)
 
-            if person and str(vars.type) == "1": # Home Address
-                if settings.has_module("hrm"):
-                    # Also check for any Volunteer HRM record(s)
-                    htable = s3db.hrm_human_resource
-                    query = (htable.person_id == person.id) & \
-                            (htable.type == 2) & \
-                            (htable.deleted != True)
-                    hrs = db(query).select(htable.id)
-                    for hr in hrs:
-                        db(htable.id == hr.id).update(location_id=location_id)
-                        # Update the Lx fields
-                        #s3_lx_update(htable, hr.id)
-                if settings.has_module("member"):
-                    # Also check for any Member record(s)
-                    mtable = s3db.member_membership
-                    query = (mtable.person_id == person.id) & \
-                            (mtable.deleted != True)
-                    members = db(query).select(mtable.id)
-                    for member in members:
-                        db(mtable.id == member.id).update(location_id=location_id)
-                        # Update the Lx fields
-                        #s3_lx_update(mtable, member.id)
-        return
+        if person and str(vars.type) == "1": # Home Address
+            if settings.has_module("hrm"):
+                # Also check for any Volunteer HRM record(s)
+                htable = s3db.hrm_human_resource
+                query = (htable.person_id == person.id) & \
+                        (htable.type == 2) & \
+                        (htable.deleted != True)
+                hrs = db(query).select(htable.id)
+                for hr in hrs:
+                    db(htable.id == hr.id).update(location_id=location_id)
+                    # Update the Lx fields
+                    #s3_lx_update(htable, hr.id)
+            if settings.has_module("member"):
+                # Also check for any Member record(s)
+                mtable = s3db.member_membership
+                query = (mtable.person_id == person.id) & \
+                        (mtable.deleted != True)
+                members = db(query).select(mtable.id)
+                for member in members:
+                    db(mtable.id == member.id).update(location_id=location_id)
+                    # Update the Lx fields
+                    #s3_lx_update(mtable, member.id)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -514,24 +514,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                      rendered based on the current hierarchy
             @keyword comment: a comment for the search widget
         """
+
         super(S3SearchOptionsWidget, self).__init__(field, name, **attr)
         self.options = options
         self.null = null
-
-    # -------------------------------------------------------------------------
-    def _get_reference_resource(self, resource):
-        """
-            If the field is entered as kfield$field, will search field in the
-            the referenced resource.
-        """
-        field_name = self.field
-        kfield_name = None
-
-        if field_name.find("$") != -1:
-            kfield_name, field_name = field_name.split("$")
-            tablename = resource.table[kfield_name].type[10:]
-            resource = S3Resource(tablename)
-        return resource, field_name, kfield_name
 
     # -------------------------------------------------------------------------
     def widget(self, resource, vars):
@@ -541,15 +527,16 @@ class S3SearchOptionsWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param vars: the URL GET variables as dict
         """
+
         T = current.T
 
-        #resource, field_name, kfield_name = self._get_reference_resource(resource)
         field_name = self.field
 
         attr = self.attr
-        self.name = attr.pop("_name",
-                             "%s_search_select_%s" % (resource.name,
-                                                      field_name))
+        name = attr.pop("_name",
+                        "%s_search_select_%s" % (resource.name,
+                                                 field_name))
+        self.name = name
 
         if "location_level" in attr:
             # This is searching a Location Hierarchy, so lookup the label now
@@ -562,8 +549,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
             attr["label"] = label
 
         # Populate the field value from the GET parameter
-        if vars and self.name in vars:
-            value = vars[self.name]
+        if vars and name in vars:
+            value = vars[name]
         else:
             value = None
 
@@ -658,31 +645,31 @@ class S3SearchOptionsWidget(S3SearchWidget):
             options = dict(opt_list)
 
         # Dummy field
-        dummy_field = Storage(name=self.name,
+        dummy_field = Storage(name=name,
                               type=field_type,
                               requires=IS_IN_SET(options,
                                                  multiple=True))
 
-        # on many-to-many fields the user can search for records containing
+        # For many-to-many fields the user can search for records containing
         # all the options or any of the options.
         if len(options) > 1 and field_type[:4] == "list":
-            self.filter_type = vars.get("%s_filter" % self.name, "any")
+            self.filter_type = vars.get("%s_filter" % name, "any")
             any_all = DIV(
                 T("Filter type "),
-                INPUT(_name="%s_filter" % self.name,
-                      _id="%s_filter_all" % self.name,
+                INPUT(_name="%s_filter" % name,
+                      _id="%s_filter_all" % name,
                       _type="radio",
                       _value="all",
                       value=self.filter_type),
                 LABEL(T("All"),
-                      _for="%s_filter_all" % self.name),
-                INPUT(_name="%s_filter" % self.name,
-                      _id="%s_filter_any" % self.name,
+                      _for="%s_filter_all" % name),
+                INPUT(_name="%s_filter" % name,
+                      _id="%s_filter_any" % name,
                       _type="radio",
                       _value="any",
                       value=self.filter_type),
                 LABEL(T("Any"),
-                      _for="%s_filter_any" % self.name),
+                      _for="%s_filter_any" % name),
                 _class="s3-checkboxes-widget-filter"
             )
         else:
@@ -711,7 +698,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             fs = S3FieldSelector(field_name)
             fl = fs.resolve(resource)
             try:
-                #table_field = resource.table[field_name]
                 table_field = fl.field
             except:
                 table_field = None
@@ -720,7 +706,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             # that is a list:* ?
             if table_field and str(table_field.type).startswith("list"):
                  query = None
-
                  if self.filter_type == "any":
                      query = S3FieldSelector(field_name).anyof(value)
                  else:
@@ -737,7 +722,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             return query
         else:
             return None
-
 
 # =============================================================================
 class S3SearchLocationWidget(S3SearchWidget):
@@ -1149,7 +1133,7 @@ S3.i18n.edit_saved_search="%s"
 
         list_fields = self._config("list_fields")
 
-        # create a list of the names, not labels, from list_fields
+        # Create a list of the names, not labels, from list_fields
         field_names = []
         for f in list_fields:
             if f != "id":
@@ -1612,8 +1596,7 @@ S3.i18n.edit_saved_search="%s"
     # -------------------------------------------------------------------------
     def build_forms(self, r, form_values=None):
         """
-            Builds a form customised to the module/resource. Includes a link
-            to the create form for this resource.
+            Builds a form customised to the module/resource.
         """
 
         simple = self.simple
@@ -1625,17 +1608,6 @@ S3.i18n.edit_saved_search="%s"
 
         simple_form = None
         advanced_form = None
-
-        # Add-link (common to all forms)
-        ADD = self.crud_string(tablename, "label_create_button")
-        href_add = r.url(method="create", representation=representation)
-        insertable = self._config("insertable", True)
-        authorised = self._permitted("create")
-        if authorised and insertable and representation != "plain":
-            add_link = self.crud_button(ADD, _href=href_add,
-                                        _id="add-btn", _class="action-lnk")
-        else:
-            add_link = ""
 
         opts = Storage(r.get_vars)
         opts["clear_opts"] = "1"
@@ -1654,7 +1626,6 @@ S3.i18n.edit_saved_search="%s"
             simple_form = self._build_form(simple,
                                            form_values=form_values,
                                            clear=clear_opts,
-                                           add=add_link,
                                            switch=switch_link,
                                            _class="simple-form")
 
@@ -1670,7 +1641,6 @@ S3.i18n.edit_saved_search="%s"
             advanced_form = self._build_form(advanced,
                                              form_values=form_values,
                                              clear=clear_opts,
-                                             add=add_link,
                                              switch=switch_link,
                                              _class=_class % "advanced-form")
 
@@ -1680,7 +1650,6 @@ S3.i18n.edit_saved_search="%s"
     def _build_form(self, widgets,
                     form_values=None,
                     clear="",
-                    add="",
                     switch="",
                     **attr):
         """
@@ -1690,7 +1659,6 @@ S3.i18n.edit_saved_search="%s"
             @param form_values: the form values (as dict) to pass to
                                 the widgets
             @param clear: the clear-values action link
-            @param add: the add-record action link
             @param switch: the switch-forms action link
             @param attr: HTML attributes for the form
 
@@ -1726,7 +1694,7 @@ S3.i18n.edit_saved_search="%s"
             trows.append(tr)
 
         trows.append(TR("", TD(INPUT(_type="submit", _value=T("Search")),
-                               clear, switch, add)))
+                               clear, switch)))
         form = FORM(TABLE(trows), **attr)
         return form
 
