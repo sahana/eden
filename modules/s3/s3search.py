@@ -577,27 +577,29 @@ class S3SearchOptionsWidget(S3SearchWidget):
             if field_type == "boolean":
                 opt_values = (True, False)
             else:
-                opt_values = []
+                multiple = field_type[:5] == "list:"
+                groupby = field if field and not multiple else None
+                virtual = field is None
                 rows = resource.select(fields=[field_name],
                                        start=None,
                                        limit=None,
-                                       orderby=field)
+                                       orderby=field,
+                                       groupby=groupby,
+                                       virtual=virtual)
+                opt_values = []
                 if rows:
-                    if field_type.startswith("list"):
+                    opt_extend = opt_values.extend
+                    opt_append = opt_values.append
+                    if multiple:
                         for row in rows:
-                            fk_list = row[field]
-                            if fk_list != None:
-                                try:
-                                    fkeys = fk_list.split("|")
-                                except:
-                                    fkeys = fk_list
-                                for fkey in fkeys:
-                                    if fkey not in opt_values:
-                                        opt_values.append(fkey)
+                            opt_extend([v for v in row[field]
+                                          if v is not None and
+                                             v not in opt_values])
                     else:
-                        opt_values = list(set([row[field]
-                                               for row in rows
-                                               if row[field] is not None]))
+                        for row in rows:
+                            v = row[field]
+                            if v is not None and v not in opt_values:
+                                opt_append(v)
 
         if len(opt_values) < 2:
             msg = attr.get("_no_opts", T("No options available"))

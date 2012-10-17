@@ -480,7 +480,9 @@ class S3Resource(object):
                limit=None,
                left=None,
                orderby=None,
-               distinct=False):
+               groupby=None,
+               distinct=False,
+               virtual=True):
         """
             Select records from this resource, applying the current filters.
 
@@ -489,9 +491,9 @@ class S3Resource(object):
             @param limit: maximum number of records
             @param left: left joins
             @param orderby: SQL orderby
+            @param groupby: SQL groupby (make sure all groupby-fields are selected!)
             @param distinct: SQL distinct
-
-            @todo: authorization
+            @param virtual: False to turn off computation of virtual fields
         """
 
         db = current.db
@@ -632,8 +634,19 @@ class S3Resource(object):
                     qfields.insert(0, self._id)
                 attributes["orderby"] = self._id
 
+        if groupby:
+            attributes["groupby"] = groupby
+
         # Retrieve the rows
+
+        # Temporarily Deactivate virtual fields
+        osetattr = object.__setattr__
+        if not virtual:
+            vf = table.virtualfields
+            osetattr(table, "virtualfields", [])
         rows = db(query).select(*qfields, **attributes)
+        if not virtual:
+            osetattr(table, "virtualfields", vf)
 
         # Apply virtual fields filter
         if rows and vfltr is not None:
