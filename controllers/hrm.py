@@ -709,6 +709,8 @@ def department():
         return True
     s3.prep = prep
 
+    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_department)
+
     output = s3_rest_controller()
     return output
 
@@ -721,6 +723,8 @@ def job_role():
             r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
         return True
     s3.prep = prep
+    
+    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_job_role)
 
     output = s3_rest_controller()
     return output
@@ -734,6 +738,8 @@ def job_title():
             r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
         return True
     s3.prep = prep
+
+    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_job_title)
 
     output = s3_rest_controller()
     return output
@@ -796,6 +802,8 @@ def course():
     if mode is not None:
         session.error = T("Access denied")
         redirect(URL(f="index"))
+
+    s3.filter = s3db.hrm_filter_by_root_org(s3db.hrm_job_title)
 
     output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output

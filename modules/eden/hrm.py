@@ -43,6 +43,7 @@ __all__ = ["S3HRModel",
            "hrm_rheader",
            "hrm_training_event_controller",
            "hrm_training_controller",
+           "hrm_filter_by_root_org",
            ]
 
 import datetime
@@ -4673,5 +4674,17 @@ def hrm_training_controller():
 
     output = current.rest_controller("hrm", "training")
     return output
-
+# =============================================================================
+def hrm_filter_by_root_org(table):
+    """
+        Function to fitler table to only display results for the user's root org
+        OR record with no root org
+        @ToDo: Restore Realms and add a role / fucntionality support for Master Data
+               Then this function is redundant
+    """
+    root_org = current.auth.root_org()
+    if root_org:
+        return (table.organisation_id == root_org) | (table.organisation_id == None)
+    else:
+        return (table.organisation_id == None)
 # END =========================================================================
