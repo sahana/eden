@@ -1494,6 +1494,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
         T = current.T
         db = current.db
+        s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
 
@@ -1503,7 +1504,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
             person_id = None
 
         ptable = db.pr_person
-        pdtable = db.pr_person_details
+        pdtable = s3db.pr_person_details
         ctable = db.pr_contact
 
         def email_validate(value, person_id):
@@ -1644,7 +1645,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                 if person_id:
                     # Update the super-entities
-                    current.s3db.update_super(ptable, dict(id=person_id))
+                    s3db.update_super(ptable, dict(id=person_id))
                     # Read the created pe_id
                     query = (ptable.id == person_id)
                     person = db(query).select(ptable.pe_id,

@@ -139,7 +139,7 @@ class S3HRModel(S3Model):
                                              default = auth.user.site_id if auth.is_logged_in() else None,
                                              readable = True,
                                              writable = True,
-                                             empty = False,
+                                             #empty = False,
                                              represent = self.org_site_represent,
                                              ),
                                   self.pr_person_id(
