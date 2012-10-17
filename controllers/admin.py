@@ -73,7 +73,7 @@ def user():
 
     s3db.configure(tablename,
                    main="first_name",
-                   onaccept = lambda form: auth.s3_approve_user(form.vars),
+                   create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    )
 
     def disable_user(r, **args):
