@@ -467,6 +467,7 @@ $(function() {
             rowindex = names.pop();
             formname = names.pop();
             inline_add(formname);
+            return false;
         });
         $('.inline-cnc').unbind('click');
         $('.inline-cnc').click(function() {
@@ -475,6 +476,7 @@ $(function() {
             formname = names.pop();
             rowindex = $('#edit-row-'+formname).data('rowindex');
             inline_cancel(formname, rowindex);
+            return false;
         });
         $('.inline-rdy').unbind('click');
         $('.inline-rdy').click(function() {
@@ -483,6 +485,7 @@ $(function() {
             formname = names.pop();
             rowindex = $('#edit-row-'+formname).data('rowindex');
             inline_update(formname, rowindex);
+            return false;
         });
         $('.inline-edt').unbind('click');
         $('.inline-edt').click(function() {
@@ -490,6 +493,7 @@ $(function() {
             rowindex = names.pop();
             formname = names.pop();
             inline_edit(formname, rowindex);
+            return false;
         });
         $('.inline-rmv').unbind('click');
         $('.inline-rmv').click(function() {
@@ -497,6 +501,7 @@ $(function() {
             rowindex = names.pop();
             formname = names.pop();
             inline_remove(formname, rowindex);
+            return false;
         });
     };
     inline_form_events();

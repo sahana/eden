@@ -601,7 +601,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                             if v is not None and v not in opt_values:
                                 opt_append(v)
 
-        if len(opt_values) < 2:
+        if len(opt_values) < 1:
             msg = attr.get("_no_opts", T("No options available"))
             return SPAN(msg, _class="no-options-available")
 

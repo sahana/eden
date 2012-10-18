@@ -1493,6 +1493,11 @@ class S3CRUD(S3Method):
                     value, error = validate(table, original, fname, value)
                 except AttributeError:
                     error = "invalid field"
+                    
+                # Date & Date Time are NOT JSON serializable
+                if field.type in ["date", "datetime"]:
+                    value = str(value)
+
                 validated["value"] = value # field.formatter(value)?
 
                 # Handle errors, update the validated item

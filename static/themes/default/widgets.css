@@ -81,6 +81,27 @@ div.form-container div.controlset div {
 div.form-container div.buttonrow {
     margin-left: 180px;
 }
+/* ------------------------------------------------------------------------- */
+/* Styling for Inline Components */
+table.embeddedComponent {
+    border: 1px solid #B3B3B3;
+    border-top:0;
+    border-right:0;
+}
+form tr td table.embeddedComponent td {
+    border: 1px solid #B3B3B3;
+    padding: 0 5px;
+    border-bottom:0;
+    border-left:0;
+} 
+table.embeddedComponent tr.label-row td {
+    text-align: center;
+    color: #B3B3B3;
+}
+div.form-container form .embeddedComponent input.string,
+div.form-container form .embeddedComponent  textarea  {
+    width: auto;
+}
 /* ========================================================================= */
 
 textarea.comments {
