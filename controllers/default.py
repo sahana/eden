@@ -744,7 +744,7 @@ def about():
                                    database=settings.database.get("database", "sahana"),
                                    user=settings.database.get("username", "sahana"),
                                    password=settings.database.get("password", "password")
-                                   ) 
+                                   )
             cur = con.cursor()
             cur.execute("SELECT version()")
             pgsql_version = cur.fetchone()
