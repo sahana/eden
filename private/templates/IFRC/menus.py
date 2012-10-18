@@ -367,10 +367,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
         use_teams = lambda i: settings.get_hrm_use_teams()
-        
-        def check_org_dependent_field(tablename, fieldname):
-            return lambda i: settings.set_org_dependent_field(tablename, fieldname,
-                                                              enable_field = False)
+
+        check_org_dependent_field = lambda tablename, fieldname: \
+            settings.set_org_dependent_field(tablename, fieldname,
+                                             enable_field = False)
 
         #if job_roles(""):
         #    jt_catalog_label = "Job Title Catalog"

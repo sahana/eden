@@ -222,11 +222,11 @@ def volunteer():
                 person_details_table.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
-                set_org_dependent_field = deployment_settings.set_org_dependent_field
-                set_org_dependent_field("pr_person_details","father_name")
-                set_org_dependent_field("pr_person_details","mother_name")
-                set_org_dependent_field("pr_person_details","affiliations")
-                set_org_dependent_field("pr_person_details","company")
+                set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("pr_person_details", "father_name")
+                set_org_dependent_field("pr_person_details", "mother_name")
+                set_org_dependent_field("pr_person_details", "affiliations")
+                set_org_dependent_field("pr_person_details", "company")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
@@ -459,11 +459,11 @@ def person():
                 person_details_table.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
-                set_org_dependent_field = deployment_settings.set_org_dependent_field
-                set_org_dependent_field("pr_person_details","father_name")
-                set_org_dependent_field("pr_person_details","mother_name")
-                set_org_dependent_field("pr_person_details","affiliations")
-                set_org_dependent_field("pr_person_details","company")
+                set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("pr_person_details", "father_name")
+                set_org_dependent_field("pr_person_details", "mother_name")
+                set_org_dependent_field("pr_person_details", "affiliations")
+                set_org_dependent_field("pr_person_details", "company")
 
             else:
                 if r.component_name == "human_resource":
@@ -488,7 +488,7 @@ def person():
                         field.writable = False
 
                     # Organisation Dependent Fields
-                    set_org_dependent_field = deployment_settings.set_org_dependent_field
+                    set_org_dependent_field = settings.set_org_dependent_field
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")

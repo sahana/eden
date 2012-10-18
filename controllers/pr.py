@@ -44,7 +44,7 @@ def index():
     """ Module's Home Page """
 
     try:
-        module_name = deployment_settings.modules[module].name_nice
+        module_name = settings.modules[module].name_nice
     except:
         module_name = T("Person Registry")
 
@@ -113,11 +113,11 @@ def person():
                 #(s3db.auth_user.registration_key != "disabled")
 
     # Organisation Dependent Fields
-    set_org_dependent_field = deployment_settings.set_org_dependent_field
-    set_org_dependent_field("pr_person_details","father_name")
-    set_org_dependent_field("pr_person_details","mother_name")
-    set_org_dependent_field("pr_person_details","affiliations")
-    set_org_dependent_field("pr_person_details","company")
+    set_org_dependent_field = settings.set_org_dependent_field
+    set_org_dependent_field("pr_person_details", "father_name")
+    set_org_dependent_field("pr_person_details", "mother_name")
+    set_org_dependent_field("pr_person_details", "affiliations")
+    set_org_dependent_field("pr_person_details", "company")
 
     # Custom Method for Contacts
     s3db.set_method(module, resourcename,
