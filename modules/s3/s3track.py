@@ -29,7 +29,6 @@
 """
 
 from gluon import current
-#from gluon.dal import Table, Query, Set, Expression, Rows, Row
 from gluon.dal import Table, Rows, Row
 from datetime import datetime, timedelta
 
@@ -60,6 +59,7 @@ class S3Trackable(object):
             @param query: a Query object
             @param record_id: a record ID (if object is a Table)
             @param record_ids: a list of record IDs (if object is a Table)
+                               - these should be in ascending order
             @param rtable: the resource table (for the recursive calls)
         """
 
@@ -105,12 +105,17 @@ class S3Trackable(object):
                 raise SyntaxError("Not a trackable type: %s" % tablename)
             if record_ids:
                 query = (table._id.belongs(record_ids))
+                limitby = None
+                orderby = table._id
             elif record_id:
                 query = (table._id == record_id)
+                limitby = (0, 1)
+                orderby = None
             else:
                 query = (table._id > 0)
+                orderby = table._id
             fields = [table[f] for f in fields]
-            rows = db(query).select(*fields)
+            rows = db(query).select(limitby=limitby, orderby=orderby, *fields)
 
         # elif isinstance(trackable, Row):
             # fields = self.__get_fields(trackable)
@@ -158,8 +163,8 @@ class S3Trackable(object):
             # fields = [table[f] for f in fields]
             # rows = trackable.select(*fields)
 
-        # else:
-            # raise SyntaxError("Invalid parameter type %s" % type(trackable))
+        else:
+            raise SyntaxError("Invalid parameters")
 
         records = []
         for r in rows:
@@ -634,7 +639,7 @@ class S3Trackable(object):
 # =============================================================================
 class S3Tracker(object):
     """
-        S3 Tracking system, to be instantiated once as global "s3tracker" object
+        S3 Tracking system, can be instantiated once as global "s3tracker" object
     """
 
     def __init__(self):

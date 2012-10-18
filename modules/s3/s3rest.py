@@ -632,21 +632,23 @@ class S3Request(object):
 
         # Store method handlers
         self._handler = Storage()
-        self.set_handler("export_tree", self.get_tree,
-                         http=["GET"], transform=True)
-        self.set_handler("import_tree", self.put_tree,
-                         http=["GET", "PUT", "POST"], transform=True)
-        self.set_handler("fields", self.get_fields,
-                         http=["GET"], transform=True)
-        self.set_handler("options", self.get_options,
-                         http=["GET"], transform=True)
+        set_handler = self.set_handler
+        set_handler("export_tree", self.get_tree,
+                    http=["GET"], transform=True)
+        set_handler("import_tree", self.put_tree,
+                    http=["GET", "PUT", "POST"], transform=True)
+        set_handler("fields", self.get_fields,
+                    http=["GET"], transform=True)
+        set_handler("options", self.get_options,
+                    http=["GET"], transform=True)
 
-        self.set_handler("sync", current.sync,
-                            http=["GET", "PUT", "POST"], transform=True)
-        self.set_handler("sync_log", current.sync.log,
-                            http=["GET"], transform=True)
-        self.set_handler("sync_log", current.sync.log,
-                            http=["GET"], transform=False)
+        sync = current.sync
+        set_handler("sync", sync,
+                    http=["GET", "PUT", "POST"], transform=True)
+        set_handler("sync_log", sync.log,
+                    http=["GET"], transform=True)
+        set_handler("sync_log", sync.log,
+                    http=["GET"], transform=False)
 
         # Initialize CRUD
         self.resource.crud(self, method="_init")
@@ -825,11 +827,7 @@ class S3Request(object):
             @param attr: Parameters for the method handler
         """
 
-        s3db = current.s3db
-        manager = current.manager
         response = current.response
-        session = current.session
-
         hooks = response.s3
         self.next = None
 
@@ -850,7 +848,7 @@ class S3Request(object):
                         redirect(URL(r=self, f=self.name, args="search",
                                      vars={"_next": self.url(id="[id]")}))
                     else:
-                        session.error = self.ERROR.BAD_RECORD
+                        current.session.error = self.ERROR.BAD_RECORD
                         redirect(URL(r=self, c=self.prefix, f=self.name))
 
         # Pre-process
@@ -882,13 +880,13 @@ class S3Request(object):
 
         # Content type
         response.headers["Content-Type"] = \
-            manager.content_type.get(self.representation, "text/html")
+            current.manager.content_type.get(self.representation, "text/html")
 
         # Custom action?
         if not self.custom_action:
-            self.custom_action = s3db.get_method(self.prefix, self.name,
-                                                 component_name=self.component_name,
-                                                 method=self.method)
+            self.custom_action = current.s3db.get_method(self.prefix, self.name,
+                                                         component_name=self.component_name,
+                                                         method=self.method)
 
         # Method handling
         http = self.http
@@ -936,6 +934,8 @@ class S3Request(object):
                         form = form[0]
                     if form.errors:
                         return output
+
+            session = current.session
             session.flash = response.flash
             session.confirmation = response.confirmation
             session.error = response.error
@@ -951,42 +951,39 @@ class S3Request(object):
         """
 
         method = self.method
-        manager = current.manager
-
-        tablename = self.component and self.component.tablename or self.tablename
-
         transform = False
         if method is None or method in ("read", "display", "update"):
             if self.transformable():
                 method = "export_tree"
                 transform = True
             elif self.component:
-                if self.interactive and self.resource.count() == 1:
+                resource = self.resource
+                if self.interactive and resource.count() == 1:
                     # Load the record
-                    if not self.resource._rows:
-                        self.resource.load(start=0, limit=1)
-                    if self.resource._rows:
-                        self.record = self.resource._rows[0]
-                        self.id = self.resource.get_id()
-                        self.uid = self.resource.get_uid()
+                    if not resource._rows:
+                        resource.load(start=0, limit=1)
+                    if resource._rows:
+                        self.record = resource._rows[0]
+                        self.id = resource.get_id()
+                        self.uid = resource.get_uid()
                 if self.multiple and not self.component_id:
                     method = "list"
                 else:
                     method = "read"
-            else:
-                if self.id or method in ("read", "display", "update"):
-                    # Enforce single record
-                    if not self.resource._rows:
-                        self.resource.load(start=0, limit=1)
-                    if self.resource._rows:
-                        self.record = self.resource._rows[0]
-                        self.id = self.resource.get_id()
-                        self.uid = self.resource.get_uid()
-                    else:
-                        self.error(404, self.ERROR.BAD_RECORD)
-                    method = "read"
+            elif self.id or method in ("read", "display", "update"):
+                # Enforce single record
+                resource = self.resource
+                if not resource._rows:
+                    resource.load(start=0, limit=1)
+                if resource._rows:
+                    self.record = resource._rows[0]
+                    self.id = resource.get_id()
+                    self.uid = resource.get_uid()
                 else:
-                    method = "list"
+                    self.error(404, self.ERROR.BAD_RECORD)
+                method = "read"
+            else:
+                method = "list"
 
         elif method in ("create", "update"):
             if self.transformable(method="import"):
@@ -997,7 +994,7 @@ class S3Request(object):
             return self.__DELETE()
 
         elif method == "clear" and not self.component:
-            manager.clear_session(self.prefix, self.name)
+            current.manager.clear_session(self.prefix, self.name)
             if "_next" in self.vars:
                 request_vars = dict(_next=self._next)
             else:
@@ -1379,14 +1376,13 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        resource = r.resource
         representation = r.representation
         if representation == "xml":
-            output = resource.export_fields(component=r.component_name)
+            output = r.resource.export_fields(component=r.component_name)
             content_type = "text/xml"
         elif representation == "s3json":
-            output = resource.export_fields(component=r.component_name,
-                                            as_json=True)
+            output = r.resource.export_fields(component=r.component_name,
+                                              as_json=True)
             content_type = "application/json"
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
@@ -1536,7 +1532,8 @@ class S3Request(object):
             return False
 
     # -------------------------------------------------------------------------
-    def unauthorised(self):
+    @staticmethod
+    def unauthorised():
         """
             Action upon unauthorised request
         """
@@ -1788,10 +1785,10 @@ class S3Method(object):
 
         # Environment of the request
         self.request = r
-        manager = current.manager
 
         # Settings
-        self.download_url = manager.s3.download_url
+        response = current.response
+        self.download_url = response.s3.download_url
 
         # Init
         self.next = None
@@ -1805,7 +1802,7 @@ class S3Method(object):
         # Find the target resource and record
         if r.component:
             component = r.component
-            self.resource = component
+            resource = component
             self.record_id = self._record_id(r)
             if not self.method:
                 if r.multiple and not r.component_id:
@@ -1815,10 +1812,10 @@ class S3Method(object):
             if component.link:
                 actuate_link = r.actuate_link()
                 if not actuate_link:
-                    self.resource = component.link
+                    resource = component.link
         else:
             self.record_id = r.id
-            self.resource = r.resource
+            resource = r.resource
             if not self.method:
                 if r.id or r.method in ("read", "display"):
                     self.method = "read"
@@ -1840,10 +1837,11 @@ class S3Method(object):
                     #self.resource = resource
                     #self.record_id = resource.records().first()[resource.table._id]
 
-        self.prefix = self.resource.prefix
-        self.name = self.resource.name
-        self.tablename = self.resource.tablename
-        self.table = self.resource.table
+        self.prefix = resource.prefix
+        self.name = resource.name
+        self.tablename = resource.tablename
+        self.table = resource.table
+        self.resource = resource
 
         if self.method == "_init":
             return None
@@ -1852,13 +1850,13 @@ class S3Method(object):
         output = self.apply_method(r, **attr)
 
         # Redirection
-        if self.next and self.resource.lastid:
+        if self.next and resource.lastid:
             self.next = str(self.next)
             placeholder = "%5Bid%5D"
-            self.next = self.next.replace(placeholder, self.resource.lastid)
+            self.next = self.next.replace(placeholder, resource.lastid)
             placeholder = "[id]"
-            self.next = self.next.replace(placeholder, self.resource.lastid)
-        if not current.response.error:
+            self.next = self.next.replace(placeholder, resource.lastid)
+        if not response.error:
             r.next = self.next
 
         # Add additional view variables (e.g. rheader)

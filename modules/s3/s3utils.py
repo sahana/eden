@@ -2641,12 +2641,15 @@ class S3DataTable(object):
 
         self.data = data
         self.rfields = rfields
-        self.lfields = []
-        self.heading = {}
+        lfields = []
+        append = lfields.append
+        heading = {}
         for field in rfields:
             selector = "%s.%s" % (field.tname, field.fname)
-            self.lfields.append(selector)
-            self.heading[selector] = (field.label)
+            append(selector)
+            heading[selector] = (field.label)
+        self.lfields = lfields
+        self.heading = heading
         max = len(data)
         if start < 0:
             start == 0

@@ -70,7 +70,7 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
         T = current.T
         # Test the widget method
 
-        # Test the widget method with a virtual field and custom options
+        # Test the widget method with a virtual field and no options
         widget = S3SearchOptionsWidget("virtual_field",
                                        options={})
         output = widget.widget(self.resource, {})
@@ -80,12 +80,13 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
 
         # Test widget with virtual field and one option.
         # Should return no-options message.
-        widget = S3SearchOptionsWidget("virtual_field",
-                                       options={1:"One"})
-        output = widget.widget(self.resource, {})
-        self.assertEqual(str(output),
-                         str(SPAN(T("No options available"),
-                                  _class="no-options-available")))
+        # - no longer!
+        #widget = S3SearchOptionsWidget("virtual_field",
+        #                               options={1:"One"})
+        #output = widget.widget(self.resource, {})
+        #self.assertEqual(str(output),
+        #                 str(SPAN(T("No options available"),
+        #                          _class="no-options-available")))
 
         # Test widget with virtual field and multiple options.
         widget = S3SearchOptionsWidget("virtual_field",

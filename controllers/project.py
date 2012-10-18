@@ -626,20 +626,23 @@ def time():
         # Show the Logged Time for this User
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         s3db.configure("project_time",
+                       orderby=~table.date,
                        listadd=False)
         person_id = auth.s3_logged_in_person()
         if person_id:
             # @ToDo: Use URL filter instead, but the Search page will have 
             # to populate it's widgets based on the URL filter  
             s3.filter = (table.person_id == person_id)
-        try:
-            list_fields = s3db.get_config(tablename,
-                                          "list_fields")
-            list_fields.remove("person_id")
-            s3db.configure(tablename,
-                           list_fields=list_fields)
-        except:
-            pass
+        list_fields = ["id",
+                       "date",
+                       "hours",
+                       (T("Project"), "project"),
+                       (T("Activity"), "activity"),
+                       "task_id",
+                       "comments",
+                       ]
+        s3db.configure(tablename,
+                       list_fields=list_fields)
 
     elif "week" in request.get_vars:
         now = request.utcnow

@@ -3205,11 +3205,12 @@ class S3ProjectTaskModel(S3Model):
                         "status",
                         s3forms.S3SQLInlineComponent(
                             "time",
-                            label=T("Time Log"),
-                            fields=["date",
-                                    "person_id",
-                                    "hours",
-                                    "comments"]
+                            label = T("Time Log"),
+                            fields = ["date",
+                                      "person_id",
+                                      "hours",
+                                      "comments"
+                                      ]
                         ),
                         "time_actual",
                     )
@@ -4543,7 +4544,7 @@ class S3ProjectTaskVirtualFields:
 class S3ProjectTimeVirtualFields:
     """ Virtual fields for the project_time table """
 
-    extra_fields = ["task_id", "person_id", "date"]
+    extra_fields = ["task_id", "date"]
 
     # -------------------------------------------------------------------------
     def project(self):

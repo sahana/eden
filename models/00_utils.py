@@ -270,19 +270,25 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r = s3_request(prefix, resourcename)
 
     # Set method handlers
-    r.set_handler("barchart", s3_barchart)
-    r.set_handler("compose", s3base.S3Compose())
-    r.set_handler("copy", s3_copy)
-    r.set_handler("report", s3base.S3Report())
-    r.set_handler("import", s3base.S3Importer())
-    r.set_handler("map", s3base.S3Map())
-
-    # Don't load S3PDF unless needed (very slow import with reportlab)
-    if r.method == "import" and r.representation == "pdf":
-        from s3.s3pdf import S3PDF
-        r.set_handler("import", S3PDF(),
-                      http = ["GET", "POST"],
-                      representation="pdf")
+    method = r.method
+    if method == "report":
+        r.set_handler("report", s3base.S3Report())
+    elif method == "import":
+        r.set_handler("import", s3base.S3Importer())
+        if r.representation == "pdf":
+            # Don't load S3PDF unless needed (very slow import with Reportlab)
+            from s3.s3pdf import S3PDF
+            r.set_handler("import", S3PDF(),
+                          http = ["GET", "POST"],
+                          representation="pdf")
+    elif method == "map":
+        r.set_handler("map", s3base.S3Map())
+    elif method == "compose":
+        r.set_handler("compose", s3base.S3Compose())
+    elif method == "copy":
+        r.set_handler("copy", s3_copy)
+    elif method == "barchart":
+        r.set_handler("barchart", s3_barchart)
 
     # Plugin OrgRoleManager where appropriate
     if r.record and auth.user is not None and \
@@ -299,7 +305,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Execute the request
     output = r(**attr)
 
-    if isinstance(output, dict) and (not r.method or r.method in ("report", "search")):
+    if isinstance(output, dict) and (not method or method in ("report", "search")):
         if s3.actions is None:
 
             # Add default action buttons
@@ -350,7 +356,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
-    elif r.method not in ("import", "review", "approve", "reject"):
+    elif method not in ("import", "review", "approve", "reject"):
         s3.actions = None
 
     return output

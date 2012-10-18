@@ -1538,7 +1538,7 @@ class S3Compose(S3CRUD):
             current.session.error = T("Cannot send messages if Messaging module disabled")
             redirect(URL(f="index"))
             
-        if not current.auth.permission.has_permission("update", c="msg"):
+        if not auth.permission.has_permission("update", c="msg"):
             current.session.error = T("You do not have permission to send messages")
             redirect(URL(f="index"))
 
@@ -1597,25 +1597,21 @@ class S3Compose(S3CRUD):
         """
 
         T = current.T
-        db = current.db
-        s3db = current.s3db
         auth = current.auth
         msg = current.msg
         session = current.session
 
         vars = current.request.post_vars
 
-        url = self.url
-
         recipients = self.recipients
         if not recipients:
             if not vars.pe_id:
                 session.error = T("Please enter the recipient(s)")
-                redirect(url)
+                redirect(self.url)
             else:
                 recipients = vars.pe_id
 
-        table = s3db.pr_person
+        table = current.s3db.pr_person
         if auth.user:
             sender_pe_id = auth.user.pe_id
         else:
@@ -1626,10 +1622,10 @@ class S3Compose(S3CRUD):
                              sender_pe_id,
                              vars.pr_message_method):
             session.confirmation = T("Check outbox for the message status")
-            redirect(url)
+            redirect(self.url)
         else:
             session.error = T("Error in message")
-            redirect(url)
+            redirect(self.url)
 
     # -------------------------------------------------------------------------
     def _compose_form(self):
@@ -1642,9 +1638,7 @@ class S3Compose(S3CRUD):
         db = current.db
         s3db = current.s3db
         crud = current.crud
-        session = current.session
-        response = current.response
-        s3 = response.s3
+        s3 = current.response.s3
 
         ltable = s3db.msg_log
         otable = s3db.msg_outbox
@@ -1773,14 +1767,14 @@ class S3Compose(S3CRUD):
         # Control the Javascript in static/scripts/S3/s3.msg.js
         if not recipients:
             if recipient_type:
-                s3.js_global.append("S3.msg_search_url = '%s';" % \
+                s3.js_global.append('''S3.msg_search_url="%s"''' % \
                                     URL(c="msg", f="search",
                                         vars={"type":recipient_type}))
             else:
-                s3.js_global.append("S3.msg_search_url = '%s';" % \
+                s3.js_global.append('''S3.msg_search_url="%s"''' % \
                                     URL(c="msg", f="search"))
 
-            s3.jquery_ready.append("s3_msg_ac_pe_input();")
+            s3.jquery_ready.append('''s3_msg_ac_pe_input()''')
 
         return form
 

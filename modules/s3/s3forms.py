@@ -1777,7 +1777,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         fields = data["fields"]
         labels = [TD(LABEL(f["label"])) for f in fields]
-        #Is this required? Header Row doesn't have to be the same number of columns
+        # @ToDo: Is this required? Header Row doesn't have to be the same number of columns
         for i in range(extra_columns):
             labels.append(TD())
         return TR(labels, **attributes)

@@ -1905,7 +1905,6 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         request = current.request
-        gis = current.gis
 
         format = current.auth.permission.format
 
@@ -2076,7 +2075,7 @@ class GIS(object):
                     if format == "geojson":
                         for row in rows:
                             # Simplify the polygon to reduce download size
-                            geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                            geojson = GIS.simplify(row["gis_location"].wkt, output="geojson")
                             if geojson:
                                 geojsons[row[tablename].id] = geojson
                     else:
@@ -2084,7 +2083,7 @@ class GIS(object):
                             # Simplify the polygon to reduce download size
                             # & also to work around the recursion limit in libxslt
                             # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(row["gis_location"].wkt)
+                            wkt = GIS.simplify(row["gis_location"].wkt)
                             if wkt:
                                 wkts[row[tablename].id] = wkt
 
@@ -2260,10 +2259,9 @@ class GIS(object):
         else:
             rows = db(query).select(table.id,
                                     gtable.wkt)
-            gis = current.gis
             for row in rows:
                 # Simplify the polygon to reduce download size
-                geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                geojson = GIS.simplify(row["gis_location"].wkt, output="geojson")
                 if geojson:
                     geojsons[row[tablename].id] = geojson
 
