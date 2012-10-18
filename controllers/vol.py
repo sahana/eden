@@ -119,9 +119,8 @@ def volunteer():
     # Remove Facility
     human_resource_search.advanced.pop(8)
     if settings.get_hrm_vol_experience() == "programme":
-        enable_active_field = settings.set_org_dependent_field(None,
-                                                               tablename = "vol_volunteer",
-                                                               fieldname = "active")
+        enable_active_field = settings.set_org_dependent_field("vol_volunteer", "active",
+                                                               enable_field = False)
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
         # Add VF to List Fields
@@ -224,14 +223,13 @@ def volunteer():
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = deployment_settings.set_org_dependent_field
-                set_org_dependent_field(person_details_table.father_name)
-                set_org_dependent_field(person_details_table.mother_name)
-                set_org_dependent_field(person_details_table.affiliations)
-                set_org_dependent_field(person_details_table.company)
-                volunteer_cluster_table = s3db.vol_volunteer_cluster
-                set_org_dependent_field(volunteer_cluster_table.vol_cluster_type_id)
-                set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
-                set_org_dependent_field(volunteer_cluster_table.vol_cluster_position_id)
+                set_org_dependent_field("pr_person_details","father_name")
+                set_org_dependent_field("pr_person_details","mother_name")
+                set_org_dependent_field("pr_person_details","affiliations")
+                set_org_dependent_field("pr_person_details","company")
+                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
+                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
+                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
 
             elif r.method == "delete":
                 # Don't redirect
@@ -462,10 +460,10 @@ def person():
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = deployment_settings.set_org_dependent_field
-                set_org_dependent_field(person_details_table.father_name)
-                set_org_dependent_field(person_details_table.mother_name)
-                set_org_dependent_field(person_details_table.affiliations)
-                set_org_dependent_field(person_details_table.company)
+                set_org_dependent_field("pr_person_details","father_name")
+                set_org_dependent_field("pr_person_details","mother_name")
+                set_org_dependent_field("pr_person_details","affiliations")
+                set_org_dependent_field("pr_person_details","company")
 
             else:
                 if r.component_name == "human_resource":
@@ -491,10 +489,9 @@ def person():
 
                     # Organisation Dependent Fields
                     set_org_dependent_field = deployment_settings.set_org_dependent_field
-                    volunteer_cluster_table = s3db.vol_volunteer_cluster
-                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_type_id)
-                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
-                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_position_id)
+                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
+                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
+                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
 
                 elif r.component_name == "hours":
                     filter = (r.component.table.hours != None)

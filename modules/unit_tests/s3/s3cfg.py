@@ -26,14 +26,14 @@ class S3ConfigTests(unittest.TestCase):
 
         # Admin does always see the field
         auth.s3_impersonate("admin@example.com")
-        check = settings.set_org_dependent_field(table.mother_name)
+        check = settings.set_org_dependent_field("pr_person_details", "mother_name")
         self.assertTrue(check)
         self.assertTrue(table.mother_name.readable)
         self.assertTrue(table.mother_name.writable)
 
         # Anonymous doesn't belong to an org thus can't see the field
         auth.s3_impersonate(None)
-        check = settings.set_org_dependent_field(table.mother_name)
+        check = settings.set_org_dependent_field("pr_person_details", "mother_name")
         self.assertFalse(check)
         self.assertFalse(table.mother_name.readable)
         self.assertFalse(table.mother_name.writable)
@@ -60,7 +60,7 @@ class S3ConfigTests(unittest.TestCase):
 
             # Normal user can't see the field by default
             auth.s3_impersonate("normaluser@example.com")
-            check = settings.set_org_dependent_field(table.mother_name)
+            check = settings.set_org_dependent_field("pr_person_details", "mother_name")
             self.assertFalse(check)
             self.assertFalse(table.mother_name.readable)
             self.assertFalse(table.mother_name.writable)
@@ -68,14 +68,14 @@ class S3ConfigTests(unittest.TestCase):
             # User can see the field if belonging to that org
             auth.user.organisation_id = org.id
             self.assertEqual(auth.root_org(), org.id)
-            check = settings.set_org_dependent_field(table.mother_name)
+            check = settings.set_org_dependent_field("pr_person_details", "mother_name")
             self.assertTrue(check)
             self.assertTrue(table.mother_name.readable)
             self.assertTrue(table.mother_name.writable)
 
             # ...but not if we haven't configured it
             settings.org.dependent_fields = None
-            check = settings.set_org_dependent_field(table.mother_name)
+            check = settings.set_org_dependent_field("pr_person_details", "mother_name")
             self.assertFalse(check)
             self.assertFalse(table.mother_name.readable)
             self.assertFalse(table.mother_name.writable)

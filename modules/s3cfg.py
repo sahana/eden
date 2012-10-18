@@ -954,9 +954,9 @@ class S3Config(Storage):
         return self.org.get("summary", False)
 
     def set_org_dependent_field(self,
-                                field, # None for Virtual Fields
                                 tablename=None,
-                                fieldname=None):
+                                fieldname=None,
+                                enable_field =True):
         """
             Enables/Disables optional fields according to a user's Organisation
             - must specify either field or tablename/fieldname
@@ -971,9 +971,6 @@ class S3Config(Storage):
             # Default to disabled
             enabled = False
 
-        if field:
-            tablename = field.tablename
-            fieldname = field.name
         #elif not tablename or not fieldname:
         #    raise SyntaxError
 
@@ -994,7 +991,8 @@ class S3Config(Storage):
                 if root_org:
                     enabled = root_org.name in org_name_list
 
-        if field:
+        if enable_field:
+            field = current.s3db[tablename][fieldname]
             field.readable = enabled
             field.writable = enabled
 
