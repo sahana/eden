@@ -156,7 +156,6 @@ class S3StatsModel(S3Model):
                              location_id(widget = S3LocationAutocompleteWidget(),
                                         requires = IS_LOCATION()),
                              Field("agg_type", "integer",
-                                   required = True,
                                    requires = IS_IN_SET(aggregate_type),
                                    represent = lambda opt: \
                                             aggregate_type.get(opt, UNKNOWN_OPT),
@@ -625,7 +624,6 @@ class S3StatsModel(S3Model):
             resilience_pid = s3db.vulnerability_resilience_id()
             for (location_id, (period, loc_level, use_location)) in resilence_parents.items():
                 for (start_date, end_date) in changed_periods:
-                    #s, e = str(start_date), str(end_date)
                     vulnerability_resilience(loc_level,
                                              location_id,
                                              resilience_pid,
