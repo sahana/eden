@@ -1198,7 +1198,8 @@ class S3Resource(object):
 
         # Resolve the selectors
         rfields = self.resolve_selectors(fields,
-                                         skip_components=False)[0]
+                                         skip_components=False,
+                                         extra_fields=False)[0]
 
         # Retrieve the rows
         rows = self.select(fields=selectors,
@@ -2993,13 +2994,17 @@ class S3Resource(object):
                     if table[f].readable and f != fkey]
 
     # -------------------------------------------------------------------------
-    def resolve_selectors(self, selectors, skip_components=True):
+    def resolve_selectors(self, selectors,
+                          skip_components=True,
+                          extra_fields=True):
         """
             Resolve a list of field selectors against this resource
 
             @param selectors: the field selectors
             @param skip_components: skip fields in components (component fields
                                     are currently not supported by list_fields)
+            @param extra_fields: automatically add extra_fields of all virtual
+                                 fields in this table
 
             @returns: tuple of (fields, joins, left, distinct)
         """
@@ -3024,16 +3029,17 @@ class S3Resource(object):
             else:
                 selector = s
             append(prefix(selector))
+        slist = list(selectors)
 
         # Collect extra fields from virtual tables
-        slist = list(selectors)
-        append = slist.append
-        for vtable in table.virtualfields:
-            if hasattr(vtable, "extra_fields"):
-                for selector in vtable.extra_fields:
-                    s = prefix(selector)
-                    if s not in display_fields:
-                        append(s)
+        if extra_fields:
+            append = slist.append
+            for vtable in table.virtualfields:
+                if hasattr(vtable, "extra_fields"):
+                    for selector in vtable.extra_fields:
+                        s = prefix(selector)
+                        if s not in display_fields:
+                            append(s)
 
         joins = Storage()
         left = Storage()
