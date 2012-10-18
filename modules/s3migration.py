@@ -102,15 +102,21 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, uniques=[]):
+    def prep(self, foreigns=[], uniques=[]):
         """
             Preparation before migration
 
-            @param uniques : List of tuples (tablename, fieldname) to have the unique indices removed
+            @param foreigns : List of tuples (tablename, fieldname) to have the foreign keys removed
+                              - if tablename == "all" then all tables are checked
+            @param uniques  : List of tuples (tablename, fieldname) to have the unique indices removed
         """
 
         # Backup current database
         self.backup()
+
+        # Remove Foreign Key constraints which need to go in next code
+        for tablename, fieldname in foreigns:
+            self.remove_foreign(tablename, fieldname)
 
         # Remove Unique indices which need to go in next code
         for tablename, fieldname in uniques:
@@ -191,10 +197,54 @@ class S3Migration(object):
         self.db_bak = db_bak
 
     # -------------------------------------------------------------------------
+    def remove_foreign(self, tablename, fieldname):
+        """
+            Remove a Foreign Key constraint from a table
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+        executesql = db.executesql
+
+        if tablename == "all":
+            tables = db.tables
+        else:
+            tables = [tablename]
+
+        for tablename in tables:
+            if fieldname not in db[tablename].fields:
+                continue
+
+            # Modify the database
+            if db_engine == "sqlite":
+                # @ToDo:
+                raise NotImplementedError
+
+            elif db_engine == "mysql":
+                # http://dev.mysql.com/doc/refman/5.1/en/alter-table.html
+                create = executesql("SHOW CREATE TABLE `%s`;" % tablename)[0][1]
+                fk = create.split("` FOREIGN KEY (`%s" % fieldname)[0].split("CONSTRAINT `").pop()
+                if "`" in fk:
+                    fk = fk.split("`")[0]
+                sql = "ALTER TABLE `%(tablename)s` DROP FOREIGN KEY `%(fk)s`;" % \
+                    dict(tablename=tablename, fk=fk)
+
+            elif db_engine == "postgres":
+                # @ToDo:
+                raise NotImplementedError
+
+            try:
+                executesql(sql)
+            except:
+                print "Error: Table %s with FK %s" % (tablename, fk)
+                import sys
+                e = sys.exc_info()[1]
+                print >> sys.stderr, e
+
+    # -------------------------------------------------------------------------
     def remove_unique(self, tablename, fieldname):
         """
             Remove a Unique Index from a table
-            - removing not_null will be very similar
         """
 
         db = self.db
@@ -202,13 +252,14 @@ class S3Migration(object):
 
         # Modify the database
         if db_engine == "sqlite":
-            # @ToDo: Check Syntax
-            sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
-                dict(tablename=tablename, fieldname=fieldname)
+            # @ToDo:
+            raise NotImplementedError
+
         elif db_engine == "mysql":
-            # @ToDo: Check Syntax
-            sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
+            # http://dev.mysql.com/doc/refman/5.1/en/alter-table.html
+            sql = "ALTER TABLE `%(tablename)s` DROP INDEX `%(fieldname)s`;" % \
                 dict(tablename=tablename, fieldname=fieldname)
+
         elif db_engine == "postgres":
             sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
                 dict(tablename=tablename, fieldname=fieldname)

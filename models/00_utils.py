@@ -216,6 +216,14 @@ def s3_copy(r, **attr):
     redirect(URL(args="create", vars={"from_record":r.id}))
 
 # -----------------------------------------------------------------------------
+def s3_map(r, **attr):
+    """
+        Wrapper for S3Map()
+    """
+
+    return s3base.S3Map()(r, **attr)
+
+# -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
         Helper function to apply the S3Resource REST interface
@@ -271,24 +279,21 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
     # Set method handlers
     method = r.method
-    if method == "report":
-        r.set_handler("report", s3base.S3Report())
-    elif method == "import":
-        r.set_handler("import", s3base.S3Importer())
-        if r.representation == "pdf":
-            # Don't load S3PDF unless needed (very slow import with Reportlab)
-            from s3.s3pdf import S3PDF
-            r.set_handler("import", S3PDF(),
-                          http = ["GET", "POST"],
-                          representation="pdf")
-    elif method == "map":
-        r.set_handler("map", s3base.S3Map())
-    elif method == "compose":
-        r.set_handler("compose", s3base.S3Compose())
-    elif method == "copy":
-        r.set_handler("copy", s3_copy)
-    elif method == "barchart":
-        r.set_handler("barchart", s3_barchart)
+    set_handler = r.set_handler
+    set_handler("barchart", s3_barchart)
+    set_handler("compose", s3base.S3Compose())
+    set_handler("copy", s3_copy)
+    set_handler("import", s3base.S3Importer())
+    set_handler("map", s3_map)
+    set_handler("report", s3base.S3Report())
+
+    if method == "import" and \
+       r.representation == "pdf":
+        # Don't load S3PDF unless needed (very slow import with Reportlab)
+        from s3.s3pdf import S3PDF
+        set_handler("import", S3PDF(),
+                    http = ["GET", "POST"],
+                    representation="pdf")
 
     # Plugin OrgRoleManager where appropriate
     if r.record and auth.user is not None and \
