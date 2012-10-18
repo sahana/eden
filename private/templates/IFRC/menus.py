@@ -352,6 +352,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Volunteer Management """
 
         s3 = current.session.s3
+        s3db = current.s3db
         ADMIN = s3.system_roles.ADMIN
 
         # Custom conditions for the check-hook, as lambdas in order
@@ -367,6 +368,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
         use_teams = lambda i: settings.get_hrm_use_teams()
+        
+        def check_org_dependent_field(field):
+            return lambda i: settings.set_org_dependent_field(field)
 
         #if job_roles(""):
         #    jt_catalog_label = "Job Title Catalog"
@@ -434,6 +438,21 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All"),
                         M("Import Hours", f="programme_hours", m="import"),
+                    ),
+                    M("Volunteer Cluster Type", f="cluster_type",
+                      check = check_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_type_id))(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Volunteer Cluster", f="cluster",
+                      check = check_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_id))(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Volunteer Cluster Position", f="cluster_position",
+                      check = check_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_position_id))(
+                        M("New", m="create"),
+                        M("List All"),
                     ),
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(

@@ -72,9 +72,9 @@
          Grade..........................optional.....person education grade
          Year...........................optional.....person education year
          Institute......................optional.....person education institute
+         Volunteer Cluster Type.........optional.....volunteer_cluster cluster_type name
          Volunteer Cluster..............optional.....volunteer_cluster cluster name
-         Volunteer Group................optional.....volunteer_group group name
-         Volunteer Group Position.......optional.....volunteer_group group_position name
+         Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
 
          Column headers looked up in labels.xml:
 
@@ -150,15 +150,16 @@
              
     <xsl:key name="volunteerclusters" 
              match="row"
-             use="col[@field='Volunteer Cluster']"/>
+             use="concat(col[@field='Volunteer Cluster Type'],
+                         col[@field='Volunteer Cluster'])"/>
 
-    <xsl:key name="volunteergroups" 
+    <xsl:key name="volunteerclustertypes" 
              match="row"
-             use="col[@field='Volunteer Group']"/>
+             use="col[@field='Volunteer Cluster Type']"/>
 
-    <xsl:key name="volunteergrouppositions" 
+    <xsl:key name="volunteerclustertpositions" 
              match="row"
-             use="col[@field='Volunteer Group Position']"/>
+             use="col[@field='Volunteer Cluster Position']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -210,18 +211,18 @@
             </xsl:for-each>
 
             <!-- Volunteer Clusters -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclusters', col[@field='Volunteer Cluster'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclusters', concat(col[@field='Volunteer Cluster Type'],col[@field='Volunteer Cluster']))[1])]">
                 <xsl:call-template name="VolunteerCluster"/>
             </xsl:for-each>
 
-            <!-- Volunteer Groups -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteergroups', col[@field='Volunteer Group'])[1])]">
-                <xsl:call-template name="VolunteerGroup"/>
+            <!-- Volunteer Cluster Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclustertypes', col[@field='Volunteer Cluster Type'])[1])]">
+                <xsl:call-template name="VolunteerClusterType"/>
             </xsl:for-each>
 
-            <!-- Volunteer Positions -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteergrouppositions', col[@field='Volunteer Group Position'])[1])]">
-                <xsl:call-template name="VolunteerGroupPosition"/>
+            <!-- Volunteer Cluster Positions -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclustertpositions', col[@field='Volunteer Cluster Position'])[1])]">
+                <xsl:call-template name="VolunteerClusterPosition"/>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -689,35 +690,30 @@
             </xsl:if>
             
             <!-- Volunteer Cluster (voluteers only) -->
-            <xsl:if test="col[@field='Volunteer Cluster']!=''">
-                <resource name="vol_volunteer_cluster">
-	                <reference field="vol_cluster_id" resource="vol_cluster">
-	                    <xsl:attribute name="tuid">
-	                        <xsl:value-of select="col[@field='Volunteer Cluster']"/>
-	                    </xsl:attribute>
-	                </reference>
-                </resource>
-            </xsl:if>
-
-            <!-- Volunteer Group (voluteers only) -->
-            <xsl:if test="col[@field='Volunteer Group'] != '' or col[@field='Volunteer Group Position'] != ''">
-                <resource name="vol_volunteer_group">
-                    <xsl:if test="col[@field='Volunteer Group'] != ''">
-	                    <reference field="vol_group_id" resource="vol_group">
-	                        <xsl:attribute name="tuid">
-	                            <xsl:value-of select="col[@field='Volunteer Group']"/>
-	                        </xsl:attribute>
-	                    </reference>
-	                </xsl:if>
-
-	                <xsl:if test="col[@field='Volunteer Group Position'] != ''">
-	                    <reference field="vol_group_position_id" resource="vol_group_position">
-	                        <xsl:attribute name="tuid">
-	                            <xsl:value-of select="col[@field='Volunteer Group Position']"/>
-	                        </xsl:attribute>
-	                    </reference>
-	                </xsl:if>
-                </resource>
+            <xsl:if test="col[@field='Volunteer Cluster Type'] != '' or col[@field='Volunteer Cluster'] != '' or col[@field='Volunteer Cluster Position'] != ''">
+              <resource name="vol_volunteer_cluster">
+                <xsl:if test="col[@field='Volunteer Cluster Type'] != ''">
+                    <reference field="vol_cluster_type_id" resource="vol_cluster_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Volunteer Cluster Type']"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+                <xsl:if test="col[@field='Volunteer Cluster']!=''">
+                    <reference field="vol_cluster_id" resource="vol_cluster">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat(col[@field='Volunteer Cluster Type'],col[@field='Volunteer Cluster'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+                <xsl:if test="col[@field='Volunteer Cluster Position'] != ''">
+                    <reference field="vol_cluster_position_id" resource="vol_cluster_position">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Volunteer Cluster Position']"/>
+                        </xsl:attribute>
+                    </reference>
+                 </xsl:if>
+               </resource>
             </xsl:if>
 
         </resource>
@@ -1285,38 +1281,44 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="VolunteerClusterType">
+        <xsl:variable name="volunteerclustertype" select="col[@field='Volunteer Cluster Type']"/>
+        <xsl:if test="$volunteerclustertype!=''">
+            <resource name="vol_cluster_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$volunteerclustertype"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$volunteerclustertype"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+    <!-- ****************************************************************** -->
     <xsl:template name="VolunteerCluster">
         <xsl:variable name="volunteercluster" select="col[@field='Volunteer Cluster']"/>
+        <xsl:variable name="volunteerclustertype" select="col[@field='Volunteer Cluster Type']"/>
         <xsl:if test="$volunteercluster!=''">
             <resource name="vol_cluster">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$volunteercluster"/>
+                    <xsl:value-of select="concat($volunteerclustertype,$volunteercluster)"/>
                 </xsl:attribute>
+                <reference field="vol_cluster_type_id" resource="vol_cluster_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$volunteerclustertype"/>
+                    </xsl:attribute>
+                </reference>
                 <data field="name"><xsl:value-of select="$volunteercluster"/></data>
             </resource>
         </xsl:if>
     </xsl:template>
     <!-- ****************************************************************** -->
-    <xsl:template name="VolunteerGroup">
-        <xsl:variable name="volunteergroup" select="col[@field='Volunteer Group']"/>
-        <xsl:if test="$volunteergroup!=''">
-            <resource name="vol_group">
+    <xsl:template name="VolunteerClusterPosition">
+        <xsl:variable name="volunteerclusterposition" select="col[@field='Volunteer Cluster Position']"/>
+        <xsl:if test="$volunteerclusterposition!=''">
+            <resource name="vol_cluster_position">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$volunteergroup"/>
+                    <xsl:value-of select="$volunteerclusterposition"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$volunteergroup"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-    <!-- ****************************************************************** -->
-    <xsl:template name="VolunteerGroupPosition">
-        <xsl:variable name="volunteergroupposition" select="col[@field='Volunteer Group Position']"/>
-        <xsl:if test="$volunteergroupposition!=''">
-            <resource name="vol_group_position">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$volunteergroupposition"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$volunteergroupposition"/></data>
+                <data field="name"><xsl:value-of select="$volunteerclusterposition"/></data>
             </resource>
         </xsl:if>
     </xsl:template>

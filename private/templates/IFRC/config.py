@@ -238,9 +238,9 @@ settings.org.dependent_fields = \
      "pr_person_details.company"                 : ["Philippine Red Cross"],
      "pr_person_details.affiliations"            : ["Philippine Red Cross"],
      "vol_volunteer.active"                      : ["Timor-Leste Red Cross Society"],
-     "vol_volunteer_cluster.vol_cluster_id"      : ["Philippine Red Cross"],
-     "vol_volunteer_group.vol_group_id"          : ["Philippine Red Cross"],
-     "vol_volunteer_group.vol_group_position_id" : ["Philippine Red Cross"],
+     "vol_volunteer_cluster.vol_cluster_type_id"      : ["Philippine Red Cross"],
+     "vol_volunteer_cluster.vol_cluster_id"          : ["Philippine Red Cross"],
+     "vol_volunteer_cluster.vol_cluster_position_id" : ["Philippine Red Cross"],
      }
 
 # -----------------------------------------------------------------------------

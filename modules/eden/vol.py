@@ -29,7 +29,6 @@
 """
 
 __all__ = ["S3VolClusterDataModel",
-           "S3VolGroupDataModel",
            ]
 
 from gluon import *
@@ -40,7 +39,9 @@ from eden.layouts import S3AddResourceLink
 # =============================================================================
 class S3VolClusterDataModel(S3Model):
 
-    names = ["vol_cluster",
+    names = ["vol_cluster_type",
+             "vol_cluster",
+             "vol_cluster_position",
              "vol_volunteer_cluster"
              ]
 
@@ -53,8 +54,50 @@ class S3VolClusterDataModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Volunteer Cluster
+        tablename = "vol_cluster_type"
+        table = self.define_table(tablename,
+                                  Field("name", unique=True,
+                                        label = T("Name")),
+                                  *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Volunteer Cluster Type Type"),
+            title_display = T("Volunteer Cluster Type"),
+            title_list = T("Volunteer Cluster Type"),
+            title_update = T("Edit Volunteer Cluster Type"),
+            title_search = T("Search Volunteer Cluster Types"),
+            title_upload = T("Import Volunteer Cluster Types"),
+            subtitle_create = T("Add New Volunteer Cluster Type"),
+            label_list_button = T("List Volunteer Cluster Types"),
+            label_create_button = T("Add Volunteer Cluster Type"),
+            label_delete_button = T("Delete Volunteer Cluster Type"),
+            msg_record_created = T("Volunteer Cluster Type added"),
+            msg_record_modified = T("Volunteer Cluster Type updated"),
+            msg_record_deleted = T("Volunteer Cluster Type deleted"),
+            msg_list_empty = T("No Volunteer Cluster Types"))
+
+        comment = S3AddResourceLink(c = "vol",
+                                    f = "cluster_type",
+                                    label = crud_strings[tablename].label_create_button,
+                                    title = T("Volunteer Cluster Type"),
+                                    )
+
+        vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", table,
+                                              label = T("Volunteer Cluster Type"),
+                                              requires = IS_NULL_OR(
+                                                                    IS_ONE_OF(db,
+                                                                              "vol_cluster_type.id",
+                                                                              s3_represent_name(table))),
+                                              represent = s3_represent_name(table),
+                                              # @ToDo: Enable once Inline Fields from Components support S3AddResourceLink 
+                                              #comment = comment
+                                              )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Cluster
         tablename = "vol_cluster"
         table = self.define_table(tablename,
+                                  vol_cluster_type_id(),
                                   Field("name", unique=True,
                                         label = T("Name")),
                                   *s3_meta_fields())
@@ -88,20 +131,78 @@ class S3VolClusterDataModel(S3Model):
                                                                   "vol_cluster.id",
                                                                   s3_represent_name(table))),
                                          represent = s3_represent_name(table),
-                                         comment = comment
+                                         # @ToDo: Enable once Inline Fields from Components support S3AddResourceLink 
+                                         #comment = comment
                                          )
 
         # ---------------------------------------------------------------------
+        # Volunteer Group Position
+        #
+        tablename = "vol_cluster_position"
+        table = self.define_table(tablename,
+                                  Field("name", unique=True,
+                                        label = T("Name")),
+                                  *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Volunteer Cluster Position"),
+            title_display = T("Volunteer Cluster Position"),
+            title_list = T("Volunteer Cluster Position"),
+            title_update = T("Edit Volunteer Cluster Position"),
+            title_search = T("Search Volunteer Cluster Positions"),
+            title_upload = T("Import Volunteer Cluster Positions"),
+            subtitle_create = T("Add New Volunteer Cluster Position"),
+            label_list_button = T("List Volunteer Cluster Positions"),
+            label_create_button = T("Add Volunteer Cluster Position"),
+            label_delete_button = T("Delete Volunteer Cluster Position"),
+            msg_record_created = T("Volunteer Cluster Position added"),
+            msg_record_modified = T("Volunteer Cluster Position updated"),
+            msg_record_deleted = T("Volunteer Cluster Position deleted"),
+            msg_list_empty = T("No Volunteer Cluster Positions"))
+
+        comment = S3AddResourceLink(c = "vol",
+                                    f = "cluster_position",
+                                    label = crud_strings[tablename].label_create_button,
+                                    title = T("Volunteer Cluster Position"),
+                                    )
+
+        vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", table,
+                                                label = T("Volunteer Cluster Postion"),
+                                                requires = IS_NULL_OR(
+                                                            IS_ONE_OF(db,
+                                                                      "vol_cluster_position.id",
+                                                                      s3_represent_name(table))),
+                                                represent = s3_represent_name(table),
+                                                # @ToDo: Enable once Inline Fields from Components support S3AddResourceLink 
+                                                #comment = comment
+                                                )
+
+        # ---------------------------------------------------------------------
         # Volunteer Cluster Link Table
+        cluster_type_filter = SCRIPT(
+'''$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'sub_volunteer_cluster_vol_cluster_type_id',
+  'Field':'sub_volunteer_cluster_vol_cluster_id',
+  'FieldKey':'vol_cluster_type_id',
+  'FieldPrefix':'vol',
+  'FieldResource':'cluster',
+ })
+})''')
+        
         tablename = "vol_volunteer_cluster"
         table = self.define_table(tablename,
                                   self.hrm_human_resource_id(),
+                                  vol_cluster_type_id(script = cluster_type_filter), # This field is ONLY here to provide a filter
                                   vol_cluster_id(readable=False,
                                                  writable=False),
+                                  vol_cluster_position_id(readable=False,
+                                                          writable=False),
                                   *s3_meta_fields())
 
         # Return names to response.s3
         return Storage(
+                vol_cluster_type_id = vol_cluster_type_id,
                 vol_cluster_id = vol_cluster_id,
             )
 
@@ -119,133 +220,4 @@ class S3VolClusterDataModel(S3Model):
                                              readable=False,
                                              writable=False),
             )
-
-# =============================================================================
-class S3VolGroupDataModel(S3Model):
-
-    names = ["vol_group",
-             "vol_group_position",
-             "vol_volunteer_group",]
-
-    def model(self):
-
-        db = current.db
-        T = current.T
-        
-        crud_strings = current.response.s3.crud_strings
-
-        # ---------------------------------------------------------------------
-        # Volunteer Group
-        #
-        tablename = "vol_group"
-        table = self.define_table(tablename,
-                                  Field("name", unique=True,
-                                        label = T("Name")),
-                                  *s3_meta_fields())
-
-        crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Group"),
-            title_display = T("Volunteer Group"),
-            title_list = T("Volunteer Group"),
-            title_update = T("Edit Volunteer Group"),
-            title_search = T("Search Volunteer Groups"),
-            title_upload = T("Import Volunteer Groups"),
-            subtitle_create = T("Add New Volunteer Group"),
-            label_list_button = T("List Volunteer Groups"),
-            label_create_button = T("Add Volunteer Group"),
-            label_delete_button = T("Delete Volunteer Group"),
-            msg_record_created = T("Volunteer Group added"),
-            msg_record_modified = T("Volunteer Group updated"),
-            msg_record_deleted = T("Volunteer Group deleted"),
-            msg_list_empty = T("No Volunteer Groups"))
-
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "group",
-                                    label = crud_strings[tablename].label_create_button,
-                                    title = T("Volunteer Group"),
-                                    )
-
-        vol_group_id = S3ReusableField("vol_group_id", table,
-                                       label = T("Volunteer Group"),
-                                       requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db,
-                                                              "vol_group.id",
-                                                              s3_represent_name(table))),
-                                       represent = s3_represent_name(table),
-                                       comment = comment
-                                       )
-
-        # ---------------------------------------------------------------------
-        # Volunteer Group Position
-        #
-        tablename = "vol_group_position"
-        table = self.define_table(tablename,
-                                  Field("name", unique=True,
-                                        label = T("Name")),
-                                  *s3_meta_fields())
-
-        crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Group Position"),
-            title_display = T("Volunteer Group Position"),
-            title_list = T("Volunteer Group Position"),
-            title_update = T("Edit Volunteer Group Position"),
-            title_search = T("Search Volunteer Group Positions"),
-            title_upload = T("Import Volunteer Group Positions"),
-            subtitle_create = T("Add New Volunteer Group Position"),
-            label_list_button = T("List Volunteer Group Positions"),
-            label_create_button = T("Add Volunteer Group Position"),
-            label_delete_button = T("Delete Volunteer Group Position"),
-            msg_record_created = T("Volunteer Group Position added"),
-            msg_record_modified = T("Volunteer Group Position updated"),
-            msg_record_deleted = T("Volunteer Group Position deleted"),
-            msg_list_empty = T("No Volunteer Group Positions"))
-
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "group",
-                                    label = crud_strings[tablename].label_create_button,
-                                    title = T("Volunteer Group Position"),
-                                    )
-
-        vol_group_position_id = S3ReusableField("vol_group_position_id", table,
-                                                label = T("Volunteer Group Postion"),
-                                                requires = IS_NULL_OR(
-                                                            IS_ONE_OF(db,
-                                                                      "vol_group_position.id",
-                                                                      s3_represent_name(table))),
-                                                represent = s3_represent_name(table),
-                                                comment = comment
-                                                )
-
-        # ---------------------------------------------------------------------
-        # Volunteer Group Link Table
-        #
-        tablename = "vol_volunteer_group"
-        table = self.define_table(tablename,
-                                  self.hrm_human_resource_id(),
-                                  vol_group_id(readable=False,
-                                               writable=False),
-                                  vol_group_position_id(readable=False,
-                                                        writable=False),
-                                  *s3_meta_fields())
-
-        # Return names to response.s3
-        return Storage(
-            vol_group_id=vol_group_id,
-        )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """
-            Return safe defaults for model globals, this will be called instead
-            of model() in case the model has been deactivated in
-            deployment_settings.
-        """
-
-        return Storage(
-                vol_group_id = S3ReusableField("vol_group_id", "integer",
-                                               readable=False,
-                                               writable=False),
-                )
-
 # END =========================================================================
