@@ -2028,6 +2028,8 @@ class GIS(object):
         if trackable:
             # Use S3Track
             ids = resource._ids
+            # Ensure IDs in ascending order
+            ids.sort()
             try:
                 tracker = S3Trackable(table, record_ids=ids)
             except SyntaxError:

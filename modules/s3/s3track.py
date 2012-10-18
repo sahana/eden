@@ -105,7 +105,7 @@ class S3Trackable(object):
                 raise SyntaxError("Not a trackable type: %s" % tablename)
             if record_ids:
                 query = (table._id.belongs(record_ids))
-                limitby = None
+                limitby = (0, len(record_ids))
                 orderby = table._id
             elif record_id:
                 query = (table._id == record_id)
@@ -113,6 +113,7 @@ class S3Trackable(object):
                 orderby = None
             else:
                 query = (table._id > 0)
+                limitby = None
                 orderby = table._id
             fields = [table[f] for f in fields]
             rows = db(query).select(limitby=limitby, orderby=orderby, *fields)

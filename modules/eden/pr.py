@@ -813,24 +813,23 @@ class S3PersonModel(S3Model):
             if age != ag:
                 form.errors.age_group = current.T("Age group does not match actual age.")
 
-   # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onaccept(form):
-        """ Onaccept callback
+        """
+            Onaccept callback
             Update any user associated with this person
-
         """
 
         db = current.db
         s3db = current.s3db
-        auth = current.auth
 
         vars = form.vars
         person_id = vars.id
 
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
-        utable = auth.settings.table_user
+        utable = current.auth.settings.table_user
 
         # Find a user for this person
         query = (ptable.id == person_id) & \
@@ -842,51 +841,13 @@ class S3PersonModel(S3Model):
                                 limitby=(0, 1)).first()
 
         # If there is a user and their first or last name have changed
-        if user and \
-           ( user.first_name != vars.first_name or \
-             user.last_name != vars.last_name ):
+        if user and vars.first_name and \
+           (user.first_name != vars.first_name or \
+            user.last_name != vars.last_name):
             # Update the user record
-            query = utable.id == user.id
-            db(query).update( first_name = vars.first_name,
-                              last_name = vars.last_name,
-                             )
-
-   # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_person_onaccept(form):
-        """ Onaccept callback
-            Update any user associated with this person
-
-        """
-
-        db = current.db
-        s3db = current.s3db
-        auth = current.auth
-
-        vars = form.vars
-        person_id = vars.id
-
-        ptable = s3db.pr_person
-        ltable = s3db.pr_person_user
-        utable = auth.settings.table_user
-
-        # Find a user for this person
-        query = (ptable.id == person_id) & \
-                (ltable.pe_id == ptable.pe_id) & \
-                (utable.id == ltable.user_id)
-        user = db(query).select(utable.id,
-                                utable.first_name,
-                                utable.last_name,
-                                limitby=(0, 1)).first()
-
-        # If there is a user and their first or last name have changed
-        if user and \
-           ( user.first_name != vars.first_name or \
-             user.last_name != vars.last_name ):
-            # Update the user record
-            query = utable.id == user.id
-            db(query).update( first_name = vars.first_name,
-                              last_name = vars.last_name,
+            query = (utable.id == user.id)
+            db(query).update(first_name = vars.first_name,
+                             last_name = vars.last_name,
                              )
 
     # -------------------------------------------------------------------------
