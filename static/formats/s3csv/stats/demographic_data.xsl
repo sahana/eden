@@ -207,8 +207,13 @@
             </xsl:attribute>
             <data field="date"><xsl:value-of select="$date"/></data>
             <data field="created_by">1</data>
+
             <!-- Link to Location -->
-            <xsl:call-template name="LocationReference"/>
+            <reference field="location_id" resource="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$location"/>
+                </xsl:attribute>
+            </reference>
 
             <!-- Link to Source -->
             <reference field="source_id" resource="doc_document">
