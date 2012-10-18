@@ -228,10 +228,10 @@ def volunteer():
                 set_org_dependent_field(person_details_table.mother_name)
                 set_org_dependent_field(person_details_table.affiliations)
                 set_org_dependent_field(person_details_table.company)
-                set_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_id)
-                volunteer_group_table = s3db.vol_volunteer_group
-                set_org_dependent_field(volunteer_group_table.vol_group_id)
-                set_org_dependent_field(volunteer_group_table.vol_group_position_id)
+                volunteer_cluster_table = s3db.vol_volunteer_cluster
+                set_org_dependent_field(volunteer_cluster_table.vol_cluster_type_id)
+                set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
+                set_org_dependent_field(volunteer_cluster_table.vol_cluster_position_id)
 
             elif r.method == "delete":
                 # Don't redirect
@@ -491,10 +491,10 @@ def person():
 
                     # Organisation Dependent Fields
                     set_org_dependent_field = deployment_settings.set_org_dependent_field
-                    set_org_dependent_field(s3db.vol_volunteer_cluster.vol_cluster_id)
-                    volunteer_group_table = s3db.vol_volunteer_group
-                    set_org_dependent_field(volunteer_group_table.vol_group_id)
-                    set_org_dependent_field(volunteer_group_table.vol_group_position_id)
+                    volunteer_cluster_table = s3db.vol_volunteer_cluster
+                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_type_id)
+                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_id)
+                    set_org_dependent_field(volunteer_cluster_table.vol_cluster_position_id)
 
                 elif r.component_name == "hours":
                     filter = (r.component.table.hours != None)
@@ -972,6 +972,11 @@ def programme_hours():
 
     output = s3_rest_controller("hrm", resourcename)
     return output
+# =============================================================================
+def cluster_type():
+    """ Volunteer Clusters controller """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def cluster():
@@ -979,14 +984,8 @@ def cluster():
 
     return s3_rest_controller()
 
-# =============================================================================
-def group():
-    """ Volunteer Groups controller """
-
-    return s3_rest_controller()
-
 # -----------------------------------------------------------------------------
-def group_position():
+def cluster_position():
     """ Volunteer Group Positions controller """
 
     return s3_rest_controller()
