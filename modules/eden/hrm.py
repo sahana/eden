@@ -4358,9 +4358,8 @@ def hrm_rheader(r, tabs=[],
                                 programme_hours_month += hours
 
                 # Already formatted as HTML
-                enable_active_field = settings.set_org_dependent_field(None,
-                                                                       tablename = "vol_volunteer",
-                                                                       fieldname = "active")
+                enable_active_field = settings.set_org_dependent_field("vol_volunteer", "active", 
+                                                                       enable_field = False)
                 if enable_active_field:
                     active = TD(record.active)
                     tooltip = SPAN(_class="tooltip",
