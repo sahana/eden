@@ -1552,7 +1552,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         TBODY(item_rows),
                         TFOOT(action_rows),
                         _class="embeddedComponent",
-                        _style="border: 1px solid black;"
                      )
         else:
             widget = current.T("No entries currently available")
@@ -1614,7 +1613,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         return TABLE(THEAD(labels),
                      TBODY(trs),
-                     TFOOT())
+                     TFOOT(),
+                     _class="embeddedComponent")
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):
@@ -1766,7 +1766,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
-    def _render_headers(self, data, extra_columns=2, **attributes):
+    def _render_headers(self, data, extra_columns=0, **attributes):
         """
             Render the header row with field labels
 
@@ -1777,6 +1777,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         fields = data["fields"]
         labels = [TD(LABEL(f["label"])) for f in fields]
+        #Is this required? Header Row doesn't have to be the same number of columns
         for i in range(extra_columns):
             labels.append(TD())
         return TR(labels, **attributes)
