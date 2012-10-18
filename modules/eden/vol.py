@@ -49,7 +49,7 @@ class S3VolClusterDataModel(S3Model):
 
         db = current.db
         T = current.T
-        
+
         crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
@@ -189,7 +189,7 @@ class S3VolClusterDataModel(S3Model):
   'FieldResource':'cluster',
  })
 })''')
-        
+
         tablename = "vol_volunteer_cluster"
         table = self.define_table(tablename,
                                   self.hrm_human_resource_id(),
