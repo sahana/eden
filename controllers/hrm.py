@@ -360,10 +360,10 @@ def person():
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = deployment_settings.set_org_dependent_field
-                set_org_dependent_field(person_details_table.father_name)
-                set_org_dependent_field(person_details_table.mother_name)
-                set_org_dependent_field(person_details_table.affiliations)
-                set_org_dependent_field(person_details_table.company)
+                set_org_dependent_field("pr_person_details","father_name")
+                set_org_dependent_field("pr_person_details","mother_name")
+                set_org_dependent_field("pr_person_details","affiliations")
+                set_org_dependent_field("pr_person_details","company")
             else:
                 if r.component_name == "human_resource":
                     table = r.component.table
