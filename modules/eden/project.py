@@ -2373,22 +2373,22 @@ class S3ProjectActivityModel(S3Model):
 
         if row is None and id is not None:
             if isinstance(id, Row):
-                row = id
+                activity = id
             else:
-                row = db(atable.id == id).select(atable.name,
-                                                 atable.project_id,
-                                                 limitby=(0, 1)).first()
+                activity = db(atable.id == id).select(atable.name,
+                                                      atable.project_id,
+                                                      limitby=(0, 1)).first()
 
-        if row is None:
+        if activity is None:
             return current.messages.NONE
 
         # Fetch the project record
         ptable = s3db.project_project
-        project = db(ptable.id == row.project_id).select(ptable.code,
-                                                         limitby=(0, 1)).first()
+        project = db(ptable.id == activity.project_id).select(ptable.code,
+                                                              limitby=(0, 1)).first()
 
         if project and project.code:
-            return "%s - %s" % (project.code, activity.name)
+            return "%s > %s" % (project.code, activity.name)
         else:
             return activity.name
 
@@ -3171,8 +3171,8 @@ class S3ProjectTaskModel(S3Model):
                     ),
                 ]
         list_fields=["id",
-                     "priority",
                      (T("ID"), "task_id"),
+                     "priority",
                      "name",
                      "pe_id",
                      "date_due",
@@ -3193,6 +3193,27 @@ class S3ProjectTaskModel(S3Model):
 
         task_search = S3Search(advanced = advanced_task_search)
 
+        crud_form = s3forms.S3SQLCustomForm(
+                        "name",
+                        "description",
+                        "source",
+                        "priority",
+                        "pe_id",
+                        "date_due",
+                        "milestone_id",
+                        "time_estimated",
+                        "status",
+                        s3forms.S3SQLInlineComponent(
+                            "time",
+                            label=T("Time Log"),
+                            fields=["date",
+                                    "person_id",
+                                    "hours",
+                                    "comments"]
+                        ),
+                        "time_actual",
+                    )
+
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
@@ -3205,6 +3226,7 @@ class S3ProjectTaskModel(S3Model):
                   update_onaccept=self.task_update_onaccept,
                   search_method=task_search,
                   list_fields=list_fields,
+                  crud_form = crud_form,
                   extra="description")
 
         # Reusable field
@@ -3364,7 +3386,7 @@ class S3ProjectTaskModel(S3Model):
             title_update = T("Edit Logged Time"),
             title_search = T("Search Logged Time"),
             title_upload = T("Import Logged Time data"),
-            title_report = T("Last Week's Work"),
+            title_report = T("Project Time Report"),
             subtitle_create = T("Log New Time"),
             label_list_button = T("List Logged Time"),
             label_create_button = ADD_TIME,
@@ -4752,9 +4774,6 @@ def project_rheader(r, tabs=[]):
         # Tabs
         tabs = [(T("Details"), None)]
         append = tabs.append
-        staff = auth.s3_has_role("STAFF")
-        if staff:
-            append((T("Time"), "time")),
         append((T("Attachments"), "document"))
         if settings.has_module("msg"):
             append((T("Notify"), "dispatch"))
@@ -4963,8 +4982,8 @@ def project_task_controller():
             crud_strings.title_search = T("All Tasks")
             list_fields = s3db.get_config(tablename,
                                           "list_fields")
-            list_fields.insert(2, (T("Project"), "project"))
-            list_fields.insert(3, (T("Activity"), "activity"))
+            list_fields.insert(3, (T("Project"), "project"))
+            list_fields.insert(4, (T("Activity"), "activity"))
             s3db.configure(tablename,
                            report_options=Storage(
                                 search=[

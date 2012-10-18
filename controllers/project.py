@@ -629,9 +629,9 @@ def time():
                        listadd=False)
         person_id = auth.s3_logged_in_person()
         if person_id:
-            now = request.utcnow
-            s3.filter = (table.person_id == person_id) & \
-                        (table.date > (now - datetime.timedelta(days=2)))
+            # @ToDo: Use URL filter instead, but the Search page will have 
+            # to populate it's widgets based on the URL filter  
+            s3.filter = (table.person_id == person_id)
         try:
             list_fields = s3db.get_config(tablename,
                                           "list_fields")

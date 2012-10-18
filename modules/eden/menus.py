@@ -1579,16 +1579,8 @@ class S3OptionsMenu(object):
                         M("Import Tasks", f="task", m="import", p="create"),
                      ),
                      M("Reports", f="report")(
-                        M("Activity Report", f="activity", m="report",
-                          vars=Storage(rows="project_id",
-                                       cols="name",
-                                       fact="time_actual",
-                                       aggregate="sum")),
-                        M("Project Time Report", f="time", m="report",
-                          vars=Storage(rows="project",
-                                       cols="person_id",
-                                       fact="hours",
-                                       aggregate="sum")),
+                        M("Activity Report", f="activity", m="report"),
+                        M("Project Time Report", f="time", m="report"),
                      ),
                     )
         else:
