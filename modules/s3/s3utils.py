@@ -79,6 +79,7 @@ def s3_debug(message, value=None):
     try:
         print >> sys.stderr, output
     except:
+        # Unicode string
         print >> sys.stderr, "Debug crashed"
 
 # =============================================================================

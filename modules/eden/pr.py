@@ -1724,13 +1724,14 @@ class S3PersonImageModel(S3Model):
     @staticmethod
     def pr_image_ondelete(row):
         """
+            If a PR Image is deleted, delete the thumbnails too
         """
+
         db = current.db
         table = db.pr_image
-        query = (table.id == row.get("id"))
-        deleted_row = db(query).select(table.image,
-                                       limitby=(0, 1)).first()
-        current.s3db.pr_image_delete_all(deleted_row.image)
+        row = db(table.id == row.id).select(table.image,
+                                            limitby=(0, 1)).first()
+        current.s3db.pr_image_delete_all(row.image)
 
 # =============================================================================
 class S3ImageLibraryModel(S3Model):
@@ -1744,9 +1745,10 @@ class S3ImageLibraryModel(S3Model):
 
         This has been included in the pr module because:
         pr uses it (but so do other modules), pr is a compulsory module
-        and this should also be compuslory but didn't want to create a
+        and this should also be compulsory but didn't want to create a
         new compulsory module just for this.
     """
+
     names = ["pr_image_library",
              "pr_image_size",
              "pr_image_delete_all",
@@ -1768,15 +1770,11 @@ class S3ImageLibraryModel(S3Model):
                                   # New file format name
                                   Field("format"),
                                   # New requested file dimensions
-                                  Field("width", "integer",
-                                       ),
-                                  Field("height", "integer",
-                                       ),
+                                  Field("width", "integer"),
+                                  Field("height", "integer"),
                                   # New actual file dimensions
-                                  Field("actual_width", "integer",
-                                       ),
-                                  Field("actual_height", "integer",
-                                       )
+                                  Field("actual_width", "integer"),
+                                  Field("actual_height", "integer")
                                 )
 
         # ---------------------------------------------------------------------
@@ -1796,8 +1794,9 @@ class S3ImageLibraryModel(S3Model):
 
         db = current.db
         table = db.pr_image_library
-        query = (table.new_name == image_name)
-        image = db(query).select(limitby=(0, 1)).first()
+        image = db(table.new_name == image_name).select(table.actual_height,
+                                                        table.actual_width,
+                                                        limitby=(0, 1)).first()
         if image:
             return (image.actual_width, image.actual_height)
         else:
@@ -1812,11 +1811,10 @@ class S3ImageLibraryModel(S3Model):
         """
 
         if current.deployment_settings.get_security_archive_not_delete():
-           return
+            return
         db = current.db
         table = db.pr_image_library
-        query = (table.original_name == original_image_name)
-        set = db(query)
+        set = db(table.original_name == original_image_name)
         set.delete_uploaded_files()
         set.delete()
 

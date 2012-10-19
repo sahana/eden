@@ -17,8 +17,14 @@ def call():
 def download():
     """ Download a file """
 
+    try:
+        filename = request.args[0]
+    except:
+        session.error("Need to specify the file to download!")
+        redirect(URL(f="index"))
+
     # Load the Model
-    tablename = request.args[0].split(".", 1)[0]
+    tablename = filename.split(".", 1)[0]
     table = s3db[tablename]
 
     return response.download(request, db)

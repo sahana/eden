@@ -2434,7 +2434,18 @@ class GIS(object):
                     geojson = row.geojson
                 elif simplify:
                     id = row.id
-                    geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                    wkt = row.wkt
+                    if wkt:
+                        geojson = _simplify(wkt, tolerance=simplify,
+                                            output="geojson")
+                    else:
+                        name = db(table.id == id).select(table.name,
+                                                         limitby=(0, 1)).first().name
+                        try:
+                            print >> sys.stderr, "No WKT, level 0: %s" % name
+                        except:
+                            print >> sys.stderr, "No WKT, level 0: %s" % id
+                        continue
                 else:
                     id = row.id
                     shape = wkt_loads(row.wkt)
@@ -2486,7 +2497,18 @@ class GIS(object):
                         geojson = row.geojson
                     elif simplify:
                         id = row.id
-                        geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                        wkt = row.wkt
+                        if wkt:
+                            geojson = _simplify(wkt, tolerance=simplify,
+                                                output="geojson")
+                        else:
+                            name = db(table.id == id).select(table.name,
+                                                             limitby=(0, 1)).first().name
+                            try:
+                                print >> sys.stderr, "No WKT, level 1: %s" % name
+                            except:
+                                print >> sys.stderr, "No WKT, level 1: %s" % id
+                            continue
                     else:
                         id = row.id
                         shape = wkt_loads(row.wkt)
@@ -2535,7 +2557,18 @@ class GIS(object):
                             geojson = row.geojson
                         elif simplify:
                             id = row.id
-                            geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                            wkt = row.wkt
+                            if wkt:
+                                geojson = _simplify(wkt, tolerance=simplify,
+                                                    output="geojson")
+                            else:
+                                name = db(table.id == id).select(table.name,
+                                                                 limitby=(0, 1)).first().name
+                                try:
+                                    print >> sys.stderr, "No WKT, level 2: %s" % name
+                                except:
+                                    print >> sys.stderr, "No WKT, level 2: %s" % id
+                                continue
                         else:
                             id = row.id
                             shape = wkt_loads(row.wkt)
@@ -2587,7 +2620,18 @@ class GIS(object):
                                 geojson = row.geojson
                             elif simplify:
                                 id = row.id
-                                geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                                wkt = row.wkt
+                                if wkt:
+                                    geojson = _simplify(wkt, tolerance=simplify,
+                                                        output="geojson")
+                                else:
+                                    name = db(table.id == id).select(table.name,
+                                                                     limitby=(0, 1)).first().name
+                                    try:
+                                        print >> sys.stderr, "No WKT, level 3: %s" % name
+                                    except:
+                                        print >> sys.stderr, "No WKT, level 3: %s" % id
+                                    continue
                             else:
                                 id = row.id
                                 shape = wkt_loads(row.wkt)
@@ -2642,7 +2686,18 @@ class GIS(object):
                                     geojson = row.geojson
                                 elif simplify:
                                     id = row.id
-                                    geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                                    wkt = row.wkt
+                                    if wkt:
+                                        geojson = _simplify(wkt, tolerance=simplify,
+                                                            output="geojson")
+                                    else:
+                                        name = db(table.id == id).select(table.name,
+                                                                         limitby=(0, 1)).first().name
+                                        try:
+                                            print >> sys.stderr, "No WKT, level 4: %s" % name
+                                        except:
+                                            print >> sys.stderr, "No WKT, level 4: %s" % id
+                                        continue
                                 else:
                                     id = row.id
                                     shape = wkt_loads(row.wkt)

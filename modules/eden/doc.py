@@ -114,20 +114,13 @@ class S3DocumentLibrary(S3Model):
                                 ),
                              s3_date(label = T("Date Published")),
                              location_id(),
-                             self.stats_group_type_id(),
                              s3_comments(),
-                             #Field("entered", "boolean", label=T("Entered")),
                              Field("checksum", readable=False, writable=False),
                              *s3_meta_fields())
 
         # Field configuration
         table.file.represent = lambda file, table=table: \
                                self.doc_file_represent(file, table)
-        #table.location_id.readable = False
-        #table.location_id.writable = False
-        #table.entered.comment = DIV(_class="tooltip",
-        #                            _title="%s|%s" % (T("Entered"),
-        #                                              T("Has data from this Reference Document been entered into Sahana?")))
 
         # CRUD Strings
         ADD_DOCUMENT = T("Add Reference Document")
@@ -172,6 +165,7 @@ class S3DocumentLibrary(S3Model):
         tablename = "doc_image"
         table = define_table(tablename,
                              # Instance
+                             # @ToDo: Remove (Images aren't stats sources)
                              super_link("source_id", "stats_source"),
                              # Component not instance
                              super_link("site_id", "org_site"),
@@ -181,6 +175,7 @@ class S3DocumentLibrary(S3Model):
                                    requires = IS_NULL_OR(
                                                 IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)
                                                          )),
+                                   represent = doc_image_represent,
                                    # upload folder needs to be visible to the download() function as well as the upload
                                    uploadfolder = os.path.join(current.request.folder,
                                                                "uploads",
@@ -202,15 +197,13 @@ class S3DocumentLibrary(S3Model):
                                 ),
                              s3_date(label = T("Date Taken")),
                              location_id(),
-                             self.stats_group_type_id(),
+                             # @ToDo: Remove (not being populated anyway)
+                             #self.stats_group_type_id(),
                              s3_comments(),
                              Field("checksum", readable=False, writable=False),
                              *s3_meta_fields())
 
-        # Field configuration
-        table.file.represent = doc_image_represent
-
-       # CRUD Strings
+        # CRUD Strings
         ADD_IMAGE = T("Add Photo")
         crud_strings[tablename] = Storage(
             title_create = ADD_IMAGE,
@@ -234,7 +227,8 @@ class S3DocumentLibrary(S3Model):
                   super_entity = "stats_source",
                   deduplicate=self.document_duplicate,
                   onvalidation=lambda form: \
-                                self.document_onvalidation(form, document=False))
+                            self.document_onvalidation(form, document=False))
+
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
