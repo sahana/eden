@@ -66,7 +66,6 @@ class S3Msg(object):
                  modem=None):
 
         T = current.T
-        self.mail = current.mail
         self.modem = modem
 
         # http://docs.oasis-open.org/emergency/edxl-have/cs01/xPIL-types.xsd
@@ -702,6 +701,7 @@ class S3Msg(object):
                    cc=None,
                    bcc=None,
                    reply_to=None,
+                   sender="%(sender)s",
                    encoding="utf-8"):
         """
             Function to send Email
@@ -714,8 +714,13 @@ class S3Msg(object):
         if not to:
             return False
 
-        limit = current.deployment_settings.get_mail_limit()
+        settings = current.deployment_settings
+        default_sender = settings.get_mail_sender()
+        if not default_sender:
+            s3_debug("Email sending disabled until the Sender address has been set in models/000_config.py")
+            return False
 
+        limit = settings.get_mail_limit()
         if limit:
             db = current.db
             s3db = current.db
@@ -730,15 +735,17 @@ class S3Msg(object):
             # Log the sending
             table.insert()
 
-        result = self.mail.send(to,
-                                subject,
-                                message,
-                                attachments,
-                                cc,
-                                bcc,
-                                reply_to,
-                                encoding
-                                )
+        result = current.mail.send(to,
+                                   subject=subject,
+                                   message=message,
+                                   attachments=attachments,
+                                   cc=cc,
+                                   bcc=bcc,
+                                   reply_to=reply_to,
+                                   # @ToDo: Once more people have upgrade their web2py
+                                   #sender=sender,
+                                   encoding=encoding
+                                   )
 
         return result
 
@@ -916,12 +923,10 @@ class S3Msg(object):
             http://www.obviously.com/tech_tips/SMS_Text_Email_Gateway.html
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.msg_smtp_to_sms_settings
-
+        table = current.s3db.msg_smtp_to_sms_settings
         query = (table.enabled == True)
-        settings = db(query).select(limitby=(0, 1)).first()
+        settings = current.db(query).select(limitby=(0, 1)
+                                            ).first()
         if not settings:
             return False
 
@@ -931,10 +936,10 @@ class S3Msg(object):
                         settings.address)
 
         try:
-            self.send_email(to=to,
-                            subject="",
-                            message= text)
-            return True
+            result = self.send_email(to=to,
+                                     subject="",
+                                     message= text)
+            return result
         except:
             return False
 

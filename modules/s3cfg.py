@@ -613,11 +613,20 @@ class S3Config(Storage):
         """
         return self.mail.get("tls", False)
     def get_mail_sender(self):
-        return self.mail.get("sender", "'Sahana' <sahana@example.org>")
+        """
+            The From Address for all Outbound Emails
+        """
+        return self.mail.get("sender", None)
     def get_mail_approver(self):
+        """
+            The default Address to send Requests for New Users to be Approved
+            - unless overridden by per-domain entries in auth_organsiation
+        """
         return self.mail.get("approver", "useradmin@example.org")
     def get_mail_limit(self):
-        """ A daily limit to the number of messages which can be sent """
+        """
+            A daily limit to the number of messages which can be sent
+        """
         return self.mail.get("limit", None)
 
     # -------------------------------------------------------------------------

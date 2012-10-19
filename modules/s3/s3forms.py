@@ -409,13 +409,10 @@ class S3SQLDefaultForm(S3SQLForm):
             @todo: describe arguments
         """
 
-        s3db = current.s3db
-
         manager = current.manager
         audit = manager.audit
         table = self.table
         record_id = self.record_id
-        response = current.response
 
         # Get the proper onvalidation routine
         if isinstance(onvalidation, dict):
@@ -456,6 +453,7 @@ class S3SQLDefaultForm(S3SQLForm):
             vars = form.vars
 
             # Update super entity links
+            s3db = current.s3db
             s3db.update_super(table, vars)
 
             # Update component link
@@ -465,17 +463,17 @@ class S3SQLDefaultForm(S3SQLForm):
                 resource.update_link(master, vars)
 
             if vars.id:
-                auth = current.auth
                 if record_id is None:
                     # Set record owner
+                    auth = current.auth
                     auth.s3_set_record_owner(table, vars.id)
                     auth.s3_make_session_owner(table, vars.id)
                 else:
                     # Update realm
                     update_realm = s3db.get_config(table, "update_realm")
                     if update_realm:
-                        auth.set_realm_entity(table, vars,
-                                              force_update=True)
+                        current.auth.set_realm_entity(table, vars,
+                                                      force_update=True)
                 # Store session vars
                 self.resource.lastid = str(vars.id)
                 manager.store_session(prefix, name, vars.id)
@@ -586,7 +584,6 @@ class S3SQLCustomForm(S3SQLForm):
 
         db = current.db
         s3 = current.response.s3
-        settings = s3.crud
 
         # Determine the target resource
         if resource is None:
@@ -633,7 +630,7 @@ class S3SQLCustomForm(S3SQLForm):
             # Default formstyle works best when we have no formatting
             formstyle = "table3cols"
         else:
-            formstyle = lambda a, b, c, d: settings.formstyle(a, b, c, d)
+            formstyle = lambda a, b, c, d: s3.crud.formstyle(a, b, c, d)
 
         # Retrieve the record
         record = None
@@ -649,6 +646,8 @@ class S3SQLCustomForm(S3SQLForm):
         forbidden = []
         permit = resource.permit
 
+        rcomponents = resource.components
+
         if record is not None:
 
             # Retrieve the subrows
@@ -656,7 +655,7 @@ class S3SQLCustomForm(S3SQLForm):
             for alias in subtables:
 
                 # Get the join for this subtable
-                component = resource.components[alias]
+                component = rcomponents[alias]
                 if component.multiple:
                     continue
                 join = component.get_join()
@@ -670,7 +669,7 @@ class S3SQLCustomForm(S3SQLForm):
                 # Check permission for this subrow
                 ctname = component.tablename
                 if not row:
-                    component = resource.components[alias]
+                    component = rcomponents[alias]
                     permitted = permit("create", ctname)
                     if not permitted:
                         forbidden.append(alias)
@@ -710,8 +709,8 @@ class S3SQLCustomForm(S3SQLForm):
 
             # Check create-permission for subtables
             for alias in subtables:
-                if alias in resource.components:
-                    component = resource.components[alias]
+                if alias in rcomponents:
+                    component = rcomponents[alias]
                 else:
                     continue
                 permitted = permit("create", component.tablename)
@@ -913,16 +912,12 @@ class S3SQLCustomForm(S3SQLForm):
             @param format: the request format (for audit)
         """
 
-        auth = current.auth
-
-        manager = current.manager
-        audit = manager.audit
-
-        db = current.db
-        s3db = current.s3db
-
         if not data:
             return
+
+        s3db = current.s3db
+        manager = current.manager
+        audit = manager.audit
 
         if alias is None:
             component = self.resource
@@ -933,11 +928,16 @@ class S3SQLCustomForm(S3SQLForm):
 
         get_config = s3db.get_config
 
+        record = None
         if record_id:
             accept_id = record_id
+            db = current.db
             db(table._id == record_id).update(**data)
             onaccept = get_config(tablename, "update_onaccept",
                        get_config(tablename, "onaccept", None))
+            if onaccept:
+                record = db(table._id == record_id).select(limitby=(0, 1)
+                                                           ).first()
         else:
             accept_id = table.insert(**data)
             if not accept_id:
@@ -947,7 +947,7 @@ class S3SQLCustomForm(S3SQLForm):
 
         data[table._id.name] = accept_id
         prefix, name = tablename.split("_", 1)
-        form = Storage(vars=Storage(data))
+        form = Storage(vars=Storage(data), record=record)
 
         # Audit
         if record_id is None:
@@ -963,14 +963,15 @@ class S3SQLCustomForm(S3SQLForm):
         if accept_id:
             if record_id is None:
                 # Set record owner
+                auth = current.auth
                 auth.s3_set_record_owner(table, accept_id)
                 auth.s3_make_session_owner(table, accept_id)
             else:
                 # Update realm
                 update_realm = s3db.get_config(table, "update_realm")
                 if update_realm:
-                    auth.set_realm_entity(table, Storage(data),
-                                          force_update=True)
+                    current.auth.set_realm_entity(table, Storage(data),
+                                                  force_update=True)
 
             # Store session vars
             component.lastid = str(accept_id)

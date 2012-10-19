@@ -3027,7 +3027,7 @@ class S3ProjectTaskModel(S3Model):
                                                         zero=None),
                                    default = 3,
                                    label = T("Priority"),
-                                   represent = lambda opt, row=None: \
+                                   represent = lambda opt: \
                                                project_task_priority_opts.get(opt,
                                                                               UNKNOWN_OPT)),
                              # Could be a Person, Team or Organisation
@@ -3193,6 +3193,7 @@ class S3ProjectTaskModel(S3Model):
 
         task_search = S3Search(advanced = advanced_task_search)
 
+        # Custom Form
         crud_form = s3forms.S3SQLCustomForm(
                         "name",
                         "description",
@@ -3244,7 +3245,6 @@ class S3ProjectTaskModel(S3Model):
                                                               tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
                                   ondelete = "CASCADE")
 
-        # ---------------------------------------------------------------------
         # Custom Methods
         self.set_method("project", "task",
                         method="dispatch",
@@ -4233,11 +4233,10 @@ def task_notify(form):
     """
 
     vars = form.vars
-    try:
-        pe_id = int(vars.pe_id)
-    except TypeError, ValueError:
+    pe_id = vars.pe_id
+    if not pe_id:
         return
-    if form.record is None or (pe_id != form.record.pe_id):
+    if form.record is None or (int(pe_id) != form.record.pe_id):
         # Assignee has changed
         settings = current.deployment_settings
         if settings.has_module("msg"):
@@ -4245,7 +4244,7 @@ def task_notify(form):
             subject = "%s: Task assigned to you" % settings.get_system_name_short()
             url = "%s%s" % (settings.get_base_public_url(),
                             URL(c="project", f="task", args=vars.id))
-            priority = current.s3db.project_task.priority.represent(vars.priority)
+            priority = current.s3db.project_task.priority.represent(int(vars.priority))
             message = "You have been assigned a Task:\n\n%s\n\n%s\n\n%s\n\n%s" % \
                 (url,
                  "%s priority" % priority,

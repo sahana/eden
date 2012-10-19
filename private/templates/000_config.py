@@ -79,7 +79,7 @@ settings.auth.hmac_key = "akeytochange"
 #settings.mail.server = "smtp.gmail.com:587"
 #settings.mail.tls = True
 #settings.mail.login = "username:password"
-# From Address
+# From Address - until this is set, no mails can be sent
 #settings.mail.sender = "'Sahana' <sahana@example.org>"
 # Default email address to which requests to approve new user accounts gets sent
 # This can be overridden for specific domains/organisations via the auth_domain table
