@@ -137,9 +137,16 @@ $(function() {
         var c = data['controller'];
         var f = data['function'];
         var url = S3.Ap.concat('/' + c + '/' + f + '/validate.json');
+        var resource = data['resource'];
+        if (null != resource && typeof resource != 'undefined') {
+            url += '?resource='+resource;
+            concat = '&';
+        } else {
+            concat = '?';
+        }
         var component = data['component'];
-        if (null != component) {
-            url += '?component='+component;
+        if (null != component && typeof component != 'undefined') {
+            url += concat+'component='+component;
         }
 
         // Request validation of the row

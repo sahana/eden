@@ -1397,8 +1397,20 @@ class S3CRUD(S3Method):
         output = Storage()
         resource = self.resource
 
-        if "component" in r.get_vars:
-            alias = r.get_vars["component"]
+        vars = r.get_vars
+        if "component" in vars:
+            alias = vars["component"]
+        else:
+            alias = None
+        if "resource" in vars:
+            tablename = vars["resource"]
+            components = [alias] if alias else None
+            try:
+                resource = current.s3db.resource(tablename,
+                                                 components=components)
+            except:
+                r.error(404, current.manager.ERROR.BAD_RESOURCE)
+        if alias:
             if alias in resource.components:
                 component = resource.components[alias]
             else:

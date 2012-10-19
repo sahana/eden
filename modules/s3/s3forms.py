@@ -1245,9 +1245,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Check selector
         if selector not in resource.components:
-            raise SyntaxError("Undefined component: %s" % selector)
-        else:
-            component = resource.components[selector]
+            hook = current.s3db.get_component(resource.tablename, selector)
+            if hook:
+                resource._attach(selector, hook)
+            else:
+                raise SyntaxError("Undefined component: %s" % selector)
+        component = resource.components[selector]
 
         # Check permission
         permitted = component.permit("read", component.tablename)
@@ -1377,6 +1380,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             data = {"controller": c,
                     "function": f,
+                    "resource": resource.tablename,
                     "component": component_name,
                     "fields": headers,
                     "defaults": self._filterby_defaults(),

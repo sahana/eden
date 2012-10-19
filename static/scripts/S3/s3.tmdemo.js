@@ -29,121 +29,6 @@ var Log = {
   }
 };
 
-var sdata = {
-    "name": "CountryX",
-    "level": 0,
-    "indicators": {
-        "0": 3,
-        "1": 2,
-        "2": 4,
-    },
-    "population": 21768322,
-    "children": [
-        {
-            "name": "ProvinceA",
-            "level": 1,
-            "indicators": {
-                "0": 4,
-                "1": 3,
-                "2": 5,
-            },
-            "population": 1768322,
-            "children": [
-                {
-                    "name": "DistrictA",
-                    "level": 2,
-                    "indicators": {
-                        "0": 3,
-                        "1": 1,
-                        "2": 5,
-                    },
-                    "population": 768322,
-                    "children": []
-                },
-                {
-                    "name": "DistrictB",
-                    "level": 2,
-                    "indicators": {
-                        "0": 3,
-                        "1": 2,
-                        "2": 4,
-                    },
-                    "population": 228322,
-                    "children": []
-                },
-            ]
-        },
-        {
-            "name": "ProvinceB",
-            "level": 1,
-            "indicators": {
-                "0": 4,
-                "1": 5,
-                "2": 3,
-            },
-            "population": 4328322,
-            "children": [
-                {
-                    "name": "DistrictC",
-                    "level": 2,
-                    "indicators": {
-                        "0": 5,
-                        "1": 5,
-                        "2": 5,
-                    },
-                    "population": 468322,
-                    "children": []
-                },
-                {
-                    "name": "DistrictD",
-                    "level": 2,
-                    "indicators": {
-                        "0": 3,
-                        "1": 2,
-                        "2": 4,
-                    },
-                    "population": 628322,
-                    "children": []
-                },
-            ]
-        },
-        {
-            "name": "ProvinceC",
-            "level": 1,
-            "indicators": {
-                "0": 1,
-                "1": 1,
-                "2": 1,
-            },
-            "population": 301230,
-            "children": [
-                {
-                    "name": "DistrictE",
-                    "level": 2,
-                    "indicators": {
-                        "0": 5,
-                        "1": 5,
-                        "2": 5,
-                    },
-                    "population": 27834,
-                    "children": []
-                },
-                {
-                    "name": "DistrictF",
-                    "level": 2,
-                    "indicators": {
-                        "0": 2,
-                        "1": 3,
-                        "2": 1,
-                    },
-                    "population": 191645,
-                    "children": []
-                },
-            ]
-        }
-    ]
-};
-
 var h = {
     "0": "Country",
     "1": "Province",
@@ -153,12 +38,37 @@ var h = {
 
 var colors = ["#999", "#ff5121", "#f4961c", "#d6b317", "#77b82e", "#059346"];
 
-function population(node) {
+var tm = null;
+
+function tmGetData(indicator_index) {
+
+    if (tm != null) {
+        $.ajax({
+            'url': S3.Ap.concat('/vulnerability/tmdata'),
+            'success': function(data) {
+                var json = tmCreateNode(s, indicator_index);
+                tm.loadJSON(json);
+                tm.refresh();
+            },
+            'error': function(request, status, error) {
+                if (error == 'UNAUTHORIZED') {
+                    msg = S3.i18n.gis_requires_login;
+                } else {
+                    msg = request.responseText;
+                }
+                console.log(msg);
+            },
+            'dataType': 'script'
+        });
+    }
+}
+
+function tmPopulation(node) {
 
     var pop = 0;
     if (node.children.length > 0) {
         for (var i=0; i<node.children.length; i++) {
-            p = population(node.children[i]);
+            p = tmPopulation(node.children[i]);
             pop += p;
         }
     } else {
@@ -167,18 +77,18 @@ function population(node) {
     return pop;
 }
 
-function create_node(node, indicator_index) {
+function tmCreateNode(node, indicator_index) {
 
     var children = [];
     for (var i=0; i<node.children.length; i++) {
-        var subnode = create_node(node.children[i], indicator_index);
+        var subnode = tmCreateNode(node.children[i], indicator_index);
         children.push(subnode);
     }
     var v = node.indicators[indicator_index];
     if (v != null) {
         var color = colors[v];
     }
-    var p = population(node);
+    var p = tmPopulation(node);
     var json = {
         "children": children,
         "data": {
@@ -195,12 +105,10 @@ function create_node(node, indicator_index) {
     return json;
 }
 
-function init(){
-
-  var json = create_node(sdata, 1);
+function tmInit(){
 
   //init TreeMap
-  var tm = new $jit.TM.Squarified({
+  tm = new $jit.TM.Squarified({
 
     //where to inject the visualization
     injectInto: 'infovis',
@@ -265,10 +173,9 @@ function init(){
         };
     }
   });
-  tm.loadJSON(json);
-  tm.refresh();
 }
 
 $(document).ready(function() {
-    init();
+    tmInit();
+    tmGetData(0);
 });
