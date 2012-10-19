@@ -359,11 +359,11 @@ def person():
                 person_details_table.occupation.writable = False
 
                 # Organisation Dependent Fields
-                set_org_dependent_field = deployment_settings.set_org_dependent_field
-                set_org_dependent_field("pr_person_details","father_name")
-                set_org_dependent_field("pr_person_details","mother_name")
-                set_org_dependent_field("pr_person_details","affiliations")
-                set_org_dependent_field("pr_person_details","company")
+                set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("pr_person_details", "father_name")
+                set_org_dependent_field("pr_person_details", "mother_name")
+                set_org_dependent_field("pr_person_details", "affiliations")
+                set_org_dependent_field("pr_person_details", "company")
             else:
                 if r.component_name == "human_resource":
                     table = r.component.table
