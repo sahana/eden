@@ -20,7 +20,7 @@ $(function() {
     inline_deserialize = function(formname) {
         var real_input = '#' + inline_get_field(formname);
         data_json = $(real_input).val();
-        data = JSON.parse(data_json)
+        data = JSON.parse(data_json);
         $(real_input).data('data', data);
         return data;
     };
@@ -58,7 +58,10 @@ $(function() {
         }
         $(field_id).after(msg);
         $('.'+formname+'_error').hide();
-        $('.error').click(function() { $(this).fadeOut('slow'); return false; });
+        $('.error').click(function() {
+            $(this).fadeOut('slow');
+            return false;
+        });
     };
 
     // Display all errors
@@ -216,13 +219,13 @@ $(function() {
         }
 
         // Insert the edit row after this read row
-        $('#edit-row-'+formname).insertAfter('#read-row-'+rowname);
+        $('#edit-row-' + formname).insertAfter('#read-row-' + rowname);
 
         // Remember the current row index in the edit row
-        $('#edit-row-'+formname).data('rowindex', rowindex);
+        $('#edit-row-' + formname).data('rowindex', rowindex);
 
         // Show the edit row
-        $('#edit-row-'+formname).removeClass('hide');
+        $('#edit-row-' + formname).removeClass('hide');
 
         // Disable the add-row while editing
         disable_inline_add(formname);
@@ -252,8 +255,8 @@ $(function() {
         var rowindex = 'none';
 
         // Hide add-button, show throbber
-        $('#add-' + formname + '-' + rowindex).addClass('hide')
-        $('#throbber-' + formname + '-' + rowindex).removeClass('hide')
+        $('#add-' + formname + '-' + rowindex).addClass('hide');
+        $('#throbber-' + formname + '-' + rowindex).removeClass('hide');
 
         // Remove any previous error messages
         inline_remove_errors(formname);
@@ -321,7 +324,7 @@ $(function() {
 
         // Hide rdy, show throbber
         $('#rdy-' + formname + '-0').addClass('hide')
-        $('#throbber-' + formname + '-0').removeClass('hide')
+        $('#throbber-' + formname + '-0').removeClass('hide');
 
         // Remove any previous error messages
         inline_remove_errors(formname);
@@ -379,13 +382,13 @@ $(function() {
             inline_form_events();
 
             // Hide and reset the edit row
-            $('#edit-row-'+formname).addClass('hide');
+            $('#edit-row-' + formname).addClass('hide');
 
             // Reset rowindex
-            $('#edit-row-'+formname).data('rowindex', null);
+            $('#edit-row-' + formname).data('rowindex', null);
 
             // Show the read row
-            $('#read-row-'+rowname).removeClass('hide');
+            $('#read-row-' + rowname).removeClass('hide');
 
             // Re-enable add-row
             enable_inline_add(formname);
@@ -401,7 +404,9 @@ $(function() {
         var rowname = formname + '-' + rowindex;
 
         // Confirmation dialog
-        if (!confirm(S3.i18n.delete_confirmation)) return false;
+        if (!confirm(S3.i18n.delete_confirmation)) {
+            return false;
+        }
 
         // Update the real_input JSON with deletion of this row
         data = inline_deserialize(formname);
