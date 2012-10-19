@@ -21,7 +21,7 @@ def index():
 # -----------------------------------------------------------------------------
 def info_prep(r):
     """
-        Preprocessor for CAP Info segments 
+        Preprocessor for CAP Info segments
         - whether accessed via /eden/info or /eden/alert/x/info
     """
 
@@ -90,7 +90,7 @@ def alert():
                          args=request.args,
                          vars=request.vars))
 
-        if r.interactive:   
+        if r.interactive:
             alert_fields_comments()
 
         post_vars = request.post_vars
@@ -137,7 +137,6 @@ def alert():
                                        "mci",
                                        "deleted",
                                        "modified_on",
-                                       "owned_by_entity",
                                        "realm_entity",
                                        "uuid",
                                        "created_on",
@@ -364,7 +363,7 @@ def alert_fields_comments():
           _title="%s|%s" % (
               T("A list of incident(s) referenced by the alert message"),
               T("Used to collate multiple messages referring to different aspects of the same incident. If multie incident identifiers are referenced, they SHALL be separated by whitespace.  Incident names including whitespace SHALL be surrounded by double-quotes.")))
-    
+
 # -----------------------------------------------------------------------------
 def area_fields_comments():
     """
@@ -401,7 +400,7 @@ def area_fields_comments():
           _title="%s|%s" % (
               T("The maximum altitude of the affected area"),
               T("must not be used except in combination with the 'altitude' element. The ceiling measure is in feet above mean sea level.")))
-    
+
 # -----------------------------------------------------------------------------
 def info_fields_comments():
     """
