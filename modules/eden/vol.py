@@ -78,6 +78,8 @@ class S3VolClusterDataModel(S3Model):
 
         comment = S3AddResourceLink(c = "vol",
                                     f = "cluster_type",
+                                    vars = dict(child = "vol_cluster_type_id",
+                                                parent = "volunteer_cluster"),
                                     label = crud_strings[tablename].label_create_button,
                                     title = T("Volunteer Cluster Type"),
                                     )
@@ -88,9 +90,8 @@ class S3VolClusterDataModel(S3Model):
                                                                     IS_ONE_OF(db,
                                                                               "vol_cluster_type.id",
                                                                               s3_represent_name(table))),
-                                              represent = s3_represent_name(table),
-                                              # @ToDo: Enable once Inline Fields from Components support S3AddResourceLink 
-                                              #comment = comment
+                                              represent = s3_represent_name(table), 
+                                              comment = comment
                                               )
 
         # ---------------------------------------------------------------------
@@ -120,6 +121,8 @@ class S3VolClusterDataModel(S3Model):
 
         comment = S3AddResourceLink(c = "vol",
                                     f = "cluster",
+                                    vars = dict(child = "vol_cluster_id",
+                                                parent = "volunteer_cluster"),
                                     label = crud_strings[tablename].label_create_button,
                                     title = T("Volunteer Cluster"),
                                     )
@@ -131,8 +134,7 @@ class S3VolClusterDataModel(S3Model):
                                                                   "vol_cluster.id",
                                                                   s3_represent_name(table))),
                                          represent = s3_represent_name(table),
-                                         # @ToDo: Enable once Inline Fields from Components support S3AddResourceLink 
-                                         #comment = comment
+                                         comment = comment
                                          )
 
         # ---------------------------------------------------------------------
@@ -162,6 +164,8 @@ class S3VolClusterDataModel(S3Model):
 
         comment = S3AddResourceLink(c = "vol",
                                     f = "cluster_position",
+                                    vars = dict(child = "vol_cluster_position_id",
+                                                parent = "volunteer_cluster"),
                                     label = crud_strings[tablename].label_create_button,
                                     title = T("Volunteer Cluster Position"),
                                     )
@@ -173,8 +177,7 @@ class S3VolClusterDataModel(S3Model):
                                                                       "vol_cluster_position.id",
                                                                       s3_represent_name(table))),
                                                 represent = s3_represent_name(table),
-                                                # @ToDo: Enable once Inline Fields from Components support S3AddResourceLink 
-                                                #comment = comment
+                                                comment = comment
                                                 )
 
         # ---------------------------------------------------------------------
