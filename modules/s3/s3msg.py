@@ -702,6 +702,7 @@ class S3Msg(object):
                    cc=None,
                    bcc=None,
                    reply_to=None,
+                   sender="%(sender)s",
                    encoding="utf-8"):
         """
             Function to send Email
@@ -731,13 +732,15 @@ class S3Msg(object):
             table.insert()
 
         result = self.mail.send(to,
-                                subject,
-                                message,
-                                attachments,
-                                cc,
-                                bcc,
-                                reply_to,
-                                encoding
+                                subject=subject,
+                                message=message,
+                                attachments=attachments,
+                                cc=cc,
+                                bcc=bcc,
+                                reply_to=reply_to,
+                                # @ToDo: Once more people have upgrade their web2py
+                                #sender=sender,
+                                encoding=encoding
                                 )
 
         return result

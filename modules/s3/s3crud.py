@@ -1999,13 +1999,9 @@ class S3CRUD(S3Method):
                         in the link table
         """
 
-        db = current.db
         s3db = current.s3db
-        auth = current.auth
         request = current.request
-        T = current.T
 
-        error_message = T("Could not create record.")
         get_config = lambda key, tablename=component: \
                             s3db.get_config(tablename, key, None)
 
@@ -2015,6 +2011,7 @@ class S3CRUD(S3Method):
             selected = None
 
         if request.env.request_method == "POST":
+            db = current.db
             table = db[component]
             _vars = request.post_vars
             _form = Storage(vars=Storage(table._filter_fields(_vars)),
@@ -2036,8 +2033,8 @@ class S3CRUD(S3Method):
                     # Update realm
                     update_realm = s3db.get_config(table, "update_realm")
                     if update_realm:
-                        auth.set_realm_entity(table, selected,
-                                              force_update=True)
+                        current.auth.set_realm_entity(table, selected,
+                                                      force_update=True)
                     # Onaccept
                     onaccept = get_config("update_onaccept") or \
                                get_config("onaccept")
@@ -2061,6 +2058,7 @@ class S3CRUD(S3Method):
                         # Update super-entity links
                         s3db.update_super(table, dict(id=selected))
                         # Set record owner
+                        auth = current.auth
                         auth.s3_set_record_owner(table, selected)
                         auth.s3_make_session_owner(table, selected)
                         # Onaccept
@@ -2068,7 +2066,7 @@ class S3CRUD(S3Method):
                                    get_config("onaccept")
                         callback(onaccept, _form, tablename=component)
                     else:
-                        form.errors[key] = error_message
+                        form.errors[key] = current.T("Could not create record.")
         return
 
     # -------------------------------------------------------------------------

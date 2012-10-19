@@ -592,9 +592,11 @@ class S3SearchOptionsWidget(S3SearchWidget):
                     opt_append = opt_values.append
                     if multiple:
                         for row in rows:
-                            opt_extend([v for v in row[field]
-                                          if v is not None and
-                                             v not in opt_values])
+                            values = row[field]
+                            if values:
+                                opt_extend([v for v in values
+                                            if v is not None and
+                                                v not in opt_values])
                     else:
                         for row in rows:
                             v = row[field]
