@@ -976,6 +976,12 @@ def cluster_type():
     return s3_rest_controller()
 
 # =============================================================================
+def volunteer_cluster():
+    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
+
+    return s3_rest_controller()
+
+# =============================================================================
 def cluster():
     """ Volunteer Clusters controller """
 
