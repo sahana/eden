@@ -252,16 +252,17 @@ _settings.lock_keys = True
 ######
 
 # These settings could be made configurable as part of the Messaging Module
-# - however also need to be used by Auth (order issues), DB calls are overheads
-# - as easy for admin to edit source here as to edit DB (although an admin panel can be nice)
-mail.settings.server = settings.get_mail_server()
-mail.settings.tls = settings.get_mail_server_tls()
-mail_server_login = settings.get_mail_server_login()
-if mail_server_login:
-    mail.settings.login = mail_server_login
-mail.settings.sender = settings.get_mail_sender()
-# Email settings for registration verification
-_settings.mailer = mail
+# - however also need to be used by Auth (order issues)
+sender = settings.get_mail_sender()
+if sender:
+    mail.settings.sender = sender
+    mail.settings.server = settings.get_mail_server()
+    mail.settings.tls = settings.get_mail_server_tls()
+    mail_server_login = settings.get_mail_server_login()
+    if mail_server_login:
+        mail.settings.login = mail_server_login
+    # Email settings for registration verification and approval
+    _settings.mailer = mail
 
 #########
 # Session

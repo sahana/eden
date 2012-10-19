@@ -204,26 +204,6 @@ def s3_barchart(r, **attr):
         raise HTTP(501, body=BADFORMAT)
 
 # -----------------------------------------------------------------------------
-def s3_copy(r, **attr):
-    """
-        Copy a record
-
-        used as REST method handler for S3Resources
-
-        @todo: move into S3CRUDHandler
-    """
-
-    redirect(URL(args="create", vars={"from_record":r.id}))
-
-# -----------------------------------------------------------------------------
-def s3_map(r, **attr):
-    """
-        Wrapper for S3Map()
-    """
-
-    return s3base.S3Map()(r, **attr)
-
-# -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
         Helper function to apply the S3Resource REST interface
@@ -282,9 +262,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)
     set_handler("compose", s3base.S3Compose())
-    set_handler("copy", s3_copy)
+    set_handler("copy", lambda r, **attr: redirect(URL(args="create",
+                                                       vars={"from_record":r.id})))
     set_handler("import", s3base.S3Importer())
-    set_handler("map", s3_map)
+    set_handler("map", lambda r, **attr: s3base.S3Map()(r, **attr))
     set_handler("report", s3base.S3Report())
 
     if method == "import" and \

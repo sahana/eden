@@ -37,6 +37,7 @@ class AddStaffToOrganisation(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
+
         browser = self.browser
         config = self.config
         self.login(account="admin", nexturl="org/organisation")
