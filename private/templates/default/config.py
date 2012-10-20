@@ -110,7 +110,7 @@ T = current.T
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #settings.L10n.date_format = T("%m-%d-%Y")
 #settings.L10n.time_format = T("%H:%M:%S")
-#settings.L10n.datetime_format = T("%m-%d-%Y %H:%M:%S")
+#settings.L10n.datetime_format = T("%m-%d-%Y %H:%M")
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = "."

@@ -330,12 +330,15 @@ def formList():
     return xml
 
 # -----------------------------------------------------------------------------
-@auth.s3_requires_membership(2)
 def submission():
     """
         Allows for submission of Xforms by ODK Collect
         http://code.google.com/p/opendatakit/
     """
+
+    # @ToDo: Something better than this crude check
+    if not auth.s3_logged_in():
+        auth.permission.fail()
 
     try:
         from cStringIO import StringIO    # Faster, where available
@@ -361,7 +364,8 @@ def submission():
 
     resource = s3db.resource(tablename)
 
-    stylesheet = os.path.join(request.folder, "static", "formats", "odk", "import.xsl")
+    stylesheet = os.path.join(request.folder, "static", "formats", "odk",
+                              "import.xsl")
 
     try:
         result = resource.import_xml(source=tree, stylesheet=stylesheet)

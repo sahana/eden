@@ -2441,10 +2441,7 @@ class GIS(object):
                     else:
                         name = db(table.id == id).select(table.name,
                                                          limitby=(0, 1)).first().name
-                        try:
-                            print >> sys.stderr, "No WKT, level 0: %s" % name
-                        except:
-                            print >> sys.stderr, "No WKT, level 0: %s" % id
+                        print >> sys.stderr, "No WKT, level 0: %s %s" % (name, id)
                         continue
                 else:
                     id = row.id
@@ -2504,10 +2501,7 @@ class GIS(object):
                         else:
                             name = db(table.id == id).select(table.name,
                                                              limitby=(0, 1)).first().name
-                            try:
-                                print >> sys.stderr, "No WKT, level 1: %s" % name
-                            except:
-                                print >> sys.stderr, "No WKT, level 1: %s" % id
+                            print >> sys.stderr, "No WKT, level 1: %s %s" % (name, id)
                             continue
                     else:
                         id = row.id
@@ -2564,10 +2558,7 @@ class GIS(object):
                             else:
                                 name = db(table.id == id).select(table.name,
                                                                  limitby=(0, 1)).first().name
-                                try:
-                                    print >> sys.stderr, "No WKT, level 2: %s" % name
-                                except:
-                                    print >> sys.stderr, "No WKT, level 2: %s" % id
+                                print >> sys.stderr, "No WKT, level 2: %s %s" % (name, id)
                                 continue
                         else:
                             id = row.id
@@ -2627,10 +2618,7 @@ class GIS(object):
                                 else:
                                     name = db(table.id == id).select(table.name,
                                                                      limitby=(0, 1)).first().name
-                                    try:
-                                        print >> sys.stderr, "No WKT, level 3: %s" % name
-                                    except:
-                                        print >> sys.stderr, "No WKT, level 3: %s" % id
+                                    print >> sys.stderr, "No WKT, level 3: %s %s" % (name, id)
                                     continue
                             else:
                                 id = row.id
@@ -2693,10 +2681,7 @@ class GIS(object):
                                     else:
                                         name = db(table.id == id).select(table.name,
                                                                          limitby=(0, 1)).first().name
-                                        try:
-                                            print >> sys.stderr, "No WKT, level 4: %s" % name
-                                        except:
-                                            print >> sys.stderr, "No WKT, level 4: %s" % id
+                                        print >> sys.stderr, "No WKT, level 4: %s %s" % (name, id)
                                         continue
                                 else:
                                     id = row.id

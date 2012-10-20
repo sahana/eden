@@ -144,7 +144,7 @@ class S3DateWidget(FormWidget):
             value = v.isoformat()
 
         if self.format:
-           # default: "yy-mm-dd"
+            # default: "yy-mm-dd"
             format = str(self.format)
         else:
             format = _format.replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd").replace("%b", "M")
