@@ -6,12 +6,19 @@
 # Contact: Sean Gillies, sgillies@frii.com
 # ============================================================================
 
-from gluon.contrib import simplejson
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 import factory
 from mapping import Mapping, to_mapping
 
 
-class GeoJSONEncoder(simplejson.JSONEncoder):
+class GeoJSONEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, Mapping):
@@ -30,19 +37,19 @@ class GeoJSONEncoder(simplejson.JSONEncoder):
 # object creation hooks
 
 def dump(obj, fp, cls=GeoJSONEncoder, **kwargs):
-    return simplejson.dump(to_mapping(obj), fp, cls=cls, **kwargs)
+    return json.dump(to_mapping(obj), fp, cls=cls, **kwargs)
 
 
 def dumps(obj, cls=GeoJSONEncoder, **kwargs):
-    return simplejson.dumps(to_mapping(obj), cls=cls, **kwargs)
+    return json.dumps(to_mapping(obj), cls=cls, **kwargs)
 
 
-def load(fp, cls=simplejson.JSONDecoder, object_hook=None, **kwargs):
-    return simplejson.load(fp, cls=cls, object_hook=object_hook, **kwargs)
+def load(fp, cls=json.JSONDecoder, object_hook=None, **kwargs):
+    return json.load(fp, cls=cls, object_hook=object_hook, **kwargs)
 
 
-def loads(s, cls=simplejson.JSONDecoder, object_hook=None, **kwargs):
-    return simplejson.loads(s, cls=cls, object_hook=object_hook, **kwargs)
+def loads(s, cls=json.JSONDecoder, object_hook=None, **kwargs):
+    return json.loads(s, cls=cls, object_hook=object_hook, **kwargs)
 
 # Backwards compatibility
 PyGFPEncoder = GeoJSONEncoder

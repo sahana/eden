@@ -2062,13 +2062,13 @@ class GIS(object):
                     if format == "geojson":
                         # Do the Simplify & GeoJSON direct from the DB
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+                                                gtable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"))
                         for row in rows:
                             geojsons[row[tablename].id] = row["gis_location"].geojson
                     else:
                         # Do the Simplify direct from the DB
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"))
+                                                gtable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"))
                         for row in rows:
                             wkts[row[tablename].id] = row["gis_location"].wkt
                 else:
@@ -2255,7 +2255,7 @@ class GIS(object):
         if current.deployment_settings.get_gis_spatialdb():
             # Do the Simplify & GeoJSON direct from the DB
             rows = db(query).select(table.id,
-                                    gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+                                    gtable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"))
             for row in rows:
                 geojsons[row[tablename].id] = row["gis_location"].geojson
         else:
@@ -2376,7 +2376,7 @@ class GIS(object):
     def export_admin_areas(countries=[],
                            levels=["L0", "L1", "L2", "L3"],
                            format="geojson",
-                           simplify=0.001,
+                           simplify=0.01,
                            ):
         """
             Export admin areas to /static/cache for use by interactive web-mapping services
@@ -2441,7 +2441,7 @@ class GIS(object):
                     else:
                         name = db(table.id == id).select(table.name,
                                                          limitby=(0, 1)).first().name
-                        print >> sys.stderr, "No WKT, level 0: %s %s" % (name, id)
+                        print >> sys.stderr, "No WKT: L0 %s %s" % (name, id)
                         continue
                 else:
                     id = row.id
@@ -2501,7 +2501,7 @@ class GIS(object):
                         else:
                             name = db(table.id == id).select(table.name,
                                                              limitby=(0, 1)).first().name
-                            print >> sys.stderr, "No WKT, level 1: %s %s" % (name, id)
+                            print >> sys.stderr, "No WKT: L1 %s %s" % (name, id)
                             continue
                     else:
                         id = row.id
@@ -2558,7 +2558,7 @@ class GIS(object):
                             else:
                                 name = db(table.id == id).select(table.name,
                                                                  limitby=(0, 1)).first().name
-                                print >> sys.stderr, "No WKT, level 2: %s %s" % (name, id)
+                                print >> sys.stderr, "No WKT: L2 %s %s" % (name, id)
                                 continue
                         else:
                             id = row.id
@@ -2618,7 +2618,7 @@ class GIS(object):
                                 else:
                                     name = db(table.id == id).select(table.name,
                                                                      limitby=(0, 1)).first().name
-                                    print >> sys.stderr, "No WKT, level 3: %s %s" % (name, id)
+                                    print >> sys.stderr, "No WKT: L3 %s %s" % (name, id)
                                     continue
                             else:
                                 id = row.id
@@ -2681,7 +2681,7 @@ class GIS(object):
                                     else:
                                         name = db(table.id == id).select(table.name,
                                                                          limitby=(0, 1)).first().name
-                                        print >> sys.stderr, "No WKT, level 4: %s %s" % (name, id)
+                                        print >> sys.stderr, "No WKT: L4 %s %s" % (name, id)
                                         continue
                                 else:
                                     id = row.id
@@ -4719,19 +4719,28 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
+    def simplify(wkt,
+                 tolerance=0.01,
+                 preserve_topology=True,
+                 output="wkt",
+                 decimals=4
+                 ):
         """
-            Simplify a complex Polygon
+            Simplify a complex Polygon using the Douglas-Peucker algorithm
             - NB This uses Python, better performance will be gained by doing
                  this direct from the database if you are using PostGIS:
             ST_Simplify() is available as
             db(query).select(table.the_geom.st_simplify(tolerance).st_astext().with_alias('wkt')).first().wkt
             db(query).select(table.the_geom.st_simplify(tolerance).st_asgeojson().with_alias('geojson')).first().geojson
 
-            @ToDo: Reduce the number of decimal points to 4
-                   - requires patching modules/geojson?
+            @param wkt: the WKT string to be simplified (usually coming from a gis_location record)
+            @param tolerance: how aggressive a simplification to perform
+            @param preserve_topology: whether the simplified geometry should be maintained
+            @param output: whether to output as WKT or GeoJSON format
+            @param decimals: the number of decimal places to include in the output
         """
 
+        from shapely.geometry import Point, LineString, Polygon, MultiPolygon
         from shapely.wkt import loads as wkt_loads
 
         try:
@@ -4747,13 +4756,53 @@ class GIS(object):
             wkt = wkt[10] if wkt else wkt
             s3_debug("Invalid Shape: %s" % wkt)
             return None
-        simplified = shape.simplify(tolerance, preserve_topology)
+
+        shape = shape.simplify(tolerance, preserve_topology)
+
+        # Limit the number of decimal places
+        formatter = ".%sf" % decimals
+        def shrink_polygon(shape):
+            """ Helper Function """
+            points = shape.exterior.coords
+            coords = []
+            cappend = coords.append
+            for point in points:
+                x = float(format(point[0], formatter))
+                y = float(format(point[1], formatter))
+                cappend((x, y))
+            return Polygon(LineString(coords))
+
+        geom_type = shape.geom_type
+        if geom_type == "MultiPolygon":
+            polygons = shape.geoms
+            p = []
+            pappend = p.append
+            for polygon in polygons:
+                pappend(shrink_polygon(polygon))
+            shape = MultiPolygon([s for s in p])
+        elif geom_type == "Polygon":
+            shape = shrink_polygon(shape)
+        elif geom_type == "LineString":
+            points = line.coords
+            for point in points:
+                x = float(format(point[0], formatter))
+                y = float(format(point[1], formatter))
+                cappend((x, y))
+            shape = LineString(coords)
+        elif geom_type == "Point":
+            x = float(format(shape.x, formatter))
+            y = float(format(shape.y, formatter))
+            shape = Point(x, y)
+        else:
+            s3_debug("Cannot yet shrink Geometry: %s" % geom_type)
+
+        # Output
         if output == "wkt":
-            output = simplified.to_wkt()
+            output = shape.to_wkt()
         elif output == "geojson":
             from ..geojson import dumps
             # Compact Encoding
-            output = dumps(simplified, separators=(",", ":"))
+            output = dumps(shape, separators=(",", ":"))
 
         return output
 
@@ -7223,7 +7272,7 @@ class YahooGeocoder(Geocoder):
         page = fetch(url)
         return page
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3ExportPOI(S3Method):
     """ Export point-of-interest resources for a location """
 
