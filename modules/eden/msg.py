@@ -582,7 +582,7 @@ class S3TwitterModel(S3Model):
         # Twitter Search Queries
         tablename = "msg_twitter_search"
         table = define_table(tablename,
-                             Field("search_query", length = 140),
+                             Field("search_query", length=140),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
