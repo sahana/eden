@@ -102,7 +102,7 @@ $(function() {
         if (typeof original != 'undefined') {
             var record_id = original['_id'];
             if (typeof record_id != 'undefined') {
-                row['id'] = record_id;
+                row['_id'] = record_id;
             }
         }
 
