@@ -270,6 +270,7 @@ $(function() {
 
         if (null != new_row) {
             // Add a new row to the real_input JSON
+            new_row['_changed'] = true; // mark as changed
             newindex = data['data'].push(new_row) - 1;
             inline_serialize(formname, data);
 
@@ -339,6 +340,7 @@ $(function() {
         if (null != new_row) {
             // Update the row in the real_input JSON
             new_row['_id'] = data['data'][rowindex]['_id'];
+            new_row['_changed'] = true; // mark as changed
             data['data'][rowindex] = new_row;
             inline_serialize(formname, data);
 
