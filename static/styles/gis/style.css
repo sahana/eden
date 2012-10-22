@@ -247,8 +247,8 @@ div.olControlSaveFeaturesItemInactive {
 }
 
 .olPopupCloseBox {
-  background: url(../../img/gis/openlayers/theme_default/close.gif) no-repeat;
-  cursor: pointer;
+    background: url(../../img/gis/openlayers/theme_default/close.gif) no-repeat;
+    cursor: pointer;
 }
 
 .olFramedCloudPopupContent {

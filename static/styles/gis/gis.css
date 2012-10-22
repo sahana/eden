@@ -1,5 +1,8 @@
 /* GIS module */
-.olControlMousePosition { font-size: 10px; background-color: white; }
+.olControlMousePosition {
+    font-size: 10px;
+    background-color: white;
+}
 
 .crosshair {
     cursor: crosshair;
@@ -177,9 +180,7 @@
 div.olFramedCloudPopupContent label {
     padding-right: 5px;
 }
-#georsspopup h2 {
-    margin: 0;
-}
+#georsspopup h2,
 #kmlpopup h2 {
     margin: 0;
 }
