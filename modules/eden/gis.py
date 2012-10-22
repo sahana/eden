@@ -472,7 +472,7 @@ class S3LocationModel(S3Model):
         # (avoid incorrect data entry)
         # Points only for now
         if not "gis_feature_type" in vars or (vars.gis_feature_type == "1") and \
-           lat is not None and lon is not None:
+           lat is not None and lon is not None and lat is not "" and lon is not "":
             name = vars.name
             if parent:
                 # Check within Bounds of the Parent
