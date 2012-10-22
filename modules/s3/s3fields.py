@@ -926,7 +926,6 @@ def s3_datetime(name="date", **attr):
         Additional options to normal S3ResuableField:
             default = "now" (in addition to usual meanings)
             represent = "date" (in addition to usual meanings)
-                      = "utc" (in addition to usual meanings)
             widget = "date" (in addition to usual meanings)
             past = x hours
             future = x hours

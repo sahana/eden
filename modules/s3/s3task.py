@@ -100,9 +100,11 @@ class S3Task(object):
         """
 
         T = current.T
-        db = current.db
+        NONE = current.messages.NONE
+        UNLIMITED = T("unlimited")
+
         tablename = self.TASK_TABLENAME
-        table = db[tablename]
+        table = current.db[tablename]
 
         if not task:
             import uuid
@@ -126,9 +128,10 @@ class S3Task(object):
         field.label = T("Repeat")
         field.comment = T("times (0 = unlimited)")
         field.default = 0
-        field.represent = lambda opt: opt and "%s %s" % (opt, T("times")) or \
-                                              opt == 0 and T("unlimited") or \
-                                              "-"
+        field.represent = lambda opt: \
+            opt and "%s %s" % (opt, T("times")) or \
+            opt == 0 and UNLIMITED or \
+            NONE
 
         field = table.period
         field.label = T("Run every")
@@ -138,9 +141,10 @@ class S3Task(object):
         field.comment = None
 
         table.timeout.default = 600
-        table.timeout.represent = lambda opt: opt and "%s %s" % (opt, T("seconds")) or \
-                                              opt == 0 and T("unlimited") or \
-                                              "-"
+        table.timeout.represent = lambda opt: \
+            opt and "%s %s" % (opt, T("seconds")) or \
+            opt == 0 and UNLIMITED or \
+            NONE
 
         field = table.vars
         field.default = json.dumps(vars)
@@ -151,7 +155,7 @@ class S3Task(object):
         # permission check and gets redirected to login before it reaches
         # the task function which does the s3_impersonate
         field = table.application_name
-        field.default = "%s/default/index" % current.request.application
+        field.default = "%s/default" % current.request.application
         field.readable = field.writable = False
         table.group_name.readable = table.group_name.writable = False
         table.status.readable = table.status.writable = False
@@ -239,7 +243,8 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Run the task asynchronously
-        record = current.db.scheduler_task.insert(task_name=task,
+        record = current.db.scheduler_task.insert(application_name="%s/default" % current.request.application,
+                                                  task_name=task,
                                                   function_name=task,
                                                   args=json.dumps(args),
                                                   vars=json.dumps(vars),
@@ -332,7 +337,8 @@ class S3Task(object):
 
         # Add to DB for pickup by Scheduler task
         db = current.db
-        record = db.scheduler_task.insert(task_name=task,
+        record = db.scheduler_task.insert(application_name="%s/default" % current.request.application,
+                                          task_name=task,
                                           function_name=function_name,
                                           args=json.dumps(args),
                                           vars=json.dumps(vars),
