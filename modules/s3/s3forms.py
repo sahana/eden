@@ -1669,11 +1669,27 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Process each item
             permit = component.permit
             audit = component.audit
+            validate = manager.validate
+            onaccept = manager.onaccept
             for item in data["data"]:
 
+                if not "_changed" in item and not "_delete" in item:
+                    # No changes made to this item - skip
+                    continue
+
                 # Get the values
-                values = Storage([(f, item[f]["value"])
-                                  for f in item if isinstance(item[f], dict)])
+                values = Storage()
+                for f, d in item.iteritems():
+                    if f[0] != "_" and d and isinstance(d, dict):
+                        # Must run through validator again (despite pre-validation)
+                        # in order to post-process widget output properly (e.g. UTC
+                        # offset subtraction)
+                        try:
+                            value, error = validate(table, None, f, d["value"])
+                        except AttributeError:
+                            continue
+                        if not error:
+                            values[f] = value
 
                 if "_id" in item:
                     record_id = item["_id"]
@@ -1710,8 +1726,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 auth.set_realm_entity(table, vars,
                                                       force_update=True)
                             # Onaccept
-                            manager.onaccept(table, Storage(vars=values),
-                                             method="update")
+                            onaccept(table, Storage(vars=values), method="update")
                 else:
                     # Create a new record
                     authorized = permit("create", tablename)
@@ -1744,8 +1759,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         # Set record owner
                         auth.s3_set_record_owner(table, record_id)
                         # onaccept
-                        manager.onaccept(table, Storage(vars=values),
-                                         method="create")
+                        onaccept(table, Storage(vars=values), method="create")
         else:
             return False
 
