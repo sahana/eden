@@ -1478,6 +1478,8 @@ class S3LocationSelectorWidget(FormWidget):
             no_map = "S3.gis.no_map = true;\n"
         # Should we display LatLon boxes?
         latlon_selector = settings.get_gis_latlon_selector()
+        # Show we display Polygons?
+        polygon = self.polygon
         # Navigate Away Confirm?
         if settings.get_ui_navigate_away_confirm():
             navigate_away_confirm = '''
@@ -1533,9 +1535,11 @@ S3.gis.tab="%s"''' % s3.gis.tab
                     if this_location.inherited:
                         lat = None
                         lon = None
+                        wkt = None
                     else:
                         lat = this_location.lat
                         lon = this_location.lon
+                        wkt = this_location.wkt
                     addr_street = this_location.addr_street or ""
                     #addr_street_encoded = ""
                     #if addr_street:
@@ -1594,11 +1598,10 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  # Same as a single zoom on a cluster
                                                  zoom = zoom + 2,
                                                  features = features,
-                                                 add_feature_active = not self.polygon,
-                                                 add_polygon = True,
-                                                 add_polygon_active = self.polygon,
                                                  add_feature = True,
-                                                 #add_feature_active = True,
+                                                 add_feature_active = not polygon,
+                                                 add_polygon = polygon,
+                                                 add_polygon_active = polygon,
                                                  toolbar = True,
                                                  collapsed = True,
                                                  search = True,
@@ -1631,15 +1634,16 @@ S3.gis.tab="%s"''' % s3.gis.tab
                 level = None
                 lat = None
                 lon = None
+                wkt = None
                 addr_street = ""
                 #addr_street_encoded = ""
                 postcode = ""
                 if map_selector:
                     map_popup = gis.show_map(
                                              add_feature = True,
-                                             add_feature_active = not self.polygon,
-                                             add_polygon = True,
-                                             add_polygon_active = self.polygon,
+                                             add_feature_active = not polygon,
+                                             add_polygon = polygon,
+                                             add_polygon_active = polygon,
                                              toolbar = True,
                                              collapsed = True,
                                              search = True,
@@ -1958,21 +1962,21 @@ S3.gis.geocoder=true'''
         converter_button = locations.lon.comment
         converter_button = ""
         latlon_rows = DIV(TR(LABEL("%s:" % LAT_LABEL), TD(),
-                               _id="gis_location_lat_label__row",
-                               _class="%s locselect box_middle" % hidden),
+                             _id="gis_location_lat_label__row",
+                             _class="%s locselect box_middle" % hidden),
                           TR(TD(lat_widget), TD(latlon_help),
-                               _id="gis_location_lat__row",
-                               _class="%s locselect box_middle" % hidden),
+                             _id="gis_location_lat__row",
+                             _class="%s locselect box_middle" % hidden),
                           TR(INPUT(_id="gis_location_lat_search",
                                    _disabled="disabled"), TD(),
                              _id="gis_location_lat_search__row",
                              _class="hide locselect box_middle"),
                           TR(LABEL("%s:" % LON_LABEL), TD(),
-                               _id="gis_location_lon_label__row",
-                               _class="%s locselect box_middle" % hidden),
+                             _id="gis_location_lon_label__row",
+                             _class="%s locselect box_middle" % hidden),
                           TR(TD(lon_widget), TD(converter_button),
-                               _id="gis_location_lon__row",
-                               _class="%s locselect box_middle" % hidden),
+                             _id="gis_location_lon__row",
+                             _class="%s locselect box_middle" % hidden),
                           TR(INPUT(_id="gis_location_lon_search",
                                    _disabled="disabled"), TD(),
                              _id="gis_location_lon_search__row",
@@ -2059,40 +2063,33 @@ S3.i18n.gis_country_required="%s"''' % (country_snippet,
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
 
         if self.polygon:
-            map_button = A(T("Draw on Map"),
-                           _style="cursor:pointer; cursor:hand",
-                           _id="gis_location_map-btn",
-                           _class="action-btn")
-
-            map_button_row = TR(map_button, TD(),
-                                _id="gis_location_map_button_row",
-                                _class="locselect box_middle")
-
+            hidden = ""
+            if value:
+                # Display read-only view
+                wkt_widget = TEXTAREA(value = wkt,
+                                      _class="wkt-input",
+                                      _id="gis_location_wkt",
+                                      _name="gis_location_wkt",
+                                      _disabled="disabled")
+                if wkt:
+                    hidden = "hide"
+            else:
+                wkt_widget = TEXTAREA(_class="wkt-input",
+                                      _id="gis_location_wkt",
+                                      _name="gis_location_wkt")
             wkt_input_row = TAG[""](
-                                TR(TD(LABEL(T("Polygon (WGS84)"))), TD(), _class="box_middle"),
+                                TR(TD(LABEL("%s (WGS84)" % T("Polygon"))),
+                                   TD(),
+                                   _id="gis_location_wkt_label__row",
+                                   _class="box_middle %s" % hidden),
                                 TR(
-                                   TD(TEXTAREA(_class="wkt-input", _id="gis_location_wkt", _name="wkt")),
-                                   TD(), _class="box_middle",
+                                   TD(wkt_widget),
+                                   TD(),
+                                   _id="gis_location_wkt__row",
+                                   _class="box_middle %s" % hidden)
                                 )
-                            )
-            return TAG[""](
-                            TR(INPUT(**attr)),  # Real input, which is hidden
-                            label_row,
-                            tab_rows,
-                            Lx_search_rows,
-                            search_rows,
-                            L0_rows,
-                            name_rows,
-                            street_rows,
-                            postcode_rows,
-                            Lx_rows,
-                            wkt_input_row,
-                            map_button_row,
-                            latlon_rows,
-                            divider,
-                            TR(map_popup, TD(), _class="box_middle"),
-                            requires=requires
-                          )
+        else:
+            wkt_input_row = ""
 
         # The overall layout of the components
         return TAG[""](
@@ -2106,6 +2103,7 @@ S3.i18n.gis_country_required="%s"''' % (country_snippet,
                         street_rows,
                         postcode_rows,
                         Lx_rows,
+                        wkt_input_row,
                         map_button_row,
                         latlon_rows,
                         divider,

@@ -221,7 +221,7 @@ class S3MainMenu(object):
                             MM("Translation", c="admin", f="translate",
                                check=translate),
                             MM("Test Results", f="result"),
-                            MM("Tickets", f="errors"),
+                            MM("Error Tickets", f="errors"),
                         )
 
         return menu_admin

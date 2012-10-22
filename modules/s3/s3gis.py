@@ -1983,8 +1983,11 @@ class GIS(object):
                     for fieldname in popup_fields:
                         try:
                             value = record[fieldname]
-                        except KeyError:
+                        except:
+                            # Field not in table
+                            # This isn't working for some reason :-? AttributeError raised by dal.py & not caught
                             continue
+                        # Ignore blank fields
                         if not value:
                             continue
                         field_reps = represents[fieldname]

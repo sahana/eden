@@ -50,9 +50,6 @@ class S3SecurityModel(S3Model):
         T = current.T
         db = current.db
 
-        location_id = self.gis_location_id
-        human_resource_id = self.hrm_human_resource_id
-
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -92,7 +89,7 @@ class S3SecurityModel(S3Model):
                              Field("zone_type_id", db.security_zone_type,
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "security_zone_type.id",
-                                                          "%(name)s",
+                                                          self.security_zone_type_represent,
                                                           sort=True)),
                                    represent = self.security_zone_type_represent,
                                    comment = S3AddResourceLink(c="security",
@@ -100,7 +97,9 @@ class S3SecurityModel(S3Model):
                                                                label=ADD_ZONE,
                                                                tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                                    label=T("Type")),
-                             location_id(),
+                             self.gis_location_id(
+                                widget = S3LocationSelectorWidget(polygon=True)
+                                ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -153,22 +152,24 @@ class S3SecurityModel(S3Model):
         # Security Staff
         tablename = "security_staff"
         table = define_table(tablename,
-                             human_resource_id(),
+                             self.hrm_human_resource_id(),
                              Field("staff_type_id", "list:reference security_staff_type",
-                                   requires = IS_NULL_OR(IS_ONE_OF(db, "security_staff_type.id",
-                                                                   "%(name)s",
-                                                                   sort=True,
-                                                                   multiple=True)),
-                                   represent = self.security_staff_type_represent,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "security_staff_type.id",
+                                                          self.security_staff_type_represent,
+                                                          sort=True,
+                                                          multiple=True)),
+                                   represent = self.security_staff_type_multirepresent,
                                    comment = S3AddResourceLink(c="security",
                                                                f="staff_type",
                                                                label=ADD_STAFF,
                                                                tooltip=T("Select a Staff Type from the list or click 'Add Staff Type'")),
                                    label=T("Type")),
                               Field("zone_id", db.security_zone,
-                                    requires = IS_NULL_OR(IS_ONE_OF(db, "security_zone.id",
-                                                                    "%(name)s",
-                                                                    sort=True)),
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "security_zone.id",
+                                                          self.security_zone_represent,
+                                                          sort=True)),
                                     represent = self.security_zone_represent,
                                     comment = S3AddResourceLink(c="security",
                                                                 f="zone",
@@ -208,10 +209,12 @@ class S3SecurityModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def security_zone_type_represent(id):
+    def security_zone_type_represent(id, row=None):
         """ Represent a security zone type in option fields or list views """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
         db = current.db
@@ -225,10 +228,12 @@ class S3SecurityModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def security_zone_represent(id):
+    def security_zone_represent(id, row=None):
         """ Represent a security zone in option fields or list views """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
         db = current.db
@@ -242,8 +247,27 @@ class S3SecurityModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def security_staff_type_represent(opt):
-        """ Represent a staff type in option fields or list views """
+    def security_staff_type_represent(id, row=None):
+        """ Represent a staff type zone in option fields """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.security_staff_type
+        record = db(table.id == id).select(table.name,
+                                           limitby=(0, 1)).first()
+        try:
+            return record.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def security_staff_type_multirepresent(opt):
+        """ Represent a staff type in list views """
 
         db = current.db
         table = db.security_staff_type

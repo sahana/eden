@@ -115,10 +115,15 @@ class S3HRModel(S3Model):
             elif controller == "vol":
                 group = "volunteer"
 
-        settings = current.deployment_settings
         auth = current.auth
+        settings = current.deployment_settings
         job_roles = settings.get_hrm_job_roles()
         organisation_label = settings.get_hrm_organisation_label()
+
+        if group == "volunteer":
+            default_site = None
+        else:
+            default_site = auth.user.site_id if auth.is_logged_in() else None
 
         tablename = "hrm_human_resource"
         table = self.define_table(tablename,
@@ -137,7 +142,7 @@ class S3HRModel(S3Model):
                                              updateable = True,
                                              not_filterby = "obsolete",
                                              not_filter_opts = [True],
-                                             default = auth.user.site_id if auth.is_logged_in() else None,
+                                             default = default_site,
                                              readable = True,
                                              writable = True,
                                              #empty = False,

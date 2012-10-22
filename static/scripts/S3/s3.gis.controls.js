@@ -364,9 +364,9 @@ function addGoogleStreetviewControl(toolbar) {
     var googleStreetviewButton = new Ext.Toolbar.Button({
         iconCls: 'streetview',
         tooltip: S3.gis.Google.StreetviewButton,
-        toggleGroup: 'controls',
         allowDepress: true,
         enableToggle: true,
+        toggleGroup: 'controls',
         toggleHandler: function(button, state) {
             if (state === true) {
                 S3.gis.StreetviewClicker.activate();
@@ -456,9 +456,9 @@ function addMeasureControls(toolbar) {
         iconCls: 'measure-off',
         // button options
         tooltip: S3.i18n.gis_length_tooltip,
-        toggleGroup: 'controls',
         allowDepress: true,
-        enableToggle: true
+        enableToggle: true,
+        toggleGroup: 'controls'
     });
 
     toolbar.add(lengthButton);
@@ -487,9 +487,9 @@ function addMeasureControls(toolbar) {
             iconCls: 'measure-area',
             // button options
             tooltip: S3.i18n.gis_area_tooltip,
-            toggleGroup: 'controls',
             allowDepress: true,
-            enableToggle: true
+            enableToggle: true,
+            toggleGroup: 'controls'
         });
 
         toolbar.add(areaButton);
@@ -544,6 +544,7 @@ function addPointControl(toolbar, point_pressed) {
                 centerPoint.transform(S3.gis.projection_current, S3.gis.proj4326);
                 $('#gis_location_lon').val(centerPoint.lon);
                 $('#gis_location_lat').val(centerPoint.lat);
+                $('#gis_location_wkt').val('');
                 // Prepare in case user selects a new point
                 S3.gis.lastDraftFeature = feature;
             }
@@ -558,9 +559,9 @@ function addPointControl(toolbar, point_pressed) {
         map: map,
         iconCls: 'drawpoint-off',
         tooltip: S3.i18n.gis_draw_feature,
-        toggleGroup: 'controls',
         allowDepress: true,
         enableToggle: true,
+        toggleGroup: 'controls',
         pressed: point_pressed
     });
     toolbar.add(S3.gis.pointButton);
@@ -589,6 +590,8 @@ function addPolygonControl(toolbar, polygon_pressed, not_regular) {
                 var WKT = feature.geometry.transform(S3.gis.projection_current, S3.gis.proj4326).toString();
                 $('#gis_search_polygon_input').val(WKT).trigger('change');
                 $('#gis_location_wkt').val(WKT);
+                $('#gis_location_lat').val('');
+                $('#gis_location_lon').val('');
                 // Prepare in case user draws a new polygon
                 S3.gis.lastDraftFeature = feature;
             }
@@ -603,10 +606,10 @@ function addPolygonControl(toolbar, polygon_pressed, not_regular) {
         map: map,
         iconCls: 'drawpolygon-off',
         tooltip: S3.i18n.gis_draw_polygon,
-        toggleGroup: 'controls',
         allowDepress: true,
-        pressed: polygon_pressed,
         enableToggle: true,
+        toggleGroup: 'controls',
+        pressed: polygon_pressed,
         activateOnEnable: true,
         deactivateOnDisable: true
     });
@@ -797,8 +800,8 @@ function addPdfControl(toolbar) {
         text: tooltip,
         control: selectPdfControl,
         map: map,
-        toggleGroup: 'controls',
         allowDepress: false,
+        toggleGroup: 'controls',
         tooltip: tooltip
         // check item options group: 'draw'
     });

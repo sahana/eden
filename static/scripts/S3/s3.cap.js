@@ -25,12 +25,12 @@
     }
 
     function get_template_fields(table) {
-        if (table=='cap_alert') {
+        if (table == 'cap_alert') {
             return ('sender,sent,status,msg_type,source,scope,' +
                     'restriction,addresses,codes,note,reference,' +
                     'incidents').split(',');
 
-        } else if (table=='cap_info') {
+        } else if (table == 'cap_info') {
              return ('category,event,response_type,urgency,' +
                      'severity,certainty,audience,event_code,' +
                      'effective,onset,expires,sender_name,headline,' +

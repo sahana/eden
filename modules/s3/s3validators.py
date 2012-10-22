@@ -836,8 +836,7 @@ class IS_LOCATION_SELECTOR(Validator):
     """
         Designed for use within the S3LocationSelectorWidget.
         For Create forms, this will create a new location from the additional fields
-        For Update forms, this will normally just check that we have a valid location_id FK
-        - although there is the option to create a new location there too, in which case it acts as-above.
+        For Update forms, this will check that we have a valid location_id FK and update any changes
 
         @ToDo: Audit
     """
@@ -865,15 +864,16 @@ class IS_LOCATION_SELECTOR(Validator):
                 for e in errors:
                     error = "%s\n%s" % (error, errors[e]) if error else errors[e]
                 return (None, error)
-            if location.name or location.lat or location.lon or \
+            if location.name or location.lat or location.lon or location.wkt or \
                location.street or location.postcode or location.parent:
                 vars = dict(name = location.name,
                             lat = location.lat,
                             lon = location.lon,
+                            wkt = location.wkt,
+                            gis_feature_type = location.gis_feature_type,
                             addr_street = location.street,
                             addr_postcode = location.postcode,
                             parent = location.parent,
-                            wkt = location.wkt,
                             lon_min = location.lon_min,
                             lon_max = location.lon_max,
                             lat_min = location.lat_min,
@@ -1326,6 +1326,7 @@ class IS_LOCATION_SELECTOR(Validator):
 
         # Check if we have a specific location to create
         name = vars.get("gis_location_name", None)
+        wkt = vars.get("gis_location_wkt", None)
         street = vars.get("gis_location_street", None)
         postcode = vars.get("gis_location_postcode", None)
         parent = L5 or L4 or L3 or L2 or L1 or L0 or None
@@ -1337,6 +1338,13 @@ class IS_LOCATION_SELECTOR(Validator):
         vars = form.vars
         vars.lat = lat
         vars.lon = lon
+        vars.wkt = wkt
+        if wkt:
+            # Polygon (will be corrected as-required by wkt_centroid)
+            vars.gis_feature_type = "3"
+        else:
+            # Point
+            vars.gis_feature_type = "1"
         vars.parent = parent
         if self.id:
             # Provide the old record to check inherited
@@ -1351,12 +1359,14 @@ class IS_LOCATION_SELECTOR(Validator):
             return None
         location = Storage(
                         name=name,
-                        lat=lat, lon=lon,
+                        lat=vars.lat,
+                        lon=vars.lon,
                         inherited=vars.inherited,
                         street=street,
                         postcode=postcode,
                         parent=parent,
                         wkt = vars.wkt,
+                        gis_feature_type = vars.gis_feature_type,
                         lon_min = vars.lon_min,
                         lon_max = vars.lon_max,
                         lat_min = vars.lat_min,

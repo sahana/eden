@@ -487,14 +487,14 @@ function addToolbar() {
         toggleGroup: 'controls'
     });
 
-    if (S3.gis.draw_feature == "active") {
-        var pan_pressed = false;
-        var point_pressed = true;
-        var polygon_pressed = false;
-    } else if (S3.gis.draw_polygon == "active") {
+    if (S3.gis.draw_polygon == "active") {
+        var polygon_pressed = true;
         var pan_pressed = false;
         var point_pressed = false;
-        var polygon_pressed = true;
+    } else if (S3.gis.draw_feature == "active") {
+        var point_pressed = true;
+        var pan_pressed = false;
+        var polygon_pressed = false;
     } else {
         var pan_pressed = true;
         var point_pressed = false;
@@ -507,8 +507,8 @@ function addToolbar() {
         iconCls: 'pan-off',
         // button options
         tooltip: S3.i18n.gis_pan,
-        toggleGroup: 'controls',
         allowDepress: true,
+        toggleGroup: 'controls',
         pressed: pan_pressed
     });
 
