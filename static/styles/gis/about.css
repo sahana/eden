@@ -20,7 +20,7 @@ div.logo {
     width: 100%;
     text-align: center;
     height: 70px;
-    background: url('../../img/gis/geoext/GeoExt_Logo.png') center no-repeat;
+    background: url(../../img/gis/geoext/GeoExt_Logo.png) center no-repeat;
 }
 
 h3 {

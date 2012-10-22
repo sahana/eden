@@ -134,9 +134,10 @@ settings.frontpage.rss = [
 #settings.gis.print_service = "/geoserver/pdf/"
 
 # Twitter settings:
-# Register an app at http://twitter.com/apps
-# (select Aplication Type: Client)
-# You'll get your consumer_key and consumer_secret from Twitter
+# Register an app at https://dev.twitter.com/apps
+# (select Application Type: Client)
+# Leave callback URL blank to allow entry of PIN for Tweepy
+# - should be changed sot aht we can have one to use for Auth!
 #settings.msg.twitter_oauth_consumer_key = ""
 #settings.msg.twitter_oauth_consumer_secret = ""
 
