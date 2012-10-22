@@ -52,6 +52,7 @@ class S3StatsModel(S3Model):
              "stats_param_id",
              "stats_rebuild_aggregates",
              "stats_update_time_aggregate",
+             "stats_update_aggregate_location",
              ]
 
     def model(self):
@@ -1151,6 +1152,8 @@ class S3StatsGroupModel(S3Model):
                 (gtable.dirty == True) & \
                 (gtable.approved_by != None)
         db(query).update(dirty=False)
+        # Explicitly commit when running async
+        db.commit()
 
     # -------------------------------------------------------------------------
     @staticmethod
