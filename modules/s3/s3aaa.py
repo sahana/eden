@@ -3604,7 +3604,7 @@ Thank you
 
             To be called by CRUD and Importer during record update.
 
-            @param table: the table (or tablename)
+            @param table: the Table (or tablename)
             @param records: - a single record
                             - a single record ID
                             - a list of records, or a Rows object
@@ -3670,6 +3670,8 @@ Thank you
             return
 
         # Update record by record
+        get_realm_entity = self.get_realm_entity
+        s3_update_record_owner = self.s3_update_record_owner
         for record in records:
 
             if not isinstance(record, (Row, Storage)):
@@ -3693,11 +3695,11 @@ Thank you
             if row[REALM] and not force_update:
                 continue
 
-            realm_entity = self.get_realm_entity(table, row,
-                                                 entity=realm_entity)
-            data = {REALM:realm_entity}
-            self.s3_update_record_owner(table, row,
-                                        update=force_update, **data)
+            _realm_entity = get_realm_entity(table, row,
+                                             entity=realm_entity)
+            data = {REALM:_realm_entity}
+            s3_update_record_owner(table, row,
+                                   update=force_update, **data)
 
         return
 
@@ -3706,39 +3708,27 @@ Thank you
         """
             Lookup the realm entity for a record
 
-            @param table: the table
+            @param table: the Table
             @param record: the record (as Row or dict)
             @param entity: the entity (pe_id)
         """
 
-        s3db = current.s3db
-
-        REALM = "realm_entity"
-
-        EID = "pe_id"
-        OID = "organisation_id"
-        SID = "site_id"
-        GID = "group_id"
-
-        otablename = "org_organisation"
-        stablename = "org_site"
-        gtablename = "pr_group"
-
-        if REALM not in table:
+        if "realm_entity" not in table:
             return None
 
+        s3db = current.s3db
+
         # Entity specified by call?
-        realm_entity = entity
         if isinstance(entity, tuple):
             realm_entity = s3db.pr_get_pe_id(entity)
+        else:
+            realm_entity = entity
 
-        # Fall back to deployment-global method to determine the realm entity
+        # See if there is a deployment-global method to determine the realm entity
         if realm_entity == 0:
             handler = current.deployment_settings.get_auth_realm_entity()
             if callable(handler):
                 realm_entity = handler(table, record)
-            else:
-                realm_entity = 0
 
         # Fall back to table-specific method
         if realm_entity == 0:
@@ -3748,16 +3738,15 @@ Thank you
 
         # Fall back to standard lookup cascade
         if realm_entity == 0:
-            get_pe_id = s3db.pr_get_pe_id
-            if EID in record and \
+            if "pe_id" in record and \
                table._tablename not in ("pr_person", "dvi_body"):
-                realm_entity = record[EID]
-            elif OID in record:
-                realm_entity = get_pe_id(otablename, record[OID])
-            elif SID in record:
-                realm_entity = get_pe_id(stablename, record[SID])
-            elif GID in record:
-                realm_entity = get_pe_id(gtablename, record[GID])
+                realm_entity = record["pe_id"]
+            elif "organisation_id" in record:
+                realm_entity = s3db.pr_get_pe_id("org_organisation", record["organisation_id"])
+            elif "site_id" in record:
+                realm_entity = s3db.pr_get_pe_id("org_site", record["site_id"])
+            elif "group_id" in record:
+                realm_entity = s3db.pr_get_pe_id("pr_group", record["group_id"])
             else:
                 realm_entity = None
 

@@ -62,28 +62,21 @@ def ifrc_realm_entity(table, row):
 
     # Entity reference fields
     EID = "pe_id"
-    OID = "organisation_id"
+    #OID = "organisation_id"
     SID = "site_id"
-    GID = "group_id"
+    #GID = "group_id"
     PID = "person_id"
-    entity_fields = (EID, OID, SID, GID, PID)
-
-    # Entity tables
-    otablename = "org_organisation"
-    stablename = "org_site"
-    gtablename = "pr_group"
-    ptablename = "pr_person"
 
     # Owner Entity Foreign Key
     realm_entity_fks = dict(pr_contact = EID,
                             pr_physical_description = EID,
                             pr_address = EID,
                             pr_image = EID,
-                            pr_identity = "person_id",
-                            pr_education = "person_id",
-                            pr_note = "person_id",
-                            hrm_human_resource = "site_id",
-                            inv_recv = "site_id",
+                            pr_identity = PID,
+                            pr_education = PID,
+                            pr_note = PID,
+                            hrm_human_resource = SID,
+                            inv_recv = SID,
                             inv_recv_item = "req_id",
                             inv_track_item = "track_org_id",
                             inv_adj_item = "adj_id",
@@ -114,7 +107,7 @@ def ifrc_realm_entity(table, row):
 
     # Check if there is a FK to inherit the realm_entity
     realm_entity = 0
-    fk = realm_entity_fks.get(tablename,None)
+    fk = realm_entity_fks.get(tablename, None)
     for default_fk in [fk] + default_fks:
         if default_fk in table.fields:
             fk = default_fk
@@ -132,10 +125,9 @@ def ifrc_realm_entity(table, row):
             if record:
                 realm_entity = record.realm_entity
                 break
-            else:
-                realm_entity = 0 # Fall back to default get_realm_entity function
-                # continue to loop through the rest of the default_fks
-                
+            #else:
+            # Continue to loop through the rest of the default_fks
+            # Fall back to default get_realm_entity function
     
     use_user_organisation = False
     # Suppliers & Partners are owned by the user's organisation
@@ -143,14 +135,14 @@ def ifrc_realm_entity(table, row):
         ott = s3db.org_organisation_type
         row = table[row.id]
         row = db(table.organisation_type_id == ott.id).select(ott.name,
-                                                              limitby = (0,1)
+                                                              limitby=(0, 1)
                                                               ).first()
         
         if row and row.name != "Red Cross / Red Crescent":
             use_user_organisation = True
 
     # Groups are owned by the user's organisation
-    if tablename in ["pr_group"]:
+    elif tablename in ["pr_group"]:
         use_user_organisation = True
 
     user = current.auth.user
