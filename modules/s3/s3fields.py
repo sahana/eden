@@ -828,7 +828,7 @@ def s3_date(name="date", **attr):
     if "label" not in attr:
         attr["label"] = current.T("Date")
     if "represent" not in attr:
-        attr["represent"] = lambda d: S3DateTime.date_represent(d, utc=True)
+        attr["represent"] = lambda d: S3DateTime.date_represent(d)
     if "requires" not in attr:
         if past is None and future is None:
             requires = IS_DATE(
@@ -925,6 +925,7 @@ def s3_datetime(name="date", **attr):
         Additional options to normal S3ResuableField:
             default = "now" (in addition to usual meanings)
             represent = "date" (in addition to usual meanings)
+                      = "utc" (in addition to usual meanings)
             widget = "date" (in addition to usual meanings)
             past = x hours
             future = x hours
@@ -946,9 +947,12 @@ def s3_datetime(name="date", **attr):
     if "label" not in attr:
         attr["label"] = current.T("Date")
     if "represent" not in attr:
-        attr["represent"] = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        attr["represent"] = lambda dt: S3DateTime.datetime_represent(dt)
     elif attr["represent"] == "date":
-        attr["represent"] = lambda dt: S3DateTime.date_represent(dt, utc=True)
+        attr["represent"] = lambda dt: S3DateTime.date_represent(dt)
+    elif attr["represent"] == "utc":
+        attr["represent"] = lambda dt: S3DateTime.datetime_represent(dt,
+                                                                     utc=True)
 
     if "widget" not in attr:
         if past is None and future is None:

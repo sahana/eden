@@ -3374,7 +3374,8 @@ class S3ProjectTaskModel(S3Model):
                              Field("hours", "double",
                                    label = "%s (%s)" % (T("Time"),
                                                         T("hours")),
-                                   represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                                   represent=lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3_comments(),
                              *s3_meta_fields())
 
