@@ -828,7 +828,8 @@ def s3_date(name="date", **attr):
     if "label" not in attr:
         attr["label"] = current.T("Date")
     if "represent" not in attr:
-        attr["represent"] = lambda d: S3DateTime.date_represent(d)
+        attr["represent"] = lambda d: S3DateTime.date_represent(d,
+                                                                utc=True)
     if "requires" not in attr:
         if past is None and future is None:
             requires = IS_DATE(
@@ -947,12 +948,11 @@ def s3_datetime(name="date", **attr):
     if "label" not in attr:
         attr["label"] = current.T("Date")
     if "represent" not in attr:
-        attr["represent"] = lambda dt: S3DateTime.datetime_represent(dt)
-    elif attr["represent"] == "date":
-        attr["represent"] = lambda dt: S3DateTime.date_represent(dt)
-    elif attr["represent"] == "utc":
         attr["represent"] = lambda dt: S3DateTime.datetime_represent(dt,
                                                                      utc=True)
+    elif attr["represent"] == "date":
+        attr["represent"] = lambda dt: S3DateTime.date_represent(dt,
+                                                                 utc=True)
 
     if "widget" not in attr:
         if past is None and future is None:
