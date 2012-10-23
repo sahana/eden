@@ -452,8 +452,6 @@ def s3_represent_facilities(db, site_ids, link=True):
 def s3_comments_represent(text, show_link=True):
     """
         Represent Comments Fields
-
-        @todo: parameter description?
     """
 
     if len(text) < 80:
@@ -479,8 +477,6 @@ def s3_comments_represent(text, show_link=True):
 def s3_url_represent(url):
     """
         Make URLs clickable
-
-        @todo: parameter description?
     """
 
     if not url:
@@ -564,8 +560,6 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
 def s3_auth_user_represent(id):
     """
         Represent a user as their email address
-
-        @todo: parameter description?
     """
 
     if not id:
@@ -585,8 +579,6 @@ def s3_auth_user_represent(id):
 def s3_auth_group_represent(opt):
     """
         Represent user groups by their role names
-
-        @todo: parameter description?
     """
 
     if not opt:
@@ -722,8 +714,6 @@ def s3_include_debug_js():
 def s3_is_mobile_client(request):
     """
         Simple UA Test whether client is a mobile device
-
-        @todo: parameter description?
     """
 
     env = request.env
@@ -794,7 +784,6 @@ def s3_populate_browser_compatibility(request):
     """
         Use WURFL for browser compatibility detection
 
-        @todo: parameter description?
         @ToDo: define a list of features to store
     """
 

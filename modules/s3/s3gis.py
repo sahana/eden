@@ -2385,10 +2385,10 @@ class GIS(object):
             Export admin areas to /static/cache for use by interactive web-mapping services
             - designed for use by the Vulnerability Mapping
 
-            simplify = False to disable simplification
-
-            Only L0 supported for now
-            Only GeoJSON supported for now (may add KML &/or OSM later)
+            @param countries: list of ISO2 country codes
+            @param levels: list of which Lx levels to export
+            @param simplify: tolerance for the simplification algorithm. False to disable simplification
+            @param format: Only GeoJSON supported for now (may add KML &/or OSM later)
         """
 
         db = current.db
@@ -2478,9 +2478,15 @@ class GIS(object):
              (table.deleted != True)
         q4 = (table.level == "L4") & \
              (table.deleted != True)
+
         if "L1" in levels:
             if "L0" not in levels:
                 countries = db(cquery).select(ifield)
+            if simplify:
+                # We want greater precision when zoomed-in more
+                simplify = simplify / 1.5 # 0.0067 with default setting
+                if spatial:
+                    field = table.the_geom.st_simplify(simplify).st_asgeojson(precision=4).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     _id = country.id
@@ -2535,6 +2541,11 @@ class GIS(object):
         if "L2" in levels:
             if "L0" not in levels and "L1" not in levels:
                 countries = db(cquery).select(ifield)
+            if simplify:
+                # We want greater precision when zoomed-in more
+                simplify = simplify / 1.5 # 0.0044 with default setting
+                if spatial:
+                    field = table.the_geom.st_simplify(simplify).st_asgeojson(precision=4).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -2592,6 +2603,11 @@ class GIS(object):
         if "L3" in levels:
             if "L0" not in levels and "L1" not in levels and "L2" not in levels:
                 countries = db(cquery).select(ifield)
+            if simplify:
+                # We want greater precision when zoomed-in more
+                simplify = simplify / 1.5 # 0.003 with default setting
+                if spatial:
+                    field = table.the_geom.st_simplify(simplify).st_asgeojson(precision=4).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -2652,6 +2668,11 @@ class GIS(object):
         if "L4" in levels:
             if "L0" not in levels and "L1" not in levels and "L2" not in levels and "L3" not in levels:
                 countries = db(cquery).select(ifield)
+            if simplify:
+                # We want greater precision when zoomed-in more
+                simplify = simplify / 1.5 # 0.002 with default setting
+                if spatial:
+                    field = table.the_geom.st_simplify(simplify).st_asgeojson(precision=4).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id

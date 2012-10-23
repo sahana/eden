@@ -2041,18 +2041,29 @@ Thank you
               verify their emails
         """
 
-        if "name" in user:
-            user["first_name"] = user["name"]
-        if "family_name" in user:
-            # Facebook
-            user["last_name"] = user["family_name"]
+        messages = self.messages
+        settings = current.deployment_settings
+        if not settings.get_mail_sender():
+            current.response.error = messages.unable_send_email
+            return
 
-        subject = self.messages.welcome_email_subject
-        message = self.messages.welcome_email
+        #if "name" in user:
+        #    user["first_name"] = user["name"]
+        #if "family_name" in user:
+        #    # Facebook
+        #    user["last_name"] = user["family_name"]
 
-        results = self.settings.mailer.send(user["email"], subject=subject, message=message)
+        to = user["email"]
+        subject = messages.welcome_email_subject
+        message = messages.welcome_email
+
+        if settings.has_module("msg"):
+            results = current.msg.send_email(to, subject=subject,
+                                             message=message)
+        else:
+            results = current.mail.send(to, subject=subject, message=message)
         if not results:
-            current.response.error = self.messages.unable_send_email
+            current.response.error = messages.unable_send_email
         return
 
     # -------------------------------------------------------------------------
