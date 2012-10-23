@@ -460,7 +460,7 @@ class S3HRModel(S3Model):
                                     label=ORGANISATION,
                                     field="organisation_id",
                                     represent = self.org_organisation_represent,
-                                    cols = 3
+                                    cols = 2
                                   ),
                                 S3SearchOptionsWidget(
                                     name="human_resource_search_L1",
