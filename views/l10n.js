@@ -9,7 +9,6 @@ S3.i18n.ajax_get='{{=T("getting")}}'
 S3.i18n.ajax_fmd='{{=T("form data")}}'
 S3.i18n.ajax_rtr='{{=T("retry")}}'
 S3.i18n.unsaved_changes="{{=T("You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.")}}"
-S3.i18n.datetime_format='{{=T("%Y-%m-%d %H:%M:%S")}}'
 S3.i18n.hour='{{=T("Hour")}}'
 S3.i18n.minute='{{=T("Minute")}}'
 S3.i18n.delete_confirmation='{{=T("Are you sure you want to delete this record?")}}'

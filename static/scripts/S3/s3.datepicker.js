@@ -21,13 +21,6 @@ $(document).ready(function() {
         minuteText: S3.i18n.minute,
         defaultTime: ''
     });
-
-    // Datetime fields - use AnyTime (set in S3DateTimeWidget)
-    //try { $('input.datetime').focus( function() {
-    //    Calendar.setup({
-    //        inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
-    //    });
-    //}); } catch(e) {};
 });
 
 /* Function to ensure that end_date is always start-date or later */

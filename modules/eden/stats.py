@@ -1160,6 +1160,8 @@ class S3StatsGroupModel(S3Model):
                 (gtable.dirty == True) & \
                 (gtable.approved_by != None)
         db(query).update(dirty=False)
+        # Explicitly commit when running async
+        db.commit()
 
     # -------------------------------------------------------------------------
     @staticmethod
