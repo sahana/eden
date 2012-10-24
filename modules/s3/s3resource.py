@@ -5500,7 +5500,7 @@ class S3Pivottable:
 
         # Retrieve the records --------------------------------------------------
         #
-        records = resource.select(self.dfields)
+        records = resource.select(self.dfields, start = None, limit = None)
 
         ## Generate the report -------------------------------------------------
         ##
