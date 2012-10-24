@@ -4823,7 +4823,7 @@ class S3ResourceFilter:
                 # BBox
                 bbox = self.parse_bbox_query(resource, vars)
                 if bbox is not None:
-                    self.mquery &= bbox
+                    self.add_filter(bbox)
 
                 # Filters
                 queries = self.parse_url_query(resource, vars)
