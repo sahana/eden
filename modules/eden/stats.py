@@ -756,6 +756,9 @@ class S3StatsModel(S3Model):
                           sum = values_sum,
                           )
 
+        # Explicitly commit when running async
+        db.commit()
+
         return
 
     # ---------------------------------------------------------------------
