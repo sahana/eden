@@ -1407,6 +1407,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             try:
                 value = json.loads(value)
             except:
+                import sys
                 error = sys.exc_info()[1]
                 if hasattr(error, "message"):
                     error = error.message
