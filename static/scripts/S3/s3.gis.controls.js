@@ -150,7 +150,7 @@ function s3_gis_tooltipUnselect(event) {
 // Replace Cluster Popup contents with selected Feature Popup
 function s3_gis_loadClusterPopup(url, id) {
     // Show Throbber whilst waiting for Popup to show
-    var contents = S3.i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
+    var contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
     $('#' + id + '_contentDiv').html(contents);
     // Load data into Popup
     $.get(
@@ -242,7 +242,7 @@ function addGeolocateControl(toolbar) {
     // Toolbar Button
     var geoLocateButton = new Ext.Toolbar.Button({
         iconCls: 'geolocation',
-        tooltip: S3.i18n.gis_geoLocate,
+        tooltip: i18n.gis_geoLocate,
         handler: function() {
             S3.gis.draftLayer.removeAllFeatures();
             //S3.gis.geolocateControl.deactivate();
@@ -444,7 +444,7 @@ function addMeasureControls(toolbar) {
     );
     length.events.on({
         'measure': function(evt) {
-            alert(S3.i18n.gis_length_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units);
+            alert(i18n.gis_length_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units);
         }
     });
 
@@ -455,7 +455,7 @@ function addMeasureControls(toolbar) {
         map: map,
         iconCls: 'measure-off',
         // button options
-        tooltip: S3.i18n.gis_length_tooltip,
+        tooltip: i18n.gis_length_tooltip,
         allowDepress: true,
         enableToggle: true,
         toggleGroup: 'controls'
@@ -477,7 +477,7 @@ function addMeasureControls(toolbar) {
         );
         area.events.on({
             'measure': function(evt) {
-                alert(S3.i18n.gis_area_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units + '2');
+                alert(i18n.gis_area_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units + '2');
             }
         });
 
@@ -486,7 +486,7 @@ function addMeasureControls(toolbar) {
             map: map,
             iconCls: 'measure-area',
             // button options
-            tooltip: S3.i18n.gis_area_tooltip,
+            tooltip: i18n.gis_area_tooltip,
             allowDepress: true,
             enableToggle: true,
             toggleGroup: 'controls'
@@ -504,12 +504,12 @@ function addNavigationControl(toolbar) {
     // Toolbar Buttons
     var navPreviousButton = new Ext.Toolbar.Button({
         iconCls: 'back',
-        tooltip: S3.i18n.gis_navPrevious,
+        tooltip: i18n.gis_navPrevious,
         handler: nav.previous.trigger
     });
     var navNextButton = new Ext.Toolbar.Button({
         iconCls: 'next',
-        tooltip: S3.i18n.gis_navNext,
+        tooltip: i18n.gis_navNext,
         handler: nav.next.trigger
     });
     toolbar.addButton(navPreviousButton);
@@ -558,7 +558,7 @@ function addPointControl(toolbar, point_pressed) {
         },
         map: map,
         iconCls: 'drawpoint-off',
-        tooltip: S3.i18n.gis_draw_feature,
+        tooltip: i18n.gis_draw_feature,
         allowDepress: true,
         enableToggle: true,
         toggleGroup: 'controls',
@@ -605,7 +605,7 @@ function addPolygonControl(toolbar, polygon_pressed, not_regular) {
         },
         map: map,
         iconCls: 'drawpolygon-off',
-        tooltip: S3.i18n.gis_draw_polygon,
+        tooltip: i18n.gis_draw_polygon,
         allowDepress: true,
         enableToggle: true,
         toggleGroup: 'controls',
@@ -622,7 +622,7 @@ function addPotlatchButton(toolbar) {
     // Toolbar Button
     var potlatchButton = new Ext.Toolbar.Button({
         iconCls: 'potlatch',
-        tooltip: S3.i18n.gis_potlatch,
+        tooltip: i18n.gis_potlatch,
         handler: function() {
             // Read current settings from map
             var zoom_current = map.getZoom();
@@ -646,7 +646,7 @@ function addSaveButton(toolbar) {
     // Toolbar Button
     var saveButton = new Ext.Toolbar.Button({
         iconCls: 'save',
-        tooltip: S3.i18n.gis_save,
+        tooltip: i18n.gis_save,
         handler: function() {
             // Read current settings from map
             var state = getState();
@@ -821,8 +821,8 @@ function addWMSGetFeatureInfoControl(toolbar) {
         toggleGroup: 'controls',
         // html not permitted by Proxy
         format: "grid",
-        infoActionTip: S3.i18n.gis_get_feature_info,
-        popupTitle: S3.i18n.gis_feature_info
+        infoActionTip: i18n.gis_get_feature_info,
+        popupTitle: i18n.gis_feature_info
     });
     // Set up shortcut to allow GXP Plugin to work
     S3.gis.wmsGetFeatureInfo.target = S3.gis;
@@ -846,7 +846,7 @@ function addRemoveLayersControl() {
             // @ToDo
             url: null
         },
-        uploadText: S3.i18n.gis_uploadlayer,
+        uploadText: i18n.gis_uploadlayer,
         relativeUploadOnly: false
     });
 
@@ -883,7 +883,7 @@ function addRemoveLayersControl() {
 function addLayerPropertiesButton() {
     var layerPropertiesButton = new Ext.Toolbar.Button({
         iconCls: 'gxp-icon-layerproperties',
-        tooltip: S3.i18n.gis_properties,
+        tooltip: i18n.gis_properties,
         handler: function() {
             // Find the Selected Node
             function isSelected(node) {

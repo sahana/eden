@@ -2236,7 +2236,7 @@ class S3HRSkillModel(S3Model):
                           _title="%s|%s" % (T("Competency Rating"),
                                             T("Level of competency this person has with this skill.")))
         if current.deployment_settings.get_hrm_skill_types():
-            s3.js_global.append("S3.i18n.no_ratings = '%s';" % T("No Ratings for Skill Type"))
+            s3.js_global.append("i18n.no_ratings = '%s';" % T("No Ratings for Skill Type"))
             s3.jquery_ready.append(
 '''S3FilterFieldChange({
  'FilterField':'skill_id',
@@ -2244,7 +2244,7 @@ class S3HRSkillModel(S3Model):
  'FieldResource':'competency',
  'FieldPrefix':'hrm',
  'url':S3.Ap.concat('/hrm/skill_competencies/'),
- 'msgNoRecords':S3.i18n.no_ratings
+ 'msgNoRecords':i18n.no_ratings
 })''')
         return comment
 

@@ -66,7 +66,7 @@ function InvItemPackIDChange() {
         
         var Quantity = (InvQuantity * InvPackQuantity) / PackQuantity;
                         
-        TotalQuantity = '<span id = "TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + S3.i18n.in_inv + ')</span>';
+        TotalQuantity = '<span id = "TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
         $('#inv_quantity_ajax_throbber').remove();
         $('[name = "quantity"]').after(TotalQuantity);
     });
@@ -109,7 +109,7 @@ $(document).ready(function() {
             'Field':		'item_pack_id',
             'FieldResource':'item_pack',
             'FieldPrefix':	'supply',
-            'msgNoRecords':	S3.i18n.no_packs,
+            'msgNoRecords':	i18n.no_packs,
             'fncPrep':		fncPrepItem,
             'fncRepresent':	fncRepresentItem
         });
@@ -122,7 +122,7 @@ $(document).ready(function() {
 		'FieldResource':'item_pack',
 		'FieldPrefix':	'supply',
 	    'url':		 	S3.Ap.concat('/inv/inv_item_packs/'),
-		'msgNoRecords':	S3.i18n.no_packs,
+		'msgNoRecords':	i18n.no_packs,
 		'fncPrep':		fncPrepItem,
 		'fncRepresent':	fncRepresentItem
 	});
@@ -134,7 +134,7 @@ $(document).ready(function() {
 		'FieldResource':'item_pack',
 		'FieldPrefix':	'supply',
 	    'url':		 	S3.Ap.concat('/req/req_item_packs/'),
-		'msgNoRecords':	S3.i18n.no_packs,
+		'msgNoRecords':	i18n.no_packs,
 		'fncPrep':		fncPrepItem,
 		'fncRepresent':	fncRepresentItem
 	});

@@ -5,8 +5,7 @@
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.min.js" % appname)}}{{pass}}
 <script type="text/javascript">
-
-S3.i18n.all='{{=T("All")}}'
+i18n.all='{{=T("All")}}'
 S3.dataTables=new Array()
 {{if s3.dataTableID:}}S3.dataTables.id=[{{idlist=[s3.dataTableID] if not isinstance (s3.dataTableID, (tuple, list)) else s3.dataTableID
  for id in idlist:}}'{{=XML(id)}}',{{pass}}
@@ -19,11 +18,9 @@ S3.dataTables=new Array()
   id=this.id
   {{=XML(s3.actions[-1]["_jqclick"])}}
   event.stopPropagation()
-  return false
-  }
+  return false}
  {{pass}}
 {{pass}}
-
 {{if response.aadata is not None:}}
  S3.dataTables.oCache={
   iCacheLower:{{=s3.start}},
@@ -31,6 +28,5 @@ S3.dataTables=new Array()
   lastJson:{{=XML(response.aadata)}}
  }
 {{pass}}
-
 </script>
 {{if s3.dataTableMap:}}{{=XML(s3.dataTableMap)}}{{pass}}

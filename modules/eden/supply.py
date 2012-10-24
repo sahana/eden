@@ -657,7 +657,7 @@ S3FilterFieldChange({
  'Field':'item_pack_id',
  'FieldResource':'item_pack',
  'FieldPrefix':'supply',
- 'msgNoRecords':S3.i18n.no_packs,
+ 'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
 })'''),

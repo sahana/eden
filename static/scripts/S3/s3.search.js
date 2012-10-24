@@ -36,7 +36,7 @@ S3.search.saveCurrentSearch = function(event) {
 			var link = $('<a/>')
 				.attr('id', id)
 				.attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
-				.text(S3.i18n.edit_saved_search);
+				.text(i18n.edit_saved_search);
 
 			// replace the Save button with the hyperlink
 			btn.replaceWith(link);
@@ -147,7 +147,7 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
 	            if (data.length == 0) {
 	                table += '<LI class = "search_autocomplete_result_item" ' +
                              'style = "border:1px solid;list-style-type:none;">' +
-                             S3.i18n.no_match + '</LI>';
+                             i18n.no_match + '</LI>';
 	            } else {
 	                for (var i = 0; i < data.length; i++) {
 	                    table += '<LI id="' +  data[i].id + '"' +
@@ -165,7 +165,7 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
 	                	table += '<LI ' +
                         		 'class = "search_autocomplete_result_item" ' +
                         		 'style = "border:1px solid;list-style-type:none;"><I>' +
-                        		 S3.i18n.ac_widget_more_results +
+                        		 i18n.ac_widget_more_results +
 	                			 '</I></LI>';
 	                }
 	            }

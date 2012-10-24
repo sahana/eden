@@ -122,6 +122,7 @@ class S3PersonEntity(S3Model):
 
         db = current.db
         T = current.T
+        auth_settings = current.auth.settings
 
         add_component = self.add_component
         configure = self.configure
@@ -177,7 +178,9 @@ class S3PersonEntity(S3Model):
                   deletable=False,
                   listadd=False,
                   onaccept=self.pr_pentity_onaccept,
-                  search_method=pentity_search)
+                  search_method=pentity_search,
+                  referenced_by=[(auth_settings.table_membership_name, "for_pe")]
+                  )
 
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
@@ -217,11 +220,10 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Person <-> User
         #
-        utable = current.auth.settings.table_user
         tablename = "pr_person_user"
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
-                             Field("user_id", utable),
+                             Field("user_id", auth_settings.table_user),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------

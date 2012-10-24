@@ -112,7 +112,7 @@ $(document).ready(function() {
     $('.confirmation').hide().slideDown('slow')
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() {
-        if ((this.checked) && (!confirm(S3.i18n.delete_confirmation))) {
+        if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
                 this.checked=false;
         }
     });
@@ -139,7 +139,7 @@ $(document).ready(function() {
     // (can't use S3ConfirmClick as the buttons haven't yet rendered)
     if (S3.interactive) {
         $('a.delete-btn').live('click', function(event) {
-            if (confirm(S3.i18n.delete_confirmation)) {
+            if (confirm(i18n.delete_confirmation)) {
                 return true;
             } else {
                 event.preventDefault();
@@ -273,7 +273,7 @@ function S3ConfirmClick(ElementID, Message) {
 // Code to warn on exit without saving
 function S3SetNavigateAwayConfirm() {
     window.onbeforeunload = function() {
-        return S3.i18n.unsaved_changes;
+        return i18n.unsaved_changes;
     };
 };
 
@@ -304,7 +304,7 @@ function S3EnableNavigateAwayConfirm() {
         var options = $.extend( {}, $.ajaxS3Settings, s );
         options.tryCount = 0;
         if (s.message) {
-            s3_showStatus(S3.i18n.ajax_get + ' ' + (s.message ? s.message : S3.i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
+            s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
         }
         options.success = function(data, status) {
             s3_hideStatus();
@@ -316,19 +316,19 @@ function S3EnableNavigateAwayConfirm() {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
                     // try again
-                    s3_showStatus(S3.i18n.ajax_get + ' ' + (s.message ? s.message : S3.i18n.ajax_fmd) + '... ' + S3.i18n.ajax_rtr + ' ' + this.tryCount,
+                    s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount,
                         $.ajaxS3Settings.msgTimeout);
                     $.ajax(this);
                     return;
                 }
-                s3_showStatus(S3.i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + S3.i18n.ajax_gvn,
+                s3_showStatus(i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn,
                     $.ajaxS3Settings.msgTimeout, false, true);
                 return;
             }
             if (xhr.status == 500) {
-                s3_showStatus(S3.i18n.ajax_500, $.ajaxS3Settings.msgTimeout, false, true);
+                s3_showStatus(i18n.ajax_500, $.ajaxS3Settings.msgTimeout, false, true);
             } else {
-                s3_showStatus(S3.i18n.ajax_dwn, $.ajaxS3Settings.msgTimeout, false, true);
+                s3_showStatus(i18n.ajax_dwn, $.ajaxS3Settings.msgTimeout, false, true);
             }
         };
         $.ajax(options);
@@ -501,7 +501,7 @@ function s3_viewMap(feature_id) {
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
     var oldhtml = $('#map').html();
     var iframe = "<iframe width='640' height='480' src='" + url + "'></iframe>";
-    var closelink = $('<a href=\"#\">' + S3.i18n.close_map + '</a>');
+    var closelink = $('<a href=\"#\">' + i18n.close_map + '</a>');
 
     // @ToDo: Also make the represent link act as a close
     closelink.bind( "click", function(evt) {
@@ -517,7 +517,7 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
     var url = S3.Ap.concat('/gis/display_feature//?module=') + module + '&resource=' + resource + '&instance=' + instance + '&jresource=' + jresource;
     var oldhtml = $('#map').html();
     var iframe = '<iframe width="640" height="480" src="' + url + '"></iframe>';
-    var closelink = $('<a href=\"#\">' + S3.i18n.close_map + '</a>');
+    var closelink = $('<a href=\"#\">' + i18n.close_map + '</a>');
 
     // @ToDo: Also make the represent link act as a close
     closelink.bind( 'click', function(evt) {

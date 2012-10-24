@@ -124,7 +124,7 @@ function addMapUI() {
     S3.gis.portal = Object();
     S3.gis.portal.map = S3.gis.mapPanel;
 
-    if (S3.i18n.gis_legend || S3.gis.layers_wms) {
+    if (i18n.gis_legend || S3.gis.layers_wms) {
         for (var i = 0; i < map.layers.length; i++) {
             // Ensure that legendPanel knows about the Markers for our Feature layers
             if (map.layers[i].legendURL) {
@@ -158,10 +158,10 @@ function addMapUI() {
     }
 
     // Legend Panel
-    if (S3.i18n.gis_legend) {
+    if (i18n.gis_legend) {
        S3.gis.legendPanel = new GeoExt.LegendPanel({
             id: 'legendpanel',
-            title: S3.i18n.gis_legend,
+            title: i18n.gis_legend,
             defaults: {
                 labelCls: 'mylabel',
                 style: 'padding:4px'
@@ -318,7 +318,7 @@ function addLayerTree() {
 
     // Default Folder for Base Layers
     var layerTreeBase = {
-        text: S3.i18n.gis_base_layers,
+        text: i18n.gis_base_layers,
         nodeType: 'gx_baselayercontainer',
         layerStore: S3.gis.mapPanel.layers,
         loader: {
@@ -335,7 +335,7 @@ function addLayerTree() {
 
     // Default Folder for Overlays
     var layerTreeOverlays = {
-        text: S3.i18n.gis_overlays,
+        text: i18n.gis_overlays,
         nodeType: 'gx_overlaylayercontainer',
         layerStore: S3.gis.mapPanel.layers,
         loader: {
@@ -379,7 +379,7 @@ function addLayerTree() {
         children: nodesArr
     });
 
-    if (S3.i18n.gis_uploadlayer || S3.i18n.gis_properties) {
+    if (i18n.gis_uploadlayer || i18n.gis_properties) {
         var tbar = new Ext.Toolbar();
     } else {
         var tbar = null;
@@ -387,7 +387,7 @@ function addLayerTree() {
 
     S3.gis.layerTree = new Ext.tree.TreePanel({
         id: 'treepanel',
-        title: S3.i18n.gis_layers,
+        title: i18n.gis_layers,
         loader: new Ext.tree.TreeLoader({applyLoader: false}),
         root: treeRoot,
         rootVisible: false,
@@ -401,11 +401,11 @@ function addLayerTree() {
     });
 
     // Add/Remove Layers
-    if (S3.i18n.gis_uploadlayer) {
+    if (i18n.gis_uploadlayer) {
         addRemoveLayersControl();
     }
     // Layer Properties
-    if (S3.i18n.gis_properties) {
+    if (i18n.gis_properties) {
         addLayerPropertiesButton();
     }
 }
@@ -466,7 +466,7 @@ function addToolbar() {
         map: map,
         iconCls: 'zoomfull',
         // button options
-        tooltip: S3.i18n.gis_zoomfull
+        tooltip: i18n.gis_zoomfull
     });
 
     var zoomout = new GeoExt.Action({
@@ -474,7 +474,7 @@ function addToolbar() {
         map: map,
         iconCls: 'zoomout',
         // button options
-        tooltip: S3.i18n.gis_zoomout,
+        tooltip: i18n.gis_zoomout,
         toggleGroup: 'controls'
     });
 
@@ -483,7 +483,7 @@ function addToolbar() {
         map: map,
         iconCls: 'zoomin',
         // button options
-        tooltip: S3.i18n.gis_zoomin,
+        tooltip: i18n.gis_zoomin,
         toggleGroup: 'controls'
     });
 
@@ -506,7 +506,7 @@ function addToolbar() {
         map: map,
         iconCls: 'pan-off',
         // button options
-        tooltip: S3.i18n.gis_pan,
+        tooltip: i18n.gis_pan,
         allowDepress: true,
         toggleGroup: 'controls',
         pressed: pan_pressed
@@ -645,7 +645,7 @@ function addToolbar() {
 
     // WMS GetFeatureInfo
     // @ToDo: Add control if we add appropriate layers dynamically...
-    if (S3.i18n.gis_get_feature_info) {
+    if (i18n.gis_get_feature_info) {
         addWMSGetFeatureInfoControl(toolbar);
     }
 
@@ -669,7 +669,7 @@ function addToolbar() {
     } catch(err) {};
     
     // Search box
-    if (S3.i18n.gis_search) {
+    if (i18n.gis_search) {
         var width = Math.min(350, (S3.gis.map_width - 680));
         var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
             map: map,
@@ -678,7 +678,7 @@ function addToolbar() {
             minChars: 2,
             // @ToDo: Restrict to the Country if using a Country config
             //countryString: ,
-            emptyText: S3.i18n.gis_search
+            emptyText: i18n.gis_search
         });
         toolbar.addSeparator();
         toolbar.add(mapSearch);

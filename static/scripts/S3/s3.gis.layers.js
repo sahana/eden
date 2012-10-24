@@ -297,7 +297,7 @@ function addDraftLayer() {
     style_marker.graphicYOffset = -marker_height;
     style_marker.externalGraphic = iconURL;
     S3.gis.draftLayer = new OpenLayers.Layer.Vector(
-        S3.i18n.gis_draft_layer, {
+        i18n.gis_draft_layer, {
             style: style_marker,
             displayInLayerSwitcher: false
         }
@@ -1885,7 +1885,7 @@ function s3_gis_loadDetails(url, id, popup) {
         },
         'error': function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
-                msg = S3.i18n.gis_requires_login;
+                msg = i18n.gis_requires_login;
             } else {
                 msg = request.responseText;
             }
@@ -1906,7 +1906,7 @@ function onGeojsonFeatureSelect(event) {
     if (feature.cluster) {
         // Cluster
         var name, uuid, url;
-        var contents = S3.i18n.gis_cluster_multiple + ':<ul>';
+        var contents = i18n.gis_cluster_multiple + ':<ul>';
         for (var i = 0; i < feature.cluster.length; i++) {
             if (undefined != feature.cluster[i].attributes.popup) {
                 // Only display the 1st line of the hover popup
@@ -1928,7 +1928,7 @@ function onGeojsonFeatureSelect(event) {
         // Single Feature
         if (undefined != feature.attributes.url) {
             // Popup contents are pulled via AJAX
-            var contents = S3.i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
+            var contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
         } else {
             // Popup contents are built from the attributes
             if (undefined == feature.attributes.name) {
@@ -1951,7 +1951,7 @@ function onGeojsonFeatureSelect(event) {
             } else if (feature.attributes.data.indexOf('http://') === 0) {
                 data_link = true;
                 var data_id = S3.uid();
-                var data = '<div id="' + data_id + '">' + S3.i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
+                var data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
             } else {
                 var data = '<p>' + feature.attributes.data + '</p>';
             };
@@ -2007,7 +2007,7 @@ function onKmlFeatureSelect(event) {
     if (feature.cluster) {
         // Cluster
         var name, uuid, url;
-        var contents = S3.i18n.gis_cluster_multiple + ':<ul>';
+        var contents = i18n.gis_cluster_multiple + ':<ul>';
         for (var i = 0; i < feature.cluster.length; i++) {
             name = feature.cluster[i].attributes.name;
             // @ToDo: Provide a way to load popups
@@ -2088,7 +2088,7 @@ function onWfsFeatureSelect(event) {
     if (feature.cluster) {
         // Cluster
         var name;
-        var contents = S3.i18n.gis_cluster_multiple + ':<ul>';
+        var contents = i18n.gis_cluster_multiple + ':<ul>';
         var length = Math.min(feature.cluster.length, 9);
         for (var i = 0; i < length; i++) {
             name = feature.cluster[i].attributes[titleField];

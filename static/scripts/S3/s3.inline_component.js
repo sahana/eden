@@ -406,7 +406,7 @@ $(function() {
         var rowname = formname + '-' + rowindex;
 
         // Confirmation dialog
-        if (!confirm(S3.i18n.delete_confirmation)) {
+        if (!confirm(i18n.delete_confirmation)) {
             return false;
         }
 

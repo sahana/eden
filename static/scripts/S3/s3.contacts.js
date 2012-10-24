@@ -81,7 +81,7 @@ $('.contact').each(function () {
     var id = contact.attr('id').match(/\d+/);
 
     contact.find('a.deleteBtn').click(function (e) {
-        if (confirm(S3.i18n.delete_confirmation)) {
+        if (confirm(i18n.delete_confirmation)) {
             $.post(S3.Ap.concat('/pr/contact/' + id[0] + '/delete'));
             contact.addClass('hide');
         }
@@ -152,7 +152,7 @@ $('.emergency').each(function () {
     var id = emergency.attr('id').match(/\d+/);
 
     emergency.find('a.deleteBtn').click(function (e) {
-        if (confirm(S3.i18n.delete_confirmation)) {
+        if (confirm(i18n.delete_confirmation)) {
             $.post(S3.Ap.concat('/pr/contact_emergency/' + id + '/delete'));
             emergency.addClass('hide');
         }

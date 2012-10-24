@@ -1105,7 +1105,7 @@ class S3Search(S3CRUD):
                                 _id="save-search"),
                          SCRIPT('''
 S3.search.saveOptions=%s
-S3.i18n.edit_saved_search="%s"
+i18n.edit_saved_search="%s"
 ''' % (json.dumps(save_options),
        T("Edit saved search"))))
 

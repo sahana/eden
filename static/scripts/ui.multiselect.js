@@ -51,8 +51,8 @@ $.widget("ui.multiselect", {
 		this.count = 0; // number of currently selected options
 		this.selectedContainer = $('<div class="selected"></div>').appendTo(this.container);
 		this.availableContainer = $('<div class="available"></div>').appendTo(this.container);
-		this.selectedActions = $('<div class="actions ui-widget-header ui-helper-clearfix widget-header-dark"><span class="count">0 '+S3.i18n.itemsCount+'</span><a href="#" class="remove-all">'+S3.i18n.removeAll+'</a></div>').appendTo(this.selectedContainer);
-		this.availableActions = $('<div class="actions ui-widget-header ui-helper-clearfix widget-header-dark"><span class="search-text"> '+S3.i18n.search+' </span><input type="text" class="search empty ui-widget-content ui-corner-all"/><a href="#" class="add-all">'+S3.i18n.addAll+'</a></div>').appendTo(this.availableContainer);
+		this.selectedActions = $('<div class="actions ui-widget-header ui-helper-clearfix widget-header-dark"><span class="count">0 '+i18n.itemsCount+'</span><a href="#" class="remove-all">'+i18n.removeAll+'</a></div>').appendTo(this.selectedContainer);
+		this.availableActions = $('<div class="actions ui-widget-header ui-helper-clearfix widget-header-dark"><span class="search-text"> '+i18n.search+' </span><input type="text" class="search empty ui-widget-content ui-corner-all"/><a href="#" class="add-all">'+i18n.addAll+'</a></div>').appendTo(this.availableContainer);
 		this.selectedList = $('<ul class="selected connected-list"><li class="ui-helper-hidden-accessible"></li></ul>').bind('selectstart', function(){return false;}).appendTo(this.selectedContainer);
 		this.availableList = $('<ul class="available connected-list"><li class="ui-helper-hidden-accessible"></li></ul>').bind('selectstart', function(){return false;}).appendTo(this.availableContainer);
 		
@@ -159,7 +159,7 @@ $.widget("ui.multiselect", {
 		that._filter.apply(this.availableContainer.find('input.search'), [that.availableList]);
   },
 	_updateCount: function() {
-		this.selectedContainer.find('span.count').text(this.count+" "+S3.i18n.itemsCount);
+		this.selectedContainer.find('span.count').text(this.count+" "+i18n.itemsCount);
 	},
 	_getOptionNode: function(option) {
 		option = $(option);

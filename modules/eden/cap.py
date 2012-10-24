@@ -907,7 +907,7 @@ def cap_info_rheader(r):
                               rheader_tabs,
                               _class="cap_info_template_form"
                              )
-                current.response.s3.js_global.append('''S3.i18n.cap_locked="%s"''' % T("Locked"))
+                current.response.s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
             else:
                 tabs.insert(1, (T("Edit Area"), "area"))
                 rheader_tabs = s3_rheader_tabs(r, tabs)

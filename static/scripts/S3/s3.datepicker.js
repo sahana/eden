@@ -17,8 +17,8 @@ $(document).ready(function() {
 
     // Time fields - use jquery.ui.timepicker
     $('input.time').timepicker({
-        hourText: S3.i18n.hour,
-        minuteText: S3.i18n.minute,
+        hourText: i18n.hour,
+        minuteText: i18n.minute,
         defaultTime: ''
     });
 });

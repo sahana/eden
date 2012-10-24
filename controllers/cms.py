@@ -175,13 +175,13 @@ def page():
 
                 # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
                 js = "".join((
-'''S3.i18n.reply="''', str(T("Reply")), '''"
+'''i18n.reply="''', str(T("Reply")), '''"
 var img_path=S3.Ap.concat('/static/img/jCollapsible/')
 var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
 function comment_reply(id){
  $('#cms_comment_post_id__row').hide()
  $('#cms_comment_post_id__row1').hide()
- $('#comment-title').html(S3.i18n.reply)
+ $('#comment-title').html(i18n.reply)
  $('#cms_comment_body').ckeditorGet().destroy()
  $('#cms_comment_body').ckeditor(ck_config)
  $('#comment-form').insertAfter($('#comment-'+id))
@@ -216,13 +216,13 @@ def discuss(r, **attr):
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
     js = "".join((
-'''S3.i18n.reply="''', str(T("Reply")), '''"
+'''i18n.reply="''', str(T("Reply")), '''"
 var img_path=S3.Ap.concat('/static/img/jCollapsible/')
 var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
 function comment_reply(id){
  $('#cms_comment_post_id__row').hide()
  $('#cms_comment_post_id__row1').hide()
- $('#comment-title').html(S3.i18n.reply)
+ $('#comment-title').html(i18n.reply)
  $('#cms_comment_body').ckeditorGet().destroy()
  $('#cms_comment_body').ckeditor(ck_config)
  $('#comment-form').insertAfter($('#comment-'+id))

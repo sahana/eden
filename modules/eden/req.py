@@ -948,7 +948,7 @@ $(document).ready(function(){
   'FieldResource':'item_pack',
   'FieldPrefix':'supply',
   'url':S3.Ap.concat('/req/req_item_packs/'),
-  'msgNoRecords':S3.i18n.no_packs,
+  'msgNoRecords':i18n.no_packs,
   'fncPrep':fncPrepItem,
   'fncRepresent':fncRepresentItem
  });
