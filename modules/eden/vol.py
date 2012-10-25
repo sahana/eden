@@ -87,9 +87,9 @@ class S3VolClusterDataModel(S3Model):
         vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", table,
                                               label = T("Volunteer Cluster Type"),
                                               requires = IS_NULL_OR(
-                                                                    IS_ONE_OF(db,
-                                                                              "vol_cluster_type.id",
-                                                                              s3_represent_name(table))),
+                                                            IS_ONE_OF(db,
+                                                                      "vol_cluster_type.id",
+                                                                      s3_represent_name(table))),
                                               represent = s3_represent_name(table), 
                                               comment = comment
                                               )

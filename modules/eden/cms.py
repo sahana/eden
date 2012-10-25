@@ -214,8 +214,8 @@ class S3ContentModel(S3Model):
         tablename = "cms_comment"
         table = define_table(tablename,
                              Field("parent", "reference cms_comment",
-                                   requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                                    "cms_comment.id")),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "cms_comment.id")),
                                    readable=False),
                              post_id(),
                              Field("body", "text", notnull=True,

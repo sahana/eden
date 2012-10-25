@@ -560,12 +560,14 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
               )
 
 # =============================================================================
-def s3_auth_user_represent(id):
+def s3_auth_user_represent(id, row=None):
     """
         Represent a user as their email address
     """
 
-    if not id:
+    if row:
+        return row.email
+    elif not id:
         return current.messages.NONE
 
     db = current.db

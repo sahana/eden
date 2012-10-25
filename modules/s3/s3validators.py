@@ -555,7 +555,7 @@ class IS_ONE_OF_EMPTY(Validator):
             label = self.label
             try:
                 # Is a function
-                labels = map(label, records)
+                labels = map(label, [], records)
             except TypeError:
                 if isinstance(label, str):
                     labels = map(lambda r: label % dict(r), records)

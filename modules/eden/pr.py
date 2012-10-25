@@ -265,7 +265,8 @@ class S3PersonEntity(S3Model):
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                         pr_pentity_represent, sort=True)
+                                         pr_pentity_represent,
+                                         sort=True)
         table.pe_id.represent = pr_pentity_represent
 
         # CRUD Strings
@@ -3249,36 +3250,36 @@ def pr_get_entities(pe_ids=None,
             return repr_all
 
 # =============================================================================
-def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
+def pr_pentity_represent(id, row=None, show_label=True,
+                         default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
-    if not id:
+    if row:
+        id = row.pe_id
+    elif not id:
         return current.messages.NONE
-
-    db = current.db
-    s3db = current.s3db
-
-    pe_str = current.T("None (no such record)")
-
-    pe_table = s3db.pr_pentity
-    if isinstance(id, Row):
-        pe = id
-        id = pe.pe_id
     else:
-        pe = db(pe_table.pe_id == id).select(pe_table.instance_type,
-                                             pe_table.pe_label,
-                                             limitby=(0, 1)).first()
-    if not pe:
+        db = current.db
+        row = db(pe_table.pe_id == id).select(pe_table.instance_type,
+                                              pe_table.pe_label,
+                                              limitby=(0, 1)).first()
+
+    s3db = current.s3db
+    pe_table = s3db.pr_pentity
+
+    pe_str = current.messages.UNKNOWN_OPT
+
+    if not row:
         return pe_str
 
-    instance_type = pe.instance_type
+    instance_type = row.instance_type
     instance_type_nice = pe_table.instance_type.represent(instance_type)
 
     table = s3db.table(instance_type, None)
     if not table:
         return pe_str
 
-    label = pe.pe_label or default_label
+    label = row.pe_label or default_label
 
     if instance_type == "pr_person":
         person = db(table.pe_id == id).select(
@@ -3317,20 +3318,21 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     return pe_str
 
 # =============================================================================
-def pr_person_represent(person_id, show_link=False):
+def pr_person_represent(id, row=None, show_link=False):
     """
         Represent a Person in option fields or list views
 
         @param show_link: whether to make the output into a hyperlink
     """
 
-    if not person_id:
+    if row:
+        name = s3_fullname(row.keys())
+        id = row.id
+    elif not id:
         return current.messages.NONE
-    if isinstance(person_id, dict):
-        name = s3_fullname(person_id.keys())
     else:
-        name = current.cache.ram("pr_person_%s" % person_id,
-                                 lambda: s3_fullname(person_id),
+        name = current.cache.ram("pr_person_%s" % id,
+                                 lambda: s3_fullname(id),
                                  time_expire=60)
     if show_link:
         request = current.request
@@ -3345,7 +3347,7 @@ def pr_person_represent(person_id, show_link=False):
         else:
             controller = "pr"
         name = A(name,
-                 _href = URL(c=controller, f="person", args=[person_id]))
+                 _href = URL(c=controller, f="person", args=[id]))
     return name
 
 # =============================================================================

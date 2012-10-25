@@ -631,50 +631,59 @@ class S3CAPModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def alert_represent(id):
+    def alert_represent(id, row=None):
         """
             Represent an alert concisely
         """
 
-        if not id:
+        if row:
+            pass
+        elif not id:
             return current.messages.NONE
-        table = current.s3db.cap_alert
-        query = (table.id == id)
-        r = current.db(query).select(table.msg_type,
-                                     table.sent,
-                                     table.created_on,
-                                     table.sender,
-                                     limitby=(0, 1)).first()
-
-        # @ToDo: Should get headline from "info"?
-        if r and r.msg_type:
-            sent = r.sent or r.created_on
-            return "%s - %s - %s" % (r.msg_type, sent, r.sender)
         else:
+            db = current.db
+            table = db.cap_alert
+            row = db(table.id == id).select(table.msg_type,
+                                            table.sent,
+                                            table.created_on,
+                                            table.sender,
+                                            limitby=(0, 1)).first()
+
+        try:
+            # @ToDo: Should get headline from "info"?
+            if row.msg_type:
+                sent = row.sent or row.created_on
+                return "%s - %s - %s" % (row.msg_type, sent, row.sender)
+        except:
             return current.messages.NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def template_represent(id):
+    def template_represent(id, row=None):
         """
             Represent an alert template concisely
         """
 
-        if not id:
+        if row:
+            id = row.id
+        elif not id:
             return current.messages.NONE
-
-        table = current.s3db.cap_alert
-        query = (table.id == id)
-        r = current.db(query).select(table.is_template,
-                                     table.template_title,
-                                     # left = table.on(table.id == table.parent_item_category_id), Doesn't work
-                                     limitby=(0, 1)).first()
-
-        # @ToDo: Should get headline from "info"?
-        if r and r.is_template:
-            return r.template_title
         else:
-            return S3CAPModel.alert_represent(id)
+            db = current.db
+            table = db.cap_alert
+            row = db(table.id == id).select(table.is_template,
+                                            table.template_title,
+                                            # left = table.on(table.id == table.parent_item_category_id), Doesn't work
+                                            limitby=(0, 1)).first()
+
+        try:
+            # @ToDo: Should get headline from "info"?
+            if row.is_template:
+                return row.template_title
+            else:
+                return S3CAPModel.alert_represent(id)
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -699,23 +708,25 @@ class S3CAPModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def info_represent(id):
+    def info_represent(id, row=None):
         """
             Represent an alert information concisely
         """
 
-        if not id:
+        if row:
+            pass
+        elif not id:
             return current.messages.NONE
-
-        db = current.db
-        table = db.cap_info
-        r = db(table.id == id).select(table.headline,
-                                      table.alert_id,
-                                      table.language,
-                                      limitby=(0, 1)).first()
+        else:
+            db = current.db
+            table = db.cap_info
+            row = db(table.id == id).select(table.headline,
+                                            table.alert_id,
+                                            table.language,
+                                            limitby=(0, 1)).first()
 
         # @ToDo: Should get headline from "info"?
-        return "%s - %s" % (r.language, r.headline)
+        return "%s - %s" % (row.language, row.headline)
 
     # -------------------------------------------------------------------------
     @staticmethod

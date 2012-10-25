@@ -215,23 +215,23 @@ class S3PatientModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def patient_represent(id):
+    def patient_represent(id, row=None):
         """
+            Represent a Patient by their full name
         """
 
-        if isinstance(id, Row):
-            # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
-            patient = id
+        if row:
+            pass
+        elif not id:
+            return current.messages.NONE
         else:
             db = current.db
             table = db.patient_patient
-            patient = db(table.id == id).select(table.person_id,
-                                                limitby=(0, 1)).first()
+            row = db(table.id == id).select(table.person_id,
+                                            limitby=(0, 1)).first()
         try:
-            represent = s3_fullname(patient.person_id)
+            return s3_fullname(row.person_id)
         except:
             return current.messages.UNKNOWN_OPT
-
-        return represent
 
 # END =========================================================================

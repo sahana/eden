@@ -503,11 +503,11 @@ class S3IRSModel(S3Model):
                             )
 
         ireport_id = S3ReusableField("ireport_id", table,
-                                     requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                     "irs_ireport.id",
-                                                                     "%(name)s")),
-                                     represent = lambda id: \
-                                        (id and [db.irs_ireport[id].name] or [NONE])[0],
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "irs_ireport.id",
+                                                              self.irs_ireport_represent)),
+                                     represent = self.irs_ireport_represent,
                                      label = T("Incident"),
                                      ondelete = "CASCADE")
 
@@ -568,21 +568,42 @@ class S3IRSModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def irs_icategory_onvalidation(form):
-            """
-                Incident Category Validation:
-                    Prevent Duplicates
+        """
+            Incident Category Validation:
+                Prevent Duplicates
 
-                Done here rather than in .requires to maintain the dropdown.
-            """
+            Done here rather than in .requires to maintain the dropdown.
+        """
 
-            db = current.db
-            table = db.irs_icategory
+        db = current.db
+        table = db.irs_icategory
 
-            category, error = IS_NOT_ONE_OF(db, "irs_icategory.code")(form.vars.code)
-            if error:
-                form.errors.code = error
+        category, error = IS_NOT_ONE_OF(db, "irs_icategory.code")(form.vars.code)
+        if error:
+            form.errors.code = error
 
-            return False
+        return False
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def irs_ireport_represent(id, row=None):
+        """
+            Represent an Incident Report via it's name
+        """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.irs_ireport
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

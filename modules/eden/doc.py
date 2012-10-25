@@ -283,25 +283,6 @@ class S3DocumentLibrary(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def document_represent(id):
-        """ Foreign key representation """
-
-        if not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.doc_document
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
-        try:
-            return A(record.name,
-                     _href = URL(c="doc", f="document", args=[id], extension=""),
-                     _target = "blank")
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def document_onvalidation(form, document=True):
         """ Form validation for both, documents and images """
 

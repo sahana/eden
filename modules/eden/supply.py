@@ -124,7 +124,7 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         brand_id = S3ReusableField("brand_id", table, sortby="name",
                     requires = IS_NULL_OR(IS_ONE_OF(db, "supply_brand.id",
-                                                    "%(name)s",
+                                                    self.supply_brand_represent,
                                                     sort=True)),
                     represent = self.supply_brand_represent,
                     label = T("Brand"),
@@ -170,14 +170,11 @@ class S3SupplyModel(S3Model):
                                    IS_ONE_OF( # Restrict to catalogs the user can update
                                               db(current.auth.s3_accessible_query("update", table)),
                                               "supply_catalog.id",
-                                              "%(name)s",
+                                              self.supply_catalog_represent,
                                               sort=True,
                                               )
                                           ),
-                    represent = lambda id: \
-                        s3_get_db_field_value(tablename = "supply_catalog",
-                                              fieldname = "name",
-                                              look_up_value = id) or current.messages.NONE,
+                    represent = self.supply_catalog_represent,
                     default = 1,
                     label = T("Catalog"),
                     comment=S3AddResourceLink(c="supply",
@@ -206,6 +203,7 @@ class S3SupplyModel(S3Model):
                              Field("parent_item_category_id",
                                    "reference supply_item_category",
                                    label = T("Parent"),
+                                   represent = self.item_category_represent,
                                    ondelete = "RESTRICT"),
                              Field("code", length=16,
                                    label = T("Code"),
@@ -245,11 +243,12 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Item Categories currently registered"))
 
         # Reusable Field
-        item_category_requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                    "supply_item_category.id",
-                                                    label = lambda v: \
-                                                        self.item_category_represent(v, False),
-                                                    sort=True))
+        item_category_requires = IS_NULL_OR(
+                                    IS_ONE_OF(db, "supply_item_category.id",
+                                              lambda id, row: \
+                                                self.item_category_represent(id, row,
+                                                                             use_code=False),
+                                              sort=True))
 
         item_category_comment = S3AddResourceLink(c="supply",
                                                   f="item_category",
@@ -258,7 +257,6 @@ class S3SupplyModel(S3Model):
                                                   tooltip=ADD_ITEM_CATEGORY)
 
         table.parent_item_category_id.requires = item_category_requires
-        table.parent_item_category_id.represent = self.item_category_represent
 
         item_category_id = S3ReusableField("item_category_id", table,
                                            sortby="name",
@@ -742,7 +740,7 @@ S3FilterFieldChange({
             msg_record_deleted = T("Alternative Item deleted"),
             msg_list_empty = T("No Alternative Items currently registered"))
 
-        #def item_alt_represent(id):
+        #def item_alt_represent(id, row=None):
         #    try:
         #        return supply_item_represent(db.supply_item_alt[id].item_id)
         #    except:
@@ -791,10 +789,12 @@ S3FilterFieldChange({
                                   # @ToDo: Make Items Trackable?
                                   #super_link("track_id", "sit_trackable"),
                                   #location_id(),
-                                  supply_item_id(represent = lambda id: \
-                                            self.supply_item_represent(id,
-                                                                       show_um=False,
-                                                                       show_link=True)),
+                                  supply_item_id(
+                                    represent = lambda id: \
+                                        self.supply_item_represent(id,
+                                                                   show_um=False,
+                                                                   show_link=True)
+                                    ),
                                   item_pack_id(),
                                   Field("quantity", "double",
                                         label = T("Quantity"),
@@ -911,37 +911,64 @@ S3FilterFieldChange({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def supply_brand_represent(id):
+    def supply_brand_represent(id, row=None):
         """
+            Represent a Brand by it's Name
         """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
         db = current.db
         table = db.supply_brand
         record = db(table.id == id).select(table.name,
                                            limitby=(0, 1)).first()
-        if record:
+        try:
             return record.name
-        else:
+        except:
             return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def item_category_represent(id, use_code=True):
+    def supply_catalog_represent(id, row=None):
         """
+            Represent a Catalog by it's Name
         """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
         db = current.db
-        cache = current.s3db.cache
-        table = db.supply_item_category
+        table = db.supply_catalog
+        record = db(table.id == id).select(table.name,
+                                           limitby=(0, 1)).first()
+        try:
+            return record.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def item_category_represent(id, row=None, use_code=True):
+        """
+            Represent an Item Category via it's hierarchy
+        """
+
+        if row:
+            # @ToDo: Optimise so we don't need to do the first query
+            item_category_id = row.id
+        elif not id:
+            return current.messages.NONE
+        else:
+            item_category_id = id
+
+        db = current.db
+        table = db.supply_item_category
         represent = ""
-        item_category_id = id
         while item_category_id:
             query = (table.id == item_category_id)
             r = db(query).select(table.catalog_id,
@@ -949,8 +976,7 @@ S3FilterFieldChange({
                                  table.name,
                                  table.parent_item_category_id,
                                  # left = table.on(table.id == table.parent_item_category_id), Doesn't work
-                                 limitby=(0, 1),
-                                 cache=cache).first()
+                                 limitby=(0, 1)).first()
 
             if (r.code and use_code) or (not r.name and r.code):
                 represent_append = r.code
@@ -1022,7 +1048,7 @@ S3FilterFieldChange({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def supply_item_represent(id,
+    def supply_item_represent(id, row=None,
                               # Needed for S3SearchAutocompleteWidget
                               show_um = False,
                               show_link = True):
@@ -1030,7 +1056,10 @@ S3FilterFieldChange({
             Representation of a supply_item
         """
 
-        if not id:
+        if row:
+            # @ToDo: Optimised query where we don't need to do the join
+            id = row.id
+        elif not id:
             return current.messages.NONE
 
         db = current.db
@@ -1070,11 +1099,15 @@ S3FilterFieldChange({
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def item_pack_represent(id):
+    def item_pack_represent(id, row=None):
         """
+            Represent an Item Pack
         """
 
-        if not id:
+        if row:
+            # @ToDo: Optimised query where we don't need to do the join
+            id = row.id
+        elif not id:
             return current.messages.NONE
 
         db = current.db

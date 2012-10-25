@@ -2170,10 +2170,7 @@ def assess_rheader(r, tabs=[]):
     if r.representation == "html":
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
-
         assess = r.record
-        person_represent = s3db.pr_person_represent
-
         if assess:
             rheader = DIV(TABLE(TR(
                                    TH("%s: " % T("Date & Time")),
@@ -2181,7 +2178,7 @@ def assess_rheader(r, tabs=[]):
                                    TH("%s: " % T("Location")),
                                    gis_location_represent(assess.location_id),
                                    TH("%s: " % T("Assessor")),
-                                   person_represent(assess.assessor_person_id),
+                                   s3db.pr_person_represent(assess.assessor_person_id),
                                   ),
                                ),
                           rheader_tabs

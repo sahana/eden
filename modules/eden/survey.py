@@ -483,19 +483,24 @@ class S3TemplateModel(S3Model):
             return duplicator(job, query)
 
 # =============================================================================
-def survey_template_represent(id):
+def survey_template_represent(id, row=None):
     """
         Display the template name rather than the id
     """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
 
     table = current.s3db.survey_template
     query = (table.id == id)
     record = current.db(query).select(table.name,
                                       limitby=(0, 1)).first()
-    if record:
+    try:
         return record.name
-    else:
-        return None
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def survey_template_rheader(r, tabs=[]):

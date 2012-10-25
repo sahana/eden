@@ -259,20 +259,24 @@ class S3ProcurementModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def proc_plan_represent(id):
+    def proc_plan_represent(id, row=None):
         """
+            Represent a Procurement Plan
         """
 
-        if not id:
+        if row:
+            table = current.db.proc_plan
+        elif not id:
             return current.messages.NONE
-        db = current.db
-        table = db.proc_plan
-        record = db(table.id == id).select(table.site_id,
-                                           table.order_date,
-                                           limitby=(0, 1)).first()
+        else:
+            db = current.db
+            table = db.proc_plan
+            row = db(table.id == id).select(table.site_id,
+                                            table.order_date,
+                                            limitby=(0, 1)).first()
         try:
-            return "%s (%s)" % (table.site_id.represent(record.site_id),
-                                table.order_date.represent(record.order_date))
+            return "%s (%s)" % (table.site_id.represent(row.site_id),
+                                table.order_date.represent(row.order_date))
         except:
             return current.messages.UNKNOWN_OPT
 

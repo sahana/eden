@@ -491,9 +491,12 @@ class S3ClimateModel(S3Model):
                 ptable[id] = {"price": currency % (datum_count * price)}
 
 # =============================================================================
-def climate_station_represent(id):
+def climate_station_represent(id, row=None):
     """
     """
+
+    if row:
+        id = row.id
 
     s3db = current.s3db
     table = s3db.climate_place_station_id
@@ -513,9 +516,12 @@ def climate_station_represent(id):
     return represent or current.messages.NONE
 
 # =============================================================================
-def sample_table_spec_represent(id):
+def sample_table_spec_represent(id, row=None):
     """
     """
+
+    if row:
+        id = row.id
 
     import ClimateDataPortal
 

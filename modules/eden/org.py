@@ -2121,7 +2121,7 @@ class S3OfficeSummaryModel(S3Model):
         table = self.define_table(tablename,
                                   Field("office_id",
                                         requires=IS_ONE_OF(current.db, "org_office.id",
-                                                             "%(name)s"),
+                                                           "%(name)s"),
                                         label=T("Office"),
                                         ondelete="CASCADE"
                                         ),
@@ -2340,7 +2340,8 @@ def org_site_represent(id, row=None, show_link=True):
     """
         Represent a Facility in option fields or list views
 
-        @param site_id: the org_site record ID or the org_site record
+        @param id: the site_id
+        @param row: the org_site Row
         @param show_link: whether to render the representation as link
     """
 
@@ -2353,18 +2354,13 @@ def org_site_represent(id, row=None, show_link=True):
         db = current.db
         s3db = current.s3db
         table = s3db.org_site
-        if isinstance(id, Row):
-            row = id
-            id = row.site_id
-        else:
-            row = db(table._id == id).select(table.instance_type,
-                                             limitby=(0, 1)).first()
+        row = db(table._id == id).select(table.instance_type,
+                                         limitby=(0, 1)).first()
     else:
         return current.messages.NONE
 
     instance_type = row.instance_type
     instance_type_nice = table.instance_type.represent(instance_type)
-    tab = None
 
     try:
         table = s3db[instance_type]
@@ -2385,12 +2381,9 @@ def org_site_represent(id, row=None, show_link=True):
 
     if show_link:
         c, f = instance_type.split("_", 1)
-        args = [r.id]
-        if tab:
-            args.append(tab)
         # extension="" removes the .aaData extension in paginated views
         represent = A(represent,
-                      _href=URL(c=c, f=f, args=args, extension=""))
+                      _href=URL(c=c, f=f, args=[r.id], extension=""))
 
     return represent
 
@@ -2611,56 +2604,60 @@ def org_organisation_controller():
             # If a filter is being applied to the Organisations, change the CRUD Strings accordingly
             type_filter = request.get_vars["organisation.organisation_type_id$name"]
             if type_filter:
-                type_crud_strings = { "Red Cross / Red Crescent" :
-                                       # @ToDo: IFRC isn't an NS?
-                                       Storage(title_create=T("Add National Society"),
-                                                title_display=T("National Society Details"),
-                                                title_list=T("Red Cross & Red Crescent National Societies"),
-                                                title_update=T("Edit National Society"),
-                                                title_search=T("Search Red Cross & Red Crescent National Societies"),
-                                                title_upload=T("Import Red Cross & Red Crescent National Societies"),
-                                                subtitle_create=T("Add National Society"),
-                                                label_list_button=T("List Red Cross & Red Crescent National Societies"),
-                                                label_create_button=T("Add National Society"),
-                                                label_delete_button=T("Delete National Society"),
-                                                msg_record_created=T("National Society added"),
-                                                msg_record_modified=T("National Society updated"),
-                                                msg_record_deleted=T("National Society deleted"),
-                                                msg_list_empty=T("No Red Cross & Red Crescent National Societies currently registered")
-                                                ),
-                                     "Supplier" :
-                                       Storage(title_create=T("Add Supplier"),
-                                                title_display=T("Supplier Details"),
-                                                title_list=T("Suppliers"),
-                                                title_update=T("Edit Supplier"),
-                                                title_search=T("Search Suppliers"),
-                                                title_upload=T("Import Suppliers"),
-                                                subtitle_create=T("Add Supplier"),
-                                                label_list_button=T("List Suppliers"),
-                                                label_create_button=T("Add Suppliers"),
-                                                label_delete_button=T("Delete Supplier"),
-                                                msg_record_created=T("Supplier added"),
-                                                msg_record_modified=T("Supplier updated"),
-                                                msg_record_deleted=T("Supplier deleted"),
-                                                msg_list_empty=T("No Suppliers currently registered")
-                                                ),
-                                     "Bilateral,Government,Intergovernmental,NGO,UN agency" :
-                                       Storage(title_create=T("Add Partner Organisation"),
-                                                title_display=T("Partner Organisation Details"),
-                                                title_list=T("Partner Organisations"),
-                                                title_update=T("Edit Partner Organisation"),
-                                                title_search=T("Search Partner Organisations"),
-                                                title_upload=T("Import Partner Organisations"),
-                                                subtitle_create=T("Add Partner Organisation"),
-                                                label_list_button=T("List Partner Organisations"),
-                                                label_create_button=T("Add Partner Organisations"),
-                                                label_delete_button=T("Delete Partner Organisation"),
-                                                msg_record_created=T("Partner Organisation added"),
-                                                msg_record_modified=T("Partner Organisation updated"),
-                                                msg_record_deleted=T("Partner Organisation deleted"),
-                                                msg_list_empty=T("No Partner Organisations currently registered")
-                                                ),
-                                    }
+                type_crud_strings = {
+                    "Red Cross / Red Crescent" :
+                        # @ToDo: IFRC isn't an NS?
+                        Storage(
+                            title_create=T("Add National Society"),
+                            title_display=T("National Society Details"),
+                            title_list=T("Red Cross & Red Crescent National Societies"),
+                            title_update=T("Edit National Society"),
+                            title_search=T("Search Red Cross & Red Crescent National Societies"),
+                            title_upload=T("Import Red Cross & Red Crescent National Societies"),
+                            subtitle_create=T("Add National Society"),
+                            label_list_button=T("List Red Cross & Red Crescent National Societies"),
+                            label_create_button=T("Add National Society"),
+                            label_delete_button=T("Delete National Society"),
+                            msg_record_created=T("National Society added"),
+                            msg_record_modified=T("National Society updated"),
+                            msg_record_deleted=T("National Society deleted"),
+                            msg_list_empty=T("No Red Cross & Red Crescent National Societies currently registered")
+                            ),
+                    "Supplier" :
+                        Storage(
+                            title_create=T("Add Supplier"),
+                            title_display=T("Supplier Details"),
+                            title_list=T("Suppliers"),
+                            title_update=T("Edit Supplier"),
+                            title_search=T("Search Suppliers"),
+                            title_upload=T("Import Suppliers"),
+                            subtitle_create=T("Add Supplier"),
+                            label_list_button=T("List Suppliers"),
+                            label_create_button=T("Add Suppliers"),
+                            label_delete_button=T("Delete Supplier"),
+                            msg_record_created=T("Supplier added"),
+                            msg_record_modified=T("Supplier updated"),
+                            msg_record_deleted=T("Supplier deleted"),
+                            msg_list_empty=T("No Suppliers currently registered")
+                            ),
+                    "Bilateral,Government,Intergovernmental,NGO,UN agency" :
+                        Storage(
+                            title_create=T("Add Partner Organisation"),
+                            title_display=T("Partner Organisation Details"),
+                            title_list=T("Partner Organisations"),
+                            title_update=T("Edit Partner Organisation"),
+                            title_search=T("Search Partner Organisations"),
+                            title_upload=T("Import Partner Organisations"),
+                            subtitle_create=T("Add Partner Organisation"),
+                            label_list_button=T("List Partner Organisations"),
+                            label_create_button=T("Add Partner Organisations"),
+                            label_delete_button=T("Delete Partner Organisation"),
+                            msg_record_created=T("Partner Organisation added"),
+                            msg_record_modified=T("Partner Organisation updated"),
+                            msg_record_deleted=T("Partner Organisation deleted"),
+                            msg_list_empty=T("No Partner Organisations currently registered")
+                            ),
+                    }
                 if type_filter in type_crud_strings:
                     s3.crud_strings.org_organisation = type_crud_strings[type_filter]
 

@@ -294,9 +294,9 @@ class S3RequestModel(S3Model):
         req_id = S3ReusableField("req_id", table, sortby="date",
                                  requires = IS_ONE_OF(db,
                                                       "req_req.id",
-                                                      lambda id:
-                                                        self.req_represent(id,
-                                                                      False),
+                                                      lambda id, row:
+                                                        self.req_represent(id, row,
+                                                                           show_link=False),
                                                       orderby="req_req.date",
                                                       sort=True),
                                  represent = self.req_represent,
@@ -479,37 +479,42 @@ $(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_represent(id, link = True):
+    def req_represent(id, row=None, show_link=True):
         """
+            Represent a Request
         """
 
-        id = int(id)
-        if id:
-            db = current.db
-            table = db.req_req
-            req = db(table.id == id).select(table.date,
-                                            table.req_ref,
-                                            table.site_id,
-                                            limitby=(0, 1)).first()
-            try:
-                if table.req_ref:
-                    req = req.req_ref
-                else:
-                    req = "%s - %s" % (table.site_id.represent(req.site_id,
-                                                               show_link=False),
-                                       table.date.represent(req.date))
-            except:
-                return current.messages.UNKNOWN_OPT
-            if link:
-                return A(req,
-                         _href = URL(c = "req",
-                                     f = "req",
-                                     args = [id]),
-                         _title = T("Go to Request"))
-            else:
-                return req
-        else:
+        if row:
+            table = current.db.req_req
+        elif not id:
             return current.messages.NONE
+        else:
+            id = int(id)
+            if id:
+                db = current.db
+                table = db.req_req
+                row = db(table.id == id).select(table.date,
+                                                table.req_ref,
+                                                table.site_id,
+                                                limitby=(0, 1)).first()
+        try:
+            if row.req_ref:
+                req = row.req_ref
+            else:
+                req = "%s - %s" % (table.site_id.represent(row.site_id,
+                                                           show_link=False),
+                                   table.date.represent(row.date))
+        except:
+            return current.messages.UNKNOWN_OPT
+
+        if show_link:
+            return A(req,
+                     _href = URL(c = "req",
+                                 f = "req",
+                                 args = [id]),
+                     _title = T("Go to Request"))
+        else:
+            return req
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -929,11 +934,12 @@ class S3RequestItemModel(S3Model):
 
         # Reusable Field
         req_item_id = S3ReusableField("req_item_id", table,
-                                      requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                      "req_req_item.id",
-                                                                      self.req_item_represent,
-                                                                      orderby="req_req_item.id",
-                                                                      sort=True)),
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "req_req_item.id",
+                                                              self.req_item_represent,
+                                                              orderby="req_req_item.id",
+                                                              sort=True)),
                                       represent = self.req_item_represent,
                                       label = T("Request Item"),
                                       comment = DIV(_class="tooltip",
@@ -999,9 +1005,16 @@ $(document).ready(function(){
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_item_represent(id):
+    def req_item_represent(id, row=None):
         """
+            Represent a Request Item
         """
+
+        if row:
+            # @ToDo: Optimised query where we don't need to do the join
+            id = row.id
+        elif not id:
+            return current.messages.NONE
 
         db = current.db
         ritable = db.req_req_item
@@ -1366,27 +1379,30 @@ class S3CommitModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def commit_represent(id):
+    def commit_represent(id, row=None):
         """
+            Represent a Commit
         """
 
-        if id:
+        if row:
+            table = current.db.req_commit
+        elif not id:
+            return current.messages.NONE
+        else:
             db = current.db
             table = db.req_commit
-            r = db(table.id == id).select(table.type,
-                                          table.date,
-                                          table.organisation_id,
-                                          table.site_id,
-                                          limitby=(0, 1)).first()
-            if r.type == 1:
-                # Items
-                return "%s - %s" % (table.site_id.represent(r.site_id),
-                                    table.date.represent(r.date))
-            else:
-                return "%s - %s" % (table.organisation_id.represent(r.organisation_id),
-                                    table.date.represent(r.date))
+            row = db(table.id == id).select(table.type,
+                                            table.date,
+                                            table.organisation_id,
+                                            table.site_id,
+                                            limitby=(0, 1)).first()
+        if row.type == 1:
+            # Items
+            return "%s - %s" % (table.site_id.represent(row.site_id),
+                                table.date.represent(row.date))
         else:
-            return current.messages.NONE
+            return "%s - %s" % (table.organisation_id.represent(row.organisation_id),
+                                table.date.represent(row.date))
 
     # -------------------------------------------------------------------------
     @staticmethod

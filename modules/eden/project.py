@@ -602,7 +602,8 @@ $(document).ready(function(){
                             IS_ONE_OF(db(current.auth.s3_accessible_query("update",
                                                                           table)),
                                       "project_project.id",
-                                      project_project_represent_no_link
+                                      lambda id, row:
+                                        project_project_represent(id, row, show_link=False)
                                       )),
             represent = project_project_represent,
             comment = S3AddResourceLink(c="project", f="project",
@@ -2433,9 +2434,14 @@ class S3ProjectAnnualBudgetModel(S3Model):
         #
         tablename = "project_annual_budget"
         self.define_table(tablename,
-                          self.project_project_id(requires=IS_ONE_OF(current.db,
-                                                   "project_project.id",
-                                                   project_project_represent_no_link)),
+                          self.project_project_id(
+                            requires=IS_ONE_OF(current.db,
+                                               "project_project.id",
+                                               lambda id, row:
+                                                project_project_represent(id, row,
+                                                                          show_link=False)
+                                               )
+                            ),
                           Field("year", "integer", notnull=True,
                                 default=None, # make it current year
                                 requires=IS_INT_IN_RANGE(1950, 3000),
@@ -2638,7 +2644,10 @@ class S3ProjectThemeModel(S3Model):
         self.define_table(tablename,
                           self.project_project_id(
                             requires=IS_ONE_OF(db, "project_project.id",
-                                               project_project_represent_no_link)
+                                               lambda id, row:
+                                                project_project_represent(id, row,
+                                                                          show_link=False)
+                                               )
                             ),
                           self.project_theme_id(
                             requires=IS_ONE_OF(db, "project_theme.id",
@@ -2678,10 +2687,11 @@ class S3ProjectThemeModel(S3Model):
         multi_theme_percentage_id = S3ReusableField("multi_theme_percentage_id",
                             "list:reference project_theme_percentage",
                             label = T("Themes"),
-                            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                "project_theme_percentage.id",
-                                                "%(id)s",
-                                                multiple=True)),
+                            requires = IS_NULL_OR(
+                                        IS_ONE_OF(db,
+                                                  "project_theme_percentage.id",
+                                                  "%(id)s",
+                                                  multiple=True)),
                             represent = multi_theme_percentage_represent,
                             ondelete = "SET NULL",
                             )
@@ -2753,7 +2763,10 @@ class S3ProjectDRRPPModel(S3Model):
         define_table(tablename,
                      project_id(
                         requires=IS_ONE_OF(db, "project_project.id",
-                                           project_project_represent_no_link)
+                                           lambda id, row:
+                                            project_project_represent(id, row,
+                                                                      show_link=False)
+                                           )
                         ),
                      Field("parent_project",
                            label = T("Parent Project"),
@@ -2797,7 +2810,10 @@ class S3ProjectDRRPPModel(S3Model):
         define_table(tablename,
                      project_id(
                         requires=IS_ONE_OF(db, "project_project.id",
-                                           project_project_represent_no_link)
+                                           lambda id, row:
+                                            project_project_represent(id, row,
+                                                                      show_link=False)
+                                           )
                         ),
                      Field("name",
                            label = T("Output"),
@@ -3317,7 +3333,10 @@ class S3ProjectTaskModel(S3Model):
                              project_id(
                                 # Override requires so that update access to the projects isn't required
                                 requires = IS_ONE_OF(db, "project_project.id",
-                                                     project_project_represent_no_link
+                                                     lambda id, row:
+                                                        project_project_represent(id, row,
+                                                                                  show_link=False)
+                                               
                                                      )
                                 ),
                              *s3_meta_fields())
@@ -3371,7 +3390,15 @@ class S3ProjectTaskModel(S3Model):
         #
         tablename = "project_time"
         table = define_table(tablename,
-                             task_id(),
+                             task_id(
+                                requires = IS_ONE_OF(db, "project_task.id",
+                                                     lambda id, row: \
+                                                        self.project_task_represent(id,
+                                                                                    row,
+                                                                                    show_link=False,
+                                                                                    show_project=True)
+                                                     ),
+                                ),
                              self.pr_person_id(default=auth.s3_logged_in_person()),
                              s3_datetime(default="now",
                                          past=8760, # Hours, so 1 year
@@ -3587,16 +3614,28 @@ class S3ProjectTaskModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def project_task_represent(id, row=None, show_link=True):
+    def project_task_represent(id, row=None, show_link=True,
+                               show_project=False):
         """ FK representation """
 
         if row:
+            represent = row.name
+            if show_project:
+                db = current.db
+                ltable = db.project_task_project
+                ptable = db.project_project
+                query = (ltable.task_id == row.id) & \
+                        (ltable.project_id == ltable.project_id)
+                project = db(query).select(ptable.name,
+                                           limitby=(0, 1)).first()
+                if project:
+                    represent = "%s (%s)" % (represent, project.name)
+                    
             if show_link:
-                return A(row.name,
+                return A(represent,
                          _href=URL(c="project", f="task", extension="html",
                                    args=[row.id]))
-            else:
-                return row.name
+            return represent
         elif not id:
             return current.messages.NONE
 
@@ -3605,14 +3644,25 @@ class S3ProjectTaskModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby=(0, 1)).first()
         try:
-            if show_link:
-                return A(r.name,
-                         _href=URL(c="project", f="task", extension="html",
-                                   args=[id]))
-            else:
-                return r.name
+            represent = r.name
         except:
             return current.messages.UNKNOWN_OPT
+        else:
+            if show_project:
+                ltable = db.project_task_project
+                ptable = db.project_project
+                query = (ltable.task_id == id) & \
+                        (ltable.project_id == ltable.project_id)
+                project = db(query).select(ptable.name,
+                                           limitby=(0, 1)).first()
+                if project:
+                    represent = "%s (%s)" % (represent, project.name)
+                    
+            if show_link:
+                return A(represent,
+                         _href=URL(c="project", f="task", extension="html",
+                                   args=[id]))
+            return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4060,9 +4110,6 @@ class S3ProjectTaskIReportModel(S3Model):
         return
 
 # =============================================================================
-def project_project_represent_no_link(id, row=None):
-    return project_project_represent(id, row, False)
-
 def project_project_represent(id, row=None, show_link=True):
     """ FK representation """
 

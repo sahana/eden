@@ -39,8 +39,7 @@ def s3_menu_postp():
         query = (person.id == person_id)
         record = db(query).select(person.id, limitby=(0, 1)).first()
         if record:
-            person_represent = s3db.pr_person_represent
-            name = person_represent(record.id)
+            name = s3db.pr_person_represent(record.id)
             menu_selected.append(
                 ["%s: %s" % (T("Person"), name),
                  False, URL(f="person", args=[record.id])]

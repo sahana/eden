@@ -775,9 +775,16 @@ $(document).ready(function(){
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_item_represent(id, show_link=True):
+    def inv_item_represent(id, row=None, show_link=True):
         """
+            Represent an Inventory Item
         """
+
+        if row:
+            # @ToDo: Optimised query where we don't need to do the join
+            id = row.id
+        elif not id:
+            return current.messages.NONE
 
         db = current.db
         itable = db.inv_inv_item
@@ -956,9 +963,11 @@ class S3TrackingModel(S3Model):
                              # This is a reference, not a super-link, so we can override
                              Field("to_site_id", self.org_site,
                                    label = T("To Warehouse/Facility/Office"),
-                                   requires = IS_NULL_OR(IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_site.site_id",
+                                                          lambda id, row: \
+                                                            org_site_represent(id, row,
+                                                                               show_link=False),
                                                         sort=True,
                                                         not_filterby = "obsolete",
                                                         not_filter_opts = [True],
@@ -1132,14 +1141,15 @@ class S3TrackingModel(S3Model):
                                    label = T("From Warehouse/Facility/Office"),
                                    ondelete = "SET NULL",
                                    #widget = S3SiteAutocompleteWidget(),
-                                   requires = IS_NULL_OR( IS_ONE_OF(db, "org_site.site_id",
-                                                                    lambda id: \
-                                                                            org_site_represent(id, show_link = False),
-                                                                    sort=True,
-                                                                    not_filterby = "obsolete",
-                                                                    not_filter_opts = [True],
-                                                                    )
-                                                         ),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_site.site_id",
+                                                          lambda id, row: \
+                                                            org_site_represent(id, row,
+                                                                               show_link = False),
+                                                          sort=True,
+                                                          not_filterby = "obsolete",
+                                                          not_filter_opts = [True],
+                                                          )),
                                    represent = org_site_represent
                                    ),
                              s3_date("eta",
@@ -1352,8 +1362,9 @@ class S3TrackingModel(S3Model):
                              Field("site_id", "reference org_site",
                                    label = T("By Warehouse/Facility/Office"),
                                    requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
+                                                        lambda id, row: \
+                                                            org_site_represent(id, row,
+                                                                               show_link=False),
                                                         #filterby = "site_id",
                                                         #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                         instance_types = auth.org_site_types,
@@ -1625,34 +1636,43 @@ $(document).ready(function(){
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_send_represent(id, show_link=True):
+    def inv_send_represent(id, row=None, show_link=True):
         """
+            Represent a Sent Shipment
         """
 
-        if id:
+        if row:
+            id = row.id
+            table = current.db.inv_send
+        elif not id:
+            return current.messages.NONE
+        else:
             db = current.db
             table = db.inv_send
             row = db(table.id == id).select(table.date,
                                             table.send_ref,
                                             table.to_site_id,
                                             limitby=(0, 1)).first()
-
+        try:
             send_ref_string = table.send_ref.represent(row.send_ref,
-                                                       show_link = False)
+                                                       show_link=False)
             to_string = table.to_site_id.represent(row.to_site_id,
-                                                   show_link = False)
+                                                   show_link=False)
             date_string = table.date.represent(row.date)
 
-            represent  = "%s (To: %s on %s)" % (send_ref_string,
+            T = current.T
+            represent  = "%s (%s: %s %s %s)" % (send_ref_string,
+                                                T("To"),
                                                 to_string,
+                                                T("on"),
                                                 date_string)
             if show_link:
                 return A(represent,
-                         _href = URL(c="inv", f = "send", args = [id]))
+                         _href = URL(c="inv", f="send", args=[id]))
             else:
                 return represent
-        else:
-            return current.messages.NONE
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1760,11 +1780,17 @@ $(document).ready(function(){
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_recv_represent(id, show_link=True):
+    def inv_recv_represent(id, row=None, show_link=True):
         """
+            Represent a Received Shipment
         """
 
-        if id:
+        if row:
+            id = row.id
+            table = current.db.inv_recv
+        elif not id:
+            return current.messages.NONE
+        else:
             db = current.db
             table = db.inv_recv
             row = db(table.id == id).select(table.date,
@@ -1773,26 +1799,26 @@ $(document).ready(function(){
                                             table.organisation_id,
                                             limitby=(0, 1)).first()
 
-            recv_ref_string = table.send_ref.represent(row.recv_ref,
-                                                       show_link = False)
-            if row.from_site_id:
-                from_string = table.from_site_id.represent(row.from_site_id,
-                                                           show_link = False)
-            else:
-                from_string = table.organisation_id.represent(row.organisation_id,
-                                                              show_link = False)
-            date_string = table.date.represent(row.date)
-
-            represent  = "%s (From: %s on %s)" % (recv_ref_string,
-                                                  from_string,
-                                                  date_string)
-            if show_link:
-                return A(represent,
-                         _href = URL(c="inv", f = "recv", args = [id]))
-            else:
-                return represent
+        recv_ref_string = table.send_ref.represent(row.recv_ref,
+                                                   show_link=False)
+        if row.from_site_id:
+            from_string = table.from_site_id.represent(row.from_site_id,
+                                                       show_link=False)
         else:
-            return current.messages.NONE
+            from_string = table.organisation_id.represent(row.organisation_id,
+                                                          show_link=False)
+        date_string = table.date.represent(row.date)
+
+        represent  = "%s (%s: %s %s %s)" % (recv_ref_string,
+                                            T("From"),
+                                            from_string,
+                                            T("on"),
+                                            date_string)
+        if show_link:
+            return A(represent,
+                     _href = URL(c="inv", f="recv", args=[id]))
+        else:
+            return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3048,8 +3074,9 @@ class S3AdjustModel(S3Model):
                                    ondelete = "SET NULL",
                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                    requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
+                                                        lambda id, row: \
+                                                            org_site_represent(id, row,
+                                                                               show_link=False),
                                                         #filterby = "site_id",
                                                         #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                         instance_types = auth.org_site_types,
@@ -3194,8 +3221,7 @@ class S3AdjustModel(S3Model):
         adj_item_id = S3ReusableField("adj_item_id", table,
                                       sortby="item_id",
                                       requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db,
-                                                              "inv_adj_item.id",
+                                                    IS_ONE_OF(db, "inv_adj_item.id",
                                                               self.inv_adj_item_represent,
                                                               orderby="inv_adj_item.item_id",
                                                               sort=True)),
@@ -3283,33 +3309,46 @@ class S3AdjustModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_adj_represent(id, show_link=True):
+    def inv_adj_represent(id, row=None, show_link=True):
         """
+            Represent an Inventory Adjustment
         """
 
-        if id:
+        if row:
+            table = current.db.inv_adj
+        elif not id:
+            return current.messages.NONE
+        else:
             db = current.db
             table = db.inv_adj
             row = db(table.id == id).select(table.adjustment_date,
                                             table.adjuster_id,
                                             limitby=(0, 1)).first()
+
+        try:
             repr = "%s - %s" % (table.adjuster_id.represent(row.adjuster_id),
                                 table.adjustment_date.represent(row.adjustment_date)
                                 )
+        except:
+            return current.messages.UNKNOWN_OPT
+        else:
             if show_link:
                 return SPAN(repr)
             else:
                 return repr
-        else:
-            return current.messages.NONE
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_adj_item_represent(id, show_link=True):
+    def inv_adj_item_represent(id, row=None, show_link=True):
         """
+            Represent an Inventory Adjustment Item
         """
 
-        if id:
+        if row:
+            table = current.db.inv_adj_item
+        elif not id:
+            return current.messages.NONE
+        else:
             db = current.db
             table = db.inv_adj_item
             row = db(table.id == id).select(table.item_id,
@@ -3317,20 +3356,22 @@ class S3AdjustModel(S3Model):
                                             table.new_quantity,
                                             table.item_pack_id,
                                             limitby=(0, 1)).first()
-            changed_quantity = 0
+        changed_quantity = 0
+        try:
             if row.new_quantity and row.old_quantity:
                 changed_quantity = row.new_quantity - row.old_quantity
             repr = "%s:%s %s" % (table.item_id.represent(row.item_id,
-                                                         show_link = show_link),
+                                                         show_link=show_link),
                                  changed_quantity,
                                  table.item_pack_id.represent(row.item_pack_id),
                                  )
+        except:
+            return current.messages.UNKNOWN_OPT
+        else:
             if show_link:
                 return SPAN(repr)
             else:
                 return repr
-        else:
-            return current.messages.NONE
 
 # =============================================================================
 def inv_adj_rheader(r):

@@ -308,17 +308,25 @@ class S3FireStationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def fire_shift_represent(shift):
+    def fire_shift_represent(id, row=None):
         """
+            Represent a Shift by Start and End times
         """
 
-        db = current.db
-        table = db.fire_shift
-        if not isinstance(shift, Row):
-            shift = db(table.id == shift).select(table.start_time,
-                                                 table.end_time,
-                                                 limitby=(0, 1)).first()
-        return "%s - %s" % (shift.start_time, shift.end_time)
+        if row:
+            pass
+        elif not id:
+            return current.messages.NONE
+        else:
+            db = current.db
+            table = db.fire_shift
+            row = db(table.id == id).select(table.start_time,
+                                            table.end_time,
+                                            limitby=(0, 1)).first()
+        try:
+            return "%s - %s" % (row.start_time, row.end_time)
+        except:
+            current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

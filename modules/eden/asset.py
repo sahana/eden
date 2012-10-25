@@ -125,8 +125,8 @@ class S3AssetModel(S3Model):
                             ASSET_TYPE_OTHER      : T("Other")
                            }
 
-        asset_item_represent = lambda id: \
-            self.supply_item_represent(id, show_um = False)
+        asset_item_represent = lambda id, row=None: \
+            self.supply_item_represent(id, row, show_um=False)
 
         ctable = self.supply_item_category
         itable = self.supply_item
@@ -537,11 +537,14 @@ $(document).ready(function(){
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def asset_represent(id):
+    def asset_represent(id, row=None):
         """
+            Represent an Asset
         """
 
-        if not id:
+        if row:
+            id = row.id
+        elif not id:
             return current.messages.NONE
 
         db = current.db

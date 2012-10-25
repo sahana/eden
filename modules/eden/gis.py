@@ -1064,7 +1064,10 @@ class S3GISConfigModel(S3Model):
 
         # Reusable field to include in other table definitions
         marker_id = S3ReusableField("marker_id", table, sortby="name",
-                                    requires = IS_NULL_OR(IS_ONE_OF(db, "gis_marker.id", "%(name)s", zero=T("Use default"))),
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "gis_marker.id",
+                                                          "%(name)s",
+                                                          zero=T("Use default"))),
                                     represent = self.gis_marker_represent,
                                     label = T("Marker"),
                                     comment=S3AddResourceLink(c="gis",
@@ -1135,9 +1138,9 @@ class S3GISConfigModel(S3Model):
         # Reusable field to include in other table definitions
         projection_id = S3ReusableField("projection_id", table,
                                         sortby="name",
-                                        requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                        "gis_projection.id",
-                                                                        "%(name)s")),
+                                        requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "gis_projection.id",
+                                                              "%(name)s")),
                                         represent = lambda id: \
                                             (id and [db(db.gis_projection.id == id).select(db.gis_projection.name,
                                                                                            limitby=(0, 1)).first().name] or [NONE])[0],
