@@ -1501,8 +1501,9 @@ class S3FacilityModel(S3Model):
                                                                label=ADD_FAC,
                                                                tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
                                    label=T("Type")),
-                             self.org_organisation_id(widget=S3OrganisationAutocompleteWidget(
-                                default_from_profile=True)),
+                             self.org_organisation_id(#widget=S3OrganisationAutocompleteWidget(
+                                #default_from_profile=True)
+                                                    ),
                              self.gis_location_id(),
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
