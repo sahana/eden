@@ -138,8 +138,7 @@ def volunteer():
         # Add VF to the Search Filters
         # Remove deprecated Active/Obsolete
         human_resource_search.advanced.pop(1)
-        table.status.readable = False
-        table.status.writable = False
+        table.status.readable = table.status.writable = False
         if enable_active_field:
             widget = s3base.S3SearchOptionsWidget(
                                 name="human_resource_search_active",
@@ -203,23 +202,15 @@ def volunteer():
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
 
                 _type.default = 2
-                _location.writable = True
-                _location.readable = True
-                table.site_id.writable = False
-                table.site_id.readable = False
-                table.code.writable = False
-                table.code.readable = False
-                table.department_id.writable = False
-                table.department_id.readable = False
-                table.essential.writable = False
-                table.essential.readable = False
-                table.site_contact.writable = False
-                table.site_contact.readable = False
-                table.status.writable = False
-                table.status.readable = False
+                _location.writable = _location.readable = True
+                table.site_id.writable = table.site_id.readable = False
+                table.code.writable = table.code.readable = False
+                table.department_id.writable = table.department_id.readable = False
+                table.essential.writable = table.essential.readable = False
+                table.site_contact.writable = table.site_contact.readable = False
+                table.status.writable = table.status.readable = False
 
-                person_details_table = s3db.pr_person_details
-                person_details_table.occupation.label = T("Normal Job")
+                s3db.pr_person_details.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = settings.set_org_dependent_field
@@ -336,7 +327,8 @@ def person():
     table.type.default = 2
     request.get_vars.update(xsltmode="volunteer")
     if hr_id:
-        hr = table[hr_id]
+        hr = db(table.id == hr_id).select(table.type,
+                                          limitby=(0, 1)).first()
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
@@ -448,15 +440,11 @@ def person():
                 table = r.table
                 # Assume volunteers only between 12-81
                 table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
-                table.pe_label.readable = False
-                table.pe_label.writable = False
-                table.missing.readable = False
-                table.missing.writable = False
-                table.age_group.readable = False
-                table.age_group.writable = False
+                table.pe_label.readable = table.pe_label.writable = False
+                table.missing.readable = table.missing.writable = False
+                table.age_group.readable = table.age_group.writable = False
 
-                person_details_table = s3db.pr_person_details
-                person_details_table.occupation.label = T("Normal Job")
+                s3db.pr_person_details.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = settings.set_org_dependent_field
@@ -468,24 +456,17 @@ def person():
             else:
                 if r.component_name == "human_resource":
                     table = r.component.table
-                    table.code.writable = False
-                    table.code.readable = False
-                    table.department_id.writable = False
-                    table.department_id.readable = False
-                    table.essential.writable = False
-                    table.essential.readable = False
-                    #table.location_id.readable = True
-                    #table.location_id.writable = True
-                    table.site_id.writable = False
-                    table.site_id.readable = False
-                    table.site_contact.writable = False
-                    table.site_contact.readable = False
+                    table.code.writable = table.code.readable = False
+                    table.department_id.writable = table.department_id.readable = False
+                    table.essential.writable = table.essential.readable = False
+                    #table.location_id.readable = table.location_id.writable = True
+                    table.site_id.writable = table.site_id.readable = False
+                    table.site_contact.writable = table.site_contact.readable = False
                     org = session.s3.hrm.org
                     if org is not None:
                         field = table.organisation_id
                         field.default = org
-                        field.readable = False
-                        field.writable = False
+                        field.readable = field.writable = False
 
                     # Organisation Dependent Fields
                     set_org_dependent_field = settings.set_org_dependent_field
@@ -501,17 +482,12 @@ def person():
                     # Lock all the fields
                     table = r.component.table
                     for field in table.fields:
-                        table[field].writable = False
-                        table[field].readable = False
+                        table[field].writable = table[field].readable = False
                     # Now enable those that we want
-                    table.ethnicity.writable = True
-                    table.ethnicity.readable = True
-                    table.blood_type.writable = True
-                    table.blood_type.readable = True
-                    table.medical_conditions.writable = True
-                    table.medical_conditions.readable = True
-                    table.other_details.writable = True
-                    table.other_details.readable = True
+                    table.ethnicity.writable = table.ethnicity.readable = True
+                    table.blood_type.writable = table.blood_type.readable = True
+                    table.medical_conditions.writable = table.medical_conditions.readable = True
+                    table.other_details.writable = table.other_details.readable = True
                 elif r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely

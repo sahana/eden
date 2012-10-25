@@ -3256,16 +3256,17 @@ def pr_pentity_represent(id, row=None, show_label=True,
 
     if row:
         id = row.pe_id
+        s3db = current.s3db
+        pe_table = s3db.pr_pentity
     elif not id:
         return current.messages.NONE
     else:
         db = current.db
+        s3db = current.s3db
+        pe_table = s3db.pr_pentity
         row = db(pe_table.pe_id == id).select(pe_table.instance_type,
                                               pe_table.pe_label,
                                               limitby=(0, 1)).first()
-
-    s3db = current.s3db
-    pe_table = s3db.pr_pentity
 
     pe_str = current.messages.UNKNOWN_OPT
 

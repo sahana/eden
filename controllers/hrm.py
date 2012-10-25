@@ -146,8 +146,7 @@ def staff():
                                                 _title="%s|%s|%s" % (settings.get_org_site_label(),
                                                                      T("The facility where this position is based."),
                                                                      T("Enter some characters to bring up a list of possible matches."))))
-                table.status.writable = False
-                table.status.readable = False
+                table.status.writable = table.status.readable = False
 
             elif r.method == "delete":
                 # Don't redirect
@@ -234,7 +233,8 @@ def person():
     table.type.default = 1
     request.get_vars.update(xsltmode="staff")
     if hr_id:
-        hr = table[hr_id]
+        hr = db(table.id == hr_id).select(table.type,
+                                          limitby=(0, 1)).first()
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
@@ -344,19 +344,15 @@ def person():
         elif r.interactive and r.method != "import":
             if not r.component:
                 table = r.table
-                table.pe_label.readable = False
-                table.pe_label.writable = False
-                table.missing.readable = False
-                table.missing.writable = False
-                table.age_group.readable = False
-                table.age_group.writable = False
+                table.pe_label.readable = table.pe_label.writable = False
+                table.missing.readable = table.missing.writable = False
+                table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 5-120
                 table.date_of_birth.widget = S3DateWidget(past=1440, future=-60)
 
                 person_details_table = s3db.pr_person_details
                 # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
-                person_details_table.occupation.readable = False
-                person_details_table.occupation.writable = False
+                person_details_table.occupation.readable = person_details_table.occupation.writable = False
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = settings.set_org_dependent_field
@@ -371,10 +367,10 @@ def person():
                     table.site_id.readable = True
                     org = session.s3.hrm.org
                     if org is not None:
-                        table.organisation_id.default = org
-                        table.organisation_id.comment = None
-                        table.organisation_id.readable = False
-                        table.organisation_id.writable = False
+                        f = table.organisation_id
+                        f.default = org
+                        f.comment = None
+                        f.readable = f.writable = False
                         table.site_id.requires = IS_EMPTY_OR(
                             IS_ONE_OF(db,
                                       "org_site.%s" % s3db.super_key(db.org_site),
@@ -386,17 +382,12 @@ def person():
                     # Lock all the fields
                     table = r.component.table
                     for field in table.fields:
-                        table[field].writable = False
-                        table[field].readable = False
+                        table[field].writable = table[field].readable = False
                     # Now enable those that we want
-                    table.ethnicity.writable = True
-                    table.ethnicity.readable = True
-                    table.blood_type.writable = True
-                    table.blood_type.readable = True
-                    table.medical_conditions.writable = True
-                    table.medical_conditions.readable = True
-                    table.other_details.writable = True
-                    table.other_details.readable = True
+                    table.ethnicity.writable = table.ethnicity.readable = True
+                    table.blood_type.writable = table.blood_type.readable = True
+                    table.medical_conditions.writable = table.medical_conditions.readable = True
+                    table.other_details.writable = table.other_details.readable = True
                 elif r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely
@@ -520,28 +511,17 @@ def profile():
                     # Lock all the fields
                     table = r.component.table
                     for field in table.fields:
-                        table[field].writable = False
-                        table[field].readable = False
+                        table[field].writable = table[field].readable = False
                     # Now enable those that we want
-                    table.ethnicity.writable = True
-                    table.ethnicity.readable = True
-                    table.blood_type.writable = True
-                    table.blood_type.readable = True
-                    table.medical_conditions.writable = True
-                    table.medical_conditions.readable = True
-                    table.other_details.writable = True
-                    table.other_details.readable = True
+                    table.ethnicity.writable = table.ethnicity.readable = True
+                    table.blood_type.writable = table.blood_type.readable = True
+                    table.medical_conditions.writable = table.medical_conditions.readable = True
+                    table.other_details.writable = table.other_details.readable = True
             else:
                 table = r.table
-                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
-                table.occupation.readable = False
-                table.occupation.writable = False
-                table.pe_label.readable = False
-                table.pe_label.writable = False
-                table.missing.readable = False
-                table.missing.writable = False
-                table.age_group.readable = False
-                table.age_group.writable = False
+                table.pe_label.readable = table.pe_label.writable = False
+                table.missing.readable = table.missing.writable = False
+                table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 12-81
                 table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
                 return True

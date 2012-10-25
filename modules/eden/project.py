@@ -2369,26 +2369,31 @@ class S3ProjectActivityModel(S3Model):
             Show activities with a prefix of the project code
         """
 
-        db = current.db
-        s3db = current.s3db
-        atable = s3db.project_activity
-
-        if row is None and id is not None:
-            if isinstance(id, Row):
-                activity = id
-            else:
-                activity = db(atable.id == id).select(atable.name,
-                                                      atable.project_id,
-                                                      limitby=(0, 1)).first()
-
-        if activity is None:
+        if row:
+            activity = row
+            db = current.db
+            # Fetch the project record
+            ptable = db.project_project
+            project = db(ptable.id == row.project_id).select(ptable.code,
+                                                             limitby=(0, 1)).first()
+        elif not id:
             return current.messages.NONE
-
-        # Fetch the project record
-        ptable = s3db.project_project
-        project = db(ptable.id == activity.project_id).select(ptable.code,
-                                                              limitby=(0, 1)).first()
-
+        else:
+            db = current.db
+            table = db.project_activity
+            ptable = db.project_project
+            left = ptable.on(ptable.id == table.project_id)
+            row = db(table.id == id).select(table.name,
+                                            table.project_id,
+                                            ptable.code,
+                                            left=left,
+                                            limitby=(0, 1)).first()
+            try:
+                project = row[ptable]
+                activity = row[table]
+            except:
+                return current.messages.UNKNOWN_OPT
+            
         if project and project.code:
             return "%s > %s" % (project.code, activity.name)
         else:
