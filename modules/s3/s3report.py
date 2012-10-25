@@ -740,21 +740,23 @@ class S3ContingencyTable(TABLE):
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
                     if m == "count":
+                        rfield = rfields[f]
+                        field = rfield.field
+                        colname = rfield.colname
+                        has_fk = field is not None and s3_has_foreign_key(field)
                         for id in cell.records:
                             # cell.records == [#, #, #]
-                            field = rfields[f].field
-                            record = report.records[id]
 
-                            if field.tablename in record:
-                                fvalue = record[field.tablename][field.name]
-                            else:
-                                fvalue = record[field.name]
+                            record = report.records[id]
+                            try:
+                                fvalue = record[colname]
+                            except AttributeError:
+                                fvalue = None
 
                             if fvalue is not None:
-                                if s3_has_foreign_key(field):
+                                if has_fk:
                                     if not isinstance(fvalue, list):
                                         fvalue = [fvalue]
-
                                     # list of foreign keys
                                     for fk in fvalue:
                                         if fk not in layer_ids:
@@ -764,7 +766,6 @@ class S3ContingencyTable(TABLE):
                                     if id not in layer_ids:
                                         layer_ids.append(id)
                                         layer_values[id] = s3_unicode(represent(f, fvalue))
-
 
                     cell_ids.append(layer_ids)
                     cell_lookup_table[layer_idx] = layer_values

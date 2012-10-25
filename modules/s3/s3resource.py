@@ -5498,12 +5498,12 @@ class S3Pivottable:
 
         self._get_fields(fields=fields)
 
-        # Retrieve the records --------------------------------------------------
+        # Retrieve the records ------------------------------------------------
         #
-        records = resource.select(self.dfields, start = None, limit = None)
+        records = resource.select(self.dfields, start=None, limit=None)
 
-        ## Generate the report -------------------------------------------------
-        ##
+        # Generate the report -------------------------------------------------
+        #
         if records:
             try:
                 pkey = resource.table._id
@@ -5679,16 +5679,11 @@ class S3Pivottable:
         rfields = self.rfields
         if field not in rfields:
             raise KeyError("Invalid field name: %s" % field)
-        lfield = rfields[field]
-        tname = lfield.tname
-        fname = lfield.fname
-        if fname in row:
-            value = row[fname]
-        elif tname in row and fname in row[tname]:
-            value = row[tname][fname]
-        else:
-            value = None
-        return value
+        rfield = rfields[field]
+        try:
+            return row[rfield.colname]
+        except AttributeError:
+            return None
 
     # -------------------------------------------------------------------------
     def _expand(self, row, field=None):
@@ -5706,19 +5701,20 @@ class S3Pivottable:
             return rows
         else:
             results = []
+            append = results.append
             rows = row
             for r in rows:
                 value = r[field]
-                if isinstance(value, (list, tuple)):
+                if type(value) is list:
                     if not len(value):
                         # Always have at least a None-entry
                         value.append(None)
                     for v in value:
                         result = Storage(r)
                         result[field] = v
-                        results.append(result)
+                        append(result)
                 else:
-                    results.append(r)
+                    append(r)
             return results
 
     # -------------------------------------------------------------------------
@@ -5868,7 +5864,7 @@ class S3Pivottable:
         elif method == "min":
             try:
                 return min(values)
-            except TypeError:
+            except (TypeError, ValueError):
                 return None
 
         elif method == "max":
