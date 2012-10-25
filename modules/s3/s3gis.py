@@ -78,7 +78,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname, s3_has_foreign_key
+from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key
 from s3rest import S3Method
 
 DEBUG = False
@@ -1984,7 +1984,7 @@ class GIS(object):
                         try:
                             value = record[fieldname]
                         except:
-                            # Field not in table
+                            # Field not in record (so not in Table?)
                             # This isn't working for some reason :-? AttributeError raised by dal.py & not caught
                             continue
                         # Ignore blank fields
@@ -2147,7 +2147,9 @@ class GIS(object):
             if DEBUG:
                 start = datetime.datetime.now()
             represents = {}
-            values = [record[fieldname] for record in resource]
+            values = [r[fieldname] for r in resource if r[fieldname]]
+            if not values:
+                return represents
             # Deduplicate including non-hashable types (lists)
             #values = list(set(values))
             seen = set()
@@ -2162,10 +2164,7 @@ class GIS(object):
             elif s3_has_foreign_key(field, m2m=False):
                 tablename = field.type[10:]
                 if tablename == "pr_person":
-                    represents = s3_fullname(values)
-                    # Need to modify this function to be able to handle bulk lookups
-                    #for value in values:
-                    #    represents[value] = s3_fullname(value)
+                    represents = s3_fullname_bulk(values)
                 else:
                     table = s3db[tablename]
                     if "name" in table.fields:
