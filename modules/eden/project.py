@@ -3652,7 +3652,7 @@ class S3ProjectTaskModel(S3Model):
                 ltable = db.project_task_project
                 ptable = db.project_project
                 query = (ltable.task_id == id) & \
-                        (ltable.project_id == ltable.project_id)
+                        (ltable.project_id == ptable.id)
                 project = db(query).select(ptable.name,
                                            limitby=(0, 1)).first()
                 if project:
