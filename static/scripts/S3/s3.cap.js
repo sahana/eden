@@ -225,7 +225,7 @@
         function inheritable_flag(field, $e) {
             var name = 'can_edit-' + field,
                 $label = $('<label for="' + name + '">' +
-                                (S3.i18n.cap_locked || 'Locked') + '</label>'),
+                                (i18n.cap_locked || 'Locked') + '</label>'),
                 $checkbox = $('<input type="checkbox" name="' + name +'"/>');
 
             $checkbox.change(function () {

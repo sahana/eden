@@ -52,7 +52,7 @@ function tmGetData(indicator_index) {
             },
             'error': function(request, status, error) {
                 if (error == 'UNAUTHORIZED') {
-                    msg = S3.i18n.gis_requires_login;
+                    msg = i18n.gis_requires_login;
                 } else {
                     msg = request.responseText;
                 }

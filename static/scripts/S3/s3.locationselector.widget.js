@@ -406,8 +406,8 @@ function s3_gis_ac_search_selected(location) {
 
 function s3_gis_lat_lon_converter() {
     // Set up the lat_lon converter
-    var nanError = S3.i18n.gis_only_numbers,
-        rangeError = S3.i18n.gis_range_error;
+    var nanError = i18n.gis_only_numbers,
+        rangeError = i18n.gis_range_error;
 
     function isNum(n) {
       return !isNaN(parseFloat(n)) && isFinite(n);
@@ -822,7 +822,7 @@ function s3_gis_search_tab() {
     $('#gis_location_search__row').removeClass('hide').show();
 
     // Change the label of the Map button
-    $('#gis_location_map-btn').html(S3.i18n.gis_view_on_map);
+    $('#gis_location_map-btn').html(i18n.gis_view_on_map);
     // Hide it
     $('#gis_location_map_button_row').hide();
 
@@ -893,7 +893,7 @@ function s3_gis_add_tab() {
     }
 
     // Change the label of the Map button
-    $('#gis_location_map-btn').html( S3.i18n.gis_place_on_map );
+    $('#gis_location_map-btn').html( i18n.gis_place_on_map );
     // Display it
     $('#gis_location_map_button_row').show();
 
@@ -977,7 +977,7 @@ function s3_gis_edit_tab() {
     $('#gis_location_wkt__row').removeClass('hide').show();
 
     // Change the label of the Map button
-    $('#gis_location_map-btn').html( S3.i18n.gis_place_on_map );
+    $('#gis_location_map-btn').html( i18n.gis_place_on_map );
     // Display it
     $('#gis_location_map_button_row').show();
 
@@ -1097,7 +1097,7 @@ function s3_gis_view_tab() {
     }
 
     // Change the label of the Map button
-    $('#gis_location_map-btn').html( S3.i18n.gis_view_on_map );
+    $('#gis_location_map-btn').html( i18n.gis_view_on_map );
     // Display it
     $('#gis_location_map_button_row').show();
 
@@ -1324,7 +1324,7 @@ function s3_gis_save_locations() {
             // Site Name is required
             if (undefined == $('#name__error').val()) {
                 // Prompt the user for a name
-                $(namefield).after('<div id="name__error" class="error" style="display: block;">' + S3.i18n.gis_name_required + '</div>');
+                $(namefield).after('<div id="name__error" class="error" style="display: block;">' + i18n.gis_name_required + '</div>');
             }
             // Move focus to this field
             $(namefield).focus();
@@ -1363,7 +1363,7 @@ function s3_gis_save_locations() {
         if (L1 || L2 || L3 || L4 || L5 || name || street || postcode || lat || lon) {
             if (undefined == $('#country__error').val()) {
                 // Prompt the user for a country
-                $('#gis_location_L0').after('<div id="country__error" class="error" style="display: block;">' + S3.i18n.gis_country_required + '</div>');
+                $('#gis_location_L0').after('<div id="country__error" class="error" style="display: block;">' + i18n.gis_country_required + '</div>');
             }
             // Move focus to this field
             $('#gis_location_L0').focus();

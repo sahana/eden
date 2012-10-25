@@ -827,9 +827,10 @@ $(document).ready(function(){
         """
 
         db = current.db
+        s3db = current.s3db
         auth = current.auth
         ptable = db.project_project
-        otable = db.project_organisation
+        otable = s3db.project_organisation
         vars = form.vars
 
         lead_role = current.deployment_settings.get_project_organisation_lead_role()
@@ -4657,13 +4658,13 @@ def project_ckeditor():
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
     js = "".join((
-'''S3.i18n.reply="''', str(current.T("Reply")), '''"
+'''i18n.reply="''', str(current.T("Reply")), '''"
 var img_path=S3.Ap.concat('/static/img/jCollapsible/')
 var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
 function comment_reply(id){
  $('#project_comment_task_id__row').hide()
  $('#project_comment_task_id__row1').hide()
- $('#comment-title').html(S3.i18n.reply)
+ $('#comment-title').html(i18n.reply)
  $('#project_comment_body').ckeditorGet().destroy()
  $('#project_comment_body').ckeditor(ck_config)
  $('#comment-form').insertAfter($('#comment-'+id))

@@ -29,20 +29,20 @@ function web2py_ajax_init() {
     jQuery('input.upload').attr('size', 50);
     jQuery('#login_box input.upload').attr('size', 36);
     jQuery('textarea.text').attr('cols', 50).attr('rows', 5);
-    if (S3.i18n.language == 'ja') {
+    if (i18n.language == 'ja') {
         // For Japanese IME
         jQuery('input.integer').blur(function() {
             $('#' + this.id + '__error').remove();
             if (this.value.reverse().search(/[^0-9\-]|\-(?=.)/) > -1) {
                 this.value = this.value.reverse().replace(/[^0-9\-]|\-(?=.)/g, '').reverse();
-                $(this).after($('<div/>', {'id':this.id + '__error', 'text':S3.i18n.input_number, 'class':'error'}));
+                $(this).after($('<div/>', {'id':this.id + '__error', 'text':i18n.input_number, 'class':'error'}));
             }
           });
         jQuery('input.double,input.decimal').blur(function() {
             $('#' + this.id + '__error').remove();
             if (this.value.reverse().search(/[^0-9\-\.]|[\-](?=.)|[\.](?=[0-9]*[\.])/) > -1) {
                 this.value = this.value.reverse().replace(/[^0-9\-\.]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '').reverse();
-                $(this).after($('<div/>', {'id':this.id + '__error', 'text':S3.i18n.input_number, 'class':'error'}));
+                $(this).after($('<div/>', {'id':this.id + '__error', 'text':i18n.input_number, 'class':'error'}));
             }
         });
     } else {

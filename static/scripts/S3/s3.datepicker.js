@@ -17,17 +17,10 @@ $(document).ready(function() {
 
     // Time fields - use jquery.ui.timepicker
     $('input.time').timepicker({
-        hourText: S3.i18n.hour,
-        minuteText: S3.i18n.minute,
+        hourText: i18n.hour,
+        minuteText: i18n.minute,
         defaultTime: ''
     });
-
-    // Datetime fields - use AnyTime (set in S3DateTimeWidget)
-    //try { $('input.datetime').focus( function() {
-    //    Calendar.setup({
-    //        inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
-    //    });
-    //}); } catch(e) {};
 });
 
 /* Function to ensure that end_date is always start-date or later */

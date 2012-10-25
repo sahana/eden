@@ -167,7 +167,7 @@ def alert():
                 jsobj = []
                 for f in fields:
                     jsobj.append("'%s': '%s'" % (f, fields[f].replace("'", "\\'")))
-                s3.js_global.append('''S3.i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
+                s3.js_global.append('''i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
                 form = output["form"]
                 form[0][-1][0][0].update(_value=T("Save and edit information"),
                                          _name="edit_info")
@@ -259,7 +259,7 @@ def template():
 
     def postp(r,output):
         if "form" in output:
-            s3.js_global.append('''S3.i18n.cap_locked="%s"''' % T("Locked"))
+            s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
             tablename = r.tablename
             if tablename == "cap_alert":
                 output["form"].update(_class="cap_template_form")

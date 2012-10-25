@@ -7,7 +7,7 @@ S3.pluginDefaults = {
 		"aaSorting": [[1, 'asc']],
 		"sDom": 'fril<"dataTable_table"t>pi',
 		"sPaginationType": 'full_numbers',
-        "aLengthMenu": [[ 25, 50, -1], [ 25, 50, S3.i18n.all]],
+        "aLengthMenu": [[ 25, 50, -1], [ 25, 50, i18n.all]],
 		"fnRowCallback": function(nRow, aData, iDisplayIndex) {
 			var instance_id = this.data("instance");
 			var instance = S3.dataTablesInstances[instance_id];

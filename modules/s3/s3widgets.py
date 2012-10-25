@@ -2037,10 +2037,10 @@ S3.gis.geocoder=true'''
 %s%s%s%s%s%s
 S3.gis.location_id='%s'
 S3.gis.site='%s'
-S3.i18n.gis_place_on_map='%s'
-S3.i18n.gis_view_on_map='%s'
-S3.i18n.gis_name_required='%s'
-S3.i18n.gis_country_required="%s"''' % (country_snippet,
+i18n.gis_place_on_map='%s'
+i18n.gis_view_on_map='%s'
+i18n.gis_name_required='%s'
+i18n.gis_country_required="%s"''' % (country_snippet,
                                         geocoder,
                                         navigate_away_confirm,
                                         no_latlon,
@@ -2163,8 +2163,8 @@ class S3LatLonWidget(DoubleWidget):
 
         if not s3.lat_lon_i18n_appended:
             s3.js_global.append('''
-S3.i18n.gis_only_numbers={degrees:'%s',minutes:'%s',seconds:'%s',decimal:'%s'}
-S3.i18n.gis_range_error={degrees:{lat:'%s',lon:'%s'},minutes:'%s',seconds:'%s',decimal:{lat:'%s',lon:'%s'}}
+i18n.gis_only_numbers={degrees:'%s',minutes:'%s',seconds:'%s',decimal:'%s'}
+i18n.gis_range_error={degrees:{lat:'%s',lon:'%s'},minutes:'%s',seconds:'%s',decimal:{lat:'%s',lon:'%s'}}
 ''' %  (T("Degrees must be a number."),
         T("Minutes must be a number."),
         T("Seconds must be a number."),
@@ -2352,10 +2352,10 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         selector = str(field).replace(".", "_")
 
         s3.js_global.append('''
-S3.i18n.addAll='%s'
-S3.i18n.removeAll='%s'
-S3.i18n.itemsCount='%s'
-S3.i18n.search='%s'
+i18n.addAll='%s'
+i18n.removeAll='%s'
+i18n.itemsCount='%s'
+i18n.search='%s'
 ''' % (T("Add all"),
        T("Remove all"),
        T("items selected"),

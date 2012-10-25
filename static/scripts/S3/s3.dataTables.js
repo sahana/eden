@@ -776,7 +776,7 @@ $(document).ready(function() {
             "aoColumnDefs": [ oGroupColumns[t] ],
             'aoColumns': ColumnSettings[t],
             'iDisplayLength': aoTableConfig[t]['displayLength'],
-            'aLengthMenu': [[ 25, 50, -1], [ 25, 50, S3.i18n.all]],
+            'aLengthMenu': [[ 25, 50, -1], [ 25, 50, i18n.all]],
             'bProcessing': bProcessing,
             'sAjaxSource': aoTableConfig[t]['ajaxUrl'],
             'fnServerData': fnAjaxCallback[t],

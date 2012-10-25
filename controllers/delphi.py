@@ -296,10 +296,10 @@ def vote(r, **attr):
     # Settings to be picked up by Static code
     js = "".join((
 '''var problem_id=''', str(problem.id), '''
-S3.i18n.delphi_failed="''', str(T("Failed!")), '''"
-S3.i18n.delphi_saving="''', str(T("Saving...")), '''"
-S3.i18n.delphi_saved="''', str(T("Saved.")), '''"
-S3.i18n.delphi_vote="''', str(T("Save Vote")), '''"'''))
+i18n.delphi_failed="''', str(T("Failed!")), '''"
+i18n.delphi_saving="''', str(T("Saving...")), '''"
+i18n.delphi_saved="''', str(T("Saved.")), '''"
+i18n.delphi_vote="''', str(T("Save Vote")), '''"'''))
     s3.js_global.append(js)
 
     # Static code which can be cached
@@ -958,13 +958,13 @@ def discuss(r, **attr):
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
     js = "".join((
-'''S3.i18n.reply="''', str(T("Reply")), '''"
+'''i18n.reply="''', str(T("Reply")), '''"
 var img_path=S3.Ap.concat('/static/img/jCollapsible/')
 var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
 function comment_reply(id){
  $('#delphi_comment_solution_id__row').hide()
  $('#delphi_comment_solution_id__row1').hide()
- $('#comment-title').html(S3.i18n.reply)
+ $('#comment-title').html(i18n.reply)
  var ed = $('#delphi_comment_body').ckeditorGet()
  ed.destroy()
  $('#delphi_comment_body').ckeditor(ck_config)
