@@ -50,12 +50,12 @@ def register_validation(form):
 
     return
 
-# -----------------------------------------------------------------------------
-auth.settings.register_onvalidation = register_validation
-
 # =============================================================================
 def index():
     """ Main Home Page """
+
+    auth.settings.register_onvalidation = register_validation
+    auth.configure_user_fields()
 
     page = request.args(0)
     if page:
@@ -448,6 +448,7 @@ def user():
     auth.settings.on_failed_authorization = URL(f="error")
 
     auth.configure_user_fields()
+    auth.settings.register_onvalidation = register_validation
 
     _table_user = auth.settings.table_user
 
@@ -482,10 +483,7 @@ def user():
     elif arg == "change_password":
         form = auth()
     elif arg == "profile":
-        # @ToDo: move this code to /modules/s3/s3aaa.py:def profile?
         form = auth.profile()
-        # add an opt in clause to receive emails depending on the deployment settings
-
     else:
         # Retrieve Password / Logout
         form = auth()
