@@ -271,6 +271,7 @@ class S3MembersModel(S3Model):
                                "location_id$L4",
                                ],
                   update_realm=True,
+                  create_next=URL(f="person", vars={"membership.id": "[id]"}),
                   )
 
         # ---------------------------------------------------------------------

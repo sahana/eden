@@ -3419,7 +3419,10 @@ class S3ProjectTaskModel(S3Model):
                                                      ),
                                 ),
                              self.pr_person_id(default=auth.s3_logged_in_person(),
-                                               widget = SQLFORM.widgets.options.widget),
+                                               # This breaks ability to save Tasks:
+                                               #SyntaxError: widget cannot determine options of sub_defaulttime.defaulttime_person_id_edit_0
+                                               #widget = SQLFORM.widgets.options.widget
+                                               ),
                              s3_datetime(default="now",
                                          past=8760, # Hours, so 1 year
                                          future=0
