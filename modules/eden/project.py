@@ -3215,7 +3215,7 @@ class S3ProjectTaskModel(S3Model):
                                             ))
 
         task_search = S3Search(advanced = advanced_task_search)
-        
+
         task_report = Storage(rows = list_fields,
                               cols = list_fields,
                               facts = list_fields,
@@ -5097,7 +5097,7 @@ def project_task_controller():
                 update_url = URL(args=["[id]"], vars=vars)
                 current.manager.crud.action_buttons(r,
                                                     update_url=update_url)
-                if not r.method in ["search","report"] and \
+                if not r.method in ("search", "report") and \
                    "form" in output:
                     # Insert fields to control the Project & Activity
                     sep = ": "
