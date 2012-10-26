@@ -1543,7 +1543,7 @@ class S3Project3WModel(S3Model):
                                (T("Project"), "project_location_id$project_id"),
                                ])
 
-        # Stats Module required for Beneficiary Functionality 
+        # Stats Module required for Beneficiary Functionality
         if settings.has_module("stats"):
             # ---------------------------------------------------------------------
             # Project Beneficiary Type
@@ -2393,7 +2393,7 @@ class S3ProjectActivityModel(S3Model):
                 activity = row[table]
             except:
                 return current.messages.UNKNOWN_OPT
-            
+
         if project and project.code:
             return "%s > %s" % (project.code, activity.name)
         else:
@@ -3355,7 +3355,7 @@ class S3ProjectTaskModel(S3Model):
                                                      lambda id, row:
                                                         project_project_represent(id, row,
                                                                                   show_link=False)
-                                               
+
                                                      )
                                 ),
                              *s3_meta_fields())
@@ -3419,9 +3419,7 @@ class S3ProjectTaskModel(S3Model):
                                                      ),
                                 ),
                              self.pr_person_id(default=auth.s3_logged_in_person(),
-                                               # This breaks ability to save Tasks:
-                                               #SyntaxError: widget cannot determine options of sub_defaulttime.defaulttime_person_id_edit_0
-                                               #widget = SQLFORM.widgets.options.widget
+                                               widget = SQLFORM.widgets.options.widget
                                                ),
                              s3_datetime(default="now",
                                          past=8760, # Hours, so 1 year
@@ -3653,7 +3651,7 @@ class S3ProjectTaskModel(S3Model):
                                            limitby=(0, 1)).first()
                 if project:
                     represent = "%s (%s)" % (represent, project.name)
-                    
+
             if show_link:
                 return A(represent,
                          _href=URL(c="project", f="task", extension="html",
@@ -3680,7 +3678,7 @@ class S3ProjectTaskModel(S3Model):
                                            limitby=(0, 1)).first()
                 if project:
                     represent = "%s (%s)" % (represent, project.name)
-                    
+
             if show_link:
                 return A(represent,
                          _href=URL(c="project", f="task", extension="html",
