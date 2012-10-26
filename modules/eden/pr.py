@@ -3327,7 +3327,7 @@ def pr_person_represent(id, row=None, show_link=False):
     """
 
     if row:
-        name = s3_fullname(row.keys())
+        name = s3_fullname(row)
         id = row.id
     elif not id:
         return current.messages.NONE

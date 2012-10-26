@@ -3199,6 +3199,7 @@ class S3ProjectTaskModel(S3Model):
                      "pe_id",
                      "date_due",
                      "time_estimated",
+                     "time_actual",
                      "created_on",
                      "status",
                      #"site_id"
@@ -3214,6 +3215,18 @@ class S3ProjectTaskModel(S3Model):
                                             ))
 
         task_search = S3Search(advanced = advanced_task_search)
+        
+        task_report = Storage(rows = list_fields,
+                              cols = list_fields,
+                              facts = list_fields,
+                              defaults = Storage(rows = "task.project",
+                                                 cols = "task.pe_id",
+                                                 fact = "task.time_estimated",
+                                                 aggregate = "sum",
+                                                 totals = True
+                                                 ),
+                              search = advanced_task_search,
+                              )
 
         # Custom Form
         crud_form = s3forms.S3SQLCustomForm(
@@ -3249,6 +3262,7 @@ class S3ProjectTaskModel(S3Model):
                   create_onaccept=self.task_create_onaccept,
                   update_onaccept=self.task_update_onaccept,
                   search_method=task_search,
+                  report_options = task_report,
                   list_fields=list_fields,
                   crud_form = crud_form,
                   extra="description")
@@ -3404,7 +3418,8 @@ class S3ProjectTaskModel(S3Model):
                                                                                     show_project=True)
                                                      ),
                                 ),
-                             self.pr_person_id(default=auth.s3_logged_in_person()),
+                             self.pr_person_id(default=auth.s3_logged_in_person(),
+                                               widget = SQLFORM.widgets.options.widget),
                              s3_datetime(default="now",
                                          past=8760, # Hours, so 1 year
                                          future=0
@@ -5043,17 +5058,6 @@ def project_task_controller():
                                           "list_fields")
             list_fields.insert(3, (T("Project"), "project"))
             list_fields.insert(4, (T("Activity"), "activity"))
-            s3db.configure(tablename,
-                           report_options=Storage(
-                                search=[
-                                    S3SearchOptionsWidget(
-                                        field="project",
-                                        name="project",
-                                        label=T("Project")
-                                    )
-                                ]),
-                           list_fields=list_fields
-                           )
 
         if r.component:
             if r.component_name == "req":
@@ -5093,7 +5097,7 @@ def project_task_controller():
                 update_url = URL(args=["[id]"], vars=vars)
                 current.manager.crud.action_buttons(r,
                                                     update_url=update_url)
-                if r.method != "search" and \
+                if not r.method in ["search","report"] and \
                    "form" in output:
                     # Insert fields to control the Project & Activity
                     sep = ": "

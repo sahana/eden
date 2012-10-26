@@ -294,33 +294,12 @@ if s3.debug:
 ######
 # CRUD
 ######
+formstyle = current.deployment_settings.get_ui_formstyle()
 
-def s3_formstyle(id, label, widget, comment, hidden=False):
-    """
-        Provide the Sahana Eden Form Style
-
-        Label above the Inputs:
-        http://uxmovement.com/design-articles/faster-with-top-aligned-labels
-    """
-
-    row = []
-
-    if hidden:
-        _class = "hide"
-    else:
-        _class = ""
-
-    # Label on the 1st row
-    row.append(TR(TD(label, _class="w2p_fl"), TD(""), _id=id + "1", _class=_class))
-    # Widget & Comment on the 2nd Row
-    row.append(TR(widget, TD(comment, _class="w2p_fc"), _id=id, _class=_class))
-
-    return tuple(row)
-
-s3_formstyle_mobile = s3_formstyle
+s3_formstyle_mobile = formstyle
 
 _crud = s3.crud
-_crud.formstyle = s3_formstyle
+_crud.formstyle = formstyle
 _crud.submit_button = T("Save")
 # Optional class for Submit buttons
 #_crud.submit_style = "submit-button"

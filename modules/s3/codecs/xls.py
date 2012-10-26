@@ -108,9 +108,10 @@ class S3XLS(S3Codec):
         lfields = []
         heading = {}
         for field in rfields:
-            selector = "%s.%s" % (field.tname, field.fname)
-            lfields.append(selector)
-            heading[selector] = (field.label)
+            if field.show:
+                selector = "%s.%s" % (field.tname, field.fname)
+                lfields.append(selector)
+                heading[selector] = (field.label)
 
         (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
         resource.add_filter(filter)

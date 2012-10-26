@@ -32,7 +32,7 @@
 
 __all__ = ["S3Config"]
 
-from gluon import current, URL
+from gluon import current, URL, TR, TD
 from gluon.storage import Storage
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
@@ -544,6 +544,31 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # UI Settings
+    def get_ui_formstyle(self):
+        formstyle = self.ui.get("formstyle", None)
+        if formstyle:
+            return formstyle
+        else:
+            def formstyle(id, label, widget, comment, hidden=False):
+                """
+                    Provide the Sahana Eden Form Style
+                    Label above the Inputs:
+                    http://uxmovement.com/design-articles/faster-with-top-aligned-labels
+                """
+                row = []
+                if hidden:
+                    _class = "hide"
+                else:
+                    _class = ""
+
+                # Label on the 1st row
+                row.append(TR(TD(label, _class="w2p_fl"), TD(""), _id=id + "1", _class=_class))
+                # Widget & Comment on the 2nd Row
+                row.append(TR(widget, TD(comment, _class="w2p_fc"), _id=id, _class=_class))
+            
+                return tuple(row)
+            return formstyle
+
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)
 
