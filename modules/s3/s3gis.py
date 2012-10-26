@@ -3951,6 +3951,8 @@ class GIS(object):
                     L0_name = Lx.name
                     L1_name = None
                 else:
+                    s3_debug("Parent of L2 Location ID %s has invalid level: %s is %s" % \
+                                (id, parent, Lx.level))
                     raise ValueError
                 Lx_lat = Lx.lat
                 Lx_lon = Lx.lon
@@ -4086,8 +4088,9 @@ class GIS(object):
                     L1_name = None
                     L2_name = None
                 else:
-                    s3_debug("S3GIS: Invalid level '%s'" % Lx.level)
-                    return
+                    s3_debug("Parent of L3 Location ID %s has invalid level: %s is %s" % \
+                                (id, parent, Lx.level))
+                    raise ValueError
                 Lx_lat = Lx.lat
                 Lx_lon = Lx.lon
             else:
@@ -4256,6 +4259,8 @@ class GIS(object):
                     L2_name = None
                     L3_name = None
                 else:
+                    s3_debug("Parent of L4 Location ID %s has invalid level: %s is %s" % \
+                                (id, parent, Lx.level))
                     raise ValueError
                 Lx_lat = Lx.lat
                 Lx_lon = Lx.lon
