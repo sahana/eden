@@ -583,7 +583,8 @@ class S3SQLCustomForm(S3SQLForm):
         """
 
         db = current.db
-        s3 = current.response.s3
+        response = current.response
+        s3 = response.s3
 
         # Determine the target resource
         if resource is None:
@@ -748,6 +749,7 @@ class S3SQLCustomForm(S3SQLForm):
                         hideerror=False):
 
             self.accept(form, format=format)
+            response.confirmation = message
 
         return form
 

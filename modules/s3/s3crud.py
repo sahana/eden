@@ -282,21 +282,23 @@ class S3CRUD(S3Method):
                 output["buttons"] = buttons
 
             # Redirection
-            create_next = _config("create_next")
-            if session.s3.rapid_data_entry and not r.component:
-                create_next = r.url()
-
             if representation in ("popup", "iframe"):
                 self.next = None
-            elif not create_next:
-                if r.component:
-                    self.next = r.url(method="")
-                else:
-                    self.next = r.url(id="[id]", method="read")
             else:
-                try:
-                    self.next = create_next(self)
-                except TypeError:
+                if session.s3.rapid_data_entry and not r.component:
+                    create_next = r.url()
+                else:
+                    create_next = _config("create_next")
+
+                if not create_next:
+                    if r.component:
+                        self.next = r.url(method="")
+                    else:
+                        self.next = r.url(id="[id]", method="read")
+                else:
+                    #try:
+                    #    self.next = create_next(self)
+                    #except TypeError:
                     self.next = create_next
 
         elif representation == "url":

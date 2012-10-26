@@ -3736,7 +3736,7 @@ class GIS(object):
     # -------------------------------------------------------------------------
     def update_location_tree(self, feature=None):
         """
-            Update GIS Locations' Materialized path, Lx locations & Lat/Lon
+            Update GIS Locations' Materialized path, Lx locations, Lat/Lon & the_geom
 
             @param feature: a feature dict to update the tree for
             - if not provided then update the whole tree
@@ -3767,16 +3767,19 @@ class GIS(object):
                     form.vars = feature
                     form.errors = Storage()
                     wkt_centroid(form)
-                    _vars = form.vars
+                    vars = form.vars
                     if "lat_max" in _vars:
-                        db(table.id == feature.id).update(gis_feature_type = _vars.gis_feature_type,
-                                                          lat = _vars.lat,
-                                                          lon = _vars.lon,
-                                                          wkt = _vars.wkt,
-                                                          lat_max = _vars.lat_max,
-                                                          lat_min = _vars.lat_min,
-                                                          lon_min = _vars.lon_min,
-                                                          lon_max = _vars.lon_max)
+                        _vars = dict(gis_feature_type = _vars.gis_feature_type,
+                                     lat = _vars.lat,
+                                     lon = _vars.lon,
+                                     wkt = _vars.wkt,
+                                     lat_max = _vars.lat_max,
+                                     lat_min = _vars.lat_min,
+                                     lon_min = _vars.lon_min,
+                                     lon_max = _vars.lon_max)
+                        if current.deployment_settings.get_gis_spatialdb():
+                            _vars.update(the_geom = _vars.wkt)
+                        db(table.id == feature.id).update(**_vars)
             return
 
         id = "id" in feature and str(feature["id"])
@@ -4595,10 +4598,6 @@ class GIS(object):
             except:
                 form.errors.gis_feature_type = messages.centroid_error
 
-            if current.deployment_settings.get_gis_spatialdb():
-                # Also populate the spatial field
-                vars.the_geom = vars.wkt
-
         elif (vars.lon is None and vars.lat is None) or \
              (vars.lon == "" and vars.lat == ""):
             # No Geometry available
@@ -4623,6 +4622,10 @@ class GIS(object):
                     vars.lat_min = vars.lat
                 if "lat_max" not in vars or vars.lat_max is None:
                     vars.lat_max = vars.lat
+
+        if current.deployment_settings.get_gis_spatialdb():
+            # Also populate the spatial field
+            vars.the_geom = vars.wkt
 
         return
 
