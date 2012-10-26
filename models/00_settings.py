@@ -21,9 +21,8 @@ s3.base_url = "%s/%s" % (settings.get_base_public_url(),
                          appname)
 s3.download_url = "%s/default/download" % s3.base_url
 
-###############
+# -----------------------------------------------------------------------------
 # Client tests
-###############
 
 # Check whether browser is Mobile & store result in session
 # - commented-out until we make use of it
@@ -32,9 +31,8 @@ s3.download_url = "%s/default/download" % s3.base_url
 #if session.s3.browser is None:
 #    session.s3.browser = s3base.s3_populate_browser_compatibility(request)
 
-##################
+# -----------------------------------------------------------------------------
 # Global variables
-##################
 
 # Strings to i18n
 messages["UNAUTHORISED"] = "Not authorised!"
@@ -77,9 +75,8 @@ s3.scripts = []
 s3.js_global = []
 s3.jquery_ready = []
 
-###########
+# -----------------------------------------------------------------------------
 # Languages
-###########
 
 s3.l10n_languages = settings.get_L10n_languages()
 
@@ -127,9 +124,9 @@ if T.accepted_language in s3_rtl_languages:
 else:
     s3.rtl = False
 
-######
+# -----------------------------------------------------------------------------
 # Auth
-######
+
 _settings = auth.settings
 _settings.lock_keys = False
 
@@ -247,9 +244,8 @@ else:
 
 _settings.lock_keys = True
 
-######
+# -----------------------------------------------------------------------------
 # Mail
-######
 
 # These settings could be made configurable as part of the Messaging Module
 # - however also need to be used by Auth (order issues)
@@ -264,9 +260,8 @@ if sender:
     # Email settings for registration verification and approval
     _settings.mailer = mail
 
-#########
+# -----------------------------------------------------------------------------
 # Session
-#########
 
 # Custom Notifications
 response.error = session.error
@@ -291,33 +286,26 @@ if s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py
     s3.toolbar = s3base.s3_dev_toolbar
 
-######
+# -----------------------------------------------------------------------------
 # CRUD
-######
-formstyle = current.deployment_settings.get_ui_formstyle()
 
+formstyle = settings.get_ui_formstyle()
 s3_formstyle_mobile = formstyle
-
+submit_button = T("Save")
 _crud = s3.crud
 _crud.formstyle = formstyle
-_crud.submit_button = T("Save")
+_crud.submit_button = submit_button
 # Optional class for Submit buttons
 #_crud.submit_style = "submit-button"
 _crud.confirm_delete = T("Do you really want to delete these records?")
-
 _crud.archive_not_delete = settings.get_security_archive_not_delete()
 _crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 
 # Web2py Crud
-
 # Breaks refresh of List after Create: http://groups.google.com/group/web2py/browse_thread/thread/d5083ed08c685e34
 #crud.settings.keepvalues = True
-crud.messages.submit_button = s3.crud.submit_button
-crud.settings.formstyle = s3.crud.formstyle
-
-##################
-# XML/JSON Formats
-##################
+crud.messages.submit_button = submit_button
+crud.settings.formstyle = formstyle
 
 s3mgr.crud = s3base.S3CRUD
 s3mgr.search = s3base.S3Search
