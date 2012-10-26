@@ -1047,10 +1047,12 @@ class S3SQLFormElement(object):
         if skip_post_validation and \
            current.request.env.request_method == "POST":
             requires = lambda value: (value, None)
+            widget = None
             required = False
             notnull = False
         else:
             requires = field.requires
+            widget = field.widget
             required = field.required
             notnull = field.notnull
 
@@ -1065,7 +1067,7 @@ class S3SQLFormElement(object):
                   uploadfolder=field.uploadfolder,
                   autodelete = field.autodelete,
 
-                  widget=field.widget,
+                  widget=widget,
                   label=field.label,
                   comment=field.comment,
 
