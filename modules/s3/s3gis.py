@@ -3768,7 +3768,7 @@ class GIS(object):
                     form.errors = Storage()
                     wkt_centroid(form)
                     vars = form.vars
-                    if "lat_max" in _vars:
+                    if "lat_max" in vars:
                         _vars = dict(gis_feature_type = vars.gis_feature_type,
                                      lat = vars.lat,
                                      lon = vars.lon,
