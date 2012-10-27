@@ -1262,8 +1262,6 @@ def stats_group_type_represent(id, row=None):
         return row.display
     elif not id:
         return current.messages.NONE
-    elif isinstance(id, Row):
-        return id.display
 
     db = current.db
     table = db.stats_group_type

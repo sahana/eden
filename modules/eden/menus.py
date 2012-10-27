@@ -217,11 +217,11 @@ class S3MainMenu(object):
                             MM("Users", f="user"),
                             MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
+                            MM("Error Tickets", f="errors"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Translation", c="admin", f="translate",
                                check=translate),
                             MM("Test Results", f="result"),
-                            MM("Error Tickets", f="errors"),
                         )
 
         return menu_admin
@@ -378,6 +378,7 @@ class S3OptionsMenu(object):
                     M("Database", c="appadmin", f="index")(
                         M("Raw Database access", c="appadmin", f="index")
                     ),
+                    M("Error Tickets", c="admin", f="errors"),
                     M("Synchronization", c="sync", f="index")(
                         M("Settings", f="config", args=[1], m="update"),
                         M("Repositories", f="repository"),
@@ -395,7 +396,6 @@ class S3OptionsMenu(object):
                        M("Add strings manually", c="admin", f="translate",
                          m="create", vars=dict(opt="4"))
                     ),
-                    M("Tickets", c="admin", f="errors"),
                     M("View Test Result Reports", c="admin", f="result"),
                     M("Portable App", c="admin", f="portable")
                 )
