@@ -24,6 +24,8 @@ if len(pop_list) > 0:
     # Allow debug
     import sys
 
+    print >> sys.stdout, "Please be patient whilst the database is populated"
+
     # Shortcuts
     acl = auth.permission
     sysroles = auth.S3_SYSTEM_ROLES
