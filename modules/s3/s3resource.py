@@ -1345,7 +1345,7 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     # Data Object API
     # -------------------------------------------------------------------------
-    def load(self, start=None, limit=None, orderby=None):
+    def load(self, start=None, limit=None, orderby=None, virtual=True):
         """
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
@@ -1377,27 +1377,38 @@ class S3Resource(object):
         rows = self.select(fields,
                            start=start,
                            limit=limit,
-                           orderby=orderby)
+                           orderby=orderby,
+                           virtual=virtual)
 
-        self._ids = []
+        ids = self._ids = []
+        new_id = ids.append
         self._rows = []
+        new_row = self._rows.append
 
         if rows:
             pkey = table._id.name
             tablename = self.tablename
 
+            UID = current.xml.UID
+            if UID in table.fields:
+                self._uids = []
+                new_uid = self._uids.append
+                load_uids = True
+            else:
+                load_uids = False
+
+            ogetattr = object.__getattribute__
             for row in rows:
-                if tablename in row and isinstance(row[tablename], Row):
-                    record = row[tablename]
-                else:
+                if hasattr(row, pkey):
                     record = row
-                record_id = record[table._id.name]
-                if record_id not in self._ids:
-                    self._ids.append(record_id)
-                    self._rows.append(record)
-            uid = current.xml.UID
-            if uid in table.fields:
-                self._uids = [row[table[uid]] for row in self._rows]
+                else:
+                    record = ogetattr(row, tablename)
+                record_id = ogetattr(record, pkey)
+                if record_id not in ids:
+                    new_id(record_id)
+                    new_row(record)
+                    if load_uids:
+                        new_uid(ogetattr(record, UID))
             self._length = len(self._rows)
 
         return self._rows
@@ -1820,7 +1831,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        self.load(start=start, limit=limit, orderby=orderby)
+        self.load(start=start, limit=limit, orderby=orderby, virtual=False)
 
         format = current.auth.permission.format
         request = current.request
@@ -3622,7 +3633,7 @@ class S3Resource(object):
         return 0
 
 # =============================================================================
-class S3FieldSelector:
+class S3FieldSelector(object):
     """ Helper class to construct a resource query """
 
     LOWER = "lower"
@@ -3728,29 +3739,43 @@ class S3FieldSelector:
                       the value from the row otherwise
         """
 
-        if isinstance(field, Field):
+        t = type(field)
+
+        if t is Field:
             f = field
             colname = str(field)
-        elif isinstance(field, S3FieldSelector):
-            rfield = S3ResourceField(resource, field)
+            tname, fname = colname.split(".", 1)
+
+        elif t is S3FieldSelector:
+            rfield = S3ResourceField(resource, field.name)
             f = rfield.field
             tname = rfield.tname
             fname = rfield.fname
             colname = rfield.colname
-        elif isinstance(field, S3ResourceField):
+
+        elif t is S3ResourceField:
             f = field.field
             tname = field.tname
             fname = field.fname
             if not fname:
                 return None
             colname = field.colname
+
         else:
             return field
-        if f is not None and isinstance(row, Row):
+
+        if type(row) is Row:
+            ogetattr = object.__getattribute__
             try:
-                return row[f]
-            except (KeyError, AttributeError):
-                raise KeyError("Field not found: %s" % colname)
+                if tname in row.__dict__:
+                    value = ogetattr(ogetattr(row, tname), fname)
+                else:
+                    value = ogetattr(row, fname)
+            except:
+                try:
+                    value = row[colname]
+                except (KeyError, AttributeError):
+                    raise KeyError("Field not found: %s" % colname)
         elif fname in row:
             value = row[fname]
         elif colname in row:
@@ -3760,7 +3785,8 @@ class S3FieldSelector:
             value = row[tname][fname]
         else:
             raise KeyError("Field not found: %s" % colname)
-        if isinstance(field, S3FieldSelector):
+
+        if hasattr(field, "expr"):
             return field.expr(value)
         return value
 
@@ -4077,11 +4103,18 @@ class S3ResourceField(object):
 
         error = "Field not found in row: %s" % colname
 
-        if field is not None and isinstance(row, Row):
+        if type(row) is Row:
+            ogetattr = object.__getattribute__
             try:
-                value = row[field]
-            except KeyError:
-                raise KeyError(error)
+                if tname in row.__dict__:
+                    value = ogetattr(ogetattr(row, tname), fname)
+                else:
+                    value = ogetattr(row, fname)
+            except:
+                try:
+                    value = row[colname]
+                except (KeyError, AttributeError):
+                    raise KeyError("Field not found: %s" % colname)
         elif fname in row:
             value = row[fname]
         elif colname in row:
@@ -4091,6 +4124,7 @@ class S3ResourceField(object):
             value = row[tname][fname]
         else:
             raise KeyError(error)
+
         if represent:
             if self.represent is not None:
                 return self.represent(value)
@@ -4100,7 +4134,7 @@ class S3ResourceField(object):
             return value
 
 # =============================================================================
-class S3ResourceQuery:
+class S3ResourceQuery(object):
     """
         Helper class representing a resource query
         - unlike DAL Query objects, these can be converted to/from URL filters
@@ -4669,7 +4703,7 @@ class S3ResourceQuery:
             return (self.left.name, self.op, self.right, False)
 
 # =============================================================================
-class S3ResourceFilter:
+class S3ResourceFilter(object):
     """ Class representing a resource filter """
 
     def __init__(self, resource, id=None, uid=None, filter=None, vars=None):
@@ -5398,7 +5432,7 @@ class S3ResourceFilter:
         return url_vars
 
 # =============================================================================
-class S3Pivottable:
+class S3Pivottable(object):
     """ Class representing a pivot table of a resource """
 
     #: Supported aggregation methods
@@ -5656,10 +5690,10 @@ class S3Pivottable:
         rfields = self.rfields
         tfields = self.tfields
 
-        extract = lambda rf: S3FieldSelector.extract(self.resource, row, rf)
+        #extract = lambda rf: S3FieldSelector.extract(self.resource, row, rf)
         for f in tfields:
             rfield = rfields[f]
-            value = extract(rfield)
+            value = rfield.extract(row)
             if value is None and f != self.pkey:
                 value = "__NONE__"
             if type(value) is str:
@@ -5681,7 +5715,7 @@ class S3Pivottable:
             raise KeyError("Invalid field name: %s" % field)
         rfield = rfields[field]
         try:
-            return row[rfield.colname]
+            return rfield.extract(row)
         except AttributeError:
             return None
 
@@ -5903,7 +5937,7 @@ class S3Pivottable:
 # =============================================================================
 # Utility classes - move?
 # =============================================================================
-class S3TypeConverter:
+class S3TypeConverter(object):
     """ Universal data type converter """
 
     @classmethod

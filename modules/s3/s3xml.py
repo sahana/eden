@@ -914,10 +914,7 @@ class S3XML(S3Codec):
         for f in fields:
             if f == DELETED:
                 continue
-            if f in record:
-                v = record[f]
-            else:
-                v = None
+            v = record.get(f, None)
             if f == MCI:
                 if v is None:
                     v = 0

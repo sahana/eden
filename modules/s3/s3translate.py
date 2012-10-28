@@ -80,7 +80,8 @@ class TranslateAPI:
             self.grp.group_files(current.request.folder, "", 0)
 
         # ---------------------------------------------------------------------
-        def get_langcodes(self):
+        @staticmethod
+        def get_langcodes():
             """ Return a list of language codes """
 
             lang_list = []
