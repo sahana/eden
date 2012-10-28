@@ -129,37 +129,39 @@
             </xsl:choose>
         </xsl:variable>
 
-        <resource name="stats_demographic_data">
-            <xsl:attribute name="approved">
-                <xsl:value-of select="$approved"/>
-            </xsl:attribute>
-            <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
-            <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
-            <!-- Bad to hardcode a created_by to an ID in an .xsl!
-            <data field="created_by">1</data> -->
-
-            <!-- Link to Demographic -->
-            <reference field="parameter_id" resource="stats_demographic">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('stats_demographic/',col[@field='Demographic'])"/>
+        <xsl:if test="col[@field='Value']!=''">
+            <resource name="stats_demographic_data">
+                <xsl:attribute name="approved">
+                    <xsl:value-of select="$approved"/>
                 </xsl:attribute>
-            </reference>
+                <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
+                <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+                <!-- Bad to hardcode a created_by to an ID in an .xsl!
+                <data field="created_by">1</data> -->
 
-            <!-- Link to Group -->
-            <reference field="group_id" resource="stats_group">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
-                </xsl:attribute>
-            </reference>
+                <!-- Link to Demographic -->
+                <reference field="parameter_id" resource="stats_demographic">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('stats_demographic/',col[@field='Demographic'])"/>
+                    </xsl:attribute>
+                </reference>
 
-            <!-- Link to Location -->
-            <reference field="location_id" resource="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$location"/>
-                </xsl:attribute>
-            </reference>
+                <!-- Link to Group -->
+                <reference field="group_id" resource="stats_group">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
+                    </xsl:attribute>
+                </reference>
 
-        </resource>
+                <!-- Link to Location -->
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$location"/>
+                    </xsl:attribute>
+                </reference>
+
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -198,35 +200,37 @@
             </xsl:choose>
         </xsl:variable>
 
-        <resource name="stats_group">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
-            </xsl:attribute>
-            <xsl:attribute name="approved">
-                <xsl:value-of select="$approved"/>
-            </xsl:attribute>
-            <data field="date"><xsl:value-of select="$date"/></data>
-            <data field="created_by">1</data>
-
-            <!-- Link to Location -->
-            <reference field="location_id" resource="gis_location">
+        <xsl:if test="col[@field='Value']!=''">
+            <resource name="stats_group">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$location"/>
+                    <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
                 </xsl:attribute>
-            </reference>
-
-            <!-- Link to Source -->
-            <reference field="source_id" resource="doc_document">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('doc_document/',$source)"/>
+                <xsl:attribute name="approved">
+                    <xsl:value-of select="$approved"/>
                 </xsl:attribute>
-            </reference>
+                <data field="date"><xsl:value-of select="$date"/></data>
+                <data field="created_by">1</data>
 
-            <!-- Link to Group Type -->
-            <reference field="group_type_id" resource="stats_group_type">
-                <xsl:attribute name="tuid">stats_group_type/stats_demographic</xsl:attribute>
-            </reference>
-        </resource>
+                <!-- Link to Location -->
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$location"/>
+                    </xsl:attribute>
+                </reference>
+
+                <!-- Link to Source -->
+                <reference field="source_id" resource="doc_document">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('doc_document/',$source)"/>
+                    </xsl:attribute>
+                </reference>
+
+                <!-- Link to Group Type -->
+                <reference field="group_type_id" resource="stats_group_type">
+                    <xsl:attribute name="tuid">stats_group_type/stats_demographic</xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

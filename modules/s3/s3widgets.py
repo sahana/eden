@@ -2682,14 +2682,6 @@ class S3AddPersonWidget(FormWidget):
                      TD(),
                      _class="box_bottom")
 
-        # JavaScript
-        if s3.debug:
-            script = "s3.select_person.js"
-        else:
-            script = "s3.select_person.min.js"
-
-        s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
-
         # Overall layout of components
         return TAG[""](select_row,
                        ac_row,

@@ -2013,7 +2013,7 @@ class GIS(object):
             if DEBUG:
                 end = datetime.datetime.now()
                 duration = end - start
-                duration = '{:.2f}'.format(duration.total_seconds())
+                duration = "{:.2f}".format(duration.total_seconds())
                 query = (ftable.id == layer_id)
                 layer_name = db(query).select(ftable.name,
                                               limitby=(0, 1)).first().name
@@ -2112,7 +2112,7 @@ class GIS(object):
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - start
-            duration = '{:.2f}'.format(duration.total_seconds())
+            duration = "{:.2f}".format(duration.total_seconds())
             _debug("latlons lookup of layer %s completed in %s seconds" % \
                     (layer_name, duration))
 

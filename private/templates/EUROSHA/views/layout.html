@@ -30,11 +30,8 @@
 {{pass}}
 </style>
 {{if s3.debug:}}
- <link href="/{{=appname}}/static/scripts/ext/resources/css/ext-all.css" rel="stylesheet" type="text/css" />
- <link href="/{{=appname}}/static/scripts/ext/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />	
  {{=s3base.s3_include_debug_css()}}
 {{else:}}
- <link href="/{{=appname}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" />
  {{# Built by /static/scripts/tools/build.sahana.py }}
  <link href="/{{=appname}}/static/themes/EUROSHA/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
