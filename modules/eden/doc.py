@@ -288,7 +288,7 @@ class S3DocumentLibrary(S3Model):
 
         vars = form.vars
         doc = vars.file
-        if isinstance(doc, NoneType):
+        if doc is None:
             # This is a prepop, so file not in form
             return
 

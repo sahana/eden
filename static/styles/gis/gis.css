@@ -180,6 +180,9 @@
 div.olFramedCloudPopupContent label {
     padding-right: 5px;
 }
+div#gis-map-window .olFramedCloudPopupContent td {
+    padding: 2px;
+}
 #georsspopup h2,
 #kmlpopup h2 {
     margin: 0;

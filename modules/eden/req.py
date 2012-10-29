@@ -1640,9 +1640,9 @@ class S3CommitPersonModel(S3Model):
 def req_item_onaccept(form):
     """
         Update req_req. commit_status, transit_status, fulfil_status
-        None = quantity = 0 for ALL items
-        Partial = some items have quantity > 0
-        Complete = quantity_x = quantity(requested) for ALL items
+        None => quantity = 0 for ALL items
+        Partial => some items have quantity > 0
+        Complete => quantity_x = quantity(requested) for ALL items
     """
 
     req_id = form.vars.get("req_id", None)
@@ -1700,9 +1700,9 @@ def req_update_status(req_id):
 def req_skill_onaccept(form):
     """
         Update req_req. commit_status, transit_status, fulfil_status
-        None = quantity = 0 for ALL skills
-        Partial = some skills have quantity > 0
-        Complete = quantity_x = quantity(requested) for ALL skills
+        None => quantity = 0 for ALL skills
+        Partial => some skills have quantity > 0
+        Complete => quantity_x = quantity(requested) for ALL skills
 
         Create a Task for People to be assigned to
     """

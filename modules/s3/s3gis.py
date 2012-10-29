@@ -1899,6 +1899,7 @@ class GIS(object):
             @param: layer_id - db.gis_layer_feature.id (Feature Layers only)
         """
 
+        NONE = current.messages.NONE
         if DEBUG:
             start = datetime.datetime.now()
 
@@ -1923,6 +1924,7 @@ class GIS(object):
 
         else:
             # e.g. Search results loaded as a Feature Resource layer
+            # e.g. Volunteer Layer in Vulnerability module
             query = (ftable.controller == request.controller) & \
                     (ftable.function == request.function)
 
@@ -1952,21 +1954,67 @@ class GIS(object):
         table = resource.table
         tablename = resource.tablename
 
+        attributes = {}
         tooltips = {}
+        represents = {}
         if format == "geojson":
-            # Build the Popup Tooltips now so that representations can be
+            # Build the Popup Tooltips or Attributes now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
-            label_off = request.vars.get("label_off", None)
-            if popup_label and not label_off:
-                _tooltip = "(%s)" % current.T(popup_label)
-            else:
-                _tooltip = ""
+            vars = request.get_vars
+            attr = vars.get("attr", None)
+            if attr:
+                attr = attr.split(",")
+                for fieldname in attr:
+                    if fieldname in table:
+                        field = table[fieldname]
+                        _represents = GIS.get_representation(field, resource)
+                        represents[fieldname] = _represents
+                    else:
+                        # Assume a virtual field
+                        represents[fieldname] = None
 
-            if popup_fields:
+                for record in resource:
+                    attribute = {}
+                    for fieldname in attr:
+                        try:
+                            value = record[fieldname]
+                        except:
+                            # Field not in record (so not in Table?)
+                            # This isn't working for some reason :-? AttributeError raised by dal.py & not caught
+                            continue
+                        # Ignore blank fields
+                        if not value or value == NONE:
+                            continue
+                        field_reps = represents[fieldname]
+                        if field_reps:
+                            try:
+                                represent = field_reps[value]
+                            except:
+                                # list:string
+                                represent = field_reps[str(value)]
+                        else:
+                            # Virtual Field
+                            represent = value
+                        attribute[fieldname] = represent
+
+                    attributes[record.id] = attribute
+
+                attributes[tablename] = attributes
+
+                if DEBUG:
+                    end = datetime.datetime.now()
+                    duration = end - start
+                    duration = "{:.2f}".format(duration.total_seconds())
+                    _debug("attributes lookup completed in %s seconds" % duration)
+
+            elif popup_fields:
+                label_off = vars.get("label_off", None)
+                if popup_label and not label_off:
+                    _tooltip = "(%s)" % current.T(popup_label)
+                else:
+                    _tooltip = ""
+
                 popup_fields = popup_fields.split("/")
-
-            if popup_fields:
-                represents = {}
                 for fieldname in popup_fields:
                     if fieldname in table:
                         field = table[fieldname]
@@ -1976,9 +2024,8 @@ class GIS(object):
                         # Assume a virtual field
                         represents[fieldname] = None
 
-            for record in resource:
-                tooltip = _tooltip
-                if popup_fields:
+                for record in resource:
+                    tooltip = _tooltip
                     first = True
                     for fieldname in popup_fields:
                         try:
@@ -2006,19 +2053,19 @@ class GIS(object):
                         elif value:
                             tooltip = "%s<br />%s" % (tooltip, represent)
 
-                tooltips[record.id] = tooltip
+                    tooltips[record.id] = tooltip
 
-            tooltips[tablename] = tooltips
+                tooltips[tablename] = tooltips
 
-            if DEBUG:
-                end = datetime.datetime.now()
-                duration = end - start
-                duration = "{:.2f}".format(duration.total_seconds())
-                query = (ftable.id == layer_id)
-                layer_name = db(query).select(ftable.name,
-                                              limitby=(0, 1)).first().name
-                _debug("tooltip lookup of layer %s completed in %s seconds" % \
-                        (layer_name, duration))
+                if DEBUG:
+                    end = datetime.datetime.now()
+                    duration = end - start
+                    duration = "{:.2f}".format(duration.total_seconds())
+                    query = (ftable.id == layer_id)
+                    layer_name = db(query).select(ftable.name,
+                                                  limitby=(0, 1)).first().name
+                    _debug("tooltip lookup of layer %s completed in %s seconds" % \
+                            (layer_name, duration))
 
         # Lookup the LatLons now so that it can be done as a single
         # query rather than per record
@@ -2121,6 +2168,7 @@ class GIS(object):
                     wkts = _wkts,
                     geojsons = _geojsons,
                     tooltips = tooltips,
+                    attributes = attributes,
                     )
 
     # -------------------------------------------------------------------------

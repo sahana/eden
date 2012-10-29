@@ -86,35 +86,39 @@ class S3XML(S3Codec):
     WKT = "wkt"
 
     IGNORE_FIELDS = [
-            "id",
-            "deleted_fk",
-            "approved_by",
-            "realm_entity"] # @todo: export the realm entity
+        "id",
+        "deleted_fk",
+        "approved_by",
+        # @todo: export the realm entity
+        "realm_entity",
+        ]
 
     FIELDS_TO_ATTRIBUTES = [
-            "id",
-            "admin",
-            CUSER,
-            MUSER,
-            OGROUP,
-            OUSER,
-            CTIME,
-            MTIME,
-            UID,
-            MCI,
-            DELETED]
+        "id",
+        "admin",
+        CUSER,
+        MUSER,
+        OGROUP,
+        OUSER,
+        CTIME,
+        MTIME,
+        UID,
+        MCI,
+        DELETED,
+        ]
 
     ATTRIBUTES_TO_FIELDS = [
-            "admin",
-            CUSER,
-            MUSER,
-            OGROUP,
-            OUSER,
-            CTIME,
-            MTIME,
-            MCI,
-            DELETED,
-            APPROVED]
+        "admin",
+        CUSER,
+        MUSER,
+        OGROUP,
+        OUSER,
+        CTIME,
+        MTIME,
+        MCI,
+        DELETED,
+        APPROVED,
+        ]
 
     TAG = Storage(
         root="s3xml",
@@ -134,7 +138,8 @@ class S3XML(S3Codec):
         fields="fields",
         table="table",
         row="row",
-        col="col")
+        col="col",
+        )
 
     ATTRIBUTE = Storage(
         id="id",
@@ -160,9 +165,10 @@ class S3XML(S3Codec):
         lonmin="lonmin",
         lonmax="lonmax",
         marker="marker",
-        popup="popup",         # for GIS Feature Layers/Queries
-        popup_url="popup_url", # for map popups
-        sym="sym",             # for GPS
+        popup="popup",          # for GIS Feature Layers/Queries
+        popup_url="popup_url",  # for map popups
+        sym="sym",              # for GPS
+        attributes="attributes",# For GeoJSON exports
         type="type",
         readable="readable",
         writable="writable",
@@ -170,20 +176,23 @@ class S3XML(S3Codec):
         has_options="has_options",
         tuid="tuid",
         label="label",
-        comment="comment")
+        comment="comment",
+        )
 
     ACTION = Storage(
         create="create",
         read="read",
         update="update",
-        delete="delete")
+        delete="delete",
+        )
 
     PREFIX = Storage(
         resource="$",
         options="$o",
         reference="$k",
         attribute="@",
-        text="$")
+        text="$",
+        )
 
     # -------------------------------------------------------------------------
     def __init__(self):
@@ -649,11 +658,6 @@ class S3XML(S3Codec):
 
         ATTRIBUTE = self.ATTRIBUTE
 
-        latlons = None
-        geojsons = None
-        wkts = None
-        popup_url = None
-        tooltips = None
         marker_url = None
         symbol = None
         if locations:
@@ -662,6 +666,14 @@ class S3XML(S3Codec):
             wkts = locations.get("wkts", None)
             popup_url = locations.get("popup_url", None)
             tooltips = locations.get("tooltips", None)
+            attributes = locations.get("attributes", None)
+        else:
+            latlons = None
+            geojsons = None
+            wkts = None
+            popup_url = None
+            tooltips = None
+            attributes = None
         if marker and format == "kml":
             _marker = marker.get("image", None)
             if _marker:
@@ -817,6 +829,17 @@ class S3XML(S3Codec):
                         pass
                     else:
                         attr[ATTRIBUTE.popup] = tooltip
+
+                if attributes and tablename in attributes:
+                    _attr = ""
+                    attrs = attributes[tablename][record[pkey]]
+                    for a in attrs:
+                        if _attr:
+                            _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
+                        else:
+                            _attr = "[%s]=[%s]" % (a, attrs[a])
+                    if _attr:
+                        attr[ATTRIBUTE.attributes] = _attr
 
     # -------------------------------------------------------------------------
     def resource(self,
