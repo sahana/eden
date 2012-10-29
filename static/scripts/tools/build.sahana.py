@@ -219,10 +219,8 @@ def dojs(dogis = False, warnings = True):
     for filename in [
                      "contacts",
                      "embed_component",
-                     "inline_component",
                      "locationselector.widget",
                      "popup",
-                     "select_person",
                      "timeline",
                      ]:
         print "Compressing s3.%s.js" % filename
