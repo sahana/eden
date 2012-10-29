@@ -3,7 +3,7 @@
  * Currently hardcoded for the hrm_human_resource/create context
  */
 
-$(function() {
+function addPersonWidget() {
     var controller = $('#select_from_registry_row').attr('controller');
     var fieldname = $('#select_from_registry_row').attr('field');
     var value = $('#select_from_registry_row').attr('value');
@@ -28,7 +28,7 @@ $(function() {
 
     });
     $(dummy_input).focusout(function() {
-        person_id = $(real_input).val()
+        person_id = $(real_input).val();
         $(dummy_input).addClass('hide');
         $('#person_autocomplete_label').addClass('hide');
         $('#select_from_registry_row').removeClass('hide');
@@ -135,8 +135,7 @@ $(function() {
         // Allow the Form's Save to continue
         return true;
     });
-    function enable_fields()
-    {
+    function enable_fields() {
         $('#pr_person_first_name').removeAttr('disabled');
         $('#pr_person_middle_name').removeAttr('disabled');
         $('#pr_person_last_name').removeAttr('disabled');
@@ -146,8 +145,7 @@ $(function() {
         $('#pr_person_email').removeAttr('disabled');
         $('#pr_person_mobile_phone').removeAttr('disabled');
     };
-    function disable_fields()
-    {
+    function disable_fields() {
         $('#pr_person_first_name').attr('disabled', true);
         $('#pr_person_middle_name').attr('disabled', true);
         $('#pr_person_last_name').attr('disabled', true);
@@ -157,4 +155,4 @@ $(function() {
         $('#pr_person_email').attr('disabled', true);
         $('#pr_person_mobile_phone').attr('disabled', true);
     };
-});
+}
