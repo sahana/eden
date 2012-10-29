@@ -106,7 +106,7 @@
                         <xsl:value-of select="@popup"/>
                     </popup>
                     <url>
-                        <xsl:value-of select="@url"/>
+                        <xsl:value-of select="@popup_url"/>
                     </url>
                 </properties>
             </xsl:otherwise>
@@ -254,36 +254,7 @@
                         </xsl:attribute>
                     </geometry>
                     <properties>
-                        <id>
-                            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
-                        </id>
-                        <xsl:choose>
-                            <xsl:when test="data[@field='name']!=''">
-                                <name>
-                                    <xsl:value-of select="data[@field='name']"/>
-                                </name>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='location_id']/text()!=''">
-                                <name>
-                                    <xsl:value-of select="reference[@field='location_id']/text()"/>
-                                </name>
-                            </xsl:when>
-                        </xsl:choose>
-                        <xsl:if test="reference[@field='location_id']/@marker!=''">
-                            <marker>
-                                <xsl:value-of select="reference[@field='location_id']/@marker"/>
-                            </marker>
-                        </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@popup!=''">
-                            <popup>
-                                <xsl:value-of select="reference[@field='location_id']/@popup"/>
-                            </popup>
-                        </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@popup_url!=''">
-                            <url>
-                                <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
-                            </url>
-                        </xsl:if>
+                        <xsl:call-template name="Properties" />
                     </properties>
                 </xsl:when>
                 <xsl:when test="$wkt!='null'">
@@ -352,42 +323,7 @@
                         </xsl:choose>
                     </geometry>
                     <properties>
-                        <id>
-                            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
-                        </id>
-                        <xsl:choose>
-                            <xsl:when test="data[@field='name']!=''">
-                                <name>
-                                    <xsl:value-of select="data[@field='name']"/>
-                                </name>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='location_id']/text()!=''">
-                                <name>
-                                    <xsl:value-of select="reference[@field='location_id']/text()"/>
-                                </name>
-                            </xsl:when>
-                        </xsl:choose>
-                        <xsl:if test="data[@field='value']!=''">
-                            <!-- Theme Layer -->
-                            <value>
-                                <xsl:value-of select="data[@field='value']"/>
-                            </value>
-                        </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@marker!=''">
-                            <marker>
-                                <xsl:value-of select="reference[@field='location_id']/@marker"/>
-                            </marker>
-                        </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@popup!=''">
-                            <popup>
-                                <xsl:value-of select="reference[@field='location_id']/@popup"/>
-                            </popup>
-                        </xsl:if>
-                        <xsl:if test="reference[@field='location_id']/@popup_url!=''">
-                            <url>
-                                <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
-                            </url>
-                        </xsl:if>
+                        <xsl:call-template name="Properties" />
                     </properties>
                 </xsl:when>
                 <xsl:when test="./reference[@field='location_id']/@lon!='null'">
@@ -404,26 +340,96 @@
                         </coordinates>
                     </geometry>
                     <properties>
-                        <id>
-                            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
-                        </id>
-                        <name>
-                            <xsl:value-of select="data[@field='name']"/>
-                        </name>
-                        <marker>
-                            <xsl:value-of select="reference[@field='location_id']/@marker"/>
-                        </marker>
-                        <popup>
-                            <xsl:value-of select="reference[@field='location_id']/@popup"/>
-                        </popup>
-                        <url>
-                            <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
-                        </url>
+                        <xsl:call-template name="Properties" />
                     </properties>
                 </xsl:when>
                 <!-- xsl:otherwise skip -->
             </xsl:choose>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Properties">
+
+        <xsl:variable name="attributes" select="./reference[@field='location_id']/@attributes"/>
+
+        <id>
+            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
+        </id>
+        <!--<xsl:choose>
+            <xsl:when test="data[@field='name']!=''">
+                <name>
+                    <xsl:value-of select="data[@field='name']"/>
+                </name>
+            </xsl:when>
+            <xsl:when test="reference[@field='location_id']/text()!=''">
+                <name>
+                    <xsl:value-of select="reference[@field='location_id']/text()"/>
+                </name>
+            </xsl:when>
+        </xsl:choose>-->
+        <xsl:if test="reference[@field='location_id']/@marker!=''">
+            <marker>
+                <xsl:value-of select="reference[@field='location_id']/@marker"/>
+            </marker>
+        </xsl:if>
+        <xsl:if test="reference[@field='location_id']/@popup!=''">
+            <popup>
+                <xsl:value-of select="reference[@field='location_id']/@popup"/>
+            </popup>
+        </xsl:if>
+        <xsl:if test="reference[@field='location_id']/@popup_url!=''">
+            <url>
+                <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
+            </url>
+        </xsl:if>
+        
+        <xsl:if test="$attributes!=''">
+            <xsl:call-template name="Attributes">
+                <xsl:with-param name="attributes">
+                    <xsl:value-of select="$attributes"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Attribute">
+        <xsl:param name="attribute"/>
+
+        <xsl:variable name="key" select="substring-after(substring-before($attribute,']=['),'[')"/>
+        <xsl:variable name="value" select="normalize-space(substring-before(substring-after($attribute,']=['),']'))"/>
+        <xsl:element name="{$key}">
+            <xsl:value-of select="$value"/>
+        </xsl:element>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Attributes">
+        <xsl:param name="attributes"/>
+        <xsl:choose>
+            <xsl:when test="contains($attributes,'],[')">
+                <xsl:variable name="attribute" select="substring-before($attributes,',[')"/>
+                <xsl:variable name="remainder" select="normalize-space(substring-after($attributes,'],'))"/>
+                <xsl:call-template name="Attribute">
+                    <xsl:with-param name="attribute">
+                        <xsl:value-of select="$attribute"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+                <xsl:call-template name="Attributes">
+                    <xsl:with-param name="attributes">
+                        <xsl:value-of select="$remainder"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="Attribute">
+                    <xsl:with-param name="attribute">
+                        <xsl:value-of select="$attributes"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->

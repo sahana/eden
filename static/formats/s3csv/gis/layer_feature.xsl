@@ -15,7 +15,7 @@
          Controller...........string..........Layer Controller
          Function.............string..........Layer Function
          Popup Label..........string..........Layer Popup Label
-         Popup Fields.........string..........Layer Popup Fields
+         Popup Fields.........string..........Layer Popup Fields (Fields to build feature.popup)
          REST Filter..........string..........Layer Filter (for Map JS calling back to server)
          Filter Field.........string..........Layer Filter Field (for exports to determine Marker)
          Filter Value.........string..........Layer Filter Value (for exports to determine Marker)
