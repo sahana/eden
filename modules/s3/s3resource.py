@@ -73,6 +73,8 @@ if DEBUG:
 else:
     _debug = lambda m: None
 
+ogetattr = object.__getattribute__
+
 # =============================================================================
 class S3Resource(object):
     """
@@ -1397,7 +1399,6 @@ class S3Resource(object):
             else:
                 load_uids = False
 
-            ogetattr = object.__getattribute__
             for row in rows:
                 if hasattr(row, pkey):
                     record = row
@@ -1607,7 +1608,8 @@ class S3Resource(object):
             records = self.extract(rows, fields)
             self._ids = [record[str(table._id)] for record in records]
             if has_uid:
-                self._uids = [record[str(table[UID])] for record in records]
+                uid = str(ogetattr(table, UID))
+                self._uids = [record[uid] for record in records]
         else:
             self._ids = []
 
@@ -2027,7 +2029,7 @@ class S3Resource(object):
 
         # Export the record
         add = False
-        export = self.__export_record
+        export = self._export_record
         element, rmap = export(record,
                                rfields=rfields,
                                dfields=dfields,
@@ -2078,7 +2080,7 @@ class S3Resource(object):
                     crecords = [crecords[0]]
 
                 # Export records
-                export = c.__export_record
+                export = c._export_record
                 map_record = c.__map_record
                 for crecord in crecords:
                     # Construct the component record URL
@@ -2118,17 +2120,17 @@ class S3Resource(object):
         return element
 
     # -------------------------------------------------------------------------
-    def __export_record(self,
-                        record,
-                        rfields=[],
-                        dfields=[],
-                        parent=None,
-                        export_map=None,
-                        url=None,
-                        msince=None,
-                        master=True,
-                        marker=None,
-                        locations=None):
+    def _export_record(self,
+                       record,
+                       rfields=[],
+                       dfields=[],
+                       parent=None,
+                       export_map=None,
+                       url=None,
+                       msince=None,
+                       master=True,
+                       marker=None,
+                       locations=None):
         """
             Exports a single record to the element tree.
 
@@ -3765,7 +3767,6 @@ class S3FieldSelector(object):
             return field
 
         if type(row) is Row:
-            ogetattr = object.__getattribute__
             try:
                 if tname in row.__dict__:
                     value = ogetattr(ogetattr(row, tname), fname)
@@ -4104,7 +4105,6 @@ class S3ResourceField(object):
         error = "Field not found in row: %s" % colname
 
         if type(row) is Row:
-            ogetattr = object.__getattribute__
             try:
                 if tname in row.__dict__:
                     value = ogetattr(ogetattr(row, tname), fname)

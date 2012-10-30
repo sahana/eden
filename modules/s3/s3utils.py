@@ -568,7 +568,7 @@ def s3_auth_user_represent(id, row=None):
     if row:
         return row.email
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     db = current.db
     table = db.auth_user
@@ -578,7 +578,7 @@ def s3_auth_user_represent(id, row=None):
     try:
         return user.email
     except:
-        return current.messages.UNKNOWN_OPT
+        return current.messages["UNKNOWN_OPT"]
 
 # =============================================================================
 def s3_auth_group_represent(opt):
@@ -587,7 +587,7 @@ def s3_auth_group_represent(opt):
     """
 
     if not opt:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     auth = current.auth
     s3db = current.s3db
@@ -607,7 +607,7 @@ def s3_auth_group_represent(opt):
         if key in groups:
             roles.append(groups[key]["role"])
     if not roles:
-        return current.messages.NONE
+        return current.messages["NONE"]
     return ", ".join(roles)
 
 # =============================================================================
@@ -621,7 +621,7 @@ def s3_represent_name(table):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         r = current.db(table._id == id).select(table.name,
                                                limitby=(0, 1)
@@ -629,7 +629,7 @@ def s3_represent_name(table):
         try:
             return r.name
         except:
-            return current.messages.UNKNOWN_OPT
+            return current.messages["UNKNOWN_OPT"]
 
     return represent
 
@@ -644,7 +644,7 @@ def s3_represent_name_translate(table):
         if row:
             return current.T(row.name)
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         r = current.db(table._id == id).select(table.name,
                                                limitby=(0, 1)
@@ -652,7 +652,7 @@ def s3_represent_name_translate(table):
         try:
             return current.T(r.name)
         except:
-            return current.messages.UNKNOWN_OPT
+            return current.messages["UNKNOWN_OPT"]
 
     return represent
 
@@ -1042,7 +1042,7 @@ def s3_unicode(s, encoding="utf-8"):
         @param encoding: the character encoding
     """
 
-    if isinstance(s, unicode):
+    if type(s) is unicode:
         return s
     try:
         if not isinstance(s, basestring):
@@ -1961,7 +1961,7 @@ class S3DateTime(object):
         if date:
             return date.strftime(str(format))
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -1985,7 +1985,7 @@ class S3DateTime(object):
         if time:
             return time.strftime(str(format))
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -2008,7 +2008,7 @@ class S3DateTime(object):
         if dt:
             return xml.encode_local_datetime(dt)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
 # =============================================================================
 class S3MultiPath:

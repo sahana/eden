@@ -51,6 +51,8 @@ if DEBUG:
 else:
     _debug = lambda m: None
 
+ogetattr = object.__getattribute__
+
 # =============================================================================
 class S3Model(object):
     """ Base class for S3 models """
@@ -144,24 +146,13 @@ class S3Model(object):
     def __getattr__(self, name):
         """ Model auto-loader """
 
-        if str(name) in self.__dict__:
-            return self.__dict__[str(name)]
-        else:
-            db = current.db
-            if name in db:
-                return db[name]
-            else:
-                s3 = current.response.s3
-                if name in s3:
-                    return s3[name]
-                else:
-                    return self.table(name,
-                                      AttributeError("undefined table: %s" % name))
+        return self.table(name,
+                          AttributeError("undefined table: %s" % name))
 
     # -------------------------------------------------------------------------
     def __getitem__(self, key):
 
-        return self.__getattr__(key)
+        return self.__getattr__(str(key))
 
     # -------------------------------------------------------------------------
     def model(self):
@@ -186,16 +177,20 @@ class S3Model(object):
         """
             Helper function to load a table definition by its name
         """
-        response = current.response
-        if "s3" not in response:
-            response.s3 = Storage()
-        s3 = response.s3
-        db = current.db
 
-        if tablename in db:
-            return db[tablename]
-        elif tablename in s3 and not db_only:
+        s3 = current.response.s3
+        if s3 is None:
+            s3 = current.response.s3 = Storage()
+
+        if not db_only and tablename in s3:
             return s3[tablename]
+
+        db = current.db
+        if hasattr(db, tablename):
+            return ogetattr(db, tablename)
+        elif ogetattr(db, "_lazy_tables") and \
+             tablename in ogetattr(db, "_LAZY_TABLES"):
+            return ogetattr(db, tablename)
         else:
             prefix, name = tablename.split("_", 1)
             models = current.models
@@ -220,10 +215,13 @@ class S3Model(object):
                     elif n.startswith("%s_" % prefix):
                         s3[n] = model
                 [module.__dict__[n](prefix) for n in generic]
-        if tablename in db:
-            return db[tablename]
-        elif tablename in s3 and not db_only:
+        if not db_only and tablename in s3:
             return s3[tablename]
+        elif hasattr(db, tablename):
+            return ogetattr(db, tablename)
+        elif ogetattr(db, "_lazy_tables") and \
+             tablename in ogetattr(db, "_LAZY_TABLES"):
+            return ogetattr(db, tablename)
         elif isinstance(default, Exception):
             raise default
         else:
@@ -235,13 +233,13 @@ class S3Model(object):
         """
             Helper function to load a response.s3 variable from models
         """
-        response = current.response
-        if "s3" not in response:
-            response.s3 = Storage()
-        s3 = response.s3
 
-        if name in response.s3:
-            return response.s3[name]
+        s3 = current.response.s3
+        if s3 is None:
+            s3 = current.response.s3 = Storage()
+
+        if name in s3:
+            return s3[name]
         elif "_" in name:
             prefix = name.split("_", 1)[0]
             models = current.models
@@ -280,10 +278,9 @@ class S3Model(object):
             Helper function to load a model by its name (=prefix)
         """
 
-        response = current.response
-        if "s3" not in response:
-            response.s3 = Storage()
-        s3 = response.s3
+        s3 = current.response.s3
+        if s3 is None:
+            s3 = current.response.s3 = Storage()
         models = current.models
 
         if models is not None and hasattr(models, name):
@@ -330,8 +327,8 @@ class S3Model(object):
         """
 
         db = current.db
-        if tablename in db:
-            table = db[tablename]
+        if hasattr(db, tablename):
+            table = ogetattr(db, tablename)
         else:
             table = db.define_table(tablename, *fields, **args)
         return table

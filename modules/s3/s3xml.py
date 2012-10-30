@@ -59,6 +59,8 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
+ogetattr = object.__getattribute__
+
 # =============================================================================
 class S3XML(S3Codec):
     """
@@ -491,8 +493,13 @@ class S3XML(S3Codec):
             @param fields: list of reference field names in this table
         """
 
-        db = current.db
         reference_map = []
+
+        fields = [f for f in fields if f in record and record[f]]
+        if not fields:
+            return reference_map
+
+        db = current.db
 
         UID = self.UID
         MCI = self.MCI
@@ -506,52 +513,70 @@ class S3XML(S3Codec):
         gtablename = current.auth.settings.table_group_name
 
         for f in fields:
-            if f not in record:
+            try:
+                dbfield = ogetattr(table, f)
+            except:
                 continue
-            val = ids = record[f]
-            if type(ids) is not list:
-                ids = [ids]
-            ktablename, pkey, multiple = s3_get_foreign_key(table[f])
+            #if f not in record or not record[f]:
+                #continue
+            #if type(ids) is not list:
+                #ids = [ids]
+            ktablename, pkey, multiple = s3_get_foreign_key(dbfield)
             if not ktablename:
                 continue
-            ktable = db[ktablename]
+            val = ids = ogetattr(record, f)
+
+            try:
+                ktable = db.get(ktablename) #db[ktablename]
+            except:
+                continue
+
             ktable_fields = ktable.fields
             k_id = ktable._id
+
             if pkey is None:
                 pkey = k_id.name
-
             if multiple:
                 query = k_id.belongs(ids)
                 limitby = None
             else:
-                query = k_id == ids[0]
+                query = k_id == ids #[0]
                 limitby = (0, 1)
 
             uid = None
             uids = None
             supertable = None
+
             if pkey != "id" and "instance_type" in ktable_fields:
+
                 if multiple:
                     continue
-                krecord = db(query).select(ktable[UID],
+
+                krecord = db(query).select(ogetattr(ktable, UID),
                                            ktable.instance_type,
                                            limitby=(0, 1)).first()
                 if not krecord:
                     continue
                 ktablename = krecord.instance_type
-                uid = krecord[UID]
+                uid = ogetattr(krecord, UID)
+
                 if ktablename == tablename and \
-                   UID in record and record[UID] == uid and \
+                   UID in record and ogetattr(record, UID) == uid and \
                    not current.manager.show_ids:
                     continue
+
                 uids = [uid]
+
             else:
                 if DELETED in ktable_fields:
                     query = (ktable.deleted != True) & query
+
                 if filter_mci and MCI in ktable_fields:
                     query = (ktable.mci >= 0) & query
+
                 if UID in ktable_fields:
-                    krecords = db(query).select(ktable[UID], limitby=limitby)
+                    krecords = db(query).select(ogetattr(ktable, UID),
+                                                limitby=limitby)
                     if krecords:
                         uids = [r[UID] for r in krecords if r[UID]]
                         if ktablename != gtablename:
@@ -562,19 +587,22 @@ class S3XML(S3Codec):
                     krecord = db(query).select(k_id, limitby=(0, 1)).first()
                     if not krecord:
                         continue
-            value = s3_unicode(table[f].formatter(val))
-            if table[f].represent:
+
+            value = s3_unicode(dbfield.formatter(val))
+            if dbfield.represent:
                 text = represent(table, f, val)
             else:
                 text = xml_encode(value)
+
             entry = {"field":f,
                      "table":ktablename,
                      "multiple":multiple,
-                     "id":ids,
+                     "id":ids if type(ids) is list else [ids],
                      "uid":uids,
                      "text":text,
                      "value":value}
             reference_map.append(Storage(entry))
+
         return reference_map
 
     # -------------------------------------------------------------------------
@@ -870,15 +898,15 @@ class S3XML(S3Codec):
         DELETED = self.DELETED
 
         TAG = self.TAG
-        RESOURCE = TAG.resource
-        DATA = TAG.data
+        RESOURCE = TAG["resource"]
+        DATA = TAG["data"]
 
         ATTRIBUTE = self.ATTRIBUTE
-        NAME = ATTRIBUTE.name
-        ALIAS = ATTRIBUTE.alias
-        FIELD = ATTRIBUTE.field
-        VALUE = ATTRIBUTE.value
-        URL = ATTRIBUTE.url
+        NAME = ATTRIBUTE["name"]
+        ALIAS = ATTRIBUTE["alias"]
+        FIELD = ATTRIBUTE["field"]
+        VALUE = ATTRIBUTE["value"]
+        URL = ATTRIBUTE["url"]
 
         tablename = table._tablename
         deleted = False
@@ -934,6 +962,7 @@ class S3XML(S3Codec):
         table_fields = table.fields
 
         _repr = self.represent
+        to_json = json.dumps
         for f in fields:
             if f == DELETED:
                 continue
@@ -943,10 +972,10 @@ class S3XML(S3Codec):
                     v = 0
                 attrib[MCI] = str(int(v) + 1)
                 continue
-            if v is None or f not in table_fields:
+            if v is None or not hasattr(table, f):
                 continue
-            dbfield = table[f]
-            fieldtype = str(table[f].type)
+            dbfield = ogetattr(table, f)
+            fieldtype = str(dbfield.type)
             formatter = dbfield.formatter
             represent = dbfield.represent
             is_attr = f in FIELDS_TO_ATTRIBUTES
@@ -986,22 +1015,23 @@ class S3XML(S3Codec):
                 attr[FIELD] = f
                 if represent or fieldtype not in ("string", "text"):
                     if value is None:
-                        value = json.dumps(v).decode("utf-8")
+                        value = to_json(v).decode("utf-8")
                     attr[VALUE] = value
                 data.text = text
         if url and not deleted:
             attrib[URL] = url
 
-        postp = None
-        if postprocess is not None:
-            if isinstance(postprocess, dict):
-                postp = postprocess.get(str(table), None)
-            else:
-                postp = postprocess
-        if postp and callable(postp):
-            result = postp(table, record, elem)
-            if isinstance(result, etree._Element):
-                elem = result
+        # @todo: currently unused => remove?
+        #postp = None
+        #if postprocess is not None:
+            #if isinstance(postprocess, dict):
+                #postp = postprocess.get(str(table), None)
+            #else:
+                #postp = postprocess
+        #if postp and callable(postp):
+            #result = postp(table, record, elem)
+            #if isinstance(result, etree._Element):
+                #elem = result
 
         return elem
 

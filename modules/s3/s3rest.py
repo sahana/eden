@@ -61,7 +61,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3resource import S3Resource
-from s3utils import S3MarkupStripper
+from s3utils import S3MarkupStripper, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -294,7 +294,7 @@ class S3RequestManager(object):
 
         xml_encode = current.xml.xml_encode
 
-        NONE = str(current.T("None")).decode("utf-8")
+        NONE = current.messages["NONE"]
         cache = current.cache
         fname = field.name
 
@@ -312,23 +312,13 @@ class S3RequestManager(object):
         # This code is needed (for example) for a data table that includes a link
         # Such a table can be seen at inv/inv_item
         # where the table displays a link to the warehouse
-        if non_xml_output == False:
+        if not non_xml_output:
             if not xml_escape and val is not None:
                 ftype = str(field.type)
                 if ftype in ("string", "text"):
-                    try:
-                        val = unicode(val)
-                    except:
-                        val = unicode(val.decode("utf-8"))
-                    val = text = xml_encode(val)
+                    val = text = xml_encode(s3_unicode(val))
                 elif ftype == "list:string":
-                    vals = []
-                    for v in val:
-                        try:
-                            vals.append(xml_encode(unicode(v)))
-                        except:
-                            vals.append(xml_encode(unicode(v.decode("utf-8"))))
-                    val = text = vals
+                    val = text = [xml_encode(s3_unicode(v)) for v in val]
 
         # Get text representation
         if field.represent:

@@ -2684,7 +2684,7 @@ class S3AddPersonWidget(FormWidget):
 
         # JS
         s3.jquery_ready.append('''addPersonWidget()''');
-        
+
         # Overall layout of components
         return TAG[""](select_row,
                        ac_row,

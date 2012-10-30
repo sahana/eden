@@ -3368,8 +3368,8 @@ def hrm_human_resource_onaccept(form):
     if current.deployment_settings.get_auth_person_realm_human_resource_site_then_org():
         # Set pr_person.realm_entity to the human_resource's site pe_id
         entity = s3db.pr_get_pe_id("org_site", site_id) or \
-                 s3db.pr_get_pe_id("org_organisation", organisation_id) 
-            
+                 s3db.pr_get_pe_id("org_organisation", organisation_id)
+
         if entity:
             auth.set_realm_entity(ptable, person,
                                   entity = entity,
@@ -3992,7 +3992,7 @@ class HRMVirtualFields:
                 names = [cert.name for cert in certs]
                 return ",".join(names)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def course(self):
@@ -4016,7 +4016,7 @@ class HRMVirtualFields:
                 names = [course.name for course in courses]
                 return ",".join(names)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def email(self):
@@ -4040,7 +4040,7 @@ class HRMVirtualFields:
                 values = [contact.value for contact in contacts]
                 return ",".join(values)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def phone(self):
@@ -4065,7 +4065,7 @@ class HRMVirtualFields:
                 values = [contact.value for contact in contacts]
                 return ",".join(values)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class HRMProgrammeVirtualFields:
@@ -4093,7 +4093,7 @@ class HRMProgrammeVirtualFields:
             if programme:
                 return programme.name
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def active(self):
@@ -4122,7 +4122,7 @@ class HRMProgrammeVirtualFields:
                              _style="color:red;")
             return active
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class HRMProgrammePersonVirtualFields:
@@ -4150,7 +4150,7 @@ class HRMProgrammePersonVirtualFields:
             if programme:
                 return programme.name
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def active(self):
@@ -4179,7 +4179,7 @@ class HRMProgrammePersonVirtualFields:
                              _style="color:red;")
             return active
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class HRMTrainingVirtualFields:
@@ -4200,7 +4200,7 @@ class HRMTrainingVirtualFields:
         if date:
             return "%s/%02d" % (date.year, date.month)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def year(self):
@@ -4213,7 +4213,7 @@ class HRMTrainingVirtualFields:
         if date:
             return date.year
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def job_title(self):
@@ -4245,7 +4245,7 @@ class HRMTrainingVirtualFields:
                         output = repr
                 return output
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def organisation(self):
@@ -4275,7 +4275,7 @@ class HRMTrainingVirtualFields:
                         output = repr
                 return output
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 def hrm_rheader(r, tabs=[],
@@ -4344,7 +4344,7 @@ def hrm_rheader(r, tabs=[],
                                 programme_hours_month += hours
 
                 # Already formatted as HTML
-                enable_active_field = settings.set_org_dependent_field("vol_volunteer", "active", 
+                enable_active_field = settings.set_org_dependent_field("vol_volunteer", "active",
                                                                        enable_field = False)
                 if enable_active_field:
                     active = TD(record.active)

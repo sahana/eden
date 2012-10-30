@@ -115,28 +115,28 @@ class S3Codec(object):
     # Utilities
     #--------------------------------------------------------------------------
     PY2XML = {"'": "&apos;", '"': "&quot;"}
-    @staticmethod
-    def xml_encode(s):
+    @classmethod
+    def xml_encode(cls, s):
         """
             XML-escape a string
 
             @param s: the string
         """
         if s:
-            s = escape(s, S3Codec.PY2XML)
+            s = escape(s, cls.PY2XML)
         return s
 
     #--------------------------------------------------------------------------
     XML2PY = {"&apos;": "'", "&quot;": '"'}
-    @staticmethod
-    def xml_decode(s):
+    @classmethod
+    def xml_decode(cls, s):
         """
             XML-unescape a string
 
             @param s: the string
         """
         if s:
-            s = unescape(s, S3Codec.XML2PY)
+            s = unescape(s, cls.XML2PY)
         return s
 
     #--------------------------------------------------------------------------

@@ -346,7 +346,7 @@ def s3_ownerstamp():
                                                         else None,
                                             represent=lambda id: \
                                                 id and s3_auth_user_represent(id) or \
-                                                       current.messages.UNKNOWN_OPT,
+                                                       current.messages["UNKNOWN_OPT"],
                                             ondelete="RESTRICT")
 
     # Role of users who collectively own the record
@@ -507,7 +507,7 @@ def s3_lx_fields():
             address_L3(),
             address_L2(),
             address_L1(),
-            address_L0(label=current.messages.COUNTRY),
+            address_L0(label=current.messages["COUNTRY"]),
            )
     return fields
 
@@ -757,7 +757,7 @@ def s3_comments(name="comments", **attr):
     if "label" not in attr:
         attr["label"] = T("Comments")
     if "represent" not in attr:
-        attr["represent"] = lambda comments: comments or current.messages.NONE
+        attr["represent"] = lambda comments: comments or current.messages["NONE"]
     if "widget" not in attr:
         attr["widget"] = s3_comments_widget
     if "comment" not in attr:

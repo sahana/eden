@@ -888,7 +888,7 @@ class GIS(object):
             # Update the specific table which has just been defined
             table = db[tablename]
             if tablename == "gis_location":
-                labels["L0"] = current.messages.COUNTRY
+                labels["L0"] = current.messages["COUNTRY"]
                 table.level.requires = \
                     IS_NULL_OR(IS_IN_SET(labels))
             else:
@@ -1156,7 +1156,7 @@ class GIS(object):
                 return _levels
 
         T = current.T
-        COUNTRY = current.messages.COUNTRY
+        COUNTRY = current.messages["COUNTRY"]
 
         if level == "L0":
             return COUNTRY
@@ -1899,7 +1899,7 @@ class GIS(object):
             @param: layer_id - db.gis_layer_feature.id (Feature Layers only)
         """
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
         if DEBUG:
             start = datetime.datetime.now()
 
