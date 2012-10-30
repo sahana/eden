@@ -146,6 +146,15 @@ parser.add_argument("--link-depth",
                     type = int,
                     default = 16,
                     help = "The recursive depth when looking for links")
+desc = """This will record the timings in a spreadsheet file. The data
+will be accumulated over time holding a maximum of 100 results, The file will
+automatically rotated. This will hold details for another program to analyse.
+The file will be written to the same location as the HTML report.
+"""
+parser.add_argument("-r",
+                    "--record-timings",
+                    const=True,
+                    help = desc)
 
 up_desc = """The user name and password, separated by a /. Multiple user name
 and passwords can be added by separating them with a comma. If multiple user
@@ -203,6 +212,11 @@ if args["suite"] == "smoke" or args["suite"] == "complete":
     if settings.get_base_debug() and not args["force_debug"]:
         print "settings.base.debug is set to True in 000_config.py, either set it to False or use the --force-debug switch"
         exit()
+    config.record_timings = args["record_timings"]
+    if config.record_timings:
+        path = args["html_path"]
+        config.record_timings_filename = os.path.join(path,"Sahana-Eden-record-timings.xls")
+        config.record_summary_filename = os.path.join(path,"Sahana-Eden-record-summary.xls")
 
 config.verbose = args["verbose"]
 browser_open = False
