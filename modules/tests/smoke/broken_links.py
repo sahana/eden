@@ -134,7 +134,7 @@ class BrokenLinkTest(Web2UnitTest):
             The test can also display an histogram depicting the number of
             links found at each depth.
         """
-        self.threasholdLink = {}
+        self.thresholdLink = {}
         self.linktimes = []
         for user in self.credentials:
             self.clearRecord()
@@ -202,7 +202,7 @@ class BrokenLinkTest(Web2UnitTest):
                     duration = time() - visit_start
                     self.linktimes.append(duration)
                     if duration > self.threshold:
-                        self.threasholdLink[visited_url] = duration
+                        self.thresholdLink[visited_url] = duration
                         if self.config.verbose >= 3:
                             print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
                 else:
@@ -212,7 +212,7 @@ class BrokenLinkTest(Web2UnitTest):
                     duration = time() - visit_start
                     self.linktimes.append(duration)
                     if duration > self.threshold:
-                        self.threasholdLink[visited_url] = duration
+                        self.thresholdLink[visited_url] = duration
                         if self.config.verbose >= 3:
                             print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
             except Exception as e:
@@ -303,7 +303,7 @@ class BrokenLinkTest(Web2UnitTest):
                 )
             n += 1
         from operator import itemgetter
-        for (visited_url, duration) in sorted(self.threasholdLink.iteritems(),
+        for (visited_url, duration) in sorted(self.thresholdLink.iteritems(),
                                               key=itemgetter(1),
                                               reverse=True):
             self.reporter( "%s took %.3f seconds" % (visited_url, duration))

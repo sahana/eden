@@ -215,8 +215,8 @@ if args["suite"] == "smoke" or args["suite"] == "complete":
     config.record_timings = args["record_timings"]
     if config.record_timings:
         path = args["html_path"]
-        config.record_timings_filename = os.path.join(path,"Sahana-Eden-record-timings.xls")
-        config.record_summary_filename = os.path.join(path,"Sahana-Eden-record-summary.xls")
+        config.record_timings_filename = os.path.join(path, "Sahana-Eden-record-timings.xls")
+        config.record_summary_filename = os.path.join(path, "Sahana-Eden-record-summary.xls")
 
 config.verbose = args["verbose"]
 browser_open = False
@@ -262,13 +262,13 @@ elif args["suite"] == "roles":
     #test_role.set(org = "Org-A",
     #              user = "asset_reader@Org-A.com",
     #              row_num = 0,
-    #                     method = "create",
-    #                     table = "org_organisation",
-    #                     c = None,
-    #                     f = None,
-    #                     record_id = 42,
-    #                     uuid = "uuid",
-    #                     permission = True)
+    #              method = "create",
+    #              table = "org_organisation",
+    #              c = None,
+    #              f = None,
+    #              record_id = 42,
+    #              uuid = "uuid",
+    #              permission = True)
     #suite.addTest(test_role)
     #suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
 
