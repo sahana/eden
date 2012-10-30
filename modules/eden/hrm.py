@@ -1463,8 +1463,8 @@ class S3HRSkillModel(S3Model):
                              # This field can only be filled-out by specific roles
                              # Once this has been filled-out then the other fields are locked
                              organisation_id(label = T("Confirming Organization"),
-                                             widget = S3OrganisationAutocompleteWidget(
-                                                        default_from_profile=True),
+                                             #widget = S3OrganisationAutocompleteWidget(
+                                             #           default_from_profile=True),
                                              comment = None,
                                              writable = False),
                              Field("from_certification", "boolean",
@@ -1595,8 +1595,8 @@ class S3HRSkillModel(S3Model):
                              person_id(),
                              self.hrm_job_title_id(),
                              organisation_id(empty=False,
-                                             widget = S3OrganisationAutocompleteWidget(
-                                                        default_from_profile=True),
+                                             #widget = S3OrganisationAutocompleteWidget(
+                                             #           default_from_profile=True),
                                              label=T("Credentialling Organization")),
                              Field("performance_rating", "integer",
                                    label = T("Performance Rating"),
@@ -2020,8 +2020,8 @@ class S3HRSkillModel(S3Model):
                              Field("name", notnull=True,
                                    length=128,   # Mayon Compatibility
                                    label=T("Name")),
-                             organisation_id(widget = S3OrganisationAutocompleteWidget(
-                                                        default_from_profile=True),
+                             organisation_id(#widget = S3OrganisationAutocompleteWidget(
+                                             #           default_from_profile=True),
                                              label=T("Certifying Organization")),
                              Field("expiry", "integer",
                                    label = T("Expiry (months)")),

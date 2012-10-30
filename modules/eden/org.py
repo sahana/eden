@@ -2811,9 +2811,10 @@ def org_office_controller():
                     s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
                     # Cascade the organisation_id from the office to the staff
                     htable = s3db.hrm_human_resource
-                    htable.organisation_id.default = r.record.organisation_id
-                    htable.organisation_id.writable = False
-                    htable.organisation_id.comment = None
+                    field = htable.organisation_id
+                    field.default = r.record.organisation_id
+                    field.writable = False
+                    field.comment = None
                     # Filter out people which are already staff for this office
                     s3_filter_staff(r)
 
