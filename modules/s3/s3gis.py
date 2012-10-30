@@ -7252,7 +7252,7 @@ class S3Map(S3Search):
         # Save Search Widget
         if session.auth and \
            current.deployment_settings.get_save_search_widget():
-            save_search = self.save_search_widget(r, search_vars, **attr)
+            save_search = self.save_search_widget(r, query, **attr)
         else:
             save_search = DIV()
 
