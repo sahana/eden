@@ -134,7 +134,7 @@ class BrokenLinkTest(Web2UnitTest):
             The test can also display an histogram depicting the number of
             links found at each depth.
         """
-        self.threasholdLink = []
+        self.thresholdLink = {}
         self.linktimes = []
         for user in self.credentials:
             self.clearRecord()
@@ -202,7 +202,7 @@ class BrokenLinkTest(Web2UnitTest):
                     duration = time() - visit_start
                     self.linktimes.append(duration)
                     if duration > self.threshold:
-                        self.threasholdLink.append((visited_url, duration))
+                        self.thresholdLink[visited_url] = duration
                         if self.config.verbose >= 3:
                             print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
                 else:
@@ -212,7 +212,7 @@ class BrokenLinkTest(Web2UnitTest):
                     duration = time() - visit_start
                     self.linktimes.append(duration)
                     if duration > self.threshold:
-                        self.threasholdLink.append((visited_url, duration))
+                        self.thresholdLink[visited_url] = duration
                         if self.config.verbose >= 3:
                             print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
             except Exception as e:
@@ -302,7 +302,10 @@ class BrokenLinkTest(Web2UnitTest):
                                                   )
                 )
             n += 1
-        for (visited_url, duration) in self.threasholdLink:
+        from operator import itemgetter
+        for (visited_url, duration) in sorted(self.thresholdLink.iteritems(),
+                                              key=itemgetter(1),
+                                              reverse=True):
             self.reporter( "%s took %.3f seconds" % (visited_url, duration))
 
         import numpy
@@ -312,6 +315,8 @@ class BrokenLinkTest(Web2UnitTest):
         std = numpy.std(self.linktimes)
         msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
         self.reporter(msg)
+        if config.record_timings:
+            self.record_timings()
 
     def report_link_depth(self):
         """
@@ -347,6 +352,75 @@ class BrokenLinkTest(Web2UnitTest):
         base64Img = base64.b64encode(image)
         image = "<img src=\"data:image/png;base64,%s\">" % base64Img
         self.reporter(image)
+
+    def record_timings(self):
+            import_error = ""
+            try:
+                import xlrd
+            except:
+                import_error += "ERROR: the xlrd modules is needed to record timings\n"
+            try:
+                import xlwt
+            except:
+                import_error += "ERROR: the xlwt modules is needed to record timings\n"
+            if import_error != "":
+                print >> self.stderr, import_error
+                return
+            rec_time_filename = config.record_timings_filename
+            try:
+                workbook = xlrd.open_workbook(filename=rec_time_filename)
+                try:
+                    sheet = workbook.sheet_by_name("Timings")
+                    summary = report_read_timings_file
+                    if sheet.ncols > 200:
+                        # Need to rotate the file
+                        # 1) make a summary and save this
+                        report_timings_summary(summary, config.record_summary_filename)
+                        # 2) archive the file
+                        from zipfile import ZipFile
+                        archive = ZipFile("rec_time.zip", "a")
+                        arc_name = "%s-%s.xls" % (rec_time_filename[:-4],
+                                                  current.request.now.date()
+                                                  )
+                        archive.write(filename,arc_name)
+                        # 3) clear the current file
+                        import os
+                        os.unlink(rec_time_filename)
+                except:
+                    pass
+            except:
+                pass
+
+    def report_read_timings_file(self, sheet):
+        """
+            This will extract all the details from the sheet
+        """
+        summary = {}
+        num_cells = worksheet.ncols
+        for row in range(sheet.nrows):
+            url = sheet.cell_value(row, 0)
+            summary[url] = []
+            for col in range(1, num_cells, 2):
+                if sheet.cell_type(row, col) != 0: # not empty
+                    date = sheet.cell_value(0, col)
+                    time = sheet.cell_value(row, col)
+                    code = sheet.cell_value(row, col+1)
+                    summary[url].append((date, time, code))
+        return summary
+
+    def report_timings_summary(self, summary, summary_file_name = None):
+        """
+            This will extract the details from the sheet and optionally save
+            them to a summary file
+        """
+        # @todo calculate the summary details
+        good_values = []
+        other_values = []
+        total_values = []
+        if summary_file_name != None:
+            # Save the details to the summary file
+            # @todo save the details to the file
+            pass
 
     def report_model_url(self):
         print "Report breakdown by module"
