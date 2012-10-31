@@ -880,75 +880,98 @@ class S3Model(object):
 
         # Get all super-entities of this table
         tablename = table._tablename
-        supertable = get_config(tablename, "super_entity")
-        if not supertable:
-            return True
-        elif not isinstance(supertable, (list, tuple)):
-            supertable = [supertable]
+        supertables = get_config(tablename, "super_entity")
+        if not supertables:
+            return False
 
         # Get the record
         id = record.get("id", None)
-        db = current.db
-        _record = db(table.id == id).select(table.ALL,
-                                            limitby=(0, 1)).first()
-        if not _record:
-            return True
+        if not id:
+            return False
 
-        super_keys = Storage()
-        for s in supertable:
-            if isinstance(s, str):
+        # Find all super-tables, super-keys and shared fields
+        if not isinstance(supertables, (list, tuple)):
+            supertables = [supertables]
+        updates = []
+        fields = []
+        has_deleted = "deleted" in table.fields
+        has_uuid = "uuid" in table.fields
+        for s in supertables:
+            if type(s) is not Table:
                 s = cls.table(s)
             if s is None:
                 continue
-            # Get the key
+            tn = s._tablename
             key = cls.super_key(s)
-            skey = _record.get(key, None)
-            # Get the shared field map
-            shared = get_config(tablename, "%s_fields" % s._tablename)
-            if shared:
-                data = Storage([(f, _record[shared[f]])
-                                for f in shared
-                                if shared[f] in _record and f in s.fields and f != key])
+            shared = get_config(tablename, "%s_fields" % tn)
+            if not shared:
+                shared = dict([(fn, fn)
+                               for fn in s.fields
+                               if fn != key and fn in table.fields])
             else:
-                data = Storage([(f, _record[f])
-                               for f in s.fields if f in _record and f != key])
-            # Add instance type and deletion status
-            data.update(instance_type=tablename,
-                        deleted=_record.get("deleted", False))
-            # UID
-            uid = _record.get("uuid", None)
-            data.update(uuid=uid)
-            # Update records
+                shared = dict([(fn, shared[fn])
+                               for fn in shared
+                               if fn != key and fn in s.fields and fn in table.fields])
+            fields.extend(shared.values())
+            fields.append(key)
+            updates.append((tn, s, key, shared))
+
+        # Get the record data
+        db = current.db
+        if has_deleted:
+            fields.append("deleted")
+        if has_uuid:
+            fields.append("uuid")
+        fields = [ogetattr(table, fn) for fn in list(set(fields))]
+        _record = db(table.id == id).select(limitby=(0, 1), *fields).first()
+        if not _record:
+            return False
+
+        super_keys = Storage()
+        for tn, s, key, shared in updates:
+
+            data = Storage([(fn, _record[shared[fn]]) for fn in shared])
+            data.instance_type = tablename
+            if has_deleted:
+                data.deleted = _record.get("deleted", False)
+            if has_uuid:
+                data.uuid = _record.get("uuid", None)
+
+            # Do we already have a super-record?
+            skey = ogetattr(_record, key)
             if skey:
                 query = s[key] == skey
-                row = db(query).select(s[key], limitby=(0, 1)).first()
+                row = db(query).select(s._id, limitby=(0, 1)).first()
             else:
-                row = Storage()
-            _tablename = s._tablename
-            form = Storage(vars=Storage(row))
+                row = None
+
             if row:
-                onaccept = get_config(_tablename, "update_onaccept",
-                           get_config(_tablename, "onaccept", None))
-                db(s[key] == row[key]).update(**data)
-                k = {key:row[key]}
-                super_keys.update(k)
-                if _record[key] != row[key]:
-                    db(table.id == id).update(**k)
-                data.update(k)
-                if onaccept:
-                    form.vars.update(data)
-                    onaccept(form)
+                # Update the super-entity record
+                success = db(s._id == skey).update(**data)
+                if success:
+                    super_keys[key] = skey
+                    data[key] = skey
+                    form = Storage(vars=data)
+                    onaccept = get_config(tn, "update_onaccept",
+                               get_config(tn, "onaccept", None))
+                    if onaccept:
+                        onaccept(form)
             else:
-                onaccept = get_config(_tablename, "create_onaccept",
-                           get_config(_tablename, "onaccept", None))
+                # Insert a new super-entity record
                 k = s.insert(**data)
                 if k:
-                    db(table.id == id).update(**{key:k})
-                    super_keys.update({key:k})
-                data.update({key:k})
-                if onaccept:
-                    form.vars.update(data)
-                    onaccept(form)
+                    super_keys[key] = k
+                    data[key] = k
+                    onaccept = get_config(tn, "create_onaccept",
+                               get_config(tn, "onaccept", None))
+                    if onaccept:
+                        form = Storage(vars=data)
+                        onaccept(form)
+
+        # Update the super_keys in the record
+        if super_keys:
+            db(table.id == id).update(**super_keys)
+
         record.update(super_keys)
         return True
 

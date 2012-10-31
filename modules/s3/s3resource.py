@@ -2833,7 +2833,7 @@ class S3Resource(object):
         xml = current.xml
         xml_decode = xml.xml_decode
 
-        VALUE = xml.ATTRIBUTE.value
+        VALUE = xml.ATTRIBUTE["value"]
         UID = xml.UID
         ATTRIBUTES_TO_FIELDS = xml.ATTRIBUTES_TO_FIELDS
 
@@ -2843,9 +2843,10 @@ class S3Resource(object):
 
         # Get the values from record
         get = record.get
-        if isinstance(record, etree._Element):
+        if type(record) is etree._Element: #isinstance(record, etree._Element):
             xpath = record.xpath
-            xexpr = "%s[@%s='%%s']" % (xml.TAG.data, xml.ATTRIBUTE.field)
+            xexpr = "%s[@%s='%%s']" % (xml.TAG["data"],
+                                       xml.ATTRIBUTE["field"])
             for f in pkeys:
                 v = None
                 if f == UID or f in ATTRIBUTES_TO_FIELDS:
@@ -2877,7 +2878,7 @@ class S3Resource(object):
                 query = _query
 
         # Try to find exactly one match by non-UID unique keys
-        if query:
+        if query is not None:
             original = db(query).select(table.ALL, limitby=(0, 2))
             if len(original) == 1:
                 return original.first()
@@ -3000,11 +3001,12 @@ class S3Resource(object):
                 fkey = component.lkey
 
         if subset:
-            return [table[f] for f in subset
-                    if f in table.fields and table[f].readable and f != fkey]
+            return [ogetattr(table, f) for f in subset
+                    if f in table.fields and \
+                       ogetattr(table, f).readable and f != fkey]
         else:
-            return [table[f] for f in table.fields
-                    if table[f].readable and f != fkey]
+            return [ogetattr(table, f) for f in table.fields
+                    if ogetattr(table, f).readable and f != fkey]
 
     # -------------------------------------------------------------------------
     def resolve_selectors(self, selectors,

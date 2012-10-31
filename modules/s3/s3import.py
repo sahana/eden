@@ -1791,12 +1791,11 @@ class S3ImportItem(object):
 
         self.element = element
         if table is None:
-            tablename = element.get(xml.ATTRIBUTE.name, None)
-            try:
-                table = s3db[tablename]
-            except:
+            tablename = element.get(xml.ATTRIBUTE["name"], None)
+            table = s3db.table(tablename)
+            if table is None:
                 self.error = self.ERROR.BAD_RESOURCE
-                element.set(xml.ATTRIBUTE.error, self.error)
+                element.set(xml.ATTRIBUTE["error"], self.error)
                 return False
 
         self.table = table
@@ -1812,24 +1811,28 @@ class S3ImportItem(object):
         if data is None:
             self.error = self.ERROR.VALIDATION_ERROR
             self.accepted = False
-            if not element.get(xml.ATTRIBUTE.error, False):
-                element.set(xml.ATTRIBUTE.error, str(self.error))
+            ERROR = xml.ATTRIBUTE["error"]
+            if not element.get(ERROR, False):
+                element.set(ERROR, str(self.error))
             return False
 
         self.data = data
 
+        UID = xml.UID
+        MCI = xml.MCI
+        MTIME = xml.MTIME
+
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
-            if xml.UID in original:
-                self.uid = original[xml.UID]
-                self.data.update({xml.UID:self.uid})
-        elif xml.UID in data:
-            self.uid = data[xml.UID]
-        if xml.MTIME in data:
-            self.mtime = data[xml.MTIME]
-        if xml.MCI in data:
-            self.mci = data[xml.MCI]
+            if UID in original:
+                self.data[UID] = self.uid = original[UID]
+        elif UID in data:
+            self.uid = data[UID]
+        if MTIME in data:
+            self.mtime = data[MTIME]
+        if MCI in data:
+            self.mci = data[MCI]
 
         _debug("New item: %s" % self)
         return True
@@ -1861,7 +1864,7 @@ class S3ImportItem(object):
             if UID in original:
                 self.uid = original[UID]
                 self.data.update({UID:self.uid})
-            self.method = self.METHOD.UPDATE
+            self.method = self.METHOD["UPDATE"]
         else:
             resolve = current.s3db.get_config(self.tablename, RESOLVER)
             if self.data and resolve:
@@ -1883,11 +1886,11 @@ class S3ImportItem(object):
             return False
 
         # Determine the method
-        self.method = self.METHOD.CREATE
+        self.method = self.METHOD["CREATE"]
         if self.id:
 
             if self.data.deleted is True:
-                self.method = self.METHOD.DELETE
+                self.method = self.METHOD["DELETE"]
                 self.accepted = True
 
             else:
@@ -1895,10 +1898,10 @@ class S3ImportItem(object):
                     query = (self.table.id == self.id)
                     self.original = current.db(query).select(limitby=(0, 1)).first()
                 if self.original:
-                    self.method = self.METHOD.UPDATE
+                    self.method = self.METHOD["UPDATE"]
 
         # Set self.id
-        if self.method == self.METHOD.CREATE:
+        if self.method == self.METHOD["CREATE"]:
             self.id = 0
 
         # Authorization
@@ -1934,9 +1937,9 @@ class S3ImportItem(object):
         form.errors = Storage()
         tablename = self.tablename
         key = "%s_onvalidation" % self.method
-        s3db = current.s3db
-        onvalidation = s3db.get_config(tablename, key,
-                       s3db.get_config(tablename, "onvalidation"))
+        get_config = current.s3db.get_config
+        onvalidation = get_config(tablename, key,
+                       get_config(tablename, "onvalidation"))
         if onvalidation:
             try:
                 callback(onvalidation, form, tablename=tablename)
@@ -1944,7 +1947,7 @@ class S3ImportItem(object):
                 pass # @todo need a better handler here.
         self.accepted = True
         if form.errors:
-            error = current.xml.ATTRIBUTE.error
+            error = current.xml.ATTRIBUTE["error"]
             for k in form.errors:
                 e = self.element.findall("data[@field='%s']" % k)
                 if not e:
@@ -1958,6 +1961,7 @@ class S3ImportItem(object):
                       str(form.errors[k]).decode("utf-8"))
             self.error = self.ERROR.VALIDATION_ERROR
             self.accepted = False
+
         return self.accepted
 
     # -------------------------------------------------------------------------
@@ -1980,24 +1984,19 @@ class S3ImportItem(object):
 
         _debug("Committing item %s" % self)
 
-        METHOD = self.METHOD
-        POLICY = self.POLICY
-
-        db = current.db
-        s3db = current.s3db
-        xml = current.xml
-        manager = current.manager
-        table = self.table
-
         # Resolve references
         self._resolve_references()
 
         # Set a flag so that we know this is an import job
         current.response.s3.bulk = True
 
+        xml = current.xml
+
         # Validate
         if not self.validate():
-            _debug("Validation error: %s (%s)" % (self.error, xml.tostring(self.element, pretty_print=True)))
+            _debug("Validation error: %s (%s)" %
+                    (self.error,
+                     xml.tostring(self.element, pretty_print=True)))
             self.skip = True
             return ignore_errors
 
@@ -2011,7 +2010,6 @@ class S3ImportItem(object):
                     _debug("Validation error, component=%s" % tn)
                     component.skip = True
                     # Skip this item on any component validation errors
-                    # unless ignore_errors is True
                     if ignore_errors:
                         continue
                     else:
@@ -2020,6 +2018,21 @@ class S3ImportItem(object):
 
         # De-duplicate
         self.deduplicate()
+
+        METHOD = self.METHOD
+        CREATE = METHOD.CREATE
+        UPDATE = METHOD.UPDATE
+        DELETE = METHOD.DELETE
+
+        POLICY = self.POLICY
+        THIS = POLICY["THIS"]
+        NEWER = POLICY["NEWER"]
+        MASTER = POLICY["MASTER"]
+
+        db = current.db
+        s3db = current.s3db
+        manager = current.manager
+        table = self.table
 
         # Log this item
         if manager.log is not None:
@@ -2036,26 +2049,30 @@ class S3ImportItem(object):
         _debug("Method: %s" % method)
 
         # Check if import method is allowed in strategy
-        if not isinstance(self.strategy, (list, tuple)):
-            self.strategy = [self.strategy]
-        if method not in self.strategy:
+        strategy = self.strategy
+        if not isinstance(strategy, (list, tuple)):
+            strategy = [strategy]
+        if method not in strategy:
             _debug("Method not in strategy - skip")
             self.error = manager.ERROR.NOT_PERMITTED
             self.skip = True
             return True
 
+        UID = xml.UID
+        MCI = xml.MCI
+        MTIME = xml.MTIME
+
         this = self.original
-        if not this and self.id and \
-           method in (METHOD.UPDATE, METHOD.DELETE):
+        if not this and self.id and method in (UPDATE, DELETE):
             query = (table.id == self.id)
             this = db(query).select(limitby=(0, 1)).first()
         this_mtime = None
         this_mci = 0
         if this:
-            if xml.MTIME in table.fields:
-                this_mtime = xml.as_utc(this[xml.MTIME])
-            if xml.MCI in table.fields:
-                this_mci = this[xml.MCI]
+            if hasattr(table, MTIME):
+                this_mtime = xml.as_utc(this[MTIME])
+            if hasattr(table, MCI):
+                this_mci = this[MCI]
         self.mtime = xml.as_utc(self.mtime)
 
         # Conflict detection
@@ -2071,8 +2088,7 @@ class S3ImportItem(object):
             if self.modified and this_modified:
                 self.conflict = True
 
-        if self.conflict and \
-           method in (METHOD.UPDATE, METHOD.DELETE):
+        if self.conflict and method in (UPDATE, DELETE):
             _debug("Conflict: %s" % self)
             if self.job.onconflict:
                 self.job.onconflict(self)
@@ -2086,26 +2102,26 @@ class S3ImportItem(object):
             def update_policy(f):
                 setting = self.update_policy
                 p = setting.get(f,
-                    setting.get("__default__", POLICY.THIS))
+                    setting.get("__default__", THIS))
                 if p not in POLICY:
-                    return POLICY.THIS
+                    return THIS
                 return p
         else:
             def update_policy(f):
                 p = self.update_policy
                 if p not in POLICY:
-                    return POLICY.THIS
+                    return THIS
                 return p
 
         # Update existing record
-        if method == METHOD.UPDATE:
+        if method == UPDATE:
 
             if this:
                 if "deleted" in this and this.deleted:
                     policy = update_policy(None)
-                    if policy == POLICY.NEWER and \
+                    if policy == NEWER and \
                        this_mtime and this_mtime > self.mtime or \
-                       policy == POLICY.MASTER and \
+                       policy == MASTER and \
                        (this_mci == 0 or self.mci != 1):
                         self.skip = True
                         return True
@@ -2113,7 +2129,7 @@ class S3ImportItem(object):
                 for f in fields:
                     if f not in this:
                         continue
-                    if isinstance(this[f], datetime):
+                    if type(this[f]) is datetime:
                         if xml.as_utc(data[f]) == xml.as_utc(this[f]):
                             del data[f]
                             continue
@@ -2123,36 +2139,36 @@ class S3ImportItem(object):
                             continue
                     remove = False
                     policy = update_policy(f)
-                    if policy == POLICY.THIS:
+                    if policy == THIS:
                         remove = True
-                    elif policy == POLICY.NEWER:
+                    elif policy == NEWER:
                         if this_mtime and this_mtime > self.mtime:
                             remove = True
-                    elif policy == POLICY.MASTER:
+                    elif policy == MASTER:
                         if this_mci == 0 or self.mci != 1:
                             remove = True
                     if remove:
                         del data[f]
-                        self.data.update({f:this[f]})
+                        self.data[f] = this[f]
                 if "deleted" in this and this.deleted:
                     # Undelete re-imported records:
-                    data.update(deleted=False)
-                    if "deleted_fk" in table:
-                        data.update(deleted_fk="")
-                    if "created_by" in table:
-                        data.update(created_by=table.created_by.default)
-                    if "modified_by" in table:
-                        data.update(modified_by=table.modified_by.default)
+                    data["deleted"] = False
+                    if hasattr(table, "deleted_fk"):
+                        data["deleted_fk"] = ""
+                    if hasattr(table, "created_by"):
+                        data["created_by"] = table.created_by.default
+                    if hasattr(table, "modified_by"):
+                        data["modified_by"] = table.modified_by.default
 
             if not self.skip and not self.conflict and \
                (len(data) or self.components or self.references):
-                if self.uid and xml.UID in table:
-                    data.update({xml.UID:self.uid})
-                if xml.MTIME in table:
-                    data.update({xml.MTIME: self.mtime})
-                if xml.MCI in data:
+                if self.uid and hasattr(table, UID):
+                    data[UID] = self.uid
+                if MTIME in table:
+                    data[MTIME] = self.mtime
+                if MCI in data:
                     # retain local MCI on updates
-                    del data[xml.MCI]
+                    del data[MCI]
                 query = (table._id == self.id)
                 try:
                     success = db(query).update(**dict(data))
@@ -2167,28 +2183,25 @@ class S3ImportItem(object):
                 self.committed = True
 
         # Create new record
-        elif method == METHOD.CREATE:
+        elif method == CREATE:
 
             # Do not apply field policy to UID and MCI
-            UID = xml.UID
             if UID in data:
                 del data[UID]
-            MCI = xml.MCI
             if MCI in data:
                 del data[MCI]
 
             for f in data:
-                policy = update_policy(f)
-                if policy == POLICY.MASTER and self.mci != 1:
+                if update_policy(f) == MASTER and self.mci != 1:
                     del data[f]
 
             if len(data) or self.components or self.references:
 
                 # Restore UID and MCI
                 if self.uid and UID in table.fields:
-                    data.update({UID:self.uid})
+                    data[UID] = self.uid
                 if MCI in table.fields:
-                    data.update({MCI:self.mci})
+                    data[MCI] = self.mci
 
                 # Insert the new record
                 try:
@@ -2207,18 +2220,18 @@ class S3ImportItem(object):
                 return True
 
         # Delete local record
-        elif method == METHOD.DELETE:
+        elif method == DELETE:
 
             if this:
                 if this.deleted:
                     self.skip = True
                 policy = update_policy(None)
-                if policy == POLICY.THIS:
+                if policy == THIS:
                     self.skip = True
-                elif policy == POLICY.NEWER and \
+                elif policy == NEWER and \
                      (this_mtime and this_mtime > self.mtime):
                     self.skip = True
-                elif policy == POLICY.MASTER and \
+                elif policy == MASTER and \
                      (this_mci == 0 or self.mci != 1):
                     self.skip = True
             else:
@@ -2257,10 +2270,10 @@ class S3ImportItem(object):
                               representation="xml")
             # Update super entity links
             s3db.update_super(table, form.vars)
-            if method == METHOD.CREATE:
+            if method == CREATE:
                 # Set record owner
                 current.auth.s3_set_record_owner(table, self.id)
-            elif method == METHOD.UPDATE:
+            elif method == UPDATE:
                 # Update realm
                 update_realm = s3db.get_config(table, "update_realm")
                 if update_realm:

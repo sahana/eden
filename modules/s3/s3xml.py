@@ -1103,7 +1103,8 @@ class S3XML(S3Codec):
         return (value, error)
 
     # -------------------------------------------------------------------------
-    def record(self, table, element,
+    @classmethod
+    def record(cls, table, element,
                original=None,
                files=[],
                preprocess=None,
@@ -1142,22 +1143,34 @@ class S3XML(S3Codec):
             element = prepare(table, element)
 
         # Extract the UUID
-        if self.UID in table.fields and self.UID not in skip:
-            uid = self.import_uid(element.get(self.UID, None))
+        UID = cls.UID
+        if UID in table.fields and UID not in skip:
+            uid = current.xml.import_uid(element.get(UID, None))
             if uid:
-                record[self.UID] = uid
+                record[UID] = uid
+
+        # Attribute names
+        FIELD = cls.ATTRIBUTE["field"]
+        VALUE = cls.ATTRIBUTE["value"]
+        ERROR = cls.ATTRIBUTE["error"]
+
+        DELETED = cls.DELETED
+        APPROVED = cls.APPROVED
+        IGNORE_FIELDS = cls.IGNORE_FIELDS
+        OGROUP = cls.OGROUP
+        USER_FIELDS = (cls.CUSER, cls.MUSER, cls.OUSER)
 
         # Attributes
         deleted = False
-        for f in self.ATTRIBUTES_TO_FIELDS:
-            if f == self.DELETED:
+        for f in cls.ATTRIBUTES_TO_FIELDS:
+            if f == DELETED:
                 if f in table and \
                    element.get(f, "false").lower() == "true":
                     record[f] = deleted = True
                     break
                 else:
                     continue
-            if f == self.APPROVED:
+            if f == APPROVED:
                 # Override default-approver:
                 if "approved_by" in table:
                     if element.get(f, "true").lower() == "false":
@@ -1166,9 +1179,9 @@ class S3XML(S3Codec):
                         if table["approved_by"].default == None:
                             auth.permission.set_default_approver(table)
                 continue
-            if f in self.IGNORE_FIELDS or f in skip:
+            if f in IGNORE_FIELDS or f in skip:
                 continue
-            elif f in (self.CUSER, self.MUSER, self.OUSER):
+            elif f in USER_FIELDS:
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
                     query = utable.email == v
@@ -1176,7 +1189,7 @@ class S3XML(S3Codec):
                     if user:
                         record[f] = user.id
                 continue
-            elif f == self.OGROUP:
+            elif f == OGROUP:
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
                     query = gtable.role == v
@@ -1184,13 +1197,13 @@ class S3XML(S3Codec):
                     if role:
                         record[f] = role.id
                 continue
-            if f in table.fields:
+            if hasattr(table, f): #f in table.fields:
                 v = value = element.get(f, None)
                 if value is not None:
                     field_type = str(table[f].type)
                     if field_type in ("datetime", "date", "time"):
-                        (value, error) = self._dtparse(v,
-                                                       field_type=field_type)
+                        (value, error) = cls._dtparse(v,
+                                                      field_type=field_type)
                     elif validate is not None:
                         try:
                             (value, error) = validate(table, original, f, v)
@@ -1198,8 +1211,7 @@ class S3XML(S3Codec):
                             # No such field
                             continue
                     if error:
-                        element.set(self.ATTRIBUTE.error,
-                                    "%s: %s" % (f, error))
+                        element.set(ERROR, "%s: %s" % (f, error))
                         valid = False
                         continue
                     record[f] = value
@@ -1208,18 +1220,19 @@ class S3XML(S3Codec):
             return record
 
         # Fields
+        xml_decode = cls.xml_decode
         for child in element.findall("data"):
-            f = child.get(self.ATTRIBUTE.field, None)
-            if not f or f not in table.fields:
+            f = child.get(FIELD, None)
+            if not f or not hasattr(table, f): #f not in table.fields:
                 continue
-            if f in self.IGNORE_FIELDS or f in skip:
+            if f in IGNORE_FIELDS or f in skip:
                 continue
             field_type = str(table[f].type)
             if field_type in ("id", "blob"):
                 continue
             elif field_type == "upload":
-                download_url = child.get(self.ATTRIBUTE.url, None)
-                filename = child.get(self.ATTRIBUTE.filename, None)
+                download_url = child.get(cls.ATTRIBUTE["url"], None)
+                filename = child.get(cls.ATTRIBUTE["filename"], None)
                 upload = None
                 if filename and filename in files:
                     # We already have the file cached
@@ -1255,7 +1268,7 @@ class S3XML(S3Codec):
                 elif download_url != "local":
                     continue
             else:
-                value = child.get(self.ATTRIBUTE.value, None)
+                value = child.get(VALUE, None)
 
             error = None
             skip_validation = False
@@ -1267,7 +1280,7 @@ class S3XML(S3Codec):
                     # comes encrypted:
                     skip_validation = True
                 else:
-                    value = self.xml_decode(child.text)
+                    value = xml_decode(child.text)
 
             if value is None and field_type in ("string", "text"):
                 value = ""
@@ -1276,8 +1289,8 @@ class S3XML(S3Codec):
 
             if value is not None:
                 if field_type in ("datetime", "date", "time"):
-                    (value, error) = self._dtparse(value,
-                                                   field_type=field_type)
+                    (value, error) = cls._dtparse(value,
+                                                  field_type=field_type)
                     skip_validation = True
                     v = value
                 elif isinstance(value, basestring) and len(value):
@@ -1312,9 +1325,9 @@ class S3XML(S3Codec):
                     except:
                         error = sys.exc_info()[1]
 
-                child.set(self.ATTRIBUTE.value, s3_unicode(v))
+                child.set(VALUE, s3_unicode(v))
                 if error:
-                    child.set(self.ATTRIBUTE.error, "%s: %s" % (f, error))
+                    child.set(ERROR, "%s: %s" % (f, error))
                     valid = False
                     continue
 
