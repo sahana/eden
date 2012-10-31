@@ -5974,7 +5974,7 @@ class S3RoleManager(S3Method):
             acl_widget = lambda f, n, v: \
                             S3ACLWidget.widget(acl_table[f], v, _id=n, _name=n,
                                                _class="acl-widget")
-            formstyle = crud_settings.formstyle
+            formstyle_row = current.deployment_settings.get_ui_formstyle_row()
 
 
             using_default = SPAN(T("using default"), _class="using-default")
@@ -5987,21 +5987,21 @@ class S3RoleManager(S3Method):
             new_acl = SPAN(T("new ACL"), _class="new-acl")
 
             # Role form -------------------------------------------------------
-            form_rows = formstyle("role_name",
-                                  mandatory("%s:" % T("Role Name")),
-                                  INPUT(value=role_name,
-                                        _name="role_name",
-                                        _type="text",
-                                        requires=IS_NOT_IN_DB(db,
-                                            "auth_group.role",
-                                            allowed_override=[role_name])),
-                                  "") + \
-                        formstyle("role_desc",
-                                  "%s:" % T("Description"),
-                                  TEXTAREA(value=role_desc,
-                                           _name="role_desc",
-                                           _rows="4"),
-                                  "")
+            form_rows = formstyle_row("role_name",
+                                      mandatory("%s:" % T("Role Name")),
+                                      INPUT(value=role_name,
+                                            _name="role_name",
+                                            _type="text",
+                                            requires=IS_NOT_IN_DB(db,
+                                                "auth_group.role",
+                                                allowed_override=[role_name])),
+                                      "") + \
+                        formstyle_row("role_desc",
+                                      "%s:" % T("Description"),
+                                      TEXTAREA(value=role_desc,
+                                               _name="role_desc",
+                                               _rows="4"),
+                                      "")
             key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
