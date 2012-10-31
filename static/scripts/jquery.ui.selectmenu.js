@@ -1,5 +1,5 @@
  /*
- * jQuery UI Selectmenu version 1.3.0pre 
+ * jQuery UI Selectmenu version 1.3.0
  *
  * Copyright (c) 2009-2010 filament group, http://filamentgroup.com
  * Copyright (c) 2010-2012 Felix Nagel, http://www.felixnagel.com
@@ -320,7 +320,7 @@ $.widget("ui.selectmenu", {
 					})
 					.bind('blur.selectmenu', function() {
 						$(this).parent().mouseout();
-					});					
+					});
 				var thisLi = $('<li/>', thisLiAttr)
 					.append(thisA)
 					.data('index', i)
@@ -328,12 +328,8 @@ $.widget("ui.selectmenu", {
 					.data('optionClasses', selectOptionData[i].classes || '')
 					.bind("mouseup.selectmenu", function(event) {
 						if (self._safemouseup && !self._disabled(event.currentTarget) && !self._disabled($( event.currentTarget ).parents( "ul>li." + self.widgetBaseClass + "-group " )) ) {
-							var changed = $(this).data('index') != self._selectedIndex();
 							self.index($(this).data('index'));
 							self.select(event);
-							if (changed) {
-								self.change(event);
-							}
 							self.close(event, true);
 						}
 						return false;
@@ -793,11 +789,12 @@ $.widget("ui.selectmenu", {
 			}
 	},
 
-	index: function(newValue) {
+	index: function(newIndex) {
 		if (arguments.length) {
-			if (!this._disabled($(this._optionLis[newValue]))) {
-				this.element[0].selectedIndex = newValue;
+			if (!this._disabled($(this._optionLis[newIndex])) && newIndex != this._selectedIndex()) {
+				this.element[0].selectedIndex = newIndex;
 				this._refreshValue();
+				this.change();
 			} else {
 				return false;
 			}
@@ -807,9 +804,10 @@ $.widget("ui.selectmenu", {
 	},
 
 	value: function(newValue) {
-		if (arguments.length) {
+		if (arguments.length && newValue != this.element[0].value) {
 			this.element[0].value = newValue;
 			this._refreshValue();
+			this.change();
 		} else {
 			return this.element[0].value;
 		}
