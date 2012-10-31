@@ -27,7 +27,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from core.spaces.models import Space, Document
 from core.spaces.forms import SpaceForm, DocForm
-from core.permissions import has_space_permission
+from core.permissions import has_space_permission, has_all_permissions
 
 
 class AddDocument(FormView):
@@ -58,9 +58,9 @@ class AddDocument(FormView):
         context = super(AddDocument, self).get_context_data(**kwargs)
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = space
-        context['user_is_admin'] = (self.request.user in space.admins.all()
-            or self.request.user in space.mods.all()
-            or self.request.user.is_staff or self.request.user.is_superuser) 
+        context['user_is_admin'] = (has_space_permission(self.request.user,
+            space, allow=['admins', 'mods']) or has_all_permissions(
+            self.request.user))
         return context
         
     @method_decorator(permission_required('spaces.add_document'))
@@ -91,9 +91,9 @@ class EditDocument(UpdateView):
         context = super(EditDocument, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, 
             url=self.kwargs['space_url'])
-        context['user_is_admin'] = (self.request.user in place.admins.all()
-            or self.request.user in place.mods.all()
-            or self.request.user.is_staff or self.request.user.is_superuser) 
+        context['user_is_admin'] = (has_space_permission(self.request.user,
+            space, allow=['admins', 'mods']) or has_all_permissions(
+            self.request.user)) 
         return context
         
     @method_decorator(permission_required('spaces.change_document'))

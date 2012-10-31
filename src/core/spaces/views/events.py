@@ -62,9 +62,9 @@ class AddEvent(FormView):
         context = super(AddEvent, self).get_context_data(**kwargs)
         place =  get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = place
-        context['user_is_admin'] = (self.request.user in place.admins.all()
-            or self.request.user in place.mods.all()
-            or self.request.user.is_staff or self.request.user.is_superuser) 
+        context['user_is_admin'] = (has_space_permission(self.request.user,
+            space, allow=['admins', 'mods']) or has_all_permissions(
+            self.request.user)) 
         return context
 
     @method_decorator(permission_required('spaces.add_event'))
@@ -133,9 +133,9 @@ class EditEvent(UpdateView):
         context = super(EditEvent, self).get_context_data(**kwargs)
         place =  get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = place
-        context['user_is_admin'] = (self.request.user in place.admins.all()
-            or self.request.user in place.mods.all()
-            or self.request.user.is_staff or self.request.user.is_superuser) 
+        context['user_is_admin'] = (has_space_permission(self.request.user,
+            space, allow=['admins', 'mods']) or has_all_permissions(
+            self.request.user)) 
         return context
         
     @method_decorator(permission_required('spaces.change_event'))

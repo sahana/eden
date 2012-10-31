@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+import itertools
+
 from django.contrib.syndication.views import Feed
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _

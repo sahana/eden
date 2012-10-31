@@ -22,6 +22,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 
 from core.spaces.models import Space
 from apps.ecidadania.news.models import Post
@@ -42,7 +44,14 @@ class ListPosts(ListView):
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return Post.objects.all().filter(space=place).order_by('-pub_date')
+        if has_space_permission(self.request.user, place,
+            allow=['admins', 'mods', 'users']) or has_all_permissions(
+            self.request.user):
+            return Post.objects.all().filter(space=place).order_by('-pub_date')
+        else:
+            emptyqs = Post.objects.none()
+            self.template_name = 'not_allowed.html'
+            return emptyqs
     
     def get_context_data(self, **kwargs):
         context = super(ListPosts, self).get_context_data(**kwargs)

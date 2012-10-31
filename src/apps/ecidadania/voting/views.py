@@ -38,6 +38,7 @@ from django.core.urlresolvers import NoReverseMatch, reverse
 from django.template.response import TemplateResponse
 
 from core.spaces.models import Space
+from core.permissions import has_all_permissions, has_space_permission
 from apps.ecidadania.voting.models import *
 from apps.ecidadania.voting.forms import *
 from apps.ecidadania.proposals.models import *
@@ -62,10 +63,9 @@ def AddPoll(request, space_url):
     except ObjectDoesNotExist:
         current_poll_id = 1
 
-    if request.user in place.admins.all() \
-    or request.user in place.mods.all() \
-    or request.user.is_staff or request.user.is_superuser \
-    or request.user.has_perm('poll_add'):
+    if has_space_permission(request.user, place, allow=['admins', 'mods']) \
+    or has_all_permissions(request.user) \
+    or request.user.has_perm('voting.poll_add'):
         if request.method == 'POST':
             if poll_form.is_valid() and choice_form.is_valid():
                 poll_form_uncommited = poll_form.save(commit=False)
@@ -90,12 +90,17 @@ def AddPoll(request, space_url):
     return render_to_response('not_allowed.html',context_instance=RequestContext(request))
 
 def EditPoll(request, space_url, poll_id):
+
     """
     Edit a specific poll.
+
+    :parameters: space_url, poll_id
+    :context: form, get_place, choiceform, pollid
     """
     place = get_object_or_404(Space, url=space_url)
 
-    if request.user in place.admins.all() or request.user.is_staff or request.user.is_superuser:
+    if has_space_permission(request.user, place, allow=['admins', 'mods']) \
+    or has_all_permissions(request.user):
      
         ChoiceFormSet = inlineformset_factory(Poll, Choice)
         instance = Poll.objects.get(pk=poll_id)

@@ -32,14 +32,15 @@ class Poll(models.Model):
     Model of a new Poll
     """
 
-    question = models.CharField(_('Question'), max_length=200, help_text=_('Max: 200 characters'))
+    question = models.CharField(_('Question'), max_length=200,
+        help_text=_('Max: 200 characters'))
     pub_date = models.DateTimeField(_('Date'), auto_now_add=True)
     poll_lastup = models.DateTimeField(_('Last update'), auto_now=True)
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
-                    null=True,help_text=_('Change the user that will figure as the \
-                            author'))
-    space = models.ForeignKey(Space, verbose_name=_('Publish in'), blank=True, null=True,
-    help_text=_('If you want to post to the index leave this blank'))
+        null=True, help_text=_('Change the user that will figure as the author'))
+    space = models.ForeignKey(Space, verbose_name=_('Publish in'), blank=True,
+        null=True, help_text=_('If you want to post to the index leave this \
+        blank'))
     poll_tags = TagField(help_text=_('Insert here relevant words related with \
                             the poll'))
 
