@@ -1283,7 +1283,7 @@ class S3Project3WModel(S3Model):
                     title_search = T("Search Community"),
                     title_upload = T("Import Community Data"),
                     title_report = T("3W Report"),
-                    title_map = T("Map of Communties"),
+                    title_map = T("Map of Communities"),
                     subtitle_create = T("Add New Community"),
                     label_list_button = T("List Communities"),
                     label_create_button = ADD_LOCATION,

@@ -7180,13 +7180,7 @@ class S3Map(S3Search):
             session.error = T("This resource cannot be displayed on the map!")
             redirect(r.url(method="search"))
 
-        # Get environment
-        request = self.request
         response = current.response
-        resource = self.resource
-        db = current.db
-        s3db = current.s3db
-        gis = current.gis
         tablename = self.tablename
 
         # Initialize the form
@@ -7221,13 +7215,13 @@ class S3Map(S3Search):
             if not search_id:
                 r.error(400, current.manager.ERROR.BAD_RECORD)
             r.post_vars = r.vars
-            search_table = s3db.pr_save_search
-            _query = (search_table.id == search_id)
-            record = current.db(_query).select(record.search_vars,
+            _query = (current.s3db.pr_save_search.id == search_id)
+            search_vars = record.search_vars
+            record = current.db(_query).select(search_vars,
                                                limitby=(0, 1)).first()
             if not record:
                 r.error(400, current.manager.ERROR.BAD_RECORD)
-            s_vars = cPickle.loads(record.search_vars)
+            s_vars = cPickle.loads(search_vars)
             r.post_vars = Storage(s_vars["criteria"])
             r.http = "POST"
 
@@ -7236,25 +7230,53 @@ class S3Map(S3Search):
                                            simple_form,
                                            advanced_form,
                                            form_values)
+
         if not errors:
+            resource = self.resource
             resource.add_filter(query)
-            search_vars = dict(simple=False,
-                               advanced=True,
-                               criteria=form_values)
+
+            # Save Search Widget
+            if session.auth and \
+               current.deployment_settings.get_save_search_widget():
+                save_search = self.save_search_widget(r, query, **attr)
+            else:
+                save_search = DIV()
+
+            # Add a map for search results
+            # (this same map is also used by the Map Search Widget, if-present)
+            # Build URL to load the features onto the map
+            if hasattr(query, "serialize_url"):
+                vars = query.serialize_url(resource)
+            else:
+                vars = None
+            url = URL(extension="geojson",
+                      args=None,
+                      vars=vars)
+            gis = current.gis
+            request = self.request
+            feature_resources = [{
+                    "name"   : T("Search Results"),
+                    "id"     : "search_results",
+                    "url"    : url,
+                    "active" : True,
+                    "marker" : gis.get_marker(request.controller, request.function)
+                }]
+            map = gis.show_map(feature_resources=feature_resources,
+                               catalogue_layers=True,
+                               legend=True,
+                               toolbar=True,
+                               collapsed=True,
+                               search = True,
+                               )
+
         else:
-            search_vars = dict()
+            save_search = DIV()
+            map = DIV()
 
         if response.s3.simple_search:
             form.append(DIV(_id="search-mode", _mode="simple"))
         else:
             form.append(DIV(_id="search-mode", _mode="advanced"))
-
-        # Save Search Widget
-        if session.auth and \
-           current.deployment_settings.get_save_search_widget():
-            save_search = self.save_search_widget(r, query, **attr)
-        else:
-            save_search = DIV()
 
         # Complete the output form
         if simple_form is not None:
@@ -7264,31 +7286,6 @@ class S3Map(S3Search):
             advanced_form.append(save_search)
             form.append(advanced_form)
 
-        # Add a map for search results
-        # (this same map is also used by the Map Search Widget, if-present)
-        # Build URL to load the features onto the map
-        if query:
-            vars = query.serialize_url(resource=resource)
-        else:
-            vars = None
-        url = URL(extension="geojson",
-                  args=None,
-                  vars=vars)
-        feature_resources = [{
-                "name"   : T("Search Results"),
-                "id"     : "search_results",
-                "url"    : url,
-                "active" : True,
-                "marker" : gis.get_marker(request.controller, request.function)
-            }]
-        map = gis.show_map(
-                            feature_resources=feature_resources,
-                            catalogue_layers=True,
-                            legend=True,
-                            toolbar=True,
-                            collapsed=True,
-                            search = True,
-                            )
         # Title
         title = self.crud_string(tablename, "title_map")
 
@@ -7297,11 +7294,10 @@ class S3Map(S3Search):
 
         # RHeader gets added later in S3Method()
 
-        output = dict(
-                    title = title,
-                    form = form,
-                    map = map,
-                )
+        output = dict(title = title,
+                      form = form,
+                      map = map,
+                      )
         return output
 
 # =============================================================================
