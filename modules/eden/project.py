@@ -4014,6 +4014,7 @@ class S3ProjectTaskModel(S3Model):
             "Field": "activity_id",
             "FieldPrefix": "project",
             "FieldResource": "activity",
+            "Optional": True,
         }
 
         current.response.s3.jquery_ready.append(
@@ -5136,12 +5137,13 @@ def project_task_controller():
                             output["form"][0].insert(0, activity[0])
                         except:
                             pass
+                        # Milestones
                         s3.scripts.append("/%s/static/scripts/S3/s3.project.js" % \
-                            request.application)
+                                            request.application)
                     if "project" in vars:
                         widget = INPUT(value=vars.project, _name="project_id")
                         project = s3_formstyle("project_task_project__row", "",
-                                               widget, "")
+                                               widget, "", hidden=True)
                     else:
                         table = s3db.project_task_project
                         field = table.project_id

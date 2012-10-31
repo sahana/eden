@@ -7,7 +7,7 @@
 // ============================================================================
 
 // Filter Item Packs based on Inv Items and Items
-function fncPrepItem(data){
+function fncPrepItem(data) {
 	for (var i = 0; i < data.length; i++) {
 		if (data[i].quantity == 1) {
 			return data[i].name;
@@ -45,7 +45,7 @@ function InvItemPackIDChange() {
         return;
 
     var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
-    if ($('#inv_quantity_ajax_throbber').length == 0 ) {
+    if ($('#inv_quantity_ajax_throbber').length == 0) {
     	$('[name = "quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
     }
     
@@ -144,9 +144,9 @@ $(document).ready(function() {
      * Function to show the transactions related to request commit, transit &
      * fulfil quantities
      */
-	$('.quantity.ajax_more').live( 'click', function (e) {		
+	$('.quantity.ajax_more').live('click', function(e) {
 		e.preventDefault();
-		var DIV = $(this)
+		var DIV = $(this);
         var ShipmentType;
 		var App;
 		if (DIV.hasClass('collapsed')) {
@@ -159,40 +159,38 @@ $(document).ready(function() {
 			} else if (DIV.hasClass('commit')) {
 				ShipmentType = 'commit';
 				App = 'req';
-			}	
+			}
 			DIV.after('<div class="ajax_throbber quantity_req_ajax_throbber"/>')
 			   .removeClass('collapsed')
 			   .addClass('expanded');
-			
+
 			// Get the req_item_id
 			var UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href');
 			var re = /req_item\/(\d*).*/i;
 			var req_item_id = re.exec(UpdateURL)[1];
-			var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item_json/', req_item_id);	
-			//var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item.s3json?/', 
-			//		   ShipmentType, '_item.req_item_id=', req_item_id);	
-			$.ajax( { 
+			var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item_json/', req_item_id);
+			//var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item.s3json?/',
+			//		   ShipmentType, '_item.req_item_id=', req_item_id);
+			$.ajax( {
 				url: url,
 				dataType: 'json',
 				context: DIV,
 				success: function(data) {
-					RecvTable = '<table class="recv_table">'	
+					RecvTable = '<table class="recv_table">'
 					for (i=0; i<data.length; i++) {
 						RecvTable += '<tr><td>';
 						if (i==0) {
-							//Header Row
-							RecvTable += data[0].id
-							
+							// Header Row
+							RecvTable += data[0].id;
 						} else {
 							RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
-							RecvTable += "<a href = '" + RecvURL + "'>"; 
+							RecvTable += "<a href = '" + RecvURL + "'>";
 							if (data[i].date != null) {
-								RecvTable += data[i].date.substring(0, 10) + ' - '
+								RecvTable += data[i].date.substring(0, 10) + ' - ';
 								RecvTable += data[i].name + '</a>';
 							} else {
 								RecvTable +=  ' - </a>';
 							}
-							
 						}
 						RecvTable += '</td><td>' + data[i].quantity + '</td></tr>';
 					}
@@ -201,13 +199,13 @@ $(document).ready(function() {
 					this.parent().after(RecvTable);
 				}
 			});
-		} else {			
+		} else {
 			DIV.removeClass('expanded')
 			   .addClass('collapsed');
-			$('.recv_table', DIV.parent().parent() ).remove()
+			$('.recv_table', DIV.parent().parent() ).remove();
 		}
-			
 	});
+
 	// ========================================================================
 	/**
      * ASSET APPLICATION JS
@@ -351,5 +349,5 @@ $(document).ready(function() {
 		}
 	});*/
 });
-// ============================================================================
 
+// END ========================================================================
