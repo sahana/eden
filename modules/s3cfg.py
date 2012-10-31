@@ -107,7 +107,7 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     def get_google_analytics_tracking_id(self):
         """
-            Enables Google Analytics
+            Google Analytics Key
         """
         return self.base.get("google_analystics_tracking_id", None)
 
@@ -447,8 +447,6 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # L10N Settings
-    def get_L10n_default_country_code(self):
-        return self.L10n.get("default_country_code", 1)
     def get_L10n_default_language(self):
         return self.L10n.get("default_language", "en")
     def get_L10n_display_toolbar(self):
@@ -474,6 +472,9 @@ class S3Config(Storage):
                                 ("ur", "اردو"),
                                 ("vi", "Tiếng Việt"),
                             ]))
+    def get_L10n_languages_readonly(self):
+        return self.L10n.get("languages_readonly", True)
+
     def get_L10n_religions(self):
         """
             Religions used in Person Registry
@@ -503,6 +504,7 @@ class S3Config(Storage):
         return self.L10n.get("datetime_format", T("%Y-%m-%d %H:%M"))
     def get_L10n_utc_offset(self):
         return self.L10n.get("utc_offset", "UTC +0000")
+
     def get_L10n_lat_lon_format(self):
         """
             This is used to format latitude and longitude fields when they are
@@ -514,16 +516,20 @@ class S3Config(Storage):
             - %f -- Degrees in decimal (double)
         """
         return self.L10n.get("lat_lon_display_format", "%f")
-    def get_L10n_languages_readonly(self):
-        return self.L10n.get("languages_readonly", True)
+
+    def get_L10n_default_country_code(self):
+        """ Default Telephone Country Code """
+        return self.L10n.get("default_country_code", 1)
+
     def get_L10n_mandatory_lastname(self):
         return self.L10n.get("mandatory_lastname", False)
+
     def get_L10n_thousands_separator(self):
-        return self.L10n.get("thousands_separator", "")
+        return self.L10n.get("thousands_separator", " ")
     def get_L10n_thousands_grouping(self):
         return self.L10n.get("thousands_grouping", 3)
     def get_L10n_decimal_separator(self):
-        return self.L10n.get("decimal_separator", ".")
+        return self.L10n.get("decimal_separator", ",")
 
     # -------------------------------------------------------------------------
     # PDF settings
@@ -578,10 +584,8 @@ class S3Config(Storage):
                       _id=id,
                       _class=_class))
         return tuple(row)
-    # -------------------------------------------------------------------------
-    def get_ui_formstyle_row(self):
-        return self.ui.get("formstyle", self.default_formstyle)
 
+    # -------------------------------------------------------------------------
     def get_ui_formstyle(self):
         return self.ui.get("formstyle", self.default_formstyle)
 

@@ -826,18 +826,15 @@ def inject_enable(output):
     """
 
     if "form" in output:
-        formstyle_row = current.deployment_settings.get_ui_formstyle_row()
-        row = formstyle_row(id  = "layer_enable",
-                            label  = LABEL("%s:" % T("Enable in Default Config?"),
-                                           _for="enable"
-                                           ),
-                            widget = (INPUT(_name="enable",
-                                            _type="checkbox",
-                                             _value="on",
-                                             _id="layer_enable",
-                                            _class="boolean"),
-                                       ),
-                            comment = "")
+        row = s3_formstyle(id  = "layer_enable",
+                           label  = LABEL("%s:" % T("Enable in Default Config?"),
+                                          _for="enable"),
+                           widget = INPUT(_name="enable",
+                                          _type="checkbox",
+                                           _value="on",
+                                           _id="layer_enable",
+                                          _class="boolean"),
+                           comment = "")
         output["form"][0][-2].append(row)
 
 # -----------------------------------------------------------------------------

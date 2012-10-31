@@ -5103,7 +5103,7 @@ def project_task_controller():
                     # Insert fields to control the Project & Activity
                     # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
                     sep = ": "
-                    formstyle_row = current.deployment_settings.get_ui_formstyle_row()
+                    s3_formstyle = current.deployment_settings.get_ui_formstyle()
                     if auth.s3_has_role("STAFF"):
                         # Activity not easy for non-Staff to know about, so don't add
                         table = s3db.project_task_activity
@@ -5122,7 +5122,8 @@ def project_task_controller():
                         label = LABEL(label, label and sep, _for=field_id,
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        activity = formstyle_row(row_id, label, widget, field.comment)
+                        activity = s3_formstyle(row_id, label, widget,
+                                                field.comment)
                         try:
                             output["form"][0].insert(0, activity[1])
                         except:
@@ -5136,7 +5137,8 @@ def project_task_controller():
                             request.application)
                     if "project" in vars:
                         widget = INPUT(value=vars.project, _name="project_id")
-                        project = formstyle_row("project_task_project__row", "", widget, "")
+                        project = s3_formstyle("project_task_project__row", "",
+                                               widget, "")
                     else:
                         table = s3db.project_task_project
                         field = table.project_id
@@ -5155,7 +5157,7 @@ def project_task_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         comment = field.comment if auth.s3_has_role("STAFF") else ""
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        project = formstyle_row(row_id, label, widget, comment)
+                        project = s3_formstyle(row_id, label, widget, comment)
                     try:
                         output["form"][0].insert(0, project[1])
                     except:

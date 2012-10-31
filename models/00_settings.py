@@ -289,11 +289,11 @@ if s3.debug:
 # -----------------------------------------------------------------------------
 # CRUD
 
-formstyle = settings.get_ui_formstyle()
-s3_formstyle_mobile = formstyle
+s3_formstyle = settings.get_ui_formstyle()
+s3_formstyle_mobile = s3_formstyle
 submit_button = T("Save")
 _crud = s3.crud
-_crud.formstyle = formstyle
+_crud.formstyle = s3_formstyle
 _crud.submit_button = submit_button
 # Optional class for Submit buttons
 #_crud.submit_style = "submit-button"
@@ -305,7 +305,7 @@ _crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 # Breaks refresh of List after Create: http://groups.google.com/group/web2py/browse_thread/thread/d5083ed08c685e34
 #crud.settings.keepvalues = True
 crud.messages.submit_button = submit_button
-crud.settings.formstyle = formstyle
+crud.settings.formstyle = s3_formstyle
 
 s3mgr.crud = s3base.S3CRUD
 s3mgr.search = s3base.S3Search

@@ -265,8 +265,8 @@ def volunteer():
                     label = LABEL(label, label and sep, _for=field_id,
                                   _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                    formstyle_row = settings.get_ui_formstyle_row()
-                    programme = formstyle_row(row_id, label, widget, field.comment)
+                    programme = s3_formstyle(row_id, label, widget,
+                                             field.comment)
                     try:
                         output["form"][0].insert(4, programme[1])
                     except:
@@ -552,8 +552,8 @@ def person():
                     label = LABEL(label, label and sep, _for=field_id,
                                   _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                    formstyle_row = settings.get_ui_formstyle_row()
-                    programme = formstyle_row(row_id, label, widget, field.comment)
+                    programme = s3_formstyle(row_id, label, widget,
+                                             field.comment)
                     try:
                         output["form"][0].insert(2, programme[1])
                     except:

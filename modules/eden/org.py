@@ -2697,6 +2697,7 @@ def org_organisation_controller():
                     row = current.db(query).select(field1,
                                                    field2,
                                                    limitby=(0, 1)).first()
+                s3_formstyle = settings.get_ui_formstyle()
                 if r.method == "read" and \
                    "item" in output:
                     for field in [field1, field2]:
@@ -2710,8 +2711,7 @@ def org_organisation_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
                         comment = ""
-                        formstyle_row = settings.get_ui_formstyle_row()
-                        rows = formstyle_row(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["item"][0].insert(-2, rows[0])
@@ -2740,8 +2740,7 @@ def org_organisation_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         comment = field.comment or ""
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        formstyle_row = settings.get_ui_formstyle_row()
-                        rows = formstyle_row(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["form"][0].insert(-4, rows[0])
@@ -2850,6 +2849,7 @@ def org_office_controller():
                     row = current.db(query).select(field1,
                                                    field2,
                                                    limitby=(0, 1)).first()
+                s3_formstyle = settings.get_ui_formstyle()
                 if r.method == "read" and \
                    "item" in output:
                     for field in [field1, field2]:
@@ -2863,8 +2863,7 @@ def org_office_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
                         comment = ""
-                        formstyle_row = settings.get_ui_formstyle_row()
-                        rows = formstyle_row(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["item"][0].insert(-2, rows[0])
@@ -2893,8 +2892,7 @@ def org_office_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         comment = field.comment or ""
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        formstyle_row = settings.get_ui_formstyle_row()
-                        rows = formstyle_row(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["form"][0].insert(-4, rows[0])

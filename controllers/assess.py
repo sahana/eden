@@ -2451,8 +2451,7 @@ def custom_assess(custom_assess_fields, location_id=None):
         if field[0] == "title":
             form_rows.append(TR(H3( field[1] )))
         else:
-            formstyle_row = current.deployment_settings.get_ui_formstyle_row()
-            form_rows = form_rows + list(formstyle_row("%s__row" % name,
+            form_rows = form_rows + list(s3_formstyle("%s__row" % name,
                                                       label,
                                                       widget,
                                                       comment))
