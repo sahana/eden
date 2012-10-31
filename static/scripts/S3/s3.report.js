@@ -29,32 +29,88 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+var reportDataIndex = null;
+var reportChart = null;
+
+function reportShowTooltip(x, y, contents) {
+    $('<div id="reportTooltip">' + contents + '</div>').css({
+        position: 'absolute',
+        display: 'none',
+        top: y - 50,
+        left: x + 10,
+        border: '1px solid #999',
+        'padding': '10px',
+        'min-height': '50px',
+        'z-index': '501',
+        'background-color': 'white',
+        color: '#000',
+        opacity: 0.95
+    }).appendTo('body').fadeIn(200);
+}
+
+function reportRemoveTooltip() {
+    $('#reportTooltip').remove();
+    reportDataIndex = null;
+}
+
+function reportRenderPieChart(src, title, layer) {
+
+    var data = [];
+    for (var i=0; i<src.length; i++) {
+        var item = src[i];
+        data.push({
+            label: item[0],
+            data: item[1]
+        });
+    }
+    $('#chart-header').html('<h4>'+layer + ' ' + title+'</h4>');
+    $('#chart-container').css({width: '600px'});
+
+    reportChart = jQuery.plot($('#chart'), data,
+        {
+            series: {
+                pie: {
+                    show: true,
+                    radius: 125
+                }
+            },
+            legend: {
+                show: true,
+                position: 'ne'
+            },
+            grid: {
+                hoverable: true,
+                clickable: false
+            }
+        }
+    );
+
+    $('#chart').bind('plothover', function(event, pos, item) {
+        if (item) {
+            if (reportDataIndex == item.seriesIndex) {
+                return;
+            }
+            reportRemoveTooltip();
+            reportDataIndex = item.seriesIndex;
+            var value = item.series.data[0][1];
+            var percent = item.series.percent.toFixed(1);
+            var tooltip = '<div class="reportTooltipLabel">' + item.series.label + '</div>';
+            tooltip += '<div class="reportTooltipValue">' + value + ' (' + percent + '%)</div>';
+            reportShowTooltip(pos.pageX, pos.pageY, tooltip)
+            $('.reportTooltipLabel').css({color: item.series.color});
+        } else {
+            reportRemoveTooltip();
+        }
+    });
+}
+
 $(function() {
     var plot;
-    render_pie_chart = function(src, title, layer) {
-        plot = jQuery.jqplot('chart', [src],
-            {
-                seriesDefaults: {
-                    renderer: $.jqplot.PieRenderer,
-                    rendererOptions: {
-                        showDataLabels: true,
-                        diameter:250
-                    }
-                },
-                highlighter: {
-                    show: true,
-                    formatString:'%s: %s',
-//                     tooltipPosition: 'e',
-                    tooltipOffset: -200,
-                    tooltipAxes: 'xy',
-                    useAxesFormatters:false
-                },
-                title: layer + ' ' + title,
-                legend: { show:true, location: 'e', escapeHtml:true }
-            }
-        );
-    };
+    var render_pie_chart = reportRenderPieChart;
+
     render_vbar_chart = function(src, title, layer) {
+        $('#chart-header').empty();
+        $('#chart-container').css({width: '100%'});
         var s = new Array(src.length);
         var t = new Array(src.length);
         minzero = 0;
@@ -172,7 +228,6 @@ $(function() {
         }
     });
 });
-
 
 $(document).ready(function() {
     // Hide the report options when the page loads
