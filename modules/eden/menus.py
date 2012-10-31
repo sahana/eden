@@ -1107,6 +1107,11 @@ class S3OptionsMenu(object):
                         M("List All"),
                         #M("Search", m="search"),
                     ),
+                    M("Facility Types", c="inv", f="facility_type")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
                     M("Requests", c="req", f="req")(
                         M("New", m="create"),
                         M("List All"),

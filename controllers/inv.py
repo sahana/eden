@@ -1857,6 +1857,10 @@ def facility():
     return s3_rest_controller("org", rheader = s3db.org_facility_rheader)
 
 # -----------------------------------------------------------------------------
+def facility_type():
+    return s3_rest_controller("org")
+
+# -----------------------------------------------------------------------------
 def incoming():
     """ Incoming Shipments """
 

@@ -105,6 +105,13 @@ class S3Config(Storage):
         return self.base.get("cd_version", False)
 
     # -------------------------------------------------------------------------
+    def get_google_analytics_tracking_id(self):
+        """
+            Enables Google Analytics
+        """
+        return self.base.get("google_analystics_tracking_id", None)
+
+    # -------------------------------------------------------------------------
     # Auth settings
     def get_auth_hmac_key(self):
         """
@@ -512,7 +519,11 @@ class S3Config(Storage):
     def get_L10n_mandatory_lastname(self):
         return self.L10n.get("mandatory_lastname", False)
     def get_L10n_thousands_separator(self):
-        return self.L10n.get("thousands_separator", False)
+        return self.L10n.get("thousands_separator", "")
+    def get_L10n_thousands_grouping(self):
+        return self.L10n.get("thousands_grouping", 3)
+    def get_L10n_decimal_separator(self):
+        return self.L10n.get("decimal_separator", ".")
 
     # -------------------------------------------------------------------------
     # PDF settings
@@ -544,33 +555,35 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # UI Settings
-    def get_ui_formstyle(self):
-        formstyle = self.ui.get("formstyle", None)
-        if formstyle is None:
-            def formstyle(id, label, widget, comment, hidden=False):
-                """
-                    Provide the default Sahana Eden Form Style
-                    Label above the Inputs:
-                    http://uxmovement.com/design-articles/faster-with-top-aligned-labels
-                """
-                row = []
-                if hidden:
-                    _class = "hide"
-                else:
-                    _class = ""
-                # Label on the 1st row
-                row.append(TR(TD(label, _class="w2p_fl"),
-                              TD(""),
-                              _id=id + "1",
-                              _class=_class))
-                # Widget & Comment on the 2nd Row
-                row.append(TR(widget,
-                              TD(comment, _class="w2p_fc"),
-                              _id=id,
-                              _class=_class))
-                return tuple(row)
+    @staticmethod
+    def default_formstyle(id, label, widget, comment, hidden=False):
+        """
+            Provide the default Sahana Eden Form Style
+            Label above the Inputs:
+            http://uxmovement.com/design-articles/faster-with-top-aligned-labels
+        """
+        row = []
+        if hidden:
+            _class = "hide"
+        else:
+            _class = ""
+        # Label on the 1st row
+        row.append(TR(TD(label, _class="w2p_fl"),
+                      TD(""),
+                      _id=id + "1",
+                      _class=_class))
+        # Widget & Comment on the 2nd Row
+        row.append(TR(widget,
+                      TD(comment, _class="w2p_fc"),
+                      _id=id,
+                      _class=_class))
+        return tuple(row)
+    # -------------------------------------------------------------------------
+    def get_ui_formstyle_row(self):
+        return self.ui.get("formstyle", self.default_formstyle)
 
-        return formstyle
+    def get_ui_formstyle(self):
+        return self.ui.get("formstyle", self.default_formstyle)
 
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)

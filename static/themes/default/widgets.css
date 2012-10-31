@@ -987,6 +987,12 @@ table.translation_module_table {
     width: 55%;
 }
 
+/* Project Task */
+
+textarea#project_task_description {
+	height: 200px;
+}
+
 /* Project Task Time Inline Form */
 select#sub_defaulttime_defaulttime_person_id_edit_none {
     width: 150px;
