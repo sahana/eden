@@ -1,7 +1,7 @@
 {{if s3.debug:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href='/{{=appname}}/static/styles/plugins/jquery.jqplot.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />
 {{else:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href='/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />
 {{pass}}
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='rheader'>
@@ -19,21 +19,26 @@
     <div id='chart-opts' style='padding-bottom:10px;'>
       {{=report_data.layer_label}}
       {{if report_data.row_label:}}
-        <a href="#" id="pie_chart_rows"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
-        <a href="#" id="vbar_chart_rows"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
+        <a class='chart-icon' id='pie_chart_rows'><img src='/{{=appname}}/static/img/report/pchart.png' style='vertical-align:middle;'/></a>
+        <a class='chart-icon' id='vbar_chart_rows'><img src='/{{=appname}}/static/img/report/vchart.png' style='vertical-align:middle;'/></a>
         {{=report_data.row_label}}
       {{pass}}
       {{if report_data.col_label:}}
-        <a href="#" id="pie_chart_cols"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
-        <a href="#" id="vbar_chart_cols"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
+        <a class='chart-icon' id='pie_chart_cols'><img src='/{{=appname}}/static/img/report/pchart.png' style='vertical-align:middle;'/></a>
+        <a class='chart-icon' id='vbar_chart_cols'><img src='/{{=appname}}/static/img/report/vchart.png' style='vertical-align:middle;'/></a>
         {{=report_data.col_label}}
       {{pass}}
     </div>
   {{pass}}
 {{except:}}{{pass}}
-<div id='chart-container' class='hide'>
-  {{=A(T("Hide Chart"), _href="#", _id="hide-chart", _class="action-lnk")}}
-  <div id='chart' style='height:400px;'></div>
+<div id='chart-container' class='hide' style='width: 800px;'>
+  <div class='chart-control'>
+    {{=A(T("Hide Chart"), _href="#", _id="hide-chart", _class="action-lnk")}}
+  </div>
+  <div class='chart-contents'>
+    <div id='chart-header'></div>
+    <div id='chart' style='height:360px;'></div>
+  </div>
 </div>
 <div id='table-container'>
   {{=items}}
@@ -42,22 +47,16 @@
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
-<script type="text/javascript">//<![CDATA[
+<script type='text/javascript'>//<![CDATA[
 {{try:}}
 {{if report_data:}}var json_data={{=XML(report_data.json_data)}}
 {{else:}}var json_data={cols:null, rows:null}{{pass}}
 {{except:}}var json_data={cols:null, rows:null}{{pass}}
 //]]></script>
 {{if s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.barRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.categoryAxisRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pointLabels.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasTextRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasAxisTickRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.highlighter.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.js"></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/flot/jquery.flot.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/flot/jquery.flot.pie.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/S3/s3.report.js'></script>
 {{else:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.min.js"></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/S3/s3.report.min.js'></script>
 {{pass}}

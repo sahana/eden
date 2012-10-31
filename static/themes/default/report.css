@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+.chart-icon {
+    cursor: default;
+}
+.chart-icon:hover {
+    cursor: pointer;
+}
+.legend tr td {
+    padding-bottom: 4px;
+}
+.legendLabel {
+    padding-left: 4px;
+    padding-right: 6px;
+}
+.reportTooltipLabel {
+    font-size: 11px;
+    font-weight: bold;
+}
+#chart-header {
+    color: #999;
+}
+#chart-header h4 {
+    font-size: 15px;
+    font-weight: bold;
+    border: 0;
+}
+.chart-contents {
+    background-color: #FFFDF6;
+    padding-left: 8px;
+    padding-right: 8px;
+    border: 1px solid #999;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
