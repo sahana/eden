@@ -109,7 +109,7 @@ class S3Config(Storage):
         """
             Google Analytics Key
         """
-        return self.base.get("google_analystics_tracking_id", None)
+        return self.base.get("google_analytics_tracking_id", None)
 
     # -------------------------------------------------------------------------
     # Auth settings

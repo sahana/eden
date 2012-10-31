@@ -109,6 +109,9 @@ settings.frontpage.rss = [
 # Allow language files to be updated automatically
 #settings.L10n.languages_readonly = False
 
+# Fill this in to get Google Analytics for your site
+#settings.base.google_analytics_tracking_id = ""
+
 # Fill these to allow users to Login using Facebook
 # https://developers.facebook.com/apps
 #settings.auth.facebook_id = ""
