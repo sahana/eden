@@ -4311,6 +4311,9 @@ def task_notify(form):
     pe_id = vars.pe_id
     if not pe_id:
         return
+    if int(vars.status) in s3.project_task_active_statuses:
+        # No need to notify about closed tasks
+        return
     if form.record is None or (int(pe_id) != form.record.pe_id):
         # Assignee has changed
         settings = current.deployment_settings

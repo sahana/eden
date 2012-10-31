@@ -45,7 +45,8 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
                        "Advance First Aid ATest"
                        ),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society"
+                       "Timor-Leste Red Cross Society",
+                       "option"
                        ),
                      ( "expiry",
                        "12"
