@@ -153,6 +153,7 @@ The file will be written to the same location as the HTML report.
 """
 parser.add_argument("-r",
                     "--record-timings",
+                    action='store_const',
                     const=True,
                     help = desc)
 
