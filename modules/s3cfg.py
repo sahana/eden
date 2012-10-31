@@ -105,6 +105,13 @@ class S3Config(Storage):
         return self.base.get("cd_version", False)
 
     # -------------------------------------------------------------------------
+    def get_google_analytics_tracking_id(self):
+        """
+            Google Analytics Key
+        """
+        return self.base.get("google_analytics_tracking_id", None)
+
+    # -------------------------------------------------------------------------
     # Auth settings
     def get_auth_hmac_key(self):
         """
@@ -440,8 +447,6 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # L10N Settings
-    def get_L10n_default_country_code(self):
-        return self.L10n.get("default_country_code", 1)
     def get_L10n_default_language(self):
         return self.L10n.get("default_language", "en")
     def get_L10n_display_toolbar(self):
@@ -467,6 +472,9 @@ class S3Config(Storage):
                                 ("ur", "اردو"),
                                 ("vi", "Tiếng Việt"),
                             ]))
+    def get_L10n_languages_readonly(self):
+        return self.L10n.get("languages_readonly", True)
+
     def get_L10n_religions(self):
         """
             Religions used in Person Registry
@@ -496,6 +504,7 @@ class S3Config(Storage):
         return self.L10n.get("datetime_format", T("%Y-%m-%d %H:%M"))
     def get_L10n_utc_offset(self):
         return self.L10n.get("utc_offset", "UTC +0000")
+
     def get_L10n_lat_lon_format(self):
         """
             This is used to format latitude and longitude fields when they are
@@ -507,12 +516,20 @@ class S3Config(Storage):
             - %f -- Degrees in decimal (double)
         """
         return self.L10n.get("lat_lon_display_format", "%f")
-    def get_L10n_languages_readonly(self):
-        return self.L10n.get("languages_readonly", True)
+
+    def get_L10n_default_country_code(self):
+        """ Default Telephone Country Code """
+        return self.L10n.get("default_country_code", 1)
+
     def get_L10n_mandatory_lastname(self):
         return self.L10n.get("mandatory_lastname", False)
+
     def get_L10n_thousands_separator(self):
-        return self.L10n.get("thousands_separator", False)
+        return self.L10n.get("thousands_separator", " ")
+    def get_L10n_thousands_grouping(self):
+        return self.L10n.get("thousands_grouping", 3)
+    def get_L10n_decimal_separator(self):
+        return self.L10n.get("decimal_separator", ",")
 
     # -------------------------------------------------------------------------
     # PDF settings
@@ -544,33 +561,33 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # UI Settings
-    def get_ui_formstyle(self):
-        formstyle = self.ui.get("formstyle", None)
-        if formstyle is None:
-            def formstyle(id, label, widget, comment, hidden=False):
-                """
-                    Provide the default Sahana Eden Form Style
-                    Label above the Inputs:
-                    http://uxmovement.com/design-articles/faster-with-top-aligned-labels
-                """
-                row = []
-                if hidden:
-                    _class = "hide"
-                else:
-                    _class = ""
-                # Label on the 1st row
-                row.append(TR(TD(label, _class="w2p_fl"),
-                              TD(""),
-                              _id=id + "1",
-                              _class=_class))
-                # Widget & Comment on the 2nd Row
-                row.append(TR(widget,
-                              TD(comment, _class="w2p_fc"),
-                              _id=id,
-                              _class=_class))
-                return tuple(row)
+    @staticmethod
+    def default_formstyle(id, label, widget, comment, hidden=False):
+        """
+            Provide the default Sahana Eden Form Style
+            Label above the Inputs:
+            http://uxmovement.com/design-articles/faster-with-top-aligned-labels
+        """
+        row = []
+        if hidden:
+            _class = "hide"
+        else:
+            _class = ""
+        # Label on the 1st row
+        row.append(TR(TD(label, _class="w2p_fl"),
+                      TD(""),
+                      _id=id + "1",
+                      _class=_class))
+        # Widget & Comment on the 2nd Row
+        row.append(TR(widget,
+                      TD(comment, _class="w2p_fc"),
+                      _id=id,
+                      _class=_class))
+        return tuple(row)
 
-        return formstyle
+    # -------------------------------------------------------------------------
+    def get_ui_formstyle(self):
+        return self.ui.get("formstyle", self.default_formstyle)
 
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)

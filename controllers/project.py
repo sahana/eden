@@ -510,10 +510,17 @@ def location():
                         else:
                             item.append(TR(TD(field.label), TD(data)))
                 hierarchy = gis.get_location_hierarchy()
-                for field in ["L4", "L3", "L2", "L1"]:
-                    if field in hierarchy and record[field]:
-                        item.append(TR(TD(hierarchy[field]),
-                                       TD(record[field])))
+                gtable = s3db.gis_location
+                location = db(gtable.id == record.location_id).select(gtable.L1,
+                                                                      gtable.L2,
+                                                                      gtable.L3,
+                                                                      gtable.L4,
+                                                                      ).first()
+                if location:
+                    for field in ["L4", "L3", "L2", "L1"]:
+                        if field in hierarchy and location[field]:
+                            item.append(TR(TD(hierarchy[field]),
+                                           TD(location[field])))
                 output["item"] = item
             else:
                 # The Project is the primary resource

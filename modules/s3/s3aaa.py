@@ -566,6 +566,7 @@ Thank you
         user = None # default
 
         # Do we use our own login form, or from a central source?
+        formstyle = self.settings.formstyle
         if self.settings.login_form == self:
             form = SQLFORM(
                 utable,
@@ -574,7 +575,7 @@ Thank you
                 showid=self.settings.showid,
                 submit_button=T("Login"),
                 delete_label=self.messages.delete_label,
-                formstyle=self.settings.formstyle,
+                formstyle=formstyle,
                 separator=self.settings.label_separator
                 )
             if self.settings.remember_me_form:
@@ -590,14 +591,14 @@ Thank you
                            LABEL(self.messages.label_remember_me,
                                  _for="auth_user_remember",
                                  )), "",
-                       self.settings.formstyle,
+                       formstyle,
                        "auth_user_remember__row")
 
             captcha = self.settings.login_captcha or \
                 (self.settings.login_captcha!=False and self.settings.captcha)
             if captcha:
                 addrow(form, captcha.label, captcha, captcha.comment,
-                       self.settings.formstyle,'captcha__row')
+                       formstyle,'captcha__row')
 
             accepted_form = False
             if form.accepts(request.vars, session,
@@ -808,7 +809,7 @@ Thank you
         else:
             submit_button = T("Register")
 
-        #formstyle = current.manager.s3.crud.formstyle
+        #formstyle = deployment_settings.get_ui_formstyle()
         form = SQLFORM(utable, hidden=dict(_next=request.vars._next),
                        labels = labels,
                        separator = "",
@@ -5709,7 +5710,6 @@ class S3RoleManager(S3Method):
         """
 
         method = self.method
-        manager = current.manager
 
         if method == "list":
             output = self._list(r, **attr)
@@ -5722,7 +5722,7 @@ class S3RoleManager(S3Method):
         elif method == "users":
             output = self._users(r, **attr)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
 
         if r.http == "GET" and method not in ("create", "update", "delete"):
             current.session.s3.cancel = r.url()
@@ -5745,8 +5745,7 @@ class S3RoleManager(S3Method):
             db = current.db
             response = current.response
             resource = self.resource
-            manager = current.manager
-            auth = manager.auth
+            auth = current.auth
             options = auth.permission.PERMISSION_OPTS
             NONE = auth.permission.NONE
             vars = self.request.get_vars
@@ -5916,10 +5915,10 @@ class S3RoleManager(S3Method):
 
         elif r.representation == "xls":
             # Not implemented yet
-            r.error(501, manager.ERROR.BAD_FORMAT)
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         else:
-            r.error(501, manager.ERROR.BAD_FORMAT)
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -5933,11 +5932,8 @@ class S3RoleManager(S3Method):
 
         request = self.request
         session = current.session
-        manager = current.manager
         db = current.db
         T = current.T
-
-        crud_settings = manager.s3.crud
 
         CACL = T("Application Permissions")
         FACL = T("Function Permissions")
@@ -5945,7 +5941,7 @@ class S3RoleManager(S3Method):
 
         CANCEL = T("Cancel")
 
-        auth = manager.auth
+        auth = current.auth
         permission = auth.permission
         acl_table = permission.table
         NONE = permission.NONE
@@ -5974,7 +5970,7 @@ class S3RoleManager(S3Method):
             acl_widget = lambda f, n, v: \
                             S3ACLWidget.widget(acl_table[f], v, _id=n, _name=n,
                                                _class="acl-widget")
-            formstyle = crud_settings.formstyle
+            formstyle = current.deployment_settings.get_ui_formstyle()
 
 
             using_default = SPAN(T("using default"), _class="using-default")
@@ -5993,8 +5989,9 @@ class S3RoleManager(S3Method):
                                         _name="role_name",
                                         _type="text",
                                         requires=IS_NOT_IN_DB(db,
-                                            "auth_group.role",
-                                            allowed_override=[role_name])),
+                                                  "auth_group.role",
+                                                  allowed_override=[role_name]
+                                                  )),
                                   "") + \
                         formstyle("role_desc",
                                   "%s:" % T("Description"),
@@ -6334,7 +6331,7 @@ class S3RoleManager(S3Method):
             current.response.view = "admin/role_edit.html"
 
         else:
-            r.error(501, manager.BAD_FORMAT)
+            r.error(501, current.manager.BAD_FORMAT)
 
         return output
 
@@ -6345,11 +6342,10 @@ class S3RoleManager(S3Method):
         """
 
         session = current.session
-        manager = current.manager
         request = self.request
         T = current.T
 
-        auth = manager.auth
+        auth = current.auth
 
         if r.interactive:
 
@@ -6393,7 +6389,7 @@ class S3RoleManager(S3Method):
             else:
                 session.error = T("No role to delete")
         else:
-            r.error(501, manager.BAD_FORMAT)
+            r.error(501, current.manager.BAD_FORMAT)
 
         redirect(URL(c="admin", f="role", vars=request.get_vars))
 
@@ -6622,7 +6618,7 @@ class S3RoleManager(S3Method):
 
                 current.response.view = "admin/membership_manage.html"
             else:
-                r.error(501, manager.BAD_FORMAT)
+                r.error(501, current.manager.BAD_FORMAT)
 
         else:
             r.error(404, self.resource.ERROR.BAD_RECORD)
@@ -6887,7 +6883,7 @@ class S3RoleManager(S3Method):
                               add_btn=add_btn)
                 current.response.view = "admin/membership_manage.html"
             else:
-                r.error(501, manager.BAD_FORMAT)
+                r.error(501, current.manager.BAD_FORMAT)
         else:
             r.error(404, self.resource.ERROR.BAD_RECORD)
 
@@ -6933,6 +6929,7 @@ class S3RoleManager(S3Method):
 
             @param entities: the pe_ids of the entities
         """
+
         T = current.T
 
         pe_ids = [e for e in entities if e is not None and e != 0]

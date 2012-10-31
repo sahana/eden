@@ -254,6 +254,7 @@ def volunteer():
                    r.method not in ["search", "report", "import"] and \
                    "form" in output:
                     # Insert field to set the Programme
+                    # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
                     sep = ": "
                     table = s3db.hrm_programme_hours
                     field = table.programme_id
@@ -264,7 +265,8 @@ def volunteer():
                     label = LABEL(label, label and sep, _for=field_id,
                                   _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                    programme = s3.crud.formstyle(row_id, label, widget, field.comment)
+                    programme = s3_formstyle(row_id, label, widget,
+                                             field.comment)
                     try:
                         output["form"][0].insert(4, programme[1])
                     except:
@@ -532,6 +534,7 @@ def person():
                    r.method not in ["search", "report", "import"] and \
                    "form" in output:
                     # Insert field to set the Programme
+                    # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
                     sep = ": "
                     table = s3db.hrm_programme_hours
                     field = table.programme_id
@@ -549,7 +552,8 @@ def person():
                     label = LABEL(label, label and sep, _for=field_id,
                                   _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                    programme = s3.crud.formstyle(row_id, label, widget, field.comment)
+                    programme = s3_formstyle(row_id, label, widget,
+                                             field.comment)
                     try:
                         output["form"][0].insert(2, programme[1])
                     except:

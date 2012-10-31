@@ -1496,10 +1496,12 @@ class S3FacilityModel(S3Model):
                                                           sort=True,
                                                           multiple=True)),
                                    represent=self.org_facility_type_multirepresent,
-                                   comment=S3AddResourceLink(c="org",
-                                                               f="facility_type",
-                                                               label=ADD_FAC,
-                                                               tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
+                                   widget = CheckboxesWidgetS3.widget,
+                                   # @ToDo: Support CheckboxesWidgetS3 with Add Popup
+                                   #comment=S3AddResourceLink(c="org",
+                                   #                            f="facility_type",
+                                   #                            label=ADD_FAC,
+                                   #                            tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
                                    label=T("Type")),
                              self.org_organisation_id(
                                 #widget=S3OrganisationAutocompleteWidget(
@@ -2681,9 +2683,11 @@ def org_organisation_controller():
     # Post-process
     def postp(r, output):
         if r.interactive:
+            settings = current.deployment_settings
             if not r.component and \
-               current.deployment_settings.get_org_summary():
+               settings.get_org_summary():
                 # Insert fields to view/record the summary data
+                # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
                 table = s3db.org_organisation_summary
                 field1 = table.national_staff
                 field2 = table.international_staff
@@ -2693,6 +2697,7 @@ def org_organisation_controller():
                     row = current.db(query).select(field1,
                                                    field2,
                                                    limitby=(0, 1)).first()
+                s3_formstyle = settings.get_ui_formstyle()
                 if r.method == "read" and \
                    "item" in output:
                     for field in [field1, field2]:
@@ -2706,7 +2711,7 @@ def org_organisation_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
                         comment = ""
-                        rows = s3.crud.formstyle(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["item"][0].insert(-2, rows[0])
@@ -2735,7 +2740,7 @@ def org_organisation_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         comment = field.comment or ""
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        rows = s3.crud.formstyle(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["form"][0].insert(-4, rows[0])
@@ -2834,6 +2839,7 @@ def org_office_controller():
             if not r.component and \
                settings.get_org_summary():
                 # Insert fields to view/record the summary data
+                # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
                 table = s3db.org_office_summary
                 field1 = table.national_staff
                 field2 = table.international_staff
@@ -2843,6 +2849,7 @@ def org_office_controller():
                     row = current.db(query).select(field1,
                                                    field2,
                                                    limitby=(0, 1)).first()
+                s3_formstyle = settings.get_ui_formstyle()
                 if r.method == "read" and \
                    "item" in output:
                     for field in [field1, field2]:
@@ -2856,7 +2863,7 @@ def org_office_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
                         comment = ""
-                        rows = s3.crud.formstyle(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["item"][0].insert(-2, rows[0])
@@ -2885,7 +2892,7 @@ def org_office_controller():
                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                         comment = field.comment or ""
                         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        rows = s3.crud.formstyle(row_id, label, widget, comment)
+                        rows = s3_formstyle(row_id, label, widget, comment)
                         try:
                             # Insert Label row
                             output["form"][0].insert(-4, rows[0])

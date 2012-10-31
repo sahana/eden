@@ -210,11 +210,11 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         # otherwise we use the ISO defaults
         THOUSAND_SEPARATOR = T("THOUSAND_SEPARATOR")
         if THOUSAND_SEPARATOR == "THOUSAND_SEPARATOR":
-            THOUSAND_SEPARATOR = settings.L10n.get("thousands_separator", u"\u00A0")
+            THOUSAND_SEPARATOR = settings.get_L10n_thousands_separator()
 
         NUMBER_GROUPING = T("NUMBER_GROUPING")
         if NUMBER_GROUPING == "NUMBER_GROUPING":
-            NUMBER_GROUPING = settings.L10n.get("thousands_grouping", 3)
+            NUMBER_GROUPING = settings.get_L10n_thousands_grouping()
 
         # The negative/positive sign for the number
         if float(number) < 0:
@@ -289,7 +289,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
         # otherwise we use the ISO defaults
         DECIMAL_SEPARATOR = current.T("DECIMAL_SEPARATOR")
         if DECIMAL_SEPARATOR == "DECIMAL_SEPARATOR":
-            DECIMAL_SEPARATOR = current.deployment_settings.L10n.get("decimal_separator", ",")
+            DECIMAL_SEPARATOR = current.deployment_settings.get_L10n_decimal_separator()
 
         str_number = unicode(number)
 
