@@ -619,6 +619,25 @@ class URLQueryParserTests(unittest.TestCase):
         self.assertEqual(parse_value('"NONE,1"'), "NONE,1")
 
     # -------------------------------------------------------------------------
+    def testBBOXFilter(self):
+        """ Test URL query with BBOX filter """
+
+        url_query = {"bbox": "119.80485082193,12.860457717185,122.27677462907,15.107136411359"}
+
+        resource = current.s3db.resource("org_office", vars=url_query)
+        rfilter = resource.rfilter
+
+        # Check the query
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((org_office.deleted <> 'T') AND "
+                                     "(org_office.id > 0)) AND "
+                                     "((org_office.location_id = gis_location.id) AND "
+                                     "((((gis_location.lon > 119.80485082193) AND "
+                                     "(gis_location.lon < 122.27677462907)) AND "
+                                     "(gis_location.lat > 12.860457717185)) AND "
+                                     "(gis_location.lat < 15.107136411359))))")
+
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.auth.override = False

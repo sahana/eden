@@ -7237,6 +7237,14 @@ class S3Map(S3Search):
                                            advanced_form,
                                            form_values)
         if not errors:
+            if hasattr(query, "serialize_url"):
+                search_url_vars = query.serialize_url(resource)
+                search_url = r.url(method = "",
+                                   vars = search_url_vars)
+
+                # Create a Save Search widget
+                save_search = self.save_search_widget(r, query, **attr)
+
             resource.add_filter(query)
             search_vars = dict(simple=False,
                                advanced=True,
@@ -7248,13 +7256,6 @@ class S3Map(S3Search):
             form.append(DIV(_id="search-mode", _mode="simple"))
         else:
             form.append(DIV(_id="search-mode", _mode="advanced"))
-
-        # Save Search Widget
-        if session.auth and \
-           current.deployment_settings.get_save_search_widget():
-            save_search = self.save_search_widget(r, search_vars, **attr)
-        else:
-            save_search = DIV()
 
         # Complete the output form
         if simple_form is not None:
