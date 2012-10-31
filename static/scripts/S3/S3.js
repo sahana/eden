@@ -745,14 +745,16 @@ function S3FilterFieldChange(setting) {
                         }
                     } else {
                         for (var i = 0; i < data.length; i++) {
-                            if (setting.Optional) {
-                                var first_value = 0;
-                            } else if (i == 0) {
+                            if (i == 0) {
                                 var first_value = data[i][FieldID];
                             }
                             options += '<option value="' +  data[i][FieldID] + '">';
                             options += this.fncRepresent( data[i], PrepResult);
                             options += '</option>';
+                        }
+                        if (setting.Optional) {
+                            first_value = 0;
+                            options = '<option value=""></option>' + options;
                         }
                     }
                     /* Set field value */
