@@ -28,6 +28,13 @@
         <a class='chart-icon' id='vbar_chart_cols'><img src='/{{=appname}}/static/img/report/vchart.png' style='vertical-align:middle;'/></a>
         {{=report_data.col_label}}
       {{pass}}
+      {{if all((report_data.row_label, report_data.col_label)):}}
+        &nbsp;|&nbsp;{{=T("Breakdown")}}
+        <a class='chart-icon' id='bd_chart_rows'><img src='/{{=appname}}/static/img/report/hchart.png' style='vertical-align:middle;'/></a>
+        {{=report_data.row_label}}
+        <a class='chart-icon' id='bd_chart_cols'><img src='/{{=appname}}/static/img/report/hchart.png' style='vertical-align:middle;'/></a>
+        {{=report_data.col_label}}
+      {{pass}}
     </div>
   {{pass}}
 {{except:}}{{pass}}

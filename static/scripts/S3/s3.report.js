@@ -30,6 +30,7 @@
  */
 
 var reportDataIndex = null;
+var reportSeriesIndex = null;
 var reportChart = null;
 
 function reportShowTooltip(x, y, contents) {
@@ -41,6 +42,7 @@ function reportShowTooltip(x, y, contents) {
         border: '1px solid #999',
         'padding': '10px',
         'min-height': '50px',
+        'max-width': '240px',
         'z-index': '501',
         'background-color': 'white',
         color: '#000',
@@ -54,6 +56,9 @@ function reportRemoveTooltip() {
 }
 
 function reportRenderPieChart(src, title, layer) {
+
+    $('#chart-container').css({width: '800px'});
+    $('#chart').css({height: '360px'});
 
     var data = [];
     for (var i=0; i<src.length; i++) {
@@ -104,6 +109,9 @@ function reportRenderPieChart(src, title, layer) {
 }
 
 function reportRenderBarChart(src, title, layer) {
+
+    $('#chart-container').css({width: '800px'});
+    $('#chart').css({height: '360px'});
 
     var data = [];
     var labels = [];
@@ -157,6 +165,97 @@ function reportRenderBarChart(src, title, layer) {
     });
 }
 
+function reportRenderBreakdown(src, dim, title, layer) {
+
+    $('#chart-container').css({width: '100%'});
+    $('#chart').css({height: '720px'});
+    var idata = src.cells;
+    if (dim == 0) {
+        // breakdown cols by rows
+        var rows = src.rows, cols = src.cols;
+        var get_data = function(i, j) { return idata[i][j]; };
+    } else {
+        // breakdown rows by cols
+        var rows = src.cols, cols = src.rows;
+        var get_data = function(i, j) { return idata[j][i]; };
+    }
+
+    var odata = [];
+    var xmax = 0;
+    for (var c=0; c<cols.length; c++) {
+        // every col gives a series
+        var series = {label: cols[c][2]};
+        var values = [];
+        for (var r=0; r<rows.length; r++) {
+            var index = (r + 1) * (cols.length + 1) - c;
+            var value = get_data(r, c);
+            if (value > xmax) {
+                xmax = value;
+            }
+            values.push([value, index]);
+        }
+        series['data'] = values;
+        odata.push(series);
+    }
+
+    var yaxis_ticks = [];
+    for (r=0; r<rows.length; r++) {
+        var index = (r + 1) * (cols.length + 1) + 1;
+        var label = rows[r][2];
+        yaxis_ticks.push([index, label]);
+    }
+
+    $('#chart-header').html('<h4>'+layer + ' ' + title+'</h4>');
+    reportChart = jQuery.plot($('#chart'), odata,
+        {
+            series: {
+                bars: {
+                    show: true,
+                    barWidth: 0.8,
+                    align: 'center',
+                    horizontal: true
+                }
+            },
+            legend: {
+                show: true,
+                position: 'ne'
+            },
+            yaxis: {
+                ticks: yaxis_ticks,
+                labelWidth: 120
+            },
+            xaxis: {
+                max: xmax * 1.1
+            },
+            grid: {
+                hoverable: true,
+                clickable: false
+            }
+        }
+    );
+    $('.yAxis .tickLabel').css({'padding-top': '20px'});
+    $('#chart').bind('plothover', function(event, pos, item) {
+        if (item) {
+            if (reportDataIndex == item.dataIndex && reportSeriesIndex == item.seriesIndex) {
+                return;
+            }
+            reportRemoveTooltip();
+            reportDataIndex = item.dataIndex;
+            reportSeriesIndex = item.seriesIndex;
+            var name = rows[reportDataIndex][2];
+            var value = item.datapoint[0];
+            var tooltip = '<div class="reportTooltipLabel">' + name + '</div>';
+            tooltip += '<div class="reportTooltipValue">' + item.series.label + ' : <span class="reportItemValue">' + value + '</span></div>';
+            reportShowTooltip(pos.pageX, pos.pageY, tooltip)
+            $('.reportTooltipLabel').css({'padding-bottom': '8px'});
+            $('.reportTooltipValue').css({color: item.series.color});
+            $('.reportItemValue').css({'font-weight': 'bold'});
+        } else {
+            reportRemoveTooltip();
+        }
+    });
+}
+
 $(function() {
     $('#pie_chart_rows').click(function() {
         $('#chart-container').removeClass('hide');
@@ -189,6 +288,22 @@ $(function() {
         reportRenderBarChart(json_data['cols'],
                              json_data['col_label'],
                              json_data['layer_label']);
+    });
+    $('#bd_chart_rows').click(function() {
+        $('#chart-container').removeClass('hide');
+        $('#chart').unbind('plothover');
+        $('#chart').empty();
+        reportRenderBreakdown(json_data['data'], 0,
+                              json_data['row_label'],
+                              json_data['layer_label']);
+    });
+    $('#bd_chart_cols').click(function() {
+        $('#chart-container').removeClass('hide');
+        $('#chart').unbind('plothover');
+        $('#chart').empty();
+        reportRenderBreakdown(json_data['data'], 1,
+                              json_data['col_label'],
+                              json_data['layer_label']);
     });
     $('#hide-chart').click(function(){
         $('#chart-container').addClass('hide');

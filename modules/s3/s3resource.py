@@ -62,7 +62,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable
+from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable, S3MarkupStripper
 from s3validators import IS_ONE_OF
 
 DEBUG = False
@@ -5618,6 +5618,132 @@ class S3Pivottable(object):
             return len(self.records)
 
     # -------------------------------------------------------------------------
+    def compact(self, n=10, layer=None, least=False, represent=False):
+        """
+            Get the top/least n numeric results for this layer
+
+            @param n: maximum dimension size, extracts the n-1 top/least
+                      rows/cols and aggregates the rest under "__other__"
+            @param layer: the layer
+            @param least: use the least n instead of the top n results
+            @param represent: represent the row/col dimension values as
+                              strings using the respective field
+                              representation
+
+            @todo: move to client-side to make "Others" expandable
+        """
+
+        default = {"rows": [], "cols": [], "cells": []}
+
+        if self.empty or layer and layer not in self.layers:
+            return default
+        elif not layer:
+            layer = self.layers[0]
+
+        method = layer[-1]
+        if method == "min":
+            least = not least
+        numeric = lambda x: isinstance(x, (int, long, float))
+
+        OTHER = "__other__"
+
+        # Find the top/least n rows/cols
+        def top(tl, length=10, least=False):
+            try:
+                if len(tl) > length:
+                    m = length - 1
+                    l = list(tl)
+                    l.sort(lambda x, y: int(y[1]-x[1]))
+                    if least:
+                        l.reverse()
+                    ts = (OTHER, self._aggregate([t[1] for t in l[m:]], method))
+                    l = l[:m] + [ts]
+                    return l
+            except (TypeError, ValueError):
+                pass
+            return tl
+
+        irows = self.row
+        icols = self.col
+        rows = []
+        cols = []
+        is_numeric = None
+        for i in xrange(self.numrows):
+            r = irows[i]
+            total = r[layer]
+            if is_numeric is None:
+                is_numeric = numeric(total)
+            if is_numeric:
+                rows.append((i, total))
+            else:
+                rows.append((i, len(r["records"])))
+        for i in xrange(len(self.col)):
+            c = self.col[i]
+            total = c[layer]
+            if is_numeric:
+                cols.append((i, total))
+            else:
+                cols.append((i, len(c["records"])))
+        rows = top(rows, n, least=least)
+        cols = top(cols, n, least=least)
+        row_indices = [i for i, t in rows]
+        col_indices = [i for i, t in cols]
+
+        # Group the cell results
+        icell = self.cell
+        cells = {}
+        for i in xrange(self.numrows):
+            irow = icell[i]
+            ridx = i if i in row_indices else OTHER
+            if ridx not in cells:
+                orow = cells[ridx] = {}
+            else:
+                orow = cells[ridx]
+            for j in xrange(self.numcols):
+                cell = irow[j]
+                cidx = j if j in col_indices else OTHER
+                value = cell[layer] if is_numeric else len(cell["records"])
+                if cidx not in orow:
+                    orow[cidx] = [value] if cidx == OTHER or ridx == OTHER else value
+                else:
+                    orow[cidx].append(value)
+
+        if represent:
+            row_repr = self._represent(self.rows)
+            col_repr = self._represent(self.cols)
+
+        # Aggregate the grouped values
+        orows = []
+        ocols = []
+        ocells = []
+        ctotals = True
+        others = s3_unicode(current.T("Others"))
+        for rindex, rtotal in rows:
+            orow = []
+            rdim = irows[rindex]["value"] if rindex != OTHER else None
+            if represent:
+                repr_str = row_repr(rdim) if rindex != OTHER else others
+                orows.append((rindex, rdim, repr_str, rtotal))
+            else:
+                orows.append((rindex, rdim, rtotal))
+            for cindex, ctotal in cols:
+                value = cells[rindex][cindex]
+                if type(value) is list:
+                    value = self._aggregate(value, method)
+                orow.append(value)
+                if ctotals:
+                    cdim = icols[cindex]["value"] if cindex != OTHER else None
+                    if represent:
+                        repr_str = col_repr(cdim) if cindex != OTHER else others
+                        ocols.append((cindex, cdim, repr_str, ctotal))
+                    else:
+                        ocols.append((cindex, cdim, ctotal))
+            ctotals = False
+            ocells.append(orow)
+
+        return {"rows": orows, "cols": ocols, "cells": ocells}
+
+    # -------------------------------------------------------------------------
     # Internal methods
     # -------------------------------------------------------------------------
     def _get_fields(self, fields=None):
@@ -5676,6 +5802,32 @@ class S3Pivottable(object):
         self.tfields = tfields
 
         return
+
+    # -------------------------------------------------------------------------
+    def _represent(self, dim):
+        """
+            Get a representation method for a dimension
+
+            @param dim: the dimension (self.rows or self.cols)
+        """
+
+        manager = current.manager
+
+        rfield = self.rfields[dim]
+        if rfield.virtual:
+            stripper = S3MarkupStripper()
+            def repr_method(val):
+                text = s3_unicode(val)
+                if "<" in text:
+                    stipper.feed(text)
+                    return stripper.stripped() # = totally naked ;)
+                else:
+                    return text
+        else:
+            def repr_method(val):
+                return manager.represent(rfield.field, val,
+                                         strip_markup=True)
+        return repr_method
 
     # -------------------------------------------------------------------------
     def _flatten(self, row):

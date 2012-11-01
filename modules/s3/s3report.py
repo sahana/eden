@@ -59,8 +59,8 @@ class S3Report(S3CRUD):
 
     T = current.T
     METHODS = {
-        "list": T("List"),
-        "count": T("Count"),
+        "list": T("Total"),
+        "count": T("Total"),
         "min": T("Minimum"),
         "max": T("Maximum"),
         "sum": T("Sum"),
@@ -836,6 +836,7 @@ class S3ContingencyTable(TABLE):
 
         json_data = json.dumps(dict(rows=drows,
                                     cols=dcols,
+                                    data=report.compact(10, represent=True),
                                     row_label=row_label,
                                     col_label=col_label,
                                     layer_label=layer_label,
