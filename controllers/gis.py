@@ -1865,7 +1865,7 @@ def layer_theme():
 def theme_data():
     """ RESTful CRUD controller """
 
-    field = s3db.gis_layer_theme_id
+    field = s3db.gis_layer_theme_id()
     field.requires = IS_NULL_OR(field.requires)
     output = s3_rest_controller(csv_extra_fields = [
                                     # CSV column headers, so no T()

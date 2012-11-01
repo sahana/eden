@@ -3898,53 +3898,43 @@ def gis_location_lx_represent(record):
     return ", ".join(location_list)
 
 # =============================================================================
-def gis_layer_represent(id, link=True):
+def gis_layer_represent(id, row=None, show_link=True):
     """ Represent a Layer  """
 
-    db = current.db
-    s3db = current.s3db
-    represent = current.messages.NONE
-
-    ltable = s3db.gis_layer_entity
-
-    if not id:
-        return represent
-
-    if isinstance(id, Row) and "instance_type" in id:
-        # Do not repeat the lookup if already done by IS_ONE_OF
-        layer = id
-        id = None
+    if row:
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.gis_layer_entity
+    elif not id:
+        return current.messages.NONE
     else:
-        layer = db(ltable._id == id).select(ltable.name,
-                                            ltable.layer_id,
-                                            ltable.instance_type,
-                                            limitby=(0, 1)).first()
-        if not layer:
-            return represent
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.gis_layer_entity
+        row = db(ltable.layer_id == id).select(ltable.name,
+                                               ltable.layer_id,
+                                               ltable.instance_type,
+                                               limitby=(0, 1)).first()
 
-    instance_type = layer.instance_type
     try:
-        table = s3db[instance_type]
+        instance_type = row.instance_type
     except:
-        return represent
+        return current.messages.UNKNOWN_OPT
 
     instance_type_nice = ltable.instance_type.represent(instance_type)
 
-    if layer:
-        represent = "%s (%s)" % (layer.name, instance_type_nice)
-    else:
-        # Since name is notnull for all types so far, this won't be reached.
-        represent = "[layer %d] (%s)" % (id, instance_type_nice)
+    represent = "%s (%s)" % (row.name, instance_type_nice)
 
-    if link and layer:
-        query = (table.layer_id == layer.layer_id)
+    if show_link:
+        table = s3db[instance_type]
+        query = (table.layer_id == row.layer_id)
         id = db(query).select(table.id,
                               limitby=(0, 1)).first().id
         c, f = instance_type.split("_", 1)
         represent = A(represent,
-                      _href = URL(c=c, f=f,
-                                  args = [id],
-                                  extension = "" # removes the .aaData extension in paginated views!
+                      _href=URL(c=c, f=f,
+                                args=[id],
+                                extension="" # removes the .aaData extension in paginated views!
                                 ))
 
     return represent
