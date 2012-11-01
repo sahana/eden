@@ -555,7 +555,7 @@ function s3_showMap(feature_id) {
  * @ToDo: - Ensure that the automatically set value of the select field
  * 			doesn't activate the "NavigateAwayConfirm"
  */
-function S3FilterFieldChange (setting) {
+function S3FilterFieldChange(setting) {
 	/**
      * Sets a Field to be hidden until a FilterField is set,
 	 * then filters it's options according to that filter field
@@ -584,6 +584,8 @@ function S3FilterFieldChange (setting) {
 	 * 							default: function(record, PrepResult) {return record.name}
 	 * @param: FilterOnLoad		(optional) If the field is empty should it be filtered when the page loads
 	 * 							default: true
+	 * @param: Optional         (optional) If the field is optional & so should default to blank
+	 * 							default: false
 	 */
 
 	// Check if this field is present in this page
@@ -602,7 +604,7 @@ function S3FilterFieldChange (setting) {
     } else {
         var FilterOnLoad = true;
     }
-    
+
     selFilterField.change(function() {
 
         // Cancel previous request
@@ -614,7 +616,7 @@ function S3FilterFieldChange (setting) {
         
         // Get Filter Val from Select or CheckBoxes
         if (selFilterField.length == 0 || selFilterField.length == undefined ) {
-        	FilterVal = ""
+        	FilterVal = '';
         } else if (selFilterField.length == 1) {
         	FilterVal = selFilterField.val();
         } else {
@@ -627,7 +629,7 @@ function S3FilterFieldChange (setting) {
         if ( FilterVal == "" || FilterVal == undefined) {
             // No value to filter
             //selFieldRows.hide();
-        selField.attr('disabled', 'disabled');
+            selField.attr('disabled', 'disabled');
             return;
         }
 
@@ -648,33 +650,33 @@ function S3FilterFieldChange (setting) {
 
         var FieldID = setting.FieldID;
         if (FieldID == undefined) {
-            var FieldID = "id";
+            var FieldID = 'id';
         }
 
         if (setting.url  != undefined && setting.url  != null) {
-            var url = setting.url
+            var url = setting.url;
         } else {
             var FieldPrefix = setting.FieldPrefix;
             var url = S3.Ap.concat('/', FieldPrefix, '/', FieldResource, '.json?',
                                    FieldResource, '.',  FieldKey, '=' );
         }
-        url = url.concat(FilterVal)
+        url = url.concat(FilterVal);
 
         // Get Field Val from Select or CheckBoxes
         if (selField.length == 0 || selField.length == undefined ) {
-            FieldVal = ""
+            FieldVal = '';
         } else if (selField.length == 1) {
         	FieldVal = selField.val();
         } else {
         	FieldVal = new Array();
-        	selField.filter('input:checked').each(function() { 
+        	selField.filter('input:checked').each(function() {
         		FieldVal.push($(this).val());
         	});
         }
-        if (url.indexOf("?") != -1) {
-            url = url.concat("&value=");
+        if (url.indexOf('?') != -1) {
+            url = url.concat('&value=');
         } else {
-            url = url.concat("?value=");
+            url = url.concat('?value=');
         }
         url = url.concat(FieldVal);
 
@@ -727,7 +729,7 @@ function S3FilterFieldChange (setting) {
                 dataType: 'json',
                 context: setting,
                 success: function(data) {
-                /* Create Select Element */
+                    /* Create Select Element */
                     var options = '';
                     var FilterField = this.FilterField;
                     var FieldResource = this.FieldResource;
@@ -744,11 +746,15 @@ function S3FilterFieldChange (setting) {
                     } else {
                         for (var i = 0; i < data.length; i++) {
                             if (i == 0) {
-                                first_value = data[i][FieldID]
-                            };
+                                var first_value = data[i][FieldID];
+                            }
                             options += '<option value="' +  data[i][FieldID] + '">';
                             options += this.fncRepresent( data[i], PrepResult);
                             options += '</option>';
+                        }
+                        if (setting.Optional) {
+                            first_value = 0;
+                            options = '<option value=""></option>' + options;
                         }
                     }
                     /* Set field value */
@@ -763,7 +769,7 @@ function S3FilterFieldChange (setting) {
                         selField.attr('disabled', 'disabled');
                     }
                     /* Show "Add" Button & modify link */
-                    selFieldAdd = $('#' + FieldResource + '_add')
+                    selFieldAdd = $('#' + FieldResource + '_add');
                     href = selFieldAdd.attr('href') + "&' + FilterField + '=" + $('[name = "' + FilterField + '"]').val();
                     selFieldAdd.attr('href', href)
                                .show();
@@ -778,7 +784,7 @@ function S3FilterFieldChange (setting) {
                 dataType: 'html',
                 context: setting,
                 success: function(data) {
-                /* Replace widget with data */
+                    /* Replace widget with data */
                     var selField = $('[name = "' + this.Field + '"]');
 
                     /* Set field widget */
@@ -800,7 +806,7 @@ function S3FilterFieldChange (setting) {
     });
 
     // If the field value is empty
-    if (selField.val() == ""  && FilterOnLoad) {
+    if (selField.val() == '' && FilterOnLoad) {
         // Initially hide or filter field
         selFilterField.change();
     }

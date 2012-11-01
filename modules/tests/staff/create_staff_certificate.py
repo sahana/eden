@@ -28,10 +28,10 @@
 from tests.web2unittest import SeleniumUnitTest
 
 class CreateStaffCertificate(SeleniumUnitTest):
-    def test_hrm001_create_volunteer_certificate(self):
+    def test_hrm001_create_staff_certificate(self):
         """
             @case: HRM001
-            @description: Create Volunteer Certificate
+            @description: Create Staff Certificate
             
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
@@ -46,8 +46,8 @@ class CreateStaffCertificate(SeleniumUnitTest):
                        "Basics of First Aid ATEST"
                        ),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society",
-                       "autocomplete"),
+                       "Timor-Leste Red Cross Society (CVTL)",
+                       "option"),
                      ( "expiry",
                        "12"
                        ),

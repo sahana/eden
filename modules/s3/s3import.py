@@ -501,7 +501,7 @@ class S3Importer(S3CRUD):
         rheader = DIV(TABLE(
             TR(
                 TH("%s: " % self.messages.job_total_records),
-                TD(rowcount, _id="totalAvaliable"),
+                TD(rowcount, _id="totalAvailable"),
                 TH("%s: " % self.messages.job_records_selected),
                 TD(0, _id="totalSelected"),
                 TH(error_tip)
