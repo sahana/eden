@@ -100,7 +100,7 @@ function reportRenderPieChart(src, title, layer) {
             var percent = item.series.percent.toFixed(1);
             var tooltip = '<div class="reportTooltipLabel">' + item.series.label + '</div>';
             tooltip += '<div class="reportTooltipValue">' + value + ' (' + percent + '%)</div>';
-            reportShowTooltip(pos.pageX, pos.pageY, tooltip)
+            reportShowTooltip(pos.pageX, pos.pageY, tooltip);
             $('.reportTooltipLabel').css({color: item.series.color});
         } else {
             reportRemoveTooltip();
