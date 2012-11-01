@@ -1846,6 +1846,14 @@ def layer_theme():
                 s3_action_buttons(r, copyable=True)
                 # Inject checkbox to enable layer in default config
                 inject_enable(output)
+                # Inject Import links
+                s3.rfooter = DIV(A(T("Import Layers"),
+                                   _href=URL(args="import"),
+                                   _class="action-btn"),
+                                 A(T("Import Data"),
+                                   _href=URL(f="theme_data", args="import"),
+                                   _class="action-btn"),
+                                 )
         return output
     s3.postp = postp
 
@@ -1857,10 +1865,12 @@ def layer_theme():
 def theme_data():
     """ RESTful CRUD controller """
 
+    field = s3db.gis_layer_theme_id
+    field.requires = IS_NULL_OR(field.requires)
     output = s3_rest_controller(csv_extra_fields = [
                                     # CSV column headers, so no T()
                                     dict(label="Layer",
-                                         field=s3db.gis_layer_theme_id())
+                                         field=field)
                                 ])
 
     return output
