@@ -66,6 +66,7 @@ s3mgr.LABEL["READ"] = READ
 s3mgr.LABEL["UPDATE"] = UPDATE
 s3mgr.LABEL["DELETE"] = DELETE
 s3mgr.LABEL["COPY"] = COPY
+s3mgr.LABEL["NONE"] = NONE
 
 # To get included in <HEAD>
 s3.stylesheets = []

@@ -1582,7 +1582,7 @@ class S3Importer(S3CRUD):
             if row:
                 rep_str = "%s %s" % (row.first_name, row.last_name)
             else:
-                rep_str = current.messages["NONE"]
+                rep_str = current.manager.LABEL["NONE"]
 
             return rep_str
 
