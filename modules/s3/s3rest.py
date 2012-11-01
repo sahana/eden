@@ -122,7 +122,8 @@ class S3RequestManager(object):
                              READ=T("READ"),
                              UPDATE=T("UPDATE"),
                              DELETE=T("DELETE"),
-                             COPY=T("COPY"))
+                             COPY=T("COPY"),
+                             NONE=T("NONE"))
 
         # Settings
         self.s3 = current.response.s3
@@ -294,7 +295,7 @@ class S3RequestManager(object):
 
         xml_encode = current.xml.xml_encode
 
-        NONE = current.messages["NONE"]
+        NONE = current.manager.LABEL["NONE"]
         cache = current.cache
         fname = field.name
 
