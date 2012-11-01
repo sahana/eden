@@ -1698,8 +1698,7 @@ def supply_item_entity_controller():
     """
         RESTful CRUD controller
         - consolidated report of inv_item, recv_item & proc_plan_item
-        @ToDo: Migrate JS to Static as part of migrating this to an
-               S3Search Widget
+        @ToDo: Migrate JS to Static as part of migrating this to an S3Search Widget
     """
 
     T = current.T

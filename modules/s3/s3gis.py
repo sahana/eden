@@ -6950,7 +6950,9 @@ class ThemeLayer(Layer):
             }
             self.setup_folder_and_visibility(output)
             self.setup_clustering(output)
-            style = json.loads(self.style)
+            style = self.style
+            if style:
+                style = json.loads(style)
             self.add_attributes_if_not_default(
                 output,
                 style = (style, (None,)),

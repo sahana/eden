@@ -1782,36 +1782,6 @@ def layer_openweathermap():
 def layer_theme():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
-    s3db.table(tablename)
-
-    # CRUD Strings
-    type = "Theme"
-    LAYERS = T(TYPE_LAYERS_FMT % type)
-    ADD_NEW_LAYER = T(ADD_NEW_TYPE_LAYER_FMT % type)
-    EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
-    LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
-    NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
-    s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
-        subtitle_create=ADD_NEW_LAYER,
-        label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
-        label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
-
-    # Custom Method
-    #s3db.set_method(module, resourcename,
-    #                method="enable",
-    #                action=enable_layer)
-
     # Pre-processor
     def prep(r):
         if r.interactive:
@@ -1832,10 +1802,32 @@ def layer_theme():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
+            else:
+                # CRUD Strings
+                type = "Theme"
+                LAYERS = T(TYPE_LAYERS_FMT % type)
+                ADD_NEW_LAYER = T(ADD_NEW_TYPE_LAYER_FMT % type)
+                EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
+                LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
+                NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
+                s3.crud_strings["gis_layer_theme"] = Storage(
+                    title_create=ADD_LAYER,
+                    title_display=LAYER_DETAILS,
+                    title_list=LAYERS,
+                    title_update=EDIT_LAYER,
+                    title_search=SEARCH_LAYERS,
+                    subtitle_create=ADD_NEW_LAYER,
+                    label_list_button=LIST_LAYERS,
+                    label_create_button=ADD_LAYER,
+                    label_delete_button = DELETE_LAYER,
+                    msg_record_created=LAYER_ADDED,
+                    msg_record_modified=LAYER_UPDATED,
+                    msg_record_deleted=LAYER_DELETED,
+                    msg_list_empty=NO_LAYERS)
         return True
     s3.prep = prep
 
@@ -1857,7 +1849,14 @@ def layer_theme():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    if "import" in request.args:
+        # Import to 'layer_config' resource instead
+        output = s3_rest_controller("gis", "layer_config",
+                                    csv_template = "layer_theme",
+                                    csv_stylesheet = "layer_theme.xsl",
+                                    )
+    else:
+        output = s3_rest_controller(rheader=s3db.gis_rheader)
 
     return output
 
