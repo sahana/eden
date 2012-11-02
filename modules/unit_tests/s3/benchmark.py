@@ -58,19 +58,21 @@ class S3PerformanceTests(unittest.TestCase):
 
         print ""
         table = s3db.table("pr_person")
-        x = lambda: [row for row in db(table.id > 0).select(table.id,
-                                                            table.first_name,
-                                                            table.last_name,
-                                                            limitby=(0, 20))]
+        x = lambda: [(row.first_name, row.last_name)
+                     for row in db(table.id > 0).select(table.id,
+                                                        table.first_name,
+                                                        table.last_name,
+                                                        limitby=(0, 50))]
         n = len(x())
         mlt = timeit.Timer(x).timeit(number = int(100/n))
         print "db.select = %s ms/record (=%s rec/sec)" % (mlt * 10.0, int(100/mlt))
 
-        x = lambda: db(table.id == 1).select(table.id,
-                                             table.first_name,
-                                             table.last_name,
-                                             limitby=(0, 1)).first()
-        mlt = timeit.Timer(x).timeit(number = 1000)
+        x = lambda: [[(row.first_name, row.last_name)
+                      for row in db(table.id < i).select(table.id,
+                                                         table.first_name,
+                                                         table.last_name)]
+                     for i in xrange(n)]
+        mlt = timeit.Timer(x).timeit(number = 10) * (100/n)
         print "db.select = %s ms/query (=%s q/sec)" % (mlt, int(1000/mlt))
 
     def testS3ModelTable(self):
