@@ -16,7 +16,6 @@ current.data = Storage()
 # (means removing the *)
 from selenium import webdriver
 from tests.asset import *
-from tests.hrm import *
 from tests.inv import *
 from tests.member import *
 from tests.org import *
@@ -71,8 +70,6 @@ def loadAllTests():
 
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
-    # Delete a prepop organisation
-    #addTests(loadTests(DeleteOrganisation))
 
     # Create a Warehouse
     addTests(loadTests(CreateWarehouse))
@@ -89,8 +86,6 @@ def loadAllTests():
     # Create Members
     addTests(loadTests(CreateMember))
 
-    # Search Staff (Simple & Advanced)
-    #addTests(loadTests(SearchStaff))
     return suite
 
 # Set up the command line arguments
