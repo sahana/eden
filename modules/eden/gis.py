@@ -79,14 +79,11 @@ class S3LocationModel(S3Model):
 
         T = current.T
         db = current.db
-        gis = current.gis
-
         messages = current.messages
 
         # Shortcuts
         add_component = self.add_component
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
+        #define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Locations
@@ -104,7 +101,7 @@ class S3LocationModel(S3Model):
             7:"GeometryCollection",
             }
 
-        hierarchy_level_keys = gis.hierarchy_level_keys
+        hierarchy_level_keys = current.gis.hierarchy_level_keys
 
         if current.deployment_settings.get_gis_spatialdb():
             # Add a spatial field
@@ -114,7 +111,7 @@ class S3LocationModel(S3Model):
             meta_spatial_fields = (s3_lx_fields() + s3_meta_fields())
 
         tablename = "gis_location"
-        table = define_table(tablename,
+        table = self.define_table(tablename,
                              Field("name", length=128,
                                    # Placenames don't have to be unique.
                                    # Waypoints don't need to have a name at all.
@@ -126,7 +123,7 @@ class S3LocationModel(S3Model):
                                    represent = self.gis_level_represent),
                              Field("parent", "reference gis_location", # This form of hierarchy may not work on all Databases
                                    label = T("Parent"),
-                                   represent = self.gis_location_represent,
+                                   represent = gis_location_represent,
                                    widget=S3LocationAutocompleteWidget(level=hierarchy_level_keys),
                                    ondelete = "RESTRICT"),
                              # Materialised Path
@@ -136,9 +133,11 @@ class S3LocationModel(S3Model):
                                    default=1, notnull=True,
                                    requires = IS_IN_SET(gis_feature_type_opts,
                                                         zero=None),
-                                   represent = lambda opt: gis_feature_type_opts.get(opt,
-                                                                                     messages.UNKNOWN_OPT),
-                                   label = T("Feature Type")),
+                                   represent = lambda opt: \
+                                    gis_feature_type_opts.get(opt,
+                                                              messages["UNKNOWN_OPT"]),
+                                   label = T("Feature Type")
+                                   ),
                              # Points or Centroid for Polygons
                              Field("lat", "double",
                                    label = T("Latitude"),
@@ -152,27 +151,28 @@ class S3LocationModel(S3Model):
                                                   T("Latitude is zero on the equator and positive in the northern hemisphere and negative in the southern hemisphere."),
                                                   T("Longitude is zero on the prime meridian (Greenwich Mean Time) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas."),
                                                   T("These need to be added in Decimal Degrees."))),
-                                  ),
+                                   ),
                              Field("lon", "double",
-                                    label = T("Longitude"),
-                                    requires = IS_NULL_OR(IS_LON()),
-                                    comment = A(T("Conversion Tool"),
-                                                _style="cursor:pointer;",
-                                                _title=T("You can use the Conversion Tool to convert from either GPS coordinates or Degrees/Minutes/Seconds."),
-                                                _id="gis_location_converter-btn"),
-                                  ),
+                                   label = T("Longitude"),
+                                   requires = IS_NULL_OR(IS_LON()),
+                                   comment = A(T("Conversion Tool"),
+                                               _style="cursor:pointer;",
+                                               _title=T("You can use the Conversion Tool to convert from either GPS coordinates or Degrees/Minutes/Seconds."),
+                                               _id="gis_location_converter-btn"),
+                                   ),
                              Field("wkt", "text",
                                    # Full WKT validation is done in the onvalidation callback
                                    # - all we do here is allow longer fields than the default (2 ** 16)
                                    requires = IS_LENGTH(2 ** 24),
-                                   represent = gis.abbreviate_wkt,
+                                   represent = self.gis_wkt_represent,
                                    label = "WKT (Well-Known Text)"),
                              Field("inherited", "boolean",
                                    label = T("Inherited?"),
                                    default = False,
                                    writable = False,
                                    represent = lambda opt: \
-                                    T("Yes") if opt == True else T("No")),
+                                    T("Yes") if opt == True else T("No")
+                                   ),
                              # Bounding box
                              Field("lat_min", "double",
                                    readable=False, writable=False),
@@ -191,7 +191,6 @@ class S3LocationModel(S3Model):
                              Field("addr_postcode", length=128,
                                    label = T("Postcode")),
                              s3_comments(),
-                             format=gis_location_represent,
                              *meta_spatial_fields)
 
         # Default the owning role to Authenticated. This can be used to allow the site
@@ -213,8 +212,8 @@ class S3LocationModel(S3Model):
                                               orderby="gis_location.name"))
 
         # CRUD Strings
-        ADD_LOCATION = messages.ADD_LOCATION
-        crud_strings[tablename] = Storage(
+        ADD_LOCATION = messages["ADD_LOCATION"]
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_LOCATION,
             title_display = T("Location Details"),
             title_list = T("Locations"),
@@ -235,8 +234,8 @@ class S3LocationModel(S3Model):
                                       sortby = "name",
                                       label = T("Location"),
                                       represent = gis_location_represent,
-                                      widget = S3LocationSelectorWidget(),
                                       requires = IS_NULL_OR(IS_LOCATION_SELECTOR()),
+                                      widget = S3LocationSelectorWidget(),
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
                                       #requires = IS_NULL_OR(IS_LOCATION()),
                                       #widget = S3LocationAutocompleteWidget(),
@@ -244,45 +243,45 @@ class S3LocationModel(S3Model):
 
         country_id = S3ReusableField("country_id", table,
                                      sortby = "name",
-                                     label = messages.COUNTRY,
+                                     label = messages["COUNTRY"],
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "gis_location.id",
-                                                              self.country_represent,
+                                                              self.gis_country_represent,
                                                               filterby = "level",
                                                               filter_opts = ["L0"],
                                                               sort=True)),
-                                     represent = self.country_represent,
+                                     represent = self.gis_country_represent,
                                      ondelete = "RESTRICT")
 
         countries_id = S3ReusableField("countries_id", "list:reference gis_location",
                                        label = T("Countries"),
                                        requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "gis_location.id",
-                                                              self.country_represent,
+                                                              self.gis_country_represent,
                                                               filterby = "level",
                                                               filter_opts = ["L0"],
                                                               sort=True,
                                                               multiple=True)),
-                                       represent = self.countries_represent,
+                                       represent = self.gis_countries_represent,
                                        ondelete = "RESTRICT")
 
         self.configure(tablename,
-                        onvalidation=self.gis_location_onvalidation,
-                        onaccept=self.gis_location_onaccept,
-                        deduplicate=self.gis_location_deduplicate,
-                        list_fields = ["id",
-                                       "name",
-                                       "level",
-                                       #"parent",
-                                       "L0",
-                                       "L1",
-                                       "L2",
-                                       "L3",
-                                       "L4",
-                                       "lat",
-                                       "lon"
-                                       ]
-                        )
+                       onvalidation=self.gis_location_onvalidation,
+                       onaccept=self.gis_location_onaccept,
+                       deduplicate=self.gis_location_deduplicate,
+                       list_fields = ["id",
+                                      "name",
+                                      "level",
+                                      #"parent",
+                                      "L0",
+                                      "L1",
+                                      "L2",
+                                      "L3",
+                                      "L4",
+                                      "lat",
+                                      "lon"
+                                      ]
+                       )
 
         # Tags as component of Locations
         add_component("gis_location_tag",
@@ -328,7 +327,7 @@ class S3LocationModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def country_represent(id, row=None):
+    def gis_country_represent(id, row=None):
         """ FK representation """
 
         if row:
@@ -347,22 +346,33 @@ class S3LocationModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def countries_represent(locations, row=None):
+    def gis_country_represent(id, row=None):
         """ FK representation """
 
-        if isinstance(locations, Rows):
-            try:
-                locations = [r.name for r in locations]
-                return ", ".join(locations)
-            except:
-                locations = [r.id for r in locations]
-        if not isinstance(locations, list):
-            locations = [locations]
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
         db = current.db
         table = db.gis_location
-        query = table.id.belongs(locations)
-        rows = db(query).select(table.name)
-        return S3LocationModel.countries_represent(rows)
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def gis_countries_represent(ids):
+        """ FK representation """
+
+        db = current.db
+        table = db.gis_location
+        rows = db(table.id.belongs(ids)).select(table.name)
+        locations = [r.name for r in rows]
+        return ", ".join(locations)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -625,6 +635,17 @@ class S3LocationModel(S3Model):
                 # The representation of a level can vary per-record (since it varies per country),
                 # however we have no way of knowing the country here, so safest not to give a wrong answer.
                 return level
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_wkt_represent(wkt, max_length=30):
+        if not wkt:
+            # Blank WKT field
+            return None
+        elif len(wkt) > max_length:
+            return "%s(...)" % wkt[0:wkt.index("(")]
+        else:
+            return wkt
 
 # =============================================================================
 class S3LocationNameModel(S3Model):

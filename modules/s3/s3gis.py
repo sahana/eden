@@ -252,17 +252,6 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def abbreviate_wkt(wkt, max_length=30):
-        if not wkt:
-            # Blank WKT field
-            return None
-        elif len(wkt) > max_length:
-            return "%s(...)" % wkt[0:wkt.index("(")]
-        else:
-            return wkt
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def gps_symbols():
         return GPS_SYMBOLS
 
@@ -2304,6 +2293,7 @@ class GIS(object):
                 (table.location_id == gtable.id)
 
         geojsons = {}
+        # Broken: row["gis_location"] doesn't exist :-?
         # Broken: row["gis_location"] doesn't exist :-?
         #if current.deployment_settings.get_gis_spatialdb():
         #    # Do the Simplify & GeoJSON direct from the DB
