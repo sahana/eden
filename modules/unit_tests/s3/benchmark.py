@@ -19,15 +19,15 @@
 # When running these tests in order to optimize the environment, you can
 # use these benchmarks as a rough guideline for what you can expect:
 #
-# S3Model.configure = 2.90979003906 ns
-# S3Model.get_config = 2.2715420723 ns
-# S3Model.table(non-table) = 2.13528013229 ns
-# S3Model.get(non-table) = 2.0619969368 ns
-# S3Model.__getattr__(non-table) = 4.12402009964 ns
-# S3Model.__getitem__(non-table) = 4.24327015877 ns
-# S3Model.table = 2.91769790649 ns
-# S3Model.__getattr__ = 4.959856987 ns
-# S3Model.__getitem__ = 5.19830703735 ns
+# S3Model.configure = 2.90979003906 µs
+# S3Model.get_config = 2.2715420723 µs
+# S3Model.table(non-table) = 2.13528013229 µs
+# S3Model.get(non-table) = 2.0619969368 µs
+# S3Model.__getattr__(non-table) = 4.12402009964 µs
+# S3Model.__getitem__(non-table) = 4.24327015877 µs
+# S3Model.table = 2.91769790649 µs
+# S3Model.__getattr__ = 4.959856987 µs
+# S3Model.__getitem__ = 5.19830703735 µs
 # S3Resource.import_xml = 12.0009431839 ms (=83 rec/sec)
 # S3Resource.export (incl. DB extraction) = 3.75156188011 ms (=266 rec/sec)
 # S3Resource.export (w/o DB extraction) = 1.7192029953 ms (=581 rec/sec)
@@ -50,6 +50,31 @@ import timeit
 #@unittest.skip("Comment or remove this line in modules/unit_tests/eden/benchmark.py to activate this test")
 class S3PerformanceTests(unittest.TestCase):
 
+    def testDBSelect(self):
+        """ DAL query peak performance """
+
+        db = current.db
+        s3db = current.s3db
+
+        print ""
+        table = s3db.table("pr_person")
+        x = lambda: [(row.first_name, row.last_name)
+                     for row in db(table.id > 0).select(table.id,
+                                                        table.first_name,
+                                                        table.last_name,
+                                                        limitby=(0, 50))]
+        n = len(x())
+        mlt = timeit.Timer(x).timeit(number = int(100/n))
+        print "db.select = %s ms/record (=%s rec/sec)" % (mlt * 10.0, int(100/mlt))
+
+        x = lambda: [[(row.first_name, row.last_name)
+                      for row in db(table.id < i).select(table.id,
+                                                         table.first_name,
+                                                         table.last_name)]
+                     for i in xrange(n)]
+        mlt = timeit.Timer(x).timeit(number = 10) * (100/n)
+        print "db.select = %s ms/query (=%s q/sec)" % (mlt, int(1000/mlt))
+
     def testS3ModelTable(self):
 
         s3db = current.s3db
@@ -60,17 +85,17 @@ class S3PerformanceTests(unittest.TestCase):
             x = lambda: s3db.table("pr_person")
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.table = %s ns" % mlt
+            print "S3Model.table = %s µs" % mlt
 
             x = lambda: s3db.pr_person
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.__getattr__ = %s ns" % mlt
+            print "S3Model.__getattr__ = %s µs" % mlt
 
             x = lambda: s3db["pr_person"]
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.__getitem__ = %s ns" % mlt
+            print "S3Model.__getitem__ = %s µs" % mlt
 
     def testS3ModelName(self):
 
@@ -82,22 +107,22 @@ class S3PerformanceTests(unittest.TestCase):
             x = lambda: s3db.table("pr_person_represent")
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.table(non-table) = %s ns" % mlt
+            print "S3Model.table(non-table) = %s µs" % mlt
 
             x = lambda: s3db.get("pr_person_represent")
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.get(non-table) = %s ns" % mlt
+            print "S3Model.get(non-table) = %s µs" % mlt
 
             x = lambda: s3db.pr_person_represent
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.__getattr__(non-table) = %s ns" % mlt
+            print "S3Model.__getattr__(non-table) = %s µs" % mlt
 
             x = lambda: s3db["pr_person_represent"]
             mlt = timeit.Timer(x).timeit()
             self.assertTrue(mlt<10)
-            print "S3Model.__getitem__(non-table) = %s ns" % mlt
+            print "S3Model.__getitem__(non-table) = %s µs" % mlt
 
     def testS3ModelConfigure(self):
 
@@ -108,13 +133,13 @@ class S3PerformanceTests(unittest.TestCase):
         x = lambda: configure("pr_person", testconfig = "Test")
         mlt = timeit.Timer(x).timeit()
         self.assertTrue(mlt<10)
-        print "S3Model.configure = %s ns" % mlt
+        print "S3Model.configure = %s µs" % mlt
 
         get_config = s3db.get_config
         x = lambda: get_config("pr_person", "testconfig")
         mlt = timeit.Timer(x).timeit()
         self.assertTrue(mlt<10)
-        print "S3Model.get_config = %s ns" % mlt
+        print "S3Model.get_config = %s µs" % mlt
 
     def testS3ResourceInit(self):
 
