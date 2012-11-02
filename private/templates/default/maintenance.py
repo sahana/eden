@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import os
+import time
 
 from gluon import current
 
@@ -12,8 +14,9 @@ class Daily():
 
         db = current.db
         s3db = current.s3db
-
-        now = current.request.utcnow
+        request = current.request
+        
+        now = request.utcnow
         month_past = now - datetime.timedelta(weeks=4)
 
         # Cleanup Scheduler logs
@@ -23,5 +26,21 @@ class Daily():
         # Cleanup Sync logs
         table = s3db.sync_log
         db(table.timestmp < month_past).delete()
+
+        # Cleanup Sessions
+        osjoin = os.path.join
+        osstat = os.stat
+        osremove = os.remove
+        folder = osjoin(request.folder, "sessions")
+        # Convert to UNIX time
+        month_past_u = time.mktime(month_past.timetuple())
+        for file in os.listdir(folder):
+            filepath = osjoin(folder, file)
+            status = osstat(filepath)
+            if status.st_mtime < month_past_u:
+                try:
+                    osremove(filepath)
+                except:
+                    pass
 
 # END =========================================================================

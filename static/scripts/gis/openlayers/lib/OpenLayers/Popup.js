@@ -469,8 +469,10 @@ OpenLayers.Popup = OpenLayers.Class({
 
         // take into account the popup's 'padding' property
         this.fixPadding();
-        wPadding += this.padding.left + this.padding.right;
-        hPadding += this.padding.top + this.padding.bottom;
+        if (this.padding) {
+            wPadding += this.padding.left + this.padding.right;
+            hPadding += this.padding.top + this.padding.bottom;
+        }
 
         // make extra space for the close div
         if (this.closeDiv) {
@@ -749,8 +751,10 @@ OpenLayers.Popup = OpenLayers.Class({
 
         // take into account the popup's 'padding' property
         this.fixPadding();
-        wPadding += this.padding.left + this.padding.right;
-        hPadding += this.padding.top + this.padding.bottom;
+        if (this.padding) {
+            wPadding += this.padding.left + this.padding.right;
+            hPadding += this.padding.top + this.padding.bottom;
+        }
 
         if (this.closeDiv) {
             var closeDivWidth = parseInt(this.closeDiv.style.width);
