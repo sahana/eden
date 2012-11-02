@@ -27,7 +27,8 @@ urlpatterns = patterns('apps.ecidadania.news.views',
     
     url(_(r'^add/$'), AddPost.as_view(), name='add-post'),
     
-    url(_(r'^(?P<post_id>\d+)/delete/$'), DeletePost.as_view(), name='delete-post'),
+    url(_(r'^(?P<post_id>\d+)/delete/$'), DeletePost.as_view(),
+        name='delete-post'),
     
     url(_(r'^(?P<post_id>\d+)/edit/$'), EditPost.as_view(), name='edit-post'),
     

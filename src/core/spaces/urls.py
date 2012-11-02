@@ -32,7 +32,8 @@ from core.spaces.views.events import ListEvents, DeleteEvent, ViewEvent, \
                                     AddEvent, EditEvent
 from core.spaces.views.rss import SpaceFeed
 from core.spaces.views.intent import ValidateIntent
-from core.spaces.views.news import ListPosts
+from core.spaces.views.news import ListPosts, YearlyPosts, MonthlyPosts, \
+                                    RedirectArchive
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -105,7 +106,9 @@ urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/intent/$'),
         'core.spaces.views.intent.add_intent', name='add-intent'),
-    url(_(r'^(?P<space_url>\w+)/intent/approve/(?P<token>\w+)/$'), ValidateIntent.as_view(), name='validate-intent'),
+
+    url(_(r'^(?P<space_url>\w+)/intent/approve/(?P<token>\w+)/$'),
+        ValidateIntent.as_view(), name='validate-intent'),
 
 )
 
@@ -118,9 +121,18 @@ urlpatterns += patterns('',
     url(_(r'^(?P<space_url>\w+)/delete/'), DeleteSpace.as_view(),
         name='delete-space'),
     
-    url(_(r'^(?P<space_url>\w+)/news/'), ListPosts.as_view(),
+    url(_(r'^(?P<space_url>\w+)/news/$'), RedirectArchive.as_view(),
         name='list-space-news'),
-        
+
+    url(_(r'^(?P<space_url>\w+)/news/archive/$'), ListPosts.as_view(),
+        name='post-archive'),
+
+    url(_(r'^(?P<space_url>\w+)/news/archive/(?P<year>\d{4})/$'),
+        YearlyPosts.as_view(), name='post-archive-year'),
+
+    url(_(r'^(?P<space_url>\w+)/news/archive/(?P<year>\d{4})/(?P<month>\w+)/$'),
+        MonthlyPosts.as_view(), name='post-archive-month'),
+
     url(_(r'^add/$'), 'core.spaces.views.spaces.create_space',
         name='create-space'),
 
@@ -135,5 +147,3 @@ urlpatterns += patterns('',
         name='space-index'),
 
 )
-
-

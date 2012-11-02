@@ -269,8 +269,7 @@ class GoToSpace(RedirectView):
     :rtype: Redirect
     """
     def get_redirect_url(self, **kwargs):
-        self.place = get_object_or_404(Space,
-            name = self.request.GET['spaces'])
+        self.place = get_object_or_404(Space,name = self.request.GET['spaces'])
         return '/spaces/%s' % self.place.url
 
 
