@@ -135,7 +135,7 @@ class S3LocationModel(S3Model):
                                                         zero=None),
                                    represent = lambda opt: \
                                     gis_feature_type_opts.get(opt,
-                                                              messages["UNKNOWN_OPT"]),
+                                                              messages.UNKNOWN_OPT),
                                    label = T("Feature Type")
                                    ),
                              # Points or Centroid for Polygons
@@ -212,7 +212,7 @@ class S3LocationModel(S3Model):
                                               orderby="gis_location.name"))
 
         # CRUD Strings
-        ADD_LOCATION = messages["ADD_LOCATION"]
+        ADD_LOCATION = messages.ADD_LOCATION
         current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_LOCATION,
             title_display = T("Location Details"),
@@ -243,7 +243,7 @@ class S3LocationModel(S3Model):
 
         country_id = S3ReusableField("country_id", table,
                                      sortby = "name",
-                                     label = messages["COUNTRY"],
+                                     label = messages.COUNTRY,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "gis_location.id",
                                                               self.gis_country_represent,
