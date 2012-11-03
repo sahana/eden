@@ -10,7 +10,9 @@
          Name....................hms_hospital
          Code....................hms_hospital.code
          Type....................hms_hospital.facility_type
-         Beds....................hms_hospital.total_beds
+         Beds Total..............hms_hospital.total_beds
+         Beds Available..........hms_hospital.available_beds
+         Services................hms_services (Comma-separated List)
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
          Country.................gis_location.L0 Name or ISO2
@@ -110,23 +112,7 @@
                 </xsl:attribute>
             </reference>
 
-            <xsl:variable name="Type" select="col[@field='Type']/text()"/>
-            <data field="facility_type">
-                <xsl:choose>
-                    <xsl:when test="$Type='Hospital'">1</xsl:when>
-                    <xsl:when test="$Type='Field Hospital'">2</xsl:when>
-                    <xsl:when test="$Type='Specialized Hospital'">3</xsl:when>
-                    <xsl:when test="$Type='Health center'">11</xsl:when>
-                    <xsl:when test="$Type='Health center with beds'">12</xsl:when>
-                    <xsl:when test="$Type='Health center without beds'">13</xsl:when>
-                    <xsl:when test="$Type='Dispensary'">21</xsl:when>
-                    <xsl:when test="$Type='Other'">98</xsl:when>
-                    <xsl:default>99</xsl:default>
-                </xsl:choose>
-            </data>
-
-            <!-- Hospital data -->
-            <data field="total_beds"><xsl:value-of select="col[@field='Beds']"/></data>
+            <!-- Facility data -->
             <data field="name"><xsl:value-of select="$HospitalName"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="address"><xsl:value-of select="col[@field='Address']"/></data>
@@ -139,10 +125,85 @@
             <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
             <data field="fax"><xsl:value-of select="col[@field='Fax']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+
+            <!-- Hospital data -->
+            <data field="total_beds"><xsl:value-of select="col[@field='Beds Total']"/></data>
+            <data field="available_beds"><xsl:value-of select="col[@field='Beds Available']"/></data>
+
+            <xsl:variable name="Type" select="col[@field='Type']/text()"/>
+            <data field="facility_type">
+                <xsl:choose>
+                    <xsl:when test="$Type='Hospital'">1</xsl:when>
+                    <xsl:when test="$Type='Field Hospital'">2</xsl:when>
+                    <xsl:when test="$Type='Specialized Hospital'">3</xsl:when>
+                    <xsl:when test="$Type='Health center'">11</xsl:when>
+                    <xsl:when test="$Type='Health center with beds'">12</xsl:when>
+                    <xsl:when test="$Type='Health center without beds'">13</xsl:when>
+                    <xsl:when test="$Type='Dispensary'">21</xsl:when>
+                    <xsl:when test="$Type='Other'">98</xsl:when>
+                    <xsl:otherwise>99</xsl:otherwise>
+                </xsl:choose>
+            </data>
+
+            <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+            <xsl:if test="$Status!=''">
+                <resource name="hms_status">
+                    <data field="facility_status">
+                        <xsl:choose>
+                            <xsl:when test="$Status='Normal'">1</xsl:when>
+                            <xsl:when test="$Status='Compromised'">2</xsl:when>
+                            <xsl:when test="$Status='Evacuating'">3</xsl:when>
+                            <xsl:when test="$Status='Closed'">4</xsl:when>
+                        </xsl:choose>
+                    </data>
+                </resource>
+            </xsl:if>
+
+            <xsl:variable name="Services" select="col[@field='Services']/text()"/>
+            <xsl:if test="$Services!=''">
+                <resource name="hms_services">
+                    <xsl:call-template name="Services">
+                        <xsl:with-param name="list">
+                            <xsl:value-of select="$Services"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </resource>
+            </xsl:if>
+
         </resource>
 
         <xsl:call-template name="Locations"/>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Services">
+        <xsl:param name="list"/>
+        <xsl:variable name="listsep" select="','"/>
+
+        <xsl:choose>
+            <xsl:when test="contains($list, $listsep)">
+                <xsl:variable name="Service" select="normalize-space(substring-before($list, $listsep))"/>
+                <data field="$Service">True</data>
+                <xsl:variable name="tail">
+                    <xsl:value-of select="substring-after($list, $listsep)"/>
+                </xsl:variable>
+                <xsl:call-template name="Services">
+                    <xsl:with-param name="list" select="$tail"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:if test="normalize-space($list)!=''">
+                    <xsl:variable name="Service" select="normalize-space($list)"/>
+                    <data>
+                        <xsl:attribute name="field">
+                            <xsl:value-of select="$Service"/>
+                        </xsl:attribute>
+                        <xsl:text>1</xsl:text>
+                    </data>
+                </xsl:if>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->

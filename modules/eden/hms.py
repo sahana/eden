@@ -64,6 +64,7 @@ class HospitalDataModel(S3Model):
 
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        FACILITY_STATUS = T("Facility Status")
 
         add_component = self.add_component
         configure = self.configure
@@ -95,17 +96,17 @@ class HospitalDataModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              super_link("pe_id", "pr_pentity"),
                              super_link("site_id", "org_site"),
-                             Field("paho_uuid",
-                                   unique=True,
-                                   length=128,
+                             Field("paho_uuid", unique=True, length=128,
+                                   readable=False,
+                                   writable=False,
                                    requires = IS_NULL_OR(IS_NOT_ONE_OF(db,
                                                 "%s.paho_uuid" % tablename)),
                                    label = T("PAHO UID")),
 
                              # UID assigned by Local Government
-                             Field("gov_uuid",
-                                   unique=True,
-                                   length=128,
+                             Field("gov_uuid", unique=True, length=128,
+                                   readable=False,
+                                   writable=False,
                                    requires = IS_NULL_OR(IS_NOT_ONE_OF(db,
                                                 "%s.gov_uuid" % tablename)),
                                    label = T("Government UID")),
@@ -120,16 +121,19 @@ class HospitalDataModel(S3Model):
                                    label=T("Code")),
 
                              # Name of the facility
-                             Field("name",
-                                   notnull=True,
+                             Field("name", notnull=True,
                                    length=64, # Mayon compatibility
                                    label = T("Name")),
 
                              # Alternate name, or name in local language
-                             Field("aka1", label = T("Other Name")),
+                             Field("aka1",
+                                   label = T("Other Name")),
 
                              # Alternate name, or name in local language
-                             #Field("aka2",label = T("Other Name")),
+                             Field("aka2",
+                                   readable=False,
+                                   writable=False,
+                                   label = T("Other Name")),
 
                              Field("facility_type", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(
@@ -223,6 +227,8 @@ class HospitalDataModel(S3Model):
             msg_record_deleted = T("Hospital information deleted"),
             msg_list_empty = T("No Hospitals currently registered"))
 
+        table.virtualfields.append(HMSHospitalVirtualFields())
+
         # Search method
         hms_hospital_search = S3Search(
             #name="hospital_search_simple",
@@ -233,8 +239,14 @@ class HospitalDataModel(S3Model):
                         name="hospital_search_advanced",
                         label=T("Name, Org and/or ID"),
                         comment=T("To search for a hospital, enter any of the names or IDs of the hospital, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all hospitals."),
-                        field=["gov_uuid", "name", "aka1", "aka2",
-                            "organisation_id$name", "organisation_id$acronym"]
+                        field=["name",
+                               "code",
+                               #"aka1",
+                               #"aka2",
+                               #"gov_uuid",
+                               "organisation_id$name",
+                               "organisation_id$acronym"
+                               ]
                       ),
                       # for testing:
                       S3SearchOptionsWidget(
@@ -253,10 +265,11 @@ class HospitalDataModel(S3Model):
                     ))
 
         report_fields = ["facility_type",
-                         "organisation_id",
+                         #"organisation_id",
                          "location_id$L1",
                          "location_id$L2",
                          "location_id$L3",
+                         (FACILITY_STATUS, "facility_status"),
                          "total_beds",
                          "available_beds",
                          ]
@@ -295,11 +308,12 @@ class HospitalDataModel(S3Model):
                                #"gov_uuid",
                                "name",
                                "facility_type",
+                               (FACILITY_STATUS, "facility_status"),
                                #"organisation_id",
                                "location_id$L1",
                                "location_id$L2",
                                "location_id$L3",
-                               "phone_exchange",
+                               #"phone_exchange",
                                "total_beds",
                                "available_beds",
                                ]
@@ -343,17 +357,17 @@ class HospitalDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Hospital status
         #
-        hms_resource_status_opts = {
-            1: T("Adequate"),
-            2: T("Insufficient")
-        } #: Resource Status Options
-
         hms_facility_status_opts = {
             1: T("Normal"),
             2: T("Compromised"),
             3: T("Evacuating"),
             4: T("Closed")
         } #: Facility Status Options
+
+        hms_resource_status_opts = {
+            1: T("Adequate"),
+            2: T("Insufficient")
+        } #: Resource Status Options
 
         hms_clinical_status_opts = {
             1: T("Normal"),
@@ -399,7 +413,7 @@ class HospitalDataModel(S3Model):
                              Field("facility_status", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(
                                                     hms_facility_status_opts)),
-                                   label = T("Facility Status"),
+                                   label = FACILITY_STATUS,
                                    represent = lambda opt: \
                                                hms_facility_status_opts.get(opt,
                                                                 UNKNOWN_OPT)),
@@ -550,7 +564,8 @@ class HospitalDataModel(S3Model):
                                "mobile",
                                "email",
                                "fax",
-                               "skype"],
+                               "skype"
+                               ],
                   main="person_id",
                   extra="title")
 
@@ -640,7 +655,8 @@ class HospitalDataModel(S3Model):
                                "date",
                                "beds_baseline",
                                "beds_available",
-                               "beds_add24"],
+                               "beds_add24"
+                               ],
                   main="hospital_id",
                   extra="id")
 
@@ -1089,6 +1105,26 @@ class HospitalActivityReportModel(S3Model):
         timestmp = form.vars.date
         if hospital and hospital.modified_on < timestmp:
             hospital.update_record(modified_on=timestmp)
+
+# =============================================================================
+class HMSHospitalVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    extra_fields = []
+
+    # -------------------------------------------------------------------------
+    def facility_status(self):
+        """ Facility Status for the Hospital """
+        id = self.hms_hospital.id
+        table = current.s3db.hms_status
+        field = table.facility_status
+        r = current.db(table.hospital_id == id).select(field,
+                                                       limitby=(0, 1)
+                                                       ).first()
+        if r:
+            return field.represent(r.facility_status)
+        else:
+            return current.messages["NONE"]
 
 # =============================================================================
 def hms_hospital_rheader(r, tabs=[]):
