@@ -238,11 +238,13 @@
             </xsl:if>
             <!-- Link to Milestone -->
             <xsl:if test="$Milestone!=''">
-                <reference field="milestone_id" resource="project_milestone">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Milestone"/>
-                    </xsl:attribute>
-                </reference>
+                <resource name="project_task_milestone">
+                    <reference field="milestone_id" resource="project_milestone">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Milestone"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
             </xsl:if>
         </resource>
 
