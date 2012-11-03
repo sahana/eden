@@ -30,7 +30,9 @@ from django.template import RequestContext
 from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 
+from core.spaces import url_names as urln
 from core.spaces.models import Space
 from apps.ecidadania.news.models import Post
 from apps.ecidadania.news.forms import NewsForm
@@ -52,8 +54,8 @@ class AddPost(FormView):
     template_name = 'news/post_form.html'
     
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.url + '/'
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
         
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -113,8 +115,8 @@ class EditPost(UpdateView):
     template_name = 'news/post_form.html'
 
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.url
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
 
     def get_object(self):
         cur_post = get_object_or_404(Post, pk=self.kwargs['post_id'])
@@ -140,7 +142,7 @@ class DeletePost(DeleteView):
 
     def get_success_url(self):
         space = self.kwargs['space_url']
-        return '/spaces/%s' % (space)
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
 
     def get_object(self):
         return get_object_or_404(Post, pk=self.kwargs['post_id'])

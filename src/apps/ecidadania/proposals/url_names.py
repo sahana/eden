@@ -17,23 +17,35 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls import *
-from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
+"""
+Module to store proposal related url names.
+"""
 
-from apps.ecidadania.news.views import DeletePost, ViewPost, AddPost, EditPost
-from apps.ecidadania.news.url_names import *
+PROPOSAL_LIST
 
+PROPOSAL_EDIT
 
-urlpatterns = patterns('apps.ecidadania.news.views',
-    
-    url(_(r'^add/$'), AddPost.as_view(), name=POST_ADD),
-    
-    url(_(r'^(?P<post_id>\d+)/delete/$'), DeletePost.as_view(),
-        name=POST_DELETE),
-    
-    url(_(r'^(?P<post_id>\d+)/edit/$'), EditPost.as_view(), name=POST_EDIT),
-    
-    url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name=POST_VIEW),
+PROPOSAL_ADD
 
-)
+PROPOSAL_VIEW
+
+PROPOSAL_DELETE
+
+PROPOSAL_VOTE
+
+PROPOSAL_MERGE
+
+PROPOSALFIELD_ADD
+
+PROPOSALFIELD_DELETE
+
+PROPOSALSET_ADD
+
+PROPOSALSET_EDIT
+
+PROPOSALSET_DELETE
+
+PROPOSALSET_LIST
+
+PROPOSALSET_VIEW
+

@@ -24,7 +24,7 @@ access to '/spaces/'.
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 
-from core.spaces.views.spaces import GoToSpace, ViewSpaceIndex, ListSpaces, \
+from core.spaces.views.spaces import ViewSpaceIndex, ListSpaces, \
                                     DeleteSpace, EditRole
 from core.spaces.views.documents import ListDocs, DeleteDocument, \
                                     AddDocument, EditDocument
@@ -34,13 +34,14 @@ from core.spaces.views.rss import SpaceFeed
 from core.spaces.views.intent import ValidateIntent
 from core.spaces.views.news import ListPosts, YearlyPosts, MonthlyPosts, \
                                     RedirectArchive
+from core.spaces.url_names import *
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
 urlpatterns = patterns('',
 
     # RSS Feed
-    url(_(r'^(?P<space_url>\w+)/rss/$'), SpaceFeed(), name='space-feed'),
+    url(_(r'^(?P<space_url>\w+)/rss/$'), SpaceFeed(), name=SPACE_FEED),
     
     # News
     url(_(r'^(?P<space_url>\w+)/news/'),
@@ -68,16 +69,16 @@ urlpatterns = patterns('',
 urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/docs/add/$'), AddDocument.as_view(),
-        name='add-document'),
+        name=DOCUMENT_ADD),
 
     url(_(r'^(?P<space_url>\w+)/docs/(?P<doc_id>\d+)/edit/$'),
-        EditDocument.as_view(), name='edit-document'),
+        EditDocument.as_view(), name=DOCUMENT_EDIT),
 
     url(_(r'^(?P<space_url>\w+)/docs/(?P<doc_id>\d+)/delete/$'),
-        DeleteDocument.as_view(), name='delete-document'),
+        DeleteDocument.as_view(), name=DOCUMENT_DELETE),
 
     url(_(r'^(?P<space_url>\w+)/docs/$'), ListDocs.as_view(),
-        name='list-documents'),
+        name=DOCUMENT_LIST),
 
 )
 
@@ -85,19 +86,19 @@ urlpatterns += patterns('',
 urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/event/add/$'), AddEvent.as_view(),
-        name='add-event'),
+        name=EVENT_ADD),
 
     url(_(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/edit/$'),
-        EditEvent.as_view(), name='edit-event'),
+        EditEvent.as_view(), name=EVENT_EDIT),
 
     url(_(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/delete/$'),
-        DeleteEvent.as_view(), name='delete-event'),
+        DeleteEvent.as_view(), name=EVENT_DELETE),
 
     url(_(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/$'),
-        ViewEvent.as_view(), name='view-event'),
+        ViewEvent.as_view(), name=EVENT_VIEW),
 
     url(_(r'^(?P<space_url>\w+)/event/$'), ListEvents.as_view(),
-        name='list-events'),
+        name=EVENT_LIST),
 
 )
 
@@ -105,10 +106,10 @@ urlpatterns += patterns('',
 urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/intent/$'),
-        'core.spaces.views.intent.add_intent', name='add-intent'),
+        'core.spaces.views.intent.add_intent', name=INTENT_ADD),
 
     url(_(r'^(?P<space_url>\w+)/intent/approve/(?P<token>\w+)/$'),
-        ValidateIntent.as_view(), name='validate-intent'),
+        ValidateIntent.as_view(), name=INTENT_VALIDATE),
 
 )
 
@@ -116,34 +117,34 @@ urlpatterns += patterns('',
 urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/edit/'),
-        'core.spaces.views.spaces.edit_space', name='edit-space'),
+        'core.spaces.views.spaces.edit_space', name=SPACE_EDIT),
 
     url(_(r'^(?P<space_url>\w+)/delete/'), DeleteSpace.as_view(),
-        name='delete-space'),
+        name=SPACE_DELETE),
     
     url(_(r'^(?P<space_url>\w+)/news/$'), RedirectArchive.as_view(),
-        name='list-space-news'),
+        name=SPACE_NEWS),
 
     url(_(r'^(?P<space_url>\w+)/news/archive/$'), ListPosts.as_view(),
-        name='post-archive'),
+        name=NEWS_ARCHIVE),
 
     url(_(r'^(?P<space_url>\w+)/news/archive/(?P<year>\d{4})/$'),
-        YearlyPosts.as_view(), name='post-archive-year'),
+        YearlyPosts.as_view(), name=NEWS_YEAR),
 
     url(_(r'^(?P<space_url>\w+)/news/archive/(?P<year>\d{4})/(?P<month>\w+)/$'),
-        MonthlyPosts.as_view(), name='post-archive-month'),
+        MonthlyPosts.as_view(), name=NEWS_MONTH),
 
     url(_(r'^add/$'), 'core.spaces.views.spaces.create_space',
-        name='create-space'),
+        name=SPACE_ADD),
 
-    url(r'^$', ListSpaces.as_view(), name='list-spaces'),
+    url(r'^$', ListSpaces.as_view(), name=SPACE_LIST),
 
-    url(_(r'^go/'), GoToSpace.as_view(), name='goto-space'),
+    #url(_(r'^go/'), GoToSpace.as_view(), name=GOTO_SPACE),
 
     url(_(r'^(?P<space_url>\w+)/roles/'), EditRole.as_view(),
-        name='edit-roles'),
+        name=EDIT_ROLES),
 
     url(r'^(?P<space_url>\w+)/$', ViewSpaceIndex.as_view(),
-        name='space-index'),
+        name=SPACE_INDEX),
 
 )

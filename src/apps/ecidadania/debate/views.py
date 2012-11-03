@@ -24,34 +24,27 @@ These are the views that control the debates.
 import json
 import datetime
 
-# Generic class-based views
 from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
-
-# Decorators. the first is a wrapper to convert function-based decorators
-# to method decorators that can be put in subclass methods.
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required, permission_required
-
-# Response types
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render_to_response, get_object_or_404, redirect
-
-# Some extras
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.comments import *
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.comments.forms import CommentForm
+from django.utils.decorators import method_decorator
+from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.comments import *
-from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.comments.forms import CommentForm
+from django.core.urlresolvers import reverse
 from django.db import connection
 
-# Application models
+from apps.ecidadania.debate import url_names as urln
 from apps.ecidadania.debate.models import Debate, Note, Row, Column
 from apps.ecidadania.debate.forms import DebateForm, UpdateNoteForm, \
     NoteForm, RowForm, ColumnForm, UpdateNotePosition
@@ -127,8 +120,10 @@ def add_new_debate(request, space_url):
                         column.debate = debate_instance
                         column.save()
 
-                    return redirect('/spaces/' + space_url + '/debate/'
-                                    + str(debate_form_uncommited.id))
+                    return HttpResponseRedirect(reverse(urln.DEBATE_VIEW,
+                        kwargs={'space_url': space_url,
+                                'debate_id': str(debate_form_uncommited.id)}))
+
             return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,
                                    'rowform': row_formset,

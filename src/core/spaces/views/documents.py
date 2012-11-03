@@ -24,11 +24,12 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
+from core.spaces import url_names as urln
 from core.spaces.models import Space, Document
 from core.spaces.forms import SpaceForm, DocForm
 from core.permissions import has_space_permission, has_all_permissions
-
 
 class AddDocument(FormView):
 
@@ -42,8 +43,8 @@ class AddDocument(FormView):
     template_name = 'spaces/document_form.html'
     
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.url
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -80,8 +81,8 @@ class EditDocument(UpdateView):
     template_name = 'spaces/document_form.html'
 
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.name
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
 
     def get_object(self):
         cur_doc = get_object_or_404(Document, pk=self.kwargs['doc_id'])
@@ -114,8 +115,8 @@ class DeleteDocument(DeleteView):
         return get_object_or_404(Document, pk = self.kwargs['doc_id'])
     
     def get_success_url(self):
-        current_space = self.kwargs['space_url']
-        return '/spaces/{0}'.format(current_space)
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
         
     def get_context_data(self, **kwargs):
         context = super(DeleteDocument, self).get_context_data(**kwargs)

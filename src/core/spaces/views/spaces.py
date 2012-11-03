@@ -30,17 +30,19 @@ from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.comments.models import Comment
 from django.db.models import Count
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 
+from core.spaces import url_names as urln
 from core.spaces.models import Space, Entity, Document, Event
-from apps.ecidadania.news.models import Post
 from core.spaces.forms import SpaceForm, EntityFormSet, RoleForm
+from core.permissions import has_space_permission, has_all_permissions
+from apps.ecidadania.news.models import Post
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
-from helpers.cache import get_or_insert_object_in_cache
 from apps.ecidadania.voting.models import Poll, Voting
-from core.permissions import has_space_permission, has_all_permissions
-
+from helpers.cache import get_or_insert_object_in_cache
 
 # Please take in mind that the create_space view can't be replaced by a CBV
 # (class-based view) since it manipulates two forms at the same time. Apparently
@@ -80,7 +82,8 @@ def create_space(request):
             # space.admins.add(request.user)
             space_form.save_m2m()
             
-            return redirect('/spaces/' + space.url)
+            return HttpResponseRedirect(reverse(urln.SPACE_INDEX,
+                kwargs={'space_url': space.url}))
     
     return render_to_response('spaces/space_form.html',
                               {'form': space_form,
@@ -223,8 +226,8 @@ def edit_space(request, space_url):
                     ef.save()
                 
                 form.save_m2m()
-                messages.success(request, _('Space edited successfully'))
-                return redirect('/spaces/' + space.url + '/')
+                return HttpResponseRedirect(reverse(urln.SPACE_INDEX,
+                    kwargs={'space_url': space.url}))
 
         return render_to_response('spaces/space_form.html', {'form': form,
                     'get_place': place, 'entityformset': entity_forms},
@@ -259,18 +262,18 @@ class DeleteSpace(DeleteView):
             return space
       
 
-class GoToSpace(RedirectView):
+# class GoToSpace(RedirectView):
 
-    """
-    Sends the user to the selected space. This view only accepts GET petitions.
-    GoToSpace is a django generic :class:`RedirectView`.
+#     """
+#     Sends the user to the selected space. This view only accepts GET petitions.
+#     GoToSpace is a django generic :class:`RedirectView`.
     
-    :Attributes: **self.place** - Selected space object
-    :rtype: Redirect
-    """
-    def get_redirect_url(self, **kwargs):
-        self.place = get_object_or_404(Space,name = self.request.GET['spaces'])
-        return '/spaces/%s' % self.place.url
+#     :Attributes: **self.place** - Selected space object
+#     :rtype: Redirect
+#     """
+#     def get_redirect_url(self, **kwargs):
+#         self.place = get_object_or_404(Space,name = self.request.GET['spaces'])
+#         return '/spaces/%s' % self.place.url
 
 
 class ListSpaces(ListView):
@@ -332,8 +335,8 @@ class EditRole(UpdateView):
     template_name = 'spaces/user_groups.html'
 
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.name
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
 
     def get_object(self):
         cur_space = get_object_or_404(Space, url=self.kwargs['space_url'])

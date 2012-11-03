@@ -25,7 +25,9 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
+from core.spaces import url_names as urln
 from core.spaces.models import Space, Event
 from core.spaces.forms import SpaceForm, EventForm
 from helpers.cache import get_or_insert_object_in_cache
@@ -45,8 +47,8 @@ class AddEvent(FormView):
     template_name = 'spaces/event_form.html'
 
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.url + '/'
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -63,7 +65,7 @@ class AddEvent(FormView):
         place =  get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = place
         context['user_is_admin'] = (has_space_permission(self.request.user,
-            space, allow=['admins', 'mods']) or has_all_permissions(
+            place, allow=['admins', 'mods']) or has_all_permissions(
             self.request.user)) 
         return context
 
@@ -119,9 +121,9 @@ class EditEvent(UpdateView):
         return cur_event
         
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return '/spaces/' + self.space.name
-    
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
+
     def form_valid(self, form):
         form_uncommited = form.save(commit=False)
         form_uncommited.save()
@@ -156,8 +158,8 @@ class DeleteEvent(DeleteView):
         return get_object_or_404(Event, pk = self.kwargs['event_id'])
 
     def get_success_url(self):
-        current_space = self.kwargs['space_url']
-        return '/spaces/{0}'.format(current_space)
+        space = self.kwargs['space_url']
+        return reverse(urln.SPACE_INDEX, kwargs={'space_url': space})
    
     def get_context_data(self, **kwargs):
         context = super(DeleteEvent, self).get_context_data(**kwargs)

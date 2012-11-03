@@ -17,23 +17,24 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls import *
-from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
+"""
+Module to store debate related url names.
+"""
 
-from apps.ecidadania.news.views import DeletePost, ViewPost, AddPost, EditPost
-from apps.ecidadania.news.url_names import *
+DEBATE_ADD = 'add-debate'
 
+DEBATE_EDIT = 'edit-debate'
 
-urlpatterns = patterns('apps.ecidadania.news.views',
-    
-    url(_(r'^add/$'), AddPost.as_view(), name=POST_ADD),
-    
-    url(_(r'^(?P<post_id>\d+)/delete/$'), DeletePost.as_view(),
-        name=POST_DELETE),
-    
-    url(_(r'^(?P<post_id>\d+)/edit/$'), EditPost.as_view(), name=POST_EDIT),
-    
-    url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name=POST_VIEW),
+DEBATE_DELETE = 'delete-debate'
 
-)
+DEBATE_LIST = 'list-debates'
+
+DEBATE_VIEW = 'view-debate'
+
+NOTE_ADD = 'create-note'
+
+NOTE_UPDATE = 'update_note'
+
+NOTE_UPDATE_POSITION = 'update-note-position'
+
+NOTE_DELETE = 'delete-note'
