@@ -111,14 +111,13 @@ class HospitalDataModel(S3Model):
                                    label = T("Government UID")),
 
                              # Alternate ids found in data feeds
-                             Field("other_ids",
-                                   length=128),
+                             #Field("other_ids",
+                             #      length=128),
 
                              # Mayon compatibility
-                             #Field("code",
-                             #      length=10,
-                             #      notnull=True,
-                             #      unique=True, label=T("Code")),
+                             Field("code", length=10,
+                                   #notnull=True, unique=True,
+                                   label=T("Code")),
 
                              # Name of the facility
                              Field("name",
@@ -130,7 +129,7 @@ class HospitalDataModel(S3Model):
                              Field("aka1", label = T("Other Name")),
 
                              # Alternate name, or name in local language
-                             Field("aka2",label = T("Other Name")),
+                             #Field("aka2",label = T("Other Name")),
 
                              Field("facility_type", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(
@@ -253,19 +252,58 @@ class HospitalDataModel(S3Model):
                       ),
                     ))
 
+        report_fields = ["facility_type",
+                         "organisation_id",
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         "total_beds",
+                         "available_beds",
+                         ]
+
         # Resource configuration
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
                   search_method=hms_hospital_search,
+                  deduplicate = self.hms_hospital_duplicate,
+                  report_options = Storage(
+                        search=[
+                              S3SearchOptionsWidget(
+                                name="hospital_facility_type",
+                                label=T("Facility Type"),
+                                field="facility_type"
+                              ),
+                              # for testing:
+                              S3SearchMinMaxWidget(
+                                name="hospital_search_bedcount",
+                                method="range",
+                                label=T("Total Beds"),
+                                comment=T("Select a range for the number of total beds"),
+                                field="total_beds"
+                              ),
+                        ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list"],
+                        defaults=Storage(rows="location_id$L2",
+                                         cols="facility_type",
+                                         fact="total_beds",
+                                         aggregate="count")
+                  ),
                   list_fields=["id",
-                               "gov_uuid",
+                               #"gov_uuid",
                                "name",
                                "facility_type",
-                               "organisation_id",
-                               "location_id",
+                               #"organisation_id",
+                               "location_id$L1",
+                               "location_id$L2",
+                               "location_id$L3",
                                "phone_exchange",
                                "total_beds",
-                               "available_beds"])
+                               "available_beds",
+                               ]
+                  )
 
         # Reusable field
         hms_hospital_id_comment = S3AddResourceLink(c="hms",
@@ -734,6 +772,32 @@ class HospitalDataModel(S3Model):
             return r.name
         except:
             return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_hospital_duplicate(item):
+        """
+            HR record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "hms_hospital":
+            data = item.data
+            #org = "organisation_id" in data and data.organisation_id
+            address = "address" in data and data.address
+
+            table = item.table
+            query = (table.name == data.name)
+            #if org:
+            #    query = query & (table.organisation_id == org)
+            if address:
+                query = query & (table.address == address)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

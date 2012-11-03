@@ -818,6 +818,8 @@ class S3OptionsMenu(object):
                         M("List All"),
                         M("Map", m="map"),
                         M("Search", m="search"),
+                        M("Report", m="report"),
+                        M("Import", m="import", p="create"),
                         #SEP(),
                         #M("Show Map", c="gis", f="map_viewing_client",
                           #vars={"kml_feed" : "%s/hms/hospital.kml" %
