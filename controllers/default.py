@@ -176,8 +176,6 @@ def index():
                           )
                         )
 
-    datatable_ajax_source = ""
-
     # Check logged in AND permissions
     roles = session.s3.roles
     if AUTHENTICATED in roles and \
@@ -232,6 +230,7 @@ def index():
                       _class = "menu_box fleft"
                       )
     else:
+        datatable_ajax_source = ""
         manage_facility_box = ""
         org_box = ""
 

@@ -1079,6 +1079,11 @@ class S3Search(S3CRUD):
         person_id = current.auth.s3_logged_in_person()
         resource = self.resource
 
+        if hasattr(query, "serialize_url"):
+            vars = query.serialize_url(resource)
+        else:
+            vars = None
+
         save_options = {
             "url": URL(c="pr", f="saved_search", vars={"format": "s3json"}),
             "url_detail": URL(c="pr", f="person", args=[person_id, "saved_search", "<id>", "update"]),
@@ -1093,9 +1098,9 @@ class S3Search(S3CRUD):
                             # Can't use the search method handler because then
                             # we can't get different formats
                             method = "search", # want to see search form
-                            vars = query.serialize_url(resource),
+                            vars = vars,
                         ),
-                        "filters": urllib.urlencode(query.serialize_url(resource)),
+                        "filters": urllib.urlencode(vars) if vars else None,
                     },
                 ],
             }),
