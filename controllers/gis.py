@@ -851,7 +851,7 @@ def layer_config():
         # Cannot import without a specific layer type
         csv_stylesheet = None
 
-    output = s3_rest_controller(csv_stylesheet = csv_stylesheet)
+    output = s3_rest_controller(csv_stylesheet=csv_stylesheet)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1852,8 +1852,8 @@ def layer_theme():
     if "import" in request.args:
         # Import to 'layer_config' resource instead
         output = s3_rest_controller("gis", "layer_config",
-                                    csv_template = "layer_theme",
-                                    csv_stylesheet = "layer_theme.xsl",
+                                    csv_template="layer_theme",
+                                    csv_stylesheet="layer_theme.xsl",
                                     )
     else:
         output = s3_rest_controller(rheader=s3db.gis_rheader)

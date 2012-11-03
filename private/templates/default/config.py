@@ -120,6 +120,17 @@ settings.L10n.decimal_separator = "."
 #settings.L10n.default_country_code = 1
 # Make last name in person/user records mandatory
 #settings.L10n.mandatory_lastname = True
+# Configure the list of Religions
+#settings.L10n.get("religions", {
+#                "none": T("none"),
+#                "christian": T("Christian"),
+#                "muslim": T("Muslim"),
+#                "jewish": T("Jewish"),
+#                "buddhist": T("Buddhist"),
+#                "hindu": T("Hindu"),
+#                "bahai": T("Bahai"),
+#                "other": T("other")
+#            })
 
 # Finance settings
 #settings.fin.currencies = {
