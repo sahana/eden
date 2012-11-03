@@ -153,17 +153,25 @@ def project():
                     set_project_multi_activity_type_id_requires(sector_ids)
                     #@ToDo: Do this for project_activity too.
                 elif r.component_name == "task":
-                    r.component.table.milestone_id.requires = IS_NULL_OR(
-                                                                IS_ONE_OF(db,
-                                                                          "project_milestone.id",
-                                                                          s3db.project_milestone_represent,
-                                                                          filterby="project_id",
-                                                                          filter_opts=(r.id,),
-                                                                          ))
+                    table = r.component.table
+                    if not auth.s3_has_role("STAFF"):
+                        # Hide fields to avoid confusion (both of inputters & recipients)
+                        field = table.source
+                        field.readable = field.writable = False
+                        field = table.pe_id
+                        field.readable = field.writable = False
+                        field = table.date_due
+                        field.readable = field.writable = False
+                        field = table.time_estimated
+                        field.readable = field.writable = False
+                        field = table.time_actual
+                        field.readable = field.writable = False
+                        field = table.status
+                        field.readable = field.writable = False
                     if "open" in request.get_vars:
                         # Show only the Open Tasks for this Project
                         statuses = s3.project_task_active_statuses
-                        filter = (r.component.table.status.belongs(statuses))
+                        filter = (table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
                 elif r.component_name == "beneficiary":
                     db.project_beneficiary.project_location_id.requires = IS_NULL_OR(
@@ -234,6 +242,10 @@ def project():
                     # Set the minimum end_date to the same as the start_date
                     s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
+            elif r.component_name == "task" and "form" in output and \
+                 not r.method in ("search", "report"):
+                # Insert fields to control the Activity & Milestone
+                output = s3db.project_task_form_inject(r, output, project=False)
         return output
     s3.postp = postp
 
@@ -404,6 +416,12 @@ def activity():
 
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
+
+    if "project_id" in request.get_vars:
+        field = table.project_id
+        field.default = request.get_vars.project_id
+        field.writable = False
+        field.comment = None
 
     # Pre-process
     def prep(r):
@@ -579,6 +597,16 @@ def report():
 
     return s3_rest_controller(module, "activity")
 
+# -----------------------------------------------------------------------------
+def partners():
+    """
+        A REST controller for Organisations filtered by Type
+        @ToDo: This could need to be a deployment setting
+    """
+
+    current.request.get_vars["organisation.organisation_type_id$name"] = "Bilateral,Government,Intergovernmental,NGO,UN agency"
+    return s3db.org_organisation_controller()
+
 # =============================================================================
 def task():
     """ RESTful CRUD controller """
@@ -587,7 +615,7 @@ def task():
 
 # =============================================================================
 def task_project():
-    """ RESTful CRUD controller """
+    """ RESTful CRUD controller for options.s3json lookups """
 
     if auth.permission.format != "s3json":
         return ""
@@ -603,7 +631,23 @@ def task_project():
 
 # =============================================================================
 def task_activity():
-    """ RESTful CRUD controller """
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+def task_milestone():
+    """ RESTful CRUD controller for options.s3json lookups """
 
     if auth.permission.format != "s3json":
         return ""
@@ -620,6 +664,12 @@ def task_activity():
 # =============================================================================
 def milestone():
     """ RESTful CRUD controller """
+
+    if "project_id" in request.get_vars:
+        field = s3db.project_milestone.project_id
+        field.default = request.get_vars.project_id
+        field.writable = False
+        field.comment = None
 
     return s3_rest_controller()
 
@@ -783,11 +833,5 @@ $('#submit_record__row input').click(function(){
                  SCRIPT(script))
 
     return XML(output)
-
-# -----------------------------------------------------------------------------
-def partners():
-    # ToDo: This could need to be a deployment setting
-    current.request.get_vars["organisation.organisation_type_id$name"] = "Bilateral,Government,Intergovernmental,NGO,UN agency"
-    return s3db.org_organisation_controller()
 
 # END =========================================================================

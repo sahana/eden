@@ -591,7 +591,7 @@ function S3FilterFieldChange(setting) {
 	// Check if this field is present in this page
 	var FilterField = setting.FilterField;
     var selFilterField = $('[name = "' + FilterField + '"]');
-    if ( undefined == selFilterField[0] ) {
+    if (undefined == selFilterField[0]) {
         return
     }
 
@@ -609,7 +609,7 @@ function S3FilterFieldChange(setting) {
 
         // Cancel previous request
         try {
-            S3.JSONRequest[$(this).attr('id')].abort();
+            S3.JSONRequest[selField.attr('id')].abort();
         } catch(err) {};
 
         var FilterVal;
@@ -724,7 +724,7 @@ function S3FilterFieldChange(setting) {
 
         // Save JSON Request by element id
         if (!GetWidgetHTML) {
-            S3.JSONRequest[$(this).attr('id')] = $.ajax( {
+            S3.JSONRequest[selField.attr('id')] = $.ajax( {
                 url: url,
                 dataType: 'json',
                 context: setting,
@@ -736,7 +736,7 @@ function S3FilterFieldChange(setting) {
                     var selField = $('[name = "' + this.Field + '"]');
                     var selFilterField = $('[name = "' + FilterField + '"]');
 
-                    PrepResult = fncPrep(data);
+                    var PrepResult = fncPrep(data);
 
                     if (data.length == 0) {
                         if (ShowEmptyField) {
@@ -769,8 +769,8 @@ function S3FilterFieldChange(setting) {
                         selField.attr('disabled', 'disabled');
                     }
                     /* Show "Add" Button & modify link */
-                    selFieldAdd = $('#' + FieldResource + '_add');
-                    href = selFieldAdd.attr('href') + "&' + FilterField + '=" + $('[name = "' + FilterField + '"]').val();
+                    var selFieldAdd = $('#' + FieldResource + '_add');
+                    var href = selFieldAdd.attr('href') + '&' + FilterField + '=' + selFilterField.val();
                     selFieldAdd.attr('href', href)
                                .show();
 	
@@ -779,7 +779,7 @@ function S3FilterFieldChange(setting) {
                 }
             });
         } else {
-            S3.JSONRequest[$(this).attr('id')] = $.ajax( {
+            S3.JSONRequest[selField.attr('id')] = $.ajax( {
                 url: url,
                 dataType: 'html',
                 context: setting,
