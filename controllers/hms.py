@@ -60,19 +60,27 @@ def marker_fn(record):
     """
 
     mtable = db.gis_marker
+    stable = db.hms_status
+    status = db(stable.hospital_id == record.id).select(stable.facility_status,
+                                                        limitby=(0, 1)
+                                                        ).first()
     if record.facility_type == 31:
-        marker = db(mtable.name == "special_needs").select(mtable.image,
-                                                           mtable.height,
-                                                           mtable.width,
-                                                           cache=s3db.cache,
-                                                           limitby=(0, 1)).first()
+        marker = "special_needs"
     else:
-        marker = db(mtable.name == "hospital").select(mtable.image,
-                                                      mtable.height,
-                                                      mtable.width,
-                                                      cache=s3db.cache,
-                                                      limitby=(0, 1)).first()
+        marker = "hospital"
+    if status:
+        if status.facility_status in (3, 4):
+            # Evacuating or Closed
+            marker = "%s_red" % marker
+        elif status.facility_status == 2:
+            # Compromised
+            marker = "%s_yellow" % marker
 
+    marker = db(mtable.name == marker).select(mtable.image,
+                                              mtable.height,
+                                              mtable.width,
+                                              cache=s3db.cache,
+                                              limitby=(0, 1)).first()
     return marker
 
 # -----------------------------------------------------------------------------
@@ -274,7 +282,9 @@ def hospital():
             r.table.location_id.readable = False
 
         elif r.representation == "geojson":
+            # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
+            stable = s3db.hms_status
             s3db.configure("hms_hospital", marker_fn=marker_fn)
 
         return True
