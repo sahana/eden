@@ -1122,9 +1122,9 @@ class HMSHospitalVirtualFields:
                                                        limitby=(0, 1)
                                                        ).first()
         if r:
-            return field.represent(r.facility_status)
+            return str(field.represent(r.facility_status))
         else:
-            return current.messages["NONE"]
+            return current.messages.NONE
 
 # =============================================================================
 def hms_hospital_rheader(r, tabs=[]):
