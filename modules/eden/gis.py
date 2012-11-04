@@ -346,25 +346,6 @@ class S3LocationModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def gis_country_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.gis_location
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # ---------------------------------------------------------------------
-    @staticmethod
     def gis_countries_represent(ids):
         """ FK representation """
 
@@ -3878,32 +3859,26 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
 
 
 # =============================================================================
-def gis_location_lx_represent(record):
+def gis_location_lx_represent(id):
     """
-        Represent a location, given either its id or full Row, as a simple string
+        Represent a location as a hierarchical string
 
-        @param record: database record
+        @param id: location_id
         @return: string
     """
 
-    if not record:
+    if not id:
         return current.messages.NONE
 
-    if isinstance(record, Row):
-        location = record
-    else:
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
-        location = db(table.id == record).select(table.id,
-                                                 table.name,
-                                                 cache=cache,
+    s3db = current.s3db
+    table = s3db.gis_location
+    location = current.db(table.id == id).select(table.name,
+                                                 cache=s3db.cache,
                                                  limitby=(0, 1)).first()
 
     parents = Storage()
     parents = current.gis.get_parent_per_level(parents,
-                                               location.id,
+                                               id,
                                                ids=False,
                                                names=True)
 

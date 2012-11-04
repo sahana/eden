@@ -507,7 +507,7 @@ def s3_lx_fields():
             address_L3(),
             address_L2(),
             address_L1(),
-            address_L0(label=current.messages["COUNTRY"]),
+            address_L0(label=current.messages.COUNTRY),
            )
     return fields
 

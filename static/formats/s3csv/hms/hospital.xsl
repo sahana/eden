@@ -10,9 +10,12 @@
          Name....................hms_hospital
          Code....................hms_hospital.code
          Type....................hms_hospital.facility_type
+         Status..................hms_status.facility_status
+         Reopening Date..........hms_status.date_reopening
+         Power...................hms_status.power_supply_type
+         Services................hms_services (Comma-separated List)
          Beds Total..............hms_hospital.total_beds
          Beds Available..........hms_hospital.available_beds
-         Services................hms_services (Comma-separated List)
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
          Country.................gis_location.L0 Name or ISO2
@@ -40,17 +43,26 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Indexes for faster processing -->
-    <!--<xsl:key name="warehouse_type" match="row" use="col[@field='Type']"/>-->
+    <!--<xsl:key name="hospital_type" match="row" use="col[@field='Type']"/>-->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="branch" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
 
     <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="Postcode">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Postcode</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Warehouse Types
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('warehouse_type', col[@field='Type'])[1])]">
-                <xsl:call-template name="WarehouseType" />
+            <!-- Hospital Types
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('hospital_type', col[@field='Type'])[1])]">
+                <xsl:call-template name="HospitalType" />
             </xsl:for-each> -->
 
             <!-- Top-level Organisations -->
@@ -74,7 +86,7 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Warehouses -->
+            <!-- Hospitals -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -116,7 +128,7 @@
             <data field="name"><xsl:value-of select="$HospitalName"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="address"><xsl:value-of select="col[@field='Address']"/></data>
-            <data field="postcode"><xsl:value-of select="col[@field='Postcode']"/></data>
+            <data field="postcode"><xsl:value-of select="$Postcode"/></data>
             <data field="city"><xsl:value-of select="col[@field='L3']"/></data>
             <data field="phone_exchange"><xsl:value-of select="col[@field='Phone Switchboard']"/></data>
             <data field="phone_business"><xsl:value-of select="col[@field='Phone Business']"/></data>
@@ -146,8 +158,9 @@
             </data>
 
             <xsl:variable name="Status" select="col[@field='Status']/text()"/>
-            <xsl:if test="$Status!=''">
-                <resource name="hms_status">
+            <xsl:variable name="Power" select="col[@field='Power']/text()"/>
+            <resource name="hms_status">
+                <xsl:if test="$Status!=''">
                     <data field="facility_status">
                         <xsl:choose>
                             <xsl:when test="$Status='Normal'">1</xsl:when>
@@ -156,8 +169,21 @@
                             <xsl:when test="$Status='Closed'">4</xsl:when>
                         </xsl:choose>
                     </data>
-                </resource>
-            </xsl:if>
+                </xsl:if>
+                <xsl:if test="col[@field='Reopening Date']!=''">
+                    <data field="date_reopening"><xsl:value-of select="col[@field='Reopening Date']"/></data>
+                </xsl:if>
+                <xsl:if test="$Power!=''">
+                    <data field="power_supply_type">
+                        <xsl:choose>
+                            <xsl:when test="$Power='Grid'">1</xsl:when>
+                            <xsl:when test="$Power='Generator'">2</xsl:when>
+                            <xsl:when test="$Power='Other'">98</xsl:when>
+                            <xsl:when test="$Power='None'">99</xsl:when>
+                        </xsl:choose>
+                    </data>
+                </xsl:if>
+            </resource>
 
             <xsl:variable name="Services" select="col[@field='Services']/text()"/>
             <xsl:if test="$Services!=''">
@@ -456,7 +482,7 @@
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
-            <data field="addr_postcode"><xsl:value-of select="col[@field='Postcode']"/></data>
+            <data field="addr_postcode"><xsl:value-of select="$Postcode"/></data>
             <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
             <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
         </resource>

@@ -124,6 +124,12 @@
         <label>ADM0_NAME</label>
     </column>
 
+   <column name="Postcode">
+        <label>Postcode</label>
+        <label>postcode</label>
+        <label>Zip</label>
+    </column>
+
    <!-- ******************************************************************* -->
 
 </labels>

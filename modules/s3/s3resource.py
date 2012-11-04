@@ -3461,7 +3461,7 @@ class S3Resource(object):
             for i in xrange(numcols):
                 try:
                     field = rfields[i].field
-                except KeyError:
+                except (KeyError, IndexError):
                     continue
                 if field is None:
                     continue
