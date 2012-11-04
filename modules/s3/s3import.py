@@ -62,7 +62,7 @@ from gluon.tools import callback
 
 from s3crud import S3CRUD
 from s3xml import S3XML
-from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key
+from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3resource import S3Resource
 
 DEBUG = False
@@ -1247,11 +1247,24 @@ class S3Importer(S3CRUD):
         request = self.request
         resource = self.resource
         s3 = current.response.s3
-        # Filter
+
+        # Controller Filter
         if s3.filter is not None:
             self.resource.add_filter(s3.filter)
 
-        representation = self.request.representation
+        representation = request.representation
+
+        # Datatable Filter
+        totalrows = displayrows = resource.count()
+        if representation == "aadata":
+            searchq, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+            if searchq is not None:
+                resource.add_filter(searchq)
+                displayrows = resource.count(left=left, distinct=True)
+        else:
+            orderby, left = None, None
+
+        # Start/Limit
         if representation == "aadata":
             vars = request.get_vars
             start = vars.get("iDisplayStart", None)
@@ -1269,48 +1282,56 @@ class S3Importer(S3CRUD):
                 limit = None # use default
         else:
             start = None # use default
+
+        if not orderby:
+            orderby = ~(resource.table.error)
+
+        # Retrieve the items
         rows = resource.select(list_fields,
                                start=start,
                                limit=limit,
-                               )
-        data = resource.extract(rows,
-                                list_fields,
-                                )
+                               orderby=orderby,
+                               left=left)
 
-        # put each value through the represent function
+        # Extract the data
+        data = resource.extract(rows, list_fields)
+
+        # Represent the data
+        _represent = represent.items()
         for row in data:
-            for (key, value) in row.items():
-                if key in represent:
-                    row[key] = represent[key](row["s3_import_item.id"], value);
+            record_id = row["s3_import_item.id"]
+            for column, method in _represent:
+                if column in row:
+                    row[column] = method(record_id, row[column])
+
+        # Build the datatable
         rfields = resource.resolve_selectors(list_fields)[0]
         dt = S3DataTable(rfields, data)
-        id = "s3import_1"
+        datatable_id = "s3import_1"
         if representation == "aadata":
-            totalrows = self.resource.count()
-            return dt.json(totalrows,
-                           totalrows,
-                           id,
-                           sEcho,
-                           dt_bulk_actions = [current.T("Import")],
-                           )
+            # Ajax callback
+            output = dt.json(totalrows,
+                             displayrows,
+                             datatable_id,
+                             sEcho,
+                             dt_bulk_actions = [current.T("Import")])
         else:
-            output = dict()
+            # Initial HTML response
             url = "/%s/%s/%s/import.aadata?job=%s" % (request.application,
                                                       request.controller,
                                                       request.function,
-                                                      ajax_item_id
-                                                      )
-            totalrows = self.resource.count()
+                                                      ajax_item_id)
             items =  dt.html(totalrows,
-                             totalrows,
-                             id,
+                             displayrows,
+                             datatable_id,
                              dt_ajax_url=url,
                              dt_bulk_actions = [current.T("Import")],
-                             dt_bulk_selected = dt_bulk_select,
-                             )
-            current.response.s3.dataTableID = ["s3import_1"]
-            output.update(items=items)
-            return output
+                             dt_bulk_selected = dt_bulk_select)
+            output = {"items":items}
+
+            current.response.s3.dataTableID = [datatable_id]
+
+        return output
 
     # -------------------------------------------------------------------------
     def _item_element_represent(self, id, value):
@@ -1323,11 +1344,9 @@ class S3Importer(S3CRUD):
         T = current.T
         db = current.db
 
-        value = S3XML.xml_decode(value)
         try:
             element = etree.fromstring(value)
         except:
-            # XMLSyntaxError: return the element as-is
             return DIV(value)
 
         tablename = element.get("name")
@@ -1395,13 +1414,13 @@ class S3Importer(S3CRUD):
             ftype = str(field.type)
             value = child.get("value", None)
             if not value:
-                value = child.text
+                value = S3XML.xml_decode(child.text)
             try:
                 value = S3Importer._decode_data(field, value)
             except:
                 pass
             if value:
-                value = S3XML.xml_encode(unicode(value))
+                value = s3_unicode(value)
             else:
                 value = ""
             if f != None and value != None:
