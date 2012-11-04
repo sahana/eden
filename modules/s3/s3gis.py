@@ -6749,7 +6749,9 @@ class KMLLayer(Layer):
         # Needed for unzipping & filtering as well
         # @ToDo: Should we move this folder to static to speed up access to cached content?
         #           Do we need to secure it?
-        cachepath = os.path.join(current.request.folder,
+        request = current.request
+        cachepath = os.path.join(request.folder,
+                                 request.folder,
                                  "uploads",
                                  "gis_cache")
 

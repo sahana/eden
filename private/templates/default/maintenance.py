@@ -31,7 +31,9 @@ class Daily():
         osjoin = os.path.join
         osstat = os.stat
         osremove = os.remove
-        folder = osjoin(request.folder, "sessions")
+        folder = osjoin(request.global_settings.applications_parent,
+                        request.folder,
+                        "sessions")
         # Convert to UNIX time
         month_past_u = time.mktime(month_past.timetuple())
         for file in os.listdir(folder):
