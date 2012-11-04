@@ -242,6 +242,10 @@ def hospital():
             #db.rms_req.shelter_id.readable = False
             #db.rms_req.organisation_id.readable = False
 
+        elif r.representation == "plain":
+            # Duplicates info in the other fields
+            r.table.location_id.readable = False
+
         return True
     response.s3.prep = prep
 
