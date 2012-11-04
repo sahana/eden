@@ -3796,6 +3796,7 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,
                       table.path, table.parent]
+            spatial = current.deployment_settings.get_gis_spatialdb()
             update_location_tree = self.update_location_tree
             wkt_centroid = self.wkt_centroid
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
@@ -3818,7 +3819,7 @@ class GIS(object):
                                      lat_min = vars.lat_min,
                                      lon_min = vars.lon_min,
                                      lon_max = vars.lon_max)
-                        if current.deployment_settings.get_gis_spatialdb():
+                        if spatial:
                             _vars.update(the_geom = vars.wkt)
                         db(table.id == feature.id).update(**_vars)
             return
@@ -3937,8 +3938,9 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
+            update_location_tree = self.update_location_tree
             for row in rows:
-                self.update_location_tree(row)
+                update_location_tree(row)
             return _path
 
         # L2
@@ -4041,8 +4043,9 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
+            update_location_tree = self.update_location_tree
             for row in rows:
-                self.update_location_tree(row)
+                update_location_tree(row)
             return _path
 
         # L3
@@ -4182,8 +4185,9 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
+            update_location_tree = self.update_location_tree
             for row in rows:
-                self.update_location_tree(row)
+                update_location_tree(row)
             return _path
 
         # L4
@@ -4358,8 +4362,9 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
+            update_location_tree = self.update_location_tree
             for row in rows:
-                self.update_location_tree(row)
+                update_location_tree(row)
             return _path
 
         # @ToDo: L5

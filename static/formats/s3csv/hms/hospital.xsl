@@ -100,6 +100,12 @@
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="HospitalName" select="col[@field='Name']/text()"/>
 
+        <xsl:variable name="postcode">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Postcode"/>
+            </xsl:call-template>
+        </xsl:variable>
+
         <resource name="hms_hospital">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$HospitalName"/>
@@ -128,7 +134,7 @@
             <data field="name"><xsl:value-of select="$HospitalName"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="address"><xsl:value-of select="col[@field='Address']"/></data>
-            <data field="postcode"><xsl:value-of select="$Postcode"/></data>
+            <data field="postcode"><xsl:value-of select="$postcode"/></data>
             <data field="city"><xsl:value-of select="col[@field='L3']"/></data>
             <data field="phone_exchange"><xsl:value-of select="col[@field='Phone Switchboard']"/></data>
             <data field="phone_business"><xsl:value-of select="col[@field='Phone Business']"/></data>
@@ -152,6 +158,7 @@
                     <xsl:when test="$Type='Health center with beds'">12</xsl:when>
                     <xsl:when test="$Type='Health center without beds'">13</xsl:when>
                     <xsl:when test="$Type='Dispensary'">21</xsl:when>
+                    <xsl:when test="$Type='Long-term care'">31</xsl:when>
                     <xsl:when test="$Type='Other'">98</xsl:when>
                     <xsl:otherwise>99</xsl:otherwise>
                 </xsl:choose>
@@ -294,6 +301,12 @@
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
+
+        <xsl:variable name="postcode">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Postcode"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -482,7 +495,7 @@
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
-            <data field="addr_postcode"><xsl:value-of select="$Postcode"/></data>
+            <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
             <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
             <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
         </resource>

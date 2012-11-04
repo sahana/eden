@@ -87,6 +87,7 @@ class HospitalDataModel(S3Model):
             12: T("Health center with beds"),
             13: T("Health center without beds"),
             21: T("Dispensary"),
+            31: T("Long-term care"),
             98: T("Other"),
             99: T("Unknown"),
         } #: Facility Type Options
@@ -330,19 +331,43 @@ class HospitalDataModel(S3Model):
                   deduplicate = self.hms_hospital_duplicate,
                   report_options = Storage(
                         search=[
-                              S3SearchOptionsWidget(
-                                name="hospital_facility_type",
-                                label=T("Facility Type"),
-                                field="facility_type"
-                              ),
-                              # for testing:
-                              S3SearchMinMaxWidget(
-                                name="hospital_search_bedcount",
-                                method="range",
-                                label=T("Total Beds"),
-                                comment=T("Select a range for the number of total beds"),
-                                field="total_beds"
-                              ),
+                          S3SearchOptionsWidget(
+                            name="hospital_search_L1",
+                            field="location_id$L1",
+                            location_level="L1",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="hospital_search_L2",
+                            field="location_id$L2",
+                            location_level="L2",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="hospital_search_L3",
+                            field="location_id$L3",
+                            location_level="L3",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="hospital_search_facility_status",
+                            label=T("Facility Status"),
+                            field="status.facility_status",
+                            options = hms_facility_status_opts,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="hospital_search_power_supply",
+                            label=T("Power"),
+                            field="status.power_supply_type",
+                            options = hms_power_supply_type_opts,
+                          ),
+                          S3SearchMinMaxWidget(
+                            name="hospital_search_bedcount",
+                            method="range",
+                            label=T("Total Beds"),
+                            comment=T("Select a range for the number of total beds"),
+                            field="total_beds"
+                          ),
                         ],
                         rows=report_fields,
                         cols=report_fields,
