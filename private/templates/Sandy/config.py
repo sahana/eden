@@ -53,6 +53,8 @@ settings.auth.registration_requires_approval = True
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 #settings.auth.always_notify_approver = False
 
+settings.security.policy = 4 # Controller & Function ACLs
+
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
