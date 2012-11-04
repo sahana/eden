@@ -2173,6 +2173,7 @@ class S3FeatureLayerModel(S3Model):
                                                                         "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
                                                                           T("Uses the REST Query Format defined in")))),
                                   # SQL Query to determine icon for feed export (e.g. type=1)
+                                  # - currently unused
                                   # @ToDo: Have both be REST-style with this being used for both & optional additional params available for main map (e.g. obsolete=False&time_between...)
                                   Field("filter_field",
                                         label = T("Filter Field")),
@@ -2181,7 +2182,8 @@ class S3FeatureLayerModel(S3Model):
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s /" % (T("Filter Value"),
                                                                           T("If you want several values, then separate with")))),
-                                  Field("popup_label",        # @ToDo: Replace with s3.crud_strings[tablename]?
+                                  # @ToDo: Replace with s3.crud_strings[tablename]?
+                                  Field("popup_label",
                                         label = T("Popup Label"),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Popup Label"),

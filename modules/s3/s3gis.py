@@ -5725,7 +5725,7 @@ S3.gis.layers_feature_resources=new Array()'''
 
             # URL to retrieve the data
             url = layer["url"]
-            # Optimise the query & & tell back-end not to add the type to the tooltips
+            # Optimise the query & tell back-end not to add the type to the tooltips
             options = "components=None&maxdepth=0&references=location_id&fields=name&label_off=1"
             if "?" in url:
                 url = "%s&%s" % (url, options)
@@ -7249,17 +7249,20 @@ class S3Map(S3Search):
                 vars = query.serialize_url(resource)
             else:
                 vars = None
+            gis = current.gis
+            #feature_resources = s3db.get_config(tablename, "feature_resources")
+            #if not feature_resources:
+            request = self.request
             url = URL(extension="geojson",
                       args=None,
                       vars=vars)
-            gis = current.gis
-            request = self.request
             feature_resources = [{
                     "name"   : T("Search Results"),
                     "id"     : "search_results",
                     "url"    : url,
                     "active" : True,
-                    "marker" : gis.get_marker(request.controller, request.function)
+                    "marker" : gis.get_marker(request.controller,
+                                              request.function)
                 }]
             map = gis.show_map(feature_resources=feature_resources,
                                catalogue_layers=True,

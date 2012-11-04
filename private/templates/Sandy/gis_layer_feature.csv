@@ -1,4 +1,3 @@
 "Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
-"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False",,,,,"False",
-"Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","office.obsolete=False",,,,,"False",
-"Warehouses","All Active Warehouses","inv","warehouse","US","warehouse","Building","Office","name/organisation_id","warehouse.obsolete=False",,,,,"False",
+"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False&hospital.facility_type__ne=31",facility_type,!31,,,"False",
+"Long-term care","","hms","ltc","US","special_needs","Medical Facility","LTC","name","hospital.obsolete=False",facility_type,31,,,"False",

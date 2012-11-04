@@ -39,7 +39,6 @@ def s3_menu_postp():
 
 # -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
     module_name = deployment_settings.modules[module].name_nice
@@ -47,12 +46,17 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
+def ltc():
+    """ Filtered REST Controller """
+
+    s3.filter = (s3db.hms_hospital.facility_type == 31)
+    return hospital()
+
+# -----------------------------------------------------------------------------
 def hospital():
+    """ Main REST controller for hospital data """
 
-    """ Main controller for hospital data entry """
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
+    table = s3db.hms_hospital
 
     # Load Models to add tabs
     if settings.has_module("inv"):
@@ -221,6 +225,24 @@ def hospital():
                 table = r.table
                 if r.id:
                     table.obsolete.readable = table.obsolete.writable = True
+                # elif r.method == "map":
+                    # feature_resources = [
+                        # {"name"   : T("Hospitals"),
+                         # "id"     : "hospitals",
+                         # "url"    : ,
+                         # "active" : True,
+                         # "marker" : gis.get_marker("hms",
+                                                   # "hospitals_only")
+                         # },
+                        # {"name"   : T("LTCs"),
+                         # "id"     : "ltcs",
+                         # "url"    : ,
+                         # "active" : True,
+                         # "marker" : gis.get_marker("hms",
+                                                   # "ltcs")
+                         # }
+                        # ]
+                    # s3db.configure("hms_hospital", feature_resources)
 
                 s3.formats["have"] = r.url() # .have added by JS
                 # Add comments
@@ -249,7 +271,8 @@ def hospital():
 
     rheader = s3db.hms_hospital_rheader
 
-    output = s3_rest_controller(rheader=rheader)
+    output = s3_rest_controller("hms", "hospital",
+                                rheader=rheader)
     return output
 
 # -----------------------------------------------------------------------------

@@ -268,11 +268,11 @@ class HospitalDataModel(S3Model):
                                "organisation_id$acronym"
                                ]
                       ),
-                      #S3SearchOptionsWidget(
-                      #  name="hospital_search_facility_type",
-                      #  label=T("Facility Type"),
-                      #  field="facility_type"
-                      #),
+                      S3SearchOptionsWidget(
+                        name="hospital_search_facility_type",
+                        label=T("Facility Type"),
+                        field="facility_type"
+                      ),
                       S3SearchOptionsWidget(
                         name="hospital_search_L1",
                         field="location_id$L1",
@@ -331,6 +331,11 @@ class HospitalDataModel(S3Model):
                   deduplicate = self.hms_hospital_duplicate,
                   report_options = Storage(
                         search=[
+                          S3SearchOptionsWidget(
+                            name="hospital_search_facility_type",
+                            label=T("Facility Type"),
+                            field="facility_type"
+                          ),
                           S3SearchOptionsWidget(
                             name="hospital_search_L1",
                             field="location_id$L1",
