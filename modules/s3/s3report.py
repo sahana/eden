@@ -59,11 +59,11 @@ class S3Report(S3CRUD):
 
     T = current.T
     METHODS = {
-        "list": T("Total"),
-        "count": T("Total"),
+        "list": T("List"),
+        "count": T("Count"),
         "min": T("Minimum"),
         "max": T("Maximum"),
-        "sum": T("Sum"),
+        "sum": T("Total"),
         "avg": T("Average"),
         #"std": T("Standard Deviation")
     }
@@ -525,7 +525,8 @@ class S3Report(S3CRUD):
             value = ""
 
         table = self.table
-        lfields, joins, left, distinct = self.resource.resolve_selectors(list_fields)
+        lfields, joins, left, distinct = self.resource.resolve_selectors(list_fields,
+                                                                         skip_components=False)
 
         options = []
         for f in lfields:

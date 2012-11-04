@@ -227,7 +227,7 @@ class HospitalDataModel(S3Model):
             msg_record_deleted = T("Hospital information deleted"),
             msg_list_empty = T("No Hospitals currently registered"))
 
-        table.virtualfields.append(HMSHospitalVirtualFields())
+        #table.virtualfields.append(HMSHospitalVirtualFields())
 
         # Search method
         hms_hospital_search = S3Search(
@@ -264,12 +264,14 @@ class HospitalDataModel(S3Model):
                       ),
                     ))
 
-        report_fields = ["facility_type",
+        report_fields = ["name",
+                         "facility_type",
                          #"organisation_id",
                          "location_id$L1",
                          "location_id$L2",
                          "location_id$L3",
-                         (FACILITY_STATUS, "facility_status"),
+                         #(FACILITY_STATUS, "facility_status"),
+                         "status.facility_status",
                          "total_beds",
                          "available_beds",
                          ]
@@ -298,17 +300,18 @@ class HospitalDataModel(S3Model):
                         rows=report_fields,
                         cols=report_fields,
                         facts=report_fields,
-                        methods=["count", "list"],
+                        methods=["count", "list", "sum"],
                         defaults=Storage(rows="location_id$L2",
                                          cols="facility_type",
                                          fact="total_beds",
-                                         aggregate="count")
+                                         aggregate="sum")
                   ),
                   list_fields=["id",
                                #"gov_uuid",
                                "name",
                                "facility_type",
-                               (FACILITY_STATUS, "facility_status"),
+                               #(FACILITY_STATUS, "facility_status"),
+                               "status.facility_status",
                                #"organisation_id",
                                "location_id$L1",
                                "location_id$L2",
@@ -375,6 +378,23 @@ class HospitalDataModel(S3Model):
             3: T("Closed")
         } #: Clinical Status Options
 
+        hms_facility_damage_opts = {
+            1: T("Flooding"),
+            2: T("Power Outage"),
+        } #: Facility Damage Options
+
+        hms_power_supply_type_opts = {
+            1: T("Grid"),
+            2: T("Generator"),
+            98: T("Other"),
+            99: T("None"),
+        } #: Power Supply Type Options
+
+        hms_gas_supply_type_opts = {
+            98: T("Other"),
+            99: T("None"),
+        } #: Gas Supply Type Options
+
         hms_security_status_opts = {
             1: T("Normal"),
             2: T("Elevated"),
@@ -424,6 +444,33 @@ class HospitalDataModel(S3Model):
                                    represent = lambda opt: \
                                                hms_resource_status_opts.get(opt,
                                                                 UNKNOWN_OPT)),
+
+                             # Facility Status Details
+                             Field("damage", "list:integer",
+                                   label=T("Damage sustained"),
+                                   requires=IS_EMPTY_OR(IS_IN_SET(hms_facility_damage_opts,
+                                                                  multiple=True)),
+                                   widget=CheckboxesWidgetS3.widget,
+                                   represent = lambda opt: \
+                                               hms_facility_damage_opts.get(opt,
+                                                                UNKNOWN_OPT)),
+                             Field("power_supply_type", "integer",
+                                   label=T("Power Supply Type"),
+                                   requires=IS_EMPTY_OR(IS_IN_SET(hms_power_supply_type_opts,
+                                                                  zero=None)),
+                                   represent = lambda opt: \
+                                               hms_power_supply_type_opts.get(opt,
+                                                                UNKNOWN_OPT)),
+                             Field("gas_supply_type", "integer",
+                                   label=T("Gas Supply Type"),
+                                   requires=IS_EMPTY_OR(IS_IN_SET(hms_gas_supply_type_opts,
+                                                                  zero=None)),
+                                   represent = lambda opt: \
+                                               hms_gas_supply_type_opts.get(opt,
+                                                                UNKNOWN_OPT)),
+                             Field("gas_supply_capacity", "integer",
+                                   label=T("Gas Supply Left (in hours)"),
+                                   requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
 
                              # Clinical status and clinical operations
                              Field("clinical_status", "integer",
@@ -1107,24 +1154,24 @@ class HospitalActivityReportModel(S3Model):
             hospital.update_record(modified_on=timestmp)
 
 # =============================================================================
-class HMSHospitalVirtualFields:
-    """ Virtual fields as dimension classes for reports """
+#class HMSHospitalVirtualFields:
+    #""" Virtual fields as dimension classes for reports """
 
-    extra_fields = []
+    #extra_fields = []
 
-    # -------------------------------------------------------------------------
-    def facility_status(self):
-        """ Facility Status for the Hospital """
-        id = self.hms_hospital.id
-        table = current.s3db.hms_status
-        field = table.facility_status
-        r = current.db(table.hospital_id == id).select(field,
-                                                       limitby=(0, 1)
-                                                       ).first()
-        if r:
-            return field.represent(r.facility_status)
-        else:
-            return current.messages["NONE"]
+    ## -------------------------------------------------------------------------
+    #def facility_status(self):
+        #""" Facility Status for the Hospital """
+        #id = self.hms_hospital.id
+        #table = current.s3db.hms_status
+        #field = table.facility_status
+        #r = current.db(table.hospital_id == id).select(field,
+                                                       #limitby=(0, 1)
+                                                       #).first()
+        #if r:
+            #return s3_unicode(field.represent(r.facility_status))
+        #else:
+            #return current.manager.LABEL["NONE"]
 
 # =============================================================================
 def hms_hospital_rheader(r, tabs=[]):
