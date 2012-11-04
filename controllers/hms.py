@@ -53,6 +53,29 @@ def ltc():
     return hospital()
 
 # -----------------------------------------------------------------------------
+def marker_fn(record):
+    """
+        Function to decide which Marker to use for Hospital Map
+        @ToDo: Use Symbology
+    """
+
+    mtable = db.gis_marker
+    if record.facility_type == 31:
+        marker = db(mtable.name == "special_needs").select(mtable.image,
+                                                           mtable.height,
+                                                           mtable.width,
+                                                           cache=s3db.cache,
+                                                           limitby=(0, 1)).first()
+    else:
+        marker = db(mtable.name == "hospital").select(mtable.image,
+                                                      mtable.height,
+                                                      mtable.width,
+                                                      cache=s3db.cache,
+                                                      limitby=(0, 1)).first()
+
+    return marker
+
+# -----------------------------------------------------------------------------
 def hospital():
     """ Main REST controller for hospital data """
 
@@ -225,24 +248,8 @@ def hospital():
                 table = r.table
                 if r.id:
                     table.obsolete.readable = table.obsolete.writable = True
-                # elif r.method == "map":
-                    # feature_resources = [
-                        # {"name"   : T("Hospitals"),
-                         # "id"     : "hospitals",
-                         # "url"    : ,
-                         # "active" : True,
-                         # "marker" : gis.get_marker("hms",
-                                                   # "hospitals_only")
-                         # },
-                        # {"name"   : T("LTCs"),
-                         # "id"     : "ltcs",
-                         # "url"    : ,
-                         # "active" : True,
-                         # "marker" : gis.get_marker("hms",
-                                                   # "ltcs")
-                         # }
-                        # ]
-                    # s3db.configure("hms_hospital", feature_resources)
+                elif r.method == "map":
+                    s3db.configure("hms_hospital", marker_fn=marker_fn)
 
                 s3.formats["have"] = r.url() # .have added by JS
                 # Add comments
@@ -265,6 +272,10 @@ def hospital():
         elif r.representation == "plain":
             # Duplicates info in the other fields
             r.table.location_id.readable = False
+
+        elif r.representation == "geojson":
+            mtable = s3db.gis_marker
+            s3db.configure("hms_hospital", marker_fn=marker_fn)
 
         return True
     s3.prep = prep

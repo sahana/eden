@@ -1889,8 +1889,8 @@ class GIS(object):
         """
 
         NONE = current.messages["NONE"]
-        if DEBUG:
-            start = datetime.datetime.now()
+        #if DEBUG:
+        #    start = datetime.datetime.now()
 
         db = current.db
         s3db = current.s3db
@@ -1943,8 +1943,9 @@ class GIS(object):
         table = resource.table
         tablename = resource.tablename
 
-        attributes = {}
+        markers = {}
         tooltips = {}
+        attributes = {}
         represents = {}
         if format == "geojson":
             # Build the Popup Tooltips or Attributes now so that representations can be
@@ -1990,11 +1991,11 @@ class GIS(object):
 
                 attributes[tablename] = attributes
 
-                if DEBUG:
-                    end = datetime.datetime.now()
-                    duration = end - start
-                    duration = "{:.2f}".format(duration.total_seconds())
-                    _debug("attributes lookup completed in %s seconds" % duration)
+                #if DEBUG:
+                #    end = datetime.datetime.now()
+                #    duration = end - start
+                #    duration = "{:.2f}".format(duration.total_seconds())
+                #    _debug("attributes lookup completed in %s seconds" % duration)
 
             elif popup_fields:
                 label_off = vars.get("label_off", None)
@@ -2046,20 +2047,37 @@ class GIS(object):
 
                 tooltips[tablename] = tooltips
 
-                if DEBUG:
-                    end = datetime.datetime.now()
-                    duration = end - start
-                    duration = "{:.2f}".format(duration.total_seconds())
-                    query = (ftable.id == layer_id)
-                    layer_name = db(query).select(ftable.name,
-                                                  limitby=(0, 1)).first().name
-                    _debug("tooltip lookup of layer %s completed in %s seconds" % \
-                            (layer_name, duration))
+                #if DEBUG:
+                #    end = datetime.datetime.now()
+                #    duration = end - start
+                #    duration = "{:.2f}".format(duration.total_seconds())
+                #    query = (ftable.id == layer_id)
+                #    layer_name = db(query).select(ftable.name,
+                #                                  limitby=(0, 1)).first().name
+                #    _debug("tooltip lookup of layer %s completed in %s seconds" % \
+                #            (layer_name, duration))
 
+            _markers = vars.get("markers", None)
+            if _markers:
+                # Add a per-feature Marker
+                pkey = table._id
+                marker_fn = s3db.get_config(tablename, "marker_fn")
+                if marker_fn:
+                    for record in resource:
+                        markers[record[pkey]] = marker_fn(record)
+                else:
+                    # No configuration found so use default marker
+                    c, f = tablename.split("_", 1)
+                    marker = GIS.get_marker(c, f)
+                    for record in resource:
+                        markers[record[pkey]] = marker
+
+                markers[tablename] = markers
+                
         # Lookup the LatLons now so that it can be done as a single
         # query rather than per record
-        if DEBUG:
-            start = datetime.datetime.now()
+        #if DEBUG:
+        #    start = datetime.datetime.now()
         latlons = {}
         wkts = {}
         geojsons = {}
@@ -2145,17 +2163,18 @@ class GIS(object):
         _geojsons = {}
         _geojsons[tablename] = geojsons
 
-        if DEBUG:
-            end = datetime.datetime.now()
-            duration = end - start
-            duration = "{:.2f}".format(duration.total_seconds())
-            _debug("latlons lookup of layer %s completed in %s seconds" % \
-                    (layer_name, duration))
+        #if DEBUG:
+        #    end = datetime.datetime.now()
+        #    duration = end - start
+        #    duration = "{:.2f}".format(duration.total_seconds())
+        #    _debug("latlons lookup of layer %s completed in %s seconds" % \
+        #            (layer_name, duration))
 
         # Used by S3XML's gis_encode()
         return dict(latlons = _latlons,
                     wkts = _wkts,
                     geojsons = _geojsons,
+                    markers = markers,
                     tooltips = tooltips,
                     attributes = attributes,
                     )
@@ -5754,7 +5773,8 @@ S3.gis.layers_feature_resources=new Array()'''
             else:
                 cluster_threshold = ""
 
-            if "marker" in layer:
+            if "marker" in layer and layer["marker"]:
+                # Per-layer Marker
                 marker = layer["marker"]
                 markerLayer = ''',
  "marker_image":"%s",
@@ -5762,6 +5782,8 @@ S3.gis.layers_feature_resources=new Array()'''
  "marker_width":%i''' % (marker["image"], marker["height"], marker["width"])
             else:
                 markerLayer = ""
+                # Request the server to provide per-feature Markers
+                url = "%s&markers=1" % url
             # Generate JS snippet to pass to static
             layers_feature_resources += '''
 S3.gis.layers_feature_resources[%i]={
@@ -7182,6 +7204,7 @@ class S3Map(S3Search):
             session.error = T("This resource cannot be displayed on the map!")
             redirect(r.url(method="search"))
 
+        s3db = current.s3db
         response = current.response
         tablename = self.tablename
 
@@ -7217,7 +7240,7 @@ class S3Map(S3Search):
             if not search_id:
                 r.error(400, current.manager.ERROR.BAD_RECORD)
             r.post_vars = r.vars
-            _query = (current.s3db.pr_save_search.id == search_id)
+            _query = (s3db.pr_save_search.id == search_id)
             search_vars = record.search_vars
             record = current.db(_query).select(search_vars,
                                                limitby=(0, 1)).first()
@@ -7252,9 +7275,13 @@ class S3Map(S3Search):
             else:
                 vars = None
             gis = current.gis
-            #feature_resources = s3db.get_config(tablename, "feature_resources")
-            #if not feature_resources:
             request = self.request
+            marker_fn = s3db.get_config(tablename, "marker_fn")
+            if marker_fn:
+                marker = None
+            else:
+                marker = gis.get_marker(request.controller,
+                                        request.function)
             url = URL(extension="geojson",
                       args=None,
                       vars=vars)
@@ -7263,8 +7290,7 @@ class S3Map(S3Search):
                     "id"     : "search_results",
                     "url"    : url,
                     "active" : True,
-                    "marker" : gis.get_marker(request.controller,
-                                              request.function)
+                    "marker" : marker
                 }]
             map = gis.show_map(feature_resources=feature_resources,
                                catalogue_layers=True,

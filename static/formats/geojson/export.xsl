@@ -384,6 +384,19 @@
             </url>
         </xsl:if>
         
+        <xsl:if test="reference[@field='location_id']/@marker_url">
+            <!-- Per-feature Marker -->
+            <marker_url>
+                <xsl:value-of select="reference[@field='location_id']/@marker_url"/>
+            </marker_url>
+            <marker_height>
+                <xsl:value-of select="reference[@field='location_id']/@marker_height"/>
+            </marker_height>
+            <marker_width>
+                <xsl:value-of select="reference[@field='location_id']/@marker_width"/>
+            </marker_width>
+        </xsl:if>
+
         <xsl:if test="$attributes!=''">
             <xsl:call-template name="Attributes">
                 <xsl:with-param name="attributes">

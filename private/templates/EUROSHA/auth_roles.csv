@@ -23,8 +23,8 @@
 "ANONYMOUS","Anonymous",,"gis","layer_wfs",,"READ",,"any",
 "ANONYMOUS","Anonymous",,"gis","layer_wms",,"READ",,"any",
 "ANONYMOUS","Anonymous",,"gis","layer_xyz",,"READ",,"any",
-"AUTHENTICATED","Anonymous",,"pr","pentity",,"READ",,"any",
-"AUTHENTICATED","Anonymous",,"pr","person_search",,"READ",,"any","Custom Controller to allow access to PR via JSON for AutoComplete"
+"AUTHENTICATED","Authenticated",,"pr","pentity",,"READ",,"any",
+"AUTHENTICATED","Authenticated",,"pr","person_search",,"READ",,"any","Custom Controller to allow access to PR via JSON for AutoComplete"
 "reader","Reader",,"asset",,,"READ",,"any",
 "reader","Reader",,"cr",,,"READ",,"any",
 "reader","Reader",,"hrm",,,"READ",,"any",

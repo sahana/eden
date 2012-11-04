@@ -167,6 +167,9 @@ class S3XML(S3Codec):
         lonmin="lonmin",
         lonmax="lonmax",
         marker="marker",
+        marker_url="marker_url",
+        marker_height="marker_height",
+        marker_width="marker_width",
         popup="popup",          # for GIS Feature Layers/Queries
         popup_url="popup_url",  # for map popups
         sym="sym",              # for GPS
@@ -693,6 +696,7 @@ class S3XML(S3Codec):
             geojsons = locations.get("geojsons", None)
             wkts = locations.get("wkts", None)
             popup_url = locations.get("popup_url", None)
+            markers = locations.get("markers", None)
             tooltips = locations.get("tooltips", None)
             attributes = locations.get("attributes", None)
         else:
@@ -700,6 +704,7 @@ class S3XML(S3Codec):
             geojsons = None
             wkts = None
             popup_url = None
+            markers = None
             tooltips = None
             attributes = None
         if marker and format == "kml":
@@ -845,6 +850,14 @@ class S3XML(S3Codec):
                         url = "%s%s/%i" % (settings.get_base_public_url(),
                                            url, record[pkey])
                     attr[ATTRIBUTE.popup_url] = url
+
+                if markers and tablename in markers:
+                    marker = markers[tablename][record[pkey]]
+                    attr[ATTRIBUTE.marker_url] = URL(c="static", f="img",
+                                                     args=["markers",
+                                                           marker["image"]])
+                    attr[ATTRIBUTE.marker_height] = str(marker["height"])
+                    attr[ATTRIBUTE.marker_width] = str(marker["width"])
 
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
