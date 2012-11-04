@@ -1255,7 +1255,7 @@ class S3Importer(S3CRUD):
         representation = request.representation
 
         # Datatable Filter
-        totalrows = displayrows = self.resource.count()
+        totalrows = displayrows = resource.count()
         if representation == "aadata":
             searchq, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
             if searchq is not None:
@@ -1282,6 +1282,9 @@ class S3Importer(S3CRUD):
                 limit = None # use default
         else:
             start = None # use default
+
+        if not orderby:
+            orderby = ~(resource.table.error)
 
         # Retrieve the items
         rows = resource.select(list_fields,
