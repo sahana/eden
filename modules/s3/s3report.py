@@ -843,23 +843,19 @@ class S3ContingencyTable(TABLE):
             col_label = "%s %s" % (BY, str(col_label))
         layer_label=str(layer_label)
 
-        print filter_query
         if filter_query and hasattr(filter_query, "serialize_url"):
             filter_vars = filter_query.serialize_url(resource=report.resource)
         else:
             filter_vars = {}
 
-        json_data = json.dumps(dict(r=report.rows,
+        json_data = json.dumps(dict(t=layer_label,
+                                    x=col_label,
+                                    y=row_label,
+                                    r=report.rows,
                                     c=report.cols,
                                     d=report.compact(n=50, represent=True),
                                     u=url,
                                     f=filter_vars,
-                                    rows=drows,
-                                    cols=dcols,
-                                    #data=report.compact(10, represent=True),
-                                    row_label=row_label,
-                                    col_label=col_label,
-                                    layer_label=layer_label,
                                     cell_lookup_table=cell_lookup_table
                                    ))
         self.report_data = Storage(row_label=row_label,

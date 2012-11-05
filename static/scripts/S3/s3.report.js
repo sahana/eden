@@ -55,17 +55,35 @@ function reportRemoveTooltip() {
     reportDataIndex = null;
 }
 
-function reportRenderPieChart(src, title, layer) {
+function reportRenderPieChart(json, dim) {
 
     $('#chart-container').css({width: '800px'});
     $('#chart').css({height: '360px'});
+
+    var d = json['d'], src, xdim, title;
+    if (dim === 0) {
+        src = d['rows'];
+        xdim = json['r'];
+        title = json['y'];
+    } else {
+        src = d['cols'];
+        xdim = json['c'];
+        title = json['x'];
+    }
+    var layer = json['t'];
+
+    var url = json['u'], concat = '?';
+    for (var f in json['f']) {
+        url += concat + f + '=' + json['f'][f];
+        concat = '&';
+    }
 
     var data = [];
     for (var i=0; i<src.length; i++) {
         var item = src[i];
         data.push({
-            label: item[0],
-            data: item[1]
+            label: item[2],
+            data: item[3]
         });
     }
     $('#chart-header').html('<h4>'+layer + ' ' + title+'</h4>');
@@ -84,7 +102,7 @@ function reportRenderPieChart(src, title, layer) {
             },
             grid: {
                 hoverable: true,
-                clickable: false
+                clickable: true
             }
         }
     );
@@ -106,19 +124,54 @@ function reportRenderPieChart(src, title, layer) {
             reportRemoveTooltip();
         }
     });
+    $('#chart').bind('plotclick', function(event, pos, item) {
+        if (item) {
+            var page = new String(url), val;
+            if (xdim) {
+                try {
+                    val = src[item.seriesIndex][1];
+                }
+                catch(e) {
+                    val = null;
+                }
+                if (val) {
+                    page += concat + xdim + '=' + val;
+                }
+            }
+            window.open(page, '_blank');
+        }
+    });
 }
 
-function reportRenderBarChart(src, title, layer) {
+function reportRenderBarChart(json, dim) {
 
-    $('#chart-container').css({width: '800px'});
+    $('#chart-container').css({width: '100%'});
     $('#chart').css({height: '360px'});
+
+    var d = json['d'], src, xdim, title;
+    if (dim === 0) {
+        src = d['rows'];
+        xdim = json['r'];
+        title = json['y'];
+    } else {
+        src = d['cols'];
+        xdim = json['c'];
+        title = json['x'];
+    }
+    var layer = json['t'];
+
+    var url = json['u'], concat = '?';
+    for (var f in json['f']) {
+        url += concat + f + '=' + json['f'][f];
+        concat = '&';
+    }
 
     var data = [];
     var labels = [];
     for (var i=0; i<src.length; i++) {
         var item = src[i];
-        data.push({label: item[0], data: [[i+1, item[1]]]});
-        labels.push([i+1, item[0]]);
+        data.push({label: item[2], data: [[i+1, item[3]]]});
+        labels.push([i+1, item[2]]);
     }
     $('#chart-header').html('<h4>'+layer + ' ' + title+'</h4>');
 
@@ -137,7 +190,7 @@ function reportRenderBarChart(src, title, layer) {
             },
             grid: {
                 hoverable: true,
-                clickable: false
+                clickable: true
             },
             xaxis: {
                 ticks: labels,
@@ -157,10 +210,27 @@ function reportRenderBarChart(src, title, layer) {
             var value = item.series.data[0][1];
             var tooltip = '<div class="reportTooltipLabel">' + item.series.label + '</div>';
             tooltip += '<div class="reportTooltipValue">' + value + '</div>';
-            reportShowTooltip(pos.pageX, pos.pageY, tooltip)
+            reportShowTooltip(pos.pageX, pos.pageY, tooltip);
             $('.reportTooltipLabel').css({color: item.series.color});
         } else {
             reportRemoveTooltip();
+        }
+    });
+    $('#chart').bind('plotclick', function(event, pos, item) {
+        if (item) {
+            var page = new String(url), val;
+            if (xdim) {
+                try {
+                    val = src[item.seriesIndex][1];
+                }
+                catch(e) {
+                    val = null;
+                }
+                if (val) {
+                    page += concat + xdim + '=' + val;
+                }
+            }
+            window.open(page, '_blank');
         }
     });
 }
@@ -170,26 +240,34 @@ function reportRenderBreakdown(json, dim) {
     var src = json['d'];
 
     $('#chart-container').css({width: '100%'});
-    $('#chart').css({height: '720px'});
-    var idata = src.cells;
-    if (dim == 0) {
+
+    var idata = src.cells, rdim, cdim, rows, cols, title, get_data;
+    if (dim === 0) {
         // breakdown cols by rows
-        var title = json['row_label'];
-        var rows = src.rows, cols = src.cols;
-        var rdim = json_data['r'], cdim = json_data['c'];
-        var get_data = function(i, j) { return idata[i][j]; };
+        title = json['y'];
+        rdim = json['r'];
+        cdim = json['c'];
+        rows = src.rows;
+        cols = src.cols;
+        get_data = function(i, j) { return idata[i][j]; };
     } else {
         // breakdown rows by cols
-        var title = json['col_label'];
-        var rows = src.cols, cols = src.rows;
-        var rdim = json_data['c'], cdim = json_data['r'];
-        var get_data = function(i, j) { return idata[j][i]; };
+        title = json['x'];
+        rdim = json['c'];
+        cdim = json['r'];
+        rows = src.cols;
+        cols = src.rows;
+        get_data = function(i, j) { return idata[j][i]; };
     }
-    var layer = json['layer_label'];
 
-    var url = json_data['u'], concat = '?';
-    for (var f in json_data['f']) {
-        url += concat + f + '=' + json_data['f'][f];
+    var height = Math.max(rows.length * Math.max((cols.length + 1) * 16, 50) + 70, 360);
+    $('#chart').css({height: height + 'px'});
+
+    var layer = json['t'];
+
+    var url = json['u'], concat = '?';
+    for (var f in json['f']) {
+        url += concat + f + '=' + json['f'][f];
         concat = '&';
     }
 
@@ -213,8 +291,8 @@ function reportRenderBreakdown(json, dim) {
 
     var yaxis_ticks = [];
     for (r=0; r<rows.length; r++) {
-        var index = (r + 1) * (cols.length + 1) + 1;
         var label = rows[r][2];
+        index = (r + 1) * (cols.length + 1) + 1;
         yaxis_ticks.push([index, label]);
     }
 
@@ -235,7 +313,8 @@ function reportRenderBreakdown(json, dim) {
             },
             yaxis: {
                 ticks: yaxis_ticks,
-                labelWidth: 120
+                labelWidth: 120,
+                max: (rows.length) * (cols.length + 1) + 1
             },
             xaxis: {
                 max: xmax * 1.1
@@ -259,7 +338,7 @@ function reportRenderBreakdown(json, dim) {
             var value = item.datapoint[0];
             var tooltip = '<div class="reportTooltipLabel">' + name + '</div>';
             tooltip += '<div class="reportTooltipValue">' + item.series.label + ' : <span class="reportItemValue">' + value + '</span></div>';
-            reportShowTooltip(pos.pageX, pos.pageY, tooltip)
+            reportShowTooltip(pos.pageX, pos.pageY, tooltip);
             $('.reportTooltipLabel').css({'padding-bottom': '8px'});
             $('.reportTooltipValue').css({color: item.series.color});
             $('.reportItemValue').css({'font-weight': 'bold'});
@@ -270,13 +349,13 @@ function reportRenderBreakdown(json, dim) {
     $('#chart').bind('plotclick', function(event, pos, item) {
         var s = concat;
         if (item) {
-            var page = new String(url);
+            var page = new String(url), rval, cval;
             if (rdim) {
                 try {
-                    var rval = rows[item.dataIndex][1];
+                    rval = rows[item.dataIndex][1];
                 }
                 catch(e) {
-                    var rval = null;
+                    rval = null;
                 }
                 if (rval) {
                     page += s + rdim + '=' + rval;
@@ -285,10 +364,10 @@ function reportRenderBreakdown(json, dim) {
             }
             if (cdim) {
                 try {
-                    var cval = cols[item.seriesIndex][1];
+                    cval = cols[item.seriesIndex][1];
                 }
                 catch(e) {
-                    var cval = null;
+                    cval = null;
                 }
                 if (cval) {
                     page += s + cdim + '=' + cval;
@@ -300,47 +379,57 @@ function reportRenderBreakdown(json, dim) {
 }
 
 $(function() {
+
+    // json_data comes with the page, and contains these attributes:
+    //
+    // t - Title of the layer
+    // x - Label for the cols-dimension
+    // y - Label for the rows-dimension
+    // r - Field selector for the rows-dimension (to construct URLs)
+    // c - Field selector for the cols-dimension (to construct URLs)
+    // d - Compact report data (see S3PivotTable.compact())
+    // u - URL of the resource
+    // f - URL query variables of the report filter widgets
+
     $('#pie_chart_rows').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
+        $('#chart').unbind('plotclick');
         $('#chart').empty();
-        reportRenderPieChart(json_data['rows'],
-                             json_data['row_label'],
-                             json_data['layer_label']);
+        reportRenderPieChart(json_data, 0);
     });
     $('#pie_chart_cols').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
+        $('#chart').unbind('plotclick');
         $('#chart').empty();
-        reportRenderPieChart(json_data['cols'],
-                             json_data['col_label'],
-                             json_data['layer_label']);
+        reportRenderPieChart(json_data, 1);
     });
     $('#vbar_chart_rows').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
+        $('#chart').unbind('plotclick');
         $('#chart').empty();
-        reportRenderBarChart(json_data['rows'],
-                             json_data['row_label'],
-                             json_data['layer_label']);
+        reportRenderBarChart(json_data, 0);
     });
     $('#vbar_chart_cols').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
+        $('#chart').unbind('plotclick');
         $('#chart').empty();
-        reportRenderBarChart(json_data['cols'],
-                             json_data['col_label'],
-                             json_data['layer_label']);
+        reportRenderBarChart(json_data, 1);
     });
     $('#bd_chart_rows').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
+        $('#chart').unbind('plotclick');
         $('#chart').empty();
         reportRenderBreakdown(json_data, 0);
     });
     $('#bd_chart_cols').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
+        $('#chart').unbind('plotclick');
         $('#chart').empty();
         reportRenderBreakdown(json_data, 1);
     });
@@ -381,7 +470,7 @@ $(function() {
                     for (var record=0, rn=records.length; record<rn; record++) {
                         list.append('<li>' + json_data.cell_lookup_table[layer][records[record]] + '</li>');
                     }
-                    lists.append(list)
+                    lists.append(list);
                 }
 
                 cell.append(lists);
