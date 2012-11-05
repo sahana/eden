@@ -188,6 +188,7 @@ class S3Report(S3CRUD):
             if not errors:
                 self.resource.add_filter(query)
         else:
+            query = None
             form = None
 
         # Get rows, cols, facts and aggregate
@@ -271,6 +272,8 @@ class S3Report(S3CRUD):
                 if not report.empty:
                     items = S3ContingencyTable(report,
                                                show_totals=show_totals,
+                                               filter_query=query,
+                                               url=r.url(method=""),
                                                _id="list",
                                                _class="dataTable display report")
                     report_data = items.report_data
@@ -595,7 +598,12 @@ class S3Report(S3CRUD):
 class S3ContingencyTable(TABLE):
     """ HTML Helper to generate a contingency table """
 
-    def __init__(self, report, show_totals=True, **attributes):
+    def __init__(self,
+                 report,
+                 show_totals=True,
+                 url=None,
+                 filter_query=None,
+                 **attributes):
         """
             Constructor
 
@@ -835,9 +843,20 @@ class S3ContingencyTable(TABLE):
             col_label = "%s %s" % (BY, str(col_label))
         layer_label=str(layer_label)
 
-        json_data = json.dumps(dict(rows=drows,
+        print filter_query
+        if filter_query and hasattr(filter_query, "serialize_url"):
+            filter_vars = filter_query.serialize_url(resource=report.resource)
+        else:
+            filter_vars = {}
+
+        json_data = json.dumps(dict(r=report.rows,
+                                    c=report.cols,
+                                    d=report.compact(n=50, represent=True),
+                                    u=url,
+                                    f=filter_vars,
+                                    rows=drows,
                                     cols=dcols,
-                                    data=report.compact(10, represent=True),
+                                    #data=report.compact(10, represent=True),
                                     row_label=row_label,
                                     col_label=col_label,
                                     layer_label=layer_label,
