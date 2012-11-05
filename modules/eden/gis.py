@@ -349,6 +349,9 @@ class S3LocationModel(S3Model):
     def gis_countries_represent(ids):
         """ FK representation """
 
+        if not ids:
+            return current.messages.NONE
+
         db = current.db
         table = db.gis_location
         rows = db(table.id.belongs(ids)).select(table.name)
