@@ -165,19 +165,32 @@ function reportRenderBarChart(src, title, layer) {
     });
 }
 
-function reportRenderBreakdown(src, dim, title, layer) {
+function reportRenderBreakdown(json, dim) {
+
+    var src = json['d'];
 
     $('#chart-container').css({width: '100%'});
     $('#chart').css({height: '720px'});
     var idata = src.cells;
     if (dim == 0) {
         // breakdown cols by rows
+        var title = json['row_label'];
         var rows = src.rows, cols = src.cols;
+        var rdim = json_data['r'], cdim = json_data['c'];
         var get_data = function(i, j) { return idata[i][j]; };
     } else {
         // breakdown rows by cols
+        var title = json['col_label'];
         var rows = src.cols, cols = src.rows;
+        var rdim = json_data['c'], cdim = json_data['r'];
         var get_data = function(i, j) { return idata[j][i]; };
+    }
+    var layer = json['layer_label'];
+
+    var url = json_data['u'], concat = '?';
+    for (var f in json_data['f']) {
+        url += concat + f + '=' + json_data['f'][f];
+        concat = '&';
     }
 
     var odata = [];
@@ -229,7 +242,7 @@ function reportRenderBreakdown(src, dim, title, layer) {
             },
             grid: {
                 hoverable: true,
-                clickable: false
+                clickable: true
             }
         }
     );
@@ -252,6 +265,36 @@ function reportRenderBreakdown(src, dim, title, layer) {
             $('.reportItemValue').css({'font-weight': 'bold'});
         } else {
             reportRemoveTooltip();
+        }
+    });
+    $('#chart').bind('plotclick', function(event, pos, item) {
+        var s = concat;
+        if (item) {
+            var page = new String(url);
+            if (rdim) {
+                try {
+                    var rval = rows[item.dataIndex][1];
+                }
+                catch(e) {
+                    var rval = null;
+                }
+                if (rval) {
+                    page += s + rdim + '=' + rval;
+                    s = '&';
+                }
+            }
+            if (cdim) {
+                try {
+                    var cval = cols[item.seriesIndex][1];
+                }
+                catch(e) {
+                    var cval = null;
+                }
+                if (cval) {
+                    page += s + cdim + '=' + cval;
+                }
+            }
+            window.open(page, '_blank');
         }
     });
 }
@@ -293,17 +336,13 @@ $(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
         $('#chart').empty();
-        reportRenderBreakdown(json_data['data'], 0,
-                              json_data['row_label'],
-                              json_data['layer_label']);
+        reportRenderBreakdown(json_data, 0);
     });
     $('#bd_chart_cols').click(function() {
         $('#chart-container').removeClass('hide');
         $('#chart').unbind('plothover');
         $('#chart').empty();
-        reportRenderBreakdown(json_data['data'], 1,
-                              json_data['col_label'],
-                              json_data['layer_label']);
+        reportRenderBreakdown(json_data, 1);
     });
     $('#hide-chart').click(function(){
         $('#chart-container').addClass('hide');

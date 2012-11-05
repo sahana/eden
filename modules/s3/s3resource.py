@@ -5618,7 +5618,7 @@ class S3Pivottable(object):
             return len(self.records)
 
     # -------------------------------------------------------------------------
-    def compact(self, n=10, layer=None, least=False, represent=False):
+    def compact(self, n=50, layer=None, least=False, represent=False):
         """
             Get the top/least n numeric results for this layer
 
