@@ -27,6 +27,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
+from core.spaces import url_names as urln
 from core.spaces.models import Space
 from apps.ecidadania.news.models import Post
 from core.permissions import has_space_permission, has_all_permissions
@@ -45,7 +46,7 @@ class RedirectArchive(RedirectView):
 
     def get_redirect_url(self, **kwargs):
         space = self.kwargs['space_url']
-        return reverse('post-archive', kwargs={'space_url':space})
+        return reverse(urln.NEWS_ARCHIVE, kwargs={'space_url':space})
 
 
 class YearlyPosts(YearArchiveView):

@@ -21,31 +21,36 @@
 Module to store proposal related url names.
 """
 
-PROPOSAL_LIST
+PROPOSAL_LIST = 'list-proposals'
 
-PROPOSAL_EDIT
+PROPOSAL_EDIT = 'edit-proposal'
 
-PROPOSAL_ADD
+PROPOSAL_ADD = 'add-proposal'
 
-PROPOSAL_VIEW
+PROPOSAL_VIEW = 'view-proposal'
 
-PROPOSAL_DELETE
+PROPOSAL_DELETE = 'delete-proposal'
 
-PROPOSAL_VOTE
+PROPOSAL_VOTE = 'vote-proposal'
 
-PROPOSAL_MERGE
+PROPOSAL_MERGED = 'merged_proposal'
 
-PROPOSALFIELD_ADD
+PROPOSAL_MERGEDTOSET = 'mergedproposal_to_set'
 
-PROPOSALFIELD_DELETE
+PROPOSALFIELD_ADD = 'add_fields'
 
-PROPOSALSET_ADD
+PROPOSALFIELD_DELETE 'delete_fields'
 
-PROPOSALSET_EDIT
+PROPOSALSET_ADD = 'add-proposalset'
 
-PROPOSALSET_DELETE
+PROPOSALSET_EDIT = 'edit-proposalset'
 
-PROPOSALSET_LIST
+PROPOSALSET_DELETE = 'delete-proposalset'
 
-PROPOSALSET_VIEW
+PROPOSALSET_LIST = 'list-proposalset'
 
+PROPOSALSET_VIEW = 'view-proposalset'
+
+SELECT_SET = 'select_set'
+
+VALIDATE_VOTE = 'validate-vote'

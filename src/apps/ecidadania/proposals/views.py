@@ -23,38 +23,32 @@ Proposal module views.
 import hashlib
 import datetime
 
-# Generic class-based views
+from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic import FormView
 from django.views.generic.create_update import update_object
-
-# Decorators 
-from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_POST
-from django.utils.decorators import method_decorator
-
-# Response types
-from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.http import HttpResponse
-
-# Some extras
-from django.contrib import messages
-from django.template import RequestContext
 from django.db.models import Count
 from django.db.models import F
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib import messages
+from django.template import RequestContext
+from django.utils.translation import ugettext_lazy as _
+from django.utils.decorators import method_decorator
+from django.http import HttpResponse
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 
-# Application models 
+from core.spaces.models import Space
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField, ConfirmVote
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
-from core.spaces.models import Space
-
-from django.core.mail import send_mail
-from django.utils.translation import ugettext_lazy as _
+from apps.ecidadania.proposals import url_names as urln_prop
+from core.spaces import url_names as urln_space
 
 
 class AddProposal(FormView):
@@ -70,7 +64,8 @@ class AddProposal(FormView):
     template_name = 'proposals/proposal_form.html'
     
     def get_success_url(self):
-        return '/spaces/' + self.kwargs['space_url']
+        space = self.kwargs['space_url']
+        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
         
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -143,7 +138,10 @@ class EditProposal(UpdateView):
     template_name = 'proposals/proposal_form.html'
     
     def get_success_url(self):
-        return '/spaces/{0}/proposal/{1}/'.format(self.kwargs['space_url'], self.kwargs['prop_id'])
+        space = self.kwargs['space_url']
+        proposal = self.kwargs['prop_id']
+        return reverse(urln_prop.PROPOSAL_VIEW, kwargs={'space_url':space,
+                                                        'prop_id':proposal})
         
     def get_object(self):
         prop_id = self.kwargs['prop_id']
@@ -174,8 +172,8 @@ class DeleteProposal(DeleteView):
         return get_object_or_404(Proposal, pk = self.kwargs['prop_id'])
 
     def get_success_url(self):
-        current_space = self.kwargs['space_url']
-        return '/spaces/{0}'.format(current_space)
+        space = self.kwargs['space_url']
+        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
 
     def get_context_data(self, **kwargs):
         context = super(DeleteProposal, self).get_context_data(**kwargs)
@@ -283,11 +281,16 @@ def add_proposal_fields(request, space_url):
         if form.is_valid():
             form_data = form.save()
             proposal_fields = ProposalField.objects.filter(proposalset=form_data.proposalset)
-            return render_to_response("proposals/proposal_add_fields.html", {'form_data':form_data,\
-                                        'get_place':get_place, 'prop_fields':proposal_fields,'form':form},\
-                                        context_instance = RequestContext(request))
-    return render_to_response("proposals/proposal_add_fields.html", {'form':form, 'get_place':get_place\
-                                },context_instance = RequestContext(request))
+            return render_to_response("proposals/proposal_add_fields.html",
+                {'form_data':form_data,
+                 'get_place':get_place,
+                 'prop_fields':proposal_fields,
+                 'form':form},
+                 context_instance = RequestContext(request))
+
+    return render_to_response("proposals/proposal_add_fields.html",
+        {'form':form, 'get_place':get_place}, 
+        context_instance = RequestContext(request))
 
 
 
@@ -302,19 +305,24 @@ def remove_proposal_field(request, space_url):
     :context: d_form, get_place, delete_field
 
     """
-    
     d_form = ProposalFieldDeleteForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
     if request.method == 'POST':
         if d_form.is_valid():
             form_data = d_form.save(commit=False)
-            delete_field = ProposalField.objects.filter(proposalset=form_data.proposalset, field_name=form_data.field_name)
+            delete_field = ProposalField.objects.filter(
+                proposalset=form_data.proposalset,
+                field_name=form_data.field_name)
             delete_field.delete()
-            return render_to_response("proposals/proposalform_remove_field.html", {'form':d_form, 'get_place':get_place,\
-                                        'deleted_field':form_data}, context_instance = RequestContext(request))
+            return render_to_response(
+                "proposals/proposalform_remove_field.html",
+                {'form':d_form, 'get_place':get_place,
+                 'deleted_field':form_data},
+                 context_instance = RequestContext(request))
 
-    return render_to_response("proposals/proposalform_remove_field.html", {'form':d_form, 'get_place':get_place}, \
-                                context_instance = RequestContext(request))
+    return render_to_response("proposals/proposalform_remove_field.html",
+        {'form':d_form, 'get_place':get_place},
+        context_instance = RequestContext(request))
 
 
 def proposal_to_set(request, space_url):
@@ -328,20 +336,19 @@ def proposal_to_set(request, space_url):
     :context: form, get_place
 
     """
-
-
     sel_form = ProposalSetSelectForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
 
     if request.method == 'POST':
         if sel_form.is_valid():
-            return redirect('/spaces/'+ space_url +'/proposal/add/'+request.POST['proposalset']+'/')
+            pset = request.POST['proposalset']
+            return reverse(urln_prop.PROPOSAL_ADD,
+                kwargs={'space_url':space_url, 'p_set':pset})
 
-    return render_to_response("proposals/proposalset_select_form.html", {'form':sel_form, 'get_place':get_place},\
-                                context_instance = RequestContext(request))
+    return render_to_response("proposals/proposalset_select_form.html",
+        {'form':sel_form, 'get_place':get_place},
+        context_instance = RequestContext(request))
 
-       
- 
 
 def mergedproposal_to_set(request, space_url):
 
@@ -358,11 +365,12 @@ def mergedproposal_to_set(request, space_url):
 
     if request.method == 'POST':
         if sel_form.is_valid():
-            return redirect('/spaces/'+ space_url +'/proposal/merged/'+ request.POST['proposalset'] +'/')
+            pset = request.POST['proposalset']
+            return reverse(urln_prop.PROPOSAL_MERGED, kwargs={'space_url':space_url, 'p_set':pset})
 
-    return render_to_response("proposals/mergedproposal_in_set.html",{'form':sel_form, 'get_place':get_place}, \
-                                context_instance = RequestContext(request))
-
+    return render_to_response("proposals/mergedproposal_in_set.html",
+        {'form':sel_form, 'get_place':get_place},
+        context_instance = RequestContext(request))
 
    
 def merged_proposal(request, space_url, p_set):
@@ -377,8 +385,6 @@ def merged_proposal(request, space_url, p_set):
     :context:form, get_place, form_field
 
     """
-
-
     get_place = get_object_or_404(Space, url=space_url)
     field = ProposalField.objects.filter(proposalset=p_set)
     form_field = [f_name.field_name for f_name in field]
@@ -394,12 +400,15 @@ def merged_proposal(request, space_url, p_set):
             form_field = [f_name.field_name for f_name in field]
             form_data.save()
             merged_form.save_m2m()
-            return redirect('/spaces/'+ space_url +'/')
+
+            return reverse(urln_space.SPACE_INDEX,
+                kwargs={'space_url':space_url})
     else: 
         merged_form = ProposalMergeForm(initial={'p_set':p_set})
 
-    return render_to_response("proposals/proposal_merged.html",{'form':merged_form, 'get_place':get_place, \
-                                'form_field':form_field},context_instance = RequestContext(request))
+    return render_to_response("proposals/proposal_merged.html",
+        {'form':merged_form, 'get_place':get_place, 'form_field':form_field},
+        context_instance = RequestContext(request))
 #
 # Proposal Sets
 #
@@ -426,7 +435,8 @@ class ListProposalSet(ListView):
         context = super(ListProposalSet, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
-    
+
+
 class ViewProposalSet(ListView):
 
     """
@@ -451,6 +461,7 @@ class ViewProposalSet(ListView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
+
 class AddProposalSet(FormView):
 
     """
@@ -467,7 +478,8 @@ class AddProposalSet(FormView):
     template_name = 'proposals/proposalset_form.html'
     
     def get_success_url(self):
-        return '/spaces/' + self.kwargs['space_url']
+        space = self.kwargs['space_url']
+        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
     
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -486,7 +498,8 @@ class AddProposalSet(FormView):
     @method_decorator(permission_required('proposals.add_proposalset'))
     def dispatch(self, *args, **kwargs):
         return super(AddProposalSet, self).dispatch(*args, **kwargs)
-        
+
+
 class EditProposalSet(UpdateView):
 
     """
@@ -501,7 +514,10 @@ class EditProposalSet(UpdateView):
     template_name = 'proposals/proposalset_form.html'
     
     def get_success_url(self):
-        return '/spaces/{0}/proposal/psets/{1}/'.format(self.kwargs['space_url'], self.kwargs['set_id'])
+        space = self.kwargs['space_url']
+        pset = self.kwargs['set_id']
+        return reverse(urln_prop.PROPOSALSET_VIEW, kwargs={'space_url':space,
+            'set_id':pset})
         
     def get_object(self):
         propset_id = self.kwargs['set_id']
@@ -515,6 +531,7 @@ class EditProposalSet(UpdateView):
     @method_decorator(permission_required('proposals.edit_proposalset'))
     def dispatch(self, *args, **kwargs):
         return super(EditProposalSet, self).dispatch(*args, **kwargs)
+
 
 class DeleteProposalSet(DeleteView):
 
@@ -530,8 +547,8 @@ class DeleteProposalSet(DeleteView):
         return get_object_or_404(ProposalSet, pk = self.kwargs['set_id'])
 
     def get_success_url(self):
-        current_space = self.kwargs['space_url']
-        return '/spaces/{0}'.format(current_space)
+        space = self.kwargs['space_url']
+        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
 
     def get_context_data(self, **kwargs):
         context = super(DeleteProposalSet, self).get_context_data(**kwargs)
