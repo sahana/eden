@@ -226,16 +226,17 @@ settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Warehouse/Facility"
 # Enable certain fields just for specific Organisations
-settings.org.dependent_fields = \
-    {"pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
-     "pr_person_details.father_name"             : ["Bangladesh Red Crescent Society"],
-     "pr_person_details.company"                 : ["Philippine Red Cross"],
-     "pr_person_details.affiliations"            : ["Philippine Red Cross"],
-     "vol_volunteer.active"                      : ["Timor-Leste Red Cross Society"],
-     "vol_volunteer_cluster.vol_cluster_type_id"      : ["Philippine Red Cross"],
-     "vol_volunteer_cluster.vol_cluster_id"          : ["Philippine Red Cross"],
-     "vol_volunteer_cluster.vol_cluster_position_id" : ["Philippine Red Cross"],
-     }
+# empty list => disabled for all (including Admin)
+#settings.org.dependent_fields = \
+#    {"pr_person_details.mother_name"             : [],
+#     "pr_person_details.father_name"             : [],
+#     "pr_person_details.company"                 : [],
+#     "pr_person_details.affiliations"            : [],
+#     "vol_volunteer.active"                      : [],
+#     "vol_volunteer_cluster.vol_cluster_type_id"      : [],
+#     "vol_volunteer_cluster.vol_cluster_id"          : [],
+#     "vol_volunteer_cluster.vol_cluster_position_id" : [],
+#     }
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

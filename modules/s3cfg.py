@@ -1010,40 +1010,35 @@ class S3Config(Storage):
     def set_org_dependent_field(self,
                                 tablename=None,
                                 fieldname=None,
-                                enable_field =True):
+                                enable_field=True):
         """
             Enables/Disables optional fields according to a user's Organisation
             - must specify either field or tablename/fieldname
                                            (e.g. for virtual fields)
         """
 
-        auth = current.auth
-        if auth.s3_has_role(auth.get_system_roles().ADMIN):
-            # Admins see all fields
-            enabled = True
-        else:
-            # Default to disabled
-            enabled = False
-
-        #elif not tablename or not fieldname:
-        #    raise SyntaxError
-
+        enabled = False
         dependent_fields = self.org.get("dependent_fields", None)
-        if dependent_fields and not enabled:
+        if dependent_fields:
             org_name_list = dependent_fields.get("%s.%s" % (tablename,
                                                             fieldname),
                                                  None)
 
             if org_name_list:
-                s3db = current.s3db
-                otable = s3db.org_organisation
-                root_org_id = auth.root_org()
-                root_org = current.db(otable.id == root_org_id).select(otable.name,
-                                                                       limitby=(0, 1),
-                                                                       cache=s3db.cache
-                                                                       ).first()
-                if root_org:
-                    enabled = root_org.name in org_name_list
+                auth = current.auth
+                if auth.s3_has_role(auth.get_system_roles().ADMIN):
+                    # Admins see all fields unless disabled for all orgs in this deployment
+                    enabled = True
+                else:
+                    s3db = current.s3db
+                    otable = s3db.org_organisation
+                    root_org_id = auth.root_org()
+                    root_org = current.db(otable.id == root_org_id).select(otable.name,
+                                                                           limitby=(0, 1),
+                                                                           cache=s3db.cache
+                                                                           ).first()
+                    if root_org:
+                        enabled = root_org.name in org_name_list
 
         if enable_field:
             field = current.s3db[tablename][fieldname]
