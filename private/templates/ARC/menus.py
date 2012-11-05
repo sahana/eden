@@ -4,12 +4,14 @@ from gluon import current
 from s3 import *
 from eden.layouts import *
 try:
+    # Nice to have to copy this file
+    #from ..IFRC.layouts import *
     from .layouts import *
 except ImportError:
     pass
 import eden.menus as default
 
-red_cross_filter = {"organisation.organisation_type_id$name" : "Red Cross / Red Crescent"}
+#red_cross_filter = {"organisation.organisation_type_id$name" : "Red Cross / Red Crescent"}
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
@@ -45,8 +47,9 @@ class S3MainMenu(default.S3MainMenu):
                     vars=dict(group="staff"))(
                 MM("Staff", c="hrm", f="staff"),
                 MM("Teams", c="hrm", f="group"),
-                MM("National Societies", c="org", f="organisation",
-                   vars = red_cross_filter),
+                MM("Organizations", c="org", f="organisation",
+                   #vars = red_cross_filter
+                   ),
                 MM("Offices", c="org", f="office"),
                 MM("Job Titles", c="hrm", f="job_title"),
                 #MM("Skill List", c="hrm", f="skill"),
@@ -63,9 +66,9 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Training Courses", c="vol", f="course"),
                 MM("Certificate List", c="vol", f="certificate"),
             ),
-            homepage("member")(
-                MM("Members", c="member", f="membership"),
-            ),
+            #homepage("member")(
+            #    MM("Members", c="member", f="membership"),
+            #),
             homepage("inv", "supply", "req")(
                 MM("Warehouses", c="inv", f="warehouse"),
                 MM("Received Shipments", c="inv", f="recv"),
@@ -87,10 +90,11 @@ class S3MainMenu(default.S3MainMenu):
             homepage("project")(
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
+                MM("Tasks", c="project", f="task"),
             ),
-            homepage("vulnerability")(
-                MM("Map", c="vulnerability", f="index"),
-            ),
+            #homepage("vulnerability")(
+            #    MM("Map", c="vulnerability", f="index"),
+            #),
             #homepage("event", "irs")(
             #    MM("Events", c="event", f="event"),
             #    MM("Incident Reports", c="irs", f="ireport"),
@@ -137,9 +141,7 @@ class S3MainMenu(default.S3MainMenu):
                     image = "graphic_office.png",
                     title = "Offices")(
                     DB("Manage Offices Data", f="office"),
-                    DB("Manage National Society Data", f="organisation",
-                       vars=red_cross_filter
-                       ),
+                    DB("Manage Organization Data", f="organisation"),
                 ),
                 DB("CATALOGS",
                     c="hrm",
@@ -162,10 +164,10 @@ class S3MainMenu(default.S3MainMenu):
                    image = "graphic_volunteers.png",
                    title = "Volunteers",
                    text = "Add new and manage existing volunteers."),
-                DB("Members", c="member", f="index",
-                   image = "graphic_members.png",
-                   title = "Members",
-                   text = "Add new and manage existing members."),
+                #DB("Members", c="member", f="index",
+                #   image = "graphic_members.png",
+                #   title = "Members",
+                #   text = "Add new and manage existing members."),
                 DB("Warehouses", c="inv", f="index",
                    image = "graphic_warehouse.png",
                    title = "Warehouses",
@@ -276,18 +278,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New Team", m="create"),
                         M("List All"),
                     ),
-                    M("National Societies", c="org", 
-                                            f="organisation",
-                                            vars=red_cross_filter,
+                    M("Organizations", c="org", 
+                                       f="organisation",
+                                       #vars=red_cross_filter,
                       check=manager_mode)(
                         M("New", m="create",
-                          vars=red_cross_filter
+                          #vars=red_cross_filter
                           ),
                         M("List All",
-                          vars=red_cross_filter
+                          #vars=red_cross_filter
                           ),
                         M("Search", m="search",
-                          vars=red_cross_filter
+                          #vars=red_cross_filter
                           ),
                         M("Import", m="import", p="create", check=is_org_admin)
                     ),
@@ -488,6 +490,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def irs(self):
         """ IRS Incident Reporting """
 
+        
         return M()(
                     M("Events", c="event", f="event")(
                         M("New", m="create"),

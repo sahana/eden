@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+/*** Home Page overrides ***/
+
+#news-window{
+    background: url(../IFRC/img/news_window_bg.png);
+}
+#news-window .close-window {
+    background: url(../IFRC/img/close_but.png) no-repeat;
+}
+#map-home{
+    background: url(img/map_bg.jpg) no-repeat;
+}
+/*
+#map-home .map-tip:before { 
+    content: url(../IFRC/img/maptip_start.png);
+}
+#map-home .map-tip:after {
+    content: url(../IFRC/img/maptip_end.png);
+}
+.marker a {
+    background: url(../IFRC/img/map_marker.png) center no-repeat;
+}
+.left .marker-plus {
+    background: url(../IFRC/img/map_marker_plus_right.png) no-repeat;
+}
+.right .marker-plus {
+    background: url(../IFRC/img/map_marker_plus_left.png) no-repeat;
+} */

@@ -920,6 +920,9 @@ Thank you
 
                 # Log them in
                 #user = utable[form.vars.id]
+                if "language" not in form.vars:
+                    # Was missing from login form
+                    form.vars.language = T.accepted_language
                 user = Storage(utable._filter_fields(form.vars, id=True))
                 self.login_user(user)
 
@@ -947,6 +950,9 @@ Thank you
                 if approved:
                     # Log them in
                     #user = utable[form.vars.id]
+                    if "language" not in form.vars:
+                        # Was missing from login form
+                        form.vars.language = T.accepted_language
                     user = Storage(utable._filter_fields(form.vars, id=True))
                     self.login_user(user)
 
@@ -1246,8 +1252,8 @@ Thank you
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
             # no permissions for autocomplete on registration page
             organisation_id.comment = DIV(_class="tooltip",
-                              _title="%s|%s" % (T("Organization"),
-                                                   T("Enter some characters to bring up a list of possible matches")))
+                                          _title="%s|%s" % (T("Organization"),
+                                                            T("Enter some characters to bring up a list of possible matches")))
 
             if not deployment_settings.get_auth_registration_organisation_required():
                 organisation_id.requires = IS_NULL_OR(organisation_id.requires)

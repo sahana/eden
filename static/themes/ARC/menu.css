@@ -1,0 +1,15 @@
+@charset "UTF-8";
+
+/*** Navigation Overrides ***/
+
+#left-col .sub-menu .highlight:after {
+    content: url(../IFRC/img/sidenav_tab.png);
+}
+#dashboard li a:hover{background:url(../IFRC/img/dashboard_hover.png) repeat-x;}
+#dashboard:before {
+    background: url(../IFRC/img/dashboard_shadow.png) repeat-x;
+}
+#sub-dashboard > li ul li {background:url(../IFRC/img/bullet-triangle.png) no-repeat 0px 4px;}
+#sub-dashboard:before {
+    background: url(../IFRC/img/dashboard_shadow.png) repeat-x;
+}

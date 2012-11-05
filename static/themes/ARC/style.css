@@ -1,0 +1,30 @@
+@charset "UTF-8";
+
+/*** General Overrides ***/
+table tr th.edit-delete-col {
+    background: url(../IFRC/img/edit_delete.png) no-repeat bottom;
+}
+.edit-button {
+    background: url(../IFRC/img/table_controls.png) 0 0;
+}
+.delete-button {
+    background: url(../IFRC/img/table_controls.png) -22px 0;
+}
+.red-button {
+    background: url(../IFRC/img/button_plus_end.png) no-repeat scroll top right;
+}
+.red-button span {
+    background: url(../IFRC/img/button_red_start.png) no-repeat;
+}
+.add-btn {
+    background: url(../IFRC/img/button_plus_end.png) no-repeat scroll right top transparent;
+}
+.add-btn span {
+    background: url(../IFRC/img/button_red_start.png) no-repeat scroll 0 0 transparent;
+}
+.pagination div a {
+    background-image: url(../IFRC/img/pagination-control.png);
+}
+.submit-search {
+    background: url(../IFRC/img/search_but.png) no-repeat;
+}

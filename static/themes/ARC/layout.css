@@ -1,0 +1,10 @@
+@charset "UTF-8";
+
+/*** Layout/Sections Overrides ***/
+
+#header #logo a {
+    background: url(../IFRC/img/logo.png) no-repeat;
+}
+#header:after {
+    background: url(../IFRC/img/header_shadow.png) repeat-x;
+}

@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="{{=T.accepted_language or "en"}}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
+{{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
+<meta name="application-name" content="{{=appname}}" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/IFRC/favicon.ico" type="image/x-icon" />
+<style type="text/css">
+{{if s3.rtl:}}
+ div{direction:rtl;}
+{{else:}}
+ body{direction:ltr;}
+{{pass}}
+</style>
+{{if s3.debug:}}
+ {{=s3base.s3_include_debug_css()}}
+{{else:}}
+ {{# Built by /static/scripts/tools/build.sahana.py }}
+ <link href="/{{=appname}}/static/themes/IFRC/eden.min.css" rel="stylesheet" type="text/css" />
+{{pass}}
+{{for sheet in s3.external_stylesheets:}}
+ <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{for sheet in s3.stylesheets:}}
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{include "scripts_top.html"}}
+</head>
+{{try:}}
+ {{if r.representation == "popup":}}{{representation = "popup"}}
+ {{elif r.representation == "iframe":}}{{representation = "iframe"}}
+ {{else:}}{{representation = ""}}{{pass}}
+{{except:}}{{representation = ""}}{{pass}}
+{{if representation == "popup":}}
+ <body>
+ {{if s3.debug:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
+ {{else:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.min.js"]))}}{{pass}}
+ {{if response.flash or response.confirmation:}}
+  {{include "layout_popup.html"}}
+ {{else:}}{{include}}{{pass}}
+{{elif representation == "iframe":}}
+ {{include "layout_iframe.html"}}
+ {{include}}
+{{else:}}
+<body>
+ <div id='container'>
+  <div id='header'>
+   <div id='society-icon'><img src='/{{=appname}}/static/themes/ARC/img/logo.png' alt='Red Cross/Red Crescent'></div>
+   <div id='logo'>
+    <h1><a href='/{{=appname}}/default/index' title='Return to Home Page'>Resource Mapping System</a></h1>
+    <div id='region' class='big'>America</div>
+   </div>
+   <div id='personal-menu'>
+    {{if auth.is_logged_in():}}<div class="username fright">{{=auth.user.email}}</div>{{pass}}
+    {{=current.menu.personal}}
+    <p>Managing material and human resources together to better prepare for future hazards and vulnerabilities.</p>
+   </div>
+   <a href='#main-content' class='skipnavigation'>Skip to Content</a>
+   {{=current.menu.main}}
+   <!--<div id='searchbox'><form><div><input type='text' name='search' title='Search' class='text-search'></div>
+   <div><select name='category' class='catsearch'>
+   <option value='' selected>Option1</option>
+   <option value=''>Option2</option>
+   </select></div><a href='' class='submit-search'>Submit</a></form></div>-->
+  </div>
+  <div id='wrapper'>
+   {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
+   {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
+   {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
+   {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
+   {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
+   {{if current.menu.options or response.menu_left:}}
+    <div id='left-col'>
+     {{if current.menu.options:}}{{=current.menu.options}}{{pass}}
+     {{if response.menu_left:}}{{=response.menu_left}}{{pass}}
+    </div>
+    <div id='right-col'>
+   {{else:}} 
+    <div id='single-col'>
+   {{pass}}
+     {{include "breadcrumbs.html"}}
+     <a id='main-content'></a>
+     {{include}}
+     {{try:}}{{if current.menu.dashboard is not None:}}{{=current.menu.dashboard}}{{pass}}{{except:}}{{pass}}
+    </div>
+  </div>
+  <div id='footer'>
+   {{include "../private/templates/IFRC/views/footer.html"}}
+   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
+  </div>
+ </div>
+{{s3.jquery_ready.append(
+"""
+$('#nav').children('li').mouseover(function(){
+ $(this).children('.sub-menu').show()
+})
+$('#nav').children('li').mouseout(function(){
+ $(this).children('.sub-menu').hide()
+})""")}}
+{{pass}}
+{{include "scripts.html"}}
+</body>
+</html>

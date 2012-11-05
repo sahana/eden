@@ -87,7 +87,11 @@ table tr td:last-child, table tr th:last-child{border-right:0px #9C9C9C dashed;}
 table tr.odd td{background:#f1e8cb;}
 table tr.even td{background:#fff;}
 table tr td.white-cell,table tr th.white-cell{background:#fff;border-right:0px #9C9C9C dashed;}
-table tr th.edit-delete-col{width:50px;background:url(img/edit_delete.png) no-repeat bottom; text-indent:-99999px;}
+table tr th.edit-delete-col {
+    width: 50px;
+    background: url(img/edit_delete.png) no-repeat bottom;
+    text-indent: -99999px;
+}
 /*table td .date{font-weight:bold;}*/
 table td input[type="text"],
 table td select,
@@ -96,8 +100,23 @@ table td textarea {
 /*    font-size: 0.9em;*/
     border: 1px solid #ccc;
 }
-.edit-button{float:left;margin-right:5px;display:block;background:url(img/table_controls.png) 0 0;width:20px;height:30px;text-indent:-99999px;}
-.delete-button{float:left;display:block;background:url(img/table_controls.png) -22px 0;width:20px;height:30px;text-indent:-99999px;}
+.edit-button {
+    float: left;
+    margin-right: 5px;
+    display: block;
+    background: url(img/table_controls.png) 0 0;
+    width: 20px;
+    height: 30px;
+    text-indent: -99999px;
+}
+.delete-button {
+    float: left;
+    display: block;
+    background: url(img/table_controls.png) -22px 0;
+    width: 20px;
+    height: 30px;
+    text-indent: -99999px;
+}
 .table-bar{overflow:hidden;margin-top:20px;border-bottom:1px solid #9c9c9c;}
 .table-bar p{margin-bottom:0;}
 .table-bar select{margin:0 10px;}
@@ -123,7 +142,7 @@ table td textarea {
     color: #fff;
 }
 .add-btn {
-    background: url("img/button_plus_end.png") no-repeat scroll right top transparent;
+    background: url(img/button_plus_end.png) no-repeat scroll right top transparent;
     display: block;
     float: left;
     height: 36px;
@@ -132,7 +151,7 @@ table td textarea {
     text-decoration: none;
 }
 .add-btn span {
-    background: url("img/button_red_start.png") no-repeat scroll 0 0 transparent;
+    background: url(img/button_red_start.png) no-repeat scroll 0 0 transparent;
     color: #FFFFFF;
     display: block;
     font-size: 1.25em;
@@ -145,17 +164,25 @@ table td textarea {
 /*** Pagination ***/
 
 .pagination{}
-.pagination > div,.pagination > ul,.pagination li{float:left;}
-.pagination ul{list-style:none; margin:0 10px 20px 5px;padding:0px;}
-.pagination li{border-left:1px #590f12 solid;padding:0 5px;}
+.pagination > div,.pagination > ul,.pagination li {float:left;}
+.pagination ul {list-style:none; margin:0 10px 20px 5px;padding:0px;}
+.pagination li {border-left:1px #590f12 solid;padding:0 5px;}
 .pagination li:first-child{border-left:0px #ccc solid;}
-.pagination li a{padding:3px;}
-.pagination div a{display:block; width:19px; height:18px; margin-right:5px;background-image:url(img/pagination-control.png);background-repeat:no-repeat;text-indent:-99999px;}
-#content.left .pagination .highlight{font-weight:bold; color:#dc032e;}
-.pagination .first-button{}
-.pagination .prev-button{background-position:-20px 0;}
-.pagination .next-button{background-position:-40px 0;}
-.pagination .last-button{background-position:-60px 0;}
+.pagination li a {padding:3px;}
+.pagination div a {
+    display: block;
+    width: 19px;
+    height: 18px;
+    margin-right: 5px;
+    background-image: url(img/pagination-control.png);
+    background-repeat: no-repeat;
+    text-indent: -99999px;
+}
+#content.left .pagination .highlight {font-weight:bold; color:#dc032e;}
+.pagination .first-button {}
+.pagination .prev-button {background-position:-20px 0;}
+.pagination .next-button {background-position:-40px 0;}
+.pagination .last-button {background-position:-60px 0;}
 
 /*** Footer ***/
 #footer .footer-nav{

@@ -875,8 +875,8 @@ def s3_register_validation():
         table = current.s3db.auth_organisation
         query = (table.organisation_id != None) & \
                 (table.domain != None)
-        whitelists = db(query).select(table.organisation_id,
-                                      table.domain)
+        whitelists = current.db(query).select(table.organisation_id,
+                                              table.domain)
         if whitelists:
             domains = '''$('#auth_user_organisation_id__row').hide()
 S3.whitelists={
