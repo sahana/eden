@@ -3207,6 +3207,7 @@ class S3ProjectTaskModel(S3Model):
                                                 name = "task_search_milestone",
                                                 label = T("Milestone"),
                                                 field = "milestone",
+                                                options = self.task_milestone_opts,
                                                 cols = 3
                                             ))
 
@@ -3580,6 +3581,27 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.task_id == ttable.id) & \
                 (ltable.activity_id == atable.id)
         opts = db(query).select(atable.name)
+        _dict = {}
+        for opt in opts:
+            _dict[opt.name] = opt.name
+        return _dict
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_milestone_opts():
+        """
+            Provide the options for the Milestone search filter
+            - all Activities with Tasks
+        """
+
+        db = current.db
+        mtable = db.project_milestone
+        ttable = db.project_task
+        ltable = db.project_task_milestone
+        query = (ttable.deleted == False) & \
+                (ltable.task_id == ttable.id) & \
+                (ltable.milestone_id == mtable.id)
+        opts = db(query).select(mtable.name)
         _dict = {}
         for opt in opts:
             _dict[opt.name] = opt.name
