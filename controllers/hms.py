@@ -69,7 +69,10 @@ def marker_fn(record):
     else:
         marker = "hospital"
     if status:
-        if status.facility_status in (3, 4):
+        if status.facility_status == 1:
+            # Normal
+            marker = "%s_green" % marker
+        elif status.facility_status in (3, 4):
             # Evacuating or Closed
             marker = "%s_red" % marker
         elif status.facility_status == 2:
