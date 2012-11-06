@@ -13,8 +13,11 @@
          L2...................string..........gis_hierarchy.L2 (Label for L2 locations)
          L3...................string..........gis_hierarchy.L3 (Label for L3 locations)
          L4...................string..........gis_hierarchy.L4 (Label for L4 locations)
+         L5...................string..........gis_hierarchy.L5 (Label for L5 locations)
          Edit L1..............boolean.........gis_hierarchy.edit_L1
-         
+         Edit L2..............boolean.........gis_hierarchy.edit_L2
+         Edit L3..............boolean.........gis_hierarchy.edit_L4
+         Edit L4..............boolean.........gis_hierarchy.edit_L4
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -71,8 +74,18 @@
             <data field="L2"><xsl:value-of select="col[@field='L2']"/></data>
             <data field="L3"><xsl:value-of select="col[@field='L3']"/></data>
             <data field="L4"><xsl:value-of select="col[@field='L4']"/></data>
+            <data field="L5"><xsl:value-of select="col[@field='L5']"/></data>
             <xsl:if test="col[@field='Edit L1']!=''">
                 <data field="edit_L1"><xsl:value-of select="col[@field='Edit L1']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Edit L2']!=''">
+                <data field="edit_L2"><xsl:value-of select="col[@field='Edit L2']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Edit L3']!=''">
+                <data field="edit_L3"><xsl:value-of select="col[@field='Edit L3']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Edit L4']!=''">
+                <data field="edit_L4"><xsl:value-of select="col[@field='Edit L4']"/></data>
             </xsl:if>
         </resource>
     </xsl:template>

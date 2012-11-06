@@ -481,6 +481,9 @@ def s3_roles_permitted(name="roles_permitted", **attr):
 # Labels that vary by country are set by gis.update_table_hierarchy_labels()
 #
 
+address_L5 = S3ReusableField("L5",
+                             readable=False,
+                             writable=False)
 address_L4 = S3ReusableField("L4",
                              readable=False,
                              writable=False)
@@ -503,6 +506,7 @@ def s3_lx_fields():
     """
 
     fields = (
+            address_L5(),
             address_L4(),
             address_L3(),
             address_L2(),
