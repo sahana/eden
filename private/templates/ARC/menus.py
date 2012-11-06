@@ -69,6 +69,10 @@ class S3MainMenu(default.S3MainMenu):
             #homepage("member")(
             #    MM("Members", c="member", f="membership"),
             #),
+            homepage("cr", "shelter")(
+                MM("Shelters", c="cr", f="shelter"),
+                #M("Requests", c="req", f="req")(),
+            ),
             homepage("inv", "supply", "req")(
                 MM("Warehouses", c="inv", f="warehouse"),
                 MM("Received Shipments", c="inv", f="recv"),
@@ -168,6 +172,10 @@ class S3MainMenu(default.S3MainMenu):
                 #   image = "graphic_members.png",
                 #   title = "Members",
                 #   text = "Add new and manage existing members."),
+                DB("Shelters", c="cr", f="index",
+                   image = "graphic_shelter.png",
+                   title = "Shelters",
+                   text = "Manage shelters."),
                 DB("Warehouses", c="inv", f="index",
                    image = "graphic_warehouse.png",
                    title = "Warehouses",

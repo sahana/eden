@@ -78,6 +78,7 @@ class S3DocumentLibrary(S3Model):
                                project_activity=T("Project Activity"),
                                project_task=T("Task"),
                                hms_hospital=T("Hospital"),
+                               cr_shelter=T("Shelter"),
                                )
 
         tablename = "doc_entity"

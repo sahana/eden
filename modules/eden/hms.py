@@ -924,7 +924,7 @@ class HospitalDataModel(S3Model):
     @staticmethod
     def hms_hospital_duplicate(item):
         """
-            HR record duplicate detection, used for the deduplicate hook
+            Hospital record duplicate detection, used for the deduplicate hook
 
             @param item: the S3ImportItem to check
         """

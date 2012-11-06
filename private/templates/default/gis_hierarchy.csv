@@ -3,7 +3,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,AU,"State / Territory","Local Government Area","","",
 ,BD,"Division","District","Thana / Upazil","Village / Union / Area",
 ,FI,"Regional State Administrative Agency","Region","Sub-region","Municipality",
-,MM,"State",,,,
+,MM,"State","District","Township","Village Tract",
 ,NZ,"Region","Territorial Authority",,,
 ,PH,"Region","Province","City / Municipality","Barangay",
 ,TL,"District","SubDistrict","Suco","Aldeia",

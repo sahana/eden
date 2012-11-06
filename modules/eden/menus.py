@@ -548,9 +548,9 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
-                        # @ToDo Search by type, services, location, available space
-                        #M("Search", m="search"),
-                        M("Import", m="import"),
+                        M("Search", m="search"),
+                        M("Report", m="report"),
+                        M("Import", m="import", p="create"),
                     ),
                     M(types, restrict=[ADMIN])(
                         M("Types", f="shelter_type"),
