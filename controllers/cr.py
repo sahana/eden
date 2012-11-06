@@ -147,7 +147,7 @@ def shelter():
         s3db.gis_location_filter(r)
 
         if r.method == "import":
-            organisation_id.default = None
+            s3db.cr_shelter.organisation_id.default = None
 
         if r.component and r.component.name == "presence":
             r.resource.add_filter(prtable.closed == False)
