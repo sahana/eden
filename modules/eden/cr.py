@@ -51,6 +51,7 @@ class S3CampDataModel(S3Model):
 
         settings = current.deployment_settings
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         messages = current.messages
@@ -106,6 +107,10 @@ class S3CampDataModel(S3Model):
                 msg_list_empty = T("No Shelter Types currently registered"),
                 name_nice = T("Shelter"),
                 name_nice_plural = T("Shelters"))
+
+        configure(tablename,
+                  deduplicate = self.cr_shelter_type_duplicate,
+                  )
 
         shelter_type_id = S3ReusableField("shelter_type_id", table,
                                           requires = IS_NULL_OR(
@@ -359,65 +364,66 @@ class S3CampDataModel(S3Model):
                          "population",
                          ]
 
-        self.configure(tablename,
-                       super_entity=("org_site", "doc_entity", "pr_pentity"),
-                       search_method=cr_shelter_search,
-                       deduplicate = self.cr_shelter_duplicate,
-                       report_options = Storage(
-                            search=[
-                              S3SearchOptionsWidget(
-                                name="shelter_search_type",
-                                label=T("Type"),
-                                field="shelter_type_id"
-                              ),
-                              S3SearchOptionsWidget(
-                                name="shelter_search_L1",
-                                field="location_id$L1",
-                                location_level="L1",
-                                cols = 3,
-                              ),
-                              S3SearchOptionsWidget(
-                                name="shelter_search_L2",
-                                field="location_id$L2",
-                                location_level="L2",
-                                cols = 3,
-                              ),
-                              S3SearchOptionsWidget(
-                                name="shelter_search_L3",
-                                field="location_id$L3",
-                                location_level="L3",
-                                cols = 3,
-                              ),
-                              S3SearchOptionsWidget(
-                                name="shelter_search_status",
-                                label=T("Status"),
-                                field="status",
-                                options = cr_shelter_opts,
-                              ),
-                            ],
-                            rows=report_fields,
-                            cols=report_fields,
-                            facts=report_fields,
-                            methods=["count", "list", "sum"],
-                            defaults=Storage(rows="location_id$L2",
-                                             cols="status",
-                                             fact="name",
-                                             aggregate="count")
-                       ),
-                       list_fields=["id",
-                                    "name",
-                                    "status",
-                                    "shelter_type_id",
-                                    #"shelter_service_id",
-                                    "capacity_day",
-                                    "capacity_night",
-                                    "population",
-                                    "location_id$addr_street",
-                                    "location_id$L1",
-                                    "location_id$L2",
-                                    "location_id$L3",
-                                    #"person_id",
-                                    ])
+        configure(tablename,
+                  super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  search_method=cr_shelter_search,
+                  deduplicate = self.cr_shelter_duplicate,
+                  report_options = Storage(
+                        search=[
+                          S3SearchOptionsWidget(
+                            name="shelter_search_type",
+                            label=T("Type"),
+                            field="shelter_type_id"
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L1",
+                            field="location_id$L1",
+                            location_level="L1",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L2",
+                            field="location_id$L2",
+                            location_level="L2",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L3",
+                            field="location_id$L3",
+                            location_level="L3",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_status",
+                            label=T("Status"),
+                            field="status",
+                            options = cr_shelter_opts,
+                          ),
+                        ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list", "sum"],
+                        defaults=Storage(rows="location_id$L2",
+                                         cols="status",
+                                         fact="name",
+                                         aggregate="count")
+                   ),
+                   list_fields=["id",
+                                "name",
+                                "status",
+                                "shelter_type_id",
+                                #"shelter_service_id",
+                                "capacity_day",
+                                "capacity_night",
+                                "population",
+                                "location_id$addr_street",
+                                "location_id$L1",
+                                "location_id$L2",
+                                "location_id$L3",
+                                #"person_id",
+                                ]
+                   )
 
         # Reusable field
         shelter_id = S3ReusableField("shelter_id", table,
@@ -582,6 +588,24 @@ class S3CampDataModel(S3Model):
             return r.name
         except:
             return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_type_duplicate(item):
+        """
+            Shelter Type record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "cr_shelter_type":
+            table = item.table
+            query = (table.name == item.data.name)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
