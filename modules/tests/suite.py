@@ -239,7 +239,7 @@ elif args["suite"] == "smoke":
         from tests.smoke import *
         broken_links = BrokenLinkTest()
         broken_links.setDepth(args["link_depth"])
-        broken_links.threshold = args["threshold"]
+        broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])
         suite = unittest.TestSuite()
         suite.addTest(broken_links)
@@ -277,7 +277,7 @@ elif args["suite"] == "complete":
         from tests.smoke import *
         broken_links = BrokenLinkTest()
         broken_links.setDepth(args["link_depth"])
-        broken_links.threshold = args["threshold"]
+        broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])
         suite.addTest(broken_links)
     except NameError as msg:
