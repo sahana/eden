@@ -2571,8 +2571,10 @@ class S3Resource(object):
         self.import_created += import_job.created
         self.import_updated += import_job.updated
         self.import_deleted += import_job.deleted
-        if self.mtime is None or import_job.mtime > self.mtime:
-            self.mtime = import_job.mtime
+        job_mtime = import_job.mtime
+        if self.mtime is None or \
+           job_mtime and job_mtime > self.mtime:
+            self.mtime = job_mtime
         if self.error:
             if ignore_errors:
                 self.error = "%s - invalid items ignored" % self.error

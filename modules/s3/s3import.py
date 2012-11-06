@@ -2902,7 +2902,7 @@ class S3ImportJob():
                                             tablename)
                 relements = reference.xpath(expr)
                 if relements and not multiple:
-                    relements = [relements[0]]
+                    relements = relements[:1]
 
             elif root is not None:
 
