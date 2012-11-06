@@ -381,6 +381,12 @@ settings.modules = OrderedDict([
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
             module_type = None,
         )),
+    ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            restricted = True,
+            module_type = 1
+        )),
     ("supply", Storage(
             name_nice = T("Supply Chain Management"),
             #description = "Used within Inventory Management, Request Management and Asset Management",

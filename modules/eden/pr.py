@@ -140,10 +140,10 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
-        #if current.deployment_settings.get_ui_camp():
-        #    shelter = T("Camp")
-        #else:
-        #    shelter = T("Shelter")
+        if current.deployment_settings.get_ui_camp():
+            shelter = T("Camp")
+        else:
+            shelter = T("Shelter")
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
                            org_organisation = messages.ORGANISATION,
@@ -151,11 +151,12 @@ class S3PersonEntity(S3Model):
                            inv_warehouse = T("Warehouse"),
                            # If we want these, then pe_id needs adding to their
                            # tables & configuring as a super-entity
-                           #cr_shelter = shelter,
                            #fire_station = T("Fire Station"),
+                           cr_shelter = shelter,
                            dvi_morgue = T("Morgue"),
                            hms_hospital = T("Hospital"),
-                           dvi_body = T("Body"))
+                           dvi_body = T("Body")
+                           )
 
         tablename = "pr_pentity"
         table = super_entity(tablename, "pe_id", pe_types,

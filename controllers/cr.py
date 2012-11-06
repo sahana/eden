@@ -2,10 +2,6 @@
 
 """
     Shelter Registry - Controllers
-
-    @ToDo Search shelters by type, services, location, available space
-    @ToDo Tie in assessments from RAT and requests from RMS.
-    @ToDo Associate persons with shelters (via presence loc == shelter loc?)
 """
 
 module = request.controller
@@ -21,7 +17,41 @@ def index():
 
     module_name = settings.modules[module].name_nice
     response.title = module_name
-    return dict(module_name=module_name)
+
+    item = None
+    if settings.has_module("cms"):
+        table = s3db.cms_post
+        _item = db(table.module == module).select(table.id,
+                                                  table.body,
+                                                  limitby=(0, 1)).first()
+        if _item:
+            if s3_has_role(ADMIN):
+                item = DIV(XML(_item.body),
+                           BR(),
+                           A(T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[_item.id, "update"],
+                                       vars={"module":module}),
+                             _class="action-btn"))
+            else:
+                item = XML(_item.body)
+        elif s3_has_role(ADMIN):
+            item = DIV(H2(module_name),
+                       A(T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module":module}),
+                         _class="action-btn"))
+
+    if not item:
+        #item = H2(module_name)
+        # Just redirect to the list of Shelters
+        redirect(URL(f="shelter"))
+
+    # tbc
+    report = ""
+
+    response.view = "index.html"
+    return dict(item=item, report=report)
 
 # =============================================================================
 def shelter_type():
@@ -31,7 +61,7 @@ def shelter_type():
         School, Hospital -- see Agasti opt_camp_type.)
     """
 
-    output = s3_rest_controller(rheader=s3db.cr_shelter_rheader)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -47,38 +77,18 @@ def shelter_service():
 # =============================================================================
 def shelter():
 
-    """ RESTful CRUD controller
-
-    >>> resource="shelter"
-    >>> from applications.sahana.modules.s3_test import WSGI_Test
-    >>> test=WSGI_Test(db)
-    >>> "200 OK" in test.getPage("/sahana/%s/%s" % (module,resource))
-    True
-    >>> test.assertHeader("Content-Type", "text/html")
-    >>> test.assertInBody("List Shelters")
-    >>> "200 OK" in test.getPage("/sahana/%s/%s/create" % (module,resource))    #doctest: +SKIP
-    True
-    >>> test.assertHeader("Content-Type", "text/html")                          #doctest: +SKIP
-    >>> test.assertInBody("Add Shelter")                                        #doctest: +SKIP
-    >>> "200 OK" in test.getPage("/sahana/%s/%s?format=json" % (module,resource))
-    True
-    >>> test.assertHeader("Content-Type", "text/html")
-    >>> test.assertInBody("[")
-    >>> "200 OK" in test.getPage("/sahana/%s/%s?format=csv" % (module,resource))
-    True
-    >>> test.assertHeader("Content-Type", "text/csv")
-
+    """
+        RESTful CRUD controller
     """
 
-    tablename = "cr_shelter"
-    table = s3db[tablename]
-
-    field = s3db.pr_presence.shelter_id
+    table = s3db.cr_shelter
+    prtable = s3db.pr_presence
+    field = prtable.shelter_id
     field.requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter.id",
-                                          "%(name)s",
+                                          s3.cr_shelter_represent,
                                           sort=True))
     field.represent = lambda id: \
-        (id and [db.cr_shelter[id].name] or ["None"])[0]
+        (id and [table[id].name] or ["None"])[0]
     field.ondelete = "RESTRICT"
     if settings.get_ui_camp():
         HELP = T("The Camp this person is checking into.")
@@ -95,48 +105,52 @@ def shelter():
     field.writable = True
 
     # Make pr_presence.pe_id visible:
-    pe_id = s3db.pr_presence.pe_id
+    pe_id = prtable.pe_id
     pe_id.readable = True
     pe_id.writable = True
 
     # Usually, the pe_id field is an invisible foreign key, therefore it
     # has no default representation/requirements => need to add this here:
     pe_id.label = T("Person/Group")
-    pe_id.represent = s3db.pr_pentity_represent
+    pe_represent = s3db.pr_pentity_represent
+    pe_id.represent = pe_represent
     pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                               s3.pr_pentity_represent,
+                               pe_represent,
                                filterby="instance_type",
                                orderby="instance_type",
                                filter_opts=("pr_person",
                                             "pr_group"))
 
     s3db.configure("pr_presence",
-                    # presence not deletable in this view! (need to register a check-out
-                    # for the same person instead):
-                    deletable=False,
-                    list_fields=["id",
-                                 "pe_id",
-                                 "datetime",
-                                 "presence_condition",
-                                 "proc_desc"
+                   # presence not deletable in this view! (need to register a check-out
+                   # for the same person instead):
+                   deletable=False,
+                   list_fields=["id",
+                                "pe_id",
+                                "datetime",
+                                "presence_condition",
+                                "proc_desc"
                                 ])
 
     # Access from Shelters
     s3db.add_component("pr_presence",
-                              cr_shelter="shelter_id")
+                       cr_shelter="shelter_id")
 
-    s3db.configure(tablename,
-                    # Go to People check-in for this shelter after creation
-                    create_next = URL(c="cr", f="shelter",
-                                      args=["[id]", "presence"]))
+    s3db.configure("cr_shelter",
+                   # Go to People check-in for this shelter after creation
+                   create_next = URL(c="cr", f="shelter",
+                                     args=["[id]", "presence"]))
 
     # Pre-processor
     def prep(r):
         # Location Filter
         s3db.gis_location_filter(r)
 
+        if r.method == "import":
+            s3db.cr_shelter.organisation_id.default = None
+
         if r.component and r.component.name == "presence":
-            r.resource.add_filter(s3db.pr_presence.closed == False)
+            r.resource.add_filter(prtable.closed == False)
 
         if r.interactive:
             if r.id:
@@ -176,33 +190,34 @@ def shelter():
                         REGISTER_LABEL = T("Register Person into this Shelter")
                         EMPTY_LIST = T("No People currently registered in this shelter")
                     # Hide the Implied fields
-                    db.pr_presence.location_id.writable = False
-                    db.pr_presence.location_id.default = r.record.location_id
-                    db.pr_presence.location_id.comment = ""
-                    db.pr_presence.proc_desc.readable = db.pr_presence.proc_desc.writable = False
+                    lfield = prtable.location_id
+                    lfield.writable = False
+                    lfield.default = r.record.location_id
+                    lfield.comment = ""
+                    prtable.proc_desc.readable = prtable.proc_desc.writable = False
                     # AT: Add Person
                     s3db.table("pr_group", None)
                     add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create_button")
-                    db.pr_presence.pe_id.comment = \
+                    prtable.pe_id.comment = \
                         DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
                             S3AddResourceLink(c="pr",
                                               f="group",
                                               title=add_group_label,
                                               tooltip=T("Create a group entry in the registry."))
                         )
-                    db.pr_presence.pe_id.widget = S3AutocompleteWidget("pr", "pentity")
+                    prtable.pe_id.widget = S3AutocompleteWidget("pr", "pentity")
                     # Set defaults
-                    db.pr_presence.datetime.default = request.utcnow
-                    db.pr_presence.observer.default = s3_logged_in_person()
-                    popts = s3db.pr_presence_opts
-                    pcnds = s3db.pr_presence_conditions
+                    prtable.datetime.default = request.utcnow
+                    prtable.observer.default = s3_logged_in_person()
+                    popts = s3.pr_presence_opts
+                    pcnds = s3.pr_presence_conditions
                     cr_shelter_presence_opts = {
                         popts.CHECK_IN: pcnds[popts.CHECK_IN],
                         popts.CHECK_OUT: pcnds[popts.CHECK_OUT]
                     }
-                    db.pr_presence.presence_condition.requires = IS_IN_SET(
+                    prtable.presence_condition.requires = IS_IN_SET(
                         cr_shelter_presence_opts, zero=None)
-                    db.pr_presence.presence_condition.default = popts.CHECK_IN
+                    prtable.presence_condition.default = popts.CHECK_IN
                     # Change the Labels
                     s3.crud_strings.pr_presence = Storage(
                         title_create = T("Register Person"),
@@ -244,57 +259,5 @@ def req_match():
     """ Match Requests """
 
     return s3db.req_match()
-
-# =============================================================================
-# This code provides urls of the form:
-# http://.../eden/cr/call/<service>/rpc/<method>/<id>
-# e.g.:
-# http://.../eden/cr/call/jsonrpc/rpc/list/2
-
-# It is not currently in use but left in as an example, and because it may
-# be used in future for interoperating with or transferring data from Agasti
-# which uses xml-rpc. See:
-# http://www.web2py.com/examples/default/tools#services
-# http://groups.google.com/group/web2py/browse_thread/thread/53086d5f89ac3ae2
-
-#from gluon.tools import Service
-#service = Service()
-
-# def call():
-    # "Call an XMLRPC, JSONRPC or RSS service"
-    # return service()
-
-# @service.jsonrpc
-# @service.xmlrpc
-# @service.amfrpc
-# def rpc(method, id=0):
-    # if method == "list":
-        # return db().select(db.cr_shelter.ALL).as_list()
-    # if method == "read":
-        # return db(db.cr_shelter.id == id).select().as_list()
-    # if method == "delete":
-        # status=db(db.cr_shelter.id == id).delete()
-        # if status:
-            # return "Success - record %d deleted!" % id
-        # else:
-            # return "Failed - no record %d!" % id
-    # else:
-        # return "Method not implemented!"
-
-# @service.xmlrpc
-# def create(name):
-    ##Need to do validation manually!
-    # id = db.cr_shelter.insert(name=name)
-    # return id
-
-# @service.xmlrpc
-# def update(id, name):
-    ##Need to do validation manually!
-    # status = db(db.cr_shelter.id == id).update(name=name)
-    ##@todo: audit!
-    # if status:
-        # return "Success - record %d updated!" % id
-    # else:
-        # return "Failed - no record %d!" % id
 
 # END =========================================================================

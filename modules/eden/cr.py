@@ -40,6 +40,7 @@ class S3CampDataModel(S3Model):
     names = ["cr_shelter_type",
              "cr_shelter_service",
              "cr_shelter",
+             "cr_shelter_status",
              ]
 
     # Define a function model() which takes no parameters (except self):
@@ -50,13 +51,12 @@ class S3CampDataModel(S3Model):
 
         settings = current.deployment_settings
 
-        person_id = self.pr_person_id
-        location_id = self.gis_location_id
-        organisation_id = self.org_organisation_id
-
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         messages = current.messages
+        super_link = self.super_link
+        NAME = T("Name")
 
         # -------------------------------------------------------------------------
         # Shelter types
@@ -64,6 +64,7 @@ class S3CampDataModel(S3Model):
         tablename = "cr_shelter_type"
         table = define_table(tablename,
                              Field("name", notnull=True,
+                                   label = NAME,
                                    requires = IS_NOT_ONE_OF(db,
                                                            "%s.name" % tablename)),
                              s3_comments(),
@@ -107,6 +108,10 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter"),
                 name_nice_plural = T("Shelters"))
 
+        configure(tablename,
+                  deduplicate = self.cr_shelter_type_duplicate,
+                  )
+
         shelter_type_id = S3ReusableField("shelter_type_id", table,
                                           requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
@@ -123,7 +128,9 @@ class S3CampDataModel(S3Model):
         # e.g. medical, housing, food, ...
         tablename = "cr_shelter_service"
         table = define_table(tablename,
-                             Field("name", notnull=True),
+                             Field("name", notnull=True,
+                                   label = NAME,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -189,47 +196,76 @@ class S3CampDataModel(S3Model):
         }
 
         tablename = "cr_shelter"
-        table = db.define_table(tablename,
-                                self.super_link("site_id", "org_site"),
-                                #Field("code",
-                                #      length=10,           # Mayon compatibility
-                                #      notnull=True,
-                                #      unique=True, label=T("Code")),
-                                Field("name", notnull=True,
-                                      length=64,            # Mayon compatibility
-                                      requires = IS_NOT_EMPTY(),
-                                      label = T("Shelter Name")),
-                                organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
-                                shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
-                                shelter_service_id(),       # e.g. medical, housing, food, ...
-                                location_id(),
-                                Field("phone", label = T("Phone"),
-                                      requires = IS_NULL_OR(s3_phone_requires)),
-                                person_id(label = T("Contact Person")),
-                                Field("capacity", "integer",
-                                      label = T("Capacity (Max Persons)"),
-                                      requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
-                                      represent=lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                                Field("population", "integer",
-                                      label = T("Population"),
-                                      requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
-                                      represent=lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                                Field("status", "integer",
-                                      requires = IS_NULL_OR(IS_IN_SET(cr_shelter_opts)),
-                                      represent = lambda opt: \
+        table = define_table(tablename,
+                             super_link("doc_id", "doc_entity"),
+                             super_link("pe_id", "pr_pentity"),
+                             super_link("site_id", "org_site"),
+                             #Field("code",
+                             #      length=10,           # Mayon compatibility
+                             #      notnull=True,
+                             #      unique=True, label=T("Code")),
+                             Field("name", notnull=True,
+                                   length=64,            # Mayon compatibility
+                                   requires = IS_NOT_EMPTY(),
+                                   label = T("Shelter Name")
+                                   ),
+                             self.org_organisation_id(
+                                widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+                             ),
+                             shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
+                             shelter_service_id(),       # e.g. medical, housing, food, ...
+                             self.gis_location_id(),
+                             Field("phone",
+                                   label = T("Phone"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             self.pr_person_id(label = T("Contact Person")),
+                             Field("capacity_day", "integer",
+                                   label = T("Capacity (Day)"),
+                                   requires = IS_NULL_OR(
+                                                IS_INT_IN_RANGE(0, 999999)),
+                                   represent=lambda v: \
+                                                IS_INT_AMOUNT.represent(v),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Capacity (Day / Evacuation)"),
+                                                                   T("Evacuation is short-term whilst storm passing e.g. 12 hours, hence people need less space."))),
+                                   ),
+                             Field("capacity_night", "integer",
+                                   label = T("Capacity (Night)"),
+                                   requires = IS_NULL_OR(
+                                                IS_INT_IN_RANGE(0, 999999)),
+                                   represent=lambda v: \
+                                                IS_INT_AMOUNT.represent(v),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Capacity (Night / Post-Impact)"),
+                                                                   T("Post-impact shelterees are there for a longer time, so need more space to Sleep."))),
+                                   ),
+                             Field("population", "integer",
+                                   label = T("Population"),
+                                   requires = IS_NULL_OR(
+                                                IS_INT_IN_RANGE(0, 999999)),
+                                   represent=lambda v: \
+                                                IS_INT_AMOUNT.represent(v)
+                                   ),
+                             Field("status", "integer",
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(cr_shelter_opts)
+                                                ),
+                                   represent = lambda opt: \
                                         cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
-                                      label = T("Status")),
-                                Field("source",
-                                      label = T("Source")),
-                                s3_comments(),
-                                Field("obsolete", "boolean",
+                                   label = T("Status")),
+                             Field("source",
+                                   readable = False,
+                                   writable = False,
+                                   label = T("Source")),
+                             s3_comments(),
+                             Field("obsolete", "boolean",
                                    label = T("Obsolete"),
                                    represent = lambda bool: \
                                      (bool and [T("Obsolete")] or [messages.NONE])[0],
                                    default = False,
                                    readable = False,
                                    writable = False),
-                                *s3_meta_fields())
+                             *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_camp():
@@ -272,6 +308,123 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter"),
                 name_nice_plural = T("Shelters"))
 
+        # Search method
+        cr_shelter_search = S3Search(
+            advanced=(S3SearchSimpleWidget(
+                        name="shelter_search_advanced",
+                        label=T("Name or Organization"),
+                        comment=T("To search for a shelter, enter any of the names of the shelter, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all shelters."),
+                        field=["name",
+                               "code",
+                               #"aka1",
+                               #"aka2",
+                               #"gov_uuid",
+                               "organisation_id$name",
+                               "organisation_id$acronym"
+                               ]
+                      ),
+                      S3SearchOptionsWidget(
+                            name="shelter_search_type",
+                            label=T("Type"),
+                            field="shelter_type_id"
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L1",
+                            field="location_id$L1",
+                            location_level="L1",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L2",
+                            field="location_id$L2",
+                            location_level="L2",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L3",
+                            field="location_id$L3",
+                            location_level="L3",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_status",
+                            label=T("Status"),
+                            field="status",
+                            options = cr_shelter_opts,
+                          ),
+                    ))
+
+        report_fields = ["name",
+                         "shelter_type_id",
+                         #"organisation_id",
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         "status",
+                         "population",
+                         ]
+
+        configure(tablename,
+                  super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  search_method=cr_shelter_search,
+                  deduplicate = self.cr_shelter_duplicate,
+                  report_options = Storage(
+                        search=[
+                          S3SearchOptionsWidget(
+                            name="shelter_search_type",
+                            label=T("Type"),
+                            field="shelter_type_id"
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L1",
+                            field="location_id$L1",
+                            location_level="L1",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L2",
+                            field="location_id$L2",
+                            location_level="L2",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_L3",
+                            field="location_id$L3",
+                            location_level="L3",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="shelter_search_status",
+                            label=T("Status"),
+                            field="status",
+                            options = cr_shelter_opts,
+                          ),
+                        ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list", "sum"],
+                        defaults=Storage(rows="location_id$L2",
+                                         cols="status",
+                                         fact="name",
+                                         aggregate="count")
+                   ),
+                   list_fields=["id",
+                                "name",
+                                "status",
+                                "shelter_type_id",
+                                #"shelter_service_id",
+                                "capacity_day",
+                                "capacity_night",
+                                "population",
+                                "location_id$addr_street",
+                                "location_id$L1",
+                                "location_id$L2",
+                                "location_id$L3",
+                                #"person_id",
+                                ]
+                   )
+
         # Reusable field
         shelter_id = S3ReusableField("shelter_id", table,
                                      requires = IS_NULL_OR(
@@ -290,43 +443,85 @@ class S3CampDataModel(S3Model):
                                      widget = S3AutocompleteWidget("cr", "shelter")
                                      )
 
-        # Add Shelters as component of Services, Types as a simple way
-        # to get reports showing shelters per type, etc.
-        self.add_component(tablename,
-                            cr_shelter_type="shelter_type_id")
-                            # @todo: can't use a list:reference type for a
-                            # component link => use a link table instead!
-                            #cr_shelter_service="shelter_service_id")
+        self.add_component("cr_shelter_status",
+                           cr_shelter=dict(joinby="shelter_id",
+                                           name="status"))
+        
+        # -------------------------------------------------------------------------
+        # Shelter statuses
+        # - a historical record of shelter status: opening/closing dates & populations
+        #
+        tablename = "cr_shelter_status"
+        table = define_table(tablename,
+                             shelter_id(),
+                             s3_date(),
+                             Field("status", "integer",
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(cr_shelter_opts)
+                                                ),
+                                   represent = lambda opt: \
+                                        cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
+                                   label = T("Status")),
+                             Field("population", "integer",
+                                   label = T("Population"),
+                                   requires = IS_NULL_OR(
+                                                IS_INT_IN_RANGE(0, 999999)),
+                                   represent=lambda v: \
+                                                IS_INT_AMOUNT.represent(v)
+                                   ),
+                             s3_comments(),
+                             *s3_meta_fields())
 
-        self.configure(tablename,
-                        super_entity="org_site",
-                        # Update the Address Fields
-                        #onvalidation=s3_address_onvalidation,
-                        list_fields=["id",
-                                     "name",
-                                     "status",
-                                     "shelter_type_id",
-                                     "shelter_service_id",
-                                     "capacity",
-                                     "population",
-                                     "location_id$addr_street",
-                                     "location_id$L1",
-                                     "location_id$L2",
-                                     "location_id$L3",
-                                     "person_id",
-                                    ])
+        # CRUD strings
+        if settings.get_ui_camp():
+            ADD_SHELTER_STATUS = T("Add Camp Status")
+            SHELTER_STATUS_LABEL = T("Camp Status")
+            crud_strings[tablename] = Storage(
+                title_create = ADD_SHELTER_STATUS,
+                title_display = T("Camp Status Details"),
+                title_list = T("Camp Statuses"),
+                title_update = T("Edit Camp Status"),
+                title_search = T("Search Camp Statuses"),
+                subtitle_create = T("Add New Camp Status"),
+                label_list_button = T("List Camp Statuses"),
+                label_create_button = ADD_SHELTER_STATUS,
+                msg_record_created = T("Camp Status added"),
+                msg_record_modified = T("Camp Status updated"),
+                msg_record_deleted = T("Camp Status deleted"),
+                msg_list_empty = T("No Camp Statuses currently registered"),
+                name_nice = T("Camp Status"),
+                name_nice_plural = T("Camp Statuses"))
+        else:
+            ADD_SHELTER_STATUS = T("Add Shelter Status")
+            SHELTER_STATUS_LABEL = T("Shelter Status")
+            crud_strings[tablename] = Storage(
+                title_create = ADD_SHELTER_STATUS,
+                title_display = T("Shelter Status Details"),
+                title_list = T("Shelter Statuses"),
+                title_update = T("Edit Shelter Status"),
+                title_search = T("Search Shelter Statuses"),
+                subtitle_create = T("Add New Shelter Status"),
+                label_list_button = T("List Shelter Statuses"),
+                label_create_button = ADD_SHELTER_STATUS,
+                msg_record_created = T("Shelter Status added"),
+                msg_record_modified = T("Shelter Status updated"),
+                msg_record_deleted = T("Shelter Status deleted"),
+                msg_list_empty = T("No Shelter Statuses currently registered"),
+                name_nice = T("Shelter Status"),
+                name_nice_plural = T("Shelter Statuses"))
 
         # Pass variables back to global scope (response.s3.*)
         return Storage(
                 ADD_SHELTER = ADD_SHELTER,
-                SHELTER_LABEL = SHELTER_LABEL
+                SHELTER_LABEL = SHELTER_LABEL,
+                cr_shelter_represent = self.cr_shelter_represent
             )
 
     # -----------------------------------------------------------------------------
     def defaults(self):
-        shelter_id = S3ReusableField("shelter_id", "integer",
-                                      readable=False,
-                                      writable=False)
+        #cr_shelter_id = S3ReusableField("shelter_id", "integer",
+        #                                readable=False,
+        #                                writable=False)
 
         return
 
@@ -351,6 +546,32 @@ class S3CampDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def cr_shelter_duplicate(item):
+        """
+            Shelter record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "cr_shelter":
+            data = item.data
+            #org = "organisation_id" in data and data.organisation_id
+            address = "address" in data and data.address
+
+            table = item.table
+            query = (table.name == data.name)
+            #if org:
+            #    query = query & (table.organisation_id == org)
+            if address:
+                query = query & (table.address == address)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def cr_shelter_type_represent(id, row=None):
         """ FK representation """
 
@@ -367,6 +588,24 @@ class S3CampDataModel(S3Model):
             return r.name
         except:
             return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_type_duplicate(item):
+        """
+            Shelter Type record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "cr_shelter_type":
+            table = item.table
+            query = (table.name == item.data.name)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -417,13 +656,13 @@ def cr_shelter_rheader(r, tabs=[]):
     rheader = None
     if r.representation == "html":
 
-        T = current.T
-        s3db = current.s3db
         tablename, record = s3_rheader_resource(r)
-
         if tablename == "cr_shelter" and record:
+            T = current.T
+            s3db = current.s3db
             if not tabs:
                 tabs = [(T("Basic Details"), None),
+                        (T("Status"), "status"),
                         (T("People"), "presence"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
@@ -465,14 +704,6 @@ def cr_shelter_rheader(r, tabs=[]):
             #if r.component and r.component.name == "req":
                 # Inject the helptext script
             #    rheader.append(response.s3.req_helptext_script)
-
-        elif tablename == "cr_shelter_type" and record:
-
-            tabs = [(T("Basic Details"), None),
-                    (current.response.s3.crud_strings["cr_shelter"].subtitle_list,
-                     "shelter")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            rheader = DIV(rheader_tabs)
 
     return rheader
 

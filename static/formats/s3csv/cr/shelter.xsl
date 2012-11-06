@@ -7,11 +7,11 @@
 
          Column headers defined in this stylesheet:
 
-         Name...........................required.....shelter name
+         Name...........................required.....cr_shelter.name
          Organisation...................org_organisation
          Branch.........................org_organisation[_branch]
          Type...........................shelter_type_id.name
-         Service........................shelter_service_id
+         Service........................shelter_service_id.name
          Country........................optional.....country
          L1.............................optional.....L1
          L2.............................optional.....L2
@@ -19,9 +19,10 @@
          Address........................optional.....Address
          Lat............................optional.....Latitude
          Lon............................optional.....Longitude
-         Capacity.......................
-         Population.....................
-         Status.........................
+         Capacity Day...................cr_shelter.capacity_day
+         Capacity Night.................cr_shelter.capacity_night
+         Population.....................cr_shelter.population
+         Status.........................cr_shelter.status (@ToDo: Populate cr_shelter_status for historical data)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -81,7 +82,8 @@
 
         <resource name="cr_shelter">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="capacity"><xsl:value-of select="col[@field='Capacity']"/></data>
+            <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
+            <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
             <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
 
             <xsl:choose>

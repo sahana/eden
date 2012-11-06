@@ -31,6 +31,7 @@ try:
 except:
     from StringIO import StringIO
 import sys
+import socket
 
 from tests.web2unittest import Web2UnitTest
 from gluon import current
@@ -48,7 +49,7 @@ except ImportError:
     raise NameError("Mechanize not installed")
 
 class BrokenLinkTest(Web2UnitTest):
-    """ Selenium Unit Test """
+    """ Smoke Test, visit every link it can find and report on the outcome """
     def __init__(self):
         Web2UnitTest.__init__(self)
         self.b = get_browser()
@@ -73,27 +74,29 @@ class BrokenLinkTest(Web2UnitTest):
         self.strip_url = ("?_next=",
                           )
         self.maxDepth = 16 # sanity check
-        self.threshold = 10
+        self.setThreshold(10)
         self.setUser("test@example.com/eden")
-        self.linkDepth = []
 
     def clearRecord(self):
-        # list of links that return a http_code other than 200
-        # with the key being the URL and the value the http code
-        self.brokenLinks = dict()
-        # List of links visited (key) with the parent
-        self.urlParentList = dict()
-        # List of links visited (key) with the depth
-        self.urlList = dict()
-        # List of urls for each model
-        self.model_url = dict()
+        # the total url links visited
         self.totalLinks = 0
+        # The number of unique urls found at depth i, where i is the index
+        self.linkDepth = []
+        # Dictionary of the parent for each URL
+        self.urlParentList = {}
+        # dictionary of ReportData objects indexed on the url
+        self.results = {}
 
     def setDepth(self, depth):
         self.maxDepth = depth
 
     def setUser(self, user):
         self.credentials = user.split(",")
+
+    def setThreshold(self, value):
+        value = float(value)
+        self.threshold = value
+#        socket.setdefaulttimeout(value*2)
 
     def login(self, credentials):
         if credentials == "UNAUTHENTICATED":
@@ -134,8 +137,6 @@ class BrokenLinkTest(Web2UnitTest):
             The test can also display an histogram depicting the number of
             links found at each depth.
         """
-        self.thresholdLink = {}
-        self.linktimes = []
         for user in self.credentials:
             self.clearRecord()
             if self.login(user):
@@ -164,27 +165,19 @@ class BrokenLinkTest(Web2UnitTest):
         if len(to_visit) > 0:
             self.linkDepth.append(len(to_visit))
         finish = time()
-        self.report()
         self.reporter("Finished took %.3f seconds" % (finish - start))
-        self.report_link_depth()
-#        self.report_model_url()
-    
+        self.report()
 
-
-    def add_to_model(self, url, depth, parent):
-        start = url.find(self.homeURL) + len(self.homeURL)
-        end = url.find("/",start) 
-        model = url[start:end]
-        if model in self.model_url:
-            self.model_url[model].append((url, depth, parent))
-        else:
-            self.model_url[model] = [(url, depth, parent)]
-    
     def visit(self, url_list, depth):
         repr_list = [".pdf", ".xls", ".rss", ".kml"]
         to_visit = []
+        record_data = self.config.verbose > 0
         for visited_url in url_list:
             index_url = visited_url[len(self.homeURL):]
+            if record_data:
+                self.results[index_url] = ReportData()
+                current_results = self.results[index_url]
+                current_results.depth = depth
             # Find out if the page can be visited
             open_novisit = False
             for repr in repr_list:
@@ -193,37 +186,30 @@ class BrokenLinkTest(Web2UnitTest):
                     break
             try:
                 if open_novisit:
-                    visit_start = time()
-                    self.b._journey("open_novisit", visited_url)
-                    http_code = self.b.get_code()
-                    if http_code != 200: # an error situation
-                        self.b.go(visited_url)
-                        http_code = self.b.get_code()
-                    duration = time() - visit_start
-                    self.linktimes.append(duration)
-                    if duration > self.threshold:
-                        self.thresholdLink[visited_url] = duration
-                        if self.config.verbose >= 3:
-                            print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
+                    action = "open_novisit"
                 else:
-                    visit_start = time()
-                    self.b.go(visited_url)
-                    http_code = self.b.get_code()
-                    duration = time() - visit_start
-                    self.linktimes.append(duration)
-                    if duration > self.threshold:
-                        self.thresholdLink[visited_url] = duration
-                        if self.config.verbose >= 3:
-                            print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
+                    action = "open"
+                visit_start = time()
+                self.b._journey(action, visited_url)
+                http_code = self.b.get_code()
+                duration = time() - visit_start
+                if record_data:
+                    current_results.duration = duration
+                if duration > self.threshold:
+                    if self.config.verbose >= 3:
+                        print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
             except Exception as e:
                 import traceback
                 print traceback.format_exc()
-                self.brokenLinks[index_url] = ("-","Exception raised")
+                if record_data:
+                    current_results.broken = True
+                    current_results.exception = True
                 continue
             http_code = self.b.get_code()
             if http_code != 200:
-                url = "<a href=%s target=\"_blank\">URL</a>" % (visited_url)
-                self.brokenLinks[index_url] = (http_code,url)
+                if record_data:
+                    current_results.broken = True
+                    current_results.http_code = http_code
             elif open_novisit:
                 continue
             links = []
@@ -235,18 +221,18 @@ class BrokenLinkTest(Web2UnitTest):
             except Exception as e:
                 import traceback
                 print traceback.format_exc()
-                self.brokenLinks[index_url] = ("-","Exception raised")
+                if record_data:
+                    current_results.broken = True
+                    current_results.exception = True
                 continue
             for link in (links):
                 url = link.absolute_url
                 if url.find(self.url_ticket) != -1:
                     # A ticket was raised so...
                     # capture the details and add to brokenLinks
-                    if current.test_config.html:
-                        ticket = "<a href=%s target=\"_blank\">Ticket</a> at <a href=%s target=\"_blank\">URL</a>" % (url,visited_url)
-                    else:
-                        ticket = "Ticket: %s" % url
-                    self.brokenLinks[index_url] = (http_code,ticket)
+                    if record_data:
+                        current_results.broken = True
+                        current_results.ticket = url[len(self.homeURL):]
                     break # no need to check any other links on this page
                 if url.find(self.homeURL) == -1:
                     continue
@@ -261,62 +247,19 @@ class BrokenLinkTest(Web2UnitTest):
                     location = url.find(strip)
                     if location != -1:
                         url = url[0:location]
-                if url not in self.urlList:
-                    self.urlList[url] = depth
-                    self.urlParentList[url[len(self.homeURL):]] = visited_url
-                    self.add_to_model(url, depth, visited_url)
+                short_url = url[len(self.homeURL):]
+                if short_url not in self.results.keys():
                     if url not in to_visit:
+                        self.urlParentList[short_url] = index_url
                         to_visit.append(url)
         return to_visit
     
     def report(self):
-#        print "Visited pages"
-#        n = 1
-#        for (url, depth) in self.urlList.items():
-#            print "%d. depth %d %s" % (n, depth, url,)
-#            n += 1
         self.reporter("%d URLs visited" % self.totalLinks)
-        self.reporter("Broken Links")
-        n = 1
-        for (url, result) in self.brokenLinks.items():
-            http_code = result[0]
-            try:
-                parent = self.urlParentList[url]
-                if current.test_config.html:
-                    parent = "<a href=%s target=\"_blank\">Parent</a>" % (parent)
-            except:
-                parent = "unknown"
-            if len(result) == 1:
-                self.reporter("%3d. (%s) %s called from %s" % (n,
-                                                http_code,
-                                                url,
-                                                parent
-                                               )
-                )
-            else:
-                self.reporter("%3d. (%s-%s) %s called from %s" % (n,
-                                                   http_code,
-                                                   result[1],
-                                                   url,
-                                                   parent
-                                                  )
-                )
-            n += 1
-        from operator import itemgetter
-        for (visited_url, duration) in sorted(self.thresholdLink.iteritems(),
-                                              key=itemgetter(1),
-                                              reverse=True):
-            self.reporter( "%s took %.3f seconds" % (visited_url, duration))
-
-        import numpy
-        self.reporter("Time Analysis")
-        total = len(self.linktimes)
-        average = numpy.mean(self.linktimes)
-        std = numpy.std(self.linktimes)
-        msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
-        self.reporter(msg)
-        if config.record_timings:
+        self.brokenReport()
+        if self.config.record_timings:
             self.record_timings()
+        self.report_link_depth()
 
     def report_link_depth(self):
         """
@@ -432,3 +375,117 @@ class BrokenLinkTest(Web2UnitTest):
                 parent = ud[2]
                 tabs = "\t" * depth
                 print "%s %s-%s (parent url - %s)" % (tabs, depth, url, parent)
+
+    def brokenReport(self):
+        self.reporter("Broken Links")
+        as_html = current.test_config.html
+        n = 1
+        for (url, rd_obj) in self.results.items():
+            if as_html:
+                print_url = "<a href=%s%s target=\"_blank\">%s</a>" % (self.homeURL, url, url)
+            else:
+                print_url = url
+            if rd_obj.is_broken():
+                if rd_obj.threw_exception():
+                    msg = "(Exception) %s" % print_url
+                else:
+                    http_code = rd_obj.return_http_code()
+                    ticket = rd_obj.the_ticket(as_html)
+                    try:
+                        parent = self.urlParentList[url]
+                        if as_html:
+                            parent = "<a href=%s%s target=\"_blank\">Parent</a>" % (self.homeURL, parent)
+                    except:
+                        parent = "unknown"
+                    msg = "%3d. (%s - %s) %s called from %s" % (n,
+                                                                http_code,
+                                                                ticket,
+                                                                print_url,
+                                                                parent
+                                                                )
+                self.reporter(msg)
+                n += 1
+
+    def timeReport(self):
+        from operator import itemgetter
+        import numpy
+        thresholdLink = {}
+        linktimes = []
+        for (url, rd_obj) in self.results.items():
+            duration = rd_obj.get_duration()
+            linktime.append(duration)
+            if duration > self.threshold:
+                thresholdLink[url] = duration
+        self.reporter("Time Analysis - Links beyond threshold")
+        for (visited_url, duration) in sorted(thresholdLink.iteritems(),
+                                              key=itemgetter(1),
+                                              reverse=True):
+            self.reporter( "%s took %.3f seconds" % (visited_url, duration))
+
+        self.reporter("Time Analysis - summary")
+        total = len(linktimes)
+        average = numpy.mean(linktimes)
+        std = numpy.std(linktimes)
+        msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
+        self.reporter(msg)
+
+    def depthReport(self):
+        pass
+
+class ReportData():
+    """
+    Class to hold the data collected from the smoke test ready for reporting
+    Instances of this class will be held in the dictionary results which will
+    be keyed on the url. This way, in an attempt to minimise the memory used,
+    the url doesn't need to be stored in this class.
+
+    The class will have the following properties
+    broken: boolean
+    exception: boolean
+    http_code: integer
+    ticket: URL of any ticket linked with this url
+    parent: the parent URL of this url
+    depth: how deep is this url
+    duration: how long did it take to get the url
+    """
+    def is_broken(self):
+        if hasattr(self, "broken"):
+            return self.broken
+        return False
+
+    def threw_exception(self):
+        if hasattr(self, "exception"):
+            return self.exception
+        return False
+
+    def return_http_code(self):
+        if hasattr(self, "http_code"):
+            return self.http_code
+        return "-"
+
+    def the_ticket(self, html):
+        """
+            Should only have a ticket if it is broken,
+            but won't always have a ticket to display.
+        """
+        if hasattr(self, "ticket"):
+            if html:
+                return "<a href=%s target=\"_blank\">Ticket</a>" % (self.ticket)
+            else:
+                return "Ticket: %s" % (self.ticket)
+        return "no ticket"
+
+    def get_parent(self):
+        if hasattr(self, "parent"):
+            return self.parent
+        return ""
+
+    def get_depth(self):
+        if hasattr(self, "depth"):
+            return self.depth
+        return 0
+
+    def get_duration(self):
+        if hasattr(self, "duration"):
+            return self.duration
+        return 0

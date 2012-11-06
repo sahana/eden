@@ -1,0 +1,42 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{try:}}
+<h2 align='center'>{{=title}}</h2>
+{{except:}}{{pass}}
+<div id='menu_box_center'>
+{{if AUTHENTICATED not in session.s3.roles:}}
+ <div id='login_box' class='menu_box'>
+  {{if not self_registration or registered:}}
+    <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration:}}
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+ </div>
+{{pass}}
+{{=project_box}}
+</div>
+</div>
+<div id='about'>
+ <p>
+  Welcome to the Who does What Where Database and Contact Management Directory. This application is being trialled by OCHA East Africa as a replacement for the <a href="http://3w.unocha.org/WhoWhatWhere/" target="_blank">current 3W system</a>.
+ </p>
+ <p>
+  To ensure that appropriate and timely humanitarian response is delivered during a disaster or emergency situation, information must be managed efficiently. The key information that are important to assess and ensure that humanitarian needs are met in any emergency/disaster are, to know which organizations(Who) are carrying out what activities (What) in which locations (Where) which is also universally referred to as the 3W (Who does What Where). The Who does What Where database (3W) is one product that is universally agreed to be the most important priority for any co-ordination activity. The integrated Contact Management Directory, complements the 3W database, making it easy for the user to navigate through the application.  
+ </p>
+ </div>
+</table>
+{{if project_box:}}
+{{include "dataTables.html"}}{{pass}}

@@ -27,7 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
 """
 
 __all__ = ["S3Migration"]
@@ -56,6 +55,12 @@ class S3Migration(object):
         migrate.prep()
         migrate.migrate()
         migrate.post()
+
+        FYI: If you need to access a filename in eden/databases/ then here is how:
+        import hashlib
+        (db_string, pool_size) = settings.get_database_string()
+        prefix = hashlib.md5(db_string).hexdigest()
+        filename = "%s_%s.table" % (prefix, tablename)
     """
 
     def __init__(self):
@@ -287,7 +292,7 @@ class S3Migration(object):
 
     # =========================================================================
     # OLD CODE below here
-    # - There are tests for this in /tests/dbmigration
+    # - There are tests for these in /tests/dbmigration
     # -------------------------------------------------------------------------
     def rename_field(self,
                      tablename,
