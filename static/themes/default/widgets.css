@@ -912,9 +912,6 @@ div.form-container form fieldset  .s3-checkboxes-widget label {
     vertical-align: middle;
 }
 
-/* Separate search fields. Labels are centered, so if field widget is multiple
-lines long, especially adjacent checkboxes, users report it's hard to tell
-which options go with which field. */
 .search_form td {
     border-top: 1px solid #D9D9D9;
 }
