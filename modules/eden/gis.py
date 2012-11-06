@@ -351,8 +351,6 @@ class S3LocationModel(S3Model):
 
         if not ids:
             return current.messages.NONE
-        if type(ids) is not list:
-            ids = [ids]
 
         db = current.db
         table = db.gis_location

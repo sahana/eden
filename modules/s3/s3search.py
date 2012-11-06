@@ -619,12 +619,14 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
             if callable(represent):
                 # Execute, if callable
-                if "show_link" in represent.func_code.co_varnames:
-                    opt_list = [(opt_value, represent(opt_value, show_link=False)) for opt_value
-                                                                                   in opt_values]
+                args = {"show_link": False} \
+                       if "show_link" in represent.func_code.co_varnames else {}
+                if multiple:
+                    repr_opt = lambda opt: (opt, represent([opt], **args))
                 else:
-                    opt_list = [(opt_value, represent(opt_value)) for opt_value
-                                                                  in opt_values]
+                    repr_opt = lambda opt: (opt, represent(opt, **args))
+                opt_list = map(repr_opt, opt_values)
+
             elif isinstance(represent, str) and field_type[:9] == "reference":
                 # Feed the format string
                 # Use the represent string to reduce db calls
@@ -634,7 +636,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 fieldnames = ["id"]
                 fieldnames += re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
                 represent_fields = [ktable[fieldname] for fieldname in fieldnames]
-                query = (ktable.id.belongs(opt_values)) & (ktable.deleted == False)
+                query = (ktable.id.belongs(opt_values)) & \
+                        (ktable.deleted == False)
                 represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
                 opt_list = []
                 for opt_value in opt_values:
