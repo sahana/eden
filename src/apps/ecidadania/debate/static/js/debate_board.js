@@ -143,8 +143,8 @@ function editNote(obj) {
         a modal dialog, after that it checks the note in the server and returns
         it's data, prepopulating the fields.
     */
-    var noteID = $(obj).parent().parent().attr('id');
-
+    var noteID = $(obj).parents('.note').attr('id');
+    
     var request = $.ajax({
         url: "../update_note/",
         data: { noteid: noteID }
