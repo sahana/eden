@@ -5816,7 +5816,10 @@ class S3Pivottable(object):
 
         manager = current.manager
 
-        rfield = self.rfields[dim]
+        if dim:
+            rfield = self.rfields[dim]
+        else:
+            return lambda val: None
         if rfield.virtual:
             stripper = S3MarkupStripper()
             def repr_method(val):
