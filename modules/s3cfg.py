@@ -1157,6 +1157,8 @@ class S3Config(Storage):
         return self.req.get("show_quantity_transit", True)
     def get_req_use_commit(self):
         return self.req.get("use_commit", True)
+    def get_req_requester_optional(self):
+        return self.req.get("requester_optional", False)
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)

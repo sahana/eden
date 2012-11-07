@@ -428,20 +428,33 @@ class S3HRModel(S3Model):
             # Being added as a component to Org, Site or Project
             hrm_url = None
 
+        if settings.has_module("vol"):
+            fields = ["organisation_id",
+                      "site_id",
+                      "person_id",
+                      "job_title_id",
+                      "job_role_id",
+                      "department_id",
+                      "volunteer_cluster.vol_cluster_type_id",
+                      "volunteer_cluster.vol_cluster_id",
+                      "volunteer_cluster.vol_cluster_position_id",
+                      "start_date",
+                      "end_date",
+                      "status",
+                      ]
+        else:
+            fields = ["organisation_id",
+                      "site_id",
+                      "person_id",
+                      "job_title_id",
+                      "job_role_id",
+                      "department_id",
+                      "start_date",
+                      "end_date",
+                      "status",
+                      ]
         # Custom Form
-        crud_form = s3forms.S3SQLCustomForm("organisation_id",
-                                            "site_id",
-                                            "person_id",
-                                            "job_title_id",
-                                            "job_role_id",
-                                            "department_id",
-                                            "volunteer_cluster.vol_cluster_type_id",
-                                            "volunteer_cluster.vol_cluster_id",
-                                            "volunteer_cluster.vol_cluster_position_id",
-                                            "start_date",
-                                            "end_date",
-                                            "status",
-                                            )
+        crud_form = s3forms.S3SQLCustomForm(*fields)
 
         self.configure(tablename,
                        crud_form = crud_form,

@@ -1,4 +1,4 @@
-Catalog,Category Code,Category,Name,Unit of Measure,Notes
+Catalog,Category Code,Category,Item Name,Unit of Measure,Notes
 Default,Agriculture,Agriculture,Rice Seed,sack20kg,This should provide enough seed for 1 Hectare of land
 Default,Food,Food,Rice,sack50kg,This should feed 125 people for 1 day
 Default,Food,Food,Cooking Utensils,kit,Cooking Utensils for a Household

@@ -1,0 +1,2 @@
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
+"Warehouses","All Active Warehouses","inv","warehouse","US","warehouse","Building","Office","name/organisation_id","warehouse.obsolete=False",,,,,"False",

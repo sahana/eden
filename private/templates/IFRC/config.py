@@ -276,7 +276,7 @@ settings.project.organisation_roles = {
 }
 
 # -----------------------------------------------------------------------------
-# Request Managemetn
+# Request Management
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 #settings.inv.collapse_tabs = True

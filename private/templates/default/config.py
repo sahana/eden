@@ -313,6 +313,7 @@ settings.L10n.decimal_separator = "."
 #settings.req.show_quantity_transit = False
 #settings.req.multiple_req_items = False
 #settings.req.use_commit = False
+#settings.req.requester_optional = True
 #settings.req.use_req_number = False
 #settings.req.generate_req_number = False
 #settings.req.req_form_name = "Request Issue Form"

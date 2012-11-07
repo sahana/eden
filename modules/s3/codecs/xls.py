@@ -94,8 +94,7 @@ class S3XLS(S3Codec):
         not_found = s3.crud_strings.get(name, current.request.function)
         title = str(crud_strings.get(name, not_found))
 
-        rfields = resource.resolve_selectors(list_fields,
-                                             skip_components=False)[0]
+        rfields = resource.resolve_selectors(list_fields)[0]
 
         types = []
         for f in rfields:

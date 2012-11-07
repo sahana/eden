@@ -32,7 +32,7 @@ class index():
                                         args=["create"]),
                             _id = "add-btn",
                             _class = "action-btn",
-                            _style = "margin-right: 10px;"),
+                            _style = "margin-right:10px;"),
                           project_items,
                           _id = "org_box",
                           _class = "menu_box fleft"

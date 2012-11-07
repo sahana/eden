@@ -188,7 +188,7 @@ class S3RequestModel(S3Model):
                                               ),
                                   human_resource_id("requester_id",
                                                     label = T("Requester"),
-                                                    empty = False,
+                                                    empty = settings.get_req_requester_optional(),
                                                     #writable = False,
                                                     #comment = None,
                                                     default = auth.s3_logged_in_human_resource()),
