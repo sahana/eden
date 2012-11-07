@@ -3421,8 +3421,6 @@ class S3GISThemeModel(S3Model):
         T = current.T
         db = current.db
 
-        #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
@@ -3433,22 +3431,14 @@ class S3GISThemeModel(S3Model):
         # Theme Layer
         #
 
-        gis_theme_type_opts = {
-            # This should be stored
-            #"population":T("Population"),
-            }
-
         tablename = "gis_layer_theme"
         table = define_table(tablename,
                              layer_id,
                              name_field()(unique = True),
                              Field("description",
                                    label=T("Description")),
-                             #Field("type", label = T("Type"),
-                             #      requires=IS_NULL_OR(IS_IN_SET(gis_theme_type_opts))
-                             #      represent = lambda opt: gis_theme_type_opts.get(opt,
-                             #                                                      UNKNOWN_OPT),
-                             #      ),
+                             # @ToDo:
+                             #self.stats_parameter_id(),
                              Field("date", "datetime",
                                    label = T("Date")),
                              gis_layer_folder()(),

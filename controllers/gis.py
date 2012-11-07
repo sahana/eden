@@ -264,6 +264,8 @@ def location():
             elif r.method in ("delete", "search"):
                 pass
             else:
+                if r.method == "report":
+                    s3.filter = (table.level !=None)
                 s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
                 # Add Map to allow locations to be found this way
                 config = gis.get_config()
