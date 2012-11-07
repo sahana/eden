@@ -520,9 +520,8 @@ class HospitalDataModel(S3Model):
                                                                   multiple=True)),
                                    widget=CheckboxesWidgetS3.widget,
                                    represent = lambda opt: \
-                                    NONE if opt is None else \
-                                        hms_facility_damage_opts.get(opt,
-                                                                     UNKNOWN_OPT)),
+                                               self.hms_damage_represent(
+                                                    hms_facility_damage_opts, opt)),
                              Field("power_supply_type", "integer",
                                    label=T("Power Supply Type"),
                                    requires=IS_EMPTY_OR(IS_IN_SET(hms_power_supply_type_opts,
@@ -919,6 +918,19 @@ class HospitalDataModel(S3Model):
             return r.name
         except:
             return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_damage_represent(options, value):
+
+        if type(value) is not list:
+            value = [value]
+        represents = []
+        for v in value:
+            r = options.get(v, None)
+            if r:
+                represents.append(r)
+        return ",".join(represents)
 
     # -------------------------------------------------------------------------
     @staticmethod

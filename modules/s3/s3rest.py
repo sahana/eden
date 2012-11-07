@@ -348,9 +348,12 @@ class S3RequestManager(object):
 
         # Strip away markup from text
         if strip_markup and "<" in text:
-            stripper = S3MarkupStripper()
-            stripper.feed(text)
-            text = stripper.stripped()
+            try:
+                stripper = S3MarkupStripper()
+                stripper.feed(text)
+                text = stripper.stripped()
+            except:
+                pass
 
         # Link ID field
         if fname == "id" and linkto:
