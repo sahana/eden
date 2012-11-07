@@ -120,7 +120,9 @@ class S3Report(S3CRUD):
             if "totals" not in r.post_vars:
                 form_values["totals"] = "off"
         else:
-            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            last = lambda opt: opt[-1] if type(opt) is list else opt
+            url_options = Storage([(k, last(v))
+                                   for k, v in r.get_vars.iteritems() if v])
             if url_options:
                 # GET
                 form_values = url_options
@@ -523,13 +525,16 @@ class S3Report(S3CRUD):
 
         resource = self.resource
 
+        prefix = lambda v: "%s.%s" % (resource.alias, v) \
+                           if "." not in v.split("$", 1)[0] else v
+
         name = attr["_name"]
         if form_values:
             value = form_values.get(name, "")
         else:
             value = ""
-        if "." not in value.split("$", 1)[0]:
-            value = "%s.%s" % (resource.alias, value)
+        if value:
+            value = prefix(value)
 
         table = self.table
         rfields, j, l, d = resource.resolve_selectors(list_fields,
