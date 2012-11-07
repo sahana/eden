@@ -519,8 +519,7 @@ class S3Resource(object):
             if f not in fields:
                 fields.append(f)
         # Resolve all field selectors
-        lfields, joins, ljoins, d = self.resolve_selectors(fields,
-                                                           skip_components=False)
+        lfields, joins, ljoins, d = self.resolve_selectors(fields)
 
         distinct = distinct | d
         attributes = {"distinct":distinct}
@@ -1199,9 +1198,7 @@ class S3Resource(object):
             selectors.insert(0, table._id.name)
 
         # Resolve the selectors
-        rfields = self.resolve_selectors(fields,
-                                         skip_components=False,
-                                         extra_fields=False)[0]
+        rfields = self.resolve_selectors(fields, extra_fields=False)[0]
 
         # Retrieve the rows
         rows = self.select(fields=selectors,
@@ -3012,7 +3009,7 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def resolve_selectors(self, selectors,
-                          skip_components=True,
+                          skip_components=False,
                           extra_fields=True):
         """
             Resolve a list of field selectors against this resource
@@ -5790,8 +5787,7 @@ class S3Pivottable(object):
         self.dfields = dfields
 
         # rfields (resource-fields): dfields resolved into a ResourceFields map
-        rfields, joins, left, distinct = resource.resolve_selectors(dfields,
-                                                                    skip_components=False)
+        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
         rfields = Storage([(f.selector, f) for f in rfields])
         self.rfields = rfields
 

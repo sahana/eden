@@ -537,8 +537,7 @@ class S3Report(S3CRUD):
             value = prefix(value)
 
         table = self.table
-        rfields, j, l, d = resource.resolve_selectors(list_fields,
-                                                      skip_components=False)
+        rfields, j, l, d = resource.resolve_selectors(list_fields)
         options = [(f.selector, f.label) for f in rfields
                    if f.show and
                       (f.field is None or f.field.name != table._id.name)]
