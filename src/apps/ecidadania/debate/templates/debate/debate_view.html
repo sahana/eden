@@ -73,19 +73,21 @@
                                             {% if note.column_id == td_id and note.row_id == row_id %}
                                                 <div id="{{ note.id }}" class="note {% if note.author == request_user %}mine{% endif %} {% if note.author == request_user or request_user.is_staff %}{% else %}disabled{% endif %}" rel="popover" data-title="{{note.title}}" data-content="<span style='font-weight:bold;line-height:1.5em;'>Author: {{note.author}}</span><br/>{{note.message|truncatechars:350}}">
                                                     <div class="handler">
+                                                        <span id="view-note" style="float:left;">
+                                                            <a href="#" class="nounderline" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note" title="{% trans 'View' %}"><i class="icon-eye-open" style="font-size:12px;"></i></a>
+                                                        </span>
                                                         {% if note.author == request_user and perms.note.delete_note or request_user.is_staff %}
-                                                            <div class="deletenote hidden"><a href="#" onclick="deleteNote(this)" id="deletenote" title="{% trans 'Delete note' %}">x</a></div>
+                                                            <div class="deletenote" style="float:right;"><a href="#" onclick="deleteNote(this)" id="deletenote" title="{% trans 'Delete note' %}"><i class="icon-remove" style="font-size:12px;"></i></a></div>
+                                                        {% endif %}
+                                                        {% if note.author == request_user or request_user.is_staff %}
+                                                            <span id="edit-note" style="float:right;">
+                                                                <a href="#" class="nounderline" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note" title="{% trans 'Edit' %}"><i class="icon-pencil" style="font-size:12px;"></i></a>
+                                                            </span>
                                                         {% endif %}
                                                     </div>
                                                     <p class="note-text">{{ note.title }}</p>
-                                                    <span id="view-note" class="label label-info"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
-                                                    {% if note.author == request_user or request_user.is_staff %}
-                                                        <span id="edit-note" class="label label-info">
-                                                            <a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a>
-                                                        </span>
-                                                    {% endif %}<br />
                                                     {% get_comment_count for note as comment_count %}
-                                                    <span class="comments">{{ comment_count	}} comments</span>
+                                                    <span class="comments">{{ comment_count }} {% trans "comments" %}</span><br/>
 												</div>
 
                                             {% endif %}

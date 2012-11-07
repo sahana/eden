@@ -10,6 +10,22 @@
     <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
 {% endblock %}
 
+{% block extrajs %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
+    <script type="text/javascript">
+                                $.datepicker.setDefaults(
+                                    { onSelect: function(dateText) {
+                                        var date = $(this).datepicker("getDate");
+                                        var month = date.getMonth() + 1;
+                                        var year = date.getFullYear();
+                                        window.location = "calendar/" + year + "/" + month + "/";
+                                      }
+                                    }
+                                );
+                                $( "#datepicker" ).datepicker( $.datepicker.regional[ "{{ LANGUAGE_CODE }}" ] );
+                            </script>
+{% endblock %}
+
 {% block content %}
 
     <div class="row">
@@ -500,43 +516,6 @@
                 <div class="tab-pane" id="events">
                     <div class="row">
                         <div class="span8">
-                            <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
-                            <script type="text/javascript">
-                                {% comment %}
-                                    This code make thw calendar inhibit the onSelect function
-                                    on load it returns the error:
-                                    Uncaught TypeError: Property 'datepicker' of object function (a,b){return new e.fn.init(a,b,h)} is not a function (anonymous function)
-
-                                $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);  
-                                $('#datepicker').datepicker($.extend({},
-                                     $.datepicker.regional[ '{{ LANGUAGE_CODE }}' ], {
-                                     onSelect: function(dateText) {
-                                         var month = dateText.split("/")[0];
-                                         var year = dateText.split("/")[2];
-                                         window.location = "calendar/" + year + "/" + month + "/";
-                                     }
-                                }));
-
-                                
-                                $('#datepicker').datepicker({
-                                     onSelect: function(dateText) {
-                                         var month = dateText.split("/")[0];
-                                         var year = dateText.split("/")[2];
-                                         window.location = "calendar/" + year + "/" + month + "/";
-                                     }
-                                });
-                                {% endcomment %} 
-		                        $.datepicker.setDefaults(
-		                            { onSelect: function(dateText) {
-                                        var date = $(this).datepicker("getDate");
-                                        var month = date.getMonth() + 1;
-                                        var year = date.getFullYear();
-                                        window.location = "calendar/" + year + "/" + month + "/";
-                                      }
-                                    }
-                                );
-		                        $( "#datepicker" ).datepicker( $.datepicker.regional[ "{{ LANGUAGE_CODE }}" ] );
-                            </script>
                             <div id="datepicker"></div>
                         </div>
                         <div class="span4">

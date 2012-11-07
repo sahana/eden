@@ -41,15 +41,14 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 
+from apps.ecidadania.proposals import url_names as urln_prop
+from core.spaces import url_names as urln_space
 from core.spaces.models import Space
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField, ConfirmVote
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
-from apps.ecidadania.proposals import url_names as urln_prop
-from core.spaces import url_names as urln_space
-
 
 class AddProposal(FormView):
 

@@ -66,10 +66,21 @@ function createNote() {
 
     request.done(function (note) {
         var newNote = $("#sortable-dispatcher").append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
-            "<div class='handler'><div class='deletenote hidden'>" + "<a href='#' onclick='deleteNote(this)'" +
-            " id='deletenote'>x</a></div></div><p class='note-text'>" + note.title + "</p>" +
-            "<span id='view-note' class='label'><a href='#' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note'>" + viewString + "</a></span>" +
-            "<span id='edit-note' class='label'><a href='#' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note'>" + editString + "</a></span></div>");
+            "<div class='handler'><span id='view-note' style='float:left;'>" +
+            "<a href='#' class='nounderline' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note' title='{% trans 'View' %}'><i class='icon-eye-open' style='font-size:12px;''></i></a>" +
+            "</span><div class='deletenote' style='float:right;'><a href='#' onclick='deleteNote(this)' id='deletenote' title='{% trans 'Delete note' %}'><i class='icon-remove' style='font-size:12px;'></i></a></div>" +
+            "<span id='edit-note' style='float:right;'>" +
+            "<a href='#'' class='nounderline' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note' title='{% trans 'Edit' %}'><i class='icon-pencil' style='font-size:12px;'></i></a>" +
+            "</span></div><p class='note-text'>" + note.title + "</p>");
+
+
+
+
+        // append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
+        //     "<div class='handler'><div class='deletenote hidden'>" + "<a href='#' onclick='deleteNote(this)'" +
+        //     " id='deletenote'>x</a></div></div><p class='note-text'>" + note.title + "</p>" +
+        //     "<span id='view-note' class='label'><a href='#' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note'>" + viewString + "</a></span>" +
+        //     "<span id='edit-note' class='label'><a href='#' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note'>" + editString + "</a></span></div>");
         newNote.show("slow");
         showControls();
     });

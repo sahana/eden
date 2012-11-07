@@ -35,11 +35,11 @@ PROPOSAL_VOTE = 'vote-proposal'
 
 PROPOSAL_MERGED = 'merged_proposal'
 
-PROPOSAL_MERGEDTOSET = 'mergedproposal_to_set'
+PROPOSAL_MERGEDTOSET = 'merge_proposal'
 
 PROPOSALFIELD_ADD = 'add_fields'
 
-PROPOSALFIELD_DELETE 'delete_fields'
+PROPOSALFIELD_DELETE = 'delete_fields'
 
 PROPOSALSET_ADD = 'add-proposalset'
 

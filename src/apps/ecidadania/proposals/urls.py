@@ -45,7 +45,7 @@ urlpatterns = patterns('',
 )
 
 
-urlpatterns += (''
+urlpatterns += patterns('',
 
     url(_(r'^psets/(?P<set_id>\w+)/edit/'), EditProposalSet.as_view(),
         name=PROPOSALSET_EDIT),
@@ -62,7 +62,7 @@ urlpatterns += (''
 )
 
 
-urlpatterns = patterns('apps.ecidadania.proposals.views',
+urlpatterns += patterns('apps.ecidadania.proposals.views',
 
     url(_(r'^merged/(?P<p_set>\w+)/'),'merged_proposal', name=PROPOSAL_MERGED),
 
