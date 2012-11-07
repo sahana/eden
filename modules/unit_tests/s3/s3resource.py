@@ -122,7 +122,8 @@ class FieldSelectorResolutionTests(unittest.TestCase):
                      "name",
                      "organisation_id$name",
                      "task.description"]
-        fields, joins, left, distinct = resource.resolve_selectors(selectors)
+        fields, joins, left, distinct = resource.resolve_selectors(selectors,
+                                                                   skip_components=True)
         self.assertEqual(len(fields), 3)
         self.assertEqual(fields[0].colname, "project_project.id")
         self.assertEqual(fields[1].colname, "project_project.name")
@@ -147,8 +148,7 @@ class FieldSelectorResolutionTests(unittest.TestCase):
                      "name",
                      "organisation_id$name",
                      "task.description"]
-        fields, joins, left, distinct = resource.resolve_selectors(selectors,
-                                                                   skip_components=False)
+        fields, joins, left, distinct = resource.resolve_selectors(selectors)
 
         self.assertEqual(len(fields), 4)
         self.assertEqual(fields[0].colname, "project_project.id")
@@ -1066,8 +1066,7 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation")
         list_fields = ["name", "office.name"]
-        lfields = resource.resolve_selectors(list_fields,
-                                             skip_components=False)[0]
+        lfields = resource.resolve_selectors(list_fields)[0]
         collapsed = resource.extract(rows, lfields)
         self.assertEqual(len(collapsed), 1)
 
