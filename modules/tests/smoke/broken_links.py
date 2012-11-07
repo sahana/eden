@@ -140,6 +140,7 @@ class BrokenLinkTest(Web2UnitTest):
         for user in self.credentials:
             self.clearRecord()
             if self.login(user):
+                self.reporter("Smoke Test for user %s" % self.user)
                 self.visitLinks()
 
     def visitLinks(self):
@@ -175,6 +176,8 @@ class BrokenLinkTest(Web2UnitTest):
         for visited_url in url_list:
             index_url = visited_url[len(self.homeURL):]
             if record_data:
+                if index_url in self.results.keys():
+                    print >> self.stdout, "Warning duplicated url: %s" % index_url
                 self.results[index_url] = ReportData()
                 current_results = self.results[index_url]
                 current_results.depth = depth
@@ -199,11 +202,13 @@ class BrokenLinkTest(Web2UnitTest):
                     if self.config.verbose >= 3:
                         print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
             except Exception as e:
+                duration = time() - visit_start
                 import traceback
                 print traceback.format_exc()
                 if record_data:
                     current_results.broken = True
                     current_results.exception = True
+                    current_results.duration = duration
                 continue
             http_code = self.b.get_code()
             if http_code != 200:
@@ -248,15 +253,17 @@ class BrokenLinkTest(Web2UnitTest):
                     if location != -1:
                         url = url[0:location]
                 short_url = url[len(self.homeURL):]
-                if short_url not in self.results.keys():
-                    if url not in to_visit:
-                        self.urlParentList[short_url] = index_url
-                        to_visit.append(url)
+                if url not in url_list and \
+                   short_url not in self.results.keys() and \
+                   url not in to_visit:
+                    self.urlParentList[short_url] = index_url
+                    to_visit.append(url)
         return to_visit
     
     def report(self):
         self.reporter("%d URLs visited" % self.totalLinks)
         self.brokenReport()
+        self.timeReport()
         if self.config.record_timings:
             self.record_timings()
         self.report_link_depth()
@@ -413,7 +420,7 @@ class BrokenLinkTest(Web2UnitTest):
         linktimes = []
         for (url, rd_obj) in self.results.items():
             duration = rd_obj.get_duration()
-            linktime.append(duration)
+            linktimes.append(duration)
             if duration > self.threshold:
                 thresholdLink[url] = duration
         self.reporter("Time Analysis - Links beyond threshold")
