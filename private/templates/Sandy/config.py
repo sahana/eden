@@ -179,12 +179,12 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    ("req", Storage(
-            name_nice = T("Requests"),
-            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-            restricted = True,
-            module_type = 3,
-        )),
+    #("req", Storage(
+    #        name_nice = T("Requests"),
+    #        #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+    #        restricted = True,
+    #        module_type = 3,
+    #    )),
     #("project", Storage(
     #        name_nice = T("Projects"),
     #        #description = "Tracking of Projects, Activities and Tasks",

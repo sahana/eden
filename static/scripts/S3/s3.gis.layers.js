@@ -1482,8 +1482,10 @@ function addWFSLayer(layer) {
     }
 
     if (undefined != layer.projection) {
-        var srsName = 'EPSG:' + layer.projection;
+        var projection = layer.projection;
+        var srsName = 'EPSG:' + projection;
     } else {
+        var projection = '4326';
         var srsName = 'EPSG:4326';
     }
     var protocol = new OpenLayers.Protocol.WFS({
@@ -1603,7 +1605,7 @@ function addWFSLayer(layer) {
         }
     });
 
-    if ((!projection) || ('4326' == projection)) {
+    if ('4326' == projection) {
         projection = S3.gis.proj4326;
     } else {
         projection = new OpenLayers.Projection('EPSG:' + projection);
