@@ -270,16 +270,19 @@ class GIS(object):
             @ToDo: Pass error messages to Result & have JavaScript listen for these
         """
 
-        layer = KMLLayer()
+        request = current.request
 
-        table = layer.table
+        table = current.s3db.gis_layer_kml
         record = current.db(table.id == record_id).select(table.url,
                                                           limitby=(0, 1)
                                                           ).first()
         url = record.url
 
-        cachepath = layer.cachepath
-        filepath = os.path.join(cachepath, filename)
+        filepath = os.path.join(request.global_settings.applications_parent,
+                                request.folder,
+                                "uploads",
+                                "gis_cache",
+                                filename)
 
         warning = self.fetch_kml(url, filepath)
 
@@ -3814,6 +3817,8 @@ class GIS(object):
             fields = [table.id, table.name, table.gis_feature_type,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,
+                      # Handle Countries which start with Bounds set, yet are Points
+                      table.lat_min, table.lon_min, table.lat_max, table.lon_max,
                       table.path, table.parent]
             spatial = current.deployment_settings.get_gis_spatialdb()
             update_location_tree = self.update_location_tree
@@ -4850,13 +4855,14 @@ class GIS(object):
         if vars.gis_feature_type == "1":
             # Point
             if (vars.lon is None and vars.lat is None) or \
-             (vars.lon == "" and vars.lat == ""):
+               (vars.lon == "" and vars.lat == ""):
                 # No Geometry available
                 # Don't clobber existing records (e.g. in Prepop)
                 #vars.gis_feature_type = "0"
                 # Cannot create WKT, so Skip
                 return
             elif vars.lat is None or vars.lat == "":
+                # Can't just have lon without lat
                 form.errors["lat"] = messages.lat_empty
             elif vars.lon is None or vars.lon == "":
                 form.errors["lon"] = messages.lon_empty
@@ -4905,10 +4911,14 @@ class GIS(object):
                 vars.lon = centroid_point.x
                 vars.lat = centroid_point.y
                 bounds = shape.bounds
-                vars.lon_min = bounds[0]
-                vars.lat_min = bounds[1]
-                vars.lon_max = bounds[2]
-                vars.lat_max = bounds[3]
+                if gis_feature_type != "Point" or \
+                   "lon_min" not in vars or vars.lon_min is None or \
+                   vars.lon_min == vars.lon_max:
+                    # Update bounds unless we have a 'Point' which has already got wider Bounds specified (such as a country)
+                    vars.lon_min = bounds[0]
+                    vars.lat_min = bounds[1]
+                    vars.lon_max = bounds[2]
+                    vars.lat_max = bounds[3]
             except:
                 form.errors.gis_feature_type = messages.centroid_error
 
@@ -6354,6 +6364,8 @@ class Layer(object):
         s3_has_role = current.auth.s3_has_role
 
         # Read the Layers enabled in the Active Configs
+        if gis.config is None:
+            GIS.set_config()
         tablename = self.tablename
         table = s3db[tablename]
         ctable = s3db.gis_config
@@ -7004,12 +7016,10 @@ class KMLLayer(Layer):
     js_array = "S3.gis.layers_kml"
 
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, init=True):
         "Set up the KML cache, should be done once per request"
-        super(KMLLayer, self).__init__()
 
-        # Needed for gis.download_kml()
-        self.table = current.s3db[self.tablename]
+        super(KMLLayer, self).__init__()
 
         # Can we cache downloaded KML feeds?
         # Needed for unzipping & filtering as well
@@ -7017,7 +7027,6 @@ class KMLLayer(Layer):
         #           Do we need to secure it?
         request = current.request
         cachepath = os.path.join(request.folder,
-                                 request.folder,
                                  "uploads",
                                  "gis_cache")
 

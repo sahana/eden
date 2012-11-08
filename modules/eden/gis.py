@@ -379,7 +379,6 @@ class S3LocationModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_location_onvalidation(form):
-
         """
             On Validation for GIS Locations (before DB I/O)
         """
