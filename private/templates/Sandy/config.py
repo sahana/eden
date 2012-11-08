@@ -183,7 +183,7 @@ settings.modules = OrderedDict([
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
-            module_type = 2,
+            module_type = 3,
         )),
     #("project", Storage(
     #        name_nice = T("Projects"),
@@ -201,7 +201,7 @@ settings.modules = OrderedDict([
             name_nice = T("Shelters"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
             restricted = True,
-            module_type = 10
+            module_type = 2
         )),
     ("hms", Storage(
             name_nice = T("Hospitals"),
