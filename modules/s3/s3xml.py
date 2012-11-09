@@ -1925,11 +1925,9 @@ class S3XML(S3Codec):
             col = etree.SubElement(row, cls.TAG.col)
             col.set(cls.ATTRIBUTE.field, str(key))
             if value:
-                text = s3_unicode(value)
-                #text = str(value)
+                text = s3_unicode(value).strip()
                 if text.lower() not in ("null", "<null>"):
                     text = cls.xml_encode(text)
-                    #text = cls.xml_encode(unicode(text.decode("utf-8")))
                     col.text = text
             else:
                 col.text = ""
