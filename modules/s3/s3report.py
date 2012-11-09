@@ -120,6 +120,12 @@ class S3Report(S3CRUD):
             if "totals" not in r.post_vars:
                 form_values["totals"] = "off"
         else:
+            clear_opts = False
+            if "clear_opts" in r.get_vars:
+                clear_opts = True
+                del r.get_vars["clear_opts"]
+            if "clear_opts" in r.vars:
+                del r.vars["clear_opts"]
             last = lambda opt: opt[-1] if type(opt) is list else opt
             url_options = Storage([(k, last(v))
                                    for k, v in r.get_vars.iteritems() if v])
@@ -133,7 +139,15 @@ class S3Report(S3CRUD):
             else:
                 session_options = s3.report_options
                 if session_options and tablename in session_options:
-                    session_options = session_options[tablename]
+                    if clear_opts:
+                        # Clear all filter options (but not report options)
+                        opts = Storage([(o, v)
+                                    for o, v in session_options[tablename].items()
+                                    if o in ("rows", "cols", "fact", "aggregate", "show_totals")])
+                        session_options[tablename] = opts
+                        session_options = opts
+                    else:
+                        session_options = session_options[tablename]
                 else:
                     session_options = Storage()
                 if session_options:
@@ -163,7 +177,12 @@ class S3Report(S3CRUD):
         show_form = attr.get("interactive_report", True)
         if show_form:
             # Build the form and prepopulate with values we've got
-            form = self._create_form(form_values)
+            opts = Storage(r.get_vars)
+            opts["clear_opts"] = "1"
+            clear_opts = A(T("Reset all filters"),
+                           _href=r.url(vars=opts),
+                           _class="action-lnk")
+            form = self._create_form(form_values, clear_opts=clear_opts)
 
             # Validate the form. This populates form.vars (values) and
             # form.errors (field errors).
@@ -333,7 +352,7 @@ class S3Report(S3CRUD):
         return output
 
     # -------------------------------------------------------------------------
-    def _create_form(self, form_values=None):
+    def _create_form(self, form_values=None, clear_opts=""):
         """ Creates the report filter and options form """
 
         T = current.T
@@ -431,7 +450,7 @@ class S3Report(S3CRUD):
                 _id="report_options"
             )
         form.append(form_report_options)
-        form.append(INPUT(_value=T("Submit"), _type="submit"))
+        form.append(DIV(INPUT(_value=T("Submit"), _type="submit"), clear_opts))
 
         return form
 
