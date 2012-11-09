@@ -73,7 +73,7 @@ settings.security.policy = 4 # Controller & Function ACLs
 settings.inv.direct_stock_edits = True
 
 # Request Management
-settings.req.req_type = ["Stock"]
+#settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 settings.req.requester_optional = True
 
