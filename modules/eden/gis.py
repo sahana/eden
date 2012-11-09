@@ -352,6 +352,9 @@ class S3LocationModel(S3Model):
         if not ids:
             return current.messages.NONE
 
+        if isinstance(ids, int):
+            ids = [ids]
+
         db = current.db
         table = db.gis_location
         rows = db(table.id.belongs(ids)).select(table.name)
