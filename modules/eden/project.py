@@ -3503,6 +3503,23 @@ class S3ProjectTaskModel(S3Model):
                                                  label=T("Date"),
                                                  field="date"),
                             ]
+        
+        if settings.get_project_sectors():
+            report_fields.insert(3,(T("Sectors"),"sectors"))
+            def get_sector_opts():
+                stable = current.s3db.org_sector
+                rows = db(stable.id>0).select(stable.name)
+                sector_opts = {}
+                for row in rows:
+                    name = row.name
+                    sector_opts[name] = name
+                return sector_opts
+            task_time_search.insert(2, S3SearchOptionsWidget(name="sectors",
+                                                             label = T("Sector"),
+                                                             field = "sectors",
+                                                             options = get_sector_opts,
+                                                             cols = 3),
+                                    )
 
         configure(tablename,
                   onaccept=self.time_onaccept,
@@ -4729,6 +4746,35 @@ class S3ProjectTimeVirtualFields:
             return activity.name
         else:
             return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    def sectors(self):
+        """
+            Sectors of the project associated with this time entry
+            - used by the 'Project Time' report
+        """
+
+        try:
+            task_id = self.project_time.task_id
+        except AttributeError:
+            return None
+
+        db = current.db
+        s3db = current.s3db
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
+        query = (ltable.deleted != True) & \
+                (ltable.task_id == task_id) & \
+                (ltable.project_id == ptable.id)
+        row = db(query).select(ptable.multi_sector_id,
+                               limitby=(0, 1)).first()
+        if row and row.multi_sector_id:
+            stable = s3db.org_sector
+            query = (stable.id.belongs(row.multi_sector_id))
+            rows = db(query).select(stable.name)
+            return [row.name for row in rows]
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def day(self):
