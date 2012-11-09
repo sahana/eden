@@ -141,12 +141,12 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 10,
         )),
-    #("vol", Storage(
-    #        name_nice = T("Volunteers"),
-    #        #description = "Human Resources Management",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    ("vol", Storage(
+            name_nice = T("Volunteers"),
+            #description = "Human Resources Management",
+            restricted = True,
+            module_type = 3,
+        )),
     ("cms", Storage(
           name_nice = T("Content Management"),
           #description = "Content Management System",
