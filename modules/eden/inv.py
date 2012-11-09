@@ -632,32 +632,36 @@ $(document).ready(function(){
         # Item Search Method (Advanced Search only)
         inv_item_search = S3Search(advanced=report_options.get("search"))
 
+        if current.deployment_settings.get_inv_direct_stock_edits():
+            writable = True
+        else:
+            writable = False
         self.configure(tablename,
-                        # Lock the record so that it can't be meddled with
-                        create=False,
-                        listadd=False,
-                        editable=False,
-                        deletable=False,
-                        super_entity = "supply_item_entity",
-                        list_fields = ["id",
-                                       "site_id",
-                                       "item_id",
-                                       (T("Item Code"), "item_code"),
-                                       (T("Category"), "item_category"),
-                                       "quantity",
-                                       "pack_value",
-                                       (T("Total Value"), "total_value"),
-                                       "currency",
-                                       "bin",
-                                       "owner_org_id",
-                                       "supply_org_id",
-                                       "status",
-                                       ],
-                        onvalidation = self.inv_inv_item_onvalidate,
-                        search_method = inv_item_search,
-                        report_options = report_options,
-                        deduplicate = self.inv_item_duplicate,
-                        )
+                       # Lock the record so that it can't be meddled with
+                       create=writable,
+                       listadd=writable,
+                       editable=writable,
+                       deletable=writable,
+                       super_entity = "supply_item_entity",
+                       list_fields = ["id",
+                                      "site_id",
+                                      "item_id",
+                                      (T("Item Code"), "item_code"),
+                                      (T("Category"), "item_category"),
+                                      "quantity",
+                                      "pack_value",
+                                      (T("Total Value"), "total_value"),
+                                      "currency",
+                                      "bin",
+                                      "owner_org_id",
+                                      "supply_org_id",
+                                      "status",
+                                      ],
+                       onvalidation = self.inv_inv_item_onvalidate,
+                       search_method = inv_item_search,
+                       report_options = report_options,
+                       deduplicate = self.inv_item_duplicate,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)

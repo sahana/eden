@@ -287,6 +287,8 @@ settings.L10n.decimal_separator = "."
 
 # Inventory Management
 #settings.inv.collapse_tabs = False
+# Uncomment if you need a simpler (but less accountable) process for managing stock levels
+#settings.inv.direct_stock_edits = True
 # Use the term 'Order' instead of 'Shipment'
 #settings.inv.shipment_name = "order"
 #settings.inv.send_form_name = "Tally Out Sheet"

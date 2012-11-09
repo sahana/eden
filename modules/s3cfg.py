@@ -916,6 +916,13 @@ class S3Config(Storage):
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 
+    def get_inv_direct_stock_edits(self):
+        """
+            Can Stock levels be adjusted directly?
+            - defaults to False
+        """
+        return self.inv.get("direct_stock_edits", False)
+
     def get_inv_item_status(self):
         """
             Item Statuses which can also be Sent Shipment Types

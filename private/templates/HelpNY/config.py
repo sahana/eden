@@ -68,6 +68,10 @@ settings.auth.registration_roles = { 0: ["super"]}
 
 settings.security.policy = 4 # Controller & Function ACLs
 
+# Inventory Management
+# Uncomment if you need a simpler (but less accountable) process for managing stock levels
+settings.inv.direct_stock_edits = True
+
 # Request Management
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
@@ -119,7 +123,7 @@ settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 3,     # 6th item in the menu
+            module_type = 4,     # 4th item in the menu
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
