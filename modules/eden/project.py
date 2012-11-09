@@ -825,29 +825,30 @@ $(document).ready(function(){
     @staticmethod
     def project_project_onaccept(form):
         """
-            Create/update project_organisation record from the organisation_id
+            After DB I/O tasks for Project records
         """
 
-        db = current.db
-        s3db = current.s3db
-        auth = current.auth
-        ptable = db.project_project
-        otable = s3db.project_organisation
-        vars = form.vars
+        settings = current.deployment_settings
+        if settings.get_project_multiple_organisations():
+            # Create/update project_organisation record from the organisation_id
+            vars = form.vars
 
-        lead_role = current.deployment_settings.get_project_organisation_lead_role()
+            lead_role = settings.get_project_organisation_lead_role()
 
-        query = (otable.project_id == vars.id) & \
-                (otable.role == lead_role)
+            otable = current.s3db.project_organisation
+            query = (otable.project_id == vars.id) & \
+                    (otable.role == lead_role)
 
-        # Update the lead organisation
-        count = db(query).update(organisation_id = vars.organisation_id)
-        if not count:
-            # If there is no record to update, then create a new one
-            otable.insert(project_id = vars.id,
-                          organisation_id = vars.organisation_id,
-                          role = lead_role,
-                          )
+            # Update the lead organisation
+            count = current.db(query).update(
+                                        organisation_id = vars.organisation_id
+                                        )
+            if not count:
+                # If there is no record to update, then create a new one
+                otable.insert(project_id = vars.id,
+                              organisation_id = vars.organisation_id,
+                              role = lead_role,
+                              )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3505,10 +3506,10 @@ class S3ProjectTaskModel(S3Model):
                             ]
         
         if settings.get_project_sectors():
-            report_fields.insert(3,(T("Sectors"),"sectors"))
+            report_fields.insert(3, (T("Sectors"), "sectors"))
             def get_sector_opts():
-                stable = current.s3db.org_sector
-                rows = db(stable.id>0).select(stable.name)
+                stable = self.org_sector
+                rows = db(stable.id > 0).select(stable.name)
                 sector_opts = {}
                 for row in rows:
                     name = row.name

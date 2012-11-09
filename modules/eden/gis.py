@@ -352,7 +352,7 @@ class S3LocationModel(S3Model):
         if not ids:
             return current.messages.NONE
 
-        if isinstance(ids, int):
+        if not isinstance(ids, (list, tuple)):
             ids = [ids]
 
         db = current.db
