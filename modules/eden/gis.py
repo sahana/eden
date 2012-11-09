@@ -379,7 +379,6 @@ class S3LocationModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_location_onvalidation(form):
-
         """
             On Validation for GIS Locations (before DB I/O)
         """
@@ -3042,7 +3041,7 @@ class S3MapModel(S3Model):
                                    requires = IS_NOT_EMPTY(),
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (LOCATION,
-                                                                 T("Mandatory. The URL to access the service.")))),
+                                                                 T("Mandatory. The base URL to access the service. e.g. http://host.domain/geoserver/wfs?")))),
                              Field("featureType",
                                    label=T("Feature Type"),
                                    requires = IS_NOT_EMPTY(),
@@ -3053,7 +3052,7 @@ class S3MapModel(S3Model):
                                    requires=IS_NULL_OR(IS_URL()),
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Feature Namespace"),
-                                                                 T("Optional. In GeoServer, this is the Workspace Namespace URI (not the name!). Within the WFS getCapabilities, this is the FeatureType Name part before the colon(:).")))),
+                                                                 T("Optional. In GeoServer, this is the Workspace Namespace URI (not the name!). Within the WFS getCapabilities, the workspace is the FeatureType Name part before the colon(:).")))),
                              Field("title",
                                    label=T("Title"),
                                    default="name",
@@ -3144,7 +3143,7 @@ class S3MapModel(S3Model):
                                    requires = IS_NOT_EMPTY(),
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (LOCATION,
-                                                                 T("The URL to access the service.")))),
+                                                                 T("Mandatory. The base URL to access the service. e.g. http://host.domain/geoserver/wms?")))),
                              Field("version", length=32,
                                    label=T("Version"),
                                    default="1.1.1",
