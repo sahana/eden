@@ -379,7 +379,7 @@ def inv_item():
                            )
     else:
         s3db.configure(tablename,
-                       insertable=False,
+                       insertable= settings.get_inv_direct_stock_edits(),
                        list_fields = ["id",
                                       "site_id",
                                       "item_id",
@@ -473,7 +473,7 @@ def inv_item():
                                 pdf_groupby = "site_id, item_id",
                                 pdf_orderby = "expiry_date, supply_org_id",
                                 )
-    if "add_btn" in output:
+    if "add_btn" in output and not settings.get_inv_direct_stock_edits():
         del output["add_btn"]
     return output
 

@@ -632,16 +632,14 @@ $(document).ready(function(){
         # Item Search Method (Advanced Search only)
         inv_item_search = S3Search(advanced=report_options.get("search"))
 
-        if current.deployment_settings.get_inv_direct_stock_edits():
-            writable = True
-        else:
-            writable = False
+        direct_stock_edits = current.deployment_settings.get_inv_direct_stock_edits()
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
-                       create=writable,
-                       listadd=writable,
-                       editable=writable,
-                       deletable=writable,
+                       # - unless explicitly told to allow this
+                       create=direct_stock_edits,
+                       listadd=direct_stock_edits,
+                       editable=direct_stock_edits,
+                       deletable=direct_stock_edits,
                        super_entity = "supply_item_entity",
                        list_fields = ["id",
                                       "site_id",
