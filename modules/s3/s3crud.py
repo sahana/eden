@@ -451,8 +451,8 @@ class S3CRUD(S3Method):
                     pass
 
             # De-duplication
-            from s3merge import S3Merge
-            output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
+            #from s3merge import S3Merge
+            #output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
         elif representation == "plain":
             T = current.T
@@ -656,8 +656,8 @@ class S3CRUD(S3Method):
                     pass
 
             # De-duplication
-            from s3merge import S3Merge
-            output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
+            #from s3merge import S3Merge
+            #output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
             # Redirection
             update_next = _config("update_next")
