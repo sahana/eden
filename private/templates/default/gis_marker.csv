@@ -24,6 +24,7 @@ Name,Height,Width,Image
 "port",33,44,"gis_marker.image.Trans_Port_S1.png"
 "project",40,40,"gis_marker.image.Emergency_Teams_S1.png"
 "rail_station",33,44,"gis_marker.image.Trans_Rail_Station_S1.png"
+"residence",33,44,"gis_marker.image.Public_Venues_Theme_S1.png"
 "school",33,44,"gis_marker.image.Edu_Schools_S1.png"
 "shelter",40,40,"gis_marker.image.Emergency_Shelters_S1.png"
 "special_needs",33,44,"gis_marker.image.Special_Needs_Adult_Day_Care_S1.png"

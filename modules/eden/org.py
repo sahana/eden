@@ -1436,6 +1436,7 @@ class S3FacilityModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Facility Types (generic)
@@ -1475,7 +1476,9 @@ class S3FacilityModel(S3Model):
         #
         tablename = "org_facility"
         table = define_table(tablename,
-                             self.super_link("site_id", "org_site"),
+                             super_link("doc_id", "doc_entity"),
+                             super_link("pe_id", "pr_pentity"),
+                             super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64, # Mayon Compatibility
                                    label=T("Name")),
@@ -1536,8 +1539,114 @@ class S3FacilityModel(S3Model):
             msg_record_deleted=T("Facility deleted"),
             msg_list_empty=T("No Facilities currently registered"))
 
+        # Search method
+        def get_facility_opts():
+            table = self.org_facility_type
+            rows = db(table.deleted == False).select(table.name)
+            opts = {}
+            for row in rows:
+                name = row.name
+                opts[name] = name
+            return opts
+
+        org_facility_search = S3Search(
+            advanced=(S3SearchSimpleWidget(
+                        name="facility_search_advanced",
+                        label=T("Name, Org and/or Code"),
+                        comment=T("To search for a facility, enter any of the names or code of the facility, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all facilities."),
+                        field=["name",
+                               "code",
+                               "organisation_id$name",
+                               "organisation_id$acronym"
+                               ]
+                      ),
+                      S3SearchOptionsWidget(
+                        name="facility_search_type",
+                        label=T("Type"),
+                        field="facility_type_id",
+                        options = get_facility_opts,
+                      ),
+                      #S3SearchOptionsWidget(
+                      #  name="facility_search_L1",
+                      #  field="location_id$L1",
+                      #  location_level="L1",
+                      #  cols = 3,
+                      #),
+                      #S3SearchOptionsWidget(
+                      #  name="facility_search_L2",
+                      #  field="location_id$L2",
+                      #  location_level="L2",
+                      #  cols = 3,
+                      #),
+                      S3SearchOptionsWidget(
+                        name="facility_search_L3",
+                        field="location_id$L3",
+                        location_level="L3",
+                        cols = 3,
+                      ),
+                      S3SearchOptionsWidget(
+                        name="facility_search_L4",
+                        field="location_id$L4",
+                        location_level="L4",
+                        cols = 3,
+                      ),
+                     ))
+
+        report_fields = ["name",
+                         "facility_type_id",
+                         "organisation_id",
+                         #"location_id$L1",
+                         #"location_id$L2",
+                         "location_id$L3",
+                         "location_id$L4",
+                         ]
+
         configure(tablename,
-                  super_entity="org_site"
+                  super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  deduplicate=self.org_facility_duplicate,
+                  search_method=org_facility_search,
+                  report_options = Storage(
+                    search=[
+                        S3SearchOptionsWidget(
+                        name="facility_search_type",
+                        label=T("Type"),
+                        field="facility_type_id",
+                        options = get_facility_opts,
+                      ),
+                      #S3SearchOptionsWidget(
+                      #  name="facility_search_L1",
+                      #  field="location_id$L1",
+                      #  location_level="L1",
+                      #  cols = 3,
+                      #),
+                      #S3SearchOptionsWidget(
+                      #  name="facility_search_L2",
+                      #  field="location_id$L2",
+                      #  location_level="L2",
+                      #  cols = 3,
+                      #),
+                      S3SearchOptionsWidget(
+                        name="facility_search_L3",
+                        field="location_id$L3",
+                        location_level="L3",
+                        cols = 3,
+                      ),
+                      S3SearchOptionsWidget(
+                        name="facility_search_L4",
+                        field="location_id$L4",
+                        location_level="L4",
+                        cols = 3,
+                      ),
+                    ],
+                    rows=report_fields,
+                    cols=report_fields,
+                    facts=report_fields,
+                    methods=["count", "list", "sum"],
+                    defaults=Storage(rows="location_id$L4",
+                                     cols="type",
+                                     fact="name",
+                                     aggregate="count")
+                    ),
                   )
 
         # ---------------------------------------------------------------------
@@ -1545,6 +1654,21 @@ class S3FacilityModel(S3Model):
         #
         return Storage(
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "org_facility":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

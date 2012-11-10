@@ -290,6 +290,64 @@ class S3RequestModel(S3Model):
             msg_record_deleted = T("Request Canceled"),
             msg_list_empty = T("No Requests"))
 
+        # Search method
+        req_req_search = S3Search(
+            advanced=(#S3SearchSimpleWidget(
+                      #  name="req_search_advanced",
+                      #  label=T("Name, Org and/or ID"),
+                      #  comment=T("To search for a request, enter the ID or site, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all requests."),
+                      #  field=["name",
+                      #         "code",
+                      #         "organisation_id$name",
+                      #         "organisation_id$acronym"
+                      #         ]
+                      #),
+                      S3SearchOptionsWidget(
+                        name="req_search_type",
+                        label=T("Type"),
+                        field="type",
+                        options = req_type_opts,
+                      ),
+                      S3SearchOptionsWidget(
+                        name="req_search_priority",
+                        label=T("Priority"),
+                        field="priority",
+                        options = req_priority_opts,
+                      ),
+                      #S3SearchOptionsWidget(
+                      #  name="req_search_L1",
+                      #  field="site_id$location_id$L1",
+                      #  location_level="L1",
+                      #  cols = 3,
+                      #),
+                      #S3SearchOptionsWidget(
+                      #  name="req_search_L2",
+                      #  field="site_id$location_id$L2",
+                      #  location_level="L2",
+                      #  cols = 3,
+                      #),
+                      S3SearchOptionsWidget(
+                        name="req_search_L3",
+                        field="site_id$location_id$L3",
+                        location_level="L3",
+                        cols = 3,
+                      ),
+                      S3SearchOptionsWidget(
+                        name="req_search_L4",
+                        field="site_id$location_id$L4",
+                        location_level="L4",
+                        cols = 3,
+                      ),
+                    ))
+
+        report_fields = ["req_id",
+                         "site_id$organisation_id",
+                         #"site_id$location_id$L1",
+                         #"site_id$location_id$L2",
+                         "site_id$location_id$L3",
+                         "site_id$location_id$L4",
+                         ]
+
         # Reusable Field
         req_id = S3ReusableField("req_id", table, sortby="date",
                                  requires = IS_ONE_OF(db,
@@ -306,7 +364,6 @@ class S3RequestModel(S3Model):
                        "site_id"
                        #"type",
                        #"event_id",
-
                        ]
 
         if settings.get_req_use_req_number():
@@ -320,6 +377,55 @@ class S3RequestModel(S3Model):
         self.configure(tablename,
                        onaccept = self.req_onaccept,
                        deduplicate = self.req_req_duplicate,
+                       search_method = req_req_search,
+                       report_options = Storage(
+                        search=[
+                            S3SearchOptionsWidget(
+                                name="req_search_type",
+                                label=T("Type"),
+                                field="type",
+                                options = req_type_opts,
+                            ),
+                            S3SearchOptionsWidget(
+                                name="req_search_priority",
+                                label=T("Priority"),
+                                field="priority",
+                                options = req_priority_opts,
+                            ),
+                            #S3SearchOptionsWidget(
+                            #    name="req_search_L1",
+                            #    field="site_id$location_id$L1",
+                            #    location_level="L1",
+                            #    cols = 3,
+                            #),
+                            #S3SearchOptionsWidget(
+                            #    name="req_search_L2",
+                            #    field="site_id$location_id$L2",
+                            #    location_level="L2",
+                            #    cols = 3,
+                            #),
+                            S3SearchOptionsWidget(
+                                name="req_search_L3",
+                                field="site_id$location_id$L3",
+                                location_level="L3",
+                                cols = 3,
+                            ),
+                            S3SearchOptionsWidget(
+                                name="req_search_L4",
+                                field="site_id$location_id$L4",
+                                location_level="L4",
+                                cols = 3,
+                            ),
+                        ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list", "sum"],
+                        defaults=Storage(rows="site_id$location_id$L4",
+                                         cols="priority",
+                                         fact="req_id",
+                                         aggregate="count")
+                       ),
                        list_fields = list_fields
                        )
 
@@ -341,8 +447,8 @@ class S3RequestModel(S3Model):
                 message = "%s or %s" % (message, type)
             req_help_msg = req_help_msg_template % message
 
-        #@TODO: Remove this script from code. Help text is added to submit button in req_prep
-        req_helptext_script = SCRIPT("""
+        # @ToDo: Remove this script from code. Help text is added to submit button in req_prep
+        req_helptext_script = SCRIPT('''
 $(function() {
     var req_help_msg = '%s\\n%s';
     // Provide some default help text in the Details box if empty
@@ -383,10 +489,10 @@ $(function() {
             }
         });
     }
-});""" % (T('If the request type is "Other", please enter request details here.'),
-          req_help_msg,
-          T("Details field is required!"))
-        )
+})''' % (T('If the request type is "Other", please enter request details here.'),
+         req_help_msg,
+         T("Details field is required!"))
+         )
 
         # Custom Methods
         set_method("req", "req",
@@ -467,6 +573,7 @@ $(function() {
             Function to be called from REST prep functions
              - main module & components (sites)
         """
+
         if not r.component or r.component.name =="req":
             table = current.db.req_req
             default_type = table.type.default
@@ -523,8 +630,8 @@ $(function() {
             Represent for the Request Reference
             if show_link is True then it will generate a link to the pdf
         """
-        if value:
 
+        if value:
             if show_link:
                 db = current.db
                 table = db.req_req
@@ -577,6 +684,7 @@ $(function() {
                         pdf_paper_alignment = "Landscape",
                         **attr
                        )
+
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):

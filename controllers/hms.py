@@ -93,7 +93,6 @@ def marker_fn(record):
         @ToDo: Use Symbology
     """
 
-    mtable = db.gis_marker
     stable = db.hms_status
     status = db(stable.hospital_id == record.id).select(stable.facility_status,
                                                         limitby=(0, 1)
@@ -113,6 +112,7 @@ def marker_fn(record):
             # Compromised
             marker = "%s_yellow" % marker
 
+    mtable = db.gis_marker
     marker = db(mtable.name == marker).select(mtable.image,
                                               mtable.height,
                                               mtable.width,

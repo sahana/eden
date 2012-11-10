@@ -527,6 +527,28 @@ class S3CampDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def cr_shelter_onaccept(form):
+        """
+            After DB I/O
+        """
+
+        # @ToDo: Update/Create a cr_shelter_status record
+        # Status & Population
+        pass
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_status_onaccept(form):
+        """
+            After DB I/O
+        """
+
+        # @ToDo: Update the cr_shelter record
+        # Status & Population
+        pass
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def cr_shelter_represent(id, row=None):
         """ FK representation """
 
@@ -649,7 +671,7 @@ class S3CampDataModel(S3Model):
             except:
                 return current.messages.UNKNOWN_OPT
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def cr_shelter_rheader(r, tabs=[]):
     """ Resource Headers """
 

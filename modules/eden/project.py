@@ -3509,7 +3509,7 @@ class S3ProjectTaskModel(S3Model):
             report_fields.insert(3, (T("Sectors"), "sectors"))
             def get_sector_opts():
                 stable = self.org_sector
-                rows = db(stable.id > 0).select(stable.name)
+                rows = db(stable.deleted == False).select(stable.name)
                 sector_opts = {}
                 for row in rows:
                     name = row.name

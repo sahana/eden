@@ -77,6 +77,40 @@ settings.inv.direct_stock_edits = True
 settings.req.use_commit = False
 settings.req.requester_optional = True
 
+settings.org.site_label = "Facility"
+# Enable certain fields just for specific Organisations
+# empty list => disabled for all (including Admin)
+#settings.org.dependent_fields = \
+#    {"pr_person_details.mother_name"             : [],
+#     "pr_person_details.father_name"             : [],
+#     "pr_person_details.company"                 : [],
+#     "pr_person_details.affiliations"            : [],
+#     "vol_volunteer.active"                      : [],
+#     "vol_volunteer_cluster.vol_cluster_type_id"      : [],
+#     "vol_volunteer_cluster.vol_cluster_id"          : [],
+#     "vol_volunteer_cluster.vol_cluster_position_id" : [],
+#     }
+
+# -----------------------------------------------------------------------------
+# Human Resource Management
+# Uncomment to allow Staff & Volunteers to be registered without an email address
+settings.hrm.email_required = False
+# Uncomment to show the Organisation name in HR represents
+settings.hrm.show_organisation = True
+# Uncomment to disable Staff experience
+settings.hrm.staff_experience = False
+# Uncomment to disable the use of HR Credentials
+settings.hrm.use_credentials = False
+# Uncomment to enable the use of HR Education
+settings.hrm.use_education = False
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = True
+# Uncomment to disable the use of HR Teams
+#settings.hrm.use_teams = False
+# Custom label for Organisations in HR module
+#settings.hrm.organisation_label = "National Society / Branch"
+settings.hrm.organisation_label = "Organization"
+
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -123,7 +157,7 @@ settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 4,     # 4th item in the menu
+            module_type = 6,     # 6th item in the menu
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
@@ -133,10 +167,10 @@ settings.modules = OrderedDict([
             module_type = 10
         )),
     ("org", Storage(
-            name_nice = T("Organizations"),
+            name_nice = T("Facilities"),
             #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
             restricted = True,
-            module_type = 10
+            module_type = 1
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
@@ -180,7 +214,7 @@ settings.modules = OrderedDict([
             name_nice = T("Warehouses"),
             #description = "Receiving and Sending Items",
             restricted = True,
-            module_type = 2
+            module_type = None
         )),
     #("proc", Storage(
     #        name_nice = T("Procurement"),
@@ -188,12 +222,12 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10
     #    )),
-    #("asset", Storage(
-    #        name_nice = T("Assets"),
-    #        #description = "Recording and Assigning Assets",
-    #        restricted = True,
-    #        module_type = 5,
-    #    )),
+    ("asset", Storage(
+            name_nice = T("Assets"),
+            #description = "Recording and Assigning Assets",
+            restricted = True,
+            module_type = 4,
+        )),
     # Vehicle depends on Assets
     #("vehicle", Storage(
     #        name_nice = T("Vehicles"),

@@ -256,7 +256,7 @@ settings.hrm.use_skills = True
 #settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
 #settings.hrm.organisation_label = "National Society / Branch"
-settings.hrm.organisation_label = "Organisation"
+settings.hrm.organisation_label = "Organization"
 
 # -----------------------------------------------------------------------------
 # Projects
