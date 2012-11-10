@@ -1511,6 +1511,12 @@ class S3FacilityModel(S3Model):
                                             #default_from_profile=True)
                                 ),
                              self.gis_location_id(),
+                             Field("phone1", label=T("Phone 1"),
+                                   requires=IS_NULL_OR(s3_phone_requires)),
+                             Field("phone2", label=T("Phone 2"),
+                                   requires=IS_NULL_OR(s3_phone_requires)),
+                             Field("email", label=T("Email"),
+                                   requires=IS_NULL_OR(IS_EMAIL())),
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
@@ -1708,6 +1714,9 @@ class S3FacilityModel(S3Model):
     @staticmethod
     def org_facility_type_multirepresent(opt):
         """ Represent a facility type in list views """
+
+        if not opt:
+            return current.messages.NONE
 
         db = current.db
         table = db.org_facility_type
@@ -2517,7 +2526,7 @@ def org_site_represent(id, row=None, show_link=True):
 
 # =============================================================================
 def org_rheader(r, tabs=[]):
-    """ Organisation/Office page headers """
+    """ Organisation/Office/Facility page headers """
 
     if r.representation != "html":
         # RHeaders only used in interactive views
@@ -2588,7 +2597,7 @@ def org_rheader(r, tabs=[]):
             rheader.append(rData)
         rheader.append(rheader_tabs)
 
-    elif tablename == "org_office":
+    elif tablename in ("org_office", "org_facility"):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
@@ -2603,9 +2612,15 @@ def org_rheader(r, tabs=[]):
         tabs.append((T("Attachments"), "document"))
         tabs.append((T("User Roles"), "roles"))
 
-        rheader_fields = [["name", "organisation_id", "email"],
+        if tablename == "org_office":
+            rheader_fields = [["name", "organisation_id", "email"],
                           ["office_type_id", "location_id", "phone1"],
                           ]
+        else:
+            rheader_fields = [["name", "organisation_id", "email"],
+                          ["facility_type_id", "location_id", "phone1"],
+                          ]
+        
 
         rheader_fields, rheader_tabs = S3ResourceHeader(rheader_fields,
                                                         tabs)(r, as_div=True)

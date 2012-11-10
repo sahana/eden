@@ -115,7 +115,7 @@ def facility_marker_fn(record):
                                                           ).first()
     if name == "Hub":
         marker = "warehouse"
-    elif name == "Distribution Center":
+    elif name == "Relief Site":
         marker = "asset"
     elif name == "Medical Clinic":
         marker = "hospital"
@@ -169,10 +169,12 @@ def facility():
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
+            elif r.method == "map":
+                s3db.configure("org_facility", marker_fn=facility_marker_fn)
         return True
     s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader=s3db.org_rheader)
 
 # -----------------------------------------------------------------------------
 def facility_type():
