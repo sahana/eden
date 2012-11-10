@@ -110,6 +110,7 @@ def facility_marker_fn(record):
     """
 
     table = db.org_facility_type
+    # @ToDo: Handle case where we use multiple types!
     type = db(table.id == record.facility_type_id).select(table.name,
                                                           limitby=(0, 1)
                                                           ).first()
@@ -173,6 +174,89 @@ def facility():
                 s3db.configure("org_facility", marker_fn=facility_marker_fn)
         return True
     s3.prep = prep
+
+    def postp(r, output):
+        if r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            output = TABLE()
+            append = output.append
+            # Edit button
+            append(TR(TD(A(T("Edit"),
+                           _target="_blank",
+                           _id="edit-btn",
+                           _href=URL(args=[r.id, "update"])))))
+
+            # Name
+            append(TR(TD(B("%s:" % T("Name"))),
+                      TD(r.record.name)))
+
+            # Type
+            if r.record.facility_type_id:
+                append(TR(TD(B("%s:" % r.table.facility_type_id.label)),
+                          TD(r.table.facility_type_id.represent(r.record.facility_type_id))))
+
+            # Organization (better with just name rather than Represent)
+            # @ToDo: Make this configurable - some deployments will only see
+            #        their staff so this is a meaningless field
+            table = s3db.org_organisation
+            query = (table.id == r.record.organisation_id)
+            org = db(query).select(table.name,
+                                    limitby=(0, 1)).first()
+            if org:
+                append(TR(TD(B("%s:" % r.table.organisation_id.label)),
+                          TD(org.name)))
+
+            # Requests link to the Site_ID
+            site_id = r.record.site_id
+
+            # Open/High/Medium priority Requests
+            rtable = s3db.req_req
+            query = (rtable.site_id == site_id) & \
+                    (rtable.fulfil_status != 2) & \
+                    (rtable.priority.belongs((2, 3)))
+            reqs = db(query).select(rtable.id,
+                                    rtable.req_ref,
+                                    rtable.type,
+                                    )
+            if reqs:
+                req_types = {1:"req_item",
+                             3:"req_skill",
+                             9:"",
+                             }
+                vals = [A(req.req_ref, _href=URL(c="req", f="req", args=[req.id, req_types[req.type]])) for req in reqs]
+                if len(reqs) > 1:
+                    represent = ", ".join(vals)
+                else:
+                    represent = len(vals) and vals[0] or ""
+                append(TR(TD(B("%s:" % T("Requests"))),
+                          TD(represent)))
+
+            gtable = s3db.gis_location
+            stable = s3db.org_site
+            query = (gtable.id == stable.location_id) & \
+                    (stable.id == site_id)
+            location = db(query).select(gtable.addr_street,
+                                        limitby=(0, 1)).first()
+            # Street address
+            if location.addr_street:
+                append(TR(TD(B("%s:" % gtable.addr_street.label)),
+                          TD(location.addr_street)))
+
+            # Phone number
+            phone1 = r.record.phone1
+            if phone1:
+                append(TR(TD(B("%s:" % r.table.phone1.label)),
+                          TD(phone1)))
+
+            # Email address (as hyperlink)
+            email = r.record.email
+            if email:
+                append(TR(TD(B("%s:" % r.table.email.label)),
+                          TD(A(email, _href="mailto:%s" % email))))
+
+        return output
+    s3.postp = postp
 
     return s3_rest_controller(rheader=s3db.org_rheader)
 

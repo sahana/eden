@@ -262,7 +262,7 @@ class S3RequestModel(S3Model):
                                   *s3_meta_fields())
 
         if len(req_type_opts) == 1:
-            k,v = req_type_opts.popitem()
+            k, v = req_type_opts.popitem()
             field = table.type
             field.default = k
             field.requires = k
