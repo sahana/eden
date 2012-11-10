@@ -203,6 +203,7 @@ $(document).ready(function() {
     var selectionMode = new Array();
     var cache = new Array();
     var textDisplay = new Array();
+    var totalRecords = new Array();
 
     for (var t=0; t < tableCnt; t++) {
         // First get the config details for each table
@@ -279,9 +280,20 @@ $(document).ready(function() {
         if (aoTableConfig[t]['bulkActions']) {
             var bulk_submit = '';
             for (var i=0, iLen=aoTableConfig[t]['bulkActions'].length; i < iLen; i++) {
-                bulk_submit += '<input type="submit" id="submitSelection"  name="' + aoTableConfig[t]['bulkActions'][i] + '" value="' + aoTableConfig[t]['bulkActions'][i] + '">&nbsp;';
+                var bulk_action = aoTableConfig[t]['bulkActions'][i], name, value, cls='';
+                if (bulk_action instanceof Array) {
+                    value = bulk_action[0];
+                    name = bulk_action[1];
+                    if (bulk_action.length == 3) {
+                        cls = bulk_action[2];
+                    }
+                } else {
+                    value = bulk_action;
+                    name = value;
+                }
+                bulk_submit += '<input type="submit" id="submitSelection" class="' + cls + '" name="' + name + '" value="' + value + '">&nbsp;';
             }
-            var bulk_action_controls = '<span class="dataTable-action">' + bulk_submit + '<span>';
+            var bulk_action_controls = '<div class="dataTable-action">' + bulk_submit + '</div>';
             // Add hidden fields to the form to record what has been selected
             var bulkSelectionID = tableId[t] + '_dataTable_bulkSelection';
             // global
@@ -341,7 +353,12 @@ $(document).ready(function() {
                 var iRequestStart = fnGetKey(aoData, 'iDisplayStart');
                 var iRequestEnd = iRequestStart + iRequestLength;
                 var oCache = cache[t];
+                totalRecords[t] = fnGetKey(aoData, 'iTotalRecords');
                 oCache.iDisplayStart = iRequestStart;
+                if (oCache.hasOwnProperty('lastJson') &&
+                    oCache.lastJson.hasOwnProperty('iTotalRecords')) {
+                    totalRecords[t] = oCache.lastJson.iTotalRecords;
+                }
                 // Prevent the Ajax lookup of the last page if we already know
                 // that there are no more records than we have in the cache.
                 if (oCache.hasOwnProperty('lastJson') &&
@@ -448,6 +465,19 @@ $(document).ready(function() {
             // Add the bulk action controls to the dataTable
             $('.dataTable-action').remove();
             $(bulk_action_controls).insertBefore('#bulk_select_options');
+            togglePairActions(t);
+        }
+    }
+
+    function togglePairActions(t) {
+        var s = selectedRows[t].length;
+        if (selectionMode[t] == 'Exclusive') {
+            s = totalRecords[t] - s;
+        }
+        if (s == 2) {
+            $(tableId[t] + ' .pair-action').removeClass('hide');
+        } else {
+            $(tableId[t] + ' .pair-action').addClass('hide');
         }
     }
 
@@ -484,6 +514,7 @@ $(document).ready(function() {
                     posn = -1 // force the row to be deselected
                 }
                 var row = $(this).parent().parent()
+                togglePairActions(t);
                 setSelectionClass(t, row, posn);
             });
         }

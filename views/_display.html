@@ -8,14 +8,14 @@
   <div>
  {{pass}}
 	{{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
-	{{try:}}{{=delete_btn}}{{except:}}{{pass}}
-	{{include "last_update.html"}}
-	{{try:}}{{include}}
-    {{except:}}{{pass}}
+        <div>
+        {{try:}}{{=buttons["edit_btn"]}}{{except:}}{{pass}}
+        {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
+        {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+        {{include "last_update.html"}}
+        </div>
 	{{try:}}
-	 <p>
-	 {{=buttons["edit_btn"]}}
-	 </p>
+	{{include}}
 	{{except:}}{{pass}}
 	<div id='map'></div>
 	<div class='item-container'>
