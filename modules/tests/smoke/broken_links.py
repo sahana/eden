@@ -144,7 +144,7 @@ class BrokenLinkTest(Web2UnitTest):
                 self.visitLinks()
 
     def visitLinks(self):
-        url = self.homeURL
+        url = self.homeURL + "/default/index"
         to_visit = [url]
         start = time()
         for depth in range(self.maxDepth):
@@ -254,6 +254,7 @@ class BrokenLinkTest(Web2UnitTest):
                         url = url[0:location]
                 short_url = url[len(self.homeURL):]
                 if url not in url_list and \
+                   short_url != "" and \
                    short_url not in self.results.keys() and \
                    url not in to_visit:
                     self.urlParentList[short_url] = index_url
@@ -266,97 +267,110 @@ class BrokenLinkTest(Web2UnitTest):
         self.timeReport()
         if self.config.record_timings:
             self.record_timings()
-        self.report_link_depth()
-
-    def report_link_depth(self):
-        """
-            Method to draw a histogram of the number of new links
-            discovered at each depth.
-            (i.e. show how many links are required to reach a link)
-        """
-        try:
-            from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-            self.FigureCanvas = FigureCanvas
-            from matplotlib.figure import Figure
-            self.Figure = Figure
-            from numpy import arange
-        except ImportError:
-            return
-        self.reporter("Analysis of link depth")
-        fig = Figure(figsize=(4, 2.5))
-        # Draw a histogram
-        width = 0.9
-        rect = [0.12, 0.08, 0.9, 0.85]
-        ax = fig.add_axes(rect)
-        left = arange(len(self.linkDepth))
-        plot = ax.bar(left, self.linkDepth, width=width)
-        # Add the x axis labels
-        ax.set_xticks(left+(width*0.5))
-        ax.set_xticklabels(left)
-
-        chart = StringIO()
-        canvas = self.FigureCanvas(fig)
-        canvas.print_figure(chart)
-        image = chart.getvalue()
-        import base64
-        base64Img = base64.b64encode(image)
-        image = "<img src=\"data:image/png;base64,%s\">" % base64Img
-        self.reporter(image)
+        self.depthReport()
 
     def record_timings(self):
-            import_error = ""
+        import_error = ""
+        try:
+            import xlrd
+        except:
+            import_error += "ERROR: the xlrd modules is needed to record timings\n"
+        try:
+            import xlwt
+        except:
+            import_error += "ERROR: the xlwt modules is needed to record timings\n"
+        if import_error != "":
+            print >> self.stderr, import_error
+            return
+        rec_time_filename = self.config.record_timings_filename
+        try:
+            workbook = xlrd.open_workbook(filename=rec_time_filename,
+                                          formatting_info=True)
             try:
-                import xlrd
+                summary = self.read_timings_sheet(workbook)
+                if len(summary["date"]) > 100:
+                    # Need to rotate the file
+                    # 1) make a summary and save this
+                    report_timings_summary(summary, rec_time_filename)
+                    # 2) archive the file
+                    from zipfile import ZipFile
+                    archive = ZipFile("rec_time.zip", "a")
+                    arc_name = "%s-%s.xls" % (rec_time_filename[:-4],
+                                              current.request.now.date()
+                                              )
+                    archive.write(filename,arc_name)
+                    # 3) clear the current file
+                    import os
+                    os.unlink(rec_time_filename)
+                    summary = {}
             except:
-                import_error += "ERROR: the xlrd modules is needed to record timings\n"
-            try:
-                import xlwt
-            except:
-                import_error += "ERROR: the xlwt modules is needed to record timings\n"
-            if import_error != "":
-                print >> self.stderr, import_error
-                return
-            rec_time_filename = config.record_timings_filename
-            try:
-                workbook = xlrd.open_workbook(filename=rec_time_filename)
-                try:
-                    sheet = workbook.sheet_by_name("Timings")
-                    summary = report_read_timings_file
-                    if sheet.ncols > 200:
-                        # Need to rotate the file
-                        # 1) make a summary and save this
-                        report_timings_summary(summary, config.record_summary_filename)
-                        # 2) archive the file
-                        from zipfile import ZipFile
-                        archive = ZipFile("rec_time.zip", "a")
-                        arc_name = "%s-%s.xls" % (rec_time_filename[:-4],
-                                                  current.request.now.date()
-                                                  )
-                        archive.write(filename,arc_name)
-                        # 3) clear the current file
-                        import os
-                        os.unlink(rec_time_filename)
-                except:
-                    pass
-            except:
-                pass
+                summary = {}
+        except:
+            summary = {}
+        if "date" not in summary:
+            last_col = 0
+            summary["date"] = [current.request.now.date()]
+        else:
+            last_col = len(summary["date"])
+            summary["date"].append(current.request.now.date())
+        for (url, rd_obj) in self.results.items():
+            if url not in summary:
+                summary[url] = []
+            # ensure that the row is as long as the number of dates
+            shortage = last_col - len(summary[url])
+            if shortage > 0:
+                summary[url] = summary[url] + ['']*shortage
+            summary[url].append((rd_obj.get_duration(), rd_obj.is_broken()))
+        self.write_timings_sheet(rec_time_filename, summary)
 
-    def report_read_timings_file(self, sheet):
+    def read_timings_sheet(self, workbook):
         """
-            This will extract all the details from the sheet
+            This will extract all the details from the xls sheet
         """
+        sheet = workbook.sheet_by_name("Timings")
         summary = {}
-        num_cells = worksheet.ncols
-        for row in range(sheet.nrows):
+        RED = 0x0A
+        num_cells = sheet.ncols
+        summary["date"] = []
+        for col in range(1, num_cells):
+            summary["date"].append(sheet.cell_value(0, col))
+        for row in range(1,sheet.nrows):
             url = sheet.cell_value(row, 0)
             summary[url] = []
-            for col in range(1, num_cells, 2):
-                if sheet.cell_type(row, col) != 0: # not empty
-                    date = sheet.cell_value(0, col)
-                    time = sheet.cell_value(row, col)
-                    code = sheet.cell_value(row, col+1)
-                    summary[url].append((date, time, code))
+            for col in range(1, num_cells):
+                duration = sheet.cell_value(row, col)
+                xf = sheet.cell_xf_index(row, col)
+                bg = workbook.xf_list[xf].background
+                broken = (bg.pattern_colour_index == RED)
+                summary[url].append((duration, broken))
         return summary
+
+    def write_timings_sheet(self, filename, summary):
+        import xlwt
+        RED = 0x0A
+        book = xlwt.Workbook(encoding="utf-8")
+        sheet = book.add_sheet("Timings")
+        stylebroken = xlwt.XFStyle()
+        stylebroken.pattern.pattern = stylebroken.pattern.SOLID_PATTERN
+        stylebroken.pattern.pattern_fore_colour = RED
+        col = 1
+        for date in summary["date"]:
+            sheet.write(0,col,str(date))
+            col += 1
+        row = 1
+        for (url, results) in summary.items():
+            if url == "date":
+                continue
+            sheet.write(row,0,url)
+            col = 1
+            for data in results:
+                if len(data) == 2 and data[1]:
+                    sheet.write(row,col,data[0],stylebroken)
+                elif len(data) > 0:
+                    sheet.write(row,col,data[0])
+                col += 1
+            row += 1
+        book.save(filename)
 
     def report_timings_summary(self, summary, summary_file_name = None):
         """
@@ -437,7 +451,39 @@ class BrokenLinkTest(Web2UnitTest):
         self.reporter(msg)
 
     def depthReport(self):
-        pass
+        """
+            Method to draw a histogram of the number of new links
+            discovered at each depth.
+            (i.e. show how many links are required to reach a link)
+        """
+        try:
+            from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+            self.FigureCanvas = FigureCanvas
+            from matplotlib.figure import Figure
+            self.Figure = Figure
+            from numpy import arange
+        except ImportError:
+            return
+        self.reporter("Analysis of link depth")
+        fig = Figure(figsize=(4, 2.5))
+        # Draw a histogram
+        width = 0.9
+        rect = [0.12, 0.08, 0.9, 0.85]
+        ax = fig.add_axes(rect)
+        left = arange(len(self.linkDepth))
+        plot = ax.bar(left, self.linkDepth, width=width)
+        # Add the x axis labels
+        ax.set_xticks(left+(width*0.5))
+        ax.set_xticklabels(left)
+
+        chart = StringIO()
+        canvas = self.FigureCanvas(fig)
+        canvas.print_figure(chart)
+        image = chart.getvalue()
+        import base64
+        base64Img = base64.b64encode(image)
+        image = "<img src=\"data:image/png;base64,%s\">" % base64Img
+        self.reporter(image)
 
 class ReportData():
     """
