@@ -128,11 +128,23 @@ class SyncDataModel(S3Model):
         # -------------------------------------------------------------------------
         # Repository
         # -------------------------------------------------------------------------
+        sync_repository_types = {
+            "eden": "Sahana Eden",
+            "ccrm": "CiviCRM",
+        }
+
         tablename = "sync_repository"
         table = define_table(tablename,
                              Field("name",
                                    length=64,
                                    notnull=True),
+                             Field("apitype",
+                                   label=T("Repository Type"),
+                                   requires = IS_IN_SET(sync_repository_types),
+                                   default = "eden",
+                                   represent = lambda opt: \
+                                               NONE if not opt else \
+                                               sync_repository_types.get(opt, NONE)),
                              Field("url",
                                    label="URL",
                                    requires = IS_EMPTY_OR(
@@ -140,6 +152,8 @@ class SyncDataModel(S3Model):
                                                     "sync_repository.url"))),
                              Field("username"),
                              Field("password", "password"),
+                             Field("apikey",
+                                   label = T("API Key")),
                              Field("proxy",
                                    label=T("Proxy Server URL"),
                                    requires=IS_EMPTY_OR(IS_URL(mode="generic"))),
@@ -177,10 +191,14 @@ class SyncDataModel(S3Model):
                                      _title="%s|%s" % (
                                         T("Password"),
                                         T("Password to use for authentication at the remote site.")))
+        table.apikey.comment = DIV(_class="tooltip",
+                                     _title="%s|%s" % (
+                                        T("API Key"),
+                                        T("API Key which this site uses to authenticate at the remote site (if required for this type of repository).")))
         table.uuid.comment = DIV(_class="tooltip",
                                  _title="%s|%s" % (
                                     T("Repository UUID"),
-                                    T("Identifier which the repository identifies itself with when sending synchronization requests.")))
+                                    T("Identifier which the remote site uses to authenticate at this site when sending synchronization requests.")))
         table.accept_push.comment = DIV(_class="tooltip",
                                         _title="%s|%s" % (
                                             T("Accept Push"),
@@ -530,7 +548,8 @@ class SyncDataModel(S3Model):
             query = (rtable.id == repository_id)
             repository = current.db(query).select(limitby=(0, 1)).first()
             if repository and repository.url:
-                success = sync.request_registration(repository)
+                connector = S3SyncRepository.factory(repository)
+                success = connector.register()
                 if not success:
                     current.response.warning = \
                         current.T("Could not auto-register at the repository, please register manually.")
