@@ -2643,13 +2643,13 @@ def org_rheader(r, tabs=[]):
         rheader.append(rheader_tabs)
 
     elif tablename in ("org_office", "org_facility"):
+        STAFF = settings.get_hrm_staff_label()
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
-                (settings.get_hrm_staff_label(), "human_resource"),
-
+                (STAFF, "human_resource"),
                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
-            tabs.append((T("Assign %(staff)s") % settings.get_hrm_staff_label(), "human_resource_site"))
+            tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):
@@ -2659,13 +2659,12 @@ def org_rheader(r, tabs=[]):
 
         if tablename == "org_office":
             rheader_fields = [["name", "organisation_id", "email"],
-                          ["office_type_id", "location_id", "phone1"],
-                          ]
+                              ["office_type_id", "location_id", "phone1"],
+                              ]
         else:
             rheader_fields = [["name", "organisation_id", "email"],
-                          ["facility_type_id", "location_id", "phone1"],
-                          ]
-        
+                              ["facility_type_id", "location_id", "phone1"],
+                              ]
 
         rheader_fields, rheader_tabs = S3ResourceHeader(rheader_fields,
                                                         tabs)(r, as_div=True)

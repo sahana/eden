@@ -178,7 +178,7 @@ def facility():
     def postp(r, output):
         if r.representation == "plain" and \
              r.method !="search":
-            # Map Popups
+            # Custom Map Popup
             output = TABLE()
             append = output.append
             # Edit button
@@ -195,6 +195,11 @@ def facility():
             if r.record.facility_type_id:
                 append(TR(TD(B("%s:" % r.table.facility_type_id.label)),
                           TD(r.table.facility_type_id.represent(r.record.facility_type_id))))
+
+            # Comments
+            if r.record.comments:
+                append(TR(TD(B("%s:" % r.table.comments.label)),
+                          TD(r.record.comments)))
 
             # Organization (better with just name rather than Represent)
             # @ToDo: Make this configurable - some deployments will only see
@@ -273,7 +278,8 @@ def facility():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader=s3db.org_rheader)
+    output = s3_rest_controller(rheader=s3db.org_rheader)
+    return output
 
 # -----------------------------------------------------------------------------
 def facility_type():

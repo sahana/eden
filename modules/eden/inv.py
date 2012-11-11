@@ -709,7 +709,7 @@ $(document).ready(function(){
                    required_pack_value = 1,
                    current_track_total = 0,
                    update = True,
-                  ):
+                   ):
         """
             Check that the required_total can be removed from the inv_record
             if their is insufficient stock then set up the total to being
@@ -902,7 +902,6 @@ class S3TrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         req_item_id = self.req_item_id
         req_ref = self.req_req_ref
-        adj_item_id = self.inv_adj_item_id
 
         org_site_represent = self.org_site_represent
 
@@ -917,6 +916,7 @@ class S3TrackingModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         set_method = self.set_method
+        super_link = self.super_link
 
         is_logged_in = auth.is_logged_in
         permitted_facilities = auth.permitted_facilities
@@ -946,21 +946,21 @@ class S3TrackingModel(S3Model):
         table = define_table(tablename,
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
-                             self.super_link("site_id", "org_site",
-                                              label = T("From %(site)s") % dict(site=SITE_LABEL),
-                                              #filterby = "site_id",
-                                              #filter_opts = permitted_facilities(redirect_on_error=False),
-                                              instance_types = auth.org_site_types,
-                                              updateable = True,
-                                              not_filterby = "obsolete",
-                                              not_filter_opts = [True],
-                                              default = user.site_id if is_logged_in() else None,
-                                              readable = True,
-                                              writable = True,
-                                              empty = False,
-                                              represent = org_site_represent,
-                                              #widget = S3SiteAutocompleteWidget(),
-                                              ),
+                             super_link("site_id", "org_site",
+                                        label = T("From %(site)s") % dict(site=SITE_LABEL),
+                                        #filterby = "site_id",
+                                        #filter_opts = permitted_facilities(redirect_on_error=False),
+                                        instance_types = auth.org_site_types,
+                                        updateable = True,
+                                        not_filterby = "obsolete",
+                                        not_filter_opts = [True],
+                                        default = user.site_id if is_logged_in() else None,
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        represent = org_site_represent,
+                                        #widget = S3SiteAutocompleteWidget(),
+                                        ),
                              Field("type", "integer",
                                    requires = IS_IN_SET(send_type_opts),
                                    represent = lambda opt: send_type_opts.get(opt, UNKNOWN_OPT),
@@ -1072,13 +1072,17 @@ class S3TrackingModel(S3Model):
                    action=self.inv_send_form)
 
         # Redirect to the Items tabs after creation
-        send_item_url = URL(f="send", args=["[id]",
-                                            "track_item"])
+        send_item_url = URL(c="inv", f="send", args=["[id]",
+                                                     "track_item"])
 
         configure(tablename,
                   # it shouldn't be possible for the user to delete a send item
                   # unless *maybe* if it is pending and has no items referencing it
                   deletable=False,
+                  onaccept = self.inv_send_onaccept,
+                  onvalidation = self.inv_send_onvalidation,
+                  create_next = send_item_url,
+                  update_next = send_item_url,
                   list_fields = ["id",
                                  "send_ref",
                                  "req_ref",
@@ -1096,10 +1100,6 @@ class S3TrackingModel(S3Model):
                                  "time_out",
                                  "comments"
                                 ],
-                  onaccept = self.inv_send_onaccept,
-                  onvalidation = self.inv_send_onvalidation,
-                  create_next = send_item_url,
-                  update_next = send_item_url,
                   orderby=~table.date,
                   sortby=[[5, "desc"], [1, "asc"]],
                   )
@@ -1118,22 +1118,22 @@ class S3TrackingModel(S3Model):
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              # @ToDo: We really need to be able to filter this by permitted_facilities
-                             self.super_link("site_id", "org_site",
-                                              label = T("%(site)s (Recipient)") % dict(site=SITE_LABEL),
-                                              ondelete = "SET NULL",
-                                              #filterby = "site_id",
-                                              #filter_opts = permitted_facilities(redirect_on_error=False),
-                                              instance_types = auth.org_site_types,
-                                              updateable = True,
-                                              not_filterby = "obsolete",
-                                              not_filter_opts = [True],
-                                              default = user.site_id if is_logged_in() else None,
-                                              readable = True,
-                                              writable = True,
-                                              empty = False,
-                                              represent = org_site_represent,
-                                              #widget = S3SiteAutocompleteWidget(),
-                                              ),
+                             super_link("site_id", "org_site",
+                                        label = T("%(site)s (Recipient)") % dict(site=SITE_LABEL),
+                                        ondelete = "SET NULL",
+                                        #filterby = "site_id",
+                                        #filter_opts = permitted_facilities(redirect_on_error=False),
+                                        instance_types = auth.org_site_types,
+                                        updateable = True,
+                                        not_filterby = "obsolete",
+                                        not_filter_opts = [True],
+                                        default = user.site_id if is_logged_in() else None,
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        represent = org_site_represent,
+                                        #widget = S3SiteAutocompleteWidget(),
+                                        ),
                              Field("type", "integer",
                                    requires = IS_IN_SET(recv_type_opts),
                                    represent = lambda opt: \
@@ -1317,8 +1317,8 @@ class S3TrackingModel(S3Model):
             ))
 
         # Redirect to the Items tabs after creation
-        recv_item_url = URL(f="recv", args=["[id]",
-                                            "track_item"])
+        recv_item_url = URL(c="inv", f="recv", args=["[id]",
+                                                     "track_item"])
 
         configure(tablename,
                   # it shouldn't be possible for the user to delete a send item
@@ -1420,7 +1420,7 @@ class S3TrackingModel(S3Model):
                                       ),
                              s3_comments(),
                              *s3_meta_fields()
-                            )
+                             )
 
         # CRUD strings
         ADD_KIT = T("Add New Kit")
@@ -1543,7 +1543,7 @@ $(document).ready(function(){
                                    default = 1,
                                    represent = lambda opt: tracking_status[opt],
                                    writable = False),
-                             adj_item_id(ondelete = "RESTRICT"), # any adjustment record
+                             self.inv_adj_item_id(ondelete = "RESTRICT"), # any adjustment record
                              # send record
                              send_id(),
                              # receive record
