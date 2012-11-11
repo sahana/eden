@@ -16,13 +16,25 @@ def index():
     module_name = settings.modules[module].name_nice
     response.title = module_name
 
-    if "iframe" in request.get_vars:
-        response.view = "gis/iframe.html"
-        height = request.get_vars.get("height", None)
-        width = request.get_vars.get("width", None)
+    # Read user request
+    vars = request.get_vars
+    height = vars.get("height", None)
+    width = vars.get("width", None)
+    iframe = vars.get("iframe", False)
+    toolbar = vars.get("toolbar", True)
+    collapsed = vars.get("collapsed", False)
+
+    if collapsed:
+        collapsed = True
+
+    if toolbar == 0:
+        toolbar = False
     else:
-        height = None
-        width = None
+        toolbar = True
+
+    if iframe:
+        response.view = "gis/iframe.html"
+    else:
         # Code to go fullscreen
         # IE (even 9) doesn't like the dynamic full-screen, so simply do a page refresh for now
         # Remove components from embedded Map's containers without destroying their contents
@@ -45,7 +57,8 @@ def index():
     map = define_map(height=height,
                      width=width,
                      window=False,
-                     toolbar=True,
+                     toolbar=toolbar,
+                     collapsed=collapsed,
                      closable=False,
                      maximizable=False)
 
@@ -72,6 +85,7 @@ def define_map(height = None,
                window = False,
                toolbar = False,
                closable = True,
+               collapsed = False,
                maximizable = True,
                config = None):
     """
@@ -106,8 +120,7 @@ def define_map(height = None,
     else:
         print_tool = {}
 
-    map = gis.show_map(
-                       height=height,
+    map = gis.show_map(height=height,
                        width=width,
                        window=window,
                        wms_browser = wms_browser,
@@ -119,7 +132,7 @@ def define_map(height = None,
                        catalogue_layers=catalogue_layers,
                        mouse_position = mouse_position,
                        print_tool = print_tool
-                      )
+                       )
 
     return map
 
