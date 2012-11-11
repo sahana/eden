@@ -150,7 +150,7 @@
                                                                           col[@field='L3'], '/',
                                                                           col[@field='L4'], '/',
                                                                           col[@field='L5']))[1])]">
-                <xsl:call-template name="L4"/>
+                <xsl:call-template name="L5"/>
             </xsl:for-each>
 
             <!-- L0 / Specific Locations -->
@@ -278,7 +278,7 @@
                 </xsl:for-each>
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
-                    <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4'] or col[@field='Name']">
+                    <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4'] or col[@field='L5'] or col[@field='Name']">
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:choose>
@@ -373,7 +373,7 @@
 
                 <!-- If this is the import level then add the details -->
                  <xsl:choose>
-                    <xsl:when test="col[@field='L3'] or col[@field='L4'] or col[@field='Name']">
+                    <xsl:when test="col[@field='L3'] or col[@field='L4'] or col[@field='L5'] or col[@field='Name']">
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:choose>
@@ -477,7 +477,7 @@
 
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
-                    <xsl:when test="col[@field='L4'] or col[@field='Name']">
+                    <xsl:when test="col[@field='L4'] or col[@field='L5'] or col[@field='Name']">
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:choose>
@@ -590,7 +590,7 @@
 
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
-                    <xsl:when test="col[@field='Name']">
+                    <xsl:when test="col[@field='L5'] or col[@field='Name']">
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:choose>
