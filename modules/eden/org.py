@@ -2523,6 +2523,7 @@ def org_site_represent(id, row=None, show_link=True):
         return current.messages.NONE
 
     instance_type = row.instance_type
+    instance_type_nice = table.instance_type.represent(instance_type)
 
     try:
         table = s3db[instance_type]
@@ -2548,7 +2549,6 @@ def org_site_represent(id, row=None, show_link=True):
         except:
             return current.messages.UNKNOWN_OPT
     else:
-        instance_type_nice = table.instance_type.represent(instance_type)
         r = db(table.site_id == id).select(table.id,
                                            table.name,
                                            limitby=(0, 1)).first()

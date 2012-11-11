@@ -160,16 +160,18 @@ class S3Sync(S3Method):
 
         _debug("S3Sync.synchronize(%s)" % repository.url)
 
+        log = self.log
+
         if not repository.url:
             message = "No URL set for repository"
-            self.log.write(repository_id=repository.id,
-                           resource_name=None,
-                           transmission=None,
-                           mode=None,
-                           action="connect",
-                           remote=False,
-                           result=self.log.FATAL,
-                           message=message)
+            log.write(repository_id=repository.id,
+                      resource_name=None,
+                      transmission=None,
+                      mode=None,
+                      action="connect",
+                      remote=False,
+                      result=self.log.FATAL,
+                      message=message)
             return False
 
         rtable = current.s3db.sync_task
@@ -178,7 +180,16 @@ class S3Sync(S3Method):
         tasks = current.db(query).select()
 
         connector = S3SyncRepository.factory(repository)
-        if not connector.login():
+        error = connector.login()
+        if error:
+            log.write(repository_id=repository.id,
+                      resource_name=None,
+                      transmission=log.OUT,
+                      mode=None,
+                      action="login",
+                      remote=True,
+                      result=log.FATAL,
+                      message=error)
             return False
 
         success = True
@@ -691,7 +702,7 @@ class S3SyncRepository(object):
         # Available connectors
         connectors = {
             "eden": S3SyncRepository,
-            #"ccrm": S3SyncCiviCRM,
+            "ccrm": S3SyncCiviCRM,
         }
 
         api = repository.apitype
@@ -716,7 +727,7 @@ class S3SyncRepository(object):
         self.url = repository.url
         self.username = repository.username
         self.password = repository.password
-        self.apikey = repository.apikey
+        self.site_key = repository.site_key
         self.proxy = repository.proxy
 
     # -------------------------------------------------------------------------
@@ -835,7 +846,7 @@ class S3SyncRepository(object):
         """ Login to the repository """
 
         # Sahana Eden uses HTTP Basic Auth, no login required
-        pass
+        return None
 
     # -------------------------------------------------------------------------
     def pull(self, task, onconflict=None):
@@ -845,11 +856,11 @@ class S3SyncRepository(object):
             @param task: the task (sync_task Row)
         """
 
-        _debug("S3Sync.__pull(%s, %s)" % (self.url, resource_name))
-
         xml = current.xml
         config = self.get_config()
         resource_name = task.resource_name
+
+        _debug("S3SyncRepository.pull(%s, %s)" % (self.url, resource_name))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -1031,11 +1042,11 @@ class S3SyncRepository(object):
             @param task: the sync_task Row
         """
 
-        _debug("S3SyncRepository.__push(%s, %s)" % (self.url, resource_name))
-
         xml = current.xml
-        config = self.__get_config()
+        config = self.get_config()
         resource_name = task.resource_name
+
+        _debug("S3SyncRepository.push(%s, %s)" % (self.url, resource_name))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -1156,5 +1167,290 @@ class S3SyncRepository(object):
         if output is not None:
             mtime = None
         return (output, mtime)
+
+# =============================================================================
+class S3SyncCiviCRM(S3SyncRepository):
+    """
+        CiviCRM REST-API connector
+
+        @status: experimental
+    """
+
+    # Resource map
+    RESOURCE = {
+        "pr_person": {
+                      "q": "civicrm/contact",
+                      "contact_type": "Individual"
+                     },
+    }
+
+    # -------------------------------------------------------------------------
+    def register(self):
+        """ Register at the repository """
+
+        # CiviCRM does not support via-web peer registration
+        return True
+
+    # -------------------------------------------------------------------------
+    def login(self):
+        """ Login to the repository """
+
+        _debug("S3SyncCiviCRM.login()")
+
+        request = {
+            "q": "civicrm/login",
+            "name": self.username,
+            "pass": self.password,
+        }
+        response, error = self.send(**request)
+
+        if error:
+            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
+            return error
+
+        api_key = response.findall("//api_key")
+        if len(api_key):
+            self.api_key = api_key[0].text
+        else:
+            error = "No API Key returned by CiviCRM"
+            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
+            return error
+        PHPSESSID = response.findall("//PHPSESSID")
+        if len(PHPSESSID):
+            self.PHPSESSID = PHPSESSID[0].text
+        else:
+            error = "No PHPSESSID returned by CiviCRM"
+            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
+            return error
+
+        _debug("S3SyncCiviCRM.login SUCCESS")
+        return None
+
+    # -------------------------------------------------------------------------
+    def pull(self, task, onconflict=None):
+        """
+            Pull updates from this repository
+
+            @param task: the task Row
+            @param onconflict: synchronization conflict resolver
+        """
+
+        xml = current.xml
+        log = self.log
+        resource_name = task.resource_name
+
+        _debug("S3SyncCiviCRM.pull(%s, %s)" % (self.url, resource_name))
+
+        mtime = None
+        message = ""
+        remote = False
+
+        # Construct the request
+        if resource_name not in self.RESOURCE:
+            result = log.FATAL
+            message = "Resource type %s currently not supported for CiviCRM synchronization" % \
+                      resource_name
+            output = xml.json_message(False, 400, message)
+        else:
+            args = Storage(self.RESOURCE[resource_name])
+            args["q"] += "/get"
+
+            tree, error = self.send(method="GET", **args)
+            if error:
+
+                result = log.FATAL
+                remote = True
+                message = error
+                output = xml.json_message(False, 400, error)
+
+            elif len(tree.getroot()):
+
+                result = log.SUCCESS
+                remote = False
+
+                # Get import strategy and update policy
+                strategy = task.strategy
+                update_policy = task.update_policy
+                conflict_policy = task.conflict_policy
+
+                # Import stylesheet
+                folder = current.request.folder
+                import os
+                stylesheet = os.path.join(folder,
+                                          "static",
+                                          "formats",
+                                          "ccrm",
+                                          "import.xsl")
+
+                # Host name of the peer,
+                # used by the import stylesheet
+                import urlparse
+                hostname = urlparse.urlsplit(self.url).hostname
+
+                # Import the data
+                resource = current.s3db.resource(resource_name)
+                onconflict = lambda item: onconflict(item, self, resource)
+                count = 0
+                success = True
+                try:
+                    success = resource.import_xml(
+                                    tree,
+                                    stylesheet=stylesheet,
+                                    ignore_errors=True,
+                                    strategy=strategy,
+                                    update_policy=update_policy,
+                                    conflict_policy=conflict_policy,
+                                    last_sync=task.last_pull,
+                                    onconflict=onconflict,
+                                    site=hostname)
+                    count = resource.import_count
+                except IOError, e:
+                    result = log.FATAL
+                    message = "%s" % e
+                    output = xml.json_message(False, 400, message)
+                mtime = resource.mtime
+
+                # Log all validation errors
+                if resource.error_tree is not None:
+                    result = log.WARNING
+                    message = "%s" % resource.error
+                    for element in resource.error_tree.findall("resource"):
+                        for field in element.findall("data[@error]"):
+                            error_msg = field.get("error", None)
+                            if error_msg:
+                                msg = "(UID: %s) %s.%s=%s: %s" % \
+                                    (element.get("uuid", None),
+                                        element.get("name", None),
+                                        field.get("field", None),
+                                        field.get("value", field.text),
+                                        field.get("error", None))
+                                message = "%s, %s" % (message, msg)
+
+                # Check for failure
+                if not success:
+                    result = log.FATAL
+                    if not message:
+                        error = current.manager.error
+                        message = "%s" % error
+                    output = xml.json_message(False, 400, message)
+                    mtime = None
+
+                # ...or report success
+                elif not message:
+                    message = "data imported successfully (%s records)" % count
+                    output = None
+
+            else:
+                # No data received from peer
+                result = log.ERROR
+                remote = True
+                message = "no data received from peer"
+                output = None
+
+        # Log the operation
+        log.write(repository_id=self.id,
+                  resource_name=resource_name,
+                  transmission=log.OUT,
+                  mode=log.PULL,
+                  action=None,
+                  remote=remote,
+                  result=result,
+                  message=message)
+
+        _debug("S3SyncCiviCRM.pull import %s: %s" % (result, message))
+        return (output, mtime)
+
+    # -------------------------------------------------------------------------
+    def push(self, task):
+        """
+            Push data for a task
+
+            @param task: the task Row
+        """
+
+        xml = current.xml
+        log = self.log
+        resource_name = task.resource_name
+
+        _debug("S3SyncCiviCRM.push(%s, %s)" % (self.url, resource_name))
+
+        result = log.FATAL
+        remote = False
+        message = "Push to CiviCRM currently not supported"
+        output = xml.json_message(False, 400, message)
+
+        # Log the operation
+        log.write(repository_id=self.id,
+                  resource_name=resource_name,
+                  transmission=log.OUT,
+                  mode=log.PUSH,
+                  action=None,
+                  remote=remote,
+                  result=result,
+                  message=message)
+
+        _debug("S3SyncCiviCRM.push export %s: %s" % (result, message))
+        return(output, None)
+
+    # -------------------------------------------------------------------------
+    def send(self, method="GET", **args):
+
+        config = self.get_config()
+
+        # Authentication
+        args = Storage(args)
+        if hasattr(self, "PHPSESSID") and self.PHPSESSID:
+            args["PHPSESSID"] = self.PHPSESSID
+        if hasattr(self, "api_key") and self.api_key:
+            args["api_key"] = self.api_key
+        if hasattr(self, "site_key") and self.site_key:
+            args["key"] = self.site_key
+
+
+        # Create the request
+        import urllib, urllib2
+        url = self.url + "?" + urllib.urlencode(args)
+        req = urllib2.Request(url=url)
+        handlers = []
+
+        # Proxy handling
+        proxy = self.proxy or config.proxy or None
+        if proxy:
+            _debug("using proxy=%s" % proxy)
+            proxy_handler = urllib2.ProxyHandler({protocol: proxy})
+            handlers.append(proxy_handler)
+
+        # Install all handlers
+        if handlers:
+            opener = urllib2.build_opener(*handlers)
+            urllib2.install_opener(opener)
+
+        # Execute the request
+        response = None
+        message = None
+
+        try:
+            if method == "POST":
+                f = urllib2.urlopen(req, data="")
+            else:
+                f = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            message = e.read()
+        else:
+            # Parse the response
+            tree = current.xml.parse(f)
+            root = tree.getroot()
+            #print current.xml.tostring(tree, pretty_print=True)
+            is_error = root.xpath("//ResultSet[1]/Result[1]/is_error")
+            if len(is_error) and int(is_error[0].text):
+                error = root.xpath("//ResultSet[1]/Result[1]/error_message")
+                if len(error):
+                    message = error[0].text
+                else:
+                    message = "Unknown error"
+            else:
+                response = tree
+
+        return response, message
 
 # End =========================================================================

@@ -152,8 +152,8 @@ class SyncDataModel(S3Model):
                                                     "sync_repository.url"))),
                              Field("username"),
                              Field("password", "password"),
-                             Field("apikey",
-                                   label = T("API Key")),
+                             Field("site_key",
+                                   label = T("Site Key")),
                              Field("proxy",
                                    label=T("Proxy Server URL"),
                                    requires=IS_EMPTY_OR(IS_URL(mode="generic"))),
@@ -191,10 +191,10 @@ class SyncDataModel(S3Model):
                                      _title="%s|%s" % (
                                         T("Password"),
                                         T("Password to use for authentication at the remote site.")))
-        table.apikey.comment = DIV(_class="tooltip",
+        table.site_key.comment = DIV(_class="tooltip",
                                      _title="%s|%s" % (
-                                        T("API Key"),
-                                        T("API Key which this site uses to authenticate at the remote site (if required for this type of repository).")))
+                                        T("Site Key"),
+                                        T("Site Key which this site uses to authenticate at the remote site (if required for this type of repository).")))
         table.uuid.comment = DIV(_class="tooltip",
                                  _title="%s|%s" % (
                                     T("Repository UUID"),
