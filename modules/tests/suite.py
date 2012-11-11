@@ -169,7 +169,7 @@ desc = """Run the smoke tests even if debug is set to true.
 
 With debug on it can add up to a second per link and given that a full run
 of the smoke tests will include thousands of links the difference of having
-this setting one can be measured in hours.
+this setting on can be measured in hours.
 """
 parser.add_argument("--force-debug",
                     action='store_const',
