@@ -22,7 +22,7 @@ class index():
         s3 = response.s3
         appname = request.application
 
-        project_items = self.project()
+        project_items = project()()
         datatable_ajax_source = "/%s/default/index/project.aadata" % \
                                 appname
         s3.actions = None
@@ -114,13 +114,13 @@ $('#login-btn').click(function(){
                     register_div=register_div
                     )
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project():
-        """
-            Function to handle pagination for the project list on the homepage
-        """
+# =============================================================================
+class project():
+    """
+        Function to handle pagination for the project list on the homepage
+    """
 
+    def __call__(self):
         request = current.request
         resource = current.s3db.resource("project_project")
         totalrows = resource.count()

@@ -30,7 +30,7 @@ class index():
         AUTHENTICATED = system_roles.AUTHENTICATED
         if AUTHENTICATED in roles and \
            auth.s3_has_permission("read", s3db.req_req):
-            req_items = self.req()
+            req_items = req()()
             datatable_ajax_source = "/%s/default/index/req.aadata" % \
                                     appname
             s3.actions = None
@@ -199,13 +199,13 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                     register_div=register_div
                     )
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req():
-        """
-            Function to handle pagination for the requests list on the homepage
-        """
+# =============================================================================
+class req():
+    """
+        Function to handle pagination for the requests list on the homepage
+    """
 
+    def __call__(self):
         request = current.request
         resource = current.s3db.resource("req_req")
         totalrows = resource.count()

@@ -8,8 +8,7 @@
 i18n.all='{{=T("All")}}'
 S3.dataTables=new Array()
 {{if s3.dataTableID:}}S3.dataTables.id=[{{idlist=[s3.dataTableID] if not isinstance (s3.dataTableID, (tuple, list)) else s3.dataTableID
- for id in idlist:}}'{{=XML(id)}}',{{pass}}
- ]
+ for id in idlist:}}'{{=XML(id)}}',{{pass}}]
 {{pass}}
 {{if s3.actions:}}
  S3.dataTables.Actions={{=XML(s3.actions)}}
