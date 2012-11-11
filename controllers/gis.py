@@ -27,7 +27,7 @@ def index():
     if collapsed:
         collapsed = True
 
-    if toolbar == 0:
+    if toolbar == "0":
         toolbar = False
     else:
         toolbar = True
@@ -125,6 +125,7 @@ def define_map(height = None,
                        window=window,
                        wms_browser = wms_browser,
                        toolbar=toolbar,
+                       collapsed=collapsed,
                        closable=closable,
                        maximizable=maximizable,
                        legend=legend,
