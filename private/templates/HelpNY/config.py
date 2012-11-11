@@ -72,7 +72,11 @@ settings.security.policy = 4 # Controller & Function ACLs
 # Uncomment to customise the label for Facilities in Inventory Management
 settings.inv.facility_label = "Facility"
 # Uncomment if you need a simpler (but less accountable) process for managing stock levels
-settings.inv.direct_stock_edits = True
+#settings.inv.direct_stock_edits = True
+# Uncomment to call Stock Adjustments, 'Stock Counts'
+settings.inv.stock_count = True
+# Uncomment to not track pack values
+settings.inv.track_pack_values = False
 
 # Request Management
 #settings.req.req_type = ["Stock"]

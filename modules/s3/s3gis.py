@@ -2316,7 +2316,6 @@ class GIS(object):
 
         geojsons = {}
         # Broken: row["gis_location"] doesn't exist :-?
-        # Broken: row["gis_location"] doesn't exist :-?
         #if current.deployment_settings.get_gis_spatialdb():
         #    # Do the Simplify & GeoJSON direct from the DB
         #    rows = current.db(query).select(table.id,

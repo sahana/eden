@@ -424,6 +424,7 @@ class S3InventoryModel(S3Model):
 
         settings = current.deployment_settings
         WAREHOUSE = settings.get_inv_facility_label()
+        track_pack_values = settings.get_inv_track_pack_values()
 
         inv_source_type = { 0: None,
                             1: T("Donated"),
@@ -479,11 +480,14 @@ class S3InventoryModel(S3Model):
                                   s3_date("expiry_date",
                                           label = T("Expiry Date")),
                                   Field("pack_value", "double",
+                                        readable=track_pack_values,
+                                        writable=track_pack_values,
                                         label = T("Value per Pack"),
                                         represent=lambda v, row=None: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
-                                  s3_currency(),
+                                  s3_currency(readable=track_pack_values,
+                                              writable=track_pack_values),
                                   #Field("pack_quantity",
                                   #      "double",
                                   #      compute = record_pack_quantity), # defined in 06_supply
@@ -559,6 +563,14 @@ $(document).ready(function(){
 })'''),
                                 )
 
+        if track_pack_values:
+            rows=["item_id", (T("Category"), "item_category"), "currency"],
+            cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
+            facts=["quantity", (T("Total Value"), "total_value"),]
+        else:
+            rows=["item_id", (T("Category"), "item_category")],
+            cols=["site_id", "owner_org_id", "supply_org_id"],
+            facts=["quantity"]
         report_options = Storage(
             search=[
                 S3SearchSimpleWidget(
@@ -620,9 +632,9 @@ $(document).ready(function(){
                 )
             ],
 
-            rows=["item_id", (T("Category"), "item_category"), "currency"],
-            cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
-            facts=["quantity", (T("Total Value"), "total_value"),],
+            rows=rows,
+            cols=cols,
+            facts=facts,
             methods=["sum"],
             defaults=Storage(rows="inv_item.item_id",
                              cols="inv_item.site_id",
@@ -636,6 +648,33 @@ $(document).ready(function(){
         inv_item_search = S3Search(advanced=report_options.get("search"))
 
         direct_stock_edits = settings.get_inv_direct_stock_edits()
+        if track_pack_values:
+            list_fields = ["id",
+                           "site_id",
+                           "item_id",
+                           (T("Item Code"), "item_code"),
+                           (T("Category"), "item_category"),
+                           "quantity",
+                           "pack_value",
+                           (T("Total Value"), "total_value"),
+                           "currency",
+                           "bin",
+                           "owner_org_id",
+                           "supply_org_id",
+                           "status",
+                           ]
+        else:
+            list_fields = ["id",
+                           "site_id",
+                           "item_id",
+                           (T("Item Code"), "item_code"),
+                           (T("Category"), "item_category"),
+                           "quantity",
+                           "bin",
+                           "owner_org_id",
+                           "supply_org_id",
+                           "status",
+                           ]
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
@@ -644,20 +683,7 @@ $(document).ready(function(){
                        editable=direct_stock_edits,
                        deletable=direct_stock_edits,
                        super_entity = "supply_item_entity",
-                       list_fields = ["id",
-                                      "site_id",
-                                      "item_id",
-                                      (T("Item Code"), "item_code"),
-                                      (T("Category"), "item_category"),
-                                      "quantity",
-                                      "pack_value",
-                                      (T("Total Value"), "total_value"),
-                                      "currency",
-                                      "bin",
-                                      "owner_org_id",
-                                      "supply_org_id",
-                                      "status",
-                                      ],
+                       list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
                        report_options = report_options,
@@ -3047,12 +3073,11 @@ class S3AdjustModel(S3Model):
         db = current.db
         auth = current.auth
 
-        person_id = self.pr_person_id
+        settings = current.deployment_settings
+        track_pack_values = settings.get_inv_track_pack_values()
+
         organisation_id = self.org_organisation_id
         org_site_represent = self.org_site_represent
-        item_id = self.supply_item_id
-        inv_item_id = self.inv_item_id
-        item_pack_id = self.supply_item_pack_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
@@ -3072,11 +3097,12 @@ class S3AdjustModel(S3Model):
         tablename = "inv_adj"
         table = define_table(tablename,
                              self.super_link("doc_id", "doc_entity"),
-                             person_id(name = "adjuster_id",
-                                       label = T("Actioning officer"),
-                                       ondelete = "RESTRICT",
-                                       default = auth.s3_logged_in_person(),
-                                       comment = self.pr_person_comment(child="adjuster_id")),
+                             self.pr_person_id(name = "adjuster_id",
+                                               label = T("Actioning officer"),
+                                               ondelete = "RESTRICT",
+                                               default = auth.s3_logged_in_person(),
+                                               comment = self.pr_person_comment(child="adjuster_id")
+                                               ),
                              # This is a reference, not a super-link, so we can override
                              Field("site_id", self.org_site,
                                    label = current.deployment_settings.get_inv_facility_label(),
@@ -3094,7 +3120,6 @@ class S3AdjustModel(S3Model):
                                                         ),
                                    represent=org_site_represent),
                              s3_date("adjustment_date",
-                                     label = T("Date of adjustment"),
                                      default = "now",
                                      writable = False
                                      ),
@@ -3103,7 +3128,7 @@ class S3AdjustModel(S3Model):
                                    represent = lambda opt: \
                                     adjust_status.get(opt, UNKNOWN_OPT),
                                    default = 0,
-                                   label = T("Status of adjustment"),
+                                   label = T("Status"),
                                    writable = False
                                    ),
                              Field("category", "integer",
@@ -3111,7 +3136,7 @@ class S3AdjustModel(S3Model):
                                    represent = lambda opt: \
                                     adjust_type.get(opt, UNKNOWN_OPT),
                                    default = 1,
-                                   label = T("Type of adjustment"),
+                                   label = T("Type"),
                                    writable = False,
                                    ),
                              s3_comments(),
@@ -3145,32 +3170,54 @@ class S3AdjustModel(S3Model):
                         }
 
         # CRUD strings
-        ADJUST_STOCK = T("New Stock Adjustment")
-        crud_strings["inv_adj"] = Storage(
-            title_create = ADJUST_STOCK,
-            title_display = T("Stock Adjustment Details"),
-            title_list = T("Stock Adjustments"),
-            title_update = T("Edit Adjustment"),
-            title_search = T("Search Stock Adjustments"),
-            subtitle_create = T("New Stock Adjustment"),
-            label_list_button = T("List Stock Adjustments"),
-            label_create_button = ADJUST_STOCK,
-            label_delete_button = T("Delete Stock Adjustment"),
-            msg_record_created = T("Adjustment created"),
-            msg_record_modified = T("Adjustment modified"),
-            msg_record_deleted = T("Adjustment deleted"),
-            msg_list_empty = T("No stock adjustments have been done"))
+        if settings.get_inv_stock_count():
+            ADJUST_STOCK = T("New Stock Count")
+            crud_strings["inv_adj"] = Storage(
+                title_create = ADJUST_STOCK,
+                title_display = T("Stock Count Details"),
+                title_list = T("Stock Counts"),
+                title_update = T("Edit Stock Count"),
+                title_search = T("Search Stock Counts"),
+                subtitle_create = T("New Stock Count"),
+                label_list_button = T("List Stock Counts"),
+                label_create_button = ADJUST_STOCK,
+                label_delete_button = T("Delete Stock Count"),
+                msg_record_created = T("Stock Count created"),
+                msg_record_modified = T("Stock Count modified"),
+                msg_record_deleted = T("Stock Count deleted"),
+                msg_list_empty = T("No stock counts have been done"))
+        else:
+            ADJUST_STOCK = T("New Stock Adjustment")
+            crud_strings["inv_adj"] = Storage(
+                title_create = ADJUST_STOCK,
+                title_display = T("Stock Adjustment Details"),
+                title_list = T("Stock Adjustments"),
+                title_update = T("Edit Adjustment"),
+                title_search = T("Search Stock Adjustments"),
+                subtitle_create = T("New Stock Adjustment"),
+                label_list_button = T("List Stock Adjustments"),
+                label_create_button = ADJUST_STOCK,
+                label_delete_button = T("Delete Stock Adjustment"),
+                msg_record_created = T("Adjustment created"),
+                msg_record_modified = T("Adjustment modified"),
+                msg_record_deleted = T("Adjustment deleted"),
+                msg_list_empty = T("No stock adjustments have been done"))
 
         # ---------------------------------------------------------------------
         # Adjustment Items
         #
         tablename = "inv_adj_item"
         table = define_table(tablename,
-                             inv_item_id(ondelete = "RESTRICT",
-                                         readable = False,
-                                         writable = False),  # original inventory
-                             item_id(ondelete = "RESTRICT"),
-                             item_pack_id(ondelete = "SET NULL"),
+                             # Original inventory item
+                             self.inv_item_id(ondelete = "RESTRICT",
+                                              readable = False,
+                                              writable = False),
+                             self.supply_item_id(
+                                ondelete = "RESTRICT"
+                                ),
+                             self.supply_item_pack_id(
+                                ondelete = "SET NULL"
+                                ),
                              Field("old_quantity", "double", notnull=True,
                                    label = T("Original Quantity"),
                                    default = 0,
@@ -3187,13 +3234,16 @@ class S3AdjustModel(S3Model):
                                    represent = lambda opt: \
                                     adjust_reason.get(opt, UNKNOWN_OPT),
                                    writable = False),
-                             Field("old_pack_value",
-                                   "double",
+                             Field("old_pack_value", "double",
+                                   readable = track_pack_values,
+                                   writable = track_pack_values,
                                    label = T("Original Value per Pack")),
-                             Field("new_pack_value",
-                                   "double",
+                             Field("new_pack_value", "double",
+                                   readable = track_pack_values,
+                                   writable = track_pack_values,
                                    label = T("Revised Value per Pack")),
-                             s3_currency(),
+                             s3_currency(readable = track_pack_values,
+                                         writable = track_pack_values),
                              Field("old_status", "integer",
                                    label = T("Current Status"),
                                    requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),

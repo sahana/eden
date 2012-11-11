@@ -293,8 +293,12 @@ settings.L10n.decimal_separator = "."
 #settings.inv.facility_label = "Facility"
 # Uncomment if you need a simpler (but less accountable) process for managing stock levels
 #settings.inv.direct_stock_edits = True
+# Uncomment to call Stock Adjustments, 'Stock Counts'
+#settings.inv.stock_count = True
 # Use the term 'Order' instead of 'Shipment'
 #settings.inv.shipment_name = "order"
+# Uncomment to not track pack values
+#settings.inv.track_pack_values = False
 #settings.inv.send_form_name = "Tally Out Sheet"
 #settings.inv.send_short_name = "TO"
 #settings.inv.send_ref_field_name = "Tally Out Number"

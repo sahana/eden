@@ -453,7 +453,7 @@ class S3CampDataModel(S3Model):
         #
         tablename = "cr_shelter_status"
         table = define_table(tablename,
-                             shelter_id(),
+                             shelter_id(ondelete = "CASCADE"),
                              s3_date(),
                              Field("status", "integer",
                                    requires = IS_NULL_OR(

@@ -932,6 +932,18 @@ class S3Config(Storage):
         """
         return self.inv.get("direct_stock_edits", False)
 
+    def get_inv_stock_count(self):
+        """
+            Call Stock Adjustments 'Stock Counts'
+        """
+        return self.inv.get("stock_count", True)
+
+    def get_inv_track_pack_values(self):
+        """
+            Whether or not Pack values are tracked
+        """
+        return self.inv.get("track_pack_values", True)
+
     def get_inv_item_status(self):
         """
             Item Statuses which can also be Sent Shipment Types
