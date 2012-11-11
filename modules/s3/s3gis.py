@@ -2324,12 +2324,23 @@ class GIS(object):
         #        geojsons[row[tablename].id] = row["gis_location"].geojson
         #else:
         rows = current.db(query).select(table.id,
+                                        gtable.level,
                                         gtable.wkt)
+        simplify = GIS.simplify
+        tolerance = {"L0":0.01,
+                     "L1":0.005,
+                     "L2":0.00125,
+                     "L3":0.000625,
+                     "L4":0.0003125,
+                     "L5":0.00015625,
+                     }
         for row in rows:
             # Simplify the polygon to reduce download size
-            geojson = GIS.simplify(row["gis_location"].wkt, output="geojson")
+            geojson = simplify(row.gis_location.wkt,
+                               tolerance=tolerance[row.gis_location.level],
+                               output="geojson")
             if geojson:
-                geojsons[row[tablename].id] = geojson
+                geojsons[row.gis_theme_data.id] = geojson
 
         _geojsons = {}
         _geojsons[tablename] = geojsons
