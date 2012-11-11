@@ -31,7 +31,7 @@ class index():
         if AUTHENTICATED in roles and \
            auth.s3_has_permission("read", s3db.req_req):
             req_items = self.req()
-            datatable_ajax_source = "/%s/default/req.aadata" % \
+            datatable_ajax_source = "/%s/default/index/req.aadata" % \
                                     appname
             s3.actions = None
             auth.permission.controller = "org"
@@ -237,7 +237,8 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                             "req_list_1",
                             dt_displayLength=10,
                             dt_ajax_url=URL(c="default",
-                                            f="req",
+                                            f="index",
+                                            args=["req"],
                                             extension="aadata",
                                             vars={"id": "req_list_1"},
                                             ),

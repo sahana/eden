@@ -408,7 +408,8 @@ def s3_fullname_bulk(record_ids=[], truncate=True):
 # =============================================================================
 def s3_represent_facilities(db, site_ids, link=True):
     """
-        Represent Facilities
+        Bulk lookup for Facility Representations
+        - used by Home page
     """
 
     table = db.org_site
@@ -429,25 +430,51 @@ def s3_represent_facilities(db, site_ids, link=True):
             instance_ids[instance_type].append(site_id)
 
     results = []
+    represent = db.org_site.instance_type.represent
     for instance_type in instance_types:
-        represent = db.org_site.instance_type.represent
-        instance_type_nice = represent(instance_type)
-        c, f = instance_type.split("_")
         site_ids = instance_ids[instance_type]
         table = db[instance_type]
+        c, f = instance_type.split("_")
         query = table.site_id.belongs(site_ids)
-        records = db(query).select(table.id,
-                                   table.site_id,
-                                   table.name)
-        for record in records:
-            site_str = "%s (%s)" % (record.name, instance_type_nice)
-            if link:
-                site_str = A(site_str, _href=URL(c=c,
-                                                 f=f,
-                                                 args=[record.id],
-                                                 extension=""))
+        if instance_type == "org_facility":
+            instance_type_nice = represent(instance_type)
+            records = db(query).select(table.id,
+                                       table.facility_type_id,
+                                       table.site_id,
+                                       table.name)
+            ttable = db.org_facility_type
+            type_ids = [r.facility_type_id[0] for r in records if r.facility_type_id]
+            facility_types = db(ttable.id.belongs(type_ids)).select(ttable.id,
+                                                                    ttable.name)
+            facility_types = facility_types.as_dict()
+            for record in records:
+                if record.facility_type_id:
+                    facility_type = facility_types[record.facility_type_id[0]]["name"]
+                    site_str = "%s (%s)" % (record.name, facility_type)
+                else:
+                    site_str = "%s (%s)" % (record.name, instance_type_nice)
+                if link:
+                    site_str = A(site_str, _href=URL(c=c,
+                                                     f=f,
+                                                     args=[record.id],
+                                                     extension=""))
 
-            results.append((record.site_id, site_str))
+                results.append((record.site_id, site_str))
+
+        else:
+            instance_type_nice = represent(instance_type)
+            records = db(query).select(table.id,
+                                       table.site_id,
+                                       table.name)
+            for record in records:
+                site_str = "%s (%s)" % (record.name, instance_type_nice)
+                if link:
+                    site_str = A(site_str, _href=URL(c=c,
+                                                     f=f,
+                                                     args=[record.id],
+                                                     extension=""))
+
+                results.append((record.site_id, site_str))
 
     return results
 

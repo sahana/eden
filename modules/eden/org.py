@@ -1266,8 +1266,8 @@ class S3SiteModel(S3Model):
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget=S3SiteAutocompleteWidget(),
                                   comment=DIV(_class="tooltip",
-                                                _title="%s|%s" % (org_site_label,
-                                                                  T("Enter some characters to bring up a list of possible matches")))
+                                              _title="%s|%s" % (org_site_label,
+                                                                T("Enter some characters to bring up a list of possible matches")))
                                   )
 
         # Components
@@ -1438,6 +1438,8 @@ class S3FacilityModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        NONE = current.messages.NONE
+
         # ---------------------------------------------------------------------
         # Facility Types (generic)
         #
@@ -1491,6 +1493,7 @@ class S3FacilityModel(S3Model):
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    #notnull=True,
                                    #unique=True,
+                                   represent = lambda v: v or NONE,
                                    label=T("Code")),
                              Field("facility_type_id", "list:reference org_facility_type",
                                    requires=IS_NULL_OR(
@@ -1511,12 +1514,27 @@ class S3FacilityModel(S3Model):
                                             #default_from_profile=True)
                                 ),
                              self.gis_location_id(),
-                             Field("phone1", label=T("Phone 1"),
+                             Field("opening_times",
+                                   represent = lambda v: v or NONE,
+                                   label=T("Opening Times")),
+                             Field("contact",
+                                   represent = lambda v: v or NONE,
+                                   label=T("Contact")),
+                             Field("phone1",
+                                   label=T("Phone 1"),
+                                   represent = lambda v: v or NONE,
                                    requires=IS_NULL_OR(s3_phone_requires)),
-                             Field("phone2", label=T("Phone 2"),
+                             Field("phone2",
+                                   label=T("Phone 2"),
+                                   represent = lambda v: v or NONE,
                                    requires=IS_NULL_OR(s3_phone_requires)),
-                             Field("email", label=T("Email"),
+                             Field("email",
+                                   label=T("Email"),
+                                   represent = lambda v: v or NONE,
                                    requires=IS_NULL_OR(IS_EMAIL())),
+                             Field("website",
+                                   represent = lambda v: v or NONE,
+                                   label=T("Website")),
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
@@ -1668,8 +1686,16 @@ class S3FacilityModel(S3Model):
 
         if item.tablename == "org_facility":
             table = item.table
-            name = item.data.get("name", None)
+            data = item.data
+            name = data.get("name", None)
+            org = data.get("organisation_id", None)
+            address = data.get("address", None)
+
             query = (table.name.lower() == name.lower())
+            if org:
+                query = query & (table.organisation_id == org)
+            if address:
+                query = query & (table.address == address)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -2497,16 +2523,35 @@ def org_site_represent(id, row=None, show_link=True):
         return current.messages.NONE
 
     instance_type = row.instance_type
-    instance_type_nice = table.instance_type.represent(instance_type)
 
     try:
         table = s3db[instance_type]
     except:
         return current.messages.UNKNOWN_OPT
 
-    r = db(table.site_id == id).select(table.id,
-                                       table.name,
-                                       limitby=(0, 1)).first()
+    if instance_type == "org_facility":
+        # Lookup Facility Type
+        r = db(table.site_id == id).select(table.id,
+                                           table.name,
+                                           table.facility_type_id,
+                                           limitby=(0, 1)).first()
+        try:
+            if r.facility_type_id:
+                facility_type = r.facility_type_id[0]
+                table = s3db.org_facility_type
+                type = db(table.id == facility_type).select(table.name,
+                                                            limitby=(0, 1),
+                                                            ).first().name
+                instance_type_nice = current.T(type)
+            else:
+                instance_type_nice = table.instance_type.represent(instance_type)
+        except:
+            return current.messages.UNKNOWN_OPT
+    else:
+        instance_type_nice = table.instance_type.represent(instance_type)
+        r = db(table.site_id == id).select(table.id,
+                                           table.name,
+                                           limitby=(0, 1)).first()
 
     try:
         if r.name:
@@ -2600,11 +2645,11 @@ def org_rheader(r, tabs=[]):
     elif tablename in ("org_office", "org_facility"):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
-                (T("Staff"), "human_resource"),
+                (settings.get_hrm_staff_label(), "human_resource"),
 
                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
-            tabs.append((T("Assign Staff"), "human_resource_site"))
+            tabs.append((T("Assign %(staff)s") % settings.get_hrm_staff_label(), "human_resource_site"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):

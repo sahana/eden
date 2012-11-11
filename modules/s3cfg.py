@@ -802,6 +802,12 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Human Resource Management
+    def get_hrm_staff_label(self):
+        """
+            Label for 'Staff'
+        """
+        return current.T(self.hrm.get("staff_label", "Staff"))
+
     def get_hrm_email_required(self):
         """
             If set to True then Staff & Volunteers require an email address
@@ -915,6 +921,9 @@ class S3Config(Storage):
     #
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
+
+    def get_inv_facility_label(self):
+        return self.inv.get("facility_label", current.T("Warehouse"))
 
     def get_inv_direct_stock_edits(self):
         """

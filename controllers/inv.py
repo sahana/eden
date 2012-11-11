@@ -1646,15 +1646,21 @@ def adj():
     def prep(r):
         if r.interactive:
             if r.component:
-                if r.component_id:
-                    aitable = s3db.inv_adj_item
-                    if r.record.status == 0:
-                        aitable.reason.writable = True
-                    record = aitable[r.component_id]
-                    if record.inv_item_id:
-                        aitable.item_id.writable = False
-                        aitable.item_id.comment = None
-                        aitable.item_pack_id.writable = False
+                if r.component_name == "adj_item":
+                    if r.component_id:
+                        aitable = s3db.inv_adj_item
+                        if r.record.status == 0:
+                            aitable.reason.writable = True
+                        record = aitable[r.component_id]
+                        if record.inv_item_id:
+                            aitable.item_id.writable = False
+                            aitable.item_id.comment = None
+                            aitable.item_pack_id.writable = False
+                elif r.component_name == "image":
+                    doc_table = s3db.doc_image
+                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
+                    doc_table.person_id.readable = doc_table.person_id.writable = False
+                    doc_table.location_id.readable = doc_table.location_id.writable = False
             else:
                 # if an adjustment has been selected and it has been completed
                 # then make the fields read only

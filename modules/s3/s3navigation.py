@@ -1339,7 +1339,6 @@ class S3ComponentTab:
     def active(self, r):
 
         s3db = current.s3db
-        manager = current.manager
 
         get_components = s3db.get_components
         get_method = s3db.get_method

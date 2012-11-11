@@ -11,7 +11,8 @@
          Organisation...................required.....organisation name
          Branch.........................optional.....branch organisation name
          Type...........................optional.....HR type (staff|volunteer|member)
-         Office.........................optional.....office name (required for staff)
+         Office.........................optional.....Facility name
+         Facility Type..................optional.....Office, Facility, Hospital, Shelter, Warehouse
          Office Lat.....................optional.....office latitude
          Office Lon.....................optional.....office longitude
          Office Street address..........optional.....office street address
@@ -42,6 +43,7 @@
          Home Phone.....................optional.....home phone number
          Office Phone...................optional.....office phone number
          Skype..........................optional.....person skype ID
+         Twitter........................optional.....person Twitter handle
          Callsign.......................optional.....person Radio Callsign
          Emergency Contact Name.........optional.....pr_contact_emergency name
          Emergency Contact Relationship.optional.....pr_contact_emergency relationship
@@ -369,10 +371,34 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
 
+        <xsl:choose>
+            <xsl:when test="$FacilityType='Office'">
+                <xsl:variable name="resourcename">org_office</xsl:variable>
+            </xsl:when>
+            <xsl:when test="$FacilityType='Facility'">
+                <xsl:variable name="resourcename">org_facility</xsl:variable>
+            </xsl:when>
+            <xsl:when test="$FacilityType='Hospital'">
+                <xsl:variable name="resourcename">hms_hospital</xsl:variable>
+            </xsl:when>
+            <xsl:when test="$FacilityType='Shelter'">
+                <xsl:variable name="resourcename">cr_shelter</xsl:variable>
+            </xsl:when>
+            <xsl:when test="$FacilityType='Warehouse'">
+                <xsl:variable name="resourcename">inv_warehouse</xsl:variable>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Backwards compatibility -->
+                <xsl:variable name="resourcename">org_office</xsl:variable>
+            </xsl:otherwise>
+        </xsl:choose>
         <xsl:if test="$OfficeName!=''">
-            <resource name="org_office">
-
+            <resource>
+                <xsl:attribute name="name">
+                    <xsl:value-of select="$resourcename"/>
+                </xsl:attribute>
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$OfficeName"/>
                 </xsl:attribute>
@@ -646,6 +672,7 @@
         <xsl:param name="OrgName"/>
         <xsl:param name="BranchName"/>
         <xsl:param name="OfficeName"/>
+        <xsl:param name="FacilityType"/>
         <xsl:param name="type"/>
 
         <resource name="hrm_human_resource">
@@ -681,8 +708,32 @@
             </reference>
 
             <!-- Link to Office (staff only) -->
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">
+                    <xsl:variable name="resourcename">org_office</xsl:variable>
+                </xsl:when>
+                <xsl:when test="$FacilityType='Facility'">
+                    <xsl:variable name="resourcename">org_facility</xsl:variable>
+                </xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">
+                    <xsl:variable name="resourcename">hms_hospital</xsl:variable>
+                </xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">
+                    <xsl:variable name="resourcename">cr_shelter</xsl:variable>
+                </xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">
+                    <xsl:variable name="resourcename">inv_warehouse</xsl:variable>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Backwards compatibility -->
+                    <xsl:variable name="resourcename">org_office</xsl:variable>
+                </xsl:otherwise>
+            </xsl:choose>
             <xsl:if test="$type=1">
-                <reference field="site_id" resource="org_office">
+                <reference field="site_id">
+                    <xsl:attribute name="resource">
+                        <xsl:value-of select="$resourcename"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$OfficeName"/>
                     </xsl:attribute>

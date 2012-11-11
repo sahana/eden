@@ -77,7 +77,7 @@ class S3HRModel(S3Model):
 
         T = current.T
         db = current.db
-
+        settings = current.deployment_settings
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         ORGANISATION = messages.ORGANISATION
@@ -94,9 +94,11 @@ class S3HRModel(S3Model):
         # @ToDo: Allocation Status for Events (link table)
         #
 
+        STAFF = settings.get_hrm_staff_label()
+
         # NB These numbers are hardcoded into KML Export stylesheet
         hrm_type_opts = {
-            1: T("Staff"),
+            1: STAFF,
             2: T("Volunteer"),
         }
 
@@ -115,7 +117,6 @@ class S3HRModel(S3Model):
                 group = "volunteer"
 
         auth = current.auth
-        settings = current.deployment_settings
         job_roles = settings.get_hrm_job_roles()
         organisation_label = settings.get_hrm_organisation_label()
 
@@ -214,21 +215,39 @@ class S3HRModel(S3Model):
                                         ),
                                   *s3_meta_fields())
 
-        crud_strings["hrm_staff"] = Storage(
-            title_create = T("Add Staff Member"),
-            title_display = T("Staff Member Details"),
-            title_list = T("Staff"),
-            title_update = T("Edit Staff Member Details"),
-            title_search = T("Search Staff"),
-            title_upload = T("Import Staff"),
-            subtitle_create = T("Add New Staff Member"),
-            label_list_button = T("List Staff Members"),
-            label_create_button = T("Add Staff Member"),
-            label_delete_button = T("Delete Staff Member"),
-            msg_record_created = T("Staff member added"),
-            msg_record_modified = T("Staff Member Details updated"),
-            msg_record_deleted = T("Staff Member deleted"),
-            msg_list_empty = T("No Staff currently registered"))
+        if STAFF == T("Contacts"):
+            crud_strings["hrm_staff"] = Storage(
+                title_create = T("Add Contact"),
+                title_display = T("Contact Details"),
+                title_list = STAFF,
+                title_update = T("Edit Contact Details"),
+                title_search = T("Search Contacts"),
+                title_upload = T("Import Contacts"),
+                subtitle_create = T("Add New Contact"),
+                label_list_button = T("List Contacts"),
+                label_create_button = T("Add Contact"),
+                label_delete_button = T("Delete Contact"),
+                msg_record_created = T("Contact added"),
+                msg_record_modified = T("Contact Details updated"),
+                msg_record_deleted = T("Contact deleted"),
+                msg_list_empty = T("No Contacts currently registered"))
+        else:
+            # @ToDo: make more flexible
+            crud_strings["hrm_staff"] = Storage(
+                title_create = T("Add Staff Member"),
+                title_display = T("Staff Member Details"),
+                title_list = STAFF,
+                title_update = T("Edit Staff Member Details"),
+                title_search = T("Search Staff"),
+                title_upload = T("Import Staff"),
+                subtitle_create = T("Add New Staff Member"),
+                label_list_button = T("List Staff Members"),
+                label_create_button = T("Add Staff Member"),
+                label_delete_button = T("Delete Staff Member"),
+                msg_record_created = T("Staff Member added"),
+                msg_record_modified = T("Staff Member Details updated"),
+                msg_record_deleted = T("Staff Member deleted"),
+                msg_list_empty = T("No Staff currently registered"))
 
         crud_strings["hrm_volunteer"] = Storage(
             title_create = T("Add Volunteer"),
@@ -247,7 +266,7 @@ class S3HRModel(S3Model):
             msg_list_empty = T("No Volunteers currently registered"))
 
         if group == "staff":
-            label = T("Staff")
+            label = STAFF
             crud_strings[tablename] = crud_strings["hrm_staff"]
             requires = IS_NULL_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",

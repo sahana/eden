@@ -47,11 +47,12 @@
         <label>PersonGender</label>
         <label>Gender</label>
         <label>Sex</label>
-<!--         <label>Title</label> -->
+        <!--<label>Title</label>-->
         <option value="2" name="female">
             <label>F</label>
             <label>f</label>
             <label>Female</label>
+            <label>female</label>
             <label>Mrs</label>
             <label>Mrs.</label>
             <label>Ms</label>
@@ -61,6 +62,7 @@
             <label>M</label>
             <label>m</label>
             <label>Male</label>
+            <label>male</label>
             <label>Mr</label>
             <label>Mr.</label>
         </option>
@@ -128,6 +130,8 @@
         <label>Postcode</label>
         <label>postcode</label>
         <label>Zip</label>
+        <label>Zipcode</label>
+        <label>zipcode</label>
     </column>
 
    <!-- ******************************************************************* -->

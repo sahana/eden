@@ -422,6 +422,9 @@ class S3InventoryModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        settings = current.deployment_settings
+        WAREHOUSE = settings.get_inv_facility_label()
+
         inv_source_type = { 0: None,
                             1: T("Donated"),
                             2: T("Procured"),
@@ -439,7 +442,7 @@ class S3InventoryModel(S3Model):
                                   # This is a component, so needs to be a super_link
                                   # - can't override field name, ondelete or requires
                                   self.super_link("site_id", "org_site",
-                                                   label = T("Warehouse"),
+                                                   label = WAREHOUSE,
                                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                                    readable = True,
                                                    writable = True,
@@ -448,7 +451,7 @@ class S3InventoryModel(S3Model):
                                                    # Comment these to use a Dropdown & not an Autocomplete
                                                    #widget = S3SiteAutocompleteWidget(),
                                                    #comment = DIV(_class="tooltip",
-                                                   #              _title="%s|%s" % (T("Warehouse"),
+                                                   #              _title="%s|%s" % (WAREHOUSE,
                                                    #                                T("Enter some characters to bring up a list of possible matches"))),
                                                    represent=self.org_site_represent),
                                   self.supply_item_entity_id,
@@ -632,7 +635,7 @@ $(document).ready(function(){
         # Item Search Method (Advanced Search only)
         inv_item_search = S3Search(advanced=report_options.get("search"))
 
-        direct_stock_edits = current.deployment_settings.get_inv_direct_stock_edits()
+        direct_stock_edits = settings.get_inv_direct_stock_edits()
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
@@ -907,6 +910,8 @@ class S3TrackingModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        SITE_LABEL = settings.get_org_site_label()
+
         add_component = self.add_component
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -942,7 +947,7 @@ class S3TrackingModel(S3Model):
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              self.super_link("site_id", "org_site",
-                                              label = T("From Warehouse/Facility/Office"),
+                                              label = T("From %(site)s") % dict(site=SITE_LABEL),
                                               #filterby = "site_id",
                                               #filter_opts = permitted_facilities(redirect_on_error=False),
                                               instance_types = auth.org_site_types,
@@ -964,7 +969,7 @@ class S3TrackingModel(S3Model):
                                    ),
                              # This is a reference, not a super-link, so we can override
                              Field("to_site_id", self.org_site,
-                                   label = T("To Warehouse/Facility/Office"),
+                                   label = T("To %(site)s") % dict(site=SITE_LABEL),
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "org_site.site_id",
                                                           lambda id, row: \
@@ -1114,7 +1119,7 @@ class S3TrackingModel(S3Model):
                              # - can't override field name, ondelete or requires
                              # @ToDo: We really need to be able to filter this by permitted_facilities
                              self.super_link("site_id", "org_site",
-                                              label = T("Warehouse/Facility/Office (Recipient)"),
+                                              label = T("%(site)s (Recipient)") % dict(site=SITE_LABEL),
                                               ondelete = "SET NULL",
                                               #filterby = "site_id",
                                               #filter_opts = permitted_facilities(redirect_on_error=False),
@@ -1140,7 +1145,7 @@ class S3TrackingModel(S3Model):
                                     ),
                              # This is a reference, not a super-link, so we can override
                              Field("from_site_id", "reference org_site",
-                                   label = T("From Warehouse/Facility/Office"),
+                                   label = T("From %(site)s") % dict(site=SITE_LABEL),
                                    ondelete = "SET NULL",
                                    #widget = S3SiteAutocompleteWidget(),
                                    requires = IS_NULL_OR(
@@ -1286,7 +1291,7 @@ class S3TrackingModel(S3Model):
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_site",
-                        label=T("Warehouse/Facility/Office"),
+                        label=SITE_LABEL,
                         field="site_id",
                         represent ="%(name)s",
                         cols = 2
@@ -1362,7 +1367,7 @@ class S3TrackingModel(S3Model):
         tablename = "inv_kit"
         table = define_table(tablename,
                              Field("site_id", "reference org_site",
-                                   label = T("By Warehouse/Facility/Office"),
+                                   label = T("By %(site)s") % dict(site=SITE_LABEL),
                                    requires = IS_ONE_OF(db, "org_site.site_id",
                                                         lambda id, row: \
                                                             org_site_represent(id, row,
@@ -1852,7 +1857,7 @@ $(document).ready(function(){
 
         vars = form.vars
         if not vars.to_site_id and not vars.organisation_id:
-            error = T("Please enter a Warehouse/Facility/Office OR an Organisation")
+            error = T("Please enter a %(site)s OR an Organisation") % dict(site=current.deployment_settings.get_org_site_label())
             errors = form.errors
             errors.to_site_id = error
             errors.organisation_id = error
@@ -1863,11 +1868,12 @@ $(document).ready(function(){
         """
             Check that either organisation_id or from_site_id are filled according to the type
         """
+
         type = form.vars.type and int(form.vars.type)
         if type == 11 and not form.vars.from_site_id:
             # Internal Shipment needs from_site_id
             # @ToDo: lookup this value instead of hardcoding it base on s3cfg.py
-            form.errors.from_site_id = T("Please enter a Warehouse/Facility/Office")
+            form.errors.from_site_id = T("Please enter a %(site)s") % dict(site=current.deployment_settings.get_org_site_label())
         if type >= 32 and not form.vars.organisation_id:
             # Internal Shipment needs from_site_id
             # @ToDo: lookup this value instead of hardcoding it base on s3cfg.py
@@ -1888,7 +1894,7 @@ $(document).ready(function(){
         table.date.readable = True
         table.site_id.readable = True
         track_table.recv_quantity.readable = True
-        table.site_id.label = T("By Warehouse")
+        table.site_id.label = T("By %(site)s") % dict(site=current.deployment_settings.get_inv_facility_label())
         table.site_id.represent = current.s3db.org_site_represent
 
         record = table[r.id]
@@ -1932,7 +1938,7 @@ $(document).ready(function(){
         table.type.readable = False
         field = table.site_id
         field.readable = True
-        field.label = current.T("By Warehouse")
+        field.label = current.T("By %(site)s") % dict(site=current.deployment_settings.get_inv_facility_label())
         field.represent = current.s3db.org_site_represent
 
         record = table[r.id]
@@ -3065,6 +3071,7 @@ class S3AdjustModel(S3Model):
 
         tablename = "inv_adj"
         table = define_table(tablename,
+                             self.super_link("doc_id", "doc_entity"),
                              person_id(name = "adjuster_id",
                                        label = T("Actioning officer"),
                                        ondelete = "RESTRICT",
@@ -3072,7 +3079,7 @@ class S3AdjustModel(S3Model):
                                        comment = self.pr_person_comment(child="adjuster_id")),
                              # This is a reference, not a super-link, so we can override
                              Field("site_id", self.org_site,
-                                   label = T("Warehouse"),
+                                   label = current.deployment_settings.get_inv_facility_label(),
                                    ondelete = "SET NULL",
                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                    requires = IS_ONE_OF(db, "org_site.site_id",
@@ -3111,9 +3118,10 @@ class S3AdjustModel(S3Model):
                              *s3_meta_fields())
 
         self.configure("inv_adj",
-                        onaccept = self.inv_adj_onaccept,
-                        create_next = URL(args=["[id]", "adj_item"]),
-                        )
+                       super_entity = "doc_entity",
+                       onaccept = self.inv_adj_onaccept,
+                       create_next = URL(args=["[id]", "adj_item"]),
+                       )
 
         # Reusable Field
         adj_id = S3ReusableField("adj_id", table,
@@ -3250,7 +3258,7 @@ class S3AdjustModel(S3Model):
 
         # Component
         self.add_component("inv_adj_item",
-                            inv_adj="adj_id")
+                           inv_adj="adj_id")
 
         return Storage(
                     inv_adj_item_id = adj_item_id,
@@ -3385,30 +3393,30 @@ def inv_adj_rheader(r):
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "adj_item"),
-                ]
+                    (T("Photos"), "image"),
+                    ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
-            rheader = DIV( TABLE(
-                               TR( TH("%s: " % table.adjuster_id.label),
-                                   table.adjuster_id.represent(record.adjuster_id),
-                                   TH("%s: " % table.adjustment_date.label),
-                                   table.adjustment_date.represent(record.adjustment_date),
-                                  ),
-                               TR( TH("%s: " % table.site_id.label),
-                                   table.site_id.represent(record.site_id),
-                                   TH("%s: " % table.category.label),
-                                   table.category.represent(record.category),
-                                  ),
-                                 ),
+            rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.adjuster_id.label),
+                               table.adjuster_id.represent(record.adjuster_id),
+                               TH("%s: " % table.adjustment_date.label),
+                               table.adjustment_date.represent(record.adjustment_date),
+                               ),
+                            TR(TH("%s: " % table.site_id.label),
+                               table.site_id.represent(record.site_id),
+                               TH("%s: " % table.category.label),
+                               table.category.represent(record.category),
+                               ),
+                            ),
                             rheader_tabs
                             )
 
             rfooter = TAG[""]()
             if record.status == 0: # In process
-                if current.auth.s3_has_permission("update",
-                                                  "inv_adj",
+                if current.auth.s3_has_permission("update", "inv_adj",
                                                   record_id=record.id):
                     # aitable = current.s3db.inv_adj_item
                     # query = (aitable.adj_id == record.id) & \

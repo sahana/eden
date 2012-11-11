@@ -268,7 +268,7 @@ class S3LocationModel(S3Model):
         self.configure(tablename,
                        onvalidation=self.gis_location_onvalidation,
                        onaccept=self.gis_location_onaccept,
-                       deduplicate=self.gis_location_deduplicate,
+                       deduplicate=self.gis_location_duplicate,
                        list_fields = ["id",
                                       "name",
                                       "level",
@@ -548,7 +548,7 @@ class S3LocationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_location_deduplicate(job):
+    def gis_location_duplicate(job):
         """
           This callback will be called when importing location records it will look
           to see if the record being imported is a duplicate.

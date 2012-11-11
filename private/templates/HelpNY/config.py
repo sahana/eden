@@ -69,6 +69,8 @@ settings.auth.registration_roles = { 0: ["super"]}
 settings.security.policy = 4 # Controller & Function ACLs
 
 # Inventory Management
+# Uncomment to customise the label for Facilities in Inventory Management
+settings.inv.facility_label = "Facility"
 # Uncomment if you need a simpler (but less accountable) process for managing stock levels
 settings.inv.direct_stock_edits = True
 
@@ -93,6 +95,8 @@ settings.org.site_label = "Facility"
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
+# Uncomment to chage the label for 'Staff'
+settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
 # Uncomment to show the Organisation name in HR represents
@@ -157,7 +161,7 @@ settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 6,     # 6th item in the menu
+            module_type = 8,     # 8th item in the menu
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
@@ -174,16 +178,16 @@ settings.modules = OrderedDict([
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
-            name_nice = T("Staff"),
+            name_nice = T("Contacts"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 10,
+            module_type = 2,
         )),
     ("vol", Storage(
             name_nice = T("Volunteers"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 3,
+            module_type = 4,
         )),
     ("cms", Storage(
           name_nice = T("Content Management"),
@@ -211,10 +215,10 @@ settings.modules = OrderedDict([
             module_type = None, # Not displayed
         )),
     ("inv", Storage(
-            name_nice = T("Warehouses"),
+            name_nice = T("Inventory"),
             #description = "Receiving and Sending Items",
             restricted = True,
-            module_type = None
+            module_type = 6
         )),
     #("proc", Storage(
     #        name_nice = T("Procurement"),
@@ -226,7 +230,7 @@ settings.modules = OrderedDict([
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
             restricted = True,
-            module_type = 4,
+            module_type = 7,
         )),
     # Vehicle depends on Assets
     #("vehicle", Storage(
@@ -239,7 +243,7 @@ settings.modules = OrderedDict([
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
-            module_type = 1,
+            module_type = 3,
         )),
     #("project", Storage(
     #        name_nice = T("Projects"),

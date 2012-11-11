@@ -845,7 +845,7 @@ class S3OptionsMenu(object):
         use_teams = lambda i: settings.get_hrm_use_teams()
 
         return M(c="hrm")(
-                    M("Staff", f="staff",
+                    M(settings.get_hrm_staff_label(), f="staff",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),

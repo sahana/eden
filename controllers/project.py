@@ -94,12 +94,6 @@ def project():
                                   _title="%s|%s" % (T("Person"),
                                                     T("Select the person assigned to this role for this project.")))
 
-    doc_table = s3db.table("doc_document", None)
-    if doc_table is not None:
-        doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
-        doc_table.person_id.readable = doc_table.person_id.writable = False
-        doc_table.location_id.readable = doc_table.location_id.writable = False
-
     # Pre-process
     def prep(r):
         table = s3db.project_project 
@@ -221,6 +215,11 @@ def project():
                             orderby="hrm_human_resource.person_id",
                             sort=True
                         )
+                elif r.component_name == "document":
+                    doc_table = s3db.doc_document
+                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
+                    doc_table.person_id.readable = doc_table.person_id.writable = False
+                    doc_table.location_id.readable = doc_table.location_id.writable = False
 
         return True
     s3.prep = prep

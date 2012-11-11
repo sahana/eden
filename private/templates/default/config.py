@@ -252,6 +252,8 @@ settings.L10n.decimal_separator = "."
 #     }
 
 # Human Resource Management
+# Uncomment to chage the label for 'Staff'
+#settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 #settings.hrm.email_required = False
 # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
@@ -287,6 +289,8 @@ settings.L10n.decimal_separator = "."
 
 # Inventory Management
 #settings.inv.collapse_tabs = False
+# Uncomment to customise the label for Facilities in Inventory Management
+#settings.inv.facility_label = "Facility"
 # Uncomment if you need a simpler (but less accountable) process for managing stock levels
 #settings.inv.direct_stock_edits = True
 # Use the term 'Order' instead of 'Shipment'

@@ -220,17 +220,14 @@ def facility():
                                     rtable.type,
                                     )
             if reqs:
+                append(TR(TD(B("%s:" % T("Requests")))))
                 req_types = {1:"req_item",
                              3:"req_skill",
                              9:"",
                              }
                 vals = [A(req.req_ref, _href=URL(c="req", f="req", args=[req.id, req_types[req.type]])) for req in reqs]
-                if len(reqs) > 1:
-                    represent = ", ".join(vals)
-                else:
-                    represent = len(vals) and vals[0] or ""
-                append(TR(TD(B("%s:" % T("Requests"))),
-                          TD(represent)))
+                for val in vals:
+                    append(TR(TD(val, _colspan=2)))
 
             gtable = s3db.gis_location
             stable = s3db.org_site
@@ -243,6 +240,18 @@ def facility():
                 append(TR(TD(B("%s:" % gtable.addr_street.label)),
                           TD(location.addr_street)))
 
+            # Opening Times
+            opens = r.record.opening_times
+            if opens:
+                append(TR(TD(B("%s:" % r.table.opening_times.label)),
+                          TD(opens)))
+
+            # Phone number
+            contact = r.record.contact
+            if contact:
+                append(TR(TD(B("%s:" % r.table.contact.label)),
+                          TD(contact)))
+
             # Phone number
             phone1 = r.record.phone1
             if phone1:
@@ -254,6 +263,12 @@ def facility():
             if email:
                 append(TR(TD(B("%s:" % r.table.email.label)),
                           TD(A(email, _href="mailto:%s" % email))))
+
+            # Website (as hyperlink)
+            website = r.record.website
+            if website:
+                append(TR(TD(B("%s:" % r.table.website.label)),
+                          TD(A(website, _href=website))))
 
         return output
     s3.postp = postp

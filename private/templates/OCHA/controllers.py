@@ -23,7 +23,7 @@ class index():
         appname = request.application
 
         project_items = self.project()
-        datatable_ajax_source = "/%s/default/project.aadata" % \
+        datatable_ajax_source = "/%s/default/index/project.aadata" % \
                                 appname
         s3.actions = None
         project_box = DIV(H3(T("Projects")),
@@ -59,7 +59,7 @@ class index():
                 # Provide a Registration box on front page
                 register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
-                                   P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
+                                   P(XML(T("If you would like to add data, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
                  # Add client-side validation
@@ -152,7 +152,8 @@ $('#login-btn').click(function(){
                             "project_list_1",
                             dt_displayLength=10,
                             dt_ajax_url=URL(c="default",
-                                            f="project",
+                                            f="index",
+                                            args=["project"],
                                             extension="aadata",
                                             vars={"id": "project_list_1"},
                                             ),
