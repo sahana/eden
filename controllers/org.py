@@ -113,18 +113,18 @@ def facility_marker_fn(record):
     # @ToDo: Handle case where we use multiple types!
     type = db(table.id == record.facility_type_id).select(table.name,
                                                           limitby=(0, 1)
-                                                          ).first()
-    if name == "Hub":
+                                                          ).first().name
+    if type == "Hub":
         marker = "warehouse"
-    elif name == "Relief Site":
+    elif type == "Relief Site":
         marker = "asset"
-    elif name == "Medical Clinic":
+    elif type == "Medical Clinic":
         marker = "hospital"
-    elif name == "Residential Building":
+    elif type == "Food":
+        marker = "food"
+    elif type == "Residential Building":
         marker = "residence"
-    #elif name == "Food":
-    #    marker = "food"
-    #elif name == "Shelter":
+    #elif type == "Shelter":
     #    marker = "shelter"
     else:
         # Unknown

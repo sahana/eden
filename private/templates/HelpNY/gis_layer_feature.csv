@@ -1,2 +1,2 @@
 "Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
-"Facilities","All Active Facilities","org","facility","US","office","Building","Office","name/comments","facility.obsolete=False",,,,,"False",
+"Facilities","All Active Facilities","org","facility","US","asset","Building","Office","name/comments","facility.obsolete=False",,,,,"False",
