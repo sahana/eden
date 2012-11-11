@@ -594,6 +594,7 @@ div#last_update {
     font-size: 80%;
     color: #666;
     float: right;
+    clear: right;
 }
 
 /* Action Buttons */
@@ -618,6 +619,14 @@ div#last_update {
     text-decoration: none;
     color: #fff;
     background-color: #164b8b;
+}
+#delete-btn {
+    margin-bottom: 8px;
+}
+#markDuplicate {
+    float: right;
+    clear: right;
+    padding-bottom: 8px;
 }
 .cancel-btn {
     padding-left: 10px;

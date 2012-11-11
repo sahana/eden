@@ -3249,8 +3249,14 @@ class S3DataTable(object):
         if pagination:
             s3 = current.response.s3
             self.end = real_end
-            aadata = self.aadata(totalrows, filteredrows, id, sEcho,
-                                 flist, stringify=False, **attr)
+            aadata = self.aadata(totalrows,
+                                 filteredrows,
+                                 id,
+                                 sEcho,
+                                 flist,
+                                 action_col=action_col,
+                                 stringify=False,
+                                 **attr)
             cache = {"iCacheLower": self.start,
                      "iCacheUpper": self.end if filteredrows > self.end else filteredrows,
                      "lastJson": aadata}
@@ -3273,6 +3279,7 @@ class S3DataTable(object):
                sEcho,
                flist,
                stringify=True,
+               action_col=None,
                **attr
                ):
         """
@@ -3303,7 +3310,8 @@ class S3DataTable(object):
             flist = self.lfields
         start = self.start
         end = self.end
-        action_col = attr.get("dt_action_col", 0)
+        if action_col is None:
+            action_col = attr.get("dt_action_col", 0)
         structure = {}
         aadata = []
         for i in xrange(start, end):
@@ -3375,7 +3383,13 @@ class S3DataTable(object):
             if bulkCol <= action_col:
                 action_col += 1
 
-        return self.aadata(totalrows, displayrows, id, sEcho, flist,
-                           stringify, **attr)
+        return self.aadata(totalrows,
+                           displayrows,
+                           id,
+                           sEcho,
+                           flist,
+                           action_col=action_col,
+                           stringify=stringify,
+                           **attr)
 
 # END =========================================================================

@@ -262,11 +262,13 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)
     set_handler("compose", s3base.S3Compose())
-    set_handler("copy", lambda r, **attr: redirect(URL(args="create",
-                                                       vars={"from_record":r.id})))
+    set_handler("copy", lambda r, **attr: \
+                        redirect(URL(args="create",
+                                     vars={"from_record":r.id})))
     set_handler("import", s3base.S3Importer())
     set_handler("map", lambda r, **attr: s3base.S3Map()(r, **attr))
     set_handler("report", s3base.S3Report())
+    set_handler("deduplicate", s3base.S3Merge())
 
     if method == "import" and \
        r.representation == "pdf":

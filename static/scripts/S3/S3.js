@@ -234,7 +234,7 @@ $(document).ready(function() {
     now = new Date();
     $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
 
-	// Social Media 'share' buttons
+    // Social Media 'share' buttons
     if ($('#socialmedia_share').length > 0) {
         // DIV exists (deployment_setting on)
         var currenturl = document.location.href;
@@ -246,6 +246,38 @@ $(document).ready(function() {
         // Facebook
         $('#socialmedia_share').append("<div class='socialmedia_element'><div id='fb-root'></div><script>(function(d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = '//connect.facebook.net/en_US/all.js#xfbml=1'; fjs.parentNode.insertBefore(js, fjs); }(document, 'script', 'facebook-jssdk'));</script> <div class='fb-like' data-send='false' data-layout='button_count' data-show-faces='true' data-href='" + currenturl + "'></div></div>");
     }
+
+    // Deduplication bookmarks
+    $('.mark-deduplicate').click(function() {
+        var url = $('#markDuplicateURL').attr('href');
+        if (url) {
+            $.ajaxS3({
+                type: "POST",
+                url: url,
+                data: {},
+                success: function(data) {
+                    $('.mark-deduplicate, .unmark-deduplicate').toggleClass('hide');
+                    return;
+                },
+                dataType: 'JSON'
+            });
+        }
+    });
+    $('.unmark-deduplicate').click(function() {
+        var url = $('#markDuplicateURL').attr('href');
+        if (url) {
+            $.ajaxS3({
+                type: "POST",
+                url: url + '?remove=1',
+                data: {},
+                success: function(data) {
+                    $('.mark-deduplicate, .unmark-deduplicate').toggleClass('hide');
+                    return;
+                },
+                dataType: 'JSON'
+            });
+        }
+    });
 });
 
 function s3_tb_remove(){
@@ -613,7 +645,7 @@ function S3FilterFieldChange(setting) {
         } catch(err) {};
 
         var FilterVal;
-        
+
         // Get Filter Val from Select or CheckBoxes
         if (selFilterField.length == 0 || selFilterField.length == undefined ) {
         	FilterVal = '';
@@ -621,11 +653,11 @@ function S3FilterFieldChange(setting) {
         	FilterVal = selFilterField.val();
         } else {
         	FilterVal = new Array();
-        	selFilterField.filter('input:checked').each(function() { 
+        	selFilterField.filter('input:checked').each(function() {
         		FilterVal.push($(this).val());
         	});
         }
-        
+
         if ( FilterVal == "" || FilterVal == undefined) {
             // No value to filter
             //selFieldRows.hide();
@@ -773,7 +805,7 @@ function S3FilterFieldChange(setting) {
                     var href = selFieldAdd.attr('href') + '&' + FilterField + '=' + selFilterField.val();
                     selFieldAdd.attr('href', href)
                                .show();
-	
+
                     /* Remove Throbber */
                     $('#' + FieldResource + '_ajax_throbber').remove();
                 }

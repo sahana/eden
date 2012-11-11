@@ -1050,7 +1050,10 @@ class S3Request(object):
             Get the DELETE method handler
         """
 
-        return self.get_handler("delete")
+        if self.method:
+            return self.get_handler(self.method)
+        else:
+            return self.get_handler("delete")
 
     # -------------------------------------------------------------------------
     # Built-in method handlers

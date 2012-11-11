@@ -450,6 +450,10 @@ class S3CRUD(S3Method):
                     # Field not in table, such as auth_user
                     pass
 
+            # De-duplication
+            #from s3merge import S3Merge
+            #output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
+
         elif representation == "plain":
             T = current.T
             if r.component:
@@ -650,6 +654,10 @@ class S3CRUD(S3Method):
                 except:
                     # Field not in table, such as auth_user
                     pass
+
+            # De-duplication
+            #from s3merge import S3Merge
+            #output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
             # Redirection
             update_next = _config("update_next")

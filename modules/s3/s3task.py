@@ -120,6 +120,7 @@ class S3Task(object):
             field.readable = False
             field.writable = False
 
+        field = table.args
         field.default = json.dumps(args)
         field.readable = False
         field.writable = False
