@@ -815,6 +815,25 @@ def privacy():
     return dict()
 
 # -----------------------------------------------------------------------------
+def tos():
+    """ Custom View """
+
+    if settings.get_template() != "default":
+        # Try a Custom View
+        view = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "tos.html")
+        if os.path.exists(view):
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+    response.title = T("Terms of Service")
+    return dict()
+
+# -----------------------------------------------------------------------------
 def contact():
     """
         Give the user options to contact the site admins.
