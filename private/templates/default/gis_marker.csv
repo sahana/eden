@@ -27,6 +27,8 @@ Name,Height,Width,Image
 "project",40,40,"gis_marker.image.Emergency_Teams_S1.png"
 "rail_station",33,44,"gis_marker.image.Trans_Rail_Station_S1.png"
 "request",40,40,"gis_marker.image.Emergency_Operations_Theme_S1.png"
+"request_red",40,40,"gis_marker.image.Emergency_Operations_Theme_S1_red.png"
+"request_yellow",40,40,"gis_marker.image.Emergency_Operations_Theme_S1_yellow.png"
 "residence",33,44,"gis_marker.image.Public_Venues_Theme_S1.png"
 "school",33,44,"gis_marker.image.Edu_Schools_S1.png"
 "shelter",40,40,"gis_marker.image.Emergency_Shelters_S1.png"
