@@ -158,6 +158,12 @@ class S3Config(Storage):
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
     def get_auth_registration_link_user_to(self):
+        """
+            Link User accounts to none or more of:
+            * Staff
+            * Volunteer
+            * Member
+        """
         return self.auth.get("registration_link_user_to", None)
     def get_auth_opt_in_team_list(self):
         return self.auth.get("opt_in_team_list", [])

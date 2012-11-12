@@ -304,20 +304,18 @@ Thank you
 
             if settings.username_field:
                 # Use username (not used by default in Sahana)
-                utable_fields.insert(2,Field("username", length=128,
-                                             default="",
-                                             unique=True)
-                                     )
+                utable_fields.insert(2, Field("username", length=128,
+                                              default="",
+                                              unique=True))
 
-            #Insert password field after either email or username
+            # Insert password field after either email or username
             passfield = settings.password_field
-            utable_fields.insert(3,Field(passfield, "password", length=512,
-                                         requires = [ CRYPT( key = settings.hmac_key,
-                                                             min_length = settings.password_min_length,
-                                                             digest_alg = "sha512") ],
-                                         readable=False,
-                                         label=messages.label_password)
-                                 )
+            utable_fields.insert(3, Field(passfield, "password", length=512,
+                                          requires=CRYPT(key=settings.hmac_key,
+                                                         min_length=settings.password_min_length,
+                                                         digest_alg="sha512"),
+                                          readable=False,
+                                          label=messages.label_password))
 
             utable = define_table(uname, 
                                   migrate = migrate,
@@ -1150,6 +1148,7 @@ Thank you
         """
 
         messages = self.messages
+        cmessages = current.messages
         settings = self.settings
         deployment_settings = current.deployment_settings
         T = current.T
@@ -1189,7 +1188,7 @@ Thank you
                                                  T("The language you wish the site to be displayed in.")))
         languages = current.deployment_settings.get_L10n_languages()
         language.represent = lambda opt: \
-            languages.get(opt, current.messages.UNKNOWN_OPT)
+            languages.get(opt, cmessages.UNKNOWN_OPT)
         # Default the profile language to the one currently active
         language.default = T.accepted_language
 
@@ -1240,19 +1239,15 @@ Thank you
             #site_id.widget = S3SiteAutocompleteWidget()
             # no permissions for autocomplete on registration page
             site_id.comment = (DIV(_class="tooltip",
-                               _title="%s|%s" % (deployment_settings.get_org_site_label(),
-                                                 T("Enter some characters to bring up a list of possible matches")
-                                                 )
-                                   ),
-# @ToDo: Required Anonymous SUers to have access to the org/site function - which needs to be restricted to JUST the names of the sites
-# This could be done witha  custom controller function
-#                              SCRIPT(
-#'''S3FilterFieldChange({
-# 'FilterField':'organisation_id',
-# 'Field':'site_id',
-# 'FieldPrefix':'org',
-# 'FieldResource':'site',
-#})''')
+                                   _title="%s|%s" % (deployment_settings.get_org_site_label(),
+                                                     T("Enter some characters to bring up a list of possible matches"))),
+                               SCRIPT(
+'''S3FilterFieldChange({
+ 'FilterField':'organisation_id',
+ 'Field':'site_id',
+ 'FieldResource':'site',
+ 'url':S3.Ap.concat('/org/sites_for_org/')
+})''')
                                )
 
             if not deployment_settings.get_auth_registration_site_required():
@@ -1262,8 +1257,9 @@ Thank you
         if link_user_to_opts:
             link_user_to = utable.link_user_to
             link_user_to_default = []
+            vars = current.request.vars
             for type in ["staff", "volunteer", "member"]:
-                if "link_user_to_%s" % type in current.request.vars:
+                if "link_user_to_%s" % type in vars:
                     link_user_to_default.append(type)
             if link_user_to_default:
                 link_user_to.default = link_user_to_default
@@ -1274,15 +1270,12 @@ Thank you
                 link_user_to.requires = IS_IN_SET(link_user_to_opts,
                                                   multiple = True
                                                   )
-                link_user_to.represent = lambda ids: ids and ", ".join([str(link_user_to_opts[id]) for id in ids]) or messages.NONE
+                link_user_to.represent = lambda ids: \
+                    ids and ", ".join([str(link_user_to_opts[id]) for id in ids]) or cmessages.NONE
                 link_user_to.widget = SQLFORM.widgets.checkboxes.widget
                 link_user_to.comment = DIV(_class="tooltip",
-                                      _title="%s|%s" % (link_user_to.label,
-                                                        T("Will create and link your user account to the following records")
-                                                        )
-                                       )
-
-            
+                                           _title="%s|%s" % (link_user_to.label,
+                                                             T("Will create and link your user account to the following records")))
 
     # -------------------------------------------------------------------------
     def s3_membership_import_prep(self, data, group=None):
@@ -1561,12 +1554,18 @@ Thank you
         person_id = self.s3_link_to_person(user, organisation_id)
 
         link_user_to = user.link_user_to
-        if "staff" in link_user_to:
-            human_resource_id = self.s3_link_to_human_resource(user, person_id, type = 1)
-        if "volunteer" in link_user_to:
-            human_resource_id = self.s3_link_to_human_resource(user, person_id, type = 2)
-        if "member" in user.link_user_to:
-            member_id = self.s3_link_to_member(user, person_id)
+        if link_user_to:
+            if "staff" in link_user_to:
+                # Add Staff Record
+                human_resource_id = self.s3_link_to_human_resource(user, person_id,
+                                                                   type=1)
+            if "volunteer" in link_user_to:
+                # Add Volunteer Record
+                human_resource_id = self.s3_link_to_human_resource(user, person_id,
+                                                                   type=2)
+            if "member" in user.link_user_to:
+                # Add Member Record
+                member_id = self.s3_link_to_member(user, person_id)
 
         return
 
@@ -1586,7 +1585,7 @@ Thank you
             Links user accounts to person registry entries
 
             @param user: the user record
-            @param organisation_id: the user's orgnaisation_id
+            @param organisation_id: the user's organisation_id
                                     to get the person's realm_entity
 
             Policy for linking to pre-existing person records:
@@ -2040,7 +2039,7 @@ Thank you
             # Update record ownership
             self.s3_set_record_owner(mtable, mtable, force_update=True)
 
-        # Create an Member record, if one doesn't already exist
+        # Create a Member record, if one doesn't already exist
         if isinstance(person_id, list):
             person_ids = person_id
         else:

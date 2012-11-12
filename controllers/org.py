@@ -81,6 +81,9 @@ def site():
 
     # Pre-processor
     def prep(r):
+        if r.representation != "json" or \
+           r.method != "search":
+            return False
         # Location Filter
         s3db.gis_location_filter(r)
         return True
@@ -89,17 +92,41 @@ def site():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def sites_for_org():
+    """
+        Used to provide the list of Sites for an Organisation
+        - used in User Registration
+    """
+
+    try:
+        org = request.args[0]
+    except:
+        result = current.xml.json_message(False, 400, "No Org provided!")
+    else:
+        table = s3db.org_site
+        query = (table.organisation_id == org)
+        records = db(query).select(table.id,
+                                   table.name,
+                                   orderby=table.name)
+        result = records.json()
+    finally:
+        response.headers["Content-Type"] = "application/json"
+        return result
+
+# -----------------------------------------------------------------------------
 def site_org_json():
     """
+        Provide the Org(s) belonging to a Site
+        - unused?
     """
 
     table = s3db.org_site
     otable = s3db.org_organisation
-    response.headers["Content-Type"] = "application/json"
     query = (table.site_id == request.args[0]) & \
             (table.organisation_id == otable.id)
     records = db(query).select(otable.id,
                                otable.name)
+    response.headers["Content-Type"] = "application/json"
     return records.json()
 
 # -----------------------------------------------------------------------------
