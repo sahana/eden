@@ -1,2 +1,3 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
-"Facilities","All Active Facilities","org","facility","US","asset","Building","Office","name/comments","facility.obsolete=False",,,,,"False",
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Site","Trackable","Folder","Visible","Enabled"
+"Facilities","All Active Facilities","org","facility","US","asset","Building","Office","name/comments","facility.obsolete=False","obsolete","False",,,,"False",
+"Requests","All Open Requests","req","req","US","request","Navaid, Red","Request","req_ref/site_id","req.fulfil_status__ne=2","fulfil_status",0,"True",,,"False",
