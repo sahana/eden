@@ -138,7 +138,10 @@ def facility_marker_fn(record):
 
     table = db.org_facility_type
     types = record.facility_type_id
-    rows = db(table.id.belongs(types)).select(table.name)
+    if isinstance(types, list):
+        rows = db(table.id.belongs(types)).select(table.name)
+    else:
+        rows = db(table.id == types).select(table.name)
     types = [row.name for row in rows]
 
     # Use Marker in preferential order
