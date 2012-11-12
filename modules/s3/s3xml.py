@@ -503,6 +503,7 @@ class S3XML(S3Codec):
             return reference_map
 
         db = current.db
+        show_ids = current.manager.show_ids
 
         UID = self.UID
         MCI = self.MCI
@@ -514,6 +515,7 @@ class S3XML(S3Codec):
         filter_mci = self.filter_mci
         tablename = table._tablename
         gtablename = current.auth.settings.table_group_name
+        load_table = current.s3db.table
 
         for f in fields:
             try:
@@ -522,8 +524,6 @@ class S3XML(S3Codec):
                 continue
             #if f not in record or not record[f]:
                 #continue
-            #if type(ids) is not list:
-                #ids = [ids]
             ktablename, pkey, multiple = s3_get_foreign_key(dbfield)
             if not ktablename:
                 continue
@@ -543,32 +543,39 @@ class S3XML(S3Codec):
                 query = k_id.belongs(ids)
                 limitby = None
             else:
-                query = k_id == ids #[0]
+                query = k_id == ids
                 limitby = (0, 1)
 
             uid = None
             uids = None
-            supertable = None
 
             if pkey != "id" and "instance_type" in ktable_fields:
 
                 if multiple:
+                    # @todo: can't currently resolve multi-references
+                    # to super-entities
                     continue
 
-                krecord = db(query).select(ogetattr(ktable, UID),
+                srecord = db(query).select(ogetattr(ktable, UID),
                                            ktable.instance_type,
                                            limitby=(0, 1)).first()
-                if not krecord:
+                if not srecord:
                     continue
-                ktablename = krecord.instance_type
-                uid = ogetattr(krecord, UID)
-
+                ktablename = srecord.instance_type
+                uid = ogetattr(srecord, UID)
                 if ktablename == tablename and \
                    UID in record and ogetattr(record, UID) == uid and \
-                   not current.manager.show_ids:
+                   not show_ids:
                     continue
-
-                uids = [uid]
+                ktable = load_table(ktablename)
+                if not ktable:
+                    continue
+                krecord = db(ktable[UID] == uid).select(ktable._id,
+                                                        limitby=(0, 1)).first()
+                if not krecord:
+                    continue
+                ids = [krecord[ktable._id]]
+                uids = [export_uid(uid)]
 
             else:
                 if DELETED in ktable_fields:
