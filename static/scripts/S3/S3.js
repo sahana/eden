@@ -781,7 +781,7 @@ function S3FilterFieldChange(setting) {
                                 var first_value = data[i][FieldID];
                             }
                             options += '<option value="' +  data[i][FieldID] + '">';
-                            options += this.fncRepresent( data[i], PrepResult);
+                            options += this.fncRepresent(data[i], PrepResult);
                             options += '</option>';
                         }
                         if (setting.Optional) {

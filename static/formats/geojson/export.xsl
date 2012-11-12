@@ -238,114 +238,64 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
-        <xsl:if test="./reference[@field='location_id']">
         <!-- Feature Layer -->
+        <xsl:choose>
+            <xsl:when test="./reference[@field='location_id']">
+                <xsl:call-template name="Feature" />
+            </xsl:when>
+            <xsl:when test="./reference[@field='site_id']">
+                <!-- Find the Associated Site -->
+                <xsl:variable name="site" select="./reference[@field='site_id']/@uuid"/>
+                <xsl:for-each select="//resource[@uuid=$site]">
+                    <xsl:call-template name="Feature" />
+                </xsl:for-each>
+            </xsl:when>
+        </xsl:choose>
+    </xsl:template>
 
-            <xsl:variable name="geometry" select="./geometry/@value"/>
-            <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
-
-            <xsl:choose>
-                <xsl:when test="$geometry!='null'">
-                    <!-- Use pre-prepared GeoJSON -->
-                    <type>Feature</type>
-                    <geometry>
-                        <xsl:attribute name="value">
-                            <xsl:value-of select="$geometry"/>
-                        </xsl:attribute>
-                    </geometry>
-                    <properties>
-                        <xsl:call-template name="Properties" />
-                    </properties>
-                </xsl:when>
-                <xsl:when test="$wkt!='null'">
-                    <!-- Convert WKT to GeoJSON in XSLT. Note that this can hit the libxslt default recursion limit
-                         http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                         This shouldn't be called any more but is left in as an example -->
-                    <type>Feature</type>
-                    <geometry>
-                        <xsl:choose>
-                            <xsl:when test="starts-with($wkt,'POINT')">
-                                <type>
-                                    <xsl:text>Point</xsl:text>
-                                </type>
-                                <coordinates>
-                                    <xsl:attribute name="value">
-                                        <xsl:call-template name="Point">
-                                            <xsl:with-param name="point">
-                                                <xsl:value-of select="substring-before(substring-after(normalize-space(substring-after($wkt,'POINT')),'('),')')"/>
-                                            </xsl:with-param>
-                                        </xsl:call-template>
-                                    </xsl:attribute>
-                                </coordinates>
-                            </xsl:when>
-                            <xsl:when test="starts-with($wkt,'LINESTRING')">
-                                <type>
-                                    <xsl:text>LineString</xsl:text>
-                                </type>
-                                <coordinates>
-                                    <xsl:attribute name="value">
-                                        <xsl:call-template name="LineString">
-                                            <xsl:with-param name="linestring">
-                                                <xsl:value-of select="normalize-space(substring-after($wkt,'LINESTRING'))"/>
-                                            </xsl:with-param>
-                                        </xsl:call-template>
-                                    </xsl:attribute>
-                                </coordinates>
-                            </xsl:when>
-                            <xsl:when test="starts-with($wkt,'POLYGON')">
-                                <type>
-                                    <xsl:text>Polygon</xsl:text>
-                                </type>
-                                <coordinates>
-                                    <xsl:attribute name="value">
-                                        <xsl:call-template name="Polygon">
-                                            <xsl:with-param name="polygon">
-                                                <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
-                                            </xsl:with-param>
-                                        </xsl:call-template>
-                                    </xsl:attribute>
-                                </coordinates>
-                            </xsl:when>
-                            <xsl:when test="starts-with($wkt,'MULTIPOLYGON')">
-                                <type>
-                                    <xsl:text>MultiPolygon</xsl:text>
-                                </type>
-                                <coordinates>
-                                    <xsl:attribute name="value">
-                                        <xsl:call-template name="MultiPolygon">
-                                            <xsl:with-param name="multipolygon">
-                                                <xsl:value-of select="normalize-space(substring-after($wkt,'MULTIPOLYGON'))"/>
-                                            </xsl:with-param>
-                                        </xsl:call-template>
-                                    </xsl:attribute>
-                                </coordinates>
-                            </xsl:when>
-                        </xsl:choose>
-                    </geometry>
-                    <properties>
-                        <xsl:call-template name="Properties" />
-                    </properties>
-                </xsl:when>
-                <xsl:when test="./reference[@field='location_id']/@lon!='null'">
-                    <type>Feature</type>
-                    <geometry>
-                        <type>
-                            <xsl:text>Point</xsl:text>
-                        </type>
-                        <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
-                        </coordinates>
-                        <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
-                        </coordinates>
-                    </geometry>
-                    <properties>
-                        <xsl:call-template name="Properties" />
-                    </properties>
-                </xsl:when>
-                <!-- xsl:otherwise skip -->
-            </xsl:choose>
-        </xsl:if>
+    <!-- ****************************************************************** -->
+    <xsl:template name="Feature">
+        <xsl:variable name="geometry" select="./geometry/@value"/>
+        <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
+        <xsl:choose>
+            <xsl:when test="$geometry!='null'">
+                <!-- Use pre-prepared GeoJSON -->
+                <type>Feature</type>
+                <geometry>
+                    <xsl:attribute name="value">
+                        <xsl:value-of select="$geometry"/>
+                    </xsl:attribute>
+                </geometry>
+                <properties>
+                    <xsl:call-template name="Properties" />
+                </properties>
+            </xsl:when>
+            <xsl:when test="$wkt!='null'">
+                <xsl:call-template name="WKT">
+                    <xsl:with-param name="wkt">
+                        <xsl:value-of select="$wkt"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:when test="./reference[@field='location_id']/@lon!='null'">
+                <type>Feature</type>
+                <geometry>
+                    <type>
+                        <xsl:text>Point</xsl:text>
+                    </type>
+                    <coordinates>
+                        <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                    </coordinates>
+                    <coordinates>
+                        <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                    </coordinates>
+                </geometry>
+                <properties>
+                    <xsl:call-template name="Properties" />
+                </properties>
+            </xsl:when>
+            <!-- xsl:otherwise skip -->
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -443,6 +393,78 @@
                 </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="WKT">
+        <xsl:param name="wkt"/>
+        <!-- Convert WKT to GeoJSON in XSLT. Note that this can hit the libxslt default recursion limit
+             http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+             This shouldn't be called any more but is left in as an example -->
+        <type>Feature</type>
+        <geometry>
+            <xsl:choose>
+                <xsl:when test="starts-with($wkt,'POINT')">
+                    <type>
+                        <xsl:text>Point</xsl:text>
+                    </type>
+                    <coordinates>
+                        <xsl:attribute name="value">
+                            <xsl:call-template name="Point">
+                                <xsl:with-param name="point">
+                                    <xsl:value-of select="substring-before(substring-after(normalize-space(substring-after($wkt,'POINT')),'('),')')"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:attribute>
+                    </coordinates>
+                </xsl:when>
+                <xsl:when test="starts-with($wkt,'LINESTRING')">
+                    <type>
+                        <xsl:text>LineString</xsl:text>
+                    </type>
+                    <coordinates>
+                        <xsl:attribute name="value">
+                            <xsl:call-template name="LineString">
+                                <xsl:with-param name="linestring">
+                                    <xsl:value-of select="normalize-space(substring-after($wkt,'LINESTRING'))"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:attribute>
+                    </coordinates>
+                </xsl:when>
+                <xsl:when test="starts-with($wkt,'POLYGON')">
+                    <type>
+                        <xsl:text>Polygon</xsl:text>
+                    </type>
+                    <coordinates>
+                        <xsl:attribute name="value">
+                            <xsl:call-template name="Polygon">
+                                <xsl:with-param name="polygon">
+                                    <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:attribute>
+                    </coordinates>
+                </xsl:when>
+                <xsl:when test="starts-with($wkt,'MULTIPOLYGON')">
+                    <type>
+                        <xsl:text>MultiPolygon</xsl:text>
+                    </type>
+                    <coordinates>
+                        <xsl:attribute name="value">
+                            <xsl:call-template name="MultiPolygon">
+                                <xsl:with-param name="multipolygon">
+                                    <xsl:value-of select="normalize-space(substring-after($wkt,'MULTIPOLYGON'))"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:attribute>
+                    </coordinates>
+                </xsl:when>
+            </xsl:choose>
+        </geometry>
+        <properties>
+            <xsl:call-template name="Properties" />
+        </properties>
     </xsl:template>
 
     <!-- ****************************************************************** -->

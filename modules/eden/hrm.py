@@ -1468,7 +1468,7 @@ class S3HRSkillModel(S3Model):
                                                     IS_ONE_OF(db,
                                                               "hrm_competency_rating.id",
                                                               self.hrm_competency_rating_represent,
-                                                              orderby="~hrm_competency_rating.priority",
+                                                              orderby=~table.priority,
                                                               sort=True)),
                                         represent = self.hrm_competency_rating_represent,
                                         comment = self.competency_rating_comment(),

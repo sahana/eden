@@ -1552,6 +1552,7 @@ class S3FacilityModel(S3Model):
             title_display=T("Facility Details"),
             title_list=T("Facilities"),
             title_update=T("Edit Facility"),
+            title_map=T("Map of Facilities"),
             title_search=T("Search Facilities"),
             title_upload=T("Import Facilities"),
             subtitle_create=T("Add New Facility"),
@@ -2511,19 +2512,19 @@ def org_site_represent(id, row=None, show_link=True):
     if row:
         db = current.db
         s3db = current.s3db
-        table = s3db.org_site
+        stable = s3db.org_site
         id = row.site_id
     elif id:
         db = current.db
         s3db = current.s3db
-        table = s3db.org_site
-        row = db(table._id == id).select(table.instance_type,
-                                         limitby=(0, 1)).first()
+        stable = s3db.org_site
+        row = db(stable._id == id).select(stable.instance_type,
+                                          limitby=(0, 1)).first()
     else:
         return current.messages.NONE
 
     instance_type = row.instance_type
-    instance_type_nice = table.instance_type.represent(instance_type)
+    instance_type_nice = stable.instance_type.represent(instance_type)
 
     try:
         table = s3db[instance_type]
@@ -2544,8 +2545,6 @@ def org_site_represent(id, row=None, show_link=True):
                                                             limitby=(0, 1),
                                                             ).first().name
                 instance_type_nice = current.T(type)
-            else:
-                instance_type_nice = table.instance_type.represent(instance_type)
         except:
             return current.messages.UNKNOWN_OPT
     else:
@@ -2678,10 +2677,6 @@ def org_rheader(r, tabs=[]):
             rheader = DIV(rheader_fields)
 
         rheader.append(rheader_tabs)
-
-        #if r.component and r.component.name == "req":
-            # Inject the helptext script
-            #rheader.append(s3.req_helptext_script)
 
     elif tablename in ("org_organisation_type", "org_office_type"):
         tabs = [(T("Basic Details"), None),

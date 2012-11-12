@@ -60,9 +60,10 @@ def req():
         site_id = inv_item.site_id
         item_id = inv_item.item_id
         s3db.req_req_item[request.vars.req_item_id] = dict(site_id = site_id)
-        response.confirmation = T("%(item)s requested from %(site)s" % {"item":s3db.supply_item_represent(item_id, show_link = False),
-                                                                        "site":s3db.org_site_represent(site_id, show_link=False)
-                                                                        })
+        response.confirmation = T("%(item)s requested from %(site)s" % \
+            {"item":s3db.supply_item_represent(item_id, show_link=False),
+             "site":s3db.org_site_represent(site_id, show_link=False)
+             })
 
     def prep(r):
 
@@ -81,15 +82,14 @@ def req():
 
         if r.interactive:
             # Set Fields and Labels depending on type
-            type = ( r.record and r.record.type ) or \
-                   ( request.vars and request.vars.type )
+            type = (r.record and r.record.type) or \
+                   (request.vars and request.vars.type)
             if type:
                 type = int(type)
                 req_table.type.default = int(type)
 
                 # This prevents the type from being edited AFTER it is set
-                req_table.type.readable = False
-                req_table.type.writable = False
+                req_table.type.readable = req_table.type.writable = False
 
                 crud_strings = settings.get_req_req_crud_strings(type)
                 if crud_strings:
@@ -98,30 +98,37 @@ def req():
                 # Filter the query based on type
                 if s3.filter:
                     s3.filter = s3.filter & \
-                                         (s3db.req_req.type == type)
+                                (s3db.req_req.type == type)
                 else:
                     s3.filter = (s3db.req_req.type == type)
 
-            # @ToDo: apply these changes via JS for the create form where type is edittable
+            # These changes are applied via JS in create forms where type is editable
             if type == 1: # Item
-                req_table.date_recv.readable = True
-                req_table.date_recv.writable = True
-                req_table.date_recv.readable = True
-                req_table.date_recv.writable = True
+                req_table.date_recv.readable = req_table.date_recv.writable = True
 
                 req_table.purpose.label = T("What the Items will be used for")
                 req_table.site_id.label =T("Deliver To")
                 req_table.request_for_id.label = T("Deliver To")
                 req_table.recv_by_id.label = T("Delivered To")
 
-            if type == 3: # Person
-                req_table.date_required_until.readable = True
-                req_table.date_required_until.writable = True
+            elif type == 3: # Person
+                req_table.date_required_until.readable = req_table.date_required_until.writable = True
 
                 req_table.purpose.label = T("Task Details")
                 req_table.site_id.label =  T("Report To")
                 req_table.request_for_id.label = T("Report To")
                 req_table.recv_by_id.label = T("Reported To")
+
+            if not r.component:
+                if type == 8:
+                    field = req_table.purpose
+                    field.label = T("Details")
+                    field.represent = req_summary_represent
+                    summary_items = settings.get_req_summary_items()
+                    if summary_items:
+                        summary_items.sort(reverse=True)
+                        s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
+                        s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
             if r.method != "update" and r.method != "read":
                 if not r.component:
@@ -129,13 +136,9 @@ def req():
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
                     s3db.req_create_form_mods()
-                    s3db.configure(s3db.req_req,
-                                   create_next = URL(c="req", f="req",
-                                                     args=["[id]", "req_item"])
-                                   )
                     # Get the default Facility for this user
                     # @ToDo: Use site_id in User Profile (like current organisation_id)
-                    if deployment_settings.has_module("hrm"):
+                    if settings.has_module("hrm"):
                         hrtable = s3db.hrm_human_resource
                         query = (hrtable.person_id == s3_logged_in_person())
                         site = db(query).select(hrtable.site_id,
@@ -145,7 +148,7 @@ def req():
 
                 elif r.component.name == "document":
                     s3.crud.submit_button = T("Add")
-                    table = r.component.table
+                    #table = r.component.table
                     # @ToDo: Fix for Link Table
                     #table.date.default = r.record.date
                     #if r.record.site_id:
@@ -191,8 +194,7 @@ def req():
                     # Limit organisation_id to organisations the user has permissions for
                     auth.permitted_organisations(table=r.table,
                                                  redirect_on_error=False)
-                    table.organisation_id.readable = True
-                    table.organisation_id.writable = True
+                    table.organisation_id.readable = table.organisation_id.writable = True
                 else:
                     # Unaffiliated people can't commit on behalf of others
                     r.component.table.committer_id.writable = False
@@ -200,8 +202,7 @@ def req():
 
                 # Non-Item commits shouldn't have a From Inventory
                 # @ToDo: Assets do?
-                table.site_id.readable = False
-                table.site_id.writable = False
+                table.site_id.readable = table.site_id.writable = False
                 if r.interactive and r.record.type == 3: # People
                     # Redirect to the Persons tab after creation
                     s3db.configure(table,
@@ -215,7 +216,6 @@ def req():
             # @ToDo: Non-Item requests shouldn't be bound to a Facility?
             auth.permitted_facilities(table=r.table,
                                       error_msg=T("You do not have permission for any facility to make a request."))
-
         return True
     s3.prep = prep
 
@@ -225,7 +225,7 @@ def req():
         if r.interactive:
             s3_action_buttons(r)
             if not r.component:
-                if deployment_settings.get_req_use_commit():
+                if settings.get_req_use_commit():
                     # This is appropriate to all
                     s3.actions.append(
                         dict(url = URL(c="req", f="req",
@@ -267,6 +267,19 @@ def req():
     output = s3_rest_controller("req", "req",
                                 rheader=eden.req.req_rheader)
 
+    return output
+
+# =============================================================================
+def req_summary_represent(opt):
+    """
+        Represent the Details of a Summary Request
+    """
+
+    if not opt:
+        return messages.NONE
+
+    opts = json.loads(opt)
+    output = ", ".join(opts)
     return output
 
 # =============================================================================

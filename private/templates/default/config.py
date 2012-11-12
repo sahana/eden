@@ -40,6 +40,12 @@ T = current.T
 #settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
 #settings.auth.registration_requires_approval = True
+
+# Allow a new user to be linked to a record (and a new record will be created if it doesn't already exist)
+#settings.auth.registration_link_user_to = {"staff":T("Staff"),
+#                                           "volunteer":T("Volunteer"),
+#                                           "member":T("Member")}
+
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 #settings.auth.always_notify_approver = False
 
@@ -324,14 +330,20 @@ settings.L10n.decimal_separator = "."
 #settings.req.multiple_req_items = False
 #settings.req.use_commit = False
 #settings.req.requester_optional = True
+# Should Requests ask whether Security is required?
+#settings.req.ask_security = True
+# Should Requests ask whether Transportation is required?
+#settings.req.ask_transport = True
 #settings.req.use_req_number = False
 #settings.req.generate_req_number = False
 #settings.req.req_form_name = "Request Issue Form"
 #settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
-# list are ["Stock", "People", "Other"]. If this is commented out then
+# list are ["Stock", "People", "Summary", "Other"]. If this is commented out then
 # all types will be valid.
 #settings.req.req_type = ["Stock"]
+# List of Items to checkbox on a 'Summary' Request
+#settings.req.summary_items = ["Batteries", "Flashlights", "Candles", "Toilet Paper", "Cleaning Supplies", "Soap", "Clothing", "Water", "Canned Food"]
 
 # Custom Crud Strings for specific req_req types
 #settings.req.req_crud_strings = dict()

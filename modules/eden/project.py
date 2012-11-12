@@ -922,11 +922,12 @@ $(document).ready(function(){
             #        so that they can be used without a screen refresh
             url = URL(f="location", extension="geojson")
             layer = {
-                    "name"   : T("Projects"),
-                    "id"     : "projects",
-                    "url"    : url,
-                    "active" : True,
-                    #"marker" : None,
+                    "name"      : T("Projects"),
+                    "id"        : "projects",
+                    "tablename" : "project_location",
+                    "url"       : url,
+                    "active"    : True,
+                    #"marker"   : None,
                 }
 
             map = current.gis.show_map(

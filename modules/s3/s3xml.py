@@ -684,11 +684,12 @@ class S3XML(S3Codec):
 
         db = current.db
         gis = current.gis
+        auth = current.auth
         s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
 
-        format = current.auth.permission.format
+        format = auth.permission.format
 
         LATFIELD = self.Lat
         LONFIELD = self.Lon
@@ -698,6 +699,7 @@ class S3XML(S3Codec):
 
         marker_url = None
         symbol = None
+        # Retrieve data prepared earlier in gis.get_locations_and_popups()
         if locations:
             latlons = locations.get("latlons", None)
             geojsons = locations.get("geojsons", None)
@@ -754,15 +756,27 @@ class S3XML(S3Codec):
 
             LatLon = None
             polygon = False
-            # Use the value calculated in gis.get_geojson_and_popup/get_geojson_theme if we can
+            # Use the value calculated earlier if we can
+            id = record[pkey]
+            if not master and \
+               tablename in auth.org_site_types:
+                # Lookup the right pre-prepared data
+                root = element.getparent()
+                if root.tag == self.TAG.root:
+                    master = root[0]
+                    master_id = master.get(ATTRIBUTE.id, None)
+                    if master_id:
+                        id = int(master_id)
+                        tablename = master.get(ATTRIBUTE.name, None)
+                        master = True
             if latlons and tablename in latlons:
-                LatLon = latlons[tablename].get(record[pkey], None)
+                LatLon = latlons[tablename].get(id, None)
                 if LatLon:
                     lat = LatLon[0]
                     lon = LatLon[1]
             elif geojsons and tablename in geojsons:
                 polygon = True
-                geojson = geojsons[tablename].get(record[pkey], None)
+                geojson = geojsons[tablename].get(id, None)
                 if geojson:
                     # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
                     geometry = etree.SubElement(element, "geometry")
@@ -771,7 +785,7 @@ class S3XML(S3Codec):
                 # Nothing gets here currently
                 # tbc: KML Polygons (or we should also do these outside XSLT)
                 polygon = True
-                wkt = wkts[tablename][record[pkey]]
+                wkt = wkts[tablename][id]
                 # Convert the WKT in XSLT
                 attr[ATTRIBUTE.wkt] = wkt
             elif "polygons" in request.get_vars:
@@ -850,16 +864,16 @@ class S3XML(S3Codec):
                     if format == "geojson":
                         # Assume being used within the Sahana Mapping client
                         # so use local URLs to keep filesize down
-                        url = "%s/%i.plain" % (url, record[pkey])
+                        url = "%s/%i.plain" % (url, id)
                     else:
                         # Assume being used outside the Sahana Mapping client
                         # so use public URLs
                         url = "%s%s/%i" % (settings.get_base_public_url(),
-                                           url, record[pkey])
+                                           url, id)
                     attr[ATTRIBUTE.popup_url] = url
 
                 if markers and tablename in markers:
-                    marker = markers[tablename][record[pkey]]
+                    marker = markers[tablename][id]
                     attr[ATTRIBUTE.marker_url] = URL(c="static", f="img",
                                                      args=["markers",
                                                            marker["image"]])
@@ -869,7 +883,7 @@ class S3XML(S3Codec):
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
                     # Retrieve the HTML for the onHover Tooltip
-                    tooltip = tooltips[tablename][record[pkey]]
+                    tooltip = tooltips[tablename][id]
                     try:
                         # encode suitable for use as XML attribute
                         tooltip = self.xml_encode(tooltip).decode("utf-8")
@@ -880,7 +894,7 @@ class S3XML(S3Codec):
 
                 if attributes and tablename in attributes:
                     _attr = ""
-                    attrs = attributes[tablename][record[pkey]]
+                    attrs = attributes[tablename][id]
                     for a in attrs:
                         if _attr:
                             _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])

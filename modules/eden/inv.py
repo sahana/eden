@@ -2519,10 +2519,6 @@ def inv_warehouse_rheader(r):
             rheader = DIV(rheader_fields)
         rheader.append(rheader_tabs)
 
-        #if r.component and r.component.name == "req":
-            # Inject the helptext script
-            #rheader.append(s3.req_helptext_script)
-
     elif tablename == "inv_inv_item":
 
         # Tabs

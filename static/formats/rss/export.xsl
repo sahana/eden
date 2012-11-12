@@ -46,6 +46,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:include href="base.xsl"/> <!-- Do not remove this line! -->
+    <xsl:include href="../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <!-- pr_person -->
@@ -97,20 +98,19 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- rms_req -->
-    <xsl:template match="resource[@name='rms_req']" mode="contents">
+    <!-- req_req -->
+    <xsl:template match="resource[@name='req_req']" mode="contents">
         <title>
-            <xsl:value-of select="./data[@field='timestamp']/text()"/>
+            <xsl:value-of select="./data[@field='req_ref']/text()"/>
         </title>
         <description>
-            <xsl:value-of select="./data[@field='message']/text()"/>
-            <xsl:if test="./data[@field='source_type']/text()">
-                &lt;br/&gt;
-                <xsl:value-of select="concat('Source: ', ./data[@field='source_type']/text(), ' ')"/>
-                <xsl:if test="./data[@field='source_id']/text()">
-                    <xsl:value-of select="concat(' [', ./data[@field='source_id']/text(), ']')"/>
-                </xsl:if>
-            </xsl:if>
+            <xsl:value-of select="./reference[@field='site_id']/text()"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="./data[@field='priority']/text()"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="./data[@field='purpose']/text()"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="./data[@field='comments']/text()"/>
         </description>
     </xsl:template>
 

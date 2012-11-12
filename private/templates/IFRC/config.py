@@ -18,6 +18,11 @@ settings.auth.registration_requires_verification = True
 settings.auth.registration_requests_organisation = True
 settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = True
+
+settings.auth.registration_link_user_to = {"staff":T("Staff"),
+                                           "volunteer":T("Volunteer"),
+                                           "member":T("Member")}
+
 settings.auth.record_approval = True
 
 settings.auth.registration_roles = {"site_id": ["asset_reader",
@@ -280,6 +285,8 @@ settings.project.organisation_roles = {
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 #settings.inv.collapse_tabs = True
+# Should Requests ask whether Transportation is required?
+settings.req.ask_transport = True
 
 # =============================================================================
 # Template Modules

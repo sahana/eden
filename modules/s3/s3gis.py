@@ -2152,7 +2152,6 @@ class GIS(object):
             else:
                 # Points
                 rows = db(query).select(table.id,
-                                        gtable.path,
                                         gtable.lat,
                                         gtable.lon)
                 for row in rows:
@@ -5263,14 +5262,15 @@ class GIS(object):
                 }]
             @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
                 [{
-                  "name"   : T("MyLabel"), # A string: the label for the layer
-                  "id"     : "search",     # A string: the id for the layer (for manipulation by JavaScript)
-                  "url"    : "/eden/module/resource.geojson?filter", # A URL to load the resource
-                  "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
-                  "marker" : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
-                  "opacity" : 1,           # Optional
-                  "cluster_distance",      # Optional
-                  "cluster_threshold"      # Optional
+                  "name"      : T("MyLabel"), # A string: the label for the layer
+                  "id"        : "search",     # A string: the id for the layer (for manipulation by JavaScript)
+                  "tablename" : "module_resource", # A string: the tablename (used to determine whether to locate via location_id or site_id)
+                  "url"       : "/eden/module/resource.geojson?filter", # A URL to load the resource
+                  "active"    : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
+                  "marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
+                  "opacity"   : 1,            # Optional
+                  "cluster_distance",         # Optional
+                  "cluster_threshold"         # Optional
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {
@@ -6013,8 +6013,25 @@ S3.gis.layers_feature_resources=new Array()'''
 
             # URL to retrieve the data
             url = layer["url"]
+            tablename = layer["tablename"]
+            table = s3db[tablename]
             # Optimise the query & tell back-end not to add the type to the tooltips
-            options = "components=None&maxdepth=0&references=location_id&fields=name&label_off=1"
+            if "location_id" in table.fields:
+                maxdepth = 0
+                references = "location_id"
+            elif "site_id" in table.fields:
+                maxdepth = 1
+                references = "site_id,location_id&show_ids=true"
+            else:
+                # Not much we can do!
+                raise
+            # @ToDo: layer["namefield"]
+            if "name" in table.fields:
+                title = "name"
+            else:
+                title = "id"
+            options = "components=None&maxdepth=%s&references=%s&fields=%s&label_off=1" % \
+                        (maxdepth, references, title)
             if "?" in url:
                 url = "%s&%s" % (url, options)
             else:
@@ -6718,6 +6735,11 @@ class FeatureLayer(Layer):
                 return
             controller = self.controller or self.module # Backwards-compatibility
             function = self.function or self.resource   # Backwards-compatibility
+            # @ToDo: better configurability
+            #if function == "req":
+            #    url = "%s.geojson?layer=%i&components=None&maxdepth=1&references=site_id,location_id&fields=req_ref" % \
+            #        (URL(controller, function), self.id)
+            #else:
             url = "%s.geojson?layer=%i&components=None&maxdepth=0&references=location_id&fields=name" % \
                 (URL(controller, function), self.id)
             if self.filter:
@@ -7554,11 +7576,12 @@ class S3Map(S3Search):
                       args=None,
                       vars=vars)
             feature_resources = [{
-                    "name"   : T("Search Results"),
-                    "id"     : "search_results",
-                    "url"    : url,
-                    "active" : True,
-                    "marker" : marker
+                    "name"      : T("Search Results"),
+                    "id"        : "search_results",
+                    "tablename" : tablename,
+                    "url"       : url,
+                    "active"    : True,
+                    "marker"    : marker
                 }]
             map = gis.show_map(feature_resources=feature_resources,
                                catalogue_layers=True,

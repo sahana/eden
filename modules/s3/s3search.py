@@ -1464,11 +1464,12 @@ i18n.edit_saved_search="%s"
                           vars=vars)
                 gis = current.gis
                 feature_resources = [{
-                        "name"   : T("Search Results"),
-                        "id"     : "search_results",
-                        "url"    : url,
-                        "active" : False, # Gets activated when the Map is opened up
-                        "marker" : gis.get_marker(request.controller, request.function)
+                        "name"      : T("Search Results"),
+                        "id"        : "search_results",
+                        "tablename" : tablename,
+                        "url"       : url,
+                        "active"    : False, # Gets activated when the Map is opened up
+                        "marker"    : gis.get_marker(request.controller, request.function)
                     }]
                 map_popup = gis.show_map(
                                         feature_resources=feature_resources,
