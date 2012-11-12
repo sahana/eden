@@ -72,15 +72,6 @@ function createNote() {
             "<span id='edit-note' style='float:right;'>" +
             "<a href='#'' class='nounderline' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note' title='{% trans 'Edit' %}'><i class='icon-pencil' style='font-size:12px;'></i></a>" +
             "</span></div><p class='note-text'>" + note.title + "</p>");
-
-
-
-
-        // append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
-        //     "<div class='handler'><div class='deletenote hidden'>" + "<a href='#' onclick='deleteNote(this)'" +
-        //     " id='deletenote'>x</a></div></div><p class='note-text'>" + note.title + "</p>" +
-        //     "<span id='view-note' class='label'><a href='#' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note'>" + viewString + "</a></span>" +
-        //     "<span id='edit-note' class='label'><a href='#' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note'>" + editString + "</a></span></div>");
         newNote.show("slow");
         showControls();
     });
@@ -128,7 +119,7 @@ for(var i=0; i<note.comments.length; i++) {
    });
 
     request.fail(function (jqXHR, textStatus) {
-        $('#edit-current-note').modal('hide');
+        $('#view-current-note').modal('hide');
         $('#jsnotify').notify("create", {
             title: errorGetNote,
             text: errorMsg + textStatus,

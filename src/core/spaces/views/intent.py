@@ -46,6 +46,11 @@ def add_intent(request, space_url):
     :context: space_url, heading
     """
     space = get_object_or_404(Space, url=space_url)
+    admins = space.admins.all()
+    mails = []
+
+    for m in space.admins.all():
+        mails.append(m.email)
 
     try:
         intent = Intent.objects.get(user=request.user, space=space)
@@ -58,20 +63,13 @@ def add_intent(request, space_url):
         intent.save()
         subject = _("New participation request")
         body = _("User {0} wants to participate in space {1}.\n \
-                 Please click on the link below to approve.\n {2}"\
-                 .format(request.user.username, space.name,
-                 intent.get_approve_url()))
+                Please click on the link below to approve.\n {2}").format(
+                request.user.username, space.name, intent.get_approve_url())
         heading = _("Your request is being processed.")
-        send_mail(subject=subject, message=body,
-                  from_email="noreply@ecidadania.org",
-                  recipient_list=[space.author.email])
+        send_mail(subject, body, "botizen@ecidadania.org", mails)
 
-        # Send a notification to all the admins in that space
-        #send_mass_mail()
-
-    return render_to_response('space_intent.html', \
-            {'space_name': space.name, 'heading': heading}, \
-            context_instance=RequestContext(request))
+    return render_to_response('space_intent.html', {'space_name': space.name,
+        'heading': heading}, context_instance=RequestContext(request))
 
 
 class ValidateIntent(DetailView):

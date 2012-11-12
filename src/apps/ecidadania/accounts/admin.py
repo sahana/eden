@@ -46,7 +46,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if 'sendmail' in request.POST:
             for obj in queryset:
                 get_user = get_object_or_404(User, id=obj.id)
-                send_mail(request.POST['massmail_subject'], request.POST['message'], 'noreply@ecidadania.org', [get_user.email])
+                send_mail(request.POST['massmail_subject'], request.POST['message'], 'botizen@ecidadania.org', [get_user.email])
             return HttpResponseRedirect(request.get_full_path())
         
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)

@@ -57,9 +57,9 @@
             {% endfor %}
         {% endif %}
     
-        <div id="jsnotify" class="hidden">
+        <div id="jsnotify">
             <div id="basic-template">
-                <!-- <a class="ui-notify-cross ui-notify-close" href="#">x</a> -->
+                <a class="ui-notify-cross ui-notify-close" href="#">x</a>
                 <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}/assets/icons/#{icon}" alt="warning" /></div>
                 <h1>#{title}</h1>
                 <p>#{text}</p>
