@@ -283,8 +283,9 @@ class S3RequestModel(S3Model):
             title_create = ADD_REQUEST,
             title_display = T("Request Details"),
             title_list = T("Requests"),
-            title_update = T("Edit Request"),
+            title_map=T("Map of Requests"),
             title_search = T("Search Requests"),
+            title_update = T("Edit Request"),
             subtitle_create = ADD_REQUEST,
             label_list_button = T("List Requests"),
             label_create_button = ADD_REQUEST,
@@ -307,16 +308,25 @@ class S3RequestModel(S3Model):
                       #         ]
                       #),
                       S3SearchOptionsWidget(
+                        name="req_search_fulfil_status",
+                        label=T("Status"),
+                        field="fulfil_status",
+                        options = req_status_opts,
+                        cols = 3,
+                      ),
+                      S3SearchOptionsWidget(
                         name="req_search_type",
                         label=T("Type"),
                         field="type",
                         options = req_type_opts,
+                        cols = 3,
                       ),
                       S3SearchOptionsWidget(
                         name="req_search_priority",
                         label=T("Priority"),
                         field="priority",
                         options = req_priority_opts,
+                        cols = 3,
                       ),
                       #S3SearchOptionsWidget(
                       #  name="req_search_L1",
@@ -385,16 +395,25 @@ class S3RequestModel(S3Model):
                        report_options = Storage(
                         search=[
                             S3SearchOptionsWidget(
+                                name="req_search_fulfil_status",
+                                label=T("Status"),
+                                field="fulfil_status",
+                                options = req_status_opts,
+                                cols = 3,
+                            ),
+                            S3SearchOptionsWidget(
                                 name="req_search_type",
                                 label=T("Type"),
                                 field="type",
                                 options = req_type_opts,
+                                cols = 3,
                             ),
                             S3SearchOptionsWidget(
                                 name="req_search_priority",
                                 label=T("Priority"),
                                 field="priority",
                                 options = req_priority_opts,
+                                cols = 3,
                             ),
                             #S3SearchOptionsWidget(
                             #    name="req_search_L1",

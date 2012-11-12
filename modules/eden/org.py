@@ -1552,6 +1552,7 @@ class S3FacilityModel(S3Model):
             title_display=T("Facility Details"),
             title_list=T("Facilities"),
             title_update=T("Edit Facility"),
+            title_map=T("Map of Facilities"),
             title_search=T("Search Facilities"),
             title_upload=T("Import Facilities"),
             subtitle_create=T("Add New Facility"),

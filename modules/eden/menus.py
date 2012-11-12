@@ -1617,6 +1617,7 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
+                        M("Map", m="map"),
                         M("Report", m="report"),
                         M("List All Requested Items", f="req_item"),
                         M("List All Requested Skills", f="req_skill",

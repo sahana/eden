@@ -98,11 +98,11 @@ def req():
                 # Filter the query based on type
                 if s3.filter:
                     s3.filter = s3.filter & \
-                                         (s3db.req_req.type == type)
+                                (s3db.req_req.type == type)
                 else:
                     s3.filter = (s3db.req_req.type == type)
 
-            # These changes applied via JS in create forms where type is editable
+            # These changes are applied via JS in create forms where type is editable
             if type == 1: # Item
                 req_table.date_recv.readable = req_table.date_recv.writable = True
 
@@ -119,10 +119,16 @@ def req():
                 req_table.request_for_id.label = T("Report To")
                 req_table.recv_by_id.label = T("Reported To")
 
-            elif type == 8: # Summary
-                field = req_table.purpose
-                field.label = T("Details")
-                field.represent = req_summary_represent
+            if not r.component:
+                if type == 8:
+                    field = req_table.purpose
+                    field.label = T("Details")
+                    field.represent = req_summary_represent
+                    summary_items = settings.get_req_summary_items()
+                    if summary_items:
+                        summary_items.sort(reverse=True)
+                        s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
+                        s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
             if r.method != "update" and r.method != "read":
                 if not r.component:
@@ -210,13 +216,6 @@ def req():
             # @ToDo: Non-Item requests shouldn't be bound to a Facility?
             auth.permitted_facilities(table=r.table,
                                       error_msg=T("You do not have permission for any facility to make a request."))
-            if type == 8:
-                summary_items = settings.get_req_summary_items()
-                if summary_items:
-                    summary_items.sort(reverse=True)
-                    s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
-
         return True
     s3.prep = prep
 
