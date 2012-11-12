@@ -187,6 +187,10 @@ def req():
                         if site:
                             r.table.site_id.default = site.site_id
 
+                    if r.method == "map":
+                        # Tell the client to request per-feature markers
+                        s3db.configure("req_req", marker_fn=marker_fn)
+
                 elif r.component.name == "document":
                     s3.crud.submit_button = T("Add")
                     #table = r.component.table

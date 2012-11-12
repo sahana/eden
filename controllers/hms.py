@@ -294,6 +294,10 @@ def hospital():
                 if r.id:
                     table.obsolete.readable = table.obsolete.writable = True
 
+                elif r.method == "map":
+                    # Tell the client to request per-feature markers
+                    s3db.configure("hms_hospital", marker_fn=marker_fn)
+
                 s3.formats["have"] = r.url() # .have added by JS
                 # Add comments
                 table.gov_uuid.comment = DIV(_class="tooltip",

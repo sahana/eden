@@ -199,6 +199,10 @@ def facility():
                 field = r.table.obsolete
                 field.readable = field.writable = True
 
+            elif r.method == "map":
+                # Tell the client to request per-feature markers
+                s3db.configure("org_facility", marker_fn=facility_marker_fn)
+
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
