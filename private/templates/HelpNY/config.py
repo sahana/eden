@@ -79,9 +79,11 @@ settings.inv.stock_count = True
 settings.inv.track_pack_values = False
 
 # Request Management
-#settings.req.req_type = ["Stock"]
+settings.req.req_type = ["People", "Stock", "Summary"]
 settings.req.use_commit = False
 settings.req.requester_optional = True
+# List of Items to checkbox on a 'Summary' Request
+settings.req.summary_items = ["Batteries", "Flashlights", "Candles", "Toilet Paper", "Cleaning Supplies", "Soap", "Clothing", "Water", "Canned Food"]
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations

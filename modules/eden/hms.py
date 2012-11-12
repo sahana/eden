@@ -1380,9 +1380,6 @@ def hms_hospital_rheader(r, tabs=[]):
                    )
                 ), rheader_tabs)
 
-        if rheader and r.component and r.component.name == "req":
-            rheader.append(s3db.req_helptext_script)
-
     return rheader
 
 # END =========================================================================

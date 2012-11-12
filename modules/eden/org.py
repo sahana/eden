@@ -2677,10 +2677,6 @@ def org_rheader(r, tabs=[]):
 
         rheader.append(rheader_tabs)
 
-        #if r.component and r.component.name == "req":
-            # Inject the helptext script
-            #rheader.append(s3.req_helptext_script)
-
     elif tablename in ("org_organisation_type", "org_office_type"):
         tabs = [(T("Basic Details"), None),
                 (T("Tags"), "tag"),

@@ -285,6 +285,8 @@ settings.project.organisation_roles = {
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 #settings.inv.collapse_tabs = True
+# Should Requests ask whether Transportation is required?
+settings.req.ask_transport = True
 
 # =============================================================================
 # Template Modules

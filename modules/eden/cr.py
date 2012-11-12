@@ -723,10 +723,6 @@ def cr_shelter_rheader(r, tabs=[]):
                                     ),
                               rheader_tabs)
 
-            #if r.component and r.component.name == "req":
-                # Inject the helptext script
-            #    rheader.append(response.s3.req_helptext_script)
-
     return rheader
 
 # END =========================================================================

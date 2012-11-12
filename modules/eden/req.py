@@ -120,22 +120,24 @@ class S3RequestModel(S3Model):
         }
 
         req_types_deployed = settings.get_req_req_type()
-        if "Other" in req_types_deployed:
-            req_type_opts = {9:T("Other")}
-        else:
-            req_type_opts = {}
-
+        req_type_opts = {}
         if settings.has_module("inv") and "Stock" in req_types_deployed:
             # Number hardcoded in controller
             req_type_opts[1] = settings.get_req_type_inv_label()
-        #if settings.has_module("asset"):
+        #if settings.has_module("asset") and "Asset" in req_types_deployed:
         #    req_type_opts[2] = T("Assets")
         if settings.has_module("hrm") and "People" in req_types_deployed:
             req_type_opts[3] = settings.get_req_type_hrm_label()
-        #if settings.has_module("cr"):
+        #if settings.has_module("cr") and "Shelter" in req_types_deployed:
         #    req_type_opts[4] = T("Shelter")
+        if "Summary" in req_types_deployed:
+            req_type_opts[8] = T("Summary")
+        if "Other" in req_types_deployed:
+            req_type_opts[9] = T("Other")
 
         use_commit = settings.get_req_use_commit()
+        req_ask_security = settings.get_req_ask_security()
+        req_ask_transport = settings.get_req_ask_transport()
 
         # ---------------------------------------------------------------------
         # Requests
@@ -170,8 +172,29 @@ class S3RequestModel(S3Model):
                                         requires = IS_NULL_OR(
                                                       IS_IN_SET(req_priority_opts))
                                         ),
-                                  Field("purpose", "text",
-                                        label=T("Purpose")), # Donations: What will the Items be used for?; People: Task Details
+                                  # This is a component, so needs to be a super_link
+                                  # - can't override field name, ondelete or requires
+                                  self.super_link("site_id", "org_site",
+                                                  label = T("Requested For Facility"),
+                                                  default = auth.user.site_id if auth.is_logged_in() else None,
+                                                  readable = True,
+                                                  writable = True,
+                                                  empty = False,
+                                                  instance_types = auth.org_site_types,
+                                                  updateable = True,
+                                                  # Comment these to use a Dropdown & not an Autocomplete
+                                                  #widget = S3SiteAutocompleteWidget(),
+                                                  #comment = DIV(_class="tooltip",
+                                                  #              _title="%s|%s" % (T("Requested By Facility"),
+                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
+                                                  represent = self.org_site_represent
+                                                  ),
+                                  #Field("location",
+                                  #      label = T("Neighborhood")),
+                                  # Donations: What will the Items be used for?; People: Task Details
+                                  s3_comments("purpose",
+                                              label=T("Purpose"),
+                                              comment=""),
                                   s3_datetime("date_required",
                                               label = T("Date Needed By"),
                                               past=0,
@@ -207,39 +230,20 @@ class S3RequestModel(S3Model):
                                                     writable = False,
                                                     #default = auth.s3_logged_in_human_resource()
                                                     ),
-                                  # This is a component, so needs to be a super_link
-                                  # - can't override field name, ondelete or requires
-                                  self.super_link("site_id", "org_site",
-                                                  label = T("Requested For Facility"),
-                                                  default = auth.user.site_id if auth.is_logged_in() else None,
-                                                  readable = True,
-                                                  writable = True,
-                                                  empty = False,
-                                                  instance_types = auth.org_site_types,
-                                                  updateable = True,
-                                                  # Comment these to use a Dropdown & not an Autocomplete
-                                                  #widget = S3SiteAutocompleteWidget(),
-                                                  #comment = DIV(_class="tooltip",
-                                                  #              _title="%s|%s" % (T("Requested By Facility"),
-                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                  represent = self.org_site_represent
-                                                  ),
-                                  #Field("location",
-                                  #      label = T("Neighborhood")),
                                   Field("transport_req", "boolean",
-                                        #readable = False,
-                                        #writable = False,
+                                        readable = req_ask_transport,
+                                        writable = req_ask_transport,
                                         label = T("Transportation Required")),
                                   Field("security_req", "boolean",
-                                        readable = False,
-                                        writable = False,
+                                        readable = req_ask_security,
+                                        writable = req_ask_security,
                                         label = T("Security Required")),
                                   s3_datetime("date_recv",
                                               label = T("Date Received"), # Could be T("Date Delivered") - make deployment_setting
                                               past=8760, # Hours, so 1 year
                                               future=0,
                                               readable = False,
-                                              writable = False
+                                              writable = False,
                                               ),
                                   human_resource_id("recv_by_id",
                                                     label = T("Received By"),
@@ -429,71 +433,6 @@ class S3RequestModel(S3Model):
                        list_fields = list_fields
                        )
 
-        # Script to inject into Pages which include Request create forms
-        req_help_msg = ""
-        req_help_msg_template = T("If the request is for %s, please enter the details on the next screen.")
-        types = []
-        if settings.has_module("inv"):
-            types.append(T("Warehouse Stock"))
-        #if settings.has_module("asset"):
-        #    types.append(T("Assets"))
-        if settings.has_module("hrm"):
-            types.append(T("Staff"))
-        #if settings.has_module("cr"):
-        #    types.append(T("Shelter"))
-        if types:
-            message = types.pop(0)
-            for type in types:
-                message = "%s or %s" % (message, type)
-            req_help_msg = req_help_msg_template % message
-
-        # @ToDo: Remove this script from code. Help text is added to submit button in req_prep
-        req_helptext_script = SCRIPT('''
-$(function() {
-    var req_help_msg = '%s\\n%s';
-    // Provide some default help text in the Details box if empty
-    if (!$('#req_req_comments').val()) {
-        $('#req_req_comments').addClass('default-text').attr({ value: req_help_msg }).focus(function(){
-            if($(this).val() == req_help_msg){
-                // Clear on click if still default
-                $(this).val('').removeClass('default-text');
-            }
-        });
-        $('form').submit( function() {
-            // Do the normal form-submission tasks
-            // @ToDo: Look to have this happen automatically
-            // http://forum.jquery.com/topic/multiple-event-handlers-on-form-submit
-            // http://api.jquery.com/bind/
-            S3ClearNavigateAwayConfirm();
-
-            if ($('#req_req_comments').val() == req_help_msg) {
-                // Default help still showing
-                if ($('#req_req_type').val() == 9) {
-                    // Requests of type 'Other' need this field to be mandatory
-                    $('#req_req_comments').after('<div id="type__error" class="error" style="display: block;">%s</div>');
-                    // Reset the Navigation protection
-                    S3SetNavigateAwayConfirm();
-                    // Move focus to this field
-                    $('#req_req_comments').focus();
-                    // Prevent the Form's save from continuing
-                    return false;
-                } else {
-                    // Clear the default help
-                    $('#req_req_comments').val('');
-                    // Allow the Form's save to continue
-                    return true;
-                }
-            } else {
-                // Allow the Form's save to continue
-                return true;
-            }
-        });
-    }
-})''' % (T('If the request type is "Other", please enter request details here.'),
-         req_help_msg,
-         T("Details field is required!"))
-         )
-
         # Custom Methods
         set_method("req", "req",
                    method = "check",
@@ -529,8 +468,8 @@ $(function() {
                 req_req_id = req_id,
                 req_req_ref = req_ref,
                 req_create_form_mods = self.req_create_form_mods,
+                req_type_opts = req_type_opts,
                 req_prep = self.req_prep,
-                req_helptext_script = req_helptext_script,
                 req_tabs = self.req_tabs,
                 req_priority_represent = self.req_priority_represent,
                 req_hide_quantities = self.req_hide_quantities,
@@ -565,7 +504,50 @@ $(function() {
         table.cancel.readable = table.cancel.writable = False
         table.recv_by_id.readable = table.recv_by_id.writable = False
 
+        settings = current.deployment_settings
+        if "People" in settings.get_req_req_type():
+            # Show the Required Until Field
+            # (gets turned-off by JS for other types)
+            table.date_required_until.writable = True
+
+        # Script to inject into Pages which include Request create forms
+        s3 = current.response.s3
+        summary_items = settings.get_req_summary_items()
+        if summary_items:
+            summary_items.sort(reverse=True)
+            s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
+
+        req_helptext = '''
+i18n.req_purpose="%s"
+i18n.req_site_id="%s"
+i18n.req_request_for_id="%s"
+i18n.req_recv_by_id="%s"
+i18n.req_items_purpose="%s"
+i18n.req_items_site_id="%s"
+i18n.req_items_recv_by_id="%s"
+i18n.req_people_purpose="%s"
+i18n.req_people_site_id="%s"
+i18n.req_people_recv_by_id="%s"
+i18n.req_next_msg="%s"
+i18n.req_other_msg="%s"
+i18n.req_details_mandatory="%s"''' % (table.purpose.label,
+                                      table.site_id.label,
+                                      table.request_for_id.label,
+                                      table.recv_by_id.label,
+                                      T("What the Items will be used for"),
+                                      T("Deliver To"),
+                                      T("Delivered To"),
+                                      T("Task Details"),
+                                      T("Report To"),
+                                      T("Reported To"),
+                                      T("Please enter the details on the next screen."),
+                                      T("Please enter request details here."),
+                                      T("Details field is required!"))
+        s3.js_global.append(req_helptext)
+        s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
+
         return
+
     # -------------------------------------------------------------------------
     @staticmethod
     def req_prep(r):
@@ -575,8 +557,7 @@ $(function() {
         """
 
         if not r.component or r.component.name =="req":
-            table = current.db.req_req
-            default_type = table.type.default
+            default_type = current.db.req_req.type.default
             if default_type:
                 req_submit_button = {1:T("Save and add Items"),
                                      3:T("Save and add People")}
@@ -899,14 +880,14 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_item"]))
-        elif type == 2 and settings.has_module("asset"):
-            s3db.configure(tablename,
-                           create_next = URL(c="req",
-                                             f="req",
-                                             args=["[id]", "req_asset"]),
-                           update_next = URL(c="req",
-                                             f="req",
-                                             args=["[id]", "req_asset"]))
+        #elif type == 2 and settings.has_module("asset"):
+        #    s3db.configure(tablename,
+        #                   create_next = URL(c="req",
+        #                                     f="req",
+        #                                     args=["[id]", "req_asset"]),
+        #                   update_next = URL(c="req",
+        #                                     f="req",
+        #                                     args=["[id]", "req_asset"]))
         elif type == 3 and settings.has_module("hrm"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
@@ -2053,11 +2034,6 @@ def req_rheader(r, check_page = False):
                               rheader_tabs,
                               )
                 return rheader
-            #else:
-                # No Record means that we are either a Create or List Create
-                # Inject the helptext script
-                # Removed because causes an error if validation fails twice
-                # return response.s3.req_helptext_script
     return None
 
 # =============================================================================

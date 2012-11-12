@@ -1177,7 +1177,6 @@ class S3Config(Storage):
         return self.req.get("type_inv_label", current.T("Warehouse Stock"))
     def get_req_type_hrm_label(self):
         return self.req.get("type_hrm_label", current.T("People"))
-
     def get_req_status_writable(self):
         """ Whether Request Status should be manually editable """
         return self.req.get("status_writable", True)
@@ -1188,6 +1187,10 @@ class S3Config(Storage):
         """ Whether People Quantities should be manually editable """
         return self.req.get("skill_quantities_writable", False)
     def get_req_multiple_req_items(self):
+        """
+            Can a Request have multiple line items?
+            - e.g. ICS says that each request should be just for items of a single Type
+        """
         return self.req.get("multiple_req_items", True)
     def get_req_show_quantity_transit(self):
         return self.req.get("show_quantity_transit", True)
@@ -1195,6 +1198,21 @@ class S3Config(Storage):
         return self.req.get("use_commit", True)
     def get_req_requester_optional(self):
         return self.req.get("requester_optional", False)
+    def get_req_summary_items(self):
+        """
+            List of Items to checkbox for 'Summary' Requests
+        """
+        return self.req.get("summary_items", [])
+    def get_req_ask_security(self):
+        """
+            Should Requests ask whether Security is required?
+        """
+        return self.req.get("ask_security", False)
+    def get_req_ask_transport(self):
+        """
+            Should Requests ask whether Transportation is required?
+        """
+        return self.req.get("ask_transport", False)
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)
