@@ -144,22 +144,26 @@
 
     <xsl:key name="jobtitles"
              match="row"
-             use="col[contains($JobTitle, concat('|', @field, '|'))]"/>
+             use="col[contains(
+                    document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
+                    concat('|', @field, '|'))]"/>
 
     <xsl:key name="jobroles"
              match="row"
-             use="col[contains($JobRole, concat('|', @field, '|'))]"/>
-             
-    <xsl:key name="volunteerclusters" 
+             use="col[contains(
+                    document(../labels.xml)/labels/column[@name='JobRole']/match/text(),
+                    concat('|', @field, '|'))]"/>
+
+    <xsl:key name="volunteerclusters"
              match="row"
              use="concat(col[@field='Volunteer Cluster Type'],
                          col[@field='Volunteer Cluster'])"/>
 
-    <xsl:key name="volunteerclustertypes" 
+    <xsl:key name="volunteerclustertypes"
              match="row"
              use="col[@field='Volunteer Cluster Type']"/>
 
-    <xsl:key name="volunteerclustertpositions" 
+    <xsl:key name="volunteerclustertpositions"
              match="row"
              use="col[@field='Volunteer Cluster Position']"/>
 
@@ -198,15 +202,23 @@
 
             <!-- Job Titles -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('jobtitles', col[contains($JobTitle, concat('|', @field, '|'))])[1])]">
-                <xsl:call-template name="JobTitle">
+                                        generate-id(key('jobtitles',
+                                            col[contains(
+                                                document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
+                                                concat('|', @field, '|'))]
+                                        )[1])]">
+                    <xsl:call-template name="JobTitle">
                     <xsl:with-param name="type">resource</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
             <!-- Job Roles -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('jobroles', col[contains($JobRole, concat('|', @field, '|'))])[1])]">
+                                        generate-id(key('jobroles',
+                                            col[contains(
+                                                document(../labels.xml)/labels/column[@name='JobRoles']/match/text(),
+                                                concat('|', @field, '|'))]
+                                        )[1])]">
                 <xsl:call-template name="JobRole">
                     <xsl:with-param name="type">resource</xsl:with-param>
                 </xsl:call-template>
@@ -373,27 +385,16 @@
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
 
-        <xsl:choose>
-            <xsl:when test="$FacilityType='Office'">
-                <xsl:variable name="resourcename">org_office</xsl:variable>
-            </xsl:when>
-            <xsl:when test="$FacilityType='Facility'">
-                <xsl:variable name="resourcename">org_facility</xsl:variable>
-            </xsl:when>
-            <xsl:when test="$FacilityType='Hospital'">
-                <xsl:variable name="resourcename">hms_hospital</xsl:variable>
-            </xsl:when>
-            <xsl:when test="$FacilityType='Shelter'">
-                <xsl:variable name="resourcename">cr_shelter</xsl:variable>
-            </xsl:when>
-            <xsl:when test="$FacilityType='Warehouse'">
-                <xsl:variable name="resourcename">inv_warehouse</xsl:variable>
-            </xsl:when>
-            <xsl:otherwise>
-                <!-- Backwards compatibility -->
-                <xsl:variable name="resourcename">org_office</xsl:variable>
-            </xsl:otherwise>
-        </xsl:choose>
+        <xsl:variable name="resourcename">
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:otherwise>org_office</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:if test="$OfficeName!=''">
             <resource>
                 <xsl:attribute name="name">
@@ -480,11 +481,11 @@
             </xsl:call-template>
         </xsl:variable>
 
-        <xsl:if test="position()=1">
+<!--        <xsl:if test="position()=1">
             <xsl:for-each select="col[starts-with(@name, 'Course')]">
                 <xsl:call-template name="Course"/>
             </xsl:for-each>
-        </xsl:if>
+        </xsl:if>-->
 
         <resource name="pr_person">
 
@@ -708,27 +709,16 @@
             </reference>
 
             <!-- Link to Office (staff only) -->
-            <xsl:choose>
-                <xsl:when test="$FacilityType='Office'">
-                    <xsl:variable name="resourcename">org_office</xsl:variable>
-                </xsl:when>
-                <xsl:when test="$FacilityType='Facility'">
-                    <xsl:variable name="resourcename">org_facility</xsl:variable>
-                </xsl:when>
-                <xsl:when test="$FacilityType='Hospital'">
-                    <xsl:variable name="resourcename">hms_hospital</xsl:variable>
-                </xsl:when>
-                <xsl:when test="$FacilityType='Shelter'">
-                    <xsl:variable name="resourcename">cr_shelter</xsl:variable>
-                </xsl:when>
-                <xsl:when test="$FacilityType='Warehouse'">
-                    <xsl:variable name="resourcename">inv_warehouse</xsl:variable>
-                </xsl:when>
-                <xsl:otherwise>
-                    <!-- Backwards compatibility -->
-                    <xsl:variable name="resourcename">org_office</xsl:variable>
-                </xsl:otherwise>
-            </xsl:choose>
+            <xsl:variable name="resourcename">
+                <xsl:choose>
+                    <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                    <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                    <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                    <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                    <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                    <xsl:otherwise>org_office</xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
             <xsl:if test="$type=1">
                 <reference field="site_id">
                     <xsl:attribute name="resource">
@@ -739,7 +729,7 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-            
+
             <!-- Volunteer Cluster (voluteers only) -->
             <xsl:if test="col[@field='Volunteer Cluster Type'] != '' or col[@field='Volunteer Cluster'] != '' or col[@field='Volunteer Cluster Position'] != ''">
               <resource name="vol_volunteer_cluster">

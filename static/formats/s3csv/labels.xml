@@ -19,6 +19,7 @@
          General syntax:
 
          <column name="StandardName">
+             <match>|StandardName|AlternativeName1|AlternativeName2|</match>
              <label>AlternativeName1</label>
              <label>AlternativeName2</label>
              <option value="InternalValue" name="StandardLabel">
@@ -30,6 +31,7 @@
          Example:
 
          <column name="PersonGender">
+             <match>|PersonGender|Gender|Sex|</match>
              <label>PersonGender</label>
              <label>Gender</label>
              <label>Sex</label>
@@ -40,6 +42,18 @@
                  <label>M</label>
              </option>
          </column>
+
+         The <match> element is required for columns which are used in
+         key generation (because xsl:key use-attribute can not contain
+         variable references, yet it can contain function calls).
+
+         To create such a key, use the following syntax:
+
+         <xsl:key name="examplekey"
+            match="row"
+            use="col[contains(
+                    document(../labels.xml)/labels/column[@name='StandardName']/match/text(),
+                    concat('|', @field, '|'))]"/>
 
     *********************************************************************** -->
 
@@ -92,12 +106,16 @@
     </column>
 
     <column name="JobTitle">
+        <!-- Special Element match for key generation -->
+        <match>|JobTitle|Job Title|Position|Volunteer Role|</match>
         <label>Job Title</label>
         <label>Position</label>
         <label>Volunteer Role</label>
     </column>
 
     <column name="JobRole">
+        <!-- Special Element match for key generation -->
+        <match>|JobRole|Job Role|</match>
         <label>Job Role</label>
     </column>
 

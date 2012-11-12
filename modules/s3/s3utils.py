@@ -1791,7 +1791,8 @@ class S3BulkImporter(object):
                                              stylesheet=task[4],
                                              extra_data=extra_data)
             except SyntaxError, e:
-                self.errorList.append("WARNING: import error - %s" % e)
+                self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %
+                                     (e, filename, task[4]))
                 return
 
             if not resource.error:
