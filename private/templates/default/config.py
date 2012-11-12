@@ -40,6 +40,12 @@ T = current.T
 #settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
 #settings.auth.registration_requires_approval = True
+
+# Allow a new user to be linked to a record (and a new record will be created if it doesn't already exist)
+#settings.auth.registration_link_user_to = {"staff":T("Staff"),
+#                                           "volunteer":T("Volunteer"),
+#                                           "member":T("Member")}
+
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 #settings.auth.always_notify_approver = False
 
