@@ -18,6 +18,11 @@ settings.auth.registration_requires_verification = True
 settings.auth.registration_requests_organisation = True
 settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = True
+
+settings.auth.registration_link_user_to = {"staff":T("Staff"),
+                                           "volunteer":T("Volunteer"),
+                                           "member":T("Member")}
+
 settings.auth.record_approval = True
 
 settings.auth.registration_roles = {"site_id": ["asset_reader",

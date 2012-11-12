@@ -105,6 +105,7 @@ class AuthS3(Auth):
             - s3_link_to_person
             - s3_link_to_organisation
             - s3_link_to_human_resource
+            - s3_link_to_member
             - s3_approver
 
         - S3 custom authentication methods:
@@ -255,58 +256,7 @@ Thank you
         uname = settings.table_user_name
         label_user_id = messages.label_user_id
         if not utable:
-            passfield = settings.password_field
-            # @ToDo - remove duplicate of table definitions
-            if settings.username_field:
-                # with username (not used by default in Sahana)
-                utable = define_table(uname,
-                    Field("first_name", length=128, notnull=True,
-                          default=""),
-                    Field("last_name", length=128,
-                          default="",
-                          label=messages.label_last_name),
-                    Field("username", length=128,
-                          default="",
-                          unique=True),
-                    Field(passfield, "password", length=512,
-                          requires = [ CRYPT( key = settings.hmac_key,
-                                     min_length = settings.password_min_length,
-                                     digest_alg = "sha512") ],
-                          readable=False, label=messages.label_password),
-                    Field("email", length=512,
-                          default="",
-                          label=messages.label_email),
-                    Field("language", length=16,
-                          default = deployment_settings.get_L10n_default_language()),
-                    Field("utc_offset", length=16,
-                          readable=False, writable=False),
-                    Field("organisation_id", "integer",
-                          readable=False, writable=False,
-                          label=messages.label_organisation_id),
-                    Field("site_id", "integer",
-                          readable=False, writable=False,
-                          label=deployment_settings.get_org_site_label()),
-                    Field("registration_key", length=512,
-                          default="",
-                          readable=False, writable=False,
-                          label=messages.label_registration_key),
-                    Field("reset_password_key", length=512,
-                          default="",
-                          readable=False, writable=False,
-                          label=messages.label_registration_key),
-                    Field("deleted", "boolean",
-                          default=False,
-                          readable=False, writable=False),
-                    Field("timestmp", "datetime",
-                          default="",
-                          readable=False, writable=False),
-                    s3_comments(readable=False, writable=False),
-                    migrate = migrate,
-                    fake_migrate=fake_migrate,
-                    *(s3_uid()+s3_timestamp()))
-            else:
-                # with email-address (Sahana default)
-                utable = define_table(uname,
+            utable_fields = [
                     Field("first_name", length=128, notnull=True,
                           default="",
                           label=messages.label_first_name,
@@ -320,12 +270,6 @@ Thank you
                           default="",
                           label=messages.label_email,
                           unique=True),
-                    Field(passfield, "password", length=512,
-                          requires = [ CRYPT( key = settings.hmac_key,
-                                     min_length = settings.password_min_length,
-                                     digest_alg = "sha512") ],
-                          readable=False,
-                          label=messages.label_password),
                     Field("language", length=16,
                           default = deployment_settings.get_L10n_default_language()),
                     Field("utc_offset", length=16,
@@ -337,6 +281,8 @@ Thank you
                     Field("site_id", "integer",
                           readable=False, writable=False,
                           label=deployment_settings.get_org_site_label()),
+                    Field("link_user_to", "list:string",
+                          readable=False, writable=False),
                     Field("registration_key", length=512,
                           default="",
                           readable=False, writable=False,
@@ -351,10 +297,32 @@ Thank you
                     Field("timestmp", "datetime",
                           default="",
                           readable=False, writable=False),
-                    s3_comments(readable=False, writable=False),
-                    migrate = migrate,
-                    fake_migrate=fake_migrate,
-                    *(s3_uid()+s3_timestamp()))
+                    s3_comments(readable=False, writable=False)
+                ]
+            utable_fields += list(s3_uid())
+            utable_fields += list(s3_timestamp())
+
+            if settings.username_field:
+                # Use username (not used by default in Sahana)
+                utable_fields.insert(2,Field("username", length=128,
+                                             default="",
+                                             unique=True)
+                                     )
+
+            #Insert password field after either email or username
+            passfield = settings.password_field
+            utable_fields.insert(3,Field(passfield, "password", length=512,
+                                         requires = [ CRYPT( key = settings.hmac_key,
+                                                             min_length = settings.password_min_length,
+                                                             digest_alg = "sha512") ],
+                                         readable=False,
+                                         label=messages.label_password)
+                                 )
+
+            utable = define_table(uname, 
+                                  migrate = migrate,
+                                  fake_migrate=fake_migrate,
+                                  *utable_fields)
             settings.table_user = utable
 
         # Fields configured in configure_user_fields
@@ -934,7 +902,6 @@ Thank you
                    not settings.mailer.send(to=form.vars.email,
                                             subject=messages.verify_email_subject,
                                             message=messages.verify_email % dict(key=key)):
-                    db.rollback()
                     current.response.error = messages.email_verification_failed
                     return form
                 # @ToDo: Deployment Setting?
@@ -1272,12 +1239,50 @@ Thank you
             #from s3widgets import S3SiteAutocompleteWidget
             #site_id.widget = S3SiteAutocompleteWidget()
             # no permissions for autocomplete on registration page
-            site_id.comment = DIV(_class="tooltip",
-                              _title="%s|%s" % (deployment_settings.get_org_site_label(),
-                                                T("Enter some characters to bring up a list of possible matches")))
+            site_id.comment = (DIV(_class="tooltip",
+                               _title="%s|%s" % (deployment_settings.get_org_site_label(),
+                                                 T("Enter some characters to bring up a list of possible matches")
+                                                 )
+                                   ),
+# @ToDo: Required Anonymous SUers to have access to the org/site function - which needs to be restricted to JUST the names of the sites
+# This could be done witha  custom controller function
+#                              SCRIPT(
+#'''S3FilterFieldChange({
+# 'FilterField':'organisation_id',
+# 'Field':'site_id',
+# 'FieldPrefix':'org',
+# 'FieldResource':'site',
+#})''')
+                               )
 
             if not deployment_settings.get_auth_registration_site_required():
                 site_id.requires = IS_NULL_OR(site_id.requires)
+
+        link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
+        if link_user_to_opts:
+            link_user_to = utable.link_user_to
+            link_user_to_default = []
+            for type in ["staff", "volunteer", "member"]:
+                if "link_user_to_%s" % type in current.request.vars:
+                    link_user_to_default.append(type)
+            if link_user_to_default:
+                link_user_to.default = link_user_to_default
+            else:
+                link_user_to.writable = True
+                link_user_to.readable = True
+                link_user_to.label = T("Register As")
+                link_user_to.requires = IS_IN_SET(link_user_to_opts,
+                                                  multiple = True
+                                                  )
+                link_user_to.represent = lambda ids: ids and ", ".join([str(link_user_to_opts[id]) for id in ids]) or messages.NONE
+                link_user_to.widget = SQLFORM.widgets.checkboxes.widget
+                link_user_to.comment = DIV(_class="tooltip",
+                                      _title="%s|%s" % (link_user_to.label,
+                                                        T("Will create and link your user account to the following records")
+                                                        )
+                                       )
+
+            
 
     # -------------------------------------------------------------------------
     def s3_membership_import_prep(self, data, group=None):
@@ -1546,6 +1551,7 @@ Thank you
                   Creates (if not existing) User's Person Record and links User
                 - Calls s3_link_to_human_resource:
                   Creates (if not existing) User's Human Resource Record and links User
+                - Calls s3_link_to_member
         """
 
         # Create/Update/Link to organisation,
@@ -1554,7 +1560,13 @@ Thank you
         # Add to user Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(user, organisation_id)
 
-        human_resource_id = self.s3_link_to_human_resource(user, person_id)
+        link_user_to = user.link_user_to
+        if "staff" in link_user_to:
+            human_resource_id = self.s3_link_to_human_resource(user, person_id, type = 1)
+        if "volunteer" in link_user_to:
+            human_resource_id = self.s3_link_to_human_resource(user, person_id, type = 2)
+        if "member" in user.link_user_to:
+            member_id = self.s3_link_to_member(user, person_id)
 
         return
 
@@ -1905,7 +1917,8 @@ Thank you
     # -------------------------------------------------------------------------
     def s3_link_to_human_resource(self,
                                   user,
-                                  person_id = None
+                                  person_id,
+                                  type,
                                   ):
         """
             Take ownership of the HR records of the person record
@@ -1925,11 +1938,15 @@ Thank you
             return None
 
         # Update existing HR record for this user
-        site_id = user.site_id
+        if type == 1:
+            site_id = user.site_id
+        else:
+            site_id = None
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
         query = (htable.deleted == False) & \
                 (htable.status == 1) & \
+                (htable.type == type) & \
                 (htable.person_id == ptable.id) & \
                 (ptable.pe_id == ltable.pe_id) & \
                 (ltable.user_id == user_id)
@@ -1964,17 +1981,13 @@ Thank you
             person_ids = [person_id]
         query = (htable.person_id.belongs(person_ids)) & \
                 (htable.organisation_id == organisation_id) & \
+                (htable.type == type) & \
                 (htable.site_id == site_id)
         row = db(query).select(htable.id, limitby=(0, 1)).first()
 
         if row:
             hr_id = row.id
         else:
-            # @ToDo: Separate deployment setting
-            if current.deployment_settings.get_hrm_show_staff():
-                type = 1 # Staff
-            else:
-                type = 2 # Volunteer
             record = Storage(person_id=person_ids[0],
                              organisation_id=organisation_id,
                              site_id = site_id,
@@ -1989,6 +2002,63 @@ Thank you
                                          method="create")
 
         return hr_id
+
+    # -------------------------------------------------------------------------
+    def s3_link_to_member(self,
+                          user,
+                          person_id = None
+                          ):
+        """
+            Link to a member Record
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        user_id = user.id
+        organisation_id = user.organisation_id
+
+        mtablename = "member_membership"
+        mtable = s3db.table(mtablename)
+
+        if not mtable or not organisation_id:
+            return None
+
+        # Update existing Member record for this user
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        query = (mtable.deleted == False) & \
+                (mtable.person_id == ptable.id) & \
+                (ptable.pe_id == ltable.pe_id) & \
+                (ltable.user_id == user_id)
+        rows = db(query).select(mtable.id,
+                                limitby=(0, 2))
+        if len(rows) == 1:
+            # Only update if there is a single member Record
+            member_id = rows.first().id
+            db(mtable.id == member_id).update(organisation_id = organisation_id)
+            # Update record ownership
+            self.s3_set_record_owner(mtable, mtable, force_update=True)
+
+        # Create an Member record, if one doesn't already exist
+        if isinstance(person_id, list):
+            person_ids = person_id
+        else:
+            person_ids = [person_id]
+        query = (mtable.person_id.belongs(person_ids)) & \
+                (mtable.organisation_id == organisation_id)
+        row = db(query).select(mtable.id, limitby=(0, 1)).first()
+
+        if row:
+            member_id = row.id
+        else:
+            record = Storage(person_id=person_ids[0],
+                             organisation_id=organisation_id,
+                             owned_by_user=user_id,
+                             )
+            member_id = mtable.insert(**record)
+
+        return member_id
 
     # -------------------------------------------------------------------------
     def s3_approver(self, user):
