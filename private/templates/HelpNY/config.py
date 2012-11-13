@@ -80,6 +80,7 @@ settings.inv.track_pack_values = False
 
 # Request Management
 settings.req.req_type = ["People", "Stock", "Summary"]
+settings.req.prompt_match = False
 settings.req.use_commit = False
 settings.req.requester_optional = True
 # List of Items to checkbox on a 'Summary' Request

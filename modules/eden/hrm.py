@@ -2238,8 +2238,8 @@ class S3HRSkillModel(S3Model):
             db = current.db
             table = db.hrm_skill_type
             skill_type = db(table.deleted == False).select(table.id,
-                                                           limitby=(0, 1),
-                                                           cache=current.s3db.cache).first()
+                                                           limitby=(0, 1)
+                                                           ).first()
             try:
                 default = skill_type.id
             except:

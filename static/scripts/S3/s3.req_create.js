@@ -31,28 +31,6 @@ $(document).ready(function() {
                 }
             });
         }
-        $('form').submit(function() {
-            // Do the normal form-submission tasks
-            // @ToDo: Look to have this happen automatically
-            // http://forum.jquery.com/topic/multiple-event-handlers-on-form-submit
-            // http://api.jquery.com/bind/
-            S3ClearNavigateAwayConfirm();
-
-            if ($('#req_req_comments').val() == i18n.req_other_msg) {
-                // Default help still showing
-                // Requests of type 'Other' need this field to be mandatory
-                $('#req_req_comments').after('<div id="type__error" class="error" style="display: block;">i18n.req_details_mandatory</div>');
-                // Reset the Navigation protection
-                S3SetNavigateAwayConfirm();
-                // Move focus to this field
-                $('#req_req_comments').focus();
-                // Prevent the Form's save from continuing
-                return false;
-            } else {
-                // Allow the Form's save to continue
-                return true;
-            }
-        });
     }
 
     function type_8() {
@@ -73,19 +51,6 @@ $(document).ready(function() {
             var row = '<tr class="summary_item"><td>' + item + '</td><td><input type="checkbox" id="req_summary_' + idescape(item) + '"></td></tr>';
             $('#req_req_purpose__row').after(row);
         }
-        $('form').submit(function() {
-            // Read the checkboxes & JSON-Encode them
-            var items = [];
-            for (var i=0; i < req_summary_items.length; i++) {
-                var item = req_summary_items[i];
-                if ($('#req_summary_' + idescape(item)).is(':checked')) {
-                    items.push(item);
-                }
-            }
-            $('#req_req_purpose').val(JSON.stringify(items));
-            // Allow the Form's save to continue
-            return true;
-        });
     }
 
     function type_next(type) {
@@ -120,14 +85,6 @@ $(document).ready(function() {
                 }
             });
         }
-        $('form').submit(function() {
-            if ($('#req_req_comments').val() == i18n.req_next_msg) {
-                // Clear the default help
-                $('#req_req_comments').val('');
-            }
-            // Allow the Form's save to continue
-            return true;
-        });
     }
 
     // Initial settings
@@ -150,5 +107,49 @@ $(document).ready(function() {
         } else {
             type_next(type);
         }
+    });
+
+    // onSubmit
+    $('form').submit(function() {
+        // Do the normal form-submission tasks
+        // @ToDo: Look to have this happen automatically
+        // http://forum.jquery.com/topic/multiple-event-handlers-on-form-submit
+        // http://api.jquery.com/bind/
+        S3ClearNavigateAwayConfirm();
+
+        var type = $('#req_req_type').val();
+        if (type == 9) {
+            // Other
+            if ($('#req_req_comments').val() == i18n.req_other_msg) {
+                // Default help still showing
+                // Requests of type 'Other' need this field to be mandatory
+                $('#req_req_comments').after('<div id="type__error" class="error" style="display: block;">i18n.req_details_mandatory</div>');
+                // Reset the Navigation protection
+                S3SetNavigateAwayConfirm();
+                // Move focus to this field
+                $('#req_req_comments').focus();
+                // Prevent the Form's save from continuing
+                return false;
+            }
+        } else if (type == 8) {
+            // Summary
+            // Read the checkboxes & JSON-Encode them
+            var items = [];
+            for (var i=0; i < req_summary_items.length; i++) {
+                var item = req_summary_items[i];
+                if ($('#req_summary_' + idescape(item)).is(':checked')) {
+                    items.push(item);
+                }
+            }
+            $('#req_req_purpose').val(JSON.stringify(items));
+        } else {
+            // Items/Skills
+            if ($('#req_req_comments').val() == i18n.req_next_msg) {
+                // Clear the default help
+                $('#req_req_comments').val('');
+            }
+        }
+        // Allow the Form's save to continue
+        return true;
     });
 });

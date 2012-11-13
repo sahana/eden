@@ -94,6 +94,8 @@ class S3SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        NONE = current.messages.NONE
+
         # =====================================================================
         # Brand
         #
@@ -316,35 +318,41 @@ class S3SupplyModel(S3Model):
                              brand_id(),
                              Field("kit", "boolean",
                                    default=False,
-                                   label=T("Kit?")),
+                                   represent=lambda bool: \
+                                    (bool and [T("Yes")] or
+                                    [NONE])[0],
+                                   label=T("Kit?")
+                                   ),
                              Field("model", length=128,
                                    label = T("Model/Type"),
                                    ),
                              Field("year", "integer",
-                                   label = T("Year of Manufacture")),
+                                   represent = lambda v: v or NONE,
+                                   label = T("Year of Manufacture")
+                                   ),
                              Field("weight", "double",
                                    label = T("Weight (kg)"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("length", "double",
                                    label = T("Length (m)"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("width", "double",
                                    label = T("Width (m)"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("height", "double",
                                    label = T("Height (m)"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("volume", "double",
                                    label = T("Volume (m3)"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              # These comments do *not* pull through to an Inventory's Items or a Request's Items
@@ -505,6 +513,7 @@ class S3SupplyModel(S3Model):
             title_display = T("Item Catalog Details"),
             title_list = T("Catalog Items"),
             title_update = T("Edit Catalog Item"),
+            title_upload = T("Import Catalog Items"),
             title_search = T("Search Catalog Items"),
             subtitle_create = T("Add Item to Catalog"),
             label_list_button = T("List Catalog Items"),
@@ -603,7 +612,8 @@ class S3SupplyModel(S3Model):
                              Field("quantity", "double",
                                    notnull=True,
                                    label = T("Quantity"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -690,7 +700,7 @@ S3FilterFieldChange({
                                             label = T("Kit Item")),
                              Field("quantity", "double",
                                    label = T("Quantity"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              item_pack_id(),
@@ -706,8 +716,7 @@ S3FilterFieldChange({
         tablename = "supply_item_alt"
         table = define_table(tablename,
                              supply_item_id(notnull=True),
-                             Field("quantity",
-                                   "double",
+                             Field("quantity", "double",
                                    label = T("Quantity"),
                                    comment = DIV(_class = "tooltip",
                                                  _title = "%s|%s" %
@@ -717,9 +726,10 @@ S3FilterFieldChange({
                                                ),
                                    default = 1,
                                    notnull=True,
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             supply_item_id("alt_item_id",
-                                            notnull=True),
+                                   represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   ),
+                             supply_item_id("alt_item_id", notnull=True),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -796,10 +806,10 @@ S3FilterFieldChange({
                                                                    show_link=True)
                                     ),
                                   item_pack_id(),
-                                  Field("quantity", "double",
+                                  Field("quantity", "double", notnull=True,
                                         label = T("Quantity"),
                                         default = 1.0,
-                                        notnull = True),
+                                        ),
                                   *s3_ownerstamp()
                                   )
 

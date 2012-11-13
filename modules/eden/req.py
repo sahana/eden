@@ -180,6 +180,7 @@ class S3RequestModel(S3Model):
                                                   readable = True,
                                                   writable = True,
                                                   empty = False,
+                                                  #required = True,
                                                   instance_types = auth.org_site_types,
                                                   updateable = True,
                                                   # Comment these to use a Dropdown & not an Autocomplete
@@ -284,6 +285,7 @@ class S3RequestModel(S3Model):
             title_display = T("Request Details"),
             title_list = T("Requests"),
             title_map=T("Map of Requests"),
+            title_report = T("Requests Report"),
             title_search = T("Search Requests"),
             title_update = T("Edit Request"),
             subtitle_create = ADD_REQUEST,
@@ -354,14 +356,15 @@ class S3RequestModel(S3Model):
                       ),
                     ))
 
-        report_fields = [
-                         #"req_id",
+        report_fields = ["priority",
                          "site_id$organisation_id",
                          #"site_id$location_id$L1",
                          #"site_id$location_id$L2",
                          "site_id$location_id$L3",
                          "site_id$location_id$L4",
                          ]
+        # @ToDo: id gets stripped in _select_field
+        fact_fields = report_fields + ["id"]
 
         # Reusable Field
         req_id = S3ReusableField("req_id", table, sortby="date",
@@ -443,7 +446,7 @@ class S3RequestModel(S3Model):
                         ],
                         rows=report_fields,
                         cols=report_fields,
-                        facts=report_fields,
+                        facts=fact_fields,
                         methods=["count", "list", "sum"],
                         defaults=Storage(rows="site_id$location_id$L4",
                                          cols="priority",
@@ -656,20 +659,35 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             Generate a PDF of a Request Form
         """
 
-        table = current.db.req_req
-        record = table[r.id]
+        db = current.db
+        table = db.req_req
+        record = db(table.id == r.id).select(limitby=(0, 1)).first()
+
+        if record.type == 1:
+            pdf_componentname = "req_req_item"
+            list_fields = ["item_id",
+                           "item_pack_id",
+                           "quantity",
+                           "quantity_commit",
+                           "quantity_transit",
+                           "quantity_fulfil",
+                          ]
+        elif record.type == 3:
+            pdf_componentname = "req_req_skill"
+            list_fields = ["skill_id",
+                           "quantity",
+                           "quantity_commit",
+                           "quantity_transit",
+                           "quantity_fulfil",
+                          ]
+        else:
+            # Not Supported - redirect to normal PDF
+            redirect(URL(args=current.request.args[0], extension="pdf"))
 
         if current.deployment_settings.get_req_use_req_number():
             filename = record.req_ref
         else:
             filename = None
-        list_fields = ["item_id",
-                       "item_pack_id",
-                       "quantity",
-                       "quantity_commit",
-                       "quantity_transit",
-                       "quantity_fulfil",
-                      ]
 
         exporter = S3Exporter().pdf
         return exporter(r,
@@ -678,13 +696,13 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                         pdf_filename = filename,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
-                        pdf_componentname = "req_req_item",
+                        pdf_componentname = pdf_componentname,
                         pdf_header_padding = 12,
                         #pdf_footer = inv_recv_pdf_footer,
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )
+                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -975,6 +993,7 @@ class S3RequestItemModel(S3Model):
         settings = current.deployment_settings
         quantities_writable = settings.get_req_quantities_writable()
         use_commit = settings.get_req_use_commit()
+        track_pack_values = settings.get_inv_track_pack_values()
 
         # -----------------------------------------------------------------
         # Request Items
@@ -985,14 +1004,17 @@ class S3RequestItemModel(S3Model):
                                   self.supply_item_entity_id,
                                   self.supply_item_id(),
                                   self.supply_item_pack_id(),
-                                  Field("quantity", "double", notnull = True,
+                                  Field("quantity", "double", notnull=True,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
-                                        represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                                  Field("pack_value",
-                                        "double",
+                                        represent=lambda v: \
+                                            IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                                  Field("pack_value", "double",
+                                        readable=track_pack_values,
+                                        writable=track_pack_values,
                                         label = T("Estimated Value per Pack")),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
-                                  s3_currency(),
+                                  s3_currency(readable=track_pack_values,
+                                              writable=track_pack_values),
                                   self.org_site_id,
                                   Field("quantity_commit", "double",
                                         label = T("Quantity Committed"),
@@ -1070,18 +1092,21 @@ $(document).ready(function(){
 })'''),
                                         )
 
-        # -------------------------------------------------------------------------
+        if settings.get_req_prompt_match():
+            # Shows the inventory items which match a requested item
+            # @ToDo: Make this page a component of req_item
+            create_next = URL(c="req",
+                              f="req_item_inv_item",
+                              args=["[id]"])
+        else:
+            create_next = None
 
         self.configure(tablename,
-                       super_entity="supply_item_entity",
-                       onaccept=req_item_onaccept,
-                       create_next = URL(c="req",
-                                         # Shows the inventory items which match a requested item
-                                         # @ToDo: Make this page a component of req_item
-                                         f="req_item_inv_item",
-                                         args=["[id]"]),
+                       super_entity = "supply_item_entity",
+                       onaccept = req_item_onaccept,
+                       create_next = create_next,
                        deletable = settings.get_req_multiple_req_items(),
-                       deduplicate=self.req_item_duplicate,
+                       deduplicate = self.req_item_duplicate,
                        list_fields = ["id",
                                       "item_id",
                                       "item_pack_id",

@@ -328,6 +328,7 @@ settings.L10n.decimal_separator = "."
 #settings.req.quantities_writable = True
 #settings.req.show_quantity_transit = False
 #settings.req.multiple_req_items = False
+#settings.req.prompt_match = False
 #settings.req.use_commit = False
 #settings.req.requester_optional = True
 # Should Requests ask whether Security is required?

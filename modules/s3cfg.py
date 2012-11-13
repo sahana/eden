@@ -1194,7 +1194,15 @@ class S3Config(Storage):
         return self.req.get("multiple_req_items", True)
     def get_req_show_quantity_transit(self):
         return self.req.get("show_quantity_transit", True)
+    def get_req_prompt_match(self):
+        """
+            Whether a Requester is prompted to match each line item in an Item request
+        """
+        return self.req.get("prompt_match", True)
     def get_req_use_commit(self):
+        """
+            Whether there is a Commit step in Requests Management
+        """
         return self.req.get("use_commit", True)
     def get_req_requester_optional(self):
         return self.req.get("requester_optional", False)
@@ -1216,13 +1224,20 @@ class S3Config(Storage):
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)
-    def get_supply_use_alt_name(self):
-        return self.supply.get("use_alt_name", True)
     def get_req_use_req_number(self):
         return self.req.get("use_req_number", True)
     def get_req_generate_req_number(self):
         return self.req.get("generate_req_number", True)
     def get_req_req_type(self):
+        """
+            The Types of Request which can be made.
+            Select one or more from:
+            * People
+            * Stock
+            * Summary
+            * Other
+            tbc: Assets, Shelter, Food
+        """
         return self.req.get("req_type", ["Stock", "People", "Other"])
     def get_req_form_name(self):
         return self.req.get("req_form_name", "Requisition Form")
@@ -1233,6 +1248,8 @@ class S3Config(Storage):
     # Supply
     def get_supply_catalog_default(self):
         return self.inv.get("catalog_default", "Default")
+    def get_supply_use_alt_name(self):
+        return self.supply.get("use_alt_name", True)
 
     # -------------------------------------------------------------------------
     # Hospital Registry
