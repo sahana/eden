@@ -354,7 +354,8 @@ class S3RequestModel(S3Model):
                       ),
                     ))
 
-        report_fields = ["req_id",
+        report_fields = [
+                         #"req_id",
                          "site_id$organisation_id",
                          #"site_id$location_id$L1",
                          #"site_id$location_id$L2",
@@ -446,7 +447,7 @@ class S3RequestModel(S3Model):
                         methods=["count", "list", "sum"],
                         defaults=Storage(rows="site_id$location_id$L4",
                                          cols="priority",
-                                         fact="req_id",
+                                         fact="id",
                                          aggregate="count")
                        ),
                        list_fields = list_fields
