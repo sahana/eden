@@ -38,6 +38,7 @@ __all__ = ["S3RequestModel",
            "req_update_status",
            "req_rheader",
            "req_match",
+           "req_site_virtualfields",
            ]
 
 import datetime
@@ -73,6 +74,7 @@ class S3RequestModel(S3Model):
              "req_create_form_mods",
              "req_prep",
              "req_tabs",
+             "req_priority_opts",
              ]
 
     def model(self):
@@ -495,6 +497,7 @@ class S3RequestModel(S3Model):
                 req_type_opts = req_type_opts,
                 req_prep = self.req_prep,
                 req_tabs = self.req_tabs,
+                req_priority_opts = req_priority_opts,
                 req_priority_represent = self.req_priority_represent,
                 req_hide_quantities = self.req_hide_quantities,
             )
@@ -2003,6 +2006,47 @@ def req_skill_onaccept(form):
         table = s3db.project_task_req
         table.insert(task_id = task,
                      req_id = req_id)
+
+# =============================================================================
+class req_site_virtualfields:
+    """
+        Virtual fields for the org_site table which reflect their Requests status
+    """
+
+    extra_fields = []
+
+    # -------------------------------------------------------------------------
+    def __init__(self, tablename):
+        self.tablename = tablename
+
+    # -------------------------------------------------------------------------
+    def reqs(self):
+        """
+            Highest priority open requests for site
+        """
+
+        tablename = self.tablename
+        try:
+            id = self[tablename].id
+        except AttributeError:
+            return None
+
+        s3db = current.s3db
+        rtable = s3db.req_req
+        stable = s3db[tablename]
+        query = (rtable.deleted != True) & \
+                (stable.id == id) & \
+                (rtable.site_id == stable.site_id) & \
+                (rtable.fulfil_status != REQ_STATUS_COMPLETE)
+        req = current.db(query).select(rtable.id,
+                                       rtable.priority,
+                                       orderby=~rtable.priority,
+                                       limitby=(0, 1)).first()
+        if req:
+            #return rtable.priority.represent(req.priority)
+            return req.priority
+        else:
+            return None
 
 # =============================================================================
 def req_rheader(r, check_page = False):

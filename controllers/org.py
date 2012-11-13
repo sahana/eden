@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -159,25 +159,35 @@ def facility_marker_fn(record):
     #    marker = "shelter"
     else:
         # Unknown
-        marker = "marker_red"
-    # @ToDo: Colour code by open/priority requests
-    #if status:
-    #    if status.facility_status == 1:
-    #        # Normal
-    #        marker = "%s_green" % marker
-    #    elif status.facility_status in (3, 4):
-    #        # Evacuating or Closed
-    #        marker = "%s_red" % marker
-    #    elif status.facility_status == 2:
-    #        # Compromised
-    #        marker = "%s_yellow" % marker
+        marker = "office"
+    if settings.has_module("req"):
+        # Colour code by open/priority requests
+        reqs = record.reqs
+        if reqs == 3:
+            # High
+            marker = "%s_red" % marker
+        elif reqs == 2:
+            # Medium
+            marker = "%s_yellow" % marker
+        elif reqs == 1:
+            # Low
+            marker = "%s_green" % marker
 
     mtable = db.gis_marker
-    marker = db(mtable.name == marker).select(mtable.image,
-                                              mtable.height,
-                                              mtable.width,
-                                              cache=s3db.cache,
-                                              limitby=(0, 1)).first()
+    try:
+        marker = db(mtable.name == marker).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
+                                                  cache=s3db.cache,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    except:
+        marker = db(mtable.name == "office").select(mtable.image,
+                                                    mtable.height,
+                                                    mtable.width,
+                                                    cache=s3db.cache,
+                                                    limitby=(0, 1)
+                                                    ).first()
     return marker
 
 # -----------------------------------------------------------------------------
@@ -292,6 +302,7 @@ def facility():
                 append(TR(TD(B("%s:" % T("Requests")))))
                 req_types = {1:"req_item",
                              3:"req_skill",
+                             8:"",
                              9:"",
                              }
                 vals = [A(req.req_ref, _href=URL(c="req", f="req", args=[req.id, req_types[req.type]])) for req in reqs]

@@ -1574,48 +1574,48 @@ class S3FacilityModel(S3Model):
                 opts[name] = name
             return opts
 
-        org_facility_search = S3Search(
-            advanced=(S3SearchSimpleWidget(
-                        name="facility_search_advanced",
-                        label=T("Name, Org and/or Code"),
-                        comment=T("To search for a facility, enter any of the names or code of the facility, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all facilities."),
-                        field=["name",
-                               "code",
-                               "organisation_id$name",
-                               "organisation_id$acronym"
-                               ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="facility_search_type",
-                        label=T("Type"),
-                        field="facility_type_id",
-                        options = get_facility_opts,
-                      ),
-                      #S3SearchOptionsWidget(
-                      #  name="facility_search_L1",
-                      #  field="location_id$L1",
-                      #  location_level="L1",
-                      #  cols = 3,
-                      #),
-                      #S3SearchOptionsWidget(
-                      #  name="facility_search_L2",
-                      #  field="location_id$L2",
-                      #  location_level="L2",
-                      #  cols = 3,
-                      #),
-                      S3SearchOptionsWidget(
-                        name="facility_search_L3",
-                        field="location_id$L3",
-                        location_level="L3",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="facility_search_L4",
-                        field="location_id$L4",
-                        location_level="L4",
-                        cols = 3,
-                      ),
-                     ))
+        org_facility_search = [
+            S3SearchSimpleWidget(
+                name="facility_search_advanced",
+                label=T("Name, Org and/or Code"),
+                comment=T("To search for a facility, enter any of the names or code of the facility, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all facilities."),
+                field=["name",
+                       "code",
+                       "organisation_id$name",
+                       "organisation_id$acronym"
+                       ]
+            ),
+            S3SearchOptionsWidget(
+                name="facility_search_type",
+                label=T("Type"),
+                field="facility_type_id",
+                options = get_facility_opts,
+            ),
+            #S3SearchOptionsWidget(
+            #  name="facility_search_L1",
+            #  field="location_id$L1",
+            #  location_level="L1",
+            #  cols = 3,
+            #),
+            #S3SearchOptionsWidget(
+            #  name="facility_search_L2",
+            #  field="location_id$L2",
+            #  location_level="L2",
+            #  cols = 3,
+            #),
+            S3SearchOptionsWidget(
+                name="facility_search_L3",
+                field="location_id$L3",
+                location_level="L3",
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="facility_search_L4",
+                field="location_id$L4",
+                location_level="L4",
+                cols = 3,
+            ),
+            ]
 
         report_fields = ["name",
                          "facility_type_id",
@@ -1626,43 +1626,26 @@ class S3FacilityModel(S3Model):
                          "location_id$L4",
                          ]
 
+        if current.deployment_settings.has_module("req"):
+            # Add Req virtual fields
+            table.virtualfields.append(self.req_site_virtualfields(tablename))
+            widget = S3SearchOptionsWidget(
+                        name="facility_search_reqs",
+                        field="reqs",
+                        label = T("Highest Priority Open Requests"),
+                        options = self.req_priority_opts,
+                        cols = 3,
+                      )
+            org_facility_search.append(widget)
+            # @ToDo: Report should show Closed Requests?
+            #report_fields.append((T("High Priority Open Requests"), "reqs"))
+
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
                   deduplicate=self.org_facility_duplicate,
-                  search_method=org_facility_search,
+                  search_method=S3Search(advanced=org_facility_search),
                   report_options = Storage(
-                    search=[
-                        S3SearchOptionsWidget(
-                        name="facility_search_type",
-                        label=T("Type"),
-                        field="facility_type_id",
-                        options = get_facility_opts,
-                      ),
-                      #S3SearchOptionsWidget(
-                      #  name="facility_search_L1",
-                      #  field="location_id$L1",
-                      #  location_level="L1",
-                      #  cols = 3,
-                      #),
-                      #S3SearchOptionsWidget(
-                      #  name="facility_search_L2",
-                      #  field="location_id$L2",
-                      #  location_level="L2",
-                      #  cols = 3,
-                      #),
-                      S3SearchOptionsWidget(
-                        name="facility_search_L3",
-                        field="location_id$L3",
-                        location_level="L3",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="facility_search_L4",
-                        field="location_id$L4",
-                        location_level="L4",
-                        cols = 3,
-                      ),
-                    ],
+                    search=org_facility_search,
                     rows=report_fields,
                     cols=report_fields,
                     facts=report_fields,

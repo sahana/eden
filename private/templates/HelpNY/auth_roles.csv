@@ -27,4 +27,5 @@
 "super","Super Editor",,"inv","warehouse",,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"org",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"pr",,,"READ|CREATE|UPDATE|DELETE",,,
+"super","Super Editor",,"req",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"supply",,,"READ|CREATE|UPDATE|DELETE",,,
