@@ -191,14 +191,39 @@ def facility():
 
         if r.interactive:
             if r.component:
-                # remove CRUD generated buttons in the tabs
-                s3db.configure("inv_inv_item",
-                               create=False,
-                               listadd=False,
-                               editable=False,
-                               deletable=False,
-                               )
-            elif r.method == "update":
+                cname = r.component.name
+                if cname in ("inv_item", "recv", "send"):
+                    # Filter out items which are already in this inventory
+                    s3db.inv_prep(r)
+
+                    # remove CRUD generated buttons in the tabs
+                    s3db.configure("inv_inv_item",
+                                   create=False,
+                                   listadd=False,
+                                   editable=False,
+                                   deletable=False,
+                                   )
+
+                elif cname == "human_resource":
+                    # Filter to just Staff
+                    s3.filter = (s3db.hrm_human_resource.type == 1)
+                    # Make it clear that this is for adding new staff, not assigning existing
+                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
+                    # Cascade the organisation_id from the office to the staff
+                    htable = s3db.hrm_human_resource
+                    field = htable.organisation_id
+                    field.default = r.record.organisation_id
+                    field.writable = False
+                    field.comment = None
+                    # Filter out people which are already staff for this office
+                    s3_filter_staff(r)
+
+                elif cname == "req" and r.method not in ("update", "read"):
+                    # Hide fields which don't make sense in a Create form
+                    # inc list_create (list_fields over-rides)
+                    s3db.req_create_form_mods()
+
+            elif r.id:
                 field = r.table.obsolete
                 field.readable = field.writable = True
 
