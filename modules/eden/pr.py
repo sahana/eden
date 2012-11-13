@@ -1070,7 +1070,7 @@ class S3GroupModel(S3Model):
                                                           filterby="system",
                                                           filter_opts=(False,))),
                                    represent = self.group_represent,
-                                   comment=S3AddResourceLink(c="pr",
+                                   comment=S3AddResourceLink(#c="pr",
                                                              f="group",
                                                              label=crud_strings.pr_group.label_create_button,
                                                              title=T("Create Group Entry"),

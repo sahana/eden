@@ -81,8 +81,7 @@ def site():
 
     # Pre-processor
     def prep(r):
-        if r.representation != "json" or \
-           r.method != "search":
+        if r.representation != "json":
             return False
         # Location Filter
         s3db.gis_location_filter(r)

@@ -338,9 +338,9 @@ $(document).ready(function(){
                                "purchase_date",
                                "organisation_id",
                                "site_id",
-                               #"location_id",
-                               "L0",
-                               "L1",
+                               (current.messages.COUNTRY, "location_id$L0"),
+                               "location_id$L1",
+                               #"L1",
                                #"L2",
                                #"L3",
                                "comments",
@@ -577,6 +577,7 @@ $(document).ready(function(){
         """
 
         db = current.db
+        s3db = current.s3db
         auth = current.auth
 
         vars = form.vars
@@ -595,6 +596,16 @@ $(document).ready(function(){
                           status = ASSET_LOG_SET_BASE,
                           site_id = site_id,
                           )
+            # Population location_id field
+            try:
+                stable = s3db.org_site
+                location_id = db(stable.id == site_id
+                                 ).select(stable.location_id,
+                                          limitby = (0,1)
+                                          ).first().location_id
+                db(atable.id == asset_id).update(location_id = location_id)
+            except:
+                pass
 
         return
 

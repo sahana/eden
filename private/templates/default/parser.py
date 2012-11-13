@@ -111,7 +111,7 @@ class S3Parsing(object):
                                                       ktable.keyword,
                                                       ktable.incident_type_id,
                                                       cache=cache)
-        incident_type_represent = s3db.event_incident_type_represent
+        incident_type_represent = s3_represent_id(s3db.event_incident_type)
         if NLTK:
             # Lookup synonyms
             # @ToDo: Cache

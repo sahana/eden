@@ -549,7 +549,6 @@ class S3IncidentTypeModel(S3Model):
 
     names = ["event_incident_type",
              "event_incident_type_id",
-             "event_incident_type_represent",
              ]
 
     def model(self):
@@ -586,14 +585,15 @@ class S3IncidentTypeModel(S3Model):
             msg_list_empty = T("No Incident Types currently registered")
             )
 
+        represent = s3_represent_id(table)
         incident_type_id = S3ReusableField("incident_type_id", table,
                                            sortby="name",
                                            requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "event_incident_type.id",
-                                                                  self.incident_type_represent,
+                                                                  represent,
                                                                   orderby="event_incident_type.name",
                                                                   sort=True)),
-                                           represent = self.incident_type_represent,
+                                           represent = represent,
                                            label = T("Incident Type"),
                                            ondelete = "RESTRICT",
                                            # Uncomment these to use an Autocomplete & not a Dropdown
@@ -611,7 +611,6 @@ class S3IncidentTypeModel(S3Model):
         #
         return Storage(
                 event_incident_type_id = incident_type_id,
-                event_incident_type_represent = self.incident_type_represent,
             )
 
     # -------------------------------------------------------------------------
@@ -626,25 +625,6 @@ class S3IncidentTypeModel(S3Model):
                                                      readable=False,
                                                      writable=False),
         )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def incident_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.event_incident_type
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # ---------------------------------------------------------------------
     @staticmethod

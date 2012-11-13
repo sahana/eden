@@ -99,19 +99,23 @@ class S3MembersModel(S3Model):
             msg_list_empty = T("No membership types currently registered"))
 
         label_create = crud_strings[tablename].label_create_button
+
         if root_org:
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)
+
+        represent = s3_represent_id(table)
+
         membership_type_id = S3ReusableField("membership_type_id", table,
             sortby = "name",
             label = T("Type"),
             requires = IS_NULL_OR(
                         IS_ONE_OF(db, "member_membership_type.id",
-                                  self.membership_type_represent,
+                                  represent,
                                   filterby="organisation_id",
                                   filter_opts=filter_opts)),
-            represent = self.membership_type_represent,
+            represent = represent,
             comment=S3AddResourceLink(f="membership_type",
                                       label=label_create,
                                       title=label_create,
@@ -278,25 +282,6 @@ class S3MembersModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def membership_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.member_membership_type
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

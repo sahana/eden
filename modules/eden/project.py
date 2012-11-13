@@ -158,14 +158,15 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Statuses currently registered"))
 
         # Reusable Field
+        represent = s3_represent_id(table)
         status_id = S3ReusableField("status_id", table,
                                     label = T("Status"),
                                     sortby = "name",
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "project_status.id",
-                                                          self.project_status_represent,
+                                                          represent,
                                                           sort=True)),
-                                    represent = self.project_status_represent,
+                                    represent = represent,
                                     comment = S3AddResourceLink(title=ADD_STATUS,
                                                                 c="project",
                                                                 f="status"),
@@ -206,9 +207,9 @@ class S3ProjectModel(S3Model):
                                    sortby = "name",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "project_theme.id",
-                                                          project_theme_represent,
+                                                          s3_represent_id(self.project_theme),
                                                           sort=True)),
-                                   represent = project_theme_represent,
+                                   represent = s3_represent_id(self.project_theme),
                                    ondelete = "RESTRICT")
 
         # Multiple for theme_percentages=False
@@ -218,11 +219,10 @@ class S3ProjectModel(S3Model):
                                          sortby = "name",
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_theme.id",
-                                                                  project_theme_represent,
+                                                                  s3_represent_id(self.project_theme),
                                                                   sort=True,
                                                                   multiple=True)),
-                                         represent = lambda opt, row=None: \
-                                             multiref_represent(opt, "project_theme"),
+                                         represent = s3_represent_multi_id(table),
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
                                              s3_grouped_checkboxes_widget(f, v,
@@ -292,11 +292,10 @@ class S3ProjectModel(S3Model):
                                           label = T("Hazards"),
                                           requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_hazard.id",
-                                                                  self.project_hazard_represent,
+                                                                  s3_represent_id(table),
                                                                   sort=True,
                                                                   multiple=True)),
-                                          represent = lambda opt, row=None: \
-                                              multiref_represent(opt, "project_hazard"),
+                                          represent = s3_represent_multi_id(table),
                                           ondelete = "RESTRICT",
                                           widget=lambda f, v: \
                                               s3_grouped_checkboxes_widget(f, v,
@@ -721,11 +720,12 @@ $(document).ready(function(){
         # Resource Configuration?
 
         # Reusable Fields
+        represent = s3_represent_id(table)
         activity_type_id = S3ReusableField("activity_type_id", table,
                                            sortby = "name",
                                            requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_activity_type.id",
-                                                                  self.project_activity_type_represent,
+                                                                  represent,
                                                                   sort=True)),
                                            represent = lambda id, row=None: \
                                                        s3_get_db_field_value(tablename = "project_activity_type",
@@ -744,11 +744,10 @@ $(document).ready(function(){
                                                  label = T("Types of Activities"),
                                                  requires = IS_NULL_OR(
                                                                 IS_ONE_OF(db, "project_activity_type.id",
-                                                                          self.project_activity_type_represent,
+                                                                          represent,
                                                                           sort=True,
                                                                           multiple=True)),
-                                                 represent = lambda opt, row=None: \
-                                                    multiref_represent(opt, "project_activity_type"),
+                                                 represent = s3_represent_multi_id(table),
                                                  widget = lambda f, v: \
                                                     s3_grouped_checkboxes_widget(f, v, cols=3),
                                                  ondelete = "RESTRICT")
@@ -784,10 +783,8 @@ $(document).ready(function(){
         return dict(
             project_project_id = project_id,
             project_multi_activity_type_id = multi_activity_type_id,
-            project_activity_type_represent = self.project_activity_type_represent,
             project_theme_id = theme_id,
             project_hfa_opts = project_hfa_opts,
-            project_theme_represent = project_theme_represent,
             project_theme_opts = self.project_theme_opts,
         )
 
@@ -1067,63 +1064,6 @@ $(document).ready(function(){
 
         else:
             raise HTTP(501, BADMETHOD)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.project_activity_type
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return current.T(r.name)
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_hazard_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.project_hazard
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return current.T(r.name)
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_status_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.project_status
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return current.T(r.name)
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2319,7 +2259,7 @@ class S3ProjectActivityModel(S3Model):
                                                                   multiple=True,
                                                                   sort=True)),
                                             widget = S3MultiSelectWidget(),
-                                            represent = multi_activity_represent,
+                                            represent = s3_represent_multi_id(table),
                                             comment = S3AddResourceLink(ADD_ACTIVITY,
                                                                         c="project", f="activity",
                                                                         tooltip=ACTIVITY_TOOLTIP),
@@ -2659,7 +2599,7 @@ class S3ProjectThemeModel(S3Model):
                             ),
                           self.project_theme_id(
                             requires=IS_ONE_OF(db, "project_theme.id",
-                                               project_theme_represent)
+                                               s3_represent_id(self.project_theme))
                             ),
                           Field("percentage", "integer",
                                 label = T("Percentage"),
@@ -2972,8 +2912,8 @@ class S3ProjectTaskModel(S3Model):
                                        sortby="name",
                                        requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "project_milestone.id",
-                                                              self.milestone_represent)),
-                                       represent = self.milestone_represent,
+                                                              s3_represent_id(table))),
+                                       represent = s3_represent_id(table),
                                        comment = S3AddResourceLink(c="project",
                                                                    f="milestone",
                                                                    title=ADD_MILESTONE,
@@ -3626,25 +3566,6 @@ class S3ProjectTaskModel(S3Model):
             _dict[opt.name] = opt.name
         return _dict
 
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def milestone_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.project_milestone
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
     # -------------------------------------------------------------------------
     @staticmethod
     def project_assignee_represent(id, row=None):
@@ -4216,95 +4137,6 @@ def project_project_represent(id, row=None, show_link=True):
                                    args=[id]))
     except:
         return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def project_theme_represent(id, row=None):
-    """ FK representation """
-
-    if row:
-        return row.name
-    elif not id:
-        return current.messages.NONE
-
-    db = current.db
-    table = db.project_theme
-    r = db(table.id == id).select(table.name,
-                                  limitby = (0, 1)).first()
-    try:
-        return r.name
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def multiref_represent(opts, tablename, represent_string = "%(name)s"):
-    """
-        Represent a list of references
-
-        @param opt: the current value or list of values
-        @param tablename: the referenced table
-        @param represent_string: format string to represent the records
-    """
-
-    if not opts:
-        return current.messages.NONE
-
-    s3db = current.s3db
-    table = s3db.table(tablename, None)
-    if table is None:
-        return current.messages.NONE
-
-    if not isinstance(opts, (list, tuple)):
-        opts = [opts]
-
-    rows = current.db(table.id.belongs(opts)).select()
-    rstr = Storage([(str(row.id), row) for row in rows])
-    keys = rstr.keys()
-    represent = lambda o: str(o) in keys and \
-                          represent_string % rstr[str(o)] or \
-                          current.messages.UNKNOWN_OPT
-    vals = [represent(o) for o in opts]
-
-    if len(opts) > 1:
-        vals = ", ".join(vals)
-    else:
-        vals = len(vals) and vals[0] or current.messages.NONE
-
-    return vals
-
-# =============================================================================
-def multi_activity_represent(opt):
-    """
-        Activity representation
-        for multiple=True options
-    """
-
-    if not opt:
-        return current.messages.NONE
-
-    table = current.s3db.project_activity
-    set = current.db(table.id > 0).select(table.id,
-                                          table.name).as_dict()
-
-    if not set:
-        return current.messages.NONE
-
-    if isinstance(opt, (list, tuple)):
-        opts = opt
-        try:
-            vals = [str(set.get(o)["name"]) for o in opts]
-        except:
-            return None
-    elif isinstance(opt, int):
-        opts = [opt]
-        vals = str(set.get(opt)["name"])
-    else:
-        return current.messages.NONE
-
-    if len(opts) > 1:
-        vals = ", ".join(vals)
-    else:
-        vals = len(vals) and vals[0] or ""
-    return vals
 
 # =============================================================================
 def multi_theme_percentage_represent(id):
