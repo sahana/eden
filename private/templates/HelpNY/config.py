@@ -83,8 +83,6 @@ settings.req.req_type = ["People", "Stock", "Summary"]
 settings.req.prompt_match = False
 settings.req.use_commit = False
 settings.req.requester_optional = True
-# List of Items to checkbox on a 'Summary' Request
-settings.req.summary_items = ["Batteries", "Flashlights", "Candles", "Toilet Paper", "Cleaning Supplies", "Soap", "Clothing", "Water", "Canned Food"]
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations

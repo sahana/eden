@@ -30,6 +30,7 @@
 __all__ = ["S3RequestModel",
            "S3RequestItemModel",
            "S3RequestSkillModel",
+           "S3RequestSummaryModel",
            "S3CommitModel",
            "S3CommitItemModel",
            "S3CommitPersonModel",
@@ -485,7 +486,7 @@ class S3RequestModel(S3Model):
                       req_req="req_id")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass variables back to global scope (s3.*)
         #
         return Storage(
                 req_req_id = req_id,
@@ -518,8 +519,10 @@ class S3RequestModel(S3Model):
              - main module & components (sites & events)
         """
 
+        db = current.db
+
         # Hide fields which don't make sense in a Create form
-        table = current.db.req_req
+        table = db.req_req
         table.req_ref.readable = False
         table.commit_status.readable = table.commit_status.writable = False
         table.transit_status.readable = table.transit_status.writable = False
@@ -527,17 +530,19 @@ class S3RequestModel(S3Model):
         table.cancel.readable = table.cancel.writable = False
         table.recv_by_id.readable = table.recv_by_id.writable = False
 
-        settings = current.deployment_settings
-        if "People" in settings.get_req_req_type():
+        req_types = current.deployment_settings.get_req_req_type()
+        if "People" in req_types:
             # Show the Required Until Field
             # (gets turned-off by JS for other types)
             table.date_required_until.writable = True
 
         # Script to inject into Pages which include Request create forms
         s3 = current.response.s3
-        summary_items = settings.get_req_summary_items()
-        if summary_items:
-            summary_items.sort(reverse=True)
+        if "Summary" in req_types:
+            stable = current.s3db.req_summary_option
+            options = db(stable.deleted == False).select(stable.name,
+                                                         orderby=~stable.name)
+            summary_items = [opt.name for opt in options]
             s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
 
         req_helptext = '''
@@ -974,7 +979,6 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
 
-
 # =============================================================================
 class S3RequestItemModel(S3Model):
     """
@@ -1119,7 +1123,7 @@ $(document).ready(function(){
                                     ])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass variables back to global scope (s3.*)
         #
         return Storage(
                 req_item_id = req_item_id,
@@ -1379,7 +1383,7 @@ class S3RequestSkillModel(S3Model):
                                     ])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass variables back to global scope (s3.*)
         #
         return Storage(
                 req_skill_represent = self.req_skill_represent,
@@ -1406,6 +1410,76 @@ class S3RequestSkillModel(S3Model):
             return record.name
         except:
             return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+class S3RequestSummaryModel(S3Model):
+    """
+    """
+
+    names = ["req_summary_option",
+            ]
+
+    def model(self):
+
+        T = current.T
+
+        # -----------------------------------------------------------------
+        # Request Summary
+        # Items which should appear on a Summary Request
+        #
+        # @ToDo: Different lookup lists for different Orgs(/?)
+        #
+        tablename = "req_summary_option"
+        table = self.define_table(tablename,
+                                  Field("name",
+                                        label=T("Name")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Option to Summary Requests"),
+            title_display = T("Summary Request Option Details"),
+            title_list = T("Summary Request Options"),
+            title_update = T("Edit Summary Request Option"),
+            title_search = T("Search Summary Request Options"),
+            title_upload = T("Import Summary Request Options"),
+            subtitle_create = T("Add Summary Request Option"),
+            label_list_button = T("List Summary Request Options"),
+            label_create_button = T("Add New Summary Request Option"),
+            label_delete_button = T("Delete Summary Request Option"),
+            msg_record_created = T("Summary Request Option added"),
+            msg_record_modified = T("Summary Request Option updated"),
+            msg_record_deleted = T("Summary Request Option deleted"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no Summary Request Options defined"))
+
+        self.configure(tablename,
+                       deduplicate = self.req_summary_option_duplicate)
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (s3.*)
+        #
+        return Storage(
+            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_summary_option_duplicate(job):
+        """
+            De-duplicate Request Summary Options
+        """
+
+        if job.tablename == "req_summary_option":
+            table = job.table
+            name = job.data.get("name", None)
+            query = (table.name == name)
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.data.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
 
 # =============================================================================
 class S3CommitModel(S3Model):
@@ -1505,7 +1579,7 @@ class S3CommitModel(S3Model):
                       req_commit="commit_id")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass variables back to global scope (s3.*)
         #
         return Storage(
                     req_commit_id = commit_id,
@@ -1639,7 +1713,7 @@ class S3CommitItemModel(S3Model):
                        onaccept = self.commit_item_onaccept )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass variables back to global scope (s3.*)
         #
         return Storage(
                 # Used by commit_req() controller
@@ -1730,7 +1804,7 @@ class S3CommitPersonModel(S3Model):
         #                onaccept = self.commit_person_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass variables back to global scope (s3.*)
         #
         return Storage()
 

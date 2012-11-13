@@ -165,11 +165,12 @@ def req():
                     field = req_table.purpose
                     field.label = T("Details")
                     field.represent = req_summary_represent
-                    summary_items = settings.get_req_summary_items()
-                    if summary_items:
-                        summary_items.sort(reverse=True)
-                        s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-                        s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+                    stable = current.s3db.req_summary_option
+                    options = db(stable.deleted == False).select(stable.name,
+                                                                 orderby=~stable.name)
+                    summary_items = [opt.name for opt in options]
+                    s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
+                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
             if r.method != "update" and r.method != "read":
                 if not r.component:
@@ -517,6 +518,12 @@ def req_skill():
     output = s3_rest_controller("req", "req_skill")
 
     return output
+
+# =============================================================================
+def summary_option():
+    """ REST Controller """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def commit():

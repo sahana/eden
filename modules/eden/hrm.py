@@ -527,7 +527,7 @@ class S3HRModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass model-global names to s3db.*
+        # Pass model-global names to s3.*
         #
         return Storage(
                     hrm_human_resource_id = human_resource_id,
@@ -694,7 +694,7 @@ class S3HRSiteModel(S3Model):
             msg_list_empty = T("Currently no staff assigned"))
 
         # ---------------------------------------------------------------------
-        # Pass model-global names to s3db.*
+        # Pass model-global names to s3.*
         #
         return Storage(
                 )
@@ -1163,7 +1163,7 @@ class S3HRJobModel(S3Model):
                                   #*s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass model-global names to s3db.*
+        # Pass model-global names to s3.*
         #
         return Storage(
                     hrm_department_id = department_id,
@@ -2217,7 +2217,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Course Certificates registered"))
 
         # ---------------------------------------------------------------------
-        # Pass model-global names to s3db.*
+        # Pass model-global names to s3.*
         #
         return Storage(
                     hrm_skill_id = skill_id,
@@ -2880,7 +2880,7 @@ class S3HRExperienceModel(S3Model):
             msg_list_empty = T("Currently no Professional Experience entered"))
 
         # ---------------------------------------------------------------------
-        # Pass model-global names to s3db.*
+        # Pass model-global names to s3.*
         #
         return Storage(
                 )
@@ -3018,7 +3018,7 @@ class S3HRProgrammeModel(S3Model):
                         )
 
         # ---------------------------------------------------------------------
-        # Pass model-global names to s3db.*
+        # Pass model-global names to s3.*
         #
         return Storage(
                     hrm_programme_virtual_fields = HRMProgrammeVirtualFields,

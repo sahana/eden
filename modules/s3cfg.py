@@ -1206,11 +1206,6 @@ class S3Config(Storage):
         return self.req.get("use_commit", True)
     def get_req_requester_optional(self):
         return self.req.get("requester_optional", False)
-    def get_req_summary_items(self):
-        """
-            List of Items to checkbox for 'Summary' Requests
-        """
-        return self.req.get("summary_items", [])
     def get_req_ask_security(self):
         """
             Should Requests ask whether Security is required?

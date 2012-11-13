@@ -343,8 +343,6 @@ settings.L10n.decimal_separator = "."
 # list are ["Stock", "People", "Summary", "Other"]. If this is commented out then
 # all types will be valid.
 #settings.req.req_type = ["Stock"]
-# List of Items to checkbox on a 'Summary' Request
-#settings.req.summary_items = ["Batteries", "Flashlights", "Candles", "Toilet Paper", "Cleaning Supplies", "Soap", "Clothing", "Water", "Canned Food"]
 
 # Custom Crud Strings for specific req_req types
 #settings.req.req_crud_strings = dict()

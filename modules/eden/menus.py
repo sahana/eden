@@ -1610,6 +1610,7 @@ class S3OptionsMenu(object):
 
         settings = current.deployment_settings
         use_commit = lambda i: settings.get_req_use_commit()
+        use_summary = lambda i: "Summary" in settings.get_req_req_type()
         req_skills = lambda i: "People" in settings.get_req_req_type()
 
         return M(c="req")(
@@ -1626,6 +1627,10 @@ class S3OptionsMenu(object):
                     ),
                     M("Commitments", f="commit", check=use_commit)(
                         M("List All")
+                    ),
+                    M("Priority Items", f="summary_option", check=use_summary)(
+                        M("New", m="create"),
+                        M("List All"),
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),

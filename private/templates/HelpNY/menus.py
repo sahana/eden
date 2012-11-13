@@ -42,8 +42,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #inv_recv_list = crud_strings.inv_recv.title_list
         #inv_recv_search = crud_strings.inv_recv.title_search
 
-        #use_commit = lambda i: current.deployment_settings.get_req_use_commit()
-
         return M()(
                     M("Facilities", c="org", f="facility")(
                         M("New", m="create"),
@@ -89,37 +87,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                       #M("New", m="create"),
-                       #M("List All"),
-                       #M("Search", m="search"),
-                    #),
-                    #M("Catalogs", c="supply", f="catalog")(
-                    #    M("New", m="create"),
-                    #    M("List All"),
-                    #    #M("Search", m="search"),
-                    #),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    #M("Suppliers", c="inv", f="supplier")(
-                    #    M("New", m="create"),
-                    #    M("List All"),
-                    #    M("Search", m="search"),
-                    #    M("Import", m="import", p="create"),
-                    #),
-                    M("Requests", c="req", f="req")(
-                        M("New", m="create"),
-                        M("List All"),
-                        M("Requested Items", f="req_item"),
-                        #M("Search Requested Items", f="req_item", m="search"),
-                    ),
-                    #M("Commitments", c="req", f="commit", check=use_commit)(
-                    #    M("List All")
-                    #),
                 )
 
     # -------------------------------------------------------------------------
@@ -163,7 +135,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         settings = current.deployment_settings
-        #use_commit = lambda i: settings.get_req_use_commit()
         req_skills = lambda i: "People" in settings.get_req_req_type()
 
         return M(c="req")(
@@ -178,27 +149,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           check=req_skills),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
-                    #M("Commitments", f="commit", check=use_commit)(
-                    #    M("List All")
-                    #),
+                    M("Priority Items", f="summary_option")(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Report", m="report"),
-                        M("Import", m="import", p="create"),
+                        M("Import", f="catalog_item", m="import", p="create"),
                     ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                       #M("New", m="create"),
-                       #M("List All"),
-                       #M("Search", m="search"),
-                    #),
-                    #M("Catalogs", c="supply", f="catalog")(
-                    #    M("New", m="create"),
-                    #    M("List All"),
-                    #    #M("Search", m="search"),
-                    #),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("New", m="create"),
