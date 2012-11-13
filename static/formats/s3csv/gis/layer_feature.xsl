@@ -19,6 +19,7 @@
          REST Filter..........string..........Layer Filter (for Map JS calling back to server)
          Filter Field.........string..........Layer Filter Field (for exports to determine Marker)
          Filter Value.........string..........Layer Filter Value (for exports to determine Marker)
+         Site.................boolean.........Layer Site (use Site for location)
          Trackable............boolean.........Layer Trackable
          Polygons.............boolean.........Layer Polygons
          Folder...............string..........Layer Folder
@@ -121,6 +122,9 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <xsl:if test="col[@field='Site']">
+                <data field="use_site"><xsl:value-of select="col[@field='Site']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Trackable']">
                 <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
             </xsl:if>

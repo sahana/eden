@@ -6735,13 +6735,14 @@ class FeatureLayer(Layer):
                 return
             controller = self.controller or self.module # Backwards-compatibility
             function = self.function or self.resource   # Backwards-compatibility
-            # @ToDo: better configurability
-            #if function == "req":
-            #    url = "%s.geojson?layer=%i&components=None&maxdepth=1&references=site_id,location_id&fields=req_ref" % \
-            #        (URL(controller, function), self.id)
-            #else:
-            url = "%s.geojson?layer=%i&components=None&maxdepth=0&references=location_id&fields=name" % \
-                (URL(controller, function), self.id)
+            if self.use_site:
+                maxdepth = 1
+                references = "site_id,location_id&show_ids=true"
+            else:
+                maxdepth = 0
+                references = "location_id"
+            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s&fields=name" % \
+                (URL(controller, function), self.id, maxdepth, references)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:

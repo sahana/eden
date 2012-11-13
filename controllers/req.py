@@ -49,6 +49,47 @@ def create():
     redirect(URL(f="req", args="create"))
 
 # -----------------------------------------------------------------------------
+def marker_fn(record):
+    """
+        Function to decide which Marker to use for Requests Map
+        @ToDo: Use Symbology
+    """
+
+    # Base Icon based on Type
+    type = record.type
+    if type in (1, 8):
+        # Items
+        marker = "asset"
+    elif type == 3:
+        # People
+        marker = "staff"
+    #elif type == 6:
+    #    # Food
+    #    marker = "food"
+    else:
+        marker = "request"
+
+    # Colour code by priority
+    priority = record.priority
+    if priority == 3:
+        # High
+        marker = "%s_red" % marker
+    elif priority == 2:
+        # Medium
+        marker = "%s_yellow" % marker
+    #elif priority == 1:
+    #    # Low
+    #    marker = "%s_yellow" % marker
+
+    mtable = db.gis_marker
+    marker = db(mtable.name == marker).select(mtable.image,
+                                              mtable.height,
+                                              mtable.width,
+                                              cache=s3db.cache,
+                                              limitby=(0, 1)).first()
+    return marker
+
+# -----------------------------------------------------------------------------
 def req():
     """ REST Controller """
 
@@ -146,6 +187,10 @@ def req():
                         if site:
                             r.table.site_id.default = site.site_id
 
+                    if r.method == "map":
+                        # Tell the client to request per-feature markers
+                        s3db.configure("req_req", marker_fn=marker_fn)
+
                 elif r.component.name == "document":
                     s3.crud.submit_button = T("Add")
                     #table = r.component.table
@@ -168,6 +213,16 @@ def req():
 
                 elif r.component.name == "req_skill":
                     s3db.req_hide_quantities(r.component.table)
+
+        elif r.representation == "plain":
+            # Map Popups
+            if r.record.type == 8:
+                req_table.purpose.represent = req_summary_represent
+
+        elif r.representation == "geojson":
+            # Load these models now as they'll be needed when we encode
+            mtable = s3db.gis_marker
+            s3db.configure("req_req", marker_fn=marker_fn)
 
         if r.component and r.component.name == "commit":
             table = r.component.table

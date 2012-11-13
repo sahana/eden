@@ -137,21 +137,25 @@ def facility_marker_fn(record):
     """
 
     table = db.org_facility_type
-    # @ToDo: Handle case where we use multiple types!
-    type = db(table.id == record.facility_type_id).select(table.name,
-                                                          limitby=(0, 1)
-                                                          ).first().name
-    if type == "Hub":
+    types = record.facility_type_id
+    if isinstance(types, list):
+        rows = db(table.id.belongs(types)).select(table.name)
+    else:
+        rows = db(table.id == types).select(table.name)
+    types = [row.name for row in rows]
+
+    # Use Marker in preferential order
+    if "Hub" in types:
         marker = "warehouse"
-    elif type == "Relief Site":
-        marker = "asset"
-    elif type == "Medical Clinic":
+    elif "Medical Clinic" in types:
         marker = "hospital"
-    elif type == "Food":
+    elif "Food" in types:
         marker = "food"
-    elif type == "Residential Building":
+    elif "Relief Site" in types:
+        marker = "asset"
+    elif "Residential Building" in types:
         marker = "residence"
-    #elif type == "Shelter":
+    #elif "Shelter" in types:
     #    marker = "shelter"
     else:
         # Unknown
@@ -197,8 +201,16 @@ def facility():
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
+
             elif r.method == "map":
+                # Tell the client to request per-feature markers
                 s3db.configure("org_facility", marker_fn=facility_marker_fn)
+
+        elif r.representation == "geojson":
+            # Load these models now as they'll be needed when we encode
+            mtable = s3db.gis_marker
+            s3db.configure("org_facility", marker_fn=facility_marker_fn)
+        
         return True
     s3.prep = prep
 
