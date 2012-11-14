@@ -3289,14 +3289,23 @@ class S3EmbedComponentWidget(FormWidget):
                        divider)
 
 # =============================================================================
-def s3_comments_widget(field, value):
+def s3_comments_widget(field, value, **attr):
     """
         A smaller-than-normal textarea
         to be used by the s3.comments() Reusable field
     """
 
-    return TEXTAREA(_name=field.name,
-                    _id="%s_%s" % (field._tablename, field.name),
+    if "_id" not in attr:
+        _id = "%s_%s" % (field._tablename, field.name)
+    else:
+        _id = attr["_id"]
+    if "_name" not in attr:
+        _name = field.name
+    else:
+        _name = attr["_name"]
+
+    return TEXTAREA(_name=_name,
+                    _id=_id,
                     _class="comments %s" % (field.type),
                     value=value,
                     requires=field.requires)

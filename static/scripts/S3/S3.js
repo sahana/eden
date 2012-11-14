@@ -256,7 +256,7 @@ $(document).ready(function() {
                 url: url,
                 data: {},
                 success: function(data) {
-                    $('.mark-deduplicate, .unmark-deduplicate').toggleClass('hide');
+                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
                     return;
                 },
                 dataType: 'JSON'
@@ -271,7 +271,7 @@ $(document).ready(function() {
                 url: url + '?remove=1',
                 data: {},
                 success: function(data) {
-                    $('.mark-deduplicate, .unmark-deduplicate').toggleClass('hide');
+                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
                     return;
                 },
                 dataType: 'JSON'

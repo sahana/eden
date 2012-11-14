@@ -597,6 +597,12 @@ div#last_update {
     clear: right;
 }
 
+.authorinfo {
+    font-style: italic;
+    font-size: 80%;
+    color: #666;
+}
+
 /* Action Buttons */
 .action-btn,
 .delete-btn {
@@ -633,7 +639,8 @@ div#last_update {
 }
 .action-lnk {
     font-size: 85%;
-    padding-left: 15px;
+    margin-left: 15px;
+    cursor: pointer;
 }
 
 .sublabels {
