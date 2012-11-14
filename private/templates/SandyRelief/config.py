@@ -15,10 +15,10 @@ T = current.T
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["HelpNY"]
+settings.base.prepopulate = ["SandyRelief"]
 
-settings.base.system_name = T("Help New York")
-settings.base.system_name_short = T("HelpNY")
+settings.base.system_name = T("Sandy Relief")
+settings.base.system_name_short = T("SandyRelief")
 
 # Theme (folder to use for views/layout.html)
 #settings.base.theme = "OCHA"

@@ -177,7 +177,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
             s3.js_global.append(feed_control)
 
         view = path.join(request.folder, "private", "templates",
-                         "HelpNY", "views", "index.html")
+                         "SandyRelief", "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
