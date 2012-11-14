@@ -435,11 +435,11 @@ class S3Merge(S3Method):
             # Swap button
             if not any((keep_o, keep_d)):
                 swap = INPUT(_value="<-->",
-                             _class="swap_button",
+                             _class="swap-button",
                              _id=sid,
                              _type="button")
             else:
-                swap = DIV(_class="swap_button")
+                swap = DIV(_class="swap-button")
 
             if owidget is None or dwidget is None:
                 continue
@@ -589,9 +589,7 @@ class S3Merge(S3Method):
             else:
                 self.next = r.url(id=0, vars={})
 
-        # View and script
-        response.s3.scripts.append("/%s/static/scripts/S3/s3.merge.js" %
-                                   r.application)
+        # View
         response.view = self._view(r, "merge.html")
 
         return output
