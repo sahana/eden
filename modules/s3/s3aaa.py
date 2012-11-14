@@ -897,6 +897,7 @@ Thank you
             elif settings.registration_requires_verification:
                 # Send the Verification email
                 if not settings.mailer or \
+                   not settings.mailer.settings.server or \
                    not settings.mailer.send(to=form.vars.email,
                                             subject=messages.verify_email_subject,
                                             message=messages.verify_email % dict(key=key)):

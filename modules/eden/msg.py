@@ -387,16 +387,35 @@ class S3SMSModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
+        # Settings for Web API services
+        #
+        # @ToDo: Simplified dropdown of services which prepopulates entries & provides nice prompts for the config options
+        #        + Advanced mode for raw access to real fields
+        #
         tablename = "msg_api_settings"
         table = define_table(tablename,
                              Field("url",
-                                   default = "https://api.clickatell.com/http/sendmsg"),
+                                   requires = IS_URL(),
+                                   default = "https://api.clickatell.com/http/sendmsg" # Clickatell
+                                   #default = "https://secure.mcommons.com/api/send_message" # Mobile Commons
+                                   ),
                              Field("parameters",
-                                   default="user=yourusername&password=yourpassword&api_id=yourapiid"),
+                                   default="user=yourusername&password=yourpassword&api_id=yourapiid" # Clickatell
+                                   #default = "campaign_id=yourid" # Mobile Commons
+                                   ),
                              Field("message_variable", "string",
-                                   default = "text"),
+                                   requires = IS_NOT_EMPTY(),
+                                   default = "text" # Clickatell
+                                   #default = "body" # Mobile Commons
+                                   ),
                              Field("to_variable", "string",
-                                   default = "to"),
+                                   requires = IS_NOT_EMPTY(),
+                                   default = "to" # Clickatell
+                                   #default = "phone_number" # Mobile Commons
+                                   ),
+                             # If using HTTP Auth (e.g. Mobile Commons)
+                             Field("username"),
+                             Field("password"),
                              Field("enabled", "boolean",
                                    default = True),
                              # To be used later

@@ -2442,7 +2442,7 @@ def req_add_from_template(req_id):
 
     id = table.insert(**data)
     
-    if template.type == "1":
+    if template.type == 1:
         # Copy across req_item
         table = s3db.req_req_item
         fieldnames = ["site_id",
@@ -2461,7 +2461,7 @@ def req_add_from_template(req_id):
                 data[field] = item[field]
             table.insert(**data)
 
-    elif template.type == "3":
+    elif template.type == 3:
         # Copy across req_skill
         table = s3db.req_req_skill
         fieldnames = ["site_id",

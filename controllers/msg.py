@@ -1118,9 +1118,8 @@ def smtp_to_sms_settings():
                     deletable=False,
                     listadd=False,
                     update_next = URL(args=[1, "update"]))
-    #response.menu_options = admin_menu_options
-    return s3_rest_controller()
 
+    return s3_rest_controller()
 
 #------------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -1135,24 +1134,32 @@ def api_settings():
     table = s3db[tablename]
 
     table.url.label = T("URL")
-    table.to_variable.label = T("To variable")
     table.message_variable.label = T("Message variable")
+    table.to_variable.label = T("To variable")
+    table.username.label = T("Username")
+    table.password.label = T("Password")
     table.enabled.label = T("Enabled")
-    table.url.comment = DIV(DIV(_class="tooltip",
+    table.url.comment = DIV(_class="tooltip",
         _title="%s|%s" % (T("URL"),
-                          T("The URL of your web gateway without the post parameters"))))
-    table.parameters.comment = DIV(DIV(_class="tooltip",
+                          T("The URL of your web gateway without the POST parameters")))
+    table.parameters.comment = DIV(_class="tooltip",
         _title="%s|%s" % (T("Parameters"),
-                          T("The post variables other than the ones containing the message and the phone number"))))
-    table.message_variable.comment = DIV(DIV(_class="tooltip",
+                          T("The POST variables other than the ones containing the message and the phone number")))
+    table.message_variable.comment = DIV(_class="tooltip",
         _title="%s|%s" % (T("Message Variable"),
-                          T("The post variable on the URL used for sending messages"))))
-    table.to_variable.comment = DIV(DIV(_class="tooltip",
+                          T("The POST variable on the URL used for sending messages")))
+    table.to_variable.comment = DIV(_class="tooltip",
         _title="%s|%s" % (T("To variable"),
-                          T("The post variable containing the phone number"))))
-    table.enabled.comment = DIV(DIV(_class="tooltip",
+                          T("The POST variable containing the phone number")))
+    table.username.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Username"),
+                          T("If the service requries HTTP BASIC Auth (e.g. Mobile Commons)")))
+    table.password.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Password"),
+                          T("If the service requries HTTP BASIC Auth (e.g. Mobile Commons)")))
+    table.enabled.comment = DIV(_class="tooltip",
         _title="%s|%s" % (T("Enabled"),
-                          T("Unselect to disable this API service"))))
+                          T("Unselect to disable this API service")))
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -1161,12 +1168,11 @@ def api_settings():
     )
 
     s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False,
-                    update_next = URL(args=[1, "update"]))
-    #response.menu_options = admin_menu_options
-    return s3_rest_controller()
+                   deletable=False,
+                   listadd=False,
+                   update_next = URL(args=[1, "update"]))
 
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -1196,9 +1202,8 @@ def tropo_settings():
                     deletable=False,
                     listadd=False,
                     update_next = URL(args=[1, "update"]))
-    #response.menu_options = admin_menu_options
-    return s3_rest_controller()
 
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -1271,8 +1276,10 @@ def twitter_settings():
         return output
     s3.postp = user_postp
 
-    #response.menu_options = admin_menu_options
-    s3db.configure(tablename, listadd=False, deletable=False)
+    s3db.configure(tablename,
+                   listadd=False,
+                   deletable=False)
+
     return s3_rest_controller()
 
 # =============================================================================
@@ -1298,7 +1305,6 @@ def group():
     s3.filter = (table.system == False)
 
     return s3_rest_controller(module, resourcename, rheader=s3db.pr_rheader)
-
 
 # -----------------------------------------------------------------------------
 def group_membership():

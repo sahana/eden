@@ -37,10 +37,19 @@
 
 __all__ = ["S3Msg", "S3Compose"]
 
+import base64
 import datetime
 import string
 import urllib
-from urllib2 import urlopen
+import urllib2
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current, redirect
 from gluon.html import *
@@ -902,15 +911,26 @@ class S3Msg(object):
 
         mobile = self.sanitise_phone(mobile)
 
+        sms_api_post_config[sms_api.message_variable] = text
+        sms_api_post_config[sms_api.to_variable] = str(mobile)
+
+        request = urllib2.Request(sms_api.url)
+        query = urllib.urlencode(sms_api_post_config)
+        if sms_api.username and sms_api.password:
+            base64string = base64.encodestring("%s:%s" % (sms_api.username, sms_api.password)).replace("\n", "")
+            request.add_header("Authorization", "Basic %s" % base64string)
         try:
-            sms_api_post_config[sms_api.message_variable] = text
-            sms_api_post_config[sms_api.to_variable] = str(mobile)
-            query = urllib.urlencode(sms_api_post_config)
-            request = urllib.urlopen(sms_api.url, query)
-            output = request.read()
-            return True
-        except:
+            result = urllib2.urlopen(request, query)
+            output = result.read()
+        except urllib2.HTTPError, e:
             return False
+        else:
+            # @ToDo: parse result
+            # if service == MobileCommons:
+            # Good = <response success="true"></response>
+            # Bad = <response success="false"><errror id="id" message="message"></response>
+            # http://www.mobilecommons.com/mobile-commons-api/rest/#errors
+            return True
 
     # -------------------------------------------------------------------------
     def send_sms_via_smtp(self, mobile, text=""):
@@ -984,7 +1004,7 @@ class S3Msg(object):
                                        ("outgoing", "1"),
                                        ("row_id", row_id)
                                       ])
-            xml = urlopen("%s?%s" % (base_url, params)).read()
+            xml = urllib2.urlopen("%s?%s" % (base_url, params)).read()
             # Parse Response (actual message is sent as a response to the POST which will happen in parallel)
             #root = etree.fromstring(xml)
             #elements = root.getchildren()
@@ -1448,25 +1468,24 @@ class S3Msg(object):
     def twilio_inbound_sms(account_name):
         """ Fetches the inbound sms from twilio API."""
 
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
         ttable = s3db.msg_twilio_inbound_settings
         query = (ttable.account_name == account_name) & \
-            (ttable.deleted == False)
-        account = db(query).select(limitby=(0,1)).first()
+                (ttable.deleted == False)
+        account = db(query).select(limitby=(0, 1)).first()
         if account:
             url = account.url
             account_sid = account.account_sid
             auth_token = account.auth_token
 
-            url += "/%s/SMS/Messages.json"%str(account_sid)
+            url += "/%s/SMS/Messages.json" % str(account_sid)
 
-            import urllib, urllib2
-            # this creates a password manager
+            # Create a password manager
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
             passman.add_password(None, url, account_sid, auth_token)
 
-            # create the AuthHandler
+            # Create the AuthHandler
             authhandler = urllib2.HTTPBasicAuthHandler(passman)
             opener = urllib2.build_opener(authhandler)
             urllib2.install_opener(opener)
@@ -1479,7 +1498,6 @@ class S3Msg(object):
             downloaded_sms = [message.sid for message in messages]
             try:
                 smspage = urllib2.urlopen(url)
-                import json
                 minsert = itable.insert
                 linsert = ltable.insert
                 sms_list = json.loads(smspage.read())
