@@ -454,15 +454,16 @@ class S3RequestModel(S3Model):
         # Pass variables back to global scope (s3.*)
         #
         return Storage(
-                req_req_id = req_id,
-                req_req_ref = req_ref,
                 req_create_form_mods = self.req_create_form_mods,
-                req_type_opts = req_type_opts,
+                req_hide_quantities = self.req_hide_quantities,
                 req_prep = self.req_prep,
-                req_tabs = self.req_tabs,
                 req_priority_opts = req_priority_opts,
                 req_priority_represent = self.req_priority_represent,
-                req_hide_quantities = self.req_hide_quantities,
+                req_req_id = req_id,
+                req_req_ref = req_ref,
+                req_status_opts = req_status_opts,
+                req_type_opts = req_type_opts,
+                req_tabs = self.req_tabs,
             )
 
     # -------------------------------------------------------------------------
@@ -1104,22 +1105,25 @@ $(document).ready(function(){
         else:
             create_next = None
 
+        list_fields = ["id",
+                       "item_id",
+                       "item_pack_id",
+                       "site_id",
+                       "quantity",
+                       "quantity_transit",
+                       "quantity_fulfil",
+                       "comments",
+                       ]
+        if use_commit:
+            list_fields.insert(5, "quantity_commit")
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        onaccept = req_item_onaccept,
                        create_next = create_next,
                        deletable = settings.get_req_multiple_req_items(),
                        deduplicate = self.req_item_duplicate,
-                       list_fields = ["id",
-                                      "item_id",
-                                      "item_pack_id",
-                                      "site_id",
-                                      "quantity",
-                                      "quantity_commit",
-                                      "quantity_transit",
-                                      "quantity_fulfil",
-                                      "comments",
-                                    ])
+                       list_fields = list_fields,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)
@@ -1354,21 +1358,24 @@ class S3RequestSkillModel(S3Model):
             msg_record_deleted = T("Skill removed from Request"),
             msg_list_empty = T("No Skills currently requested"))
 
+        list_fields = ["id",
+                       "task",
+                       "skill_id",
+                       "quantity",
+                       "quantity_transit",
+                       "quantity_fulfil",
+                       "comments",
+                    ]
+        if use_commit:
+            list_fields.insert(4, "quantity_commit")
         self.configure(tablename,
                        onaccept=req_skill_onaccept,
                        # @ToDo: Produce a custom controller like req_item_inv_item?
                        #create_next = URL(c="req", f="req_skill_skill",
                        #                  args=["[id]"]),
                        deletable = settings.get_req_multiple_req_items(),
-                       list_fields = ["id",
-                                      "task",
-                                      "skill_id",
-                                      "quantity",
-                                      "quantity_commit",
-                                      "quantity_transit",
-                                      "quantity_fulfil",
-                                      "comments",
-                                    ])
+                       list_fields = list_fields,
+                       )
 
         # -----------------------------------------------------------------
         # Link Skill Requests to Tasks

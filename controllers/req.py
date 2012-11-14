@@ -485,14 +485,67 @@ def req_controller():
 def req_item():
     """
         REST Controller
-        @ToDo: Filter out Template Items
         @ToDo: Filter out fulfilled Items? 
     """
+
+    # Filter out Template Items
+    table = s3db.req_req_item
+    rtable = s3db.req_req
+    s3.filter = (rtable.is_template == False) & \
+                (rtable.id == table.req_id)
+
+    # Search method
+    S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
+    req_item_search = (
+        S3SearchOptionsWidget(
+            name="req_search_fulfil_status",
+            label=T("Status"),
+            field="req_id$fulfil_status",
+            options = s3.req_status_opts,
+            cols = 3,
+        ),
+        S3SearchOptionsWidget(
+            name="req_search_priority",
+            label=T("Priority"),
+            field="req_id$priority",
+            options = s3.req_priority_opts,
+            cols = 3,
+        ),
+        #S3SearchOptionsWidget(
+        #  name="req_search_L1",
+        #  field="req_id$site_id$location_id$L1",
+        #  location_level="L1",
+        #  cols = 3,
+        #),
+        #S3SearchOptionsWidget(
+        #  name="req_search_L2",
+        #  field="req_id$site_id$location_id$L2",
+        #  location_level="L2",
+        #  cols = 3,
+        #),
+        S3SearchOptionsWidget(
+            name="req_search_L3",
+            field="req_id$site_id$location_id$L3",
+            location_level="L3",
+            cols = 3,
+        ),
+        S3SearchOptionsWidget(
+            name="req_search_L4",
+            field="req_id$site_id$location_id$L4",
+            location_level="L4",
+            cols = 3,
+        ),
+    )
+    s3db.configure("req_req_skill",
+                   search_method = s3base.S3Search(advanced=req_item_search),
+                   )
 
     def prep(r):
         if r.interactive:
             list_fields = s3db.get_config("req_req_item", "list_fields")
             list_fields.insert(1, "req_id$site_id")
+            list_fields.insert(1, "req_id$site_id$location_id$L4")
+            list_fields.insert(1, "req_id$site_id$location_id$L3")
             s3db.configure("req_req_item",
                            insertable=False,
                            list_fields = list_fields,
@@ -512,9 +565,9 @@ def req_item():
 
     req_item_inv_item_btn = dict(url = URL(c="req", f="req_item_inv_item",
                                            args=["[id]"]),
-                                _class = "action-btn",
-                                label = str(T("Request from Facility")),
-                               )
+                                 _class = "action-btn",
+                                 label = str(T("Request from Facility")),
+                                 )
     if s3.actions:
         s3.actions += [req_item_inv_item_btn]
     else:
@@ -637,14 +690,68 @@ def req_item_inv_item():
 def req_skill():
     """
         REST Controller
-        @ToDo: Filter out Template Skills
         @ToDo: Filter out fulfilled Skills?
     """
+
+    # Filter out Template Items
+    table = s3db.req_req_skill
+    rtable = s3db.req_req
+    s3.filter = (rtable.is_template == False) & \
+                (rtable.id == table.req_id)
+
+    # Search method
+    S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
+    req_skill_search = (
+        S3SearchOptionsWidget(
+            name="req_search_fulfil_status",
+            label=T("Status"),
+            field="req_id$fulfil_status",
+            options = s3.req_status_opts,
+            cols = 3,
+        ),
+        S3SearchOptionsWidget(
+            name="req_search_priority",
+            label=T("Priority"),
+            field="req_id$priority",
+            options = s3.req_priority_opts,
+            cols = 3,
+        ),
+        #S3SearchOptionsWidget(
+        #  name="req_search_L1",
+        #  field="req_id$site_id$location_id$L1",
+        #  location_level="L1",
+        #  cols = 3,
+        #),
+        #S3SearchOptionsWidget(
+        #  name="req_search_L2",
+        #  field="req_id$site_id$location_id$L2",
+        #  location_level="L2",
+        #  cols = 3,
+        #),
+        S3SearchOptionsWidget(
+            name="req_search_L3",
+            field="req_id$site_id$location_id$L3",
+            location_level="L3",
+            cols = 3,
+        ),
+        S3SearchOptionsWidget(
+            name="req_search_L4",
+            field="req_id$site_id$location_id$L4",
+            location_level="L4",
+            cols = 3,
+        ),
+    )
+    s3db.configure("req_req_skill",
+                   search_method = s3base.S3Search(advanced=req_skill_search),
+                   )
 
     def prep(r):
         if r.interactive:
             list_fields = s3db.get_config("req_req_skill", "list_fields")
             list_fields.insert(1, "req_id$site_id")
+            list_fields.insert(1, "req_id$site_id$location_id$L4")
+            list_fields.insert(1, "req_id$site_id$location_id$L3")
+            
             s3db.configure("req_req_skill",
                            insertable=False,
                            list_fields = list_fields,

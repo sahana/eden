@@ -134,9 +134,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        settings = current.deployment_settings
-        req_skills = lambda i: "People" in settings.get_req_req_type()
-
         return M(c="req")(
                     M("Requests", f="req")(
                         M("New", m="create"),
@@ -145,10 +142,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search", m="search"),
                         M("Map", m="map"),
                         M("Report", m="report"),
-                        M("List All Requested Items", f="req_item"),
-                        M("List All Requested Skills", f="req_skill",
-                          check=req_skills),
-                        #M("Search Requested Items", f="req_item", m="search"),
+                        M("Search All Requested Items", f="req_item", m="search"),
+                        M("Search All Requested Skills", f="req_skill", m="search"),
                     ),
                     M("Priority Items", f="summary_option")(
                         M("New", m="create"),
