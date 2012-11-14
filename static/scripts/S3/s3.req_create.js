@@ -10,13 +10,15 @@ function idescape(input) {
 
 $(document).ready(function() {
     
+    var span = '<span class="req"> *</span>';
+
     function type_9() {
         // Other
         $('.summary_item').remove();
         $('#req_req_date_required_until__row1').hide();
         $('#req_req_date_required_until__row').hide();
         $('#req_req_purpose__row1 label').html(i18n.req_purpose + ':');
-        $('#req_req_site_id__row1 label').html(i18n.req_site_id + ':');
+        $('#req_req_site_id__row1 label').html(i18n.req_site_id + ':' + span);
         $('#req_req_request_for_id__row1 label').html(i18n.req_request_for_id + ':');
         $('#req_req_recv_by_id__row1 label').html(i18n.req_recv_by_id + ':');
         $('#req_req_purpose__row1').show();
@@ -37,7 +39,7 @@ $(document).ready(function() {
         // Summary
         $('#req_req_date_required_until__row1').hide();
         $('#req_req_date_required_until__row').hide();
-        $('#req_req_site_id__row1 label').html(i18n.req_site_id + ':');
+        $('#req_req_site_id__row1 label').html(i18n.req_site_id + ':' + span);
         $('#req_req_request_for_id__row1 label').html(i18n.req_request_for_id + ':');
         $('#req_req_recv_by_id__row1 label').html(i18n.req_recv_by_id + ':');
         if (($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
@@ -60,15 +62,19 @@ $(document).ready(function() {
             $('#req_req_date_required_until__row1').hide();
             $('#req_req_date_required_until__row').hide();
             $('#req_req_purpose__row1 label').html(i18n.req_items_purpose + ':');
-            $('#req_req_site_id__row1 label').html(i18n.req_items_site_id + ':');
+            $('#req_req_site_id__row1 label').html(i18n.req_items_site_id + ':' + span);
             $('#req_req_request_for_id__row1 label').html(i18n.req_items_recv_by_id + ':');
             $('#req_req_recv_by_id__row1 label').html(i18n.req_items_recv_by_id + ':');
         } else if (type == 3) {
             // People/Skills
-            $('#req_req_date_required_until__row1').show();
-            $('#req_req_date_required_until__row').show();
+            if ($('#req_req_is_template').is(':checked')) {
+                // pass
+            } else {
+                $('#req_req_date_required_until__row1').show();
+                $('#req_req_date_required_until__row').show();
+            }
             $('#req_req_purpose__row1 label').html(i18n.req_people_purpose + ':');
-            $('#req_req_site_id__row1 label').html(i18n.req_people_site_id + ':');
+            $('#req_req_site_id__row1 label').html(i18n.req_people_site_id + ':' + span);
             $('#req_req_request_for_id__row1 label').html(i18n.req_people_recv_by_id + ':');
             $('#req_req_recv_by_id__row1 label').html(i18n.req_people_recv_by_id + ':');
         }
@@ -106,6 +112,30 @@ $(document).ready(function() {
             type_8();
         } else {
             type_next(type);
+        }
+    });
+    $('#req_req_is_template').change(function() {
+        if ($('#req_req_is_template').is(':checked')) {
+            $('#req_req_date__row1').hide();
+            $('#req_req_date__row').hide();
+            $('#req_req_date_required__row1').hide();
+            $('#req_req_date_required__row').hide();
+            $('#req_req_date_required_until__row1').hide();
+            $('#req_req_date_required_until__row').hide();
+            $('#req_req_recv_by_id__row1').hide();
+            $('#req_req_recv_by_id__row').hide();
+        } else {
+            $('#req_req_date__row1').show();
+            $('#req_req_date__row').show();
+            $('#req_req_date_required__row1').show();
+            $('#req_req_date_required__row').show();
+            $('#req_req_recv_by_id__row1').show();
+            $('#req_req_recv_by_id__row').show();
+            var type = $('#req_req_type').val();
+            if (type == 3) {
+                $('#req_req_date_required_until__row1').show();
+                $('#req_req_date_required_until__row').show();
+            }
         }
     });
 

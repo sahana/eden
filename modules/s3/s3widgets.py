@@ -2971,6 +2971,7 @@ class S3TimeIntervalWidget(FormWidget):
                    ("minutes", 60),
                    ("seconds", 1))
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def widget(field, value, **attributes):
 
@@ -3005,6 +3006,7 @@ class S3TimeIntervalWidget(FormWidget):
                          _name=("%s_multiplier" % field).replace(".", "_")))
         return inp
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def represent(value):
 

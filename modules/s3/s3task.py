@@ -53,12 +53,12 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current, HTTP
+from gluon import current, HTTP, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3widgets import S3TimeIntervalWidget
-from s3validators import IS_TIME_INTERVAL_WIDGET
-from s3utils import s3_debug
+from s3utils import s3_debug, S3DateTime
+from s3validators import IS_TIME_INTERVAL_WIDGET, IS_UTC_DATETIME
+from s3widgets import S3DateTimeWidget, S3TimeIntervalWidget
 
 # -----------------------------------------------------------------------------
 class S3Task(object):
@@ -88,7 +88,9 @@ class S3Task(object):
                                  task=None,
                                  function=None,
                                  args=[],
-                                 vars={}):
+                                 vars={},
+                                 period = 3600, # seconds, so 1 hour
+                                 ):
         """
             Configure the task table for interactive CRUD,
             setting defaults, widgets and hiding unnecessary fields
@@ -105,6 +107,32 @@ class S3Task(object):
 
         tablename = self.TASK_TABLENAME
         table = current.db[tablename]
+
+        field = table.uuid
+        field.readable = False
+        field.writable = False
+
+        field = table.sync_output
+        field.readable = False
+        field.writable = False
+
+        field = table.times_failed
+        field.readable = False
+
+        field = table.start_time
+        field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        field.widget = S3DateTimeWidget(past=0)
+        field.requires = IS_UTC_DATETIME(
+                    format=current.deployment_settings.get_L10n_datetime_format()
+                )
+
+        field = table.stop_time
+        field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        field.widget = S3DateTimeWidget(past=0)
+        field.requires = IS_EMPTY_OR(
+                            IS_UTC_DATETIME(
+                    format=current.deployment_settings.get_L10n_datetime_format()
+                ))
 
         if not task:
             import uuid
@@ -136,6 +164,7 @@ class S3Task(object):
 
         field = table.period
         field.label = T("Run every")
+        field.default = period
         field.widget = S3TimeIntervalWidget.widget
         field.requires = IS_TIME_INTERVAL_WIDGET(table.period)
         field.represent = S3TimeIntervalWidget.represent

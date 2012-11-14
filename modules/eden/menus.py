@@ -1617,6 +1617,7 @@ class S3OptionsMenu(object):
                     M("Requests", f="req")(
                         M("New", m="create"),
                         M("List All"),
+                        #M("List Recurring Requests", f="req_template"),
                         M("Search", m="search"),
                         M("Map", m="map"),
                         M("Report", m="report"),

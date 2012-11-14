@@ -69,7 +69,6 @@ class SyncDataModel(S3Model):
         configure = self.configure
         set_method = self.set_method
 
-        scheduler_task_id = s3.scheduler_task_id
         s3_datetime_represent = lambda dt: \
                                 S3DateTime.datetime_represent(dt, utc=True)
 
@@ -405,7 +404,7 @@ class SyncDataModel(S3Model):
         tablename = "sync_job"
         table = define_table(tablename,
                              repository_id(),
-                             scheduler_task_id(),
+                             s3.scheduler_task_id(),
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -469,7 +468,7 @@ class SyncDataModel(S3Model):
                   orderby=~table.timestmp)
 
         # ---------------------------------------------------------------------
-        # Return global names to s3db
+        # Return global names to s3.*
         #
         return Storage()
 
@@ -619,7 +618,7 @@ class SyncRepositoryVirtualFields:
         else:
             return current.T("never")
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def sync_rheader(r, tabs=[]):
     """
         Synchronization resource headers
@@ -651,7 +650,7 @@ def sync_rheader(r, tabs=[]):
                 return rheader
     return None
 
-# -------------------------------------------------------------------------
+# =============================================================================
 def sync_job_reset(r, **attr):
     """
         RESTful method to reset a job status from FAILED to QUEUED,
@@ -667,7 +666,7 @@ def sync_job_reset(r, **attr):
     r.component_id = None
     redirect(r.url(method=""))
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def sync_now(r, **attr):
     """
         Manual synchronization of a repository

@@ -1651,7 +1651,7 @@ class S3FacilityModel(S3Model):
                     facts=report_fields,
                     methods=["count", "list", "sum"],
                     defaults=Storage(rows="location_id$L4",
-                                     cols="type",
+                                     cols="facility_type_id",
                                      fact="name",
                                      aggregate="count")
                     ),

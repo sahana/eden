@@ -17,6 +17,17 @@ T = current.T
 # Pre-Populate
 settings.base.prepopulate = ["Crisis"]
 
+# -----------------------------------------------------------------------------
+# Finance settings
+settings.fin.currencies = {
+    "AUD" : T("Australian Dollars"),
+    "CAD" : T("Canadian Dollars"),
+    "EUR" : T("Euros"),
+    "GBP" : T("Great British Pounds"),
+    "CHF" : T("Swiss Francs"),
+    "USD" : T("United States Dollars"),
+}
+
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -152,6 +163,13 @@ settings.modules = OrderedDict([
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
             module_type = 2
+        )),
+    # required for Project
+    ("stats", Storage(
+            name_nice = T("Statistics"),
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
         )),
     ("survey", Storage(
             name_nice = T("Surveys"),

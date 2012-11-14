@@ -186,6 +186,23 @@ if settings.has_module("msg"):
     tasks["msg_search_subscription_notifications"] = msg_search_subscription_notifications
 
 # -----------------------------------------------------------------------------
+if settings.has_module("req"):
+
+    def req_add_from_template(req_id, user_id=None):
+        """
+            Add a Request from template
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.req_add_from_template(req_id)
+        db.commit()
+        return result
+
+    tasks["req_add_from_template"] = req_add_from_template
+
+# -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 
     def stats_group_clean(user_id=None):

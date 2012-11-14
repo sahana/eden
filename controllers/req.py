@@ -91,9 +91,101 @@ def marker_fn(record):
 
 # -----------------------------------------------------------------------------
 def req():
-    """ REST Controller """
+    """
+        REST Controller for Request Instances
+    """
 
-    req_table = s3db.req_req
+    s3.filter = (s3db.req_req.is_template == False)
+
+    output = req_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def req_template():
+    """
+        REST Controller for Request Templates
+    """
+
+    # Hide fields which aren't relevant to templates
+    # @ToDo: Need to get this done later after being opened by Types?
+    table = s3db.req_req
+    field = table.is_template
+    field.default = True
+    field.readable = field.writable = False
+    s3.filter = (field == True)
+
+    if "req_item" in request.args:
+        # List fields for req_item
+        table = s3db.req_req_item
+        list_fields = ["id",
+                       "item_id",
+                       "item_pack_id",
+                       "quantity",
+                       "comments",
+                       ]
+        s3db.configure("req_req_item",
+                       list_fields=list_fields)
+
+    elif "req_skill" in request.args:
+        # List fields for req_skill
+        table = s3db.req_req_skill
+        list_fields = ["id",
+                       "skill_id",
+                       "quantity",
+                       "comments",
+                       ]
+        s3db.configure("req_req_skill",
+                       list_fields=list_fields)
+
+    else:
+        # Main Req
+        for fieldname in ["req_ref",
+                          "date",
+                          "date_required",
+                          "date_required_until",
+                          "date_recv",
+                          "recv_by_id",
+                          "commit_status",
+                          "transit_status",
+                          "fulfil_status",
+                          "cancel",
+                          ]:
+            field = table[fieldname]
+            field.readable = field.writable = False
+        table.purpose.label = T("Details")
+        list_fields = ["id",
+                       "site_id"
+                       ]
+        if len(settings.get_req_req_type()) > 1:
+            list_fields.append("type")
+        list_fields.append("priority")
+        list_fields.append("purpose")
+        list_fields.append("comments")
+        s3db.configure("req_req",
+                       list_fields=list_fields)
+
+        # CRUD strings
+        ADD_REQUEST = T("Add Request Template")
+        s3.crud_strings["req_req"] = Storage(
+            title_create = ADD_REQUEST,
+            title_display = T("Request Template Details"),
+            title_list = T("Request Templates"),
+            title_update = T("Edit Request Template"),
+            subtitle_create = ADD_REQUEST,
+            label_list_button = T("List Request Templates"),
+            label_create_button = ADD_REQUEST,
+            label_delete_button = T("Delete Request Template"),
+            msg_record_created = T("Request Template Added"),
+            msg_record_modified = T("Request Template Updated"),
+            msg_record_deleted = T("Request Template Deleted"),
+            msg_list_empty = T("No Request Templates"))
+
+    output = req_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def req_controller():
+    """ REST Controller """
 
     # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
     if "req_item_id" in request.vars and "inv_item_id" in request.vars:
@@ -108,18 +200,20 @@ def req():
 
     def prep(r):
 
-        s3db.req_prep(r)
+        req_table = s3db.req_req
+        s3.req_prep(r)
 
-        # Remove type from list_fields
-        list_fields = s3db.get_config("req_req", "list_fields")
-        try:
-            list_fields.remove("type")
-        except:
-             # It has already been removed.
-             # This can happen if the req controller is called
-             # for a second time, such as when printing reports
-            pass
-        s3db.configure("req_req", list_fields=list_fields)
+        if len(settings.get_req_req_type()) == 1:
+            # Remove type from list_fields
+            list_fields = s3db.get_config("req_req", "list_fields")
+            try:
+                list_fields.remove("type")
+            except:
+                 # It has already been removed.
+                 # This can happen if the req controller is called
+                 # for a second time, such as when printing reports
+                pass
+            s3db.configure("req_req", list_fields=list_fields)
 
         if r.interactive:
             # Set Fields and Labels depending on type
@@ -160,39 +254,8 @@ def req():
                 req_table.request_for_id.label = T("Report To")
                 req_table.recv_by_id.label = T("Reported To")
 
-            if not r.component:
-                if type == 8:
-                    field = req_table.purpose
-                    field.label = T("Details")
-                    field.represent = req_summary_represent
-                    stable = current.s3db.req_summary_option
-                    options = db(stable.deleted == False).select(stable.name,
-                                                                 orderby=~stable.name)
-                    summary_items = [opt.name for opt in options]
-                    s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
-
-            if r.method != "update" and r.method != "read":
-                if not r.component:
-                    # Hide fields which don't make sense in a Create form
-                    # - includes one embedded in list_create
-                    # - list_fields over-rides, so still visible within list itself
-                    s3db.req_create_form_mods()
-                    # Get the default Facility for this user
-                    # @ToDo: Use site_id in User Profile (like current organisation_id)
-                    if settings.has_module("hrm"):
-                        hrtable = s3db.hrm_human_resource
-                        query = (hrtable.person_id == s3_logged_in_person())
-                        site = db(query).select(hrtable.site_id,
-                                                limitby=(0, 1)).first()
-                        if site:
-                            r.table.site_id.default = site.site_id
-
-                    if r.method == "map":
-                        # Tell the client to request per-feature markers
-                        s3db.configure("req_req", marker_fn=marker_fn)
-
-                elif r.component.name == "document":
+            if r.component:
+                if r.component.name == "document":
                     s3.crud.submit_button = T("Add")
                     #table = r.component.table
                     # @ToDo: Fix for Link Table
@@ -214,11 +277,48 @@ def req():
 
                 elif r.component.name == "req_skill":
                     s3db.req_hide_quantities(r.component.table)
+                elif r.component.alias == "job":
+                    s3task.configure_tasktable_crud(
+                        function="req_add_from_template",
+                        args = [r.id],
+                        vars = dict(user_id = auth.user is not None and auth.user.id or 0),
+                        period = 86400, # seconds, so 1 day
+                        )
+            else:
+                if r.id:
+                    req_table.is_template.readable = req_table.is_template.writable = False
+
+                if type == 8:
+                    req_table.purpose.label = T("Details")
+                    stable = current.s3db.req_summary_option
+                    options = db(stable.deleted == False).select(stable.name,
+                                                                 orderby=~stable.name)
+                    summary_items = [opt.name for opt in options]
+                    s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
+                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+
+                if r.method != "update" and r.method != "read":
+                    # Hide fields which don't make sense in a Create form
+                    # - includes one embedded in list_create
+                    # - list_fields over-rides, so still visible within list itself
+                    s3db.req_create_form_mods()
+                    # Get the default Facility for this user
+                    # @ToDo: Use site_id in User Profile (like current organisation_id)
+                    if settings.has_module("hrm"):
+                        hrtable = s3db.hrm_human_resource
+                        query = (hrtable.person_id == s3_logged_in_person())
+                        site = db(query).select(hrtable.site_id,
+                                                limitby=(0, 1)).first()
+                        if site:
+                            r.table.site_id.default = site.site_id
+
+                    if r.method == "map":
+                        # Tell the client to request per-feature markers
+                        s3db.configure("req_req", marker_fn=marker_fn)
 
         elif r.representation == "plain":
             # Map Popups
-            if r.record.type == 8:
-                req_table.purpose.represent = req_summary_represent
+            pass
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
@@ -257,7 +357,7 @@ def req():
                     r.component.table.committer_id.comment = None
 
                 # Non-Item commits shouldn't have a From Inventory
-                # @ToDo: Assets do?
+                # @ToDo: Assets do? (Well, a 'From Site')
                 table.site_id.readable = table.site_id.writable = False
                 if r.interactive and r.record.type == 3: # People
                     # Redirect to the Persons tab after creation
@@ -302,6 +402,18 @@ def req():
                          restrict = restrict
                         )
                     )
+                # This is only appropriate for people requests
+                query = (r.table.type == 3)
+                rows = db(query).select(r.table.id)
+                restrict = [str(row.id) for row in rows]
+                s3.actions.append(
+                    dict(url = URL(c="req", f="req",
+                                   args=["[id]", "req_skill"]),
+                         _class = "action-btn",
+                         label = str(T("View Skills")),
+                         restrict = restrict
+                        )
+                    )
             elif r.component.name == "req_item":
                 req_item_inv_item_btn = dict(url = URL(c = "req",
                                                        f = "req_item_inv_item",
@@ -311,8 +423,21 @@ def req():
                                              label = str(T("Request from Facility")),
                                              )
                 s3.actions.append(req_item_inv_item_btn)
-            elif r.component.name == "req_skill":
-                pass
+            elif r.component.alias == "job":
+                s3.actions = [
+                    dict(label=str(T("Open")),
+                         _class="action-btn",
+                         url=URL(c="req", f="req_template",
+                                 args=[str(r.id), "job", "[id]"])),
+                    dict(label=str(T("Reset")),
+                         _class="action-btn",
+                         url=URL(c="req", f="req_template",
+                                 args=[str(r.id), "job", "[id]", "reset"])),
+                    dict(label=str(T("Run Now")),
+                         _class="action-btn",
+                         url=URL(c="req", f="req_template",
+                                 args=[str(r.id), "job", "[id]", "run"])),
+                    ]
             else:
                 # We don't yet have other components
                 pass
@@ -326,27 +451,23 @@ def req():
     return output
 
 # =============================================================================
-def req_summary_represent(opt):
-    """
-        Represent the Details of a Summary Request
-    """
-
-    if not opt:
-        return messages.NONE
-
-    opts = json.loads(opt)
-    output = ", ".join(opts)
-    return output
-
-# =============================================================================
 def req_item():
-    """ REST Controller """
-
-    s3db.configure("req_req_item",
-                   insertable=False)
+    """
+        REST Controller
+        @ToDo: Filter out Template Items
+        @ToDo: Filter out fulfilled Items? 
+    """
 
     def prep(r):
         if r.interactive:
+            list_fields = s3db.get_config("req_req_item", "list_fields")
+            list_fields.insert(1, "req_id$site_id")
+            s3db.configure("req_req_item",
+                           insertable=False,
+                           list_fields = list_fields,
+                           )
+
+            s3.crud_strings["req_req_item"].title_list = T("Requested Items")
             if r.method != None and r.method != "update" and r.method != "read":
                 # Hide fields which don't make sense in a Create form
                 # - includes one embedded in list_create
@@ -483,16 +604,21 @@ def req_item_inv_item():
 
 # =============================================================================
 def req_skill():
-    """ REST Controller """
-
-    tablename = "req_req_skill"
-    table = s3db[tablename]
-
-    s3db.configure(tablename,
-                   insertable=False)
+    """
+        REST Controller
+        @ToDo: Filter out Template Skills
+        @ToDo: Filter out fulfilled Skills?
+    """
 
     def prep(r):
         if r.interactive:
+            list_fields = s3db.get_config("req_req_skill", "list_fields")
+            list_fields.insert(1, "req_id$site_id")
+            s3db.configure("req_req_skill",
+                           insertable=False,
+                           list_fields = list_fields,
+                           )
+
             if r.method != "update" and r.method != "read":
                 # Hide fields which don't make sense in a Create form
                 # - includes one embedded in list_create

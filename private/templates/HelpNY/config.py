@@ -66,6 +66,9 @@ settings.auth.registration_requires_approval = True
 # Roles that newly-registered users get automatically
 settings.auth.registration_roles = { 0: ["super"]}
 
+settings.auth.registration_link_user_to = {"staff":T("Staff"),
+                                           "volunteer":T("Volunteer")}
+
 settings.security.policy = 4 # Controller & Function ACLs
 
 # Inventory Management
