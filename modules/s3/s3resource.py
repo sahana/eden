@@ -4544,10 +4544,21 @@ class S3ResourceQuery(object):
                 return str(b) in a
             elif isinstance(a, (list, tuple)):
                 if isinstance(b, (list, tuple)):
-                    l = [item for item in b if item not in a]
-                    if l:
-                        return False
-                    return True
+                    convert = S3TypeConverter.convert
+                    found = True
+                    for _b in b:
+                        if _b not in a:
+                            found = False
+                            for _a in a:
+                                try:
+                                    if convert(_a, _b) == _a:
+                                        found = True
+                                        break
+                                except (TypeError, ValueError):
+                                    continue
+                        if not found:
+                            break
+                    return found
                 else:
                     return b in a
             else:

@@ -293,7 +293,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Execute the request
     output = r(**attr)
 
-    if isinstance(output, dict) and (not method or method in ("report", "search")):
+    if isinstance(output, dict) and \
+       (not method or method in ("report", "search")):
         if s3.actions is None:
 
             # Add default action buttons
@@ -344,7 +345,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
-    elif method not in ("import", "review", "approve", "reject"):
+    elif method not in ("import", "review", "approve", "reject", "deduplicate"):
         s3.actions = None
 
     return output
