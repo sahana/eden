@@ -564,12 +564,12 @@ $(document).ready(function(){
                                 )
 
         if track_pack_values:
-            rows=["item_id", (T("Category"), "item_category"), "currency"],
-            cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
+            rows=["item_id", (T("Category"), "item_category"), "currency"]
+            cols=["site_id", "owner_org_id", "supply_org_id", "currency"]
             facts=["quantity", (T("Total Value"), "total_value"),]
         else:
-            rows=["item_id", (T("Category"), "item_category")],
-            cols=["site_id", "owner_org_id", "supply_org_id"],
+            rows=["item_id", (T("Category"), "item_category")]
+            cols=["site_id", "owner_org_id", "supply_org_id"]
             facts=["quantity"]
         report_options = Storage(
             search=[
