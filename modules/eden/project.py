@@ -3505,7 +3505,7 @@ class S3ProjectTaskModel(S3Model):
                                                  label=T("Date"),
                                                  field="date"),
                             ]
-        
+
         if settings.get_project_sectors():
             report_fields.insert(3, (T("Sectors"), "sectors"))
             def get_sector_opts():
@@ -4534,13 +4534,13 @@ class S3ProjectBeneficiaryVirtualFields:
 
         if not date or not end_date:
             table = current.s3db.project_project
-            project = current.db(table.id == project_id).select(table.date,
+            project = current.db(table.id == project_id).select(table.start_date,
                                                                 table.end_date,
                                                                 limitby=(0, 1)
                                                                 ).first()
             if project:
                 if not date:
-                    date = project.date
+                    date = project.start_date
                 if not end_date:
                     end_date = project.end_date
         if not date and not end_date:

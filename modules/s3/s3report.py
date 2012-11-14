@@ -207,6 +207,7 @@ class S3Report(S3CRUD):
             # Use the values to generate the query filter
             query, errors = self._process_filter_options(form)
             if not errors:
+                print query.represent(self.resource)
                 self.resource.add_filter(query)
         else:
             query = None
