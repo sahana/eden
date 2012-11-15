@@ -164,8 +164,8 @@ class S3RequestModel(S3Model):
                                               default="now",
                                               past=8760, # Hours, so 1 year
                                               future=0,
-                                              represent="date",
-                                              widget="date",
+                                              #represent="date",
+                                              #widget="date",
                                               ),
                                   Field("priority", "integer",
                                         default = 2,
@@ -2117,7 +2117,8 @@ class req_site_virtualfields:
         query = (rtable.deleted != True) & \
                 (stable.id == id) & \
                 (rtable.site_id == stable.site_id) & \
-                (rtable.fulfil_status != REQ_STATUS_COMPLETE)
+                (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
+                (rtable.is_template == False)
         req = current.db(query).select(rtable.id,
                                        rtable.priority,
                                        orderby=~rtable.priority,

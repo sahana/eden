@@ -786,6 +786,7 @@ function S3FilterFieldChange(setting) {
         }
 
         var data;
+        setting.FieldVal = FieldVal;
 
         // Save JSON Request by element id
         if (!GetWidgetHTML) {
@@ -820,6 +821,9 @@ function S3FilterFieldChange(setting) {
                         if (setting.Optional) {
                             first_value = 0;
                             options = '<option value=""></option>' + options;
+                        }
+                        if (setting.FieldVal) {
+                            first_value = setting.FieldVal;
                         }
                     }
                     /* Set field value */
@@ -870,11 +874,8 @@ function S3FilterFieldChange(setting) {
         }
     });
 
-    // If the field value is empty
-    if (selField.val() == '' && FilterOnLoad) {
-        // Initially hide or filter field
-        selFilterField.change();
-    }
+    // If the field value is empty - disable - but keep initial value
+    selFilterField.change();
 };
 
 // ============================================================================
