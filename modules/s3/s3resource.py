@@ -551,7 +551,7 @@ class S3Resource(object):
         # Sort left joins and add to attributes
         if left_joins:
             try:
-                left_joins.sort(self.sortleft)
+                left_joins = self.sortleft(left_joins)
             except:
                 pass
             attributes["left"] = left_joins
@@ -1311,7 +1311,7 @@ class S3Resource(object):
                 left_joins.append(join)
         if left_joins:
             try:
-                left_joins.sort(self.sortleft)
+                left_joins = self.sortleft(left_joins)
             except:
                 pass
             left = left_joins
@@ -1830,7 +1830,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        
+
         # Facility Map search needs VFs for reqs (marker_fn & filter)
         # @ToDo: Lazy VirtualFields
         #self.load(start=start, limit=limit, orderby=orderby, virtual=False)
@@ -3628,16 +3628,25 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def sortleft(x, y):
-        """ Sort left joins after their dependency """
+    def sortleft(joins):
+        """
+            Sort a list of left-joins by their interdependency
 
-        tx, qx = str(x.first), str(x.second)
-        ty, qy = str(y.first), str(y.second)
-        if "%s." % tx in qy:
-            return -1
-        if "%s." % ty in qx:
-            return 1
-        return 0
+            @param joins: the list of joins
+        """
+
+        s = []
+        append, insert = s.append, s.insert
+        for i in xrange(len(joins)):
+            join = joins[i]
+            for j in xrange(len(s)):
+                if str(join.first) in str(s[j].second):
+                    insert(j, join)
+                    join = None
+                    break
+            if join:
+                append(join)
+        return s
 
 # =============================================================================
 class S3FieldSelector(object):
@@ -5357,7 +5366,7 @@ class S3ResourceFilter(object):
                 left_joins.append(join)
         if left_joins:
             try:
-                left_joins.sort(resource.sortleft)
+                left_joins = resource.sortleft(left_joins)
             except:
                 pass
             left = left_joins
@@ -5402,7 +5411,7 @@ class S3ResourceFilter(object):
         left_joins = self.get_left_joins()
         if left_joins:
             try:
-                left_joins.sort(resource.sortleft)
+                left_joins = resource.sortleft(left_joins)
             except:
                 pass
             left = left_joins
