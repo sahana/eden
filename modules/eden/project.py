@@ -5085,7 +5085,7 @@ def project_task_form_inject(r, output, project=True):
         field = table.activity_id
         if r.id:
             query = (table.task_id == r.id)
-            default = db(query).select(table.activity_id,
+            default = db(query).select(field,
                                        limitby=(0, 1)).first()
             if default:
                 default = default.activity_id
@@ -5094,7 +5094,7 @@ def project_task_form_inject(r, output, project=True):
         field_id = "%s_%s" % (table._tablename, field.name)
         # Options will be added later based on the Project
         if default:
-            field.requires = IS_IN_SET([default])
+            field.requires = IS_IN_SET({default:field.represent(default)})
         else:
             field.requires = IS_IN_SET([])
         #widget = SELECT(_id=field_id, _name=field.name)
@@ -5132,7 +5132,7 @@ def project_task_form_inject(r, output, project=True):
             field = table.milestone_id
             if r.id:
                 query = (table.task_id == r.id)
-                default = db(query).select(table.milestone_id,
+                default = db(query).select(field,
                                            limitby=(0, 1)).first()
                 if default:
                     default = default.milestone_id
@@ -5141,7 +5141,7 @@ def project_task_form_inject(r, output, project=True):
             field_id = "%s_%s" % (table._tablename, field.name)
             # Options will be added later based on the Project
             if default:
-                field.requires = IS_IN_SET([default])
+                field.requires = IS_IN_SET({default:field.represent(default)})
             else:
                 field.requires = IS_IN_SET([])
             #widget = SELECT(_id=field_id, _name=field.name)
