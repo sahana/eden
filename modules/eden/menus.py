@@ -1302,6 +1302,7 @@ class S3OptionsMenu(object):
                         M("Add Member", m="create"),
                         M("List All"),
                         M("Search", m="search"),
+                        M("Report", m="report"),
                         M("Import", f="person", m="import"),
                     ),
                     M("Membership Types", f="membership_type")(

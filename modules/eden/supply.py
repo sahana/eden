@@ -124,11 +124,12 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Brands currently registered"))
 
         # Reusable Field
+        represent = s3_represent_id(table)
         brand_id = S3ReusableField("brand_id", table, sortby="name",
                     requires = IS_NULL_OR(IS_ONE_OF(db, "supply_brand.id",
-                                                    self.supply_brand_represent,
+                                                    represent,
                                                     sort=True)),
-                    represent = self.supply_brand_represent,
+                    represent = represent,
                     label = T("Brand"),
                     comment=S3AddResourceLink(c="supply",
                                               f="brand",
@@ -166,17 +167,18 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Catalogs currently registered"))
 
         # Reusable Field
+        represent = s3_represent_id(table)
         catalog_id = S3ReusableField("catalog_id", table,
                     sortby="name",
                     requires = IS_NULL_OR(
                                    IS_ONE_OF( # Restrict to catalogs the user can update
                                               db(current.auth.s3_accessible_query("update", table)),
                                               "supply_catalog.id",
-                                              self.supply_catalog_represent,
+                                              represent,
                                               sort=True,
                                               )
                                           ),
-                    represent = self.supply_catalog_represent,
+                    represent = represent,
                     default = 1,
                     label = T("Catalog"),
                     comment=S3AddResourceLink(c="supply",
@@ -919,47 +921,6 @@ S3FilterFieldChange({
                         (quantity_2 * pack_quantity_2)) / pack_quantity_1
         return quantity
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply_brand_represent(id, row=None):
-        """
-            Represent a Brand by it's Name
-        """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.supply_brand
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply_catalog_represent(id, row=None):
-        """
-            Represent a Catalog by it's Name
-        """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.supply_catalog
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

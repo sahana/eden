@@ -559,8 +559,7 @@ class S3Report(S3CRUD):
         table = self.table
         rfields, j, l, d = resource.resolve_selectors(list_fields)
         options = [(f.selector, f.label) for f in rfields
-                   if f.show and
-                      (f.field is None or f.field.name != table._id.name)]
+                   if f.show and (f.field is not None)]
 
         dummy_field = Storage(name=name, requires=IS_IN_SET(options))
         return OptionsWidget.widget(dummy_field, value, **attr)
