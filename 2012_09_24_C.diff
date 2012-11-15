@@ -1,0 +1,2252 @@
+diff --git a/controllers/default.py b/controllers/default.py
+index 5a519b6..d036d31 100755
+--- a/controllers/default.py
++++ b/controllers/default.py
+@@ -477,75 +477,9 @@ def user():
+         form = auth()
+     elif arg == "profile":
+         # @ToDo: move this code to /modules/s3/s3aaa.py:def profile?
+-
+-        # If we have an opt_in and some post_vars then update the opt_in value
+-        if settings.get_auth_opt_in_to_email() and request.post_vars:
+-            opt_list = settings.get_auth_opt_in_team_list()
+-            removed = []
+-            selected = []
+-            for opt_in in opt_list:
+-                if opt_in in request.post_vars:
+-                    selected.append(opt_in)
+-                else:
+-                    removed.append(opt_in)
+-            ptable = s3db.pr_person
+-            putable = s3db.pr_person_user
+-            query = (putable.user_id == request.post_vars.id) & \
+-                    (putable.pe_id == ptable.pe_id)
+-            person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id
+-            db(ptable.id == person_id).update(opt_in = selected)
+-
+-            g_table = s3db["pr_group"]
+-            gm_table = s3db["pr_group_membership"]
+-            # Remove them from any team they are a member of in the removed list
+-            for team in removed:
+-                query = (g_table.name == team) & \
+-                        (gm_table.group_id == g_table.id) & \
+-                        (gm_table.person_id == person_id)
+-                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+-                if gm_rec:
+-                    db(gm_table.id == gm_rec.id).delete()
+-            # Add them to the team (if they are not already a team member)
+-            for team in selected:
+-                query = (g_table.name == team) & \
+-                        (gm_table.group_id == g_table.id) & \
+-                        (gm_table.person_id == person_id)
+-                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+-                if not gm_rec:
+-                    query = (g_table.name == team)
+-                    team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+-                    # if the team doesn't exist then add it
+-                    if team_rec == None:
+-                        team_id = g_table.insert(name = team, group_type = 5)
+-                    else:
+-                        team_id = team_rec.id
+-                    gm_table.insert(group_id = team_id,
+-                                    person_id = person_id)
+-        if settings.get_auth_openid():
+-            form = DIV(form, openid_login_form.list_user_openids())
+-        else:
+-            form = auth.profile()
++        form = auth.profile()
+         # add an opt in clause to receive emails depending on the deployment settings
+-        if settings.get_auth_opt_in_to_email():
+-            ptable = s3db.pr_person
+-            ltable = s3db.pr_person_user
+-            opt_list = settings.get_auth_opt_in_team_list()
+-            query = (ltable.user_id == form.record.id) & \
+-                    (ltable.pe_id == ptable.pe_id)
+-            db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
+-            for opt_in in opt_list:
+-                field_id = "%s_opt_in_%s" % (_table_user, opt_list)
+-                if opt_in in db_opt_in_list:
+-                    checked = "selected"
+-                else:
+-                    checked = None
+-                form[0].insert(-1,
+-                               TR(TD(LABEL("Receive %s updates:" % opt_in,
+-                                           _for="opt_in",
+-                                           _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+-                                     _class="w2p_fl"),
+-                                     INPUT(_name=opt_in, _id=field_id, _type="checkbox", _checked=checked),
+-                               _id=field_id + SQLFORM.ID_ROW_SUFFIX))
++
+     else:
+         # Retrieve Password / Logout
+         form = auth()
+@@ -561,6 +495,150 @@ def user():
+                 register_form=register_form,
+                 self_registration=self_registration)
+ 
++
++# -----------------------------------------------------------------------------
++def person():
++    """
++        Profile to show:
++         - User Details 
++         - Person Details
++         - HRM 
++        
++    """
++    configure = s3db.configure
++    set_method = s3db.set_method
++
++    # Set to current user
++    user_person_id  = str(s3_logged_in_person())
++    if not request.args or request.args[0] != user_person_id:
++        request.args = [str(user_person_id)]
++
++    # Custom Method for User
++    def auth_profile_method(r, **attr):
++        # Custom View
++        response.view = "update.html"
++        current.menu.breadcrumbs = None
++    
++        # RHeader for consistency
++        rheader = attr.get("rheader", None)
++        if callable(rheader):
++            rheader = rheader(r)
++            
++        table = auth.settings.table_user
++        tablename = table._tablename
++
++        next = URL(c = "default",
++                   f = "person",
++                   args = [ str(user_person_id),
++                            "user"])
++        onaccept = lambda form: auth.s3_approve_user(form.vars),
++        form = auth.profile( next = next,
++                             onaccept = onaccept)
++
++        return dict(
++                title = T("User Profile"),
++                rheader = rheader,
++                form = form,
++            )
++
++    set_method("pr", "person",
++               method="user",
++               action=auth_profile_method)
++
++    # Custom Method for Contacts
++    set_method("pr", "person",
++               method="contacts",
++               action=s3db.pr_contacts)
++    
++
++    if settings.has_module("asset"):
++        # Assets as component of people
++        s3db.add_component("asset_asset",
++                            pr_person="assigned_to_id")
++
++    group = request.get_vars.get("group", "staff")
++
++    # Configure person table
++    tablename = "pr_person"
++    table = s3db[tablename]
++    if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
++       (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
++        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
++    #configure(tablename,
++    #          deletable=False)
++
++    # Configure for personal mode
++    s3.crud_strings[tablename].update(
++        title_display = T("Personal Profile"),
++        title_update = T("Personal Profile"))
++
++    # CRUD pre-process
++    def prep(r):
++        if r.interactive and r.method != "import":
++            if r.component:
++                if r.component_name == "physical_description":
++                    # Hide all but those details that we want
++                    # Lock all the fields
++                    table = r.component.table
++                    for field in table.fields:
++                        table[field].writable = False
++                        table[field].readable = False
++                    # Now enable those that we want
++                    table.ethnicity.writable = True
++                    table.ethnicity.readable = True
++                    table.blood_type.writable = True
++                    table.blood_type.readable = True
++                    table.medical_conditions.writable = True
++                    table.medical_conditions.readable = True
++                    table.other_details.writable = True
++                    table.other_details.readable = True
++            else:
++                table = r.table
++                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
++                table.occupation.readable = False
++                table.occupation.writable = False
++                table.pe_label.readable = False
++                table.pe_label.writable = False
++                table.missing.readable = False
++                table.missing.writable = False
++                table.age_group.readable = False
++                table.age_group.writable = False
++                # Assume volunteers only between 12-81
++                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
++            return True
++        else:
++            # Disable non-interactive & import
++            return False
++    
++    s3.prep = prep
++
++    # CRUD post-process
++    def postp(r, output):
++        if r.interactive and r.component:
++            if r.component_name == "human_resource":
++                # Set the minimum end_date to the same as the start_date
++                s3.jquery_ready.append(
++'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
++            if r.component_name == "experience":
++                # Set the minimum end_date to the same as the start_date
++                s3.jquery_ready.append(
++'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
++            elif r.component_name == "asset":
++                # Provide a link to assign a new Asset
++                # @ToDo: Proper Widget to do this inline
++                output["add_btn"] = A(T("Assign Asset"),
++                                      _href=URL(c="asset", f="asset"),
++                                      _id="add-btn",
++                                      _class="action-btn")
++        return output
++    s3.postp = postp
++
++    output = s3_rest_controller("pr", "person",
++                                native=False,
++                                rheader = lambda r: s3db.hrm_rheader(r, 
++                                              profile = True),
++                                )
++    return output
+ # -----------------------------------------------------------------------------
+ def facebook():
+     """ Login using Facebook """
+diff --git a/controllers/hrm.py b/controllers/hrm.py
+index 19d287e..dac6196 100644
+--- a/controllers/hrm.py
++++ b/controllers/hrm.py
+@@ -463,6 +463,115 @@ def person():
+                                 )
+     return output
+ 
++def profile():
++    """
++        Profile Controller
++        - includes components relevant to HRM
++    """
++
++    configure = s3db.configure
++    set_method = s3db.set_method
++
++    request.args = [str(s3_logged_in_person())]
++
++    # Custom Method for Contacts
++    set_method("pr", resourcename,
++               method="contacts",
++               action=s3db.pr_contacts)
++
++    if settings.has_module("asset"):
++        # Assets as component of people
++        s3db.add_component("asset_asset",
++                            pr_person="assigned_to_id")
++
++    group = request.get_vars.get("group", "staff")
++
++    # Configure human resource table
++    tablename = "hrm_human_resource"
++    table = s3db[tablename]
++    table.type.default = 1
++
++    # Configure person table
++    tablename = "pr_person"
++    table = s3db[tablename]
++    if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
++       (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
++        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
++    configure(tablename,
++              deletable=False)
++
++    # Configure for personal mode
++    s3.crud_strings[tablename].update(
++        title_display = T("Personal Profile"),
++        title_update = T("Personal Profile"))
++
++    # CRUD pre-process
++    def prep(r):
++        if r.interactive and r.method != "import":
++            if r.component:
++                if r.component_name == "physical_description":
++                    # Hide all but those details that we want
++                    # Lock all the fields
++                    table = r.component.table
++                    for field in table.fields:
++                        table[field].writable = False
++                        table[field].readable = False
++                    # Now enable those that we want
++                    table.ethnicity.writable = True
++                    table.ethnicity.readable = True
++                    table.blood_type.writable = True
++                    table.blood_type.readable = True
++                    table.medical_conditions.writable = True
++                    table.medical_conditions.readable = True
++                    table.other_details.writable = True
++                    table.other_details.readable = True
++            else:
++                table = r.table
++                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
++                table.occupation.readable = False
++                table.occupation.writable = False
++                table.pe_label.readable = False
++                table.pe_label.writable = False
++                table.missing.readable = False
++                table.missing.writable = False
++                table.age_group.readable = False
++                table.age_group.writable = False
++                # Assume volunteers only between 12-81
++                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
++                return True
++        else:
++            # Disable non-interactive & import
++            return False
++    
++    s3.prep = prep
++
++    # CRUD post-process
++    def postp(r, output):
++        if r.interactive and r.component:
++            if r.component_name == "human_resource":
++                # Set the minimum end_date to the same as the start_date
++                s3.jquery_ready.append(
++'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
++            if r.component_name == "experience":
++                # Set the minimum end_date to the same as the start_date
++                s3.jquery_ready.append(
++'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
++            elif r.component_name == "asset":
++                # Provide a link to assign a new Asset
++                # @ToDo: Proper Widget to do this inline
++                output["add_btn"] = A(T("Assign Asset"),
++                                      _href=URL(c="asset", f="asset"),
++                                      _id="add-btn",
++                                      _class="action-btn")
++        return output
++    s3.postp = postp
++
++    output = s3_rest_controller("pr", "person",
++                                native=False,
++                                rheader=s3db.hrm_rheader,
++                                )
++    return output
++
+ # -----------------------------------------------------------------------------
+ def person_search():
+     """
+diff --git a/controllers/inv.py b/controllers/inv.py
+index 7addd92..0c75000 100644
+--- a/controllers/inv.py
++++ b/controllers/inv.py
+@@ -66,8 +66,6 @@ def index():
+                                                   extension="aadata",
+                                                   vars={"id":"warehouse_list_1"},
+                                                   ),
+-                                     dt_text_maximum_len = 16,
+-                                     dt_text_condense_len = 12,
+                                      )
+             else:
+                 warehouse = dt.json(totalrows,
+@@ -168,9 +166,9 @@ def index():
+                                                      "dtwarning": warningList,
+                                                      "dtalert": alertList,
+                                                      },
+-                                        dt_text_maximum_len = 10,
+-                                        dt_text_condense_len = 8,
+-                                        dt_group_space = "true",
++                                        #dt_text_maximum_len = 10,
++                                        #dt_text_condense_len = 8,
++                                        #dt_group_space = "true",
+                                         dt_shrink_groups = "accordion",
+                                         #dt_shrink_groups = "individual",
+                                         )
+@@ -234,8 +232,6 @@ def index():
+                                                        extension="aadata",
+                                                        vars={"id": "supply_list_1"},
+                                                        ),
+-                                       dt_text_maximum_len = 16,
+-                                       dt_text_condense_len = 12,
+                                        )
+             else:
+                 supply_items = dt.json(totalrows,
+diff --git a/controllers/org.py b/controllers/org.py
+index 2416cba..21fb1ce 100644
+--- a/controllers/org.py
++++ b/controllers/org.py
+@@ -38,17 +38,18 @@ def subsector():
+     return s3_rest_controller()
+ 
+ # -----------------------------------------------------------------------------
+-def site():
+-    """ RESTful CRUD controller """
+-
+-    # Pre-processor
+-    def prep(r):
+-        # Location Filter
+-        s3db.gis_location_filter(r)
+-        return True
+-    s3.prep = prep
+-
+-    return s3_rest_controller()
++#  What is this controller needed for? It creates issues with  Permissions 
++#def site():
++#    """ RESTful CRUD controller """
++#
++#    # Pre-processor
++#    def prep(r):
++#        # Location Filter
++#        s3db.gis_location_filter(r)
++#        return True
++#    s3.prep = prep
++#
++#    return s3_rest_controller()
+ 
+ # -----------------------------------------------------------------------------
+ def site_org_json():
+diff --git a/modules/eden/hrm.py b/modules/eden/hrm.py
+index 38af587..b60808e 100644
+--- a/modules/eden/hrm.py
++++ b/modules/eden/hrm.py
+@@ -113,6 +113,7 @@ class S3HRModel(S3Model):
+                 group = "volunteer"
+ 
+         settings = current.deployment_settings
++        auth = current.auth
+         job_roles = settings.get_hrm_job_roles()
+         organisation_label = settings.get_hrm_organisation_label()
+ 
+@@ -121,11 +122,24 @@ class S3HRModel(S3Model):
+                                   self.super_link("track_id", "sit_trackable"),
+                                   self.org_organisation_id(
+                                     label = organisation_label,
+-                                    widget=S3OrganisationAutocompleteWidget(
+-                                        default_from_profile=True),
++                                    requires = self.org_organisation_requires(updateable_only = True),
++                                    widget = None,
++                                    #widget=S3OrganisationAutocompleteWidget(
++                                    #    default_from_profile=True),
+                                     empty=False
+                                     ),
+-                                  self.org_site_id,
++                                   self.super_link("site_id", "org_site",
++                                                   label=T("Office/Warehouse/Facility"),
++                                                   filterby = "site_id",
++                                                   filter_opts = auth.permitted_facilities(redirect_on_error=False),
++                                                   not_filterby = "obsolete",
++                                                   not_filter_opts = [True],
++                                                   default = auth.user.site_id if auth.is_logged_in() else None,
++                                                   readable = True,
++                                                   writable = True,
++                                                   empty = False,
++                                                   represent = self.org_site_represent,
++                                                   ),
+                                   self.pr_person_id(
+                                     widget=S3AddPersonWidget(controller="hrm"),
+                                     requires=IS_ADD_PERSON_WIDGET(),
+@@ -198,8 +212,6 @@ class S3HRModel(S3Model):
+                                         ),
+                                   *s3_meta_fields())
+ 
+-        table.site_id.label = T("Office/Warehouse/Facility")
+-
+         crud_strings["hrm_staff"] = Storage(
+             title_create = T("Add Staff Member"),
+             title_display = T("Staff Member Details"),
+@@ -1585,7 +1597,18 @@ class S3HRSkillModel(S3Model):
+         tablename = "hrm_training_event"
+         table = define_table(tablename,
+                              course_id(empty=False),
+-                             site_id,
++                            self.super_link("site_id", "org_site",
++                                            label=T("Office/Warehouse/Facility"),
++                                            filterby = "site_id",
++                                            filter_opts = auth.permitted_facilities(redirect_on_error=False),
++                                            not_filterby = "obsolete",
++                                            not_filter_opts = [True],
++                                            default = auth.user.site_id if auth.is_logged_in() else None,
++                                            readable = True,
++                                            writable = True,
++                                            empty = False,
++                                            represent = self.org_site_represent,
++                                            ),
+                              Field("start_date", "datetime",
+                                    widget = S3DateWidget(),
+                                    requires = IS_DATE(format=s3_date_format),
+@@ -4142,7 +4165,8 @@ class HRMTrainingVirtualFields:
+         return current.messages.NONE
+ 
+ # =============================================================================
+-def hrm_rheader(r, tabs=[]):
++def hrm_rheader(r, tabs=[],
++                profile = False):
+     """ Resource headers for component views """
+ 
+     if r.representation != "html":
+@@ -4291,7 +4315,25 @@ def hrm_rheader(r, tabs=[]):
+         else:
+             trainings_tab = None
+ 
+-        if current.session.s3.hrm.mode is not None:
++        if profile:
++            # Configure for personal mode
++            tabs = [(T("Person Details"), None),
++                    (T("User Account"), "user"),
++                    (T("Staff/Volunteer Record"), "human_resource"),
++                    id_tab,
++                    description_tab,
++                    (T("Address"), "address"),
++                    (T("Contacts"), "contacts"),
++                    education_tab,
++                    trainings_tab,
++                    certificates_tab,
++                    skills_tab,
++                    credentials_tab,
++                    experience_tab,
++                    teams_tab,
++                    #(T("Assets"), "asset"),
++                   ]
++        elif current.session.s3.hrm.mode is not None:
+             # Configure for personal mode
+             tabs = [(T("Person Details"), None),
+                     id_tab,
+@@ -4316,10 +4358,10 @@ def hrm_rheader(r, tabs=[]):
+             tabs = [(T("Person Details"), None),
+                     (hr_record, "human_resource"),
+                     id_tab,
+-                    education_tab,
+                     description_tab,
+                     (T("Address"), "address"),
+                     (T("Contacts"), "contacts"),
++                    education_tab,
+                     trainings_tab,
+                     certificates_tab,
+                     skills_tab,
+diff --git a/modules/eden/inv.py b/modules/eden/inv.py
+index e67713a..f744346 100644
+--- a/modules/eden/inv.py
++++ b/modules/eden/inv.py
+@@ -424,8 +424,10 @@ class S3InventoryModel(S3Model):
+                                                    #                                T("Enter some characters to bring up a list of possible matches"))),
+                                                    represent=self.org_site_represent),
+                                   self.supply_item_entity_id,
+-                                  self.supply_item_id(ondelete = "RESTRICT"),
+-                                  self.supply_item_pack_id(ondelete = "RESTRICT"),
++                                  self.supply_item_id(ondelete = "RESTRICT",
++                                                           required = True),
++                                  self.supply_item_pack_id(ondelete = "RESTRICT",
++                                                           required = True),
+                                   Field("quantity", "double", notnull=True,
+                                         label = T("Quantity"),
+                                         represent=lambda v, row=None: \
+diff --git a/modules/eden/member.py b/modules/eden/member.py
+index 8f837ba..5ccb9ba 100644
+--- a/modules/eden/member.py
++++ b/modules/eden/member.py
+@@ -131,7 +131,9 @@ class S3MembersModel(S3Model):
+ 
+         tablename = "member_membership"
+         table = define_table(tablename,
+-                             organisation_id(widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
++                             organisation_id(#widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
++                                             requires = self.org_organisation_requires(updateable_only = True),
++                                             widget = None,
+                                              empty=False),
+                              person_id(widget=S3AddPersonWidget(controller="member"),
+                                        requires=IS_ADD_PERSON_WIDGET(),
+diff --git a/modules/eden/org.py b/modules/eden/org.py
+index 830f105..741406d 100644
+--- a/modules/eden/org.py
++++ b/modules/eden/org.py
+@@ -40,6 +40,7 @@ __all__ = ["S3OrganisationModel",
+            "S3OfficeTypeTagModel",
+            "org_organisation_logo",
+            "org_root_organisation",
++           "org_organisation_requires",
+            "org_organisation_represent",
+            "org_site_represent",
+            "org_rheader",
+@@ -423,13 +424,11 @@ class S3OrganisationModel(S3Model):
+                                                       title=T("Organization"),
+                                                       tooltip=help)
+ 
++        auth = current.auth
+         organisation_id = S3ReusableField("organisation_id", table,
+                                           sortby="name",
+-                                          requires=IS_NULL_OR(
+-                                                        IS_ONE_OF(db, "org_organisation.id",
+-                                                                  org_organisation_represent,
+-                                                                  orderby="org_organisation.name",
+-                                                                  sort=True)),
++                                          default = auth.user.organisation_id if auth.is_logged_in() else None,
++                                          requires=org_organisation_requires(),
+                                           represent=org_organisation_represent,
+                                           label=T("Organization"),
+                                           comment=organisation_comment,
+@@ -1061,7 +1060,6 @@ class S3OrganisationModel(S3Model):
+         if record:
+             current.s3db.pr_update_affiliations(table, record)
+         return
+-
+ # =============================================================================
+ class S3OrganisationVirtualFields:
+     """ Virtual fields for the org_organisation table """
+@@ -1165,6 +1163,7 @@ class S3SiteModel(S3Model):
+     """
+ 
+     names = ["org_site",
++             "org_site_requires",
+              "org_site_id",
+              ]
+ 
+@@ -1214,7 +1213,7 @@ class S3SiteModel(S3Model):
+         site_id = self.super_link("site_id", "org_site",
+                                   #writable = True,
+                                   #readable = True,
+-                                  label=T("Facility"),
++                                  label=T("Office/Warehouse/Facility"),
+                                   default=auth.user.site_id if auth.is_logged_in() else None,
+                                   represent=lambda id: \
+                                     org_site_represent(id, show_link=True),
+@@ -1223,7 +1222,7 @@ class S3SiteModel(S3Model):
+                                   # Comment these to use a Dropdown & not an Autocomplete
+                                   widget=S3SiteAutocompleteWidget(),
+                                   comment=DIV(_class="tooltip",
+-                                                _title="%s|%s" % (T("Facility"),
++                                                _title="%s|%s" % (T("Office/Warehouse/Facility"),
+                                                                   T("Enter some characters to bring up a list of possible matches")))
+                                   )
+ 
+@@ -1797,8 +1796,11 @@ class S3OfficeModel(S3Model):
+                                    #writable=False,
+                                    # @ToDo: Deployment Setting to add validator to make these unique
+                                    ),
+-                             self.org_organisation_id(widget=S3OrganisationAutocompleteWidget(
+-                                default_from_profile=True)),
++                             self.org_organisation_id(
++                                 #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
++                                 widget = None,
++                                 requires = self.org_organisation_requires(updateable_only = True),
++                                 ),
+                              office_type_id(
+                                             #readable = False,
+                                             #writable = False,
+@@ -2195,7 +2197,20 @@ def org_root_organisation(organisation_id=None, pe_id=None):
+             return (row.id, row.pe_id)
+ 
+     return None, None
+-
++# =============================================================================
++def org_organisation_requires(updateable_only = False):
++    db = current.db
++    s3db = current.s3db
++    if updateable_only:
++        set = db(current.auth.s3_accessible_query("update", s3db.org_organisation))
++    else:
++        set = db
++    return IS_NULL_OR( IS_ONE_OF( set,
++                                  "org_organisation.id",
++                                  org_organisation_represent,
++                                  orderby="org_organisation.name",
++                                  sort=True)
++                      )
+ # =============================================================================
+ def org_organisation_represent(id, row=None, show_link=False,
+                                acronym=True, parent=True):
+diff --git a/modules/eden/project.py b/modules/eden/project.py
+index 699c21a..be4083d 100644
+--- a/modules/eden/project.py
++++ b/modules/eden/project.py
+@@ -279,6 +279,9 @@ class S3ProjectModel(S3Model):
+         # Project
+         #
+ 
++        LEAD_ROLE = settings.get_project_organisation_lead_role()
++        org_label = settings.get_project_organisation_roles()[LEAD_ROLE]
++
+         # HFA
+         project_hfa_opts = {
+             1: T("HFA1: Ensure that disaster risk reduction is a national and a local priority with a strong institutional basis for implementation."),
+@@ -293,10 +296,10 @@ class S3ProjectModel(S3Model):
+                              super_link("doc_id", "doc_entity"),
+                              # multi_orgs deployments use the separate project_organisation table
+                              # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
+-                             organisation_id(
+-                                          readable=False if multi_orgs else True,
+-                                          writable=False if multi_orgs else True,
+-                                        ),
++                             organisation_id( label = org_label,
++                                              requires = self.org_organisation_requires(updateable_only = True),
++                                              widget = None,
++                                              ),
+                              Field("name", unique = True,
+                                    label = T("Name"),
+                                    # Require unique=True if using IS_NOT_ONE_OF like here (same table,
+@@ -465,10 +468,7 @@ class S3ProjectModel(S3Model):
+         project_search = S3Search(advanced = advanced)
+ 
+         # Resource Configuration
+-        if multi_orgs:
+-            create_next = URL(c="project", f="project",
+-                              args=["[id]", "organisation"])
+-        elif theme_percentages:
++        if theme_percentages:
+             create_next = URL(c="project", f="project",
+                               args=["[id]", "theme_percentage"])
+         elif mode_task:
+@@ -497,11 +497,7 @@ class S3ProjectModel(S3Model):
+             if use_codes:
+                 append("code")
+             append("name")
+-            if multi_orgs:
+-                LEAD_ROLE = settings.get_project_organisation_lead_role()
+-                append((settings.get_project_organisation_roles()[LEAD_ROLE], "organisation_id"))
+-            else:
+-                append("organisation_id")
++            append("organisation_id")
+             if use_sectors:
+                 append("sector_id")
+             if mode_3w:
+@@ -526,6 +522,7 @@ class S3ProjectModel(S3Model):
+                   super_entity="doc_entity",
+                   deduplicate=self.project_project_deduplicate,
+                   onvalidation=self.project_project_onvalidation,
++                  onaccept=self.project_project_onaccept,
+                   create_next=create_next,
+                   search_method=project_search,
+                   list_fields=list_fields,
+@@ -548,7 +545,8 @@ class S3ProjectModel(S3Model):
+         project_id = S3ReusableField("project_id", table,
+                                      sortby="name",
+                                      requires = IS_NULL_OR(
+-                                                    IS_ONE_OF(db, "project_project.id",
++                                                    IS_ONE_OF(db(current.auth.s3_accessible_query("update", table)), 
++                                                              "project_project.id",
+                                                               project_project_represent_no_link
+                                                               )),
+                                      represent = project_project_represent,
+@@ -742,6 +740,36 @@ class S3ProjectModel(S3Model):
+ 
+     # -------------------------------------------------------------------------
+     @staticmethod
++    def project_project_onaccept(form):
++        """ 
++            Form onaccept
++            Creates project_organisation record for the project.organisation_id
++        """
++
++        # if the project has an Host National Society organisation
++        # update organisation_id with its id
++
++        db = current.db
++        s3db = current.s3db
++        ptable = db.project_project
++        otable = db.project_organisation
++        vars = form.vars
++        
++        lead_role = current.deployment_settings.get_project_organisation_lead_role()
++
++        query = (otable.project_id == vars.id) & \
++                (otable.role == lead_role)
++                
++        # Update the lead organisation
++        count = db(query).update( organisation_id = vars.organisation_id )
++        if not count:
++            #if there is no record to update - create a record
++            otable.insert( project_id = vars.id,
++                           organisation_id = vars.organisation_id,
++                           role = lead_role )
++
++    # -------------------------------------------------------------------------
++    @staticmethod
+     def project_project_deduplicate(item):
+         """ Import item de-duplication """
+ 
+@@ -1342,9 +1370,10 @@ class S3Project3WModel(S3Model):
+         # Reusable Field
+         project_location_id = S3ReusableField("project_location_id", table,
+                                       requires = IS_NULL_OR(
+-                                                    IS_ONE_OF(db, "project_location.id",
+-                                                              project_location_represent,
+-                                                              sort=True)),
++                                                    IS_ONE_OF( db(current.auth.s3_accessible_query("update", table)), 
++                                                               "project_location.id",
++                                                               project_location_represent,
++                                                               sort=True)),
+                                       represent = project_location_represent,
+                                       label = LOCATION,
+                                       comment = S3AddResourceLink(ADD_LOCATION,
+@@ -1685,11 +1714,13 @@ class S3Project3WModel(S3Model):
+         tablename = "project_organisation"
+         table = define_table(tablename,
+                              project_id(),
+-                             organisation_id(comment=S3AddResourceLink(c="org",
+-                                                                       f="organisation",
+-                                                                       label=T("Add Organization"),
+-                                                                       title=T("Organization"),
+-                                                                       tooltip=organisation_help)
++                             organisation_id( requires = self.org_organisation_requires(updateable_only = True),
++                                              widget = None,
++                                              comment=S3AddResourceLink(c="org",
++                                                                        f="organisation",
++                                                                        label=T("Add Organization"),
++                                                                        title=T("Organization"),
++                                                                        tooltip=organisation_help)
+                                              ),
+                              Field("role", "integer",
+                                    requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
+@@ -4034,7 +4065,7 @@ class S3ProjectOrganisationDonorVirtualFields:
+ 
+ # =============================================================================
+ class S3ProjectOrganisationFundingVirtualFields:
+-    """ Virtual fields for the project_project table when multi_orgs=True """
++    """ Virtual fields for the project_project table """
+ 
+     # -------------------------------------------------------------------------
+     def total_organisation_amount(self):
+diff --git a/modules/eden/req.py b/modules/eden/req.py
+index 52e1f15..4354486 100644
+--- a/modules/eden/req.py
++++ b/modules/eden/req.py
+@@ -215,6 +215,8 @@ class S3RequestModel(S3Model):
+                                                    readable = True,
+                                                    writable = True,
+                                                    empty = False,
++                                                   filterby = "site_id",
++                                                   filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                                    # Comment these to use a Dropdown & not an Autocomplete
+                                                    #widget = S3SiteAutocompleteWidget(),
+                                                    #comment = DIV(_class="tooltip",
+diff --git a/modules/s3/s3aaa.py b/modules/s3/s3aaa.py
+index e356bbc..4e73480 100644
+--- a/modules/s3/s3aaa.py
++++ b/modules/s3/s3aaa.py
+@@ -167,6 +167,8 @@ class AuthS3(Auth):
+         self.settings.lock_keys = True
+ 
+         self.messages.lock_keys = False
++        
++        # @ToDo Move these to deployemnt_settings modules/s3cfg.py
+         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
+         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
+         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
+@@ -174,9 +176,15 @@ class AuthS3(Auth):
+         self.messages.welcome_email_subject = "Welcome to %(system_name)s" % \
+             dict(system_name=system_name)
+         self.messages.welcome_email = \
+-            "Welcome to %(system_name)s - click on the link %(url)s to complete your profile" % \
+-                dict(system_name = system_name,
+-                     url = deployment_settings.get_base_public_url() + URL("default", "user", args=["profile"]))
++"""Welcome to %(system_name)s
++ - You can start using %(system_name)s at: %(url)s
++ - To edit your profile go to: %(url)s%(profile)s
++Thank you
++""" % \
++            dict(system_name = system_name,
++                 url = deployment_settings.get_base_public_url(),
++                 profile = URL("default", "user", args=["profile"])
++                 )
+         self.messages.duplicate_email = "This email address is already in use"
+         self.messages.registration_disabled = "Registration Disabled!"
+         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
+@@ -881,6 +889,8 @@ class AuthS3(Auth):
+             if len(users) == 1:
+                 # 1st user to register doesn't need verification/approval
+                 self.s3_approve_user(form.vars)
++                self.s3_send_welcome_email(form.vars)
++                current.session.confirmation = self.messages.registration_successful
+ 
+                 # 1st user gets Admin rights
+                 admin_group_id = 1
+@@ -1000,6 +1010,8 @@ class AuthS3(Auth):
+ 
+         request = current.request
+         session = current.session
++        settings = current.deployment_settings
++
+         if next == DEFAULT:
+             next = request.get_vars._next \
+                 or request.post_vars._next \
+@@ -1011,35 +1023,103 @@ class AuthS3(Auth):
+         if log == DEFAULT:
+             log = self.messages.profile_log
+         labels, required = s3_mark_required(utable)
+-        form = SQLFORM(
+-            utable,
+-            self.user.id,
+-            fields = self.settings.profile_fields,
+-            labels = labels,
+-            hidden = dict(_next=next),
+-            showid = self.settings.showid,
+-            submit_button = self.messages.profile_save_button,
+-            delete_label = self.messages.delete_label,
+-            upload = self.settings.download_url,
+-            formstyle = self.settings.formstyle,
+-            separator = ""
+-            )
+-        if form.accepts(request, session,
+-                        formname='profile',
+-                        onvalidation=onvalidation,
+-                        hideerror=self.settings.hideerror):
+-            self.user.update(utable._filter_fields(form.vars))
+-            session.flash = self.messages.profile_updated
+-            if log:
+-                self.log_event(log % self.user)
+-            callback(onaccept, form)
+-            if not next:
+-                next = self.url(args=request.args)
+-            elif isinstance(next, (list, tuple)): ### fix issue with 2.6
+-                next = next[0]
+-            elif next and not next[0] == '/' and next[:4] != 'http':
+-                next = self.url(next.replace('[id]', str(form.vars.id)))
+-            redirect(next)
++        
++        # If we have an opt_in and some post_vars then update the opt_in value
++        if settings.get_auth_opt_in_to_email() and request.post_vars:
++            opt_list = settings.get_auth_opt_in_team_list()
++            removed = []
++            selected = []
++            for opt_in in opt_list:
++                if opt_in in request.post_vars:
++                    selected.append(opt_in)
++                else:
++                    removed.append(opt_in)
++            ptable = s3db.pr_person
++            putable = s3db.pr_person_user
++            query = (putable.user_id == request.post_vars.id) & \
++                    (putable.pe_id == ptable.pe_id)
++            person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id
++            db(ptable.id == person_id).update(opt_in = selected)
++
++            g_table = s3db["pr_group"]
++            gm_table = s3db["pr_group_membership"]
++            # Remove them from any team they are a member of in the removed list
++            for team in removed:
++                query = (g_table.name == team) & \
++                        (gm_table.group_id == g_table.id) & \
++                        (gm_table.person_id == person_id)
++                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
++                if gm_rec:
++                    db(gm_table.id == gm_rec.id).delete()
++            # Add them to the team (if they are not already a team member)
++            for team in selected:
++                query = (g_table.name == team) & \
++                        (gm_table.group_id == g_table.id) & \
++                        (gm_table.person_id == person_id)
++                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
++                if not gm_rec:
++                    query = (g_table.name == team)
++                    team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
++                    # if the team doesn't exist then add it
++                    if team_rec == None:
++                        team_id = g_table.insert(name = team, group_type = 5)
++                    else:
++                        team_id = team_rec.id
++                    gm_table.insert(group_id = team_id,
++                                    person_id = person_id)
++        if settings.get_auth_openid():
++            form = DIV(form, openid_login_form.list_user_openids())
++        else:
++            form = SQLFORM(
++                utable,
++                self.user.id,
++                fields = self.settings.profile_fields,
++                labels = labels,
++                hidden = dict(_next=next),
++                showid = self.settings.showid,
++                submit_button = self.messages.profile_save_button,
++                delete_label = self.messages.delete_label,
++                upload = self.settings.download_url,
++                formstyle = self.settings.formstyle,
++                separator = ""
++                )
++            if form.accepts(request, session,
++                            formname='profile',
++                            onvalidation=onvalidation,
++                            hideerror=self.settings.hideerror):
++                self.user.update(utable._filter_fields(form.vars))
++                session.flash = self.messages.profile_updated
++                if log:
++                    self.log_event(log % self.user)
++                callback(onaccept, form)
++                if not next:
++                    next = self.url(args=request.args)
++                elif isinstance(next, (list, tuple)): ### fix issue with 2.6
++                    next = next[0]
++                elif next and not next[0] == '/' and next[:4] != 'http':
++                    next = self.url(next.replace('[id]', str(form.vars.id)))
++                redirect(next)
++
++        if settings.get_auth_opt_in_to_email():
++            ptable = s3db.pr_person
++            ltable = s3db.pr_person_user
++            opt_list = settings.get_auth_opt_in_team_list()
++            query = (ltable.user_id == form.record.id) & \
++                    (ltable.pe_id == ptable.pe_id)
++            db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
++            for opt_in in opt_list:
++                field_id = "%s_opt_in_%s" % (_table_user, opt_list)
++                if opt_in in db_opt_in_list:
++                    checked = "selected"
++                else:
++                    checked = None
++                form[0].insert(-1,
++                               TR(TD(LABEL("Receive %s updates:" % opt_in,
++                                           _for="opt_in",
++                                           _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
++                                     _class="w2p_fl"),
++                                     INPUT(_name=opt_in, _id=field_id, _type="checkbox", _checked=checked),
++                               _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+         return form
+ 
+     # -------------------------------------------------------------------------
+@@ -1296,7 +1376,9 @@ class AuthS3(Auth):
+         else:
+             approved = True
+             self.s3_approve_user(user)
++            self.s3_send_welcome_email(user)
+             current.session.confirmation = self.messages.email_verified
++            current.session.flash = self.messages.registration_successful
+ 
+             if not deployment_settings.get_auth_always_notify_approver():
+                 return True
+@@ -1383,17 +1465,6 @@ class AuthS3(Auth):
+         # Allow them to login
+         db(utable.id == user_id).update(registration_key = "")
+ 
+-        session.confirmation = self.messages.registration_successful
+-
+-        # Send email to user confirming that they are now able to login
+-        if not self.settings.mailer or \
+-               not self.settings.mailer.send(to=user.email,
+-                    subject = self.messages.confirmation_email_subject,
+-                    message = self.messages.confirmation_email):
+-                db.rollback()
+-                session.warning = self.messages.unable_send_email
+-                return
+-
+         return
+ 
+     # -------------------------------------------------------------------------
+@@ -1919,7 +1990,11 @@ class AuthS3(Auth):
+         subject = self.messages.welcome_email_subject
+         message = self.messages.welcome_email
+ 
+-        self.settings.mailer.send(user["email"], subject=subject, message=message)
++        results = self.settings.mailer.send(user["email"], subject=subject, message=message)
++        if not results:
++            db.rollback()
++            current.response.error = self.messages.unable_send_email
++        return
+ 
+     # -------------------------------------------------------------------------
+     # S3-specific authentication methods
+@@ -3278,7 +3353,11 @@ class AuthS3(Auth):
+             return None
+ 
+     # -------------------------------------------------------------------------
+-    def s3_set_record_owner(self, table, record, force_update=False, **fields):
++    def s3_set_record_owner(self, 
++                            table, 
++                            record, 
++                            force_update = False,
++                            **fields):
+         """
+             Update the record owner, to be called from CRUD and Importer
+ 
+@@ -3292,6 +3371,7 @@ class AuthS3(Auth):
+         """
+ 
+         s3db = current.s3db
++        db = current.db
+ 
+         # Ownership fields
+         OUSR = "owned_by_user"
+@@ -3353,15 +3433,18 @@ class AuthS3(Auth):
+         if OUSR in fields_in_table:
+             if OUSR in fields:
+                 data[OUSR] = fields[OUSR]
+-            elif row[OUSR]:
+-                pass
+             else:
+                 user_id = None
+                 # Records which link to a person_id shall be owned by that person
+-                if tablename == "pr_person":
++                if tablename == ptablename:
+                     user_id = self.s3_get_user_id(row[table._id])
+                 elif PID in row:
+                     user_id = self.s3_get_user_id(row[PID])
++                elif EID in row:
++                    person_record = db(db[ptablename].pe_id == row[EID]
++                                       ).select(limitby = [0,1]).first()
++                    if person_record:
++                        user_id = self.s3_get_user_id(person_record.id)
+                 if not user_id and self.s3_logged_in() and self.user:
+                     # Fallback to current user
+                     user_id = self.user.id
+diff --git a/modules/s3/s3rest.py b/modules/s3/s3rest.py
+index 7139205..e71bc2c 100644
+--- a/modules/s3/s3rest.py
++++ b/modules/s3/s3rest.py
+@@ -844,7 +844,7 @@ class S3Request(object):
+                 count = self.resource.count()
+                 if self.vars is not None and count == 1:
+                     self.resource.load()
+-                    self.record = self.resource._rows.first()
++                    self.record = self.resource._rows[0]
+                 else:
+                     if hasattr(self.resource.search, "search_interactive"):
+                         redirect(URL(r=self, f=self.name, args="search",
+diff --git a/modules/s3cfg.py b/modules/s3cfg.py
+index a31c3c2..3e2b0f2 100644
+--- a/modules/s3cfg.py
++++ b/modules/s3cfg.py
+@@ -224,7 +224,6 @@ class S3Config(Storage):
+         return self.auth.get("record_approval_required_for", None)
+     def get_auth_realm_entity(self):
+         """ Hook to determine the owner entity of a record """
+-        return self.auth.get("realm_entity", None)
+     def get_auth_person_realm_human_resource_org(self):
+         """
+             Sets pr_person.realm_entity to
+diff --git a/modules/tests/roles/IFRC/Org-A_permission_matrix.csv b/modules/tests/roles/IFRC/Org-A_permission_matrix.csv
+index f4db9a2..f46b359 100644
+--- a/modules/tests/roles/IFRC/Org-A_permission_matrix.csv
++++ b/modules/tests/roles/IFRC/Org-A_permission_matrix.csv
+@@ -1,145 +1,145 @@
+-,table,c,f,method,uuid,asset_reader@org-a.com,asset_data_entry@org-a.com,asset_editor@org-a.com,asset_super@org-a.com,inv_reader@org-a.com,inv_data_entry@org-a.com,inv_editor@org-a.com,inv_super@org-a.com,irs_reader@org-a.com,irs_data_entry@org-a.com,irs_editor@org-a.com,irs_super@org-a.com,member_reader@org-a.com,member_data_entry@org-a.com,member_editor@org-a.com,member_super@org-a.com,project_reader@org-a.com,project_data_entry@org-a.com,project_editor@org-a.com,project_super@org-a.com,staff_reader@org-a.com,staff_data_entry@org-a.com,staff_editor@org-a.com,staff_super@org-a.com,vol_reader@org-a.com,vol_data_entry@org-a.com,vol_editor@org-a.com,vol_super@org-a.com,survey_reader@org-a.com,survey_data_entry@org-a.com,survey_editor@org-a.com,survey_super@org-a.com
+-1,org_organisation,org,organisation,create,,,,,Yes,,,,Yes,,,,,,,,Yes,,,,Yes,,,,Yes,,,,Yes,,,,Yes
+-2,org_organisation,org,organisation,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-3,org_organisation,org,organisation,read,Org-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-4,org_organisation,org,organisation,update,Org-A,,,Yes,Yes,,,Yes,Yes,,,,,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
+-5,org_organisation,org,organisation,delete,Org-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-6,org_organisation,org,organisation,read,Org-A-Branch-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-7,org_organisation,org,organisation,update,Org-A-Branch-A,,,Yes,Yes,,,Yes,Yes,,,,,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
+-8,org_organisation,org,organisation,delete,Org-A-Branch-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-9,org_organisation,org,organisation,read,Org-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-10,org_organisation,org,organisation,update,Org-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-11,org_organisation,org,organisation,delete,Org-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-12,org_office,org,office,create,,,,,Yes,,,,Yes,,,,,,,,Yes,,,,Yes,,,,Yes,,,,Yes,,,,Yes
+-13,org_office,org,office,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-14,org_office,org,office,read,Org-A Office-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-15,org_office,org,office,update,Org-A Office-A,,,Yes,Yes,,,Yes,Yes,,,,,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
+-16,org_office,org,office,delete,Org-A Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-17,org_office,org,office,read,Org-A-Branch-A Office-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-18,org_office,org,office,update,Org-A-Branch-A Office-A,,,Yes,Yes,,,Yes,Yes,,,,,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
+-19,org_office,org,office,delete,Org-A-Branch-A Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-20,org_office,org,office,read,Org-B Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-21,org_office,org,office,update,Org-B Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-22,org_office,org,office,delete,Org-B Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-23,hrm_human_resource,hrm,human_resource,create,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-24,hrm_human_resource,hrm,human_resource,read,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-25,hrm_human_resource,hrm,human_resource,read,Org-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-26,hrm_human_resource,hrm,human_resource,update,Org-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-27,hrm_human_resource,hrm,human_resource,delete,Org-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-28,hrm_human_resource,hrm,human_resource,read,Org-A-Branch-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-29,hrm_human_resource,hrm,human_resource,update,Org-A-Branch-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-30,hrm_human_resource,hrm,human_resource,delete,Org-A-Branch-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-31,hrm_human_resource,hrm,human_resource,read,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-32,hrm_human_resource,hrm,human_resource,update,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-33,hrm_human_resource,hrm,human_resource,delete,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-34,,hrm,staff,create,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,,,,,
+-35,hrm_human_resource,,,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-36,hrm_human_resource,,,read,Org-A Office-A Staff-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-37,,hrm,staff,read,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,
+-38,hrm_human_resource,hrm,staff,read,Org-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,
+-39,hrm_human_resource,hrm,staff,update,Org-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,
+-40,hrm_human_resource,hrm,staff,delete,Org-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,
+-41,hrm_human_resource,,,read,Org-A-Branch-A Office-A Staff-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-42,hrm_human_resource,hrm,staff,read,Org-A-Branch-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,
+-43,hrm_human_resource,hrm,staff,update,Org-A-Branch-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,
+-44,hrm_human_resource,hrm,staff,delete,Org-A-Branch-A Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,
+-45,hrm_human_resource,hrm,staff,read,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-46,hrm_human_resource,hrm,staff,update,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-47,hrm_human_resource,hrm,staff,delete,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-48,,vol,volunteer,create,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,
+-49,hrm_human_resource,,,read,Org-A Office-A Vol-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-50,,vol,volunteer,read,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,
+-51,hrm_human_resource,vol,volunteer,read,Org-A Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,
+-52,hrm_human_resource,vol,volunteer,update,Org-A Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,
+-53,hrm_human_resource,vol,volunteer,delete,Org-A Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,
+-54,hrm_human_resource,,,read,Org-A-Branch-A Office-A Vol-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+-55,hrm_human_resource,vol,volunteer,read,Org-A-Branch-A Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,
+-56,hrm_human_resource,vol,volunteer,update,Org-A-Branch-A Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,
+-57,hrm_human_resource,vol,volunteer,delete,Org-A-Branch-A Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,
+-58,hrm_human_resource,vol,volunteer,read,Org-B Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-59,hrm_human_resource,vol,volunteer,update,Org-B Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-60,hrm_human_resource,vol,volunteer,delete,Org-B Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-61,asset_asset,asset,asset,create,,,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-62,asset_asset,asset,asset,read,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-63,asset_asset,asset,asset,read,Org-A Asset-A,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-64,asset_asset,asset,asset,update,Org-A Asset-A,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-65,asset_asset,asset,asset,delete,Org-A Asset-A,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-66,asset_asset,asset,asset,read,Org-A-Branch-A Asset-A,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-67,asset_asset,asset,asset,update,Org-A-Branch-A Asset-A,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-68,asset_asset,asset,asset,delete,Org-A-Branch-A Asset-A,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-69,asset_asset,asset,asset,read,Org-B Asset-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-70,asset_asset,asset,asset,update,Org-B Asset-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-71,asset_asset,asset,asset,delete,Org-B Asset-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-72,supply_item,supply,item,create,,,Yes,Yes,Yes,,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-73,supply_item,supply,item,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-74,supply_item,supply,item,read,Org-A Asset-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-75,supply_item,supply,item,update,Org-A Asset-A Item-A,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-76,supply_item,supply,item,delete,Org-A Asset-A Item-A,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-77,supply_item,supply,item,read,Org-A-Branch-A Asset-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-78,supply_item,supply,item,update,Org-A-Branch-A Asset-A Item-A,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-79,supply_item,supply,item,delete,Org-A-Branch-A Asset-A Item-A,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-80,supply_item,supply,item,read,Org-B Asset-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-81,supply_item,supply,item,update,Org-B Asset-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-82,supply_item,supply,item,delete,Org-B Asset-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-83,supply_item,supply,item,read,Org-A InvItem-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-84,supply_item,supply,item,update,Org-A InvItem-A Item-A,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-85,supply_item,supply,item,delete,Org-A InvItem-A Item-A,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-86,supply_item,supply,item,read,Org-A-Branch-A InvItem-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-87,supply_item,supply,item,update,Org-A-Branch-A InvItem-A Item-A,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-88,supply_item,supply,item,delete,Org-A-Branch-A InvItem-A Item-A,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-89,supply_item,supply,item,read,Org-B InvItem-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-90,supply_item,supply,item,update,Org-B InvItem-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-91,supply_item,supply,item,delete,Org-B InvItem-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-92,member_membership,member,membership,create,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,,,,,,,,,,,,,
+-93,member_membership,member,membership,read,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,
+-94,member_membership,member,membership,read,Org-A Member-A,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,
+-95,member_membership,member,membership,update,Org-A Member-A,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,
+-96,member_membership,member,membership,delete,Org-A Member-A,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,
+-97,member_membership,member,membership,read,Org-A-Branch-A Member-A,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,
+-98,member_membership,member,membership,update,Org-A-Branch-A Member-A,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,
+-99,member_membership,member,membership,delete,Org-A-Branch-A Member-A,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,
+-100,member_membership,member,membership,read,Org-B Member-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-101,member_membership,member,membership,update,Org-B Member-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-102,member_membership,member,membership,delete,Org-B Member-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-103,project_project,project,project,create,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,,,,,,,,,
+-104,project_project,project,project,read,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
+-105,project_project,project,project,read,Org-A Project-A,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
+-106,project_project,project,project,update,Org-A Project-A,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
+-107,project_project,project,project,delete,Org-A Project-A,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
+-108,project_project,project,project,read,Org-A-Branch-A Project-A,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
+-109,project_project,project,project,update,Org-A-Branch-A Project-A,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
+-110,project_project,project,project,delete,Org-A-Branch-A Project-A,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
+-111,project_project,project,project,read,Org-B Project-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-112,project_project,project,project,update,Org-B Project-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-113,project_project,project,project,delete,Org-B Project-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-114,project_project,project,project,read,Org-A Project-B,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
+-115,project_project,project,project,update,Org-A Project-B,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
+-116,project_project,project,project,delete,Org-A Project-B,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
+-117,project_project,project,project,read,Org-A-Branch-A Project-B,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
+-118,project_project,project,project,update,Org-A-Branch-A Project-B,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
+-119,project_project,project,project,delete,Org-A-Branch-A Project-B,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
+-120,project_project,project,project,read,Org-B Project-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-121,project_project,project,project,update,Org-B Project-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-122,project_project,project,project,delete,Org-B Project-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-123,inv_warehouse,inv,warehouse,create,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-124,inv_warehouse,inv,warehouse,read,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-125,inv_warehouse,inv,warehouse,read,Org-A Warehouse-A,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-126,inv_warehouse,inv,warehouse,update,Org-A Warehouse-A,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-127,inv_warehouse,inv,warehouse,delete,Org-A Warehouse-A,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-128,inv_warehouse,inv,warehouse,read,Org-A-Branch-A Warehouse-A,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-129,inv_warehouse,inv,warehouse,update,Org-A-Branch-A Warehouse-A,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-130,inv_warehouse,inv,warehouse,delete,Org-A-Branch-A Warehouse-A,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-131,inv_warehouse,inv,warehouse,read,Org-B Warehouse-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-132,inv_warehouse,inv,warehouse,update,Org-B Warehouse-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-133,inv_warehouse,inv,warehouse,delete,Org-B Warehouse-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-134,inv_inv_item,inv,inv_item,create,,,,,,,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-135,inv_inv_item,inv,inv_item,read,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-136,inv_inv_item,inv,inv_item,read,Org-A InvItem-A,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-137,inv_inv_item,inv,inv_item,update,Org-A InvItem-A,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-138,inv_inv_item,inv,inv_item,delete,Org-A InvItem-A,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-139,inv_inv_item,inv,inv_item,read,Org-A-Branch-A InvItem-A,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-140,inv_inv_item,inv,inv_item,update,Org-A-Branch-A InvItem-A,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-141,inv_inv_item,inv,inv_item,delete,Org-A-Branch-A InvItem-A,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
+-142,inv_inv_item,inv,inv_item,read,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-143,inv_inv_item,inv,inv_item,update,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-144,inv_inv_item,inv,inv_item,delete,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+\ No newline at end of file
++,table,c,f,method,uuid,org_admin@org-a.com,asset_reader@org-a.com,asset_data_entry@org-a.com,asset_editor@org-a.com,asset_super@org-a.com,inv_reader@org-a.com,inv_data_entry@org-a.com,inv_editor@org-a.com,inv_super@org-a.com,irs_reader@org-a.com,irs_data_entry@org-a.com,irs_editor@org-a.com,irs_super@org-a.com,member_reader@org-a.com,member_data_entry@org-a.com,member_editor@org-a.com,member_super@org-a.com,project_reader@org-a.com,project_data_entry@org-a.com,project_editor@org-a.com,project_super@org-a.com,staff_reader@org-a.com,staff_data_entry@org-a.com,staff_editor@org-a.com,staff_super@org-a.com,vol_reader@org-a.com,vol_data_entry@org-a.com,vol_editor@org-a.com,vol_super@org-a.com,survey_reader@org-a.com,survey_data_entry@org-a.com,survey_editor@org-a.com,survey_super@org-a.com
++1,org_organisation,org,organisation,create,,Yes,,,Yes,Yes,,,Yes,Yes,,,,Yes,,,,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,,Yes
++2,org_organisation,org,organisation,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++3,org_organisation,org,organisation,read,Org-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++4,org_organisation,org,organisation,update,Org-A,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
++5,org_organisation,org,organisation,delete,Org-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++6,org_organisation,org,organisation,read,Org-A-Branch-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++7,org_organisation,org,organisation,update,Org-A-Branch-A,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
++8,org_organisation,org,organisation,delete,Org-A-Branch-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++9,org_organisation,org,organisation,read,Org-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++10,org_organisation,org,organisation,update,Org-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++11,org_organisation,org,organisation,delete,Org-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++12,org_office,org,office,create,,Yes,,,Yes,Yes,,,Yes,Yes,,,,Yes,,,,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,,Yes
++13,org_office,org,office,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++14,org_office,org,office,read,Org-A Office-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++15,org_office,org,office,update,Org-A Office-A,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
++16,org_office,org,office,delete,Org-A Office-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++17,org_office,org,office,read,Org-A-Branch-A Office-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++18,org_office,org,office,update,Org-A-Branch-A Office-A,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes,,,Yes,Yes
++19,org_office,org,office,delete,Org-A-Branch-A Office-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++20,org_office,org,office,read,Org-B Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++21,org_office,org,office,update,Org-B Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++22,org_office,org,office,delete,Org-B Office-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++23,hrm_human_resource,hrm,human_resource,create,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++24,hrm_human_resource,hrm,human_resource,read,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++25,hrm_human_resource,hrm,human_resource,read,Org-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++26,hrm_human_resource,hrm,human_resource,update,Org-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++27,hrm_human_resource,hrm,human_resource,delete,Org-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++28,hrm_human_resource,hrm,human_resource,read,Org-A-Branch-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++29,hrm_human_resource,hrm,human_resource,update,Org-A-Branch-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++30,hrm_human_resource,hrm,human_resource,delete,Org-A-Branch-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++31,hrm_human_resource,hrm,human_resource,read,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++32,hrm_human_resource,hrm,human_resource,update,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++33,hrm_human_resource,hrm,human_resource,delete,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++34,,hrm,staff,create,,Yes,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,,,,,
++35,hrm_human_resource,,,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++36,hrm_human_resource,,,read,Org-A Office-A Staff-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++37,,hrm,staff,read,,Yes,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,
++38,hrm_human_resource,hrm,staff,read,Org-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,
++39,hrm_human_resource,hrm,staff,update,Org-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,
++40,hrm_human_resource,hrm,staff,delete,Org-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,
++41,hrm_human_resource,,,read,Org-A-Branch-A Office-A Staff-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++42,hrm_human_resource,hrm,staff,read,Org-A-Branch-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,
++43,hrm_human_resource,hrm,staff,update,Org-A-Branch-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,
++44,hrm_human_resource,hrm,staff,delete,Org-A-Branch-A Office-A Staff-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,
++45,hrm_human_resource,hrm,staff,read,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++46,hrm_human_resource,hrm,staff,update,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++47,hrm_human_resource,hrm,staff,delete,Org-B Office-A Staff-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++48,,vol,volunteer,create,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,
++49,hrm_human_resource,,,read,Org-A Office-A Vol-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++50,,vol,volunteer,read,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,
++51,hrm_human_resource,vol,volunteer,read,Org-A Office-A Vol-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,
++52,hrm_human_resource,vol,volunteer,update,Org-A Office-A Vol-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,
++53,hrm_human_resource,vol,volunteer,delete,Org-A Office-A Vol-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,
++54,hrm_human_resource,,,read,Org-A-Branch-A Office-A Vol-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
++55,hrm_human_resource,vol,volunteer,read,Org-A-Branch-A Office-A Vol-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,
++56,hrm_human_resource,vol,volunteer,update,Org-A-Branch-A Office-A Vol-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,
++57,hrm_human_resource,vol,volunteer,delete,Org-A-Branch-A Office-A Vol-A,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,Yes,,,,
++58,hrm_human_resource,vol,volunteer,read,Org-B Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++59,hrm_human_resource,vol,volunteer,update,Org-B Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++60,hrm_human_resource,vol,volunteer,delete,Org-B Office-A Vol-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++61,asset_asset,asset,asset,create,,Yes,,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++62,asset_asset,asset,asset,read,,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++63,asset_asset,asset,asset,read,Org-A Asset-A,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++64,asset_asset,asset,asset,update,Org-A Asset-A,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++65,asset_asset,asset,asset,delete,Org-A Asset-A,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++66,asset_asset,asset,asset,read,Org-A-Branch-A Asset-A,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++67,asset_asset,asset,asset,update,Org-A-Branch-A Asset-A,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++68,asset_asset,asset,asset,delete,Org-A-Branch-A Asset-A,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++69,asset_asset,asset,asset,read,Org-B Asset-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++70,asset_asset,asset,asset,update,Org-B Asset-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++71,asset_asset,asset,asset,delete,Org-B Asset-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++72,supply_item,supply,item,create,,Yes,,Yes,Yes,Yes,,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++73,supply_item,supply,item,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++74,supply_item,supply,item,read,Org-A Asset-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++75,supply_item,supply,item,update,Org-A Asset-A Item-A,Yes,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++76,supply_item,supply,item,delete,Org-A Asset-A Item-A,Yes,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++77,supply_item,supply,item,read,Org-A-Branch-A Asset-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++78,supply_item,supply,item,update,Org-A-Branch-A Asset-A Item-A,Yes,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++79,supply_item,supply,item,delete,Org-A-Branch-A Asset-A Item-A,Yes,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++80,supply_item,supply,item,read,Org-B Asset-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++81,supply_item,supply,item,update,Org-B Asset-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++82,supply_item,supply,item,delete,Org-B Asset-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++83,supply_item,supply,item,read,Org-A InvItem-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++84,supply_item,supply,item,update,Org-A InvItem-A Item-A,Yes,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++85,supply_item,supply,item,delete,Org-A InvItem-A Item-A,Yes,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++86,supply_item,supply,item,read,Org-A-Branch-A InvItem-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++87,supply_item,supply,item,update,Org-A-Branch-A InvItem-A Item-A,Yes,,,Yes,Yes,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++88,supply_item,supply,item,delete,Org-A-Branch-A InvItem-A Item-A,Yes,,,,Yes,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++89,supply_item,supply,item,read,Org-B InvItem-A Item-A,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++90,supply_item,supply,item,update,Org-B InvItem-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++91,supply_item,supply,item,delete,Org-B InvItem-A Item-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++92,member_membership,member,membership,create,,Yes,,,,,,,,,,,,,,Yes,Yes,Yes,,,,,,,,,,,,,,,,
++93,member_membership,member,membership,read,,Yes,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,
++94,member_membership,member,membership,read,Org-A Member-A,Yes,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,
++95,member_membership,member,membership,update,Org-A Member-A,Yes,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,
++96,member_membership,member,membership,delete,Org-A Member-A,Yes,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,
++97,member_membership,member,membership,read,Org-A-Branch-A Member-A,Yes,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,
++98,member_membership,member,membership,update,Org-A-Branch-A Member-A,Yes,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,
++99,member_membership,member,membership,delete,Org-A-Branch-A Member-A,Yes,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,
++100,member_membership,member,membership,read,Org-B Member-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++101,member_membership,member,membership,update,Org-B Member-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++102,member_membership,member,membership,delete,Org-B Member-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++103,project_project,project,project,create,,Yes,,,,,,,,,,,,,,,,,,Yes,Yes,Yes,,,,,,,,,,,,
++104,project_project,project,project,read,,Yes,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
++105,project_project,project,project,read,Org-A Project-A,Yes,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
++106,project_project,project,project,update,Org-A Project-A,Yes,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
++107,project_project,project,project,delete,Org-A Project-A,Yes,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
++108,project_project,project,project,read,Org-A-Branch-A Project-A,Yes,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
++109,project_project,project,project,update,Org-A-Branch-A Project-A,Yes,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
++110,project_project,project,project,delete,Org-A-Branch-A Project-A,Yes,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
++111,project_project,project,project,read,Org-B Project-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++112,project_project,project,project,update,Org-B Project-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++113,project_project,project,project,delete,Org-B Project-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++114,project_project,project,project,read,Org-A Project-B,Yes,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
++115,project_project,project,project,update,Org-A Project-B,Yes,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
++116,project_project,project,project,delete,Org-A Project-B,Yes,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
++117,project_project,project,project,read,Org-A-Branch-A Project-B,Yes,,,,,,,,,,,,,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,
++118,project_project,project,project,update,Org-A-Branch-A Project-B,Yes,,,,,,,,,,,,,,,,,,,Yes,Yes,,,,,,,,,,,,
++119,project_project,project,project,delete,Org-A-Branch-A Project-B,Yes,,,,,,,,,,,,,,,,,,,,Yes,,,,,,,,,,,,
++120,project_project,project,project,read,Org-B Project-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++121,project_project,project,project,update,Org-B Project-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++122,project_project,project,project,delete,Org-B Project-B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++123,inv_warehouse,inv,warehouse,create,,Yes,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++124,inv_warehouse,inv,warehouse,read,,Yes,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++125,inv_warehouse,inv,warehouse,read,Org-A Warehouse-A,Yes,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++126,inv_warehouse,inv,warehouse,update,Org-A Warehouse-A,Yes,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++127,inv_warehouse,inv,warehouse,delete,Org-A Warehouse-A,Yes,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++128,inv_warehouse,inv,warehouse,read,Org-A-Branch-A Warehouse-A,Yes,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++129,inv_warehouse,inv,warehouse,update,Org-A-Branch-A Warehouse-A,Yes,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++130,inv_warehouse,inv,warehouse,delete,Org-A-Branch-A Warehouse-A,Yes,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++131,inv_warehouse,inv,warehouse,read,Org-B Warehouse-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++132,inv_warehouse,inv,warehouse,update,Org-B Warehouse-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++133,inv_warehouse,inv,warehouse,delete,Org-B Warehouse-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++134,inv_inv_item,inv,inv_item,create,,Yes,,,,,,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++135,inv_inv_item,inv,inv_item,read,,Yes,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++136,inv_inv_item,inv,inv_item,read,Org-A InvItem-A,Yes,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++137,inv_inv_item,inv,inv_item,update,Org-A InvItem-A,Yes,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++138,inv_inv_item,inv,inv_item,delete,Org-A InvItem-A,Yes,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++139,inv_inv_item,inv,inv_item,read,Org-A-Branch-A InvItem-A,Yes,,,,,Yes,Yes,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++140,inv_inv_item,inv,inv_item,update,Org-A-Branch-A InvItem-A,Yes,,,,,,,Yes,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++141,inv_inv_item,inv,inv_item,delete,Org-A-Branch-A InvItem-A,Yes,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,,,,,
++142,inv_inv_item,inv,inv_item,read,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++143,inv_inv_item,inv,inv_item,update,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++144,inv_inv_item,inv,inv_item,delete,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+\ No newline at end of file
+diff --git a/modules/tests/roles/IFRC/data.xml b/modules/tests/roles/IFRC/data.xml
+index a4b8e58..718d68e 100644
+--- a/modules/tests/roles/IFRC/data.xml
++++ b/modules/tests/roles/IFRC/data.xml
+@@ -3,6 +3,7 @@
+    <resource name="org_organisation" uuid="%(org)s">
+      <data field="name">%(org)s</data>
+      
++     
+      <!-- Office-A -->
+      <resource name="org_office" uuid="%(org)s Office-A">
+        <data field="name">%(org)s Office-A</data>
+@@ -45,6 +46,13 @@
+          <reference field="owner_org_id" resource="org_organisation" uuid="%(org)s"/>
+          <reference field="item_id" resource="supply_item" uuid="%(org)s InvItem-A Item-A"/>
+          <data field="quantity">10</data>
++         <reference field="item_pack_id" resource="supply_item_pack">
++           <resource name="supply_item_pack" uuid="%(org)s Asset-A Item-A">
++             <reference field="item_id" resource="supply_item" uuid="%(org)s InvItem-A Item-A"/>
++             <data field="name">"piece"</data>
++             <data field="quantity">1</data>
++           </resource>
++         </reference>
+        </resource>
+      </resource>
+      
+@@ -58,6 +66,13 @@
+          <reference field="owner_org_id" resource="org_organisation" uuid="%(org)s"/>
+          <reference field="item_id" resource="supply_item" uuid="%(org)s InvItem-B Item-A"/>
+          <data field="quantity">10</data>
++         <reference field="item_pack_id" resource="supply_item_pack">
++           <resource name="supply_item_pack" uuid="%(org)s Asset-A Item-A">
++             <reference field="item_id" resource="supply_item" uuid="%(org)s InvItem-B Item-A"/>
++             <data field="name">"piece"</data>
++             <data field="quantity">1</data>
++           </resource>
++         </reference>
+        </resource>
+      </resource>
+ 
+diff --git a/modules/tests/roles/IFRC/test_users.csv b/modules/tests/roles/IFRC/test_users.csv
+index d93513b..74c9d66 100644
+--- a/modules/tests/roles/IFRC/test_users.csv
++++ b/modules/tests/roles/IFRC/test_users.csv
+@@ -1,4 +1,7 @@
+-First Name,Last Name,Email,Password,Role,Organisation
+-Warehouse-A,Org-A,warehouse-a@org-a.com,eden,"inv_editor/inv_warehouse.name=Org-A Warehouse-A,org_user/inv_warehouse.name=Org-A Warehouse-A,inv_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A
+-Warehouse-B,Org-A,warehouse-b@org-a.com,eden,"inv_editor/inv_warehouse.name=Org-A Warehouse-B,org_user/inv_warehouse.name=Org-A Warehouse-B,inv_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A
+-Org-A-Branch-A,Org-A,branch-a@org-a.com,eden,"staff_editor/org_organisation.name=Org-A-Branch-A,org_user/org_organisation.name=Org-A-Branch-A,staff_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A-Branch-A
+\ No newline at end of file
++First Name,Last Name,Email,Password,Role,Organisation,Home Address,Home Postcode,Home Country,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Teams
++Warehouse-A,Org-A,warehouse-a@org-a.com,eden,"inv_editor/inv_warehouse.name=Org-A Warehouse-A,org_user/inv_warehouse.name=Org-A Warehouse-A,inv_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Org-A Test Team
++Warehouse-B,Org-A,warehouse-b@org-a.com,eden,"inv_editor/inv_warehouse.name=Org-A Warehouse-B,org_user/inv_warehouse.name=Org-A Warehouse-B,inv_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Org-A Test Team
++Staff-Branch-A,Org-A,staff@branch-a.com,eden,"staff_editor/org_organisation.name=Org-A-Branch-A,org_user/org_organisation.name=Org-A-Branch-A,staff_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A-Branch-A,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Org-A Test Team
++Project-Branch-A,Org-A,project@branch-a.com,eden,"project_editor/org_organisation.name=Org-A-Branch-A,org_user/org_organisation.name=Org-A-Branch-A,project_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A-Branch-A,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Org-A Test Team
++Asset-Branch-A,Org-A,asset@branch-a.com,eden,"asset_editor/org_organisation.name=Org-A-Branch-A,org_user/org_organisation.name=Org-A-Branch-A,asset_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A-Branch-A,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Org-A Test Team
++Member-Branch-A,Org-A,member@branch-a.com,eden,"member_editor/org_organisation.name=Org-A-Branch-A,org_user/org_organisation.name=Org-A-Branch-A,member_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A-Branch-A,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Org-A Test Team
+\ No newline at end of file
+diff --git a/modules/tests/roles/IFRC/users_template.csv b/modules/tests/roles/IFRC/users_template.csv
+index 10fa005..e989a81 100644
+--- a/modules/tests/roles/IFRC/users_template.csv
++++ b/modules/tests/roles/IFRC/users_template.csv
+@@ -1,33 +1,34 @@
+-First Name,Last Name,Email,Password,Role,Organisation
+-Asset,Reader (%(org)s),asset_reader@%(org_lower)s.com,eden,"asset_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Asset,Data Entry (%(org)s),asset_data_entry@%(org_lower)s.com,eden,"asset_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Asset,Editor (%(org)s),asset_editor@%(org_lower)s.com,eden,"asset_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Asset,Super Editor (%(org)s),asset_super@%(org_lower)s.com,eden,"asset_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Warehouse,Reader (%(org)s),inv_reader@%(org_lower)s.com,eden,"inv_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Warehouse,Data Entry (%(org)s),inv_data_entry@%(org_lower)s.com,eden,"inv_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Warehouse,Editor (%(org)s),inv_editor@%(org_lower)s.com,eden,"inv_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Warehouse,Super Editor (%(org)s),inv_super@%(org_lower)s.com,eden,"inv_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Incident,Reader (%(org)s),irs_reader@%(org_lower)s.com,eden,"irs_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Incident,Data Entry (%(org)s),irs_data_entry@%(org_lower)s.com,eden,"irs_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Incident,Editor (%(org)s),irs_editor@%(org_lower)s.com,eden,"irs_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Incident,Super Editor (%(org)s),irs_super@%(org_lower)s.com,eden,"irs_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Members,Reader (%(org)s),member_reader@%(org_lower)s.com,eden,"member_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Members,Data Entry (%(org)s),member_data_entry@%(org_lower)s.com,eden,"member_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Members,Editor (%(org)s),member_editor@%(org_lower)s.com,eden,"member_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Members,Super Editor (%(org)s),member_super@%(org_lower)s.com,eden,"member_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Project,Reader (%(org)s),project_reader@%(org_lower)s.com,eden,"project_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Project,Data Entry (%(org)s),project_data_entry@%(org_lower)s.com,eden,"project_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Project,Editor (%(org)s),project_editor@%(org_lower)s.com,eden,"project_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Project,Super Editor (%(org)s),project_super@%(org_lower)s.com,eden,"project_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Staff,Reader (%(org)s),staff_reader@%(org_lower)s.com,eden,"staff_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Staff,Data Entry (%(org)s),staff_data_entry@%(org_lower)s.com,eden,"staff_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Staff,Editor (%(org)s),staff_editor@%(org_lower)s.com,eden,"staff_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Staff,Super Editor (%(org)s),staff_super@%(org_lower)s.com,eden,"staff_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Volunteer,Reader (%(org)s),vol_reader@%(org_lower)s.com,eden,"vol_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Volunteer,Data Entry (%(org)s),vol_data_entry@%(org_lower)s.com,eden,"vol_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Volunteer,Editor (%(org)s),vol_editor@%(org_lower)s.com,eden,"vol_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Volunteer,Super Editor (%(org)s),vol_super@%(org_lower)s.com,eden,"vol_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Assessment,Reader (%(org)s),survey_reader@%(org_lower)s.com,eden,"survey_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Assessment,Data Entry (%(org)s),survey_data_entry@%(org_lower)s.com,eden,"survey_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Assessment,Editor (%(org)s),survey_editor@%(org_lower)s.com,eden,"survey_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+-Assessment,Super Editor (%(org)s),survey_super@%(org_lower)s.com,eden,"survey_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+\ No newline at end of file
++First Name,Last Name,Email,Password,Role,Organisation,Home Address,Home Postcode,Home Country,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Teams
++Asset,Reader (%(org)s),asset_reader@%(org_lower)s.com,eden,"asset_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Asset,Data Entry (%(org)s),asset_data_entry@%(org_lower)s.com,eden,"asset_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Asset,Editor (%(org)s),asset_editor@%(org_lower)s.com,eden,"asset_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Asset,Super Editor (%(org)s),asset_super@%(org_lower)s.com,eden,"asset_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Warehouse,Reader (%(org)s),inv_reader@%(org_lower)s.com,eden,"inv_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Warehouse,Data Entry (%(org)s),inv_data_entry@%(org_lower)s.com,eden,"inv_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Warehouse,Editor (%(org)s),inv_editor@%(org_lower)s.com,eden,"inv_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Warehouse,Super Editor (%(org)s),inv_super@%(org_lower)s.com,eden,"inv_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Incident,Reader (%(org)s),irs_reader@%(org_lower)s.com,eden,"irs_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Incident,Data Entry (%(org)s),irs_data_entry@%(org_lower)s.com,eden,"irs_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Incident,Editor (%(org)s),irs_editor@%(org_lower)s.com,eden,"irs_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Incident,Super Editor (%(org)s),irs_super@%(org_lower)s.com,eden,"irs_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Members,Reader (%(org)s),member_reader@%(org_lower)s.com,eden,"member_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Members,Data Entry (%(org)s),member_data_entry@%(org_lower)s.com,eden,"member_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Members,Editor (%(org)s),member_editor@%(org_lower)s.com,eden,"member_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Members,Super Editor (%(org)s),member_super@%(org_lower)s.com,eden,"member_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Project,Reader (%(org)s),project_reader@%(org_lower)s.com,eden,"project_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Project,Data Entry (%(org)s),project_data_entry@%(org_lower)s.com,eden,"project_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Project,Editor (%(org)s),project_editor@%(org_lower)s.com,eden,"project_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Project,Super Editor (%(org)s),project_super@%(org_lower)s.com,eden,"project_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Staff,Reader (%(org)s),staff_reader@%(org_lower)s.com,eden,"staff_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Staff,Data Entry (%(org)s),staff_data_entry@%(org_lower)s.com,eden,"staff_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Staff,Editor (%(org)s),staff_editor@%(org_lower)s.com,eden,"staff_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Staff,Super Editor (%(org)s),staff_super@%(org_lower)s.com,eden,"staff_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Volunteer,Reader (%(org)s),vol_reader@%(org_lower)s.com,eden,"vol_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Volunteer,Data Entry (%(org)s),vol_data_entry@%(org_lower)s.com,eden,"vol_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Volunteer,Editor (%(org)s),vol_editor@%(org_lower)s.com,eden,"vol_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Volunteer,Super Editor (%(org)s),vol_super@%(org_lower)s.com,eden,"vol_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Assessment,Reader (%(org)s),survey_reader@%(org_lower)s.com,eden,"survey_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Assessment,Data Entry (%(org)s),survey_data_entry@%(org_lower)s.com,eden,"survey_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Assessment,Editor (%(org)s),survey_editor@%(org_lower)s.com,eden,"survey_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Assessment,Super Editor (%(org)s),survey_super@%(org_lower)s.com,eden,"survey_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
++Org,Admin (%(org)s),org_admin@%(org_lower)s.com,eden,ORG_ADMIN/org_organisation.name=%(org)s,%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,%(org)s Team
+\ No newline at end of file
+diff --git a/modules/tests/roles/create_role_test_data.py b/modules/tests/roles/create_role_test_data.py
+index f9b8838..dc3ebf8 100644
+--- a/modules/tests/roles/create_role_test_data.py
++++ b/modules/tests/roles/create_role_test_data.py
+@@ -40,8 +40,6 @@ def create_role_test_data(orgs, branches):
+     s3mgr = current.manager
+     request = current.request
+ 
+-
+-
+     #----------------------------------------------------------------------
+     # Initialize Data & Users
+     auth.override = True
+@@ -90,7 +88,7 @@ def create_role_test_data(orgs, branches):
+                 orgx = "%s-%s" % (org,branch)
+             else:
+                 orgx = org
+-            print orgx
++            #print orgx
+             
+             # Create Org & get id
+             org_string = org_template_string % dict( org = orgx )
+diff --git a/modules/tests/roles/load_data.py b/modules/tests/roles/load_data.py
+index 6e2d402..fe9de07 100644
+--- a/modules/tests/roles/load_data.py
++++ b/modules/tests/roles/load_data.py
+@@ -1,9 +1,9 @@
+ from tests.roles.create_role_test_data import *
+ 
+ # Define Organisations
+-orgs = ["Org-1",
+-        "Org-2",
+-        "Org-3",
++orgs = ["Org-A",
++        "Org-B",
++        "Org-C",
+         ]
+ branches = [ None,
+              "Branch-A"]
+diff --git a/modules/tests/roles/test_roles.py b/modules/tests/roles/test_roles.py
+index 3676a94..d4e2c97 100644
+--- a/modules/tests/roles/test_roles.py
++++ b/modules/tests/roles/test_roles.py
+@@ -87,7 +87,7 @@ def test_roles():
+                 row_num = row_num - 1
+                 continue
+             if uuid:
+-                print "%s, %s, %s, %s" % (table,c,f, uuid)
++                #print "%s, %s, %s, %s" % (table,c,f, uuid)
+                 #print uuid
+                 record_id = db(db_table.uuid==uuid).select(db_table._id, limitby=(0,1)).first()[db_table._id]
+             else:
+diff --git a/private/templates/IFRC/auth_roles.csv b/private/templates/IFRC/auth_roles.csv
+index 58bf8d6..67dc376 100644
+--- a/private/templates/IFRC/auth_roles.csv
++++ b/private/templates/IFRC/auth_roles.csv
+@@ -1,4 +1,17 @@
+ uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
++AUTHENTICATED,Authenticated,,gis,index,,,READ,,,,,
++AUTHENTICATED,Authenticated,,default,person,gis_location,,READ|CREATE,,,,,
++AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
++AUTHENTICATED,Authenticated,,,,pr_person,,,READ|UPDATE,,,,
++AUTHENTICATED,Authenticated,,,,hrm_human_resource,,,READ,,,,
++AUTHENTICATED,Authenticated,,,,pr_identity,,,READ|CREATE|UPDATE,,,,
++AUTHENTICATED,Authenticated,,,,pr_physical_description,,,READ|CREATE|UPDATE,,,,
++AUTHENTICATED,Authenticated,,,,pr_address,,,READ|CREATE|UPDATE,,,,
++AUTHENTICATED,Authenticated,,pr,contact,,,,READ|CREATE|UPDATE,,,,
++AUTHENTICATED,Authenticated,,,,pr_contact,,,READ|CREATE|UPDATE,,,,
++AUTHENTICATED,Authenticated,,,,pr_education,,,READ,,,,
++AUTHENTICATED,Authenticated,,,,hrm_training,,,READ,,,,
++AUTHENTICATED,Authenticated,,,,pr_group_membership,,,READ,,,,
+ AUTHENTICATED,Authenticated,,,,gis_layer_bing,,READ,,,,,
+ AUTHENTICATED,Authenticated,,,,gis_layer_coordinate,,READ,,,,,
+ AUTHENTICATED,Authenticated,,,,gis_layer_empty,,READ,,,,,
+@@ -14,39 +27,60 @@ AUTHENTICATED,Authenticated,,,,gis_layer_tms,,READ|CREATE,,,,,
+ AUTHENTICATED,Authenticated,,,,gis_layer_wfs,,READ|CREATE,,,,,
+ AUTHENTICATED,Authenticated,,,,gis_layer_wms,,READ|CREATE,,,,,
+ AUTHENTICATED,Authenticated,,,,gis_layer_xyz,,READ|CREATE,,,,,
+-org_user,Organisation User,,org,,,,READ,,,,,
+-org_user,Organisation User,,,,pr_pentity,,READ,,,,,
+-org_user,Organisation User,,,,pr_person_search,,READ,,,,,
+-org_user,Organisation User,,,,hrm_human_resource,,READ,,,,,
+-org_user,Organisation User,,,,pr_person_search,,READ,,,,,
+ asset_reader,Asset Reader,,asset,,,,READ,,,,,
+ asset_reader,Asset Reader,,supply,,,,READ,,,,,
+ asset_reader,Asset Reader,,,,inv_warehouse,,READ,,,,,
+ asset_reader,Asset Reader,,supply,,,any,READ,,,,,
++asset_reader,Asset Reader,,supply,catalog,supply_catalog,,READ,,,,,
++asset_reader,Asset Reader,,org,,,,READ,,,,,
++asset_reader,Asset Reader,,pr,,,,READ,,,,,
++asset_reader,Asset Reader,,,,hrm_human_resource,,READ,,,,,
+ asset_data_entry,Asset Data Entry,,asset,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ asset_data_entry,Asset Data Entry,,supply,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ asset_data_entry,Asset Data Entry,,,,inv_warehouse,,READ,,,,,
+ asset_data_entry,Asset Data Entry,,supply,,,any,READ,,,,,
++asset_data_entry,Asset Data Entry,,supply,catalog,supply_catalog,,READ,,,,,
++asset_data_entry,Asset Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++asset_data_entry,Asset Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++asset_data_entry,Asset Data Entry,,pr,,,,READ,,,,,
++asset_data_entry,Asset Data Entry,,,,hrm_human_resource,,READ,,,,,
+ asset_editor,Asset Editor,,asset,,,,READ|CREATE|UPDATE,,,,,
+ asset_editor,Asset Editor,,supply,,,,READ|CREATE|UPDATE,,,,,
+-asset_editor,Asset Editor,,org,,,,READ|UPDATE,,,,,
+ asset_editor,Asset Editor,,,,inv_warehouse,,READ|UPDATE,,,,,
+ asset_editor,Asset Editor,,supply,,,any,READ,,,,,
++asset_editor,Asset Editor,,supply,catalog,supply_catalog,,READ|UPDATE,,,,,
++asset_editor,Asset Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++asset_editor,Asset Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++asset_editor,Asset Editor,,pr,,,,READ,,,,,
++asset_editor,Asset Editor,,,,hrm_human_resource,,READ,,,,,
+ asset_super,Asset Super Editor,,asset,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ asset_super,Asset Super Editor,,supply,,,,READ|CREATE|UPDATE|DELETE,,,,,
+-asset_super,Asset Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
+ asset_super,Asset Super Editor,,,,inv_warehouse,,READ|CREATE|UPDATE,,,,,
+ asset_super,Asset Super Editor,,supply,,,any,READ,,,,,
++asset_super,Asset Super Editor,,supply,catalog,supply_catalog,,ALL,,,,,
++asset_super,Asset Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++asset_super,Asset Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++asset_super,Asset Super Editor,,pr,,,,READ,,,,,
++asset_super,Asset Super Editor,,,,hrm_human_resource,,READ,,,,,
+ inv_reader,Warehouse Reader,,inv,,,,READ,,,,,
+ inv_reader,Warehouse Reader,,inv,req_match,,,READ,,,,,
+ inv_reader,Warehouse Reader,,supply,,,any,READ,,,,,
+ inv_reader,Warehouse Reader,,req,,,,READ,,,,,
++inv_reader,Warehouse Reader,,supply,catalog,supply_catalog,,READ,,,,,
++inv_reader,Warehouse Reader,,org,,,,READ,,,,,
++inv_reader,Warehouse Reader,,pr,,,,READ,,,,,
++inv_reader,Warehouse Reader,,,,hrm_human_resource,,READ,,,,,
+ inv_data_entry,Warehouse Data Entry,,inv,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ inv_data_entry,Warehouse Data Entry,,inv,req_match,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ inv_data_entry,Warehouse Data Entry,,,,inv_warehouse,,READ,,,,,
+ inv_data_entry,Warehouse Data Entry,,supply,,,any,READ,,,,,
+ inv_data_entry,Warehouse Data Entry,,supply,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ inv_data_entry,Warehouse Data Entry,,req,,,,"READ|CREATE,READ|CREATE|UPDATE",,,,,
++inv_data_entry,Warehouse Data Entry,,supply,catalog,supply_catalog,,READ,,,,,
++inv_data_entry,Warehouse Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++inv_data_entry,Warehouse Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++inv_data_entry,Warehouse Data Entry,,pr,,,,READ,,,,,
++inv_data_entry,Warehouse Data Entry,,,,hrm_human_resource,,READ,,,,,
+ inv_editor,Warehouse Editor,,inv,,,,READ|CREATE|UPDATE,,,,,
+ inv_editor,Warehouse Editor,,inv,req_match,,,READ|CREATE|UPDATE,,,,,
+ inv_editor,Warehouse Editor,,,,inv_warehouse,,READ|UPDATE,,,,,
+@@ -54,6 +88,11 @@ inv_editor,Warehouse Editor,,supply,,,any,READ,,,,,
+ inv_editor,Warehouse Editor,,supply,,,,READ|CREATE|UPDATE,,,,,
+ inv_editor,Warehouse Editor,,req,,,,READ|CREATE|UPDATE,,,,,
+ inv_editor,Warehouse Editor,,org,,,,READ|UPDATE,,,,,
++inv_editor,Warehouse Editor,,supply,catalog,supply_catalog,,READ|UPDATE,,,,,
++inv_editor,Warehouse Editor,,org,,,,READ|CREATE|UPDATE,,,,,Used to filter office fields
++inv_editor,Warehouse Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++inv_editor,Warehouse Editor,,pr,,,,READ,,,,,
++inv_editor,Warehouse Editor,,,,hrm_human_resource,,READ,,,,,
+ inv_super,Warehouse Super Editor,,inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ inv_super,Warehouse Super Editor,,inv,req_match,,,READ|CREATE|UPDATE|DELETE,,,,,
+ inv_super,Warehouse Super Editor,,,,inv_warehouse,,READ|CREATE|UPDATE|DELETE,,,,,
+@@ -61,34 +100,85 @@ inv_super,Warehouse Super Editor,,supply,,,any,READ,,,,,
+ inv_super,Warehouse Super Editor,,supply,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ inv_super,Warehouse Super Editor,,req,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ inv_super,Warehouse Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++inv_super,Warehouse Super Editor,,supply,catalog,supply_catalog,,ALL,,,,,
++inv_super,Warehouse Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++inv_super,Warehouse Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++inv_super,Warehouse Super Editor,,pr,,,,READ,,,,,
++inv_super,Warehouse Super Editor,,,,hrm_human_resource,,READ,,,,,
+ irs_reader,Incident Reader,,irs,,,,READ,,,,,What other modules does Incident use?
++irs_reader,Incident Reader,,event,,,,READ,,,,,
++irs_reader,Incident Reader,,org,,,,READ,,,,,
++irs_reader,Incident Reader,,pr,,,,READ,,,,,
++irs_reader,Incident Reader,,,,hrm_human_resource,,READ,,,,,
+ irs_data_entry,Incident Data Entry,,irs,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
++irs_data_entry,Incident Data Entry,,event,,,,READ|CREATE,,,,,
++irs_data_entry,Incident Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++irs_data_entry,Incident Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++irs_data_entry,Incident Data Entry,,pr,,,,READ,,,,,
++irs_data_entry,Incident Data Entry,,,,hrm_human_resource,,READ,,,,,
+ irs_editor,Incident Editor,,irs,,,,READ|CREATE|UPDATE,,,,,
++irs_editor,Incident Editor,,event,,,,READ|CREATE|UPDATE,,,,,
++irs_editor,Incident Editor,,org,,,,READ|UPDATE,,,,,Used to filter organisation fields
++irs_editor,Incident Editor,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++irs_editor,Incident Editor,,pr,,,,READ,,,,,
++irs_editor,Incident Editor,,,,hrm_human_resource,,READ,,,,,
+ irs_super,Incident Super Editor,,irs,,,,READ|CREATE|UPDATE|DELETE,,,,,
++irs_super,Incident Super Editor,,event,,,,READ|CREATE|UPDATE|DELETE,,,,,
++irs_super,Incident Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++irs_super,Incident Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++irs_super,Incident Super Editor,,pr,,,,READ,,,,,
++irs_super,Incident Super Editor,,,,hrm_human_resource,,READ,,,,,
+ member_reader,Members Reader,,member,,,,READ,,,,,
+ member_reader,Members Reader,,pr,,,,READ,,,,,
++member_reader,Members Reader,,org,,,,READ,,,,,
++member_reader,Members Reader,,pr,,,,READ,,,,,
++member_reader,Members Reader,,,,hrm_human_resource,,READ,,,,,
+ member_data_entry,Members Data Entry,,member,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ member_data_entry,Members Data Entry,,,,member_membership_type,,READ,,,,,
+ member_data_entry,Members Data Entry,,pr,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
++member_data_entry,Members Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++member_data_entry,Members Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++member_data_entry,Members Data Entry,,pr,,,,READ,,,,,
++member_data_entry,Members Data Entry,,,,hrm_human_resource,,READ,,,,,
+ member_editor,Members Editor,,member,,,,READ|CREATE|UPDATE,,,,,
+ member_editor,Members Editor,,,,member_membership_type,,READ,,,,,
+ member_editor,Members Editor,,pr,,,,READ|CREATE|UPDATE,,,,,
+-member_editor,Members Editor,,org,,,,READ|UPDATE,,,,,
++member_editor,Members Editor,,org,,,,READ|UPDATE,,,,,Used to filter organisation fields
++member_editor,Members Editor,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++member_editor,Members Editor,,pr,,,,READ,,,,,
++member_editor,Members Editor,,,,hrm_human_resource,,READ,,,,,
+ member_super,Members Super Editor,,member,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ member_super,Members Super Editor,,,,member_membership_type,,READ|CREATE|UPDATE|DELETE,,,,,
+ member_super,Members Super Editor,,pr,,,,READ|CREATE|UPDATE|DELETE,,,,,
+-member_super,Members Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++member_super,Members Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++member_super,Members Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++member_super,Members Super Editor,,pr,,,,READ,,,,,
++member_super,Members Super Editor,,,,hrm_human_resource,,READ,,,,,
+ project_reader,Project Reader,,project,,,,READ,,,,,
++project_reader,Project Reader,,org,,,,READ,,,,,
++project_reader,Project Reader,,pr,,,,READ,,,,,
++project_reader,Project Reader,,,,hrm_human_resource,,READ,,,,,
+ project_data_entry,Project Data Entry,,project,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
++project_data_entry,Project Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++project_data_entry,Project Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++project_data_entry,Project Data Entry,,pr,,,,READ,,,,,
++project_data_entry,Project Data Entry,,,,hrm_human_resource,,READ,,,,,
+ project_editor,Project Editor,,project,,,,READ|CREATE|UPDATE,,,,,
+-project_editor,Project Editor,,org,,,,READ|UPDATE,,,,,
++project_editor,Project Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++project_editor,Project Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++project_editor,Project Editor,,pr,,,,READ,,,,,
++project_editor,Project Editor,,,,hrm_human_resource,,READ,,,,,
+ project_super,Project Super Editor,,project,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ project_super,Project Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++project_super,Project Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++project_super,Project Super Editor,,pr,,,,READ,,,,,
++project_super,Project Super Editor,,,,hrm_human_resource,,READ,,,,,
+ staff_reader,Staff Reader,,hrm,,,,READ,,,,,
+ staff_reader,Staff Reader,,,,hrm_human_resource,,READ,,,,,
+ staff_reader,Staff Reader,,hrm,human_resource,,,NONE,,,,,
+ staff_reader,Staff Reader,,vol,,,,NONE,,,,,
+ staff_reader,Staff Reader,,pr,,,,READ,,,,,
++staff_reader,Staff Reader,,org,,,,READ,,,,,
+ staff_data_entry,Staff Data Entry,,hrm,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ staff_data_entry,Staff Data Entry,,,,hrm_human_resource,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ staff_data_entry,Staff Data Entry,,hrm,human_resource,,,NONE,,,,,
+@@ -97,6 +187,8 @@ staff_data_entry,Staff Data Entry,,,,hrm_certificate,,READ,READ,,,,
+ staff_data_entry,Staff Data Entry,,,,hrm_course,,READ,READ,,,,
+ staff_data_entry,Staff Data Entry,,,,hrm_job_title,,READ,READ,,,,
+ staff_data_entry,Staff Data Entry,,pr,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
++staff_data_entry,Staff Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++staff_data_entry,Staff Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
+ staff_editor,Staff Editor,,hrm,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE,,,,
+ staff_editor,Staff Editor,,,,hrm_human_resource,,READ|CREATE|UPDATE,,,,,
+ staff_editor,Staff Editor,,hrm,human_resource,,,NONE,,,,,
+@@ -105,7 +197,8 @@ staff_editor,Staff Editor,,,,hrm_certificate,,READ,READ,,,,
+ staff_editor,Staff Editor,,,,hrm_course,,READ,READ,,,,
+ staff_editor,Staff Editor,,,,hrm_job_title,,READ,READ,,,,
+ staff_editor,Staff Editor,,pr,,,,READ|CREATE|UPDATE,,,,,
+-staff_editor,Staff Editor,,org,,,,READ|UPDATE,,,,,
++staff_editor,Staff Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++staff_editor,Staff Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
+ staff_super,Staff Super Editor,,hrm,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ staff_super,Staff Super Editor,,,,hrm_human_resource,,READ|CREATE|UPDATE|DELETE,,,,,
+ staff_super,Staff Super Editor,,hrm,human_resource,,,NONE,,,,,
+@@ -115,7 +208,9 @@ staff_super,Staff Super Editor,,,,hrm_course,,READ|CREATE|UPDATE|DELETE,,,,,
+ staff_super,Staff Super Editor,,,,hrm_job_title,,READ|CREATE|UPDATE|DELETE,,,,,
+ staff_super,Staff Super Editor,,pr,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ staff_super,Staff Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++staff_super,Staff Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
+ vol_reader,Volunteer Reader,,vol,,,,READ,,,,,
++vol_reader,Volunteer Reader,,,,hrm_human_resource,,READ,,,,,
+ vol_reader,Volunteer Reader,,hrm,human_resource,,,NONE,,,,,
+ vol_reader,Volunteer Reader,,hrm,staff,,,NONE,,,,,
+ vol_reader,Volunteer Reader,,hrm,person,,,NONE,,,,,
+@@ -124,6 +219,7 @@ vol_reader,Volunteer Reader,,,,hrm_course,,READ,,,,,
+ vol_reader,Volunteer Reader,,,,hrm_job_title,,READ,,,,,
+ vol_reader,Volunteer Reader,,,,hrm_programme,,READ,,,,,
+ vol_reader,Volunteer Reader,,pr,,,,READ,,,,,
++vol_reader,Volunteer Reader,,org,,,,READ,,,,,
+ vol_data_entry,Volunteer Data Entry,,vol,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ vol_data_entry,Volunteer Data Entry,,,,hrm_human_resource,,READ|CREATE,READ|CREATE|UPDATE,,,,
+ vol_data_entry,Volunteer Data Entry,,hrm,human_resource,,,NONE,,,,,
+@@ -134,6 +230,8 @@ vol_data_entry,Volunteer Data Entry,,,,hrm_course,,READ,READ,,,,
+ vol_data_entry,Volunteer Data Entry,,,,hrm_job_title,,READ,READ,,,,
+ vol_data_entry,Volunteer Data Entry,,,,hrm_programme,,READ,READ,,,,
+ vol_data_entry,Volunteer Data Entry,,pr,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
++vol_data_entry,Volunteer Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
++vol_data_entry,Volunteer Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
+ vol_editor,Volunteer Editor,,vol,,,,READ|CREATE|UPDATE,,,,,
+ vol_editor,Volunteer Editor,,,,hrm_human_resource,,READ|CREATE|UPDATE,,,,,
+ vol_editor,Volunteer Editor,,hrm,human_resource,,,NONE,,,,,
+@@ -144,7 +242,8 @@ vol_editor,Volunteer Editor,,,,hrm_course,,READ,READ,,,,
+ vol_editor,Volunteer Editor,,,,hrm_job_title,,READ,READ,,,,
+ vol_editor,Volunteer Editor,,,,hrm_programme,,READ,READ,,,,
+ vol_editor,Volunteer Editor,,pr,,,,READ|CREATE|UPDATE,,,,,
+-vol_editor,Volunteer Editor,,org,,,,READ|UPDATE,,,,,
++vol_editor,Volunteer Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++vol_editor,Volunteer Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
+ vol_super,Volunteer Super Editor,,vol,,,,READ|CREATE|UPDATE|DELETE,,,,,
+ vol_super,Volunteer Super Editor,,,,hrm_human_resource,,READ|CREATE|UPDATE|DELETE,,,,,
+ vol_super,Volunteer Super Editor,,hrm,human_resource,,,NONE,,,,,
+@@ -156,6 +255,7 @@ vol_super,Volunteer Super Editor,,,,hrm_job_title,,READ|CREATE|UPDATE|DELETE,,,,
+ vol_super,Volunteer Super Editor,,,,hrm_programme,,READ|CREATE|UPDATE|DELETE,,,,,
+ vol_super,Volunteer Super Editor,,pr,,,,READ|CREATE|UPDATE,,,,,
+ vol_super,Volunteer Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++vol_super,Volunteer Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
+ survey_reader,Assessment Reader,,survey,index,,,READ,,,,,
+ survey_reader,Assessment Reader,,survey,series,,,READ,,,,,
+ survey_reader,Assessment Reader,,survey,series_export_formatted,,,READ,,,,,
+@@ -163,6 +263,9 @@ survey_reader,Assessment Reader,,,,survey_translate,,READ,,,,,
+ survey_reader,Assessment Reader,,survey,completed_chart,,,READ,,,,,
+ survey_reader,Assessment Reader,,survey,export_all_responses,,,READ,,,,,
+ survey_reader,Assessment Reader,,survey,template,,,READ,,,,,
++survey_reader,Assessment Reader,,org,,,,READ,,,,,
++survey_reader,Assessment Reader,,pr,,,,READ,,,,,
++survey_reader,Assessment Reader,,,,hrm_human_resource,,READ,,,,,
+ survey_data_entry,Assessment Data Entry,,survey,index,,,READ,,,,,
+ survey_data_entry,Assessment Data Entry,,survey,template,,,READ,,,,,
+ survey_data_entry,Assessment Data Entry,,survey,templateRead,,,READ,,,,,
+@@ -178,6 +281,9 @@ survey_data_entry,Assessment Data Entry,,,,survey_complete,,READ|CREATE,READ|CRE
+ survey_data_entry,Assessment Data Entry,,,,survey_question,,READ|UPDATE,,,,,
+ survey_data_entry,Assessment Data Entry,,,,survey_series,,READ|UPDATE,,,,,
+ survey_data_entry,Assessment Data Entry,,,,survey_translate,,READ,,,,,
++survey_data_entry,Assessment Data Entry,,org,,,,READ,,,,,
++survey_data_entry,Assessment Data Entry,,pr,,,,READ,,,,,
++survey_data_entry,Assessment Data Entry,,,,hrm_human_resource,,READ,,,,,
+ survey_editor,Assessment Editor,,survey,index,,,READ,,,,,
+ survey_editor,Assessment Editor,,survey,template,,,READ,,,,,
+ survey_editor,Assessment Editor,,survey,templateRead,,,READ,,,,,
+@@ -194,18 +300,53 @@ survey_editor,Assessment Editor,,,,survey_question,,READ|UPDATE,,,,,
+ survey_editor,Assessment Editor,,,,survey_series,,READ|CREATE|UPDATE,,,,,
+ survey_editor,Assessment Editor,,,,survey_translate,,READ,,,,,
+ survey_editor,Assessment Editor,,org,,,,READ|UPDATE,,,,,
++survey_editor,Assessment Editor,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
++survey_editor,Assessment Editor,,pr,,,,READ,,,,,
++survey_editor,Assessment Editor,,,,hrm_human_resource,,READ,,,,,
+ survey_super,Assessment Super Editor,,survey,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+ survey_super,Assessment Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,
++survey_super,Assessment Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
++survey_super,Assessment Super Editor,,pr,,,,READ,,,,,
++survey_super,Assessment Super Editor,,,,hrm_human_resource,,READ,,,,,
+ vulnerability_reader,Vulnerability Reader,,stats,,,,READ,READ,,,,
+ vulnerability_reader,Vulnerability Reader,,vulnerability,,,,READ,READ,,,,
++vulnerability_reader,Vulnerability Reader,,org,,,,READ,,,,,
++vulnerability_reader,Vulnerability Reader,,pr,,,,READ,,,,,
++vulnerability_reader,Vulnerability Reader,,,,hrm_human_resource,,READ,,,,,
+ vulnerability_data_entry,Vulnerability Data Entry,,stats,,,,READ|CREATE|UPDATE,READ,,,,
+ vulnerability_data_entry,Vulnerability Data Entry,,vulnerability,,,,READ|CREATE|UPDATE,READ,,,,
++vulnerability_data_entry,Vulnerability Data Entry,,org,,,,READ,,,,,
++vulnerability_data_entry,Vulnerability Data Entry,,pr,,,,READ,,,,,
++vulnerability_data_entry,Vulnerability Data Entry,,,,hrm_human_resource,,READ,,,,,
+ vulnerability_editor,Vulnerability Editor,,stats,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE,,,,
+ vulnerability_editor,Vulnerability Editor,,vulnerability,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE,,,,
++vulnerability_editor,Vulnerability Editor,,org,,,,READ,,,,,
++vulnerability_editor,Vulnerability Editor,,pr,,,,READ,,,,,
++vulnerability_editor,Vulnerability Editor,,,,hrm_human_resource,,READ,,,,,
+ vulnerability_super,Vulnerability Super Editor,,stats,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+ vulnerability_super,Vulnerability Super Editor,,vulnerability,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
++vulnerability_super,Vulnerability Super Editor,,org,,,,READ,,,,,
++vulnerability_super,Vulnerability Super Editor,,pr,,,,READ,,,,,
++vulnerability_super,Vulnerability Super Editor,,,,hrm_human_resource,,READ,,,,,
+ ORG_ADMIN,Organisation Admin,Can control all record permissions,event,,,,ALL,,,,,
+ ORG_ADMIN,Organisation Admin,Can control all record permissions,org,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,,,pr_pentity,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,,,pr_person_search,,READ,,,,,
++ORG_ADMIN,Organisation Admin,,,,hrm_human_resource,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,,,pr_person_search,,READ,,,,,
++ORG_ADMIN,Organisation Admin,,asset,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,supply,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,supply,,,any,READ,,,,,
++ORG_ADMIN,Organisation Admin,,inv,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,req,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,irs,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,member,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,pr,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,project,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,hrm,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,vol,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,survey,,,,ALL,,,,,
++ORG_ADMIN,Organisation Admin,,vulnerability,,,,ALL,,,,,
+ MAP_ADMIN,Map Admin,,,,gis_layer_arcrest,,ALL,,,,,
+ MAP_ADMIN,Map Admin,,,,gis_layer_bing,,ALL,,,,,
+ MAP_ADMIN,Map Admin,,,,gis_layer_coordinate,,ALL,,,,,
+diff --git a/private/templates/IFRC/config.py b/private/templates/IFRC/config.py
+index 63789e2..e4eaa74 100644
+--- a/private/templates/IFRC/config.py
++++ b/private/templates/IFRC/config.py
+@@ -161,7 +161,7 @@ settings.L10n.decimal_separator = "."
+ # Thousands separator for numbers (defaults to space)
+ settings.L10n.thousands_separator = ","
+ # Unsortable 'pretty' date format
+-settings.L10n.date_format = T("%d-%b-%Y")
++settings.L10n.date_format = T("%d-%b-%y")
+ settings.L10n.datetime_format = T("%d-%b-%Y %H:%M:%S")
+ # Make last name in person/user records mandatory
+ settings.L10n.mandatory_lastname = True
+diff --git a/private/templates/IFRC/controllers.py b/private/templates/IFRC/controllers.py
+index 2e8ad6c..f2c8f03 100644
+--- a/private/templates/IFRC/controllers.py
++++ b/private/templates/IFRC/controllers.py
+@@ -208,7 +208,8 @@ $('.marker').mouseout(function(){
+                    _class="map-tip"))
+ 
+         current.menu.breadcrumbs = None
+-
++        response.homepage = True
++        
+         return dict(map=map)
+ 
+ # END =========================================================================
+diff --git a/private/templates/IFRC/menus.py b/private/templates/IFRC/menus.py
+index a98d5cd..5577fd1 100644
+--- a/private/templates/IFRC/menus.py
++++ b/private/templates/IFRC/menus.py
+@@ -228,10 +228,11 @@ class S3MainMenu(default.S3MainMenu):
+             menu_personal = MP()(
+                         MP("Administration", c="admin", f="index",
+                            check=s3_has_role(ADMIN)),
+-                        MP("Logout", c="default", f="user",
+-                           m="logout"),
++                        MP("Profile", c="default", f="person"),
+                         MP("Change Password", c="default", f="user",
+                            m="change_password"),
++                        MP("Logout", c="default", f="user",
++                           m="logout"),
+                         menu_lang,
+             )
+         return menu_personal
+@@ -328,14 +329,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
+                         M("List All"),
+                         #M("Skill Equivalence", f="certificate_skill"),
+                     ),
+-                    M("My Profile", c="hrm", f="person",
+-                      check=personal_mode, vars=dict(mode="personal")),
++                    #M("My Profile", c="hrm", f="person",
++                    #  check=personal_mode, vars=dict(mode="personal")),
+                     # This provides the link to switch to the manager mode:
+                     M("Human Resources", c="hrm", f="index",
+                       check=[personal_mode, is_org_admin]),
+                     # This provides the link to switch to the personal mode:
+-                    M("Personal Profile", c="hrm", f="person",
+-                      check=manager_mode, vars=dict(mode="personal"))
++                    #M("Personal Profile", c="hrm", f="person",
++                    #  check=manager_mode, vars=dict(mode="personal"))
+                 )
+ 
+     # -------------------------------------------------------------------------
+@@ -426,8 +427,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
+                         M("Volunteer Report", m="report"),
+                         M("Training Report", f="training", m="report"),
+                     ),
+-                    M("My Profile", f="person",
+-                      check=personal_mode, vars=dict(mode="personal")),
++                    #M("My Profile", f="person",
++                    #  check=personal_mode, vars=dict(mode="personal")),
+                     M("My Tasks", f="task",
+                       check=[personal_mode, show_tasks],
+                       vars=dict(mode="personal",
+@@ -436,8 +437,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
+                     M("Volunteer Management", f="index",
+                       check=[personal_mode, is_org_admin]),
+                     # This provides the link to switch to the personal mode:
+-                    M("Personal Profile", f="person",
+-                      check=manager_mode, vars=dict(mode="personal"))
++                    #M("Personal Profile", f="person",
++                    #  check=manager_mode, vars=dict(mode="personal"))
+                 )
+ 
+     # -------------------------------------------------------------------------
+diff --git a/private/templates/IFRC/views/layout.html b/private/templates/IFRC/views/layout.html
+index 4b225ce..a20d1a2 100644
+--- a/private/templates/IFRC/views/layout.html
++++ b/private/templates/IFRC/views/layout.html
+@@ -81,7 +81,9 @@
+      {{if response.menu_left:}}{{=response.menu_left}}{{pass}}
+     </div>
+     <div id='right-col'>
+-   {{else:}}
++   {{elif response.homepage:}}
++    <div id='home-col'>
++   {{else:}} 
+     <div id='single-col'>
+    {{pass}}
+      {{include "breadcrumbs.html"}}
+diff --git a/private/templates/IFRC_Train/people.csv b/private/templates/IFRC_Train/people.csv
+deleted file mode 100644
+index 73e7578..0000000
+--- a/private/templates/IFRC_Train/people.csv
++++ /dev/null
+@@ -1,35 +0,0 @@
+-"Sex","First Name","Last Name","Type","Email","Mobile Phone","Organisation","Branch","Office Phone","Office","Job Title","Home Address","Home Country","Home L1","Home L2","Home L3","Home Lat","Home Lon"
+-"Mr.","Joe","Random","Staff","joe@redcross.au",,"Australian Red Cross","Victoria",,"Victoria Branch Office",,,,,,,,
+-"Mr.","Test","User","Staff","test@example.com",,"Timor-Leste Red Cross Society",,"+670 1234-1234","Timor-Leste Red Cross Society (CVTL) National Headquarters","Manager",,,,,,,
+-"Mr.","Quito","Cromos","Staff","quito.cromos@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8233","Timor-Leste Red Cross Society (CVTL) National Headquarters","Manager",,,,,,,
+-"Ms.","Herculano","Ximenes","Staff","herculano.ximenes@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8232","Timor-Leste Red Cross Society (CVTL) National Headquarters","Administrative Officer",,,,,,,
+-"Ms.","Elly","Marques","Staff","elly.marques@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8231","Timor-Leste Red Cross Society (CVTL) National Headquarters","Geospatial Information Officer",,,,,,,
+-"Mr.","Guilherme","Soares","Staff","guilherme.soares@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8230","Timor-Leste Red Cross Society (CVTL) National Headquarters","Child Care Worker, Part Time",,,,,,,
+-"Mr.","Nilton","Moniz","Staff","nilton.moniz@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8229","Timor-Leste Red Cross Society (CVTL) National Headquarters","Safety Officer",,,,,,,
+-"Mr.","Goku","Gohan","Staff","goku.gohan@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8228","Timor-Leste Red Cross Society (CVTL) National Headquarters","Procurement Officer",,,,,,,
+-"Mr.","José","Saboga","Staff","jose.saboga@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8227","Timor-Leste Red Cross Society (CVTL) National Headquarters","DRR Officer",,,,,,,
+-"Mr.","Xanana","Chilro","Staff","xanana.chilro@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8226","Timor-Leste Red Cross Society (CVTL) National Headquarters","DRR Manager",,,,,,,
+-"Ms.","Adriana","Macedo","Staff","adriana.macedo@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8225","Timor-Leste Red Cross Society (CVTL) National Headquarters","Warehouse Officer",,,,,,,
+-"Mr.","Duarte","Botelheiro","Staff","duarte.botelheiro@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 2728-8224","Timor-Leste Red Cross Society (CVTL) National Headquarters","Administrative Officer",,,,,,,
+-"Ms.","Beatriz","de Carvalho","Staff","beatriz.decarvalho@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 1858-9018","Ainaro Branch Office","Disaster Management Officer",,,,,,,
+-"Mr.","Yakobus","Sereno","Staff","yakobus.serena@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 4415-5356","Lospalos Branch Office","Disaster Management Officer",,,,,,,
+-"Ms.","Liliana","Otilia","Staff","liliana.otilia@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 1201-3440","Manatuto Branch Office","Disaster Management Officer",,,,,,,
+-"Mr.","Eduardo","dos Santos","Staff","eduardo.dossantos@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 4327-7316","Same Branch Office","Disaster Management Officer",,,,,,,
+-"Ms.","Margarida","Martins","Staff","margarida.martins@redcross.tl",,"Timor-Leste Red Cross Society",,"+670 6166-3916","Viqueque Branch Office","Disaster Management Officer",,,,,,,
+-"Mr.","Natalino","Amaral","Volunteer","natalino.amaral@yahoo.com","+(670) 2906-8755","Timor-Leste Red Cross Society",,,,,"Tasqolo","TL","Bobonaro","Bobonaro","Lour","-9.06795","125.35758"
+-"Ms.","Isabel","Zacarias","Volunteer","isabel.zacarias@hotmail.com","+(670) 6276-9280","Timor-Leste Red Cross Society",,,,,"Couguira","TL","Baucau","Laga","Tequino Mata","-8.49722","126.60278"
+-"Ms.","Beatriz","Albuquequer","Volunteer","beatriz.albuquequer@gmail.com","+(670) 4639-3551","Timor-Leste Red Cross Society",,,,,"Hedamea","TL","Ermera","Hatolia","Hatolia","-8.82409","125.32266"
+-"Mr.","Marcelino","Otilia","Volunteer","marcelino.otilia@yahoo.com","+(670) 6004-8196","Timor-Leste Red Cross Society",,,,,"Mautobalau","TL","Aileu","Aileu Vila","Seloi Craic","-8.71296","125.48791"
+-"Mr.","Marcelo","Polainos","Volunteer","marcelo.polainos@hotmail.com","+(670) 4327-7315","Timor-Leste Red Cross Society",,,,,"Charano","TL","Lautém","Lospalos","Cacavem","-8.59469","126.88854"
+-"Mr.","Justiano","Macedo","Volunteer","justiano.macedo@gmail.com","+(670) 2611-9149","Timor-Leste Red Cross Society",,,,,"Caunua","TL","Manatuto","Barique/Natarbora","Barique","-8.84709","126.06484"
+-"Ms.","Soraia","Moises","Volunteer","soraia.moises@yahoo.com","+(670) 5295-1204","Timor-Leste Red Cross Society",,,,,"Sarlala","TL","Aileu","Aileu Vila","Seloi Craic","-8.67454","125.5507"
+-"Mr.","Lucio","Horta","Volunteer","lucio.horta@hotmail.com","+(670) 8371-2372","Timor-Leste Red Cross Society",,,,,"Vatalara","TL","Lautém","Lospalos","Cacavem","-8.56221","126.89902"
+-"Ms.","Clàudia","Gohan","Volunteer","claudia.gohan@gmail.com","+(670) 7358-3044","Timor-Leste Red Cross Society",,,,,"Raimaten","TL","Bobonaro","Maliana","Lahomea","-8.9884","125.22017"
+-"Ms.","Adriana","Ramos","Volunteer","adriana.ramos@yahoo.com","+(670) 1818-7216","Timor-Leste Red Cross Society",,,,,"Hatomanuc","TL","Manatuto","Laclubar","Manelima","-8.79088","125.93067"
+-"Ms.","Elly","de Carvalho","Volunteer","elly.decarvalho@hotmail.com","+(670) 6166-3906","Timor-Leste Red Cross Society",,,,,"Fatucahi","TL","Manufahi","Fatuberliu","Fatucahi","-9.03412","125.98864"
+-"Mr.","Orlando","Fahik Batak","Volunteer","orlando.fahikbatak@gmail.com","+(670) 4169-1104","Timor-Leste Red Cross Society",,,,,"Betoria","TL","Viqueque","Uatucarbau","Irabin de Baixo","-8.74656","126.69775"
+-"Mr.","Yakobus","Maia","Volunteer","yakobus.maia@yahoo.com","+(670) 7187-1430","Timor-Leste Red Cross Society",,,,,"Lelalai","TL","Baucau","Quelicai","Lelalai","-8.65705","126.51793"
+-"Mr.","Abrao","Moio","Volunteer","abrao.moio@hotmail.com","+(670) 7391-9251","Timor-Leste Red Cross Society",,,,,"Banitur","TL","Liquiçá","Liquiçá","Leoteala","-8.68995","125.29288"
+-"Ms.","Mariana","Sereno","Volunteer","mariana.sereno@gmail.com","+(670) 9459-1197","Timor-Leste Red Cross Society",,,,,"Manufahi","TL","Manatuto","Soibada","Manufahi","-8.83087","125.9218"
+-"Mr.","Andreia","Gorette","Volunteer","andreia.gorette@yahoo.com","+(670) 3436-2535","Timor-Leste Red Cross Society",,,,,"Aimerulu","TL","Ermera","Hatolia","Hatolia","-8.81285","125.32802"
+-"Mr.","Eeru","Hykka","Staff","eeru.hykka@punainenristi.fi",,"Finnish Red Cross",,,,,,,,,,,
+\ No newline at end of file
+diff --git a/private/templates/IFRC_Train/tasks.cfg b/private/templates/IFRC_Train/tasks.cfg
+index 9808e11..d81fddf 100644
+--- a/private/templates/IFRC_Train/tasks.cfg
++++ b/private/templates/IFRC_Train/tasks.cfg
+@@ -26,6 +26,8 @@ auth,organisation,IFRC/organisation.csv,organisation.xsl
+ # Users
+ auth,user,regression/masterUsers.csv,user.xsl
+ auth,user,users.csv,user.xsl
++# Associate Users with Organisations
++hrm,person,users.csv,person.xsl
+ # -----------------------------------------------------------------------------
+ # GIS
+ #  Projections
+@@ -40,12 +42,12 @@ gis,location,locations/TL_L0.csv,location.xsl
+ gis,config,IFRC/gis_config.csv,config.xsl
+ gis,hierarchy,default/gis_hierarchy.csv,hierarchy.xsl
+ # GIS Locations
+-gis,location,locations/TL_L1.csv,location.xsl
+-gis,location,locations/TL_L2.csv,location.xsl
+-#gis,location,locations/TL_L3.csv,location.xsl
+-gis,location,locations/PH_L1.csv,location.xsl
+-gis,location,locations/PH_L2.csv,location.xsl
+-#gis,location,locations/PH_L3.csv,location.xsl
++#gis,location,locations/TL_L1.csv,location.xsl
++#gis,location,locations/TL_L2.csv,location.xsl
++##gis,location,locations/TL_L3.csv,location.xsl
++#gis,location,locations/PH_L1.csv,location.xsl
++#gis,location,locations/PH_L2.csv,location.xsl
++##gis,location,locations/PH_L3.csv,location.xsl
+ # Layers
+ gis,layer_config,IFRC/gis_layer_feature.csv,layer_feature.xsl
+ gis,layer_symbology,IFRC/gis_layer_feature.csv,layer_feature.xsl
+@@ -75,13 +77,10 @@ hrm,job_title,IFRC/job_title.csv,job_title.xsl
+ hrm,programme,IFRC/hrm_programme.csv,programme.xsl
+ hrm,person,staff.csv,person.xsl,"{'Type':'Staff'}"
+ hrm,person,volunteers.csv,person.xsl,"{'Type':'Volunteer'}"
+-# Associate Users with Organisations (not working)
+-hrm,person,users.csv,person.xsl
+ hrm,training,training.csv,training.xsl
+ hrm,programme_hours,hrm_programme_hours.csv,programme_hours.xsl
+ # -----------------------------------------------------------------------------
+ # Project Tool
+-*,import_role,roles/project_roles.csv
+ org,facility,facility.csv,facility.xsl
+ project,status,default/project_status.csv,status.xsl
+ project,activity_type,IFRC/project_activity_type.csv,activity_type.xsl
+@@ -116,7 +115,7 @@ project,project,project_project.csv,project.xsl
+ project,location,project_location.csv,location.xsl
+ project,organisation,project_organisation.csv,organisation.xsl
+ # Events
+-irs,ireport,ireport.csv,ireport.xsl
++#irs,ireport,ireport.csv,ireport.xsl
+ # -----------------------------------------------------------------------------
+ # ADAT
+ # Add the survey templates
+diff --git a/private/templates/IFRC_Train/users.csv b/private/templates/IFRC_Train/users.csv
+index c5ffa73..ebed09f 100644
+--- a/private/templates/IFRC_Train/users.csv
++++ b/private/templates/IFRC_Train/users.csv
+@@ -1,5 +1,5 @@
+ First Name,Last Name,Email,Password,Role,Organisation
+-Test,User,test@example.com,eden,"inv_editor/0,project_editor/0,staff_editor/0,vol_editor/0,survey_editor/0,member_editor/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies
++Test,User,test@ifrc.org,eden,"inv_editor/0,project_editor/0,staff_editor/0,vol_editor/0,survey_editor/0,member_editor/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies
+ Adriana,Macedo,adriana.macedo@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+ Duarte,Botelheiro,duarte.botelheiro@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+ Beatriz,de Carvalho,beatriz.decarvalho@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+diff --git a/static/formats/s3csv/hrm/person.xsl b/static/formats/s3csv/hrm/person.xsl
+index 9e6c490..d7e0201 100644
+--- a/static/formats/s3csv/hrm/person.xsl
++++ b/static/formats/s3csv/hrm/person.xsl
+@@ -4,6 +4,7 @@
+ 
+     <!-- **********************************************************************
+          Human Resources - CSV Import Stylesheet
++         Must be imported through the pr_person resource
+ 
+          Column headers defined in this stylesheet:
+ 
+diff --git a/static/scripts/S3/S3.js b/static/scripts/S3/S3.js
+index 9e734cb..f36ca91 100644
+--- a/static/scripts/S3/S3.js
++++ b/static/scripts/S3/S3.js
+@@ -699,8 +699,12 @@ function S3FilterFieldChange (setting) {
+ 	        }
+ 	    });
+     });
+-    // Initially hide or filter field
+-    selFilterField.change();
++
++    // If the field value is empty
++    if (selField.val() == "") {
++        // Initially hide or filter field
++        selFilterField.change();
++    }
+ };
+ 
+ // ============================================================================
+diff --git a/static/scripts/anytime.js b/static/scripts/anytime.js
+index c8857ad..910c71d 100644
+--- a/static/scripts/anytime.js
++++ b/static/scripts/anytime.js
+@@ -3048,7 +3048,7 @@ AnyTime.picker = function( id, options )
+ 		      if ( left + pickerWidth > bodyWidth - 20 )
+ 		        left = bodyWidth - ( pickerWidth + 20 );
+ 		      var top = off.top - this.div.outerHeight(true);
+-		      if ( top < 0 )
++		      //if ( top < 0 )
+ 		        top = off.top + this.inp.outerHeight(true);
+ 		      this.div.css( { top: String(top)+'px', left: String(left<0?0:left)+'px' } );
+ 		    }
+diff --git a/static/themes/IFRC/layout.css b/static/themes/IFRC/layout.css
+index 670e71d..79bfd87 100644
+--- a/static/themes/IFRC/layout.css
++++ b/static/themes/IFRC/layout.css
+@@ -18,15 +18,21 @@
+ #wrapper{
+     overflow:hidden;
+ }
++#home-col,
+ #single-col,
+ #right-col,
+ #left-col{
+     background: #fff;
+ }
++#home-col,
+ #single-col{
+     position: relative;
+     clear: both;
+ }
++#single-col{
++    padding: 15px 15px 0 15px;
++}
++
+ #right-col{
+     /*width: 788px;
+     padding: 15px 50px 0 15px;*/
+@@ -60,13 +66,13 @@
+     width: 60px;
+ }
+ #header #logo {
+-    width: 600px;
++    width: 585px;
+     height: 90px;
+     border: 1px solid #9c9c9c;
+     border-width: 0 1px 0 1px;
+ }
+ #header #personal-menu {
+-    width: 359px;
++    width: 374px;
+ }
+ #header #logo h1 {
+     float: left;
+diff --git a/static/themes/default/widgets.css b/static/themes/default/widgets.css
+index 1665e70..bde3302 100644
+--- a/static/themes/default/widgets.css
++++ b/static/themes/default/widgets.css
+@@ -16,6 +16,7 @@ div.form-container {
+     width: 100%;
+     overflow: auto;
+     margin-top: 5px;
++    margin-bottom: 15px;
+ }
+ div.form-container form {
+     padding: 5px;
+@@ -561,6 +562,7 @@ div#component {
+ /* Resource Footer */
+ div#rfooter {
+ 	padding: 15px 0;
++	clear: both;
+ }
+ 
+ /* Last Update Meta-data */
