@@ -3801,6 +3801,16 @@ class S3FieldSelector(object):
         else:
             raise KeyError("Field not found: %s" % colname)
 
+        if callable(value):
+            # Lazy virtual field
+            try:
+                value = value()
+            except:
+                if current.response.s3.debug:
+                    from s3utils import s3_debug
+                    s3_debug(sys.exc_info()[1])
+                value = None
+
         if hasattr(field, "expr"):
             return field.expr(value)
         return value
@@ -4138,6 +4148,16 @@ class S3ResourceField(object):
             value = row[tname][fname]
         else:
             raise KeyError(error)
+
+        if callable(value):
+            # Lazy virtual field
+            try:
+                value = value()
+            except:
+                if current.response.s3.debug:
+                    from s3utils import s3_debug
+                    s3_debug(sys.exc_info()[1])
+                value = None
 
         if represent:
             if self.represent is not None:
@@ -5870,7 +5890,6 @@ class S3Pivottable(object):
         rfields = self.rfields
         tfields = self.tfields
 
-        #extract = lambda rf: S3FieldSelector.extract(self.resource, row, rf)
         for f in tfields:
             rfield = rfields[f]
             value = rfield.extract(row)

@@ -2141,6 +2141,109 @@ class ResourceGetTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
+    """ Test support for lazy virtual fields """
+
+    def setUp(self):
+
+        auth.override = True
+        table = s3db.pr_person
+        if not hasattr(table, "name"):
+            table.name = Field.Lazy(self.lazy_name)
+        self.record_id = None
+
+    def lazy_name(self, row):
+        """ Dummy lazy field """
+
+        self.record_id = row.pr_person.id
+        return "%s %s" % (row.pr_person.first_name,
+                          row.pr_person.last_name)
+
+    def testLazyVirtualFieldsResolve(self):
+        """
+            Test whether field selectors for lazy virtual fields
+            can be properly resolved
+        """
+
+        resource = s3db.resource("pr_person")
+
+        from s3.s3resource import S3ResourceField
+        rfield = S3ResourceField(resource, "name")
+        self.assertEqual(rfield.field, None)
+        self.assertEqual(rfield.ftype, "virtual")
+
+    def testLazyVirtualFieldsExtract(self):
+        """
+            Test whether values for lazy virtual fields can be extracted
+        """
+
+        self.record_id = None
+
+        resource = s3db.resource("pr_person")
+        rows = resource.select(limit=1)
+        row = rows[0]
+        self.assertTrue("name" in row)
+        self.assertTrue(callable(row["name"]))
+
+        # lazy field not called in select
+        self.assertEqual(self.record_id, None)
+
+        from s3.s3resource import S3ResourceField
+        rfield = S3ResourceField(resource, "name")
+        name = rfield.extract(row)
+        self.assertEqual(name, "%s %s" % (row.first_name, row.last_name))
+
+        # now lazy field has been called in extract
+        self.assertEqual(self.record_id, row.id)
+
+        data = resource.extract(rows, ["name"])
+        item = data[0]
+        self.assertTrue(isinstance(item, Storage))
+        self.assertTrue("pr_person.name" in item)
+        self.assertEqual(item["pr_person.name"], "%s %s" % (row.first_name, row.last_name))
+
+    def testLazyVirtualFieldsFilter(self):
+        """
+            Test whether S3ResourceQueries work with lazy virtual fields
+        """
+
+        resource = s3db.resource("pr_person")
+
+        from s3.s3resource import S3FieldSelector as FS
+        query = FS("name").like("Admin%")
+        resource.add_filter(query)
+
+        rows = resource.select()
+        data = resource.extract(rows, ["name", "first_name", "last_name"])
+        for item in data:
+            self.assertTrue("pr_person.name" in item)
+            self.assertEqual(item["pr_person.name"][:5], "Admin")
+            self.assertEqual(item["pr_person.name"], "%s %s" % (
+                             item["pr_person.first_name"],
+                             item["pr_person.last_name"]))
+
+    def testLazyVirtualFieldsURLFilter(self):
+        """
+            Test whether URL filters work with lazy virtual fields
+        """
+
+        vars = Storage({"person.name__like": "Admin*"})
+        resource = s3db.resource("pr_person", vars=vars)
+
+        rows = resource.select()
+        data = resource.extract(rows, ["name", "first_name", "last_name"])
+        for item in data:
+            self.assertTrue("pr_person.name" in item)
+            self.assertEqual(item["pr_person.name"][:5], "Admin")
+            self.assertEqual(item["pr_person.name"], "%s %s" % (
+                             item["pr_person.first_name"],
+                             item["pr_person.last_name"]))
+
+    def tearDown(self):
+
+        auth.override = False
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -2170,7 +2273,7 @@ if __name__ == "__main__":
         URLFilterSerializerTests,
 
         ResourceFieldTests,
-
+        ResourceLazyVirtualFieldsSupportTests,
         ResourceDataObjectAPITests,
 
         ResourceDataAccessTests,
