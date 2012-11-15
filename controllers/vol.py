@@ -589,7 +589,7 @@ def person():
                                 rheader=s3db.hrm_rheader,
                                 orgname=orgname,
                                 replace_option=T("Remove existing data before import"),
-                                csv_template="volunteer",
+                                csv_template=("hrm", "volunteer"),
                                 csv_stylesheet=("hrm", "person.xsl"),
                                 csv_extra_fields=[
                                     dict(label="Type",
@@ -948,7 +948,8 @@ def programme_hours():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
+    output = s3_rest_controller("hrm", resourcename,
+                                csv_template = ("hrm", "programme_hours"))
     return output
 # =============================================================================
 def cluster_type():

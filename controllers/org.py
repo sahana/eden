@@ -160,18 +160,19 @@ def facility_marker_fn(record):
     else:
         # Unknown
         marker = "office"
-    if settings.has_module("req"):
-        # Colour code by open/priority requests
-        reqs = record.reqs
-        if reqs == 3:
-            # High
-            marker = "%s_red" % marker
-        elif reqs == 2:
-            # Medium
-            marker = "%s_yellow" % marker
-        elif reqs == 1:
-            # Low
-            marker = "%s_green" % marker
+    # VF not visible currently so disabling
+    #if settings.has_module("req"):
+    #    # Colour code by open/priority requests
+    #    reqs = record.reqs
+    #    if reqs == 3:
+    #        # High
+    #        marker = "%s_red" % marker
+    #    elif reqs == 2:
+    #        # Medium
+    #        marker = "%s_yellow" % marker
+    #    elif reqs == 1:
+    #        # Low
+    #        marker = "%s_green" % marker
 
     mtable = db.gis_marker
     try:

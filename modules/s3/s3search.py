@@ -1335,14 +1335,11 @@ i18n.edit_saved_search="%s"
             search_vars = dict()
 
         s3.formats.pdf = r.url(method="",
-                               vars=search_url_vars,
-                               representation="pdf")
+                               vars=search_url_vars)
         s3.formats.xls = r.url(method="",
-                               vars=search_url_vars,
-                               representation="xls")
+                               vars=search_url_vars)
         s3.formats.rss = r.url(method="",
-                               vars=search_url_vars,
-                               representation="rss")
+                               vars=search_url_vars)
 
         if representation == "plain":
             # Map popup filter
