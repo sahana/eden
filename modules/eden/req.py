@@ -2107,7 +2107,7 @@ class req_site_virtualfields:
 
         tablename = self.tablename
         try:
-            id = self[tablename].id
+            id = self.__dict__[tablename].id
         except AttributeError:
             return None
 
