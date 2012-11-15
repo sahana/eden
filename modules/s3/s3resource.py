@@ -1830,7 +1830,11 @@ class S3Resource(object):
         else:
             orderby = None
 
-        self.load(start=start, limit=limit, orderby=orderby, virtual=False)
+        
+        # Facility Map search needs VFs for reqs (marker_fn & filter)
+        # @ToDo: Lazy VirtualFields
+        #self.load(start=start, limit=limit, orderby=orderby, virtual=False)
+        self.load(start=start, limit=limit, orderby=orderby)
 
         format = current.auth.permission.format
         request = current.request

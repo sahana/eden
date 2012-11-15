@@ -160,19 +160,18 @@ def facility_marker_fn(record):
     else:
         # Unknown
         marker = "office"
-    # VF not visible currently so disabling
-    #if settings.has_module("req"):
-    #    # Colour code by open/priority requests
-    #    reqs = record.reqs
-    #    if reqs == 3:
-    #        # High
-    #        marker = "%s_red" % marker
-    #    elif reqs == 2:
-    #        # Medium
-    #        marker = "%s_yellow" % marker
-    #    elif reqs == 1:
-    #        # Low
-    #        marker = "%s_green" % marker
+    if settings.has_module("req"):
+        # Colour code by open/priority requests
+        reqs = record.reqs
+        if reqs == 3:
+            # High
+            marker = "%s_red" % marker
+        elif reqs == 2:
+            # Medium
+            marker = "%s_yellow" % marker
+        elif reqs == 1:
+            # Low
+            marker = "%s_green" % marker
 
     mtable = db.gis_marker
     try:
@@ -306,7 +305,9 @@ def facility():
                              8:"",
                              9:"",
                              }
-                vals = [A(req.req_ref, _href=URL(c="req", f="req", args=[req.id, req_types[req.type]])) for req in reqs]
+                vals = [A(req.req_ref,
+                          _href=URL(c="req", f="req",
+                                    args=[req.id, req_types[req.type]])) for req in reqs]
                 for val in vals:
                     append(TR(TD(val, _colspan=2)))
 
