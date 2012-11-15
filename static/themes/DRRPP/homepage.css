@@ -28,11 +28,12 @@
 
 #add_div div {
     color: #5D6E4F;
+    font-size: 13px;
     font-weight: 700;
     background: url(img/button_addprojects.png ) no-repeat;
     width: 196px;
     height: 26px;
-    padding: 11px 0 0 10px;
+    padding: 9px 0 0 8px;
     margin: 0 0 2px 7px;
     text-decoration: none;
 }
@@ -130,12 +131,21 @@ img#matrix_img {
     border: 1px solid grey;
 }
 
+#auth_user_email {
+    width: 165px;
+}
+#auth_user_password {
+    width: 165px;
+}
+
 #register-btn {
     float: left;
+    font-size: 12px;
 }
 #retrieve-btn {
     float: right;
-    margin: 0;
+    font-size: 12px;
+    margin: 0 0 0 55px;
 }
 #auth_user_remember__row .w2p_fl {
     display: none;
@@ -159,7 +169,7 @@ img#matrix_img {
 #market_div 	i  {
     color: #025A9E;
 }
-#market_div   h2 {
+#market_div h3 {
     margin-top: 5px;
 	text-align:center;
 	line-height: 100%;
