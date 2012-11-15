@@ -930,16 +930,17 @@ class S3SQLCustomForm(S3SQLForm):
 
         get_config = s3db.get_config
 
-        record = None
+        oldrecord = None
         if record_id:
             accept_id = record_id
             db = current.db
-            db(table._id == record_id).update(**data)
             onaccept = get_config(tablename, "update_onaccept",
                        get_config(tablename, "onaccept", None))
             if onaccept:
-                record = db(table._id == record_id).select(limitby=(0, 1)
-                                                           ).first()
+                # Get oldrecord to save in form
+                oldrecord = db(table._id == record_id).select(limitby=(0, 1)
+                                                              ).first()
+            db(table._id == record_id).update(**data)
         else:
             accept_id = table.insert(**data)
             if not accept_id:
@@ -949,7 +950,7 @@ class S3SQLCustomForm(S3SQLForm):
 
         data[table._id.name] = accept_id
         prefix, name = tablename.split("_", 1)
-        form = Storage(vars=Storage(data), record=record)
+        form = Storage(vars=Storage(data), record=oldrecord)
 
         # Audit
         if record_id is None:
@@ -984,7 +985,6 @@ class S3SQLCustomForm(S3SQLForm):
 
         return accept_id
 
-# =============================================================================
 # =============================================================================
 class S3SQLFormElement(object):
     """ SQL Form Element Base Class """

@@ -5093,7 +5093,10 @@ def project_task_form_inject(r, output, project=True):
             default = field.default
         field_id = "%s_%s" % (table._tablename, field.name)
         # Options will be added later based on the Project
-        field.requires = IS_IN_SET([default])
+        if default:
+            field.requires = IS_IN_SET([default])
+        else:
+            field.requires = IS_IN_SET([])
         #widget = SELECT(_id=field_id, _name=field.name)
         widget = SQLFORM.widgets.options.widget(field, default)
         label = field.label
@@ -5137,7 +5140,10 @@ def project_task_form_inject(r, output, project=True):
                 default = field.default
             field_id = "%s_%s" % (table._tablename, field.name)
             # Options will be added later based on the Project
-            field.requires = IS_IN_SET([default])
+            if default:
+                field.requires = IS_IN_SET([default])
+            else:
+                field.requires = IS_IN_SET([])
             #widget = SELECT(_id=field_id, _name=field.name)
             widget = SQLFORM.widgets.options.widget(field, default)
             label = field.label
