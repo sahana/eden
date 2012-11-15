@@ -5,17 +5,6 @@
     <!-- **********************************************************************
          Request Items - CSV Import Stylesheet
 
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be req/req_item/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          Request........................req_req_item.req_id & req_req.req_ref (lookup only)
          Item...........................req_req_item.item_id & supply_item.name (lookup only)
@@ -29,71 +18,108 @@
 
     <xsl:output method="xml"/>
 
+    <!-- Indexes for faster processing -->
+    <xsl:key name="request" match="row" use="col[@field='Request']"/>
+    <xsl:key name="item" match="row" use="concat(col[@field='Item'],
+                                                 col[@field='Pack'])"/>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Create each record -->
-            <xsl:for-each select="table/row">
-
-                <xsl:variable name="item" select="col[@field='Item']/text()"/>
-                <xsl:variable name="pack" select="col[@field='Pack']/text()"/>
-                <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack)"/>
-                <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack)"/>
-
-                <!-- Request -->
-                <xsl:variable name="Request"><xsl:value-of select="col[@field='Request']"/></xsl:variable>
-                <resource name="req_req">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Request"/>
-                    </xsl:attribute>
-                    <data field="req_ref"><xsl:value-of select="$Request"/></data>
-                </resource>
-
-                <!-- Supply Item -->
-                <resource name="supply_item">
-	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="$item_tuid"/>
-	                </xsl:attribute>
-	                <data field="name"><xsl:value-of select="$item"/></data>
-	                <data field="um"><xsl:value-of select="$pack"/></data>
-	            </resource>
-
-                <!-- Supply Item Pack -->
-                <resource name="supply_item_pack">
-	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="$pack_tuid"/>
-	                </xsl:attribute>
-                    <!-- Link to item -->
-                    <reference field="item_id" resource="supply_item">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$item_tuid"/>
-                        </xsl:attribute>
-                    </reference>
-	                <data field="name"><xsl:value-of select="$pack"/></data>
-	            </resource>
-
-                <!-- Request Item -->
-                <resource name="req_req_item">
-                    <reference field="req_id" resource="req_req">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$Request"/>
-                        </xsl:attribute>
-                    </reference>
-                    <reference field="item_id" resource="supply_item">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$item_tuid"/>
-                        </xsl:attribute>
-                    </reference>
-                    <reference field="item_pack_id" resource="supply_item_pack">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$pack_tuid"/>
-                        </xsl:attribute>
-                    </reference>
-                    <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
-                    <data field="currency"><xsl:value-of select="col[@field='Currency']"/></data>
-                    <data field="pack_value"><xsl:value-of select="col[@field='Value']"/></data>
-                    <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-	            </resource>
+            <!-- Requests -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('request',
+                                                                       col[@field='Request'])[1])]">
+                <xsl:call-template name="Request" />
             </xsl:for-each>
+
+            <!-- Items & Packs -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('item',
+                                                                       concat(col[@field='Item'],
+                                                                              col[@field='Pack']))[1])]">
+                <xsl:call-template name="Item" />
+            </xsl:for-each>
+
+            <!-- Req Items -->
+            <xsl:apply-templates select="table/row"/>
+
         </s3xml>
     </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="row">
+
+        <xsl:variable name="Item" select="col[@field='Item']"/>
+        <xsl:variable name="Pack" select="col[@field='Pack']"/>
+
+        <!-- Request Item -->
+        <resource name="req_req_item">
+            <reference field="req_id" resource="req_req">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Request:', col[@field='Request'])"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Item:', $Item, $Pack)"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="item_pack_id" resource="supply_item_pack">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ItemPack:', $Item, $Pack)"/>
+                </xsl:attribute>
+            </reference>
+            <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
+            <xsl:if test="col[@field='Currency']!=''">
+                <data field="currency"><xsl:value-of select="col[@field='Currency']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Value']!=''">
+                <data field="pack_value"><xsl:value-of select="col[@field='Value']"/></data>
+            </xsl:if>
+            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Request">
+
+        <xsl:variable name="Request" select="col[@field='Request']"/>
+
+        <resource name="req_req">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Request:', $Request)"/>
+            </xsl:attribute>
+            <data field="req_ref"><xsl:value-of select="$Request"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Item">
+
+        <xsl:variable name="Item" select="col[@field='Item']"/>
+        <xsl:variable name="Pack" select="col[@field='Pack']"/>
+
+        <resource name="supply_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Item:', $Item, $Pack)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Item"/></data>
+            <data field="um"><xsl:value-of select="$Pack"/></data>
+        </resource>
+
+        <resource name="supply_item_pack">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('ItemPack:', $Item, $Pack)"/>
+            </xsl:attribute>
+            <!-- Link to item -->
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Item:', $Item, $Pack)"/>
+                </xsl:attribute>
+            </reference>
+            <data field="name"><xsl:value-of select="$Pack"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
 </xsl:stylesheet>

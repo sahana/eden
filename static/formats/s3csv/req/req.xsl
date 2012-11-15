@@ -36,7 +36,7 @@
     <!-- Indexes for faster processing -->
     <xsl:key name="scenario" match="row" use="col[@field='Scenario']"/>
     <xsl:key name="event" match="row" use="col[@field='Event']"/>
-    <xsl:key name="facility" match="row" use="col[@field='Facility']"/>
+    <xsl:key name="facility" match="row" use="col[@field='Requested for Facility']"/>
     <xsl:key name="requester_id" match="row" use="col[@field='Requester']"/>
     <xsl:key name="assigned_to_id" match="row" use="col[@field='Assigned To']"/>
     <xsl:key name="approved_by_id" match="row" use="col[@field='Approved By']"/>
@@ -58,7 +58,7 @@
                 <xsl:call-template name="Event" />
             </xsl:for-each>
 
-            <!-- Sites -->
+            <!-- Facilities -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('facility',
                                                                        col[@field='Requested for Facility'])[1])]">
                 <xsl:call-template name="Facility" />
@@ -74,7 +74,7 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Requesters -->
+            <!-- Assignees -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('approved_by_id',
                                                                        col[@field='Assigned To'])[1])]">
                 <xsl:call-template name="HumanResource">
@@ -84,7 +84,7 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Requesters -->
+            <!-- Approvers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('request_for_id',
                                                                        col[@field='Approved By'])[1])]">
                 <xsl:call-template name="HumanResource">
@@ -94,7 +94,7 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Requesters -->
+            <!-- Requested For -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('recv_by_id',
                                                                        col[@field='Requested For'])[1])]">
                 <xsl:call-template name="HumanResource">
@@ -104,7 +104,7 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Requesters -->
+            <!-- Receivers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('requester_id',
                                                                        col[@field='Received By'])[1])]">
                 <xsl:call-template name="HumanResource">
@@ -124,6 +124,10 @@
     <xsl:template match="row">
 
         <xsl:variable name="Event" select="col[@field='Event']"/>
+        <xsl:variable name="Priority" select="col[@field='Priority']"/>
+        <xsl:variable name="Type" select="col[@field='Request Type']"/>
+        <xsl:variable name="FacilityName" select="col[@field='Requested for Facility']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Requested for Facility Type']/text()"/>
 
         <!-- Request -->
         <resource name="req_req">
@@ -134,6 +138,60 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$Type='Stock'">
+                    <data field="type">1</data>
+                </xsl:when>
+                <xsl:when test="$Type='Asset'">
+                    <data field="type">2</data>
+                </xsl:when>
+                <xsl:when test="$Type='People'">
+                    <data field="type">3</data>
+                </xsl:when>
+                <xsl:when test="$Type='Summary'">
+                    <data field="type">8</data>
+                </xsl:when>
+                <xsl:when test="$Type='Other'">
+                    <data field="type">9</data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- other -->
+                    <data field="type">9</data>
+                </xsl:otherwise>
+            </xsl:choose>
+            <xsl:choose>
+                <xsl:when test="$Priority='Low'">
+                    <data field="priority">1</data>
+                </xsl:when>
+                <xsl:when test="$Priority='Medium'">
+                    <data field="priority">2</data>
+                </xsl:when>
+                <xsl:when test="$Priority='High'">
+                    <data field="priority">3</data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Medium -->
+                    <data field="priority">2</data>
+                </xsl:otherwise>
+            </xsl:choose>
+            <xsl:variable name="resourcename">
+                <xsl:choose>
+                    <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                    <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                    <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                    <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                    <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                    <xsl:otherwise>inv_warehouse</xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <reference field="site_id">
+                <xsl:attribute name="resource">
+                    <xsl:value-of select="$resourcename"/>
+                </xsl:attribute>
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Facility:', $FacilityName)"/>
+                </xsl:attribute>
+            </reference>
             <xsl:choose>
                 <xsl:when test="col[@field='Template']='True'">
                     <data field="is_template">True</data>
@@ -181,28 +239,7 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-            <xsl:choose>
-                <xsl:when test="col[@field='Priority']='Low'">
-                    <data field="priority">1</data>
-                </xsl:when>
-                <xsl:when test="col[@field='Priority']='Medium'">
-                    <data field="priority">2</data>
-                </xsl:when>
-                <xsl:when test="col[@field='Priority']='High'">
-                    <data field="priority">3</data>
-                </xsl:when>
-                <xsl:otherwise>
-                    <data field="priority">2</data>
-                </xsl:otherwise>
-            </xsl:choose>
             <data field="purpose"><xsl:value-of select="col[@field='Purpose']"/></data>
-            <xsl:if test="col[@field='Requested for Facility']!=''">
-                <reference field="site_id" resource="inv_warehouse">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Site"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
             <data field="transport_req"><xsl:value-of select="col[@field='Transportation Required']"/></data>
             <data field="security_req"><xsl:value-of select="col[@field='Security Required']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
@@ -229,6 +266,7 @@
     <xsl:template name="Event">
 
         <xsl:variable name="Event" select="col[@field='Event']"/>
+        <xsl:variable name="Scenario" select="col[@field='Scenario']"/>
 
         <xsl:if test="$Event!=''">
             <resource name="event_event">
@@ -236,11 +274,13 @@
                     <xsl:value-of select="concat('Event:', $Event)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Event"/></data>
-                <reference field="scenario_id" resource="scenario_scenario">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('Scenario:', col[@field='Scenario'])"/>
-                    </xsl:attribute>
-                </reference>
+                <xsl:if test="$Scenario!=''">
+                    <reference field="scenario_id" resource="scenario_scenario">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Scenario:', $Scenario)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
             </resource>
         </xsl:if>
     </xsl:template>
@@ -261,17 +301,15 @@
                 <xsl:otherwise>inv_warehouse</xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <xsl:if test="$FacilityName!=''">
-            <resource>
-                <xsl:attribute name="name">
-                    <xsl:value-of select="$resourcename"/>
-                </xsl:attribute>
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$FacilityName"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$FacilityName"/></data>
-            </resource>
-        </xsl:if>
+        <resource>
+            <xsl:attribute name="name">
+                <xsl:value-of select="$resourcename"/>
+            </xsl:attribute>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Facility:', $FacilityName)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$FacilityName"/></data>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
