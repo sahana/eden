@@ -1259,7 +1259,7 @@ class ResourceExportTests(unittest.TestCase):
             resource = current.s3db.resource(resource,
                                             uid=["ORDERTESTHOSPITAL1",
                                                 "ORDERTESTHOSPITAL2"])
-            resource.load()
+            resource.load(limit=2)
             self.assertEqual(len(resource), 2)
             first = resource._rows[0]["uuid"]
             last = resource._rows[1]["uuid"]
