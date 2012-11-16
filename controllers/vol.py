@@ -134,7 +134,7 @@ def volunteer():
             report_fields.append((T("Active?"), "active"))
         report_options.rows = report_fields
         report_options.cols = report_fields
-        report_options.facts = report_fields
+        report_options.fact = report_fields
         # Add VF to the Search Filters
         # Remove deprecated Active/Obsolete
         human_resource_search.advanced.pop(1)

@@ -405,7 +405,7 @@ class S3RequestModel(S3Model):
                         search=req_req_search,
                         rows=report_fields,
                         cols=report_fields,
-                        facts=fact_fields,
+                        fact=fact_fields,
                         methods=["count", "list", "sum"],
                         defaults=Storage(rows="site_id$location_id$L4",
                                          cols="priority",
@@ -2449,7 +2449,7 @@ def req_add_from_template(req_id):
         data["req_ref"] = code
 
     id = table.insert(**data)
-    
+
     if template.type == 1:
         # Copy across req_item
         table = s3db.req_req_item

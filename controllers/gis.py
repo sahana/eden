@@ -223,12 +223,11 @@ def location():
                             search=gis_location_adv_search,
                             rows=["name"],
                             cols=[],
-                            facts=[(T("Population"), "population")],
+                            fact=[("population", "sum", T("Total Population"))],
                             defaults=Storage(
                                             rows="name",
                                             cols=None,
-                                            fact=(T("Population"), "population"),
-                                            aggregate="sum",
+                                            fact="sum:population",
                                             totals=True
                                             )
                             ),

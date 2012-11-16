@@ -321,12 +321,10 @@ $(document).ready(function(){
                             ],
                         rows=report_fields,
                         cols=report_fields,
-                        facts=report_fields,
-                        methods=["count", "list"],
+                        fact=[("number", "count", T("Number of items"))],
                         defaults=Storage(
-                                aggregate="count",
                                 cols="asset.L1",
-                                fact="asset.number",
+                                fact="count:asset.number",
                                 rows="asset.item_id$item_category_id"
                             )
                         ),

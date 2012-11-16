@@ -572,7 +572,7 @@ $(document).ready(function(){
                     search=advanced,
                     rows=report_fields,
                     cols=report_fields,
-                    facts=report_fields,
+                    fact=report_fields,
                     defaults=Storage(
                         rows="project.multi_hazard_id",
                         cols="project.countries_id",
@@ -1437,7 +1437,7 @@ class S3Project3WModel(S3Model):
                   report_options=Storage(search = advanced_search,
                                          rows=report_fields,
                                          cols=report_fields,
-                                         facts=report_fields,
+                                         fact=report_fields,
                                          defaults=Storage(rows="location.location_id$L1",
                                                           cols="location.project_id",
                                                           fact="location.multi_activity_type_id",
@@ -1787,7 +1787,7 @@ class S3Project3WModel(S3Model):
                         ],
                         rows=report_fields,
                         cols=report_fields,
-                        facts=["value"],
+                        fact=["value"],
                         methods=["sum"],
                         defaults=Storage(rows="beneficiary.project_id",
                                          cols="beneficiary.parameter_id",
@@ -1880,7 +1880,7 @@ class S3Project3WModel(S3Model):
                          ]
         report_options = Storage( rows = report_fields,
                                   cols = report_fields,
-                                  facts = report_fields,
+                                  fact = report_fields,
                                   #methods = ["sum"],
                                   defaults = Storage( rows = "organisation.organisation_id",
                                                       cols  ="organisation.currency",
@@ -2284,7 +2284,7 @@ class S3ProjectActivityModel(S3Model):
                        report_options=Storage(
                                 rows=report_fields,
                                 cols=report_fields,
-                                facts=report_fields,
+                                fact=report_fields,
                                 defaults=Storage(
                                     rows="activity.project_id",
                                     cols="activity.name",
@@ -3217,7 +3217,7 @@ class S3ProjectTaskModel(S3Model):
 
         task_report = Storage(rows = list_fields,
                               cols = list_fields,
-                              facts = list_fields,
+                              fact = list_fields,
                               defaults = Storage(rows = "task.project",
                                                  cols = "task.pe_id",
                                                  fact = "task.time_estimated",
@@ -3529,7 +3529,7 @@ class S3ProjectTaskModel(S3Model):
                   report_options=Storage(
                         rows = report_fields,
                         cols = report_fields,
-                        facts = report_fields,
+                        fact = report_fields,
                         defaults = Storage(
                             rows = "time.project",
                             cols = "time.person_id",

@@ -701,7 +701,7 @@ class S3Resource(object):
             @param format: the representation format of the request (optional)
             @param cascade: this is a cascade delete (prevents rollbacks/commits)
 
-            @returns: number of records deleted
+            @return: number of records deleted
 
             @todo: Fix for Super Entities where we need row[table._id.name]
             @todo: optimize
@@ -1183,7 +1183,7 @@ class S3Resource(object):
             @param orderby: orderby for DB query
             @param distinct: distinct-flag for DB query
 
-            @returns: an S3DataTable instance
+            @return: an S3DataTable instance
         """
 
         # Choose fields
@@ -1227,7 +1227,7 @@ class S3Resource(object):
             @param layers: list of tuples (field selector, method) for
                            the aggregation layers
 
-            @returns: an S3Pivottable instance
+            @return: an S3Pivottable instance
 
             Supported methods: see S3Pivottable
         """
@@ -1253,7 +1253,7 @@ class S3Resource(object):
             @param distinct: select only distinct rows
             @param orderby: Orderby-expression for the query
 
-            @returns: the JSON
+            @return: the JSON
         """
 
         # Choose fields
@@ -1353,7 +1353,7 @@ class S3Resource(object):
             @param limit: the maximum number of records to load
             @param orderby: orderby-expression for the query
 
-            @returns: the records as list of Rows
+            @return: the records as list of Rows
         """
 
         table = self.table
@@ -1453,7 +1453,7 @@ class S3Resource(object):
             Find a record currently stored in this instance by its record ID
 
             @param key: the record ID
-            @returns: a Row
+            @return: a Row
 
             @raises: IndexError if the record is not currently loaded
         """
@@ -1494,7 +1494,7 @@ class S3Resource(object):
             @param key: the record ID
             @param component: the name of the component
                               (None to get the primary record)
-            @returns: a Row (if component is None) or a list of rows
+            @return: a Row (if component is None) or a list of rows
         """
 
         NOT_FOUND = KeyError("Record not found")
@@ -2907,7 +2907,7 @@ class S3Resource(object):
             @param rows: the Rows
             @param fields: list of fields
 
-            @returns: list of dicts of {"tablename.fieldname":value}
+            @return: list of dicts of {"tablename.fieldname":value}
         """
 
         pkey = self.table._id
@@ -3024,7 +3024,7 @@ class S3Resource(object):
             @param extra_fields: automatically add extra_fields of all virtual
                                  fields in this table
 
-            @returns: tuple of (fields, joins, left, distinct)
+            @return: tuple of (fields, joins, left, distinct)
         """
 
         table = self.table
@@ -3423,7 +3423,7 @@ class S3Resource(object):
                            the order of fields in the datatable (list_fields)
             @param vars: the datatable GET vars
 
-            @returns: tuple of (query, orderby, left joins)
+            @return: tuple of (query, orderby, left joins)
         """
 
         db = current.db
@@ -3751,7 +3751,7 @@ class S3FieldSelector(object):
             @param row: the Row
             @param field: the field
 
-            @returns: field if field is not a Field/S3FieldSelector instance,
+            @return: field if field is not a Field/S3FieldSelector instance,
                       the value from the row otherwise
         """
 
@@ -4656,7 +4656,7 @@ class S3ResourceQuery(object):
         """
             Serialize this query as URL query
 
-            @returns: a Storage of URL variables
+            @return: a Storage of URL variables
         """
 
         op = self.op
@@ -5465,7 +5465,7 @@ class S3ResourceFilter(object):
         """
             Serialize this filter as URL query
 
-            @returns: a Storage of URL GET variables
+            @return: a Storage of URL GET variables
         """
         resource = self.resource
 

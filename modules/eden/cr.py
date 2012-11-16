@@ -402,7 +402,7 @@ class S3CampDataModel(S3Model):
                         ],
                         rows=report_fields,
                         cols=report_fields,
-                        facts=report_fields,
+                        fact=report_fields,
                         methods=["count", "list", "sum"],
                         defaults=Storage(rows="location_id$L2",
                                          cols="status",
@@ -446,7 +446,7 @@ class S3CampDataModel(S3Model):
         self.add_component("cr_shelter_status",
                            cr_shelter=dict(joinby="shelter_id",
                                            name="status"))
-        
+
         # -------------------------------------------------------------------------
         # Shelter statuses
         # - a historical record of shelter status: opening/closing dates & populations

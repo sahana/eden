@@ -430,7 +430,7 @@ class S3IRSModel(S3Model):
                       ],
                       rows=report_fields,
                       cols=report_fields,
-                      facts=report_fields,
+                      fact=report_fields,
                       methods=["count", "list"],
                       defaults = dict(rows="L1",
                                       cols="category",
