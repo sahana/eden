@@ -269,13 +269,12 @@ class S3SupplyModel(S3Model):
                                            ondelete = "RESTRICT")
         item_category_id_script = SCRIPT(
 '''$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'catalog_id',
-  'Field':'item_category_id',
-  'FieldPrefix':'supply',
-  'FieldResource':'item_category',
- })
-})''')
+S3FilterFieldChange({
+ 'FilterField':'catalog_id',
+ 'Field':'item_category_id',
+ 'FieldPrefix':'supply',
+ 'FieldResource':'item_category',
+})})''')
 
 
         # Categories as component of Categories

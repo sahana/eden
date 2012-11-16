@@ -273,10 +273,10 @@ def req_controller():
                 req_table.date_recv.readable = req_table.date_recv.writable = True
 
                 req_table.purpose.label = T("What the Items will be used for")
-                req_table.site_id.label =T("Deliver To")
+                req_table.site_id.label = T("Deliver To")
                 req_table.request_for_id.label = T("Deliver To")
                 req_table.recv_by_id.label = T("Delivered To")
-
+                
             elif type == 3: # Person
                 req_table.date_required_until.readable = req_table.date_required_until.writable = True
 
@@ -308,6 +308,7 @@ def req_controller():
 
                 elif r.component.name == "req_skill":
                     s3db.req_hide_quantities(r.component.table)
+
                 elif r.component.alias == "job":
                     s3task.configure_tasktable_crud(
                         function="req_add_from_template",
@@ -333,6 +334,76 @@ def req_controller():
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
                     s3db.req_create_form_mods()
+
+                    if type == 1:
+                        # Dropdown not Autocomplete
+                        itable = s3db.req_req_item
+                        itable.item_id.widget = None
+                        s3.jquery_ready.append('''
+S3FilterFieldChange({
+ 'FilterField':'defaultreq_item_item_id_edit_none',
+ 'FieldKey':'item_id',
+ 'Field':'defaultreq_item_item_pack_id_edit_none',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})''')
+                        # We don't want to force people to enter quantities
+                        #itable.quantity.default = 0
+                        # Custom Form
+                        s3forms = s3base.s3forms
+                        crud_form = s3forms.S3SQLCustomForm(
+                                # If not generated automatically
+                                #"req_ref",
+                                "site_id",
+                                "is_template",
+                                "requester_id",
+                                "date",
+                                "priority",
+                                "date_required",
+                                "purpose",
+                                s3forms.S3SQLInlineComponent(
+                                    "req_item",
+                                    label = T("Items"),
+                                    fields = ["item_id",
+                                              "item_pack_id",
+                                              "quantity",
+                                              "comments"
+                                              ]
+                                ),
+                                "date_recv",
+                                "comments",
+                            )
+                        s3db.configure("req_req", crud_form=crud_form)
+
+                    elif type == 3:
+                        # Custom Form
+                        s3forms = s3base.s3forms
+                        crud_form = s3forms.S3SQLCustomForm(
+                                # If not generated automatically
+                                #"req_ref",
+                                "site_id",
+                                "is_template",
+                                "requester_id",
+                                "date",
+                                "priority",
+                                "date_required",
+                                "date_required_until",
+                                "purpose",
+                                s3forms.S3SQLInlineComponent(
+                                    "req_skill",
+                                    label = T("Skills"),
+                                    fields = ["quantity",
+                                              "skill_id",
+                                              "comments"
+                                              ]
+                                ),
+                                "comments",
+                            )
+                        s3db.configure("req_req", crud_form=crud_form)
+
                     # Get the default Facility for this user
                     # @ToDo: Use site_id in User Profile (like current organisation_id)
                     if settings.has_module("hrm"):

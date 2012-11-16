@@ -101,67 +101,6 @@ S3.addTooltips = function() {
     });
 }
 
-S3.deduplication = function() {
-    // Deduplication event handlers
-
-    $('.mark-deduplicate').click(function() {
-        var url = $('#markDuplicateURL').attr('href');
-        if (url) {
-            $.ajaxS3({
-                type: "POST",
-                url: url,
-                data: {},
-                success: function(data) {
-                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                    return;
-                },
-                dataType: 'JSON'
-            });
-        }
-    });
-    $('.unmark-deduplicate').click(function() {
-        var url = $('#markDuplicateURL').attr('href');
-        if (url) {
-            $.ajaxS3({
-                type: "POST",
-                url: url + '?remove=1',
-                data: {},
-                success: function(data) {
-                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                    return;
-                },
-                dataType: 'JSON'
-            });
-        }
-    });
-    $('.swap-button').click(function() {
-        // Swap widgets between original and duplicate side
-        var id = this.id;
-        var name = id.slice(5);
-
-        var original = $('#original_' + name);
-        var original_name = original.attr('name');
-        var original_id = original.attr('id');
-        var original_parent = original.parent();
-
-        var duplicate = $('#duplicate_' + name);
-        var duplicate_name = duplicate.attr('name');
-        var duplicate_id = duplicate.attr('id');
-        var duplicate_parent = duplicate.parent();
-
-        var o = original.detach();
-        o.attr('id', duplicate_id);
-        o.attr('name', duplicate_name);
-
-        var d = duplicate.detach();
-        d.attr('id', original_id);
-        d.attr('name', original_name);
-
-        o.appendTo(duplicate_parent);
-        d.appendTo(original_parent);
-    });
-}
-
 $(document).ready(function() {
     // Web2Py Layer
     $('.error').hide().slideDown('slow');
@@ -316,6 +255,67 @@ $(document).ready(function() {
 function s3_tb_remove(){
     // Colorbox Popup
     $.fn.colorbox.close();
+}
+
+// ============================================================================
+S3.deduplication = function() {
+    // Deduplication event handlers
+    $('.mark-deduplicate').click(function() {
+        var url = $('#markDuplicateURL').attr('href');
+        if (url) {
+            $.ajaxS3({
+                type: 'POST',
+                url: url,
+                data: {},
+                success: function(data) {
+                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
+                    return;
+                },
+                dataType: 'JSON'
+            });
+        }
+    });
+    $('.unmark-deduplicate').click(function() {
+        var url = $('#markDuplicateURL').attr('href');
+        if (url) {
+            $.ajaxS3({
+                type: 'POST',
+                url: url + '?remove=1',
+                data: {},
+                success: function(data) {
+                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
+                    return;
+                },
+                dataType: 'JSON'
+            });
+        }
+    });
+    $('.swap-button').click(function() {
+        // Swap widgets between original and duplicate side
+        var id = this.id;
+        var name = id.slice(5);
+
+        var original = $('#original_' + name);
+        var original_name = original.attr('name');
+        var original_id = original.attr('id');
+        var original_parent = original.parent();
+
+        var duplicate = $('#duplicate_' + name);
+        var duplicate_name = duplicate.attr('name');
+        var duplicate_id = duplicate.attr('id');
+        var duplicate_parent = duplicate.parent();
+
+        var o = original.detach();
+        o.attr('id', duplicate_id);
+        o.attr('name', duplicate_name);
+
+        var d = duplicate.detach();
+        d.attr('id', original_id);
+        d.attr('name', original_name);
+
+        o.appendTo(duplicate_parent);
+        d.appendTo(original_parent);
+    });
 }
 
 // ============================================================================

@@ -396,6 +396,7 @@ class S3RequestModel(S3Model):
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
         list_fields.append("date_required")
+
         self.configure(tablename,
                        onaccept = self.req_onaccept,
                        deduplicate = self.req_req_duplicate,
@@ -1083,17 +1084,16 @@ class S3RequestItemModel(S3Model):
                                       ondelete = "CASCADE",
                                       script = SCRIPT('''
 $(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'req_item_id',
-  'Field':'item_pack_id',
-  'FieldResource':'item_pack',
-  'FieldPrefix':'supply',
-  'url':S3.Ap.concat('/req/req_item_packs/'),
-  'msgNoRecords':i18n.no_packs,
-  'fncPrep':fncPrepItem,
-  'fncRepresent':fncRepresentItem
- });
-})'''),
+S3FilterFieldChange({
+ 'FilterField':'req_item_id',
+ 'Field':'item_pack_id',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'url':S3.Ap.concat('/req/req_item_packs/'),
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})})'''),
                                         )
 
         if settings.get_req_prompt_match():
