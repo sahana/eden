@@ -87,7 +87,7 @@ settings.inv.stock_count = True
 settings.inv.track_pack_values = False
 
 # Request Management
-settings.req.req_type = ["People", "Stock", "Summary"]
+settings.req.req_type = ["People", "Stock"]#, "Summary"]
 settings.req.prompt_match = False
 settings.req.use_commit = False
 settings.req.requester_optional = True
