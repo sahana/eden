@@ -645,7 +645,7 @@ def translate():
            language file
 
         4) Upload a text file containing a list of new-line separated strings
-           which are to be considered for translation in the future. These 
+           which are to be considered for translation in the future. These
            strings are termed as "user-supplied" strings and are picked up by
            the first workflow when preparing the spreadsheet for translation
 
