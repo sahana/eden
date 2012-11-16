@@ -2146,8 +2146,8 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
     def setUp(self):
 
-        auth.override = True
-        table = s3db.pr_person
+        current.auth.override = True
+        table = current.s3db.pr_person
         if not hasattr(table, "name"):
             table.name = Field.Lazy(self.lazy_name)
         self.record_id = None
@@ -2165,7 +2165,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
             can be properly resolved
         """
 
-        resource = s3db.resource("pr_person")
+        resource = current.s3db.resource("pr_person")
 
         from s3.s3resource import S3ResourceField
         rfield = S3ResourceField(resource, "name")
@@ -2179,7 +2179,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
         self.record_id = None
 
-        resource = s3db.resource("pr_person")
+        resource = current.s3db.resource("pr_person")
         rows = resource.select(limit=1)
         row = rows[0]
         self.assertTrue("name" in row)
@@ -2207,7 +2207,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
             Test whether S3ResourceQueries work with lazy virtual fields
         """
 
-        resource = s3db.resource("pr_person")
+        resource = current.s3db.resource("pr_person")
 
         from s3.s3resource import S3FieldSelector as FS
         query = FS("name").like("Admin%")
@@ -2228,7 +2228,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         """
 
         vars = Storage({"person.name__like": "Admin*"})
-        resource = s3db.resource("pr_person", vars=vars)
+        resource = current.s3db.resource("pr_person", vars=vars)
 
         rows = resource.select()
         data = resource.extract(rows, ["name", "first_name", "last_name"])
@@ -2241,7 +2241,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
     def tearDown(self):
 
-        auth.override = False
+        current.auth.override = False
 
 # =============================================================================
 def run_suite(*test_classes):
