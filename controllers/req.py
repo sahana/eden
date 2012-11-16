@@ -556,7 +556,7 @@ S3FilterFieldChange({
 def req_item():
     """
         REST Controller
-        @ToDo: Filter out fulfilled Items? 
+        @ToDo: Filter out fulfilled Items?
     """
 
     # Filter out Template Items
@@ -607,7 +607,7 @@ def req_item():
             cols = 3,
         ),
     )
-    s3db.configure("req_req_skill",
+    s3db.configure("req_req_item",
                    search_method = s3base.S3Search(advanced=req_item_search),
                    )
 
@@ -822,7 +822,7 @@ def req_skill():
             list_fields.insert(1, "req_id$site_id")
             list_fields.insert(1, "req_id$site_id$location_id$L4")
             list_fields.insert(1, "req_id$site_id$location_id$L3")
-            
+
             s3db.configure("req_req_skill",
                            insertable=False,
                            list_fields = list_fields,
