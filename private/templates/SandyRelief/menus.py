@@ -136,7 +136,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="req")(
                     M("Requests", f="req")(
-                        M("New", m="create"),
+                        M("Request Items", m="create", vars={"type":1}),
+                        M("Request Skills", m="create", vars={"type":3}),
                         M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         M("Search", m="search"),
@@ -145,10 +146,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search All Requested Items", f="req_item", m="search"),
                         M("Search All Requested Skills", f="req_skill", m="search"),
                     ),
-                    M("Priority Items", f="summary_option")(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
+                    #M("Priority Items", f="summary_option")(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         M("List All"),
