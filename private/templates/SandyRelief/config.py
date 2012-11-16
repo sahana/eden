@@ -91,6 +91,8 @@ settings.req.req_type = ["People", "Stock", "Summary"]
 settings.req.prompt_match = False
 settings.req.use_commit = False
 settings.req.requester_optional = True
+settings.req.quantities_writable = True
+settings.req.skill_quantities_writable = True
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations

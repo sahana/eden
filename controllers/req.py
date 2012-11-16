@@ -634,15 +634,16 @@ def req_item():
 
     output = s3_rest_controller()
 
-    req_item_inv_item_btn = dict(url = URL(c="req", f="req_item_inv_item",
-                                           args=["[id]"]),
-                                 _class = "action-btn",
-                                 label = str(T("Request from Facility")),
-                                 )
-    if s3.actions:
-        s3.actions += [req_item_inv_item_btn]
-    else:
-        s3.actions = [req_item_inv_item_btn]
+    if settings.get_req_prompt_match():
+        req_item_inv_item_btn = dict(url = URL(c="req", f="req_item_inv_item",
+                                               args=["[id]"]),
+                                     _class = "action-btn",
+                                     label = str(T("Request from Facility")),
+                                     )
+        if s3.actions:
+            s3.actions += [req_item_inv_item_btn]
+        else:
+            s3.actions = [req_item_inv_item_btn]
 
     return output
 
