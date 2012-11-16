@@ -229,6 +229,12 @@ def facility():
                     s3_filter_staff(r)
 
                 elif cname == "req" and r.method not in ("update", "read"):
+                    # Remove type from list_fields
+                    list_fields = s3db.get_config("req_req", "list_fields")
+                    try:
+                        list_fields.remove("site_id")
+                    except:
+                        pass
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
                     s3db.req_create_form_mods()
@@ -351,6 +357,16 @@ def facility():
             if website:
                 append(TR(TD(B("%s:" % r.table.website.label)),
                           TD(A(website, _href=website))))
+
+        if r.component and r.component.name == "req":
+            s3_action_buttons(r)
+            s3.actions.append(
+                dict(url = URL(c="req", f="req",
+                               args=["[id]", "form"]),
+                     _class = "action-btn",
+                     label = str(T("PDF Form"))
+                    )
+                )
 
         return output
     s3.postp = postp

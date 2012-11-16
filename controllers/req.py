@@ -247,6 +247,42 @@ def req_controller():
             s3db.configure("req_req", list_fields=list_fields)
 
         if r.interactive:
+            # Custom Form
+            s3forms = s3base.s3forms
+            crud_form_fields = [
+                        "type",
+                        "date",
+                        "priority",
+                        "site_id",
+                        s3forms.S3SQLInlineComponent(
+                            "req_item",
+                            label = T("Request Inventory Items:"),
+                            comment = s3db.supply_item_pack_id().comment,
+                            fields = ["item_id",
+                                      "quantity",
+                                      "item_pack_id",
+                                      "comments",
+                                      ]
+                        ),
+                        # This requires the component to be multiple = False
+                        "req_skill.skill_id",
+                        "req_skill.quantity",
+                        # Ugly!
+                        #s3forms.S3SQLInlineComponent(
+                        #    "req_skill",
+                        #    label = T("Request People:"),
+                        #    fields = ["skill_id",
+                        #              "quantity",
+                        #              "comments",
+                        #              ]
+                        #),
+                        "purpose",
+                        "is_template",
+                        "date_required",
+                        "requester_id",
+                        "comments",
+                    ]
+            
             # Set Fields and Labels depending on type
             type = (r.record and r.record.type) or \
                    (request.vars and request.vars.type)
@@ -270,6 +306,10 @@ def req_controller():
 
             # These changes are applied via JS in create forms where type is editable
             if type == 1: # Item
+                s3.crud_strings.req_req.title_create =  T("Make a Request for Items")
+                
+                del crud_form_fields[5]
+                del crud_form_fields[5]
                 req_table.date_recv.readable = req_table.date_recv.writable = True
 
                 req_table.purpose.label = T("What the Items will be used for")
@@ -278,12 +318,27 @@ def req_controller():
                 req_table.recv_by_id.label = T("Delivered To")
 
             elif type == 3: # Person
+                s3.crud_strings.req_req.title_create =  T("Make a Request for People")
+                
+                del crud_form_fields[4]
                 req_table.date_required_until.readable = req_table.date_required_until.writable = True
 
                 req_table.purpose.label = T("Task Details")
                 req_table.site_id.label =  T("Report To")
                 req_table.request_for_id.label = T("Report To")
                 req_table.recv_by_id.label = T("Reported To")
+                
+            elif type == 8: # Summary
+                s3.crud_strings.req_req.title_create =  T("Make a General Request")
+
+                del crud_form_fields[4]
+                del crud_form_fields[4]
+                del crud_form_fields[4]
+                pass
+            
+            s3db.configure("req_req", 
+                           crud_form = s3forms.S3SQLCustomForm(*crud_form_fields)
+                           )
 
             if r.component:
                 if r.component.name == "document":
@@ -411,6 +466,13 @@ def req_controller():
 
         if r.interactive:
             s3_action_buttons(r)
+            s3.actions.append(
+                dict(url = URL(c="req", f="req",
+                               args=["[id]", "form"]),
+                     _class = "action-btn",
+                     label = str(T("PDF Form"))
+                    )
+                )
             if not r.component:
                 if settings.get_req_use_commit():
                     # This is appropriate to all
@@ -421,31 +483,8 @@ def req_controller():
                              label = str(T("Commit"))
                             )
                         )
-                # This is only appropriate for item requests
-                query = (r.table.type == 1)
-                rows = db(query).select(r.table.id)
-                restrict = [str(row.id) for row in rows]
-                s3.actions.append(
-                    dict(url = URL(c="req", f="req",
-                                   args=["[id]", "req_item"]),
-                         _class = "action-btn",
-                         label = str(T("View Items")),
-                         restrict = restrict
-                        )
-                    )
-                # This is only appropriate for people requests
-                query = (r.table.type == 3)
-                rows = db(query).select(r.table.id)
-                restrict = [str(row.id) for row in rows]
-                s3.actions.append(
-                    dict(url = URL(c="req", f="req",
-                                   args=["[id]", "req_skill"]),
-                         _class = "action-btn",
-                         label = str(T("View Skills")),
-                         restrict = restrict
-                        )
-                    )
             elif r.component.name == "req_item":
+                # @ToDo: This is no longer easily accessible as req_items are a inline form
                 req_item_inv_item_btn = dict(url = URL(c = "req",
                                                        f = "req_item_inv_item",
                                                        args = ["[id]"]

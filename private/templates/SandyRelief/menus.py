@@ -135,8 +135,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="req")(
+                    M("Make a Request", f="req", m="create")(
+                        M("General Request", m="create", vars = {"type":8}),
+                        M("For Items", m="create", vars = {"type":1}),
+                        M("For People", m="create", vars = {"type":3}),
+                    ),
                     M("Requests", f="req")(
-                        M("New", m="create"),
                         M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         M("Search", m="search"),
