@@ -1276,9 +1276,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             label = " ".join([s.capitalize() for s in label.split("_")])
 
+        if "comment" in options:
+            comment = options["comment"]
+        else:
+            comment = None
+
         fname = self._formname(separator = "_")
         field = Field(fname, "text",
                       label = label,
+                      comment = comment,
                       widget = self,
                       default = self.extract(resource, None),
                       represent = self.represent,

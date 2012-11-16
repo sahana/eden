@@ -436,7 +436,7 @@ class S3RequestModel(S3Model):
         # Request Skills as component of Requests
         add_component("req_req_skill",
                       req_req=dict(joinby="req_id",
-                                   multiple=multiple_req_items))
+                                   multiple=False))
 
         # Commitment as a component of Requests
         add_component("req_commit",
@@ -907,39 +907,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             type = int(form.vars.type)
         else:
             type = 1
-        if type == 1 and settings.has_module("inv"):
-            s3db.configure(tablename,
-                           create_next = URL(c="req",
-                                             f=f,
-                                             args=["[id]", "req_item"]),
-                           update_next = URL(c="req",
-                                             f=f,
-                                             args=["[id]", "req_item"]))
-        #elif type == 2 and settings.has_module("asset"):
-        #    s3db.configure(tablename,
-        #                   create_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_asset"]),
-        #                   update_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_asset"]))
-        elif type == 3 and settings.has_module("hrm"):
-            s3db.configure(tablename,
-                           create_next = URL(c="req",
-                                             f=f,
-                                             args=["[id]", "req_skill"]),
-                           update_next = URL(c="req",
-                                             f=f,
-                                             args=["[id]", "req_skill"]))
-        #elif type == 4 and settings.has_module("cr"):
-        #    s3db.configure(tablename,
-        #                   create_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_shelter"]),
-        #                   update_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_shelter"]))
-        elif is_template:
+        if is_template:
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f=f,
@@ -1068,6 +1036,19 @@ class S3RequestItemModel(S3Model):
             msg_list_empty = T("No Items currently requested"))
 
         # Reusable Field
+        req_item_script = SCRIPT('''
+$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'req_item_id',
+  'Field':'item_pack_id',
+  'FieldResource':'item_pack',
+  'FieldPrefix':'supply',
+  'url':S3.Ap.concat('/req/req_item_packs/'),
+  'msgNoRecords':i18n.no_packs,
+  'fncPrep':fncPrepItem,
+  'fncRepresent':fncRepresentItem
+ });
+})''')
         req_item_id = S3ReusableField("req_item_id", table,
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
@@ -1081,20 +1062,8 @@ class S3RequestItemModel(S3Model):
                                                     _title="%s|%s" % (T("Request Item"),
                                                                       T("Select Items from the Request"))),
                                       ondelete = "CASCADE",
-                                      script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'req_item_id',
-  'Field':'item_pack_id',
-  'FieldResource':'item_pack',
-  'FieldPrefix':'supply',
-  'url':S3.Ap.concat('/req/req_item_packs/'),
-  'msgNoRecords':i18n.no_packs,
-  'fncPrep':fncPrepItem,
-  'fncRepresent':fncRepresentItem
- });
-})'''),
-                                        )
+                                      script = req_item_script,
+                                      )
 
         if settings.get_req_prompt_match():
             # Shows the inventory items which match a requested item
@@ -2148,14 +2117,7 @@ def req_rheader(r, check_page=False):
                 is_template = record.is_template
 
                 tabs = [(T("Edit Details"), None)]
-                if record.type == 1 and settings.has_module("inv"):
-                    if settings.get_req_multiple_req_items():
-                        req_item_tab_label = T("Items")
-                    else:
-                        req_item_tab_label = T("Item")
-                    tabs.append((req_item_tab_label, "req_item"))
-                elif record.type == 3 and settings.has_module("hrm"):
-                    tabs.append((T("People"), "req_skill"))
+
                 tabs.append((T("Documents"), "document"))
                 if is_template:
                     tabs.append((T("Schedule"), "job"))
@@ -2243,9 +2205,7 @@ def req_rheader(r, check_page=False):
                 else:
                     fulfil_status = (TH("%s: " % table.fulfil_status.label),
                                      table.fulfil_status.represent(record.fulfil_status))
-                    row2 = TR(TH("%s: " % table.date.label),
-                              table.date.represent(record.date),
-                              *transit_status
+                    row2 = TR(*transit_status
                               )
 
                 if settings.get_req_use_req_number() and not is_template:
@@ -2265,14 +2225,8 @@ def req_rheader(r, check_page=False):
                         headerTR.append(TD(logo, _colspan=2))
 
                 if use_commit:
-                    row = TR(TH("%s: " % table.date_required.label),
-                             table.date_required.represent(record.date_required),
-                             TH("%s: " % table.commit_status.label),
+                    row = TR(TH("%s: " % table.commit_status.label),
                              table.commit_status.represent(record.commit_status),
-                             )
-                elif not is_template:
-                    row = TR(TH("%s: " % table.date_required.label),
-                             table.date_required.represent(record.date_required),
                              )
                 else:
                     row = ""
@@ -2280,13 +2234,7 @@ def req_rheader(r, check_page=False):
                 rData = TABLE(headerTR,
                               row,
                               row2,
-                              TR(TH("%s: " % table.site_id.label),
-                                 table.site_id.represent(site_id),
-                                 *fulfil_status
-                                 ),
-                              TR(TH("%s: " % table.comments.label),
-                                 TD(record.comments or "", _colspan=3)
-                                 ),
+                              TR(*fulfil_status),
                               )
 
                 rheader = DIV(rData,
