@@ -75,8 +75,11 @@ def index():
             if page in custom.__dict__:
                 exec ("output = custom.%s()()" % page)
                 return output
-            else:
+            elif page != "login":
                 raise(HTTP(404, "Function not found: %s()" % page))
+            else:
+                output = custom.index()()
+                return output
     elif settings.get_template() != "default":
         # Try a Custom Homepage
         controller = "applications.%s.private.templates.%s.controllers" % \
