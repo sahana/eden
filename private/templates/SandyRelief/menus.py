@@ -227,8 +227,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="req")(
                     M("Requests", f="req")(
                         M("Request Items", m="create", vars={"type":1}),
-                        M("Request Skills", m="create", vars={"type":3}),
-                        M("Fulfil Requests", m="search"),
+                        M("Request People", m="create", vars={"type":3}),
+                        M("Fulfill Requests", m="search"),
                         M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         M("Search", m="search"),

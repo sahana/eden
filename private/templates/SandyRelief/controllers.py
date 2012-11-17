@@ -69,7 +69,7 @@ class index():
                           _class = "menu-btn-l",
                           _href=URL(c="req", f="req", args=["create"], vars={"type":3})
                           ),
-                        A(DIV(T("Fulfil Requests"),
+                        A(DIV(T("Fulfill Requests"),
                               _class = "menu-btn-r"),
                           _class = "menu-btn-l",
                           _href=URL(c="req", f="req", args=["search"])

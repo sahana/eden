@@ -143,6 +143,7 @@ class S3RequestModel(S3Model):
         use_commit = settings.get_req_use_commit()
         req_ask_security = settings.get_req_ask_security()
         req_ask_transport = settings.get_req_ask_transport()
+        date_writable = settings.get_req_date_writable()
 
         # ---------------------------------------------------------------------
         # Requests
@@ -164,6 +165,8 @@ class S3RequestModel(S3Model):
                                               default="now",
                                               past=8760, # Hours, so 1 year
                                               future=0,
+                                              readable=date_writable,
+                                              writable=date_writable,
                                               #represent="date",
                                               #widget="date",
                                               ),
@@ -321,8 +324,15 @@ class S3RequestModel(S3Model):
         req_req_search = (
             S3SearchOptionsWidget(
                 name="req_search_fulfil_status",
-                label=T("Status"),
+                label=T("Fulfill Status"),
                 field="fulfil_status",
+                options = req_status_opts,
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="req_search_transit_status",
+                label=T("Transit Status"),
+                field="transit_status",
                 options = req_status_opts,
                 cols = 3,
             ),
@@ -552,6 +562,8 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             s3.js_global.append(req_helptext)
             s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
 
+        else:
+            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.req_schedule.js" % current.request.application)
         return
 
     # -------------------------------------------------------------------------
