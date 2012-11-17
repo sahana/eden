@@ -230,7 +230,8 @@ class S3RequestModel(S3Model):
                                                     empty = settings.get_req_requester_optional(),
                                                     #writable = False,
                                                     #comment = None,
-                                                    default = auth.s3_logged_in_human_resource()),
+                                                    #default = auth.s3_logged_in_human_resource()
+                                                    ),
                                   human_resource_id("assigned_to_id", # This field should be in req_commit, but that complicates the UI
                                                     readable = False,
                                                     writable = False,

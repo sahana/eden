@@ -17,8 +17,8 @@ T = current.T
 # Pre-Populate
 settings.base.prepopulate = ["SandyRelief"]
 
-settings.base.system_name = T("Sandy Relief")
-settings.base.system_name_short = T("SandyRelief")
+settings.base.system_name = "Sandy Relief"
+settings.base.system_name_short = "SandyRelief"
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "SandyRelief"

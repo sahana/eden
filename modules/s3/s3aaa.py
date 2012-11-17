@@ -1934,7 +1934,8 @@ Thank you
         htablename = "hrm_human_resource"
         htable = s3db.table(htablename)
 
-        if not htable or not organisation_id:
+        if not htable or (not organisation_id and \
+                          current.deployment_settings.get_hrm_org_required()):
             return None
 
         # Update existing HR record for this user
