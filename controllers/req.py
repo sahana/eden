@@ -321,6 +321,7 @@ def req_controller():
                         vars = dict(user_id = auth.user is not None and auth.user.id or 0),
                         period = 86400, # seconds, so 1 day
                         )
+                    db.scheduler_task.timeout.writable = False
             else:
                 if r.id:
                     req_table.is_template.readable = req_table.is_template.writable = False

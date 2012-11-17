@@ -52,10 +52,16 @@ settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
 
+# Restrict the Location Selector to just certain countries
+# NB This can also be over-ridden for specific contexts later
+# e.g. Activities filtered to those of parent Project
+settings.gis.countries = ["KE"]
+
 # Finance settings
 settings.fin.currencies = {
     "EUR" : T("Euros"),
     "GBP" : T("Great British Pounds"),
+    "KES" : T("Kenyan Shillings"),
     "USD" : T("United States Dollars"),
 }
 
