@@ -659,7 +659,7 @@ class IS_ONE_OF_EMPTY(Validator):
 
             if self.multiple:
                 if isinstance(value, list):
-                    values = value
+                    values = [int(v) for v in value]
                 elif isinstance(value, basestring) and \
                      value[0] == "|" and value[-1] == "|":
                     values = value[1:-1].split("|")
@@ -675,6 +675,7 @@ class IS_ONE_OF_EMPTY(Validator):
                         return (value, self.error_message)
                 else:
                     field = table[self.kfield]
+                    query = None
                     for v in values:
                         q = (field == v)
                         query = query is not None and query | q or q
