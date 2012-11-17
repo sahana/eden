@@ -21,7 +21,7 @@ settings.base.system_name = T("Sandy Relief")
 settings.base.system_name_short = T("SandyRelief")
 
 # Theme (folder to use for views/layout.html)
-#settings.base.theme = "OCHA"
+settings.base.theme = "SandyRelief"
 
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False

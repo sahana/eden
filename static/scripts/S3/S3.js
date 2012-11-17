@@ -880,6 +880,9 @@ function S3FilterFieldChange(setting) {
 
     // If the field value is empty - disable - but keep initial value
     selFilterField.change();
+    // Don't include this change in the deliberate changes
+    S3ClearNavigateAwayConfirm();
+    S3EnableNavigateAwayConfirm();
 };
 
 // ============================================================================

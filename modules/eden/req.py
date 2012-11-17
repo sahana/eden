@@ -1117,14 +1117,16 @@ S3FilterFieldChange({
         list_fields = ["id",
                        "item_id",
                        "item_pack_id",
-                       "site_id",
-                       "quantity",
-                       "quantity_transit",
-                       "quantity_fulfil",
-                       "comments",
                        ]
+        if settings.get_req_prompt_match():
+            list_fields.append("site_id")
+        list_fields.append("quantity")
         if use_commit:
-            list_fields.insert(5, "quantity_commit")
+            list_fields.append("quantity_commit")
+        list_fields.append("quantity_transit")
+        list_fields.append("quantity_fulfil")
+        list_fields.append("comments")
+
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        onaccept = req_item_onaccept,
@@ -1309,10 +1311,11 @@ class S3RequestSkillModel(S3Model):
         tablename = "req_req_skill"
         table = define_table(tablename,
                              req_id(),
-                             Field("task",
-                                   readable=False,
-                                   writable=False, # Populated from req_req 'Purpose'
-                                   label = T("Task Details")),
+                             # Make this a Virtual Field
+                             #Field("task",
+                             #      readable=False,
+                             #      writable=False, # Populated from req_req 'Purpose'
+                             #      label = T("Task Details")),
                              self.hrm_multi_skill_id(
                                     label = T("Required Skills"),
                                     comment = T("Leave blank to request an unskilled person")
@@ -1370,7 +1373,7 @@ class S3RequestSkillModel(S3Model):
             msg_list_empty = T("No Skills currently requested"))
 
         list_fields = ["id",
-                       "task",
+                       #"task",
                        "skill_id",
                        "quantity",
                        "quantity_transit",
@@ -2148,7 +2151,7 @@ class ReqVirtualFields:
             ltable = s3db.req_req_item
             query = (ltable.deleted != True) & \
                     (ltable.req_id == id) & \
-                    (ltable.item_id == itable.name)
+                    (ltable.item_id == itable.id)
             items = current.db(query).select(itable.name)
             if items:
                 return ",".join([item.name for item in items])
@@ -2356,6 +2359,9 @@ def req_rheader(r, check_page=False):
                     row = ""
 
                 rData = TABLE(headerTR,
+                              TR(TH("%s: " % table.purpose.label),
+                                 record.purpose
+                                 ),
                               row,
                               row2,
                               TR(TH("%s: " % table.site_id.label),
