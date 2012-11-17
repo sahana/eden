@@ -129,12 +129,18 @@ settings.hrm.org_required = False
 settings.hrm.show_organisation = True
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
+# Uncomment to disable the use of HR Certificates
+settings.hrm.use_certificates = False
 # Uncomment to disable the use of HR Credentials
 settings.hrm.use_credentials = False
 # Uncomment to enable the use of HR Education
 settings.hrm.use_education = False
 # Uncomment to disable the use of HR Skills
-settings.hrm.use_skills = True
+#settings.hrm.use_skills = False
+# Uncomment to disable the use of HR Trainings
+settings.hrm.use_trainings = False
+# Uncomment to disable the use of HR Description
+settings.hrm.use_description = False
 # Uncomment to disable the use of HR Teams
 #settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
