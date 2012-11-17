@@ -246,50 +246,14 @@ def req_controller():
                 pass
             s3db.configure("req_req", list_fields=list_fields)
 
+        
+        # Remove MultiSelect Widget (although does work with Inline Forms)
+        s3db.req_req_skill.skill_id.widget = None
+        # Could use checkbox widget - easier to see all + select multiple - but doesn't scale well
+        #s3db.req_req_skill.skill_id.widget = SQLFORM.widgets.checkboxes.widget
+        
+
         if r.interactive:
-            # Set Fields and Labels depending on type
-            type = (r.record and r.record.type) or \
-                   (request.vars and request.vars.type)
-            if type:
-                type = int(type)
-                req_table.type.default = int(type)
-
-                # This prevents the type from being edited AFTER it is set
-                req_table.type.readable = req_table.type.writable = False
-
-                crud_strings = settings.get_req_req_crud_strings(type)
-                if crud_strings:
-                    s3.crud_strings["req_req"] = crud_strings
-
-                # Filter the query based on type
-                if s3.filter:
-                    s3.filter = s3.filter & \
-                                (s3db.req_req.type == type)
-                else:
-                    s3.filter = (s3db.req_req.type == type)
-
-            # These changes are applied via JS in create forms where type is editable
-            if type == 1: # Item
-                req_table.date_recv.readable = req_table.date_recv.writable = True
-
-                req_table.purpose.label = T("What the Items will be used for")
-                req_table.site_id.label = T("Deliver To")
-                req_table.request_for_id.label = T("Deliver To")
-                req_table.requester_id.label = T("Site Contact")
-                req_table.recv_by_id.label = T("Delivered To")
-                
-            elif type == 3: # Person
-                req_table.date_required_until.readable = req_table.date_required_until.writable = True
-
-                req_table.purpose.label = T("Task Details")
-                req_table.purpose.comment = DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Task Details"),
-                                                                  T("Include any special requirements such as equipment which they need to bring.")))
-                req_table.site_id.label =  T("Report To")
-                req_table.requester_id.label = T("Volunteer Contact")
-                req_table.request_for_id.label = T("Report To")
-                req_table.recv_by_id.label = T("Reported To")
-
             if r.component:
                 if r.component.name == "document":
                     s3.crud.submit_button = T("Add")
@@ -323,10 +287,99 @@ def req_controller():
                         )
                     db.scheduler_task.timeout.writable = False
             else:
-                if r.id:
-                    req_table.is_template.readable = req_table.is_template.writable = False
+                # Custom Form
+                s3forms = s3base.s3forms
+                crud_form_fields = [
+                            "type",
+                            "date",
+                            "priority",
+                            "site_id",
+                            "purpose",
+                            s3forms.S3SQLInlineComponent(
+                                "req_item",
+                                label = T("Request Inventory Items:"),
+                                comment = s3db.supply_item_pack_id().comment,
+                                fields = ["item_id",
+                                          "quantity",
+                                          "item_pack_id",
+                                          "comments",
+                                          ]
+                            ),
+                            # This requires the component to be multiple = False
+                            #"req_skill.skill_id",
+                            #"req_skill.quantity",
+                            s3forms.S3SQLInlineComponent(
+                                "req_skill",
+                                label = T("Request People:"),
+                                fields = ["quantity",
+                                          "skill_id",
+                                          "comments",
+                                          ]
+                            ),
+                            "is_template",
+                            "date_required",
+                            "date_required_until",
+                            "requester_id",
+                            "comments",
+                        ]
 
-                if type == 8:
+                # Set Fields and Labels depending on type
+                type = (r.record and r.record.type) or \
+                       (request.vars and request.vars.type)
+                if type:
+                    type = int(type)
+                    req_table.type.default = int(type)
+    
+                    # This prevents the type from being edited AFTER it is set
+                    req_table.type.readable = req_table.type.writable = False
+    
+                    crud_strings = settings.get_req_req_crud_strings(type)
+                    if crud_strings:
+                        s3.crud_strings["req_req"] = crud_strings
+    
+                    # Filter the query based on type
+                    if s3.filter:
+                        s3.filter = s3.filter & \
+                                    (s3db.req_req.type == type)
+                    else:
+                        s3.filter = (s3db.req_req.type == type)
+                else:
+                    s3db.req_create_form_mods()
+    
+                # These changes are applied via JS in create forms where type is editable
+                if type == 1: # Item
+                    s3.crud_strings.req_req.title_create =  T("Make a Request for Items")
+                    
+                    del crud_form_fields[6]
+                    req_table.date_recv.readable = req_table.date_recv.writable = True
+    
+                    req_table.purpose.label = T("What the Items will be used for")
+                    req_table.site_id.label = T("Deliver To")
+                    req_table.request_for_id.label = T("Deliver To")
+                    req_table.requester_id.label = T("Site Contact")
+                    req_table.recv_by_id.label = T("Delivered To")
+                    
+                elif type == 3: # Person
+                    s3.crud_strings.req_req.title_create =  T("Make a Request for People")
+                    
+                    del crud_form_fields[5]
+                    req_table.date_required_until.readable = req_table.date_required_until.writable = True
+    
+                    req_table.purpose.label = T("Task Details")
+                    req_table.purpose.comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Task Details"),
+                                                                      T("Include any special requirements such as equipment which they need to bring.")))
+                    req_table.site_id.label =  T("Report To")
+                    req_table.requester_id.label = T("Volunteer Contact")
+                    req_table.request_for_id.label = T("Report To")
+                    req_table.recv_by_id.label = T("Reported To")
+                    
+                elif type == 8: # Summary
+                    s3.crud_strings.req_req.title_create =  T("Make a General Request")
+    
+                    del crud_form_fields[5]
+                    del crud_form_fields[5]
+                    
                     req_table.purpose.label = T("Details")
                     stable = current.s3db.req_summary_option
                     options = db(stable.deleted == False).select(stable.name,
@@ -334,84 +387,6 @@ def req_controller():
                     summary_items = [opt.name for opt in options]
                     s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
-
-                if r.method != "update" and r.method != "read":
-                    # Hide fields which don't make sense in a Create form
-                    # - includes one embedded in list_create
-                    # - list_fields over-rides, so still visible within list itself
-                    s3db.req_create_form_mods()
-
-                    if type == 1:
-                        # Dropdown not Autocomplete
-                        itable = s3db.req_req_item
-                        itable.item_id.widget = None
-                        s3.jquery_ready.append('''
-S3FilterFieldChange({
- 'FilterField':'defaultreq_item_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultreq_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
-})''')
-                        # We don't want to force people to enter quantities
-                        #itable.quantity.default = 0
-                        # Custom Form
-                        s3forms = s3base.s3forms
-                        crud_form = s3forms.S3SQLCustomForm(
-                                # If not generated automatically
-                                #"req_ref",
-                                "site_id",
-                                "is_template",
-                                "requester_id",
-                                "date",
-                                "priority",
-                                "date_required",
-                                "purpose",
-                                s3forms.S3SQLInlineComponent(
-                                    "req_item",
-                                    label = T("Items"),
-                                    fields = ["item_id",
-                                              "item_pack_id",
-                                              "quantity",
-                                              "comments"
-                                              ]
-                                ),
-                                #"date_recv",
-                                "comments",
-                            )
-                        s3db.configure("req_req", crud_form=crud_form)
-
-                    elif type == 3:
-                        # Custom Form
-                        stable = s3db.req_req_skill
-                        stable.skill_id.label = T("Required Skills (optional)")
-                        stable.skill_id.widget = None
-                        s3forms = s3base.s3forms
-                        crud_form = s3forms.S3SQLCustomForm(
-                                # If not generated automatically
-                                #"req_ref",
-                                "site_id",
-                                "is_template",
-                                "requester_id",
-                                "date",
-                                "priority",
-                                "date_required",
-                                "date_required_until",
-                                "purpose",
-                                s3forms.S3SQLInlineComponent(
-                                    "req_skill",
-                                    label = T("Skills"),
-                                    fields = ["quantity",
-                                              "skill_id",
-                                              "comments"
-                                              ]
-                                ),
-                                "comments",
-                            )
-                        s3db.configure("req_req", crud_form=crud_form)
 
                     # Get the default Facility for this user
                     # @ToDo: Use site_id in User Profile (like current organisation_id)
@@ -426,6 +401,12 @@ S3FilterFieldChange({
                     if r.method == "map":
                         # Tell the client to request per-feature markers
                         s3db.configure("req_req", marker_fn=marker_fn)
+
+                s3db.configure("req_req", 
+                               crud_form = s3forms.S3SQLCustomForm(*crud_form_fields)
+                               )
+                if r.id:
+                    req_table.is_template.readable = req_table.is_template.writable = False
 
         elif r.representation == "plain":
             # Map Popups
@@ -491,6 +472,13 @@ S3FilterFieldChange({
 
         if r.interactive:
             s3_action_buttons(r)
+            s3.actions.append(
+                dict(url = URL(c="req", f="req",
+                               args=["[id]", "form"]),
+                     _class = "action-btn",
+                     label = str(T("PDF Form"))
+                    )
+                )
             if not r.component:
                 if settings.get_req_use_commit():
                     # This is appropriate to all
@@ -526,6 +514,7 @@ S3FilterFieldChange({
                         )
                     )
             elif r.component.name == "req_item" and settings.get_req_prompt_match():
+                # @ToDo: This is no longer easily accessible as req_items are a inline form
                 req_item_inv_item_btn = dict(url = URL(c = "req",
                                                        f = "req_item_inv_item",
                                                        args = ["[id]"]

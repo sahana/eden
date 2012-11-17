@@ -659,14 +659,11 @@ function S3FilterFieldChange(setting) {
 
 	// Check if this field is present in this page
 	var FilterField = setting.FilterField;
-    var selFilterField = $('[name = "' + FilterField + '"]');
+	// Support Inline Forms
+    var selFilterField = $('[name = "' + FilterField + '"], [name *= "' + FilterField + '_edit_"]');
     if (undefined == selFilterField[0]) {
         return
     }
-
-	var Field = setting.Field;
-    var selField = $('[name = "' + Field + '"]');
-    //var selFieldRows = $('[id *= "' + Field + '__row"]');
 
     if (setting.FilterOnLoad != undefined) {
         var FilterOnLoad = setting.FilterOnLoad;
@@ -675,7 +672,6 @@ function S3FilterFieldChange(setting) {
     }
 
     selFilterField.change(function() {
-
         // Cancel previous request
         try {
             S3.JSONRequest[selField.attr('id')].abort();
@@ -684,17 +680,27 @@ function S3FilterFieldChange(setting) {
         var FilterVal;
 
         // Get Filter Val from Select or CheckBoxes
-        if (selFilterField.length == 0 || selFilterField.length == undefined ) {
+        if ($(this).length == 0 || $(this).length == undefined ) {
         	FilterVal = '';
-        } else if (selFilterField.length == 1) {
-        	FilterVal = selFilterField.val();
+        } else if ($(this).length == 1) {
+        	FilterVal = $(this).val();
         } else {
         	FilterVal = new Array();
-        	selFilterField.filter('input:checked').each(function() {
+        	$(this).filter('input:checked').each(function() {
         		FilterVal.push($(this).val());
         	});
         }
 
+        var Field = setting.Field;
+        var FilterFieldName = $(this).attr("name");
+        var Editindex = FilterFieldName.indexOf("_edit_");
+        if (Editindex != -1) {
+            // This field in in an inline form
+            Field = FilterFieldName.replace(FilterField, Field)
+        }
+        var selField = $('[name = "' + Field + '"]');
+        
+        
         if ( FilterVal == "" || FilterVal == undefined) {
             // No value to filter
             //selFieldRows.hide();
@@ -791,6 +797,8 @@ function S3FilterFieldChange(setting) {
 
         var data;
         setting.FieldVal = FieldVal;
+        setting.selField = selField;
+        setting.selFilterField = $(this);
 
         // Save JSON Request by element id
         if (!GetWidgetHTML) {
@@ -803,8 +811,8 @@ function S3FilterFieldChange(setting) {
                     var options = '';
                     var FilterField = this.FilterField;
                     var FieldResource = this.FieldResource;
-                    var selField = $('[name = "' + this.Field + '"]');
-                    var selFilterField = $('[name = "' + FilterField + '"]');
+                    var selField = setting.selField;
+                    var selFilterField = setting.selFilterField;
 
                     var PrepResult = fncPrep(data);
 
@@ -988,4 +996,17 @@ S3.slider = function(fieldname, minval, maxval, steprange, value) {
     });
 };
 
+//============================================================================
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
 // ============================================================================
