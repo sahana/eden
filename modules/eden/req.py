@@ -200,7 +200,9 @@ class S3RequestModel(S3Model):
                                   # Donations: What will the Items be used for?; People: Task Details
                                   s3_comments("purpose",
                                               label=T("Purpose"),
-                                              represent = self.req_purpose_represent,
+                                              # Only-needed for summary mode (unused)
+                                              #represent = self.req_purpose_represent,
+                                              represent = s3_string_represent,
                                               comment=""),
                                   Field("is_template", "boolean",
                                         label = T("Recurring Request?"),
@@ -2023,9 +2025,9 @@ def req_skill_onaccept(form):
 
     table = s3db.req_req_skill
     query = (table.req_id == req_id)
-    if record:
-        # Copy the Task description to the Skills component
-        db(query).update(task=record.purpose)
+    #if record:
+    #    # Copy the Task description to the Skills component
+    #    db(query).update(task=record.purpose)
 
     is_none = dict(commit = True,
                    transit = True,
@@ -2064,32 +2066,26 @@ def req_skill_onaccept(form):
         # Add a Task to which the People can be assigned
 
         # Get the request record
+        otable = s3db.org_site
+        query = (rtable.id == req_id) & \
+                (otable.id == rtable.site_id)
         record = db(query).select(rtable.req_ref,
                                   rtable.purpose,
                                   rtable.priority,
                                   rtable.requester_id,
                                   rtable.site_id,
+                                  otable.location_id,
                                   limitby=(0, 1)).first()
         if not record:
             return
-        otable = s3db.org_site
-        query = (otable.id == record.site_id)
-        site = db(query).select(otable.location_id,
-                                otable.organisation_id,
-                                limitby=(0, 1)).first()
-        if site:
-            location = site.location_id
-            organisation = site.organisation_id
-        else:
-            location = None
-            organisation = None
 
+        name = record.req_req.req_ref or "Req: %s" % req_id
         table = s3db.project_task
-        task = table.insert(name=record.req_ref,
-                            description=record.purpose,
-                            priority=record.priority,
-                            location_id=location,
-                            site_id=record.site_id)
+        task = table.insert(name=name,
+                            description=record.req_req.purpose,
+                            priority=record.req_req.priority,
+                            location_id=record.org_site.location_id,
+                            site_id=record.req_req.site_id)
 
         # Add the Request as a Component to the Task
         table = s3db.project_task_req

@@ -1672,7 +1672,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if fname in form.vars:
 
             # Retrieve the data
-            data = form.vars[fname]
+            data = json.loads(form.vars[fname])
             if "component" not in data:
                 return
 

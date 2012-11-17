@@ -282,6 +282,9 @@ def req_controller():
                 req_table.date_required_until.readable = req_table.date_required_until.writable = True
 
                 req_table.purpose.label = T("Task Details")
+                req_table.purpose.comment = DIV(_class="tooltip",
+                                                _title="%s|%s" % (T("Task Details"),
+                                                                  T("Include any special requirements such as equipment which they need to bring.")))
                 req_table.site_id.label =  T("Report To")
                 req_table.requester_id.label = T("Volunteer Contact")
                 req_table.request_for_id.label = T("Report To")
