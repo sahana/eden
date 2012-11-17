@@ -173,7 +173,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("Expiring Staff Contracts Report",
                     #      vars=dict(expiring=1)),
                     #    M("Training Report", f="training", m="report"),
-                    ),
+                    #),
                     M("Personal Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
                     # This provides the link to switch to the manager mode:
