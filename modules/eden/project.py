@@ -1358,7 +1358,8 @@ class S3Project3WModel(S3Model):
                     cols = 1,
                     options = self.project_theme_opts,
                 )
-        advanced_search = (
+                
+        advanced_search = [
             simple,
             # This is only suitable for deployments with a few projects
             #S3SearchOptionsWidget(
@@ -1396,7 +1397,16 @@ class S3Project3WModel(S3Model):
                 location_level = "L3",
                 cols = 3
             )
-        )
+        ]
+
+        if settings.get_project_sectors():
+            sectors = S3SearchOptionsWidget(
+                name = "project_location_search_sector",
+                label = T("Sector"),
+                field = "project_id$multi_sector_id",
+                cols = 3
+            )
+            advanced_search.insert(1, sectors)
 
         project_location_search = S3Search(
             simple = (simple),
