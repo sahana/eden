@@ -15,6 +15,11 @@ $(document).ready(function() {
     function type_9() {
         // Other
         $('.summary_item').remove();
+        req_req_sub_defaultreq_item__row1
+        $('#req_req_sub_defaultreq_item__row1').hide();
+        $('#req_req_sub_defaultreq_item__row').hide();
+        $('#req_req_sub_defaultreq_skill__row1').hide();
+        $('#req_req_sub_defaultreq_skill__row').hide();
         $('#req_req_date_required_until__row1').hide();
         $('#req_req_date_required_until__row').hide();
         $('#req_req_purpose__row1 label').html(i18n.req_purpose + ':');
@@ -23,31 +28,23 @@ $(document).ready(function() {
         $('#req_req_recv_by_id__row1 label').html(i18n.req_recv_by_id + ':');
         $('#req_req_purpose__row1').show();
         $('#req_req_purpose__row').show();
-        if (($('#req_req_comments').val() == '') || ($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
-            $('#req_req_comments').addClass('default-text')
-                                  .attr({ value: i18n.req_other_msg })
-                                  .focus(function() {
-                if($(this).val() == i18n.req_other_msg){
-                    // Clear on click if still default
-                    $(this).val('').removeClass('default-text');
-                }
-            });
-        }
     }
 
     function type_8() {
         // Summary
+        $('#req_req_sub_defaultreq_item__row1').hide();
+        $('#req_req_sub_defaultreq_item__row').hide();
+        $('#req_req_sub_defaultreq_skill__row1').hide();
+        $('#req_req_sub_defaultreq_skill__row').hide();
         $('#req_req_date_required_until__row1').hide();
         $('#req_req_date_required_until__row').hide();
         $('#req_req_site_id__row1 label').html(i18n.req_site_id + ':' + span);
         $('#req_req_request_for_id__row1 label').html(i18n.req_request_for_id + ':');
         $('#req_req_recv_by_id__row1 label').html(i18n.req_recv_by_id + ':');
-        if (($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
-            $('#req_req_comments').val('');
-        }
         // Replace the Purpose field with a list of checkboxes
         $('#req_req_purpose__row1').hide();
         $('#req_req_purpose__row').hide();
+        $('.summary_item').remove(); // If populated by server
         for (var i=0; i < req_summary_items.length; i++) {
             var item = req_summary_items[i];
             var row = '<tr class="summary_item"><td>' + item + '</td><td><input type="checkbox" id="req_summary_' + idescape(item) + '"></td></tr>';
@@ -61,12 +58,20 @@ $(document).ready(function() {
             // Items
             $('#req_req_date_required_until__row1').hide();
             $('#req_req_date_required_until__row').hide();
+            $('#req_req_sub_defaultreq_item__row1').show();
+            $('#req_req_sub_defaultreq_item__row').show();
+            $('#req_req_sub_defaultreq_skill__row1').hide();
+            $('#req_req_sub_defaultreq_skill__row').hide();
             $('#req_req_purpose__row1 label').html(i18n.req_items_purpose + ':');
             $('#req_req_site_id__row1 label').html(i18n.req_items_site_id + ':' + span);
             $('#req_req_request_for_id__row1 label').html(i18n.req_items_recv_by_id + ':');
             $('#req_req_recv_by_id__row1 label').html(i18n.req_items_recv_by_id + ':');
         } else if (type == 3) {
             // People/Skills
+            $('#req_req_sub_defaultreq_item__row1').hide();
+            $('#req_req_sub_defaultreq_item__row').hide();
+            $('#req_req_sub_defaultreq_skill__row1').show();
+            $('#req_req_sub_defaultreq_skill__row').show();
             if ($('#req_req_is_template').is(':checked')) {
                 // pass
             } else {
@@ -81,20 +86,13 @@ $(document).ready(function() {
         $('.summary_item').remove();
         $('#req_req_purpose__row1').show();
         $('#req_req_purpose__row').show();
-        if (($('#req_req_comments').val() == '') || ($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
-            $('#req_req_comments').addClass('default-text')
-                                  .attr({ value: i18n.req_next_msg })
-                                  .focus(function() {
-                if($(this).val() == i18n.req_next_msg){
-                    // Clear on click if still default
-                    $(this).val('').removeClass('default-text');
-                }
-            });
-        }
     }
 
     // Initial settings
     var type = $('#req_req_type').val();
+    if (type == undefined) {
+        type = getUrlVars().type
+    }
     if (type == 9) {
         type_9();
     } else if (type == 8) {
@@ -172,12 +170,6 @@ $(document).ready(function() {
                 }
             }
             $('#req_req_purpose').val(JSON.stringify(items));
-        } else {
-            // Items/Skills
-            if ($('#req_req_comments').val() == i18n.req_next_msg) {
-                // Clear the default help
-                $('#req_req_comments').val('');
-            }
         }
         // Allow the Form's save to continue
         return true;
