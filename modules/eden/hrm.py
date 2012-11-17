@@ -3266,6 +3266,8 @@ def hrm_skill_multirepresent(opt):
     UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
     opts = [opt] if type(opt) is not list else opt
+    if not opts:
+        return current.messages.NONE
 
     table = current.s3db.hrm_skill
     rows = current.db(table.id.belongs(opts)).select(table.id,
