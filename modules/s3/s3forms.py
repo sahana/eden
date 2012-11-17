@@ -32,6 +32,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
 from gluon.sqlhtml import StringWidget
+from gluon.validators import Validator
 from s3utils import s3_mark_required, s3_unicode
 
 try:
@@ -1046,7 +1047,7 @@ class S3SQLFormElement(object):
 
         if skip_post_validation and \
            current.request.env.request_method == "POST":
-            requires = lambda value: (value, None)
+            requires = SKIP_POST_VALIDATION(field.requires)
             widget = None
             required = False
             notnull = False
@@ -1218,6 +1219,31 @@ class S3SQLSubForm(S3SQLFormElement):
         """
 
         return True
+
+# =============================================================================
+class SKIP_POST_VALIDATION(Validator):
+
+    def __init__(self, other=None):
+        if other and isinstance(other, (list, tuple)):
+            other = other[0]
+        self.other = other
+        if other:
+            if hasattr(other, 'multiple'):
+                self.multiple = other.multiple
+            if hasattr(other, 'options'):
+                self.options = other.options
+
+    def __call__(self, value):
+        other = self.other
+        if current.request.env.request_method == "POST" or not other:
+            return value, None
+        if not isinstance(other, (list, tuple)):
+            other = [other]
+        for r in other:
+            value, error = r(value)
+            if error:
+                return value, error
+        return value, None
 
 # =============================================================================
 class S3SQLInlineComponent(S3SQLSubForm):
@@ -1486,11 +1512,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Get the item record ID
             if "_id" in item:
                 record_id = item["_id"]
+                # Check permissions to edit this item
+                editable = permit("update", tablename, record_id)
+                deletable = permit("delete", tablename, record_id)
             else:
-                continue
-            # Check permissions to edit this item
-            editable = permit("update", tablename, record_id)
-            deletable = permit("delete", tablename, record_id)
+                record_id = None
+                editable = deletable = True
+
             # Render read-row accordingly
             rowname = "%s-%s" % (formname, i)
             read_row = self._render_item(table, item, fields,
@@ -1500,8 +1528,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                          index=i,
                                          _id="read-row-%s" % rowname,
                                          _class="read-row")
-            audit("read", prefix, name,
-                  record=record_id, representation="html")
+            if record_id:
+                audit("read", prefix, name,
+                      record=record_id, representation="html")
             item_rows.append(read_row)
 
         # Add the action rows
@@ -1551,7 +1580,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Real input: a hidden text field to store the JSON data
         real_input = "%s_%s" % (self.resource.tablename, field.name)
-        default = dict(_type = "text", value = value)
+        default = dict(_type = "text",
+                       _value = value,
+                       requires=lambda v: (v, None))
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = attr["_class"] + " hide"
         attr["_id"] = real_input
@@ -1565,7 +1596,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                      )
         else:
             widget = current.T("No entries currently available")
-
 
         # Render output HTML
         output = DIV(
