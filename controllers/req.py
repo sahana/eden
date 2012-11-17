@@ -275,6 +275,7 @@ def req_controller():
                 req_table.purpose.label = T("What the Items will be used for")
                 req_table.site_id.label = T("Deliver To")
                 req_table.request_for_id.label = T("Deliver To")
+                req_table.requester_id.label = T("Site Contact")
                 req_table.recv_by_id.label = T("Delivered To")
                 
             elif type == 3: # Person
@@ -282,6 +283,7 @@ def req_controller():
 
                 req_table.purpose.label = T("Task Details")
                 req_table.site_id.label =  T("Report To")
+                req_table.requester_id.label = T("Volunteer Contact")
                 req_table.request_for_id.label = T("Report To")
                 req_table.recv_by_id.label = T("Reported To")
 
@@ -373,13 +375,16 @@ S3FilterFieldChange({
                                               "comments"
                                               ]
                                 ),
-                                "date_recv",
+                                #"date_recv",
                                 "comments",
                             )
                         s3db.configure("req_req", crud_form=crud_form)
 
                     elif type == 3:
                         # Custom Form
+                        stable = s3db.req_req_skill
+                        stable.skill_id.label = T("Required Skills (optional)")
+                        stable.skill_id.widget = None
                         s3forms = s3base.s3forms
                         crud_form = s3forms.S3SQLCustomForm(
                                 # If not generated automatically
@@ -516,7 +521,7 @@ S3FilterFieldChange({
                          restrict = restrict
                         )
                     )
-            elif r.component.name == "req_item":
+            elif r.component.name == "req_item" and settings.get_req_prompt_match():
                 req_item_inv_item_btn = dict(url = URL(c = "req",
                                                        f = "req_item_inv_item",
                                                        args = ["[id]"]

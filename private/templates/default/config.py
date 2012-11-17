@@ -235,6 +235,12 @@ settings.L10n.decimal_separator = "."
 # Enable Social Media share buttons
 #settings.ui.social_buttons = True
 
+# -----------------------------------------------------------------------------
+# Persons
+# Uncomment to hide fields in S3AddPersonWidget
+#settings.pr.request_dob = False
+#settings.pr.request_gender = False
+
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
@@ -262,6 +268,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 #settings.hrm.email_required = False
+# Uncomment to allow Staff & Volunteers to be registered without an Organisation
+#settings.hrm.org_required = False
 # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
 #settings.hrm.deletable = True
 # Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title

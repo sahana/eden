@@ -40,6 +40,7 @@ __all__ = ["S3HRModel",
            "hrm_map_popup",
            "hrm_service_record",
            "hrm_rheader",
+           "hrm_skill_multirepresent",
            "hrm_training_event_controller",
            "hrm_training_controller",
            ]
@@ -134,7 +135,7 @@ class S3HRModel(S3Model):
                                     widget = None,
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
-                                    empty = False,
+                                    empty = not settings.get_hrm_org_required(),
                                     ),
                                   super_link("site_id", "org_site",
                                              label=settings.get_org_site_label(),
@@ -213,9 +214,11 @@ class S3HRModel(S3Model):
                                             (T("No"),
                                              T("Yes"))[opt == True],
                                         ),
+                                  s3_comments(),
                                   *s3_meta_fields())
 
         if STAFF == T("Contacts"):
+            contacts = True
             crud_strings["hrm_staff"] = Storage(
                 title_create = T("Add Contact"),
                 title_display = T("Contact Details"),
@@ -233,6 +236,7 @@ class S3HRModel(S3Model):
                 msg_list_empty = T("No Contacts currently registered"))
         else:
             # @ToDo: make more flexible
+            contacts = False
             crud_strings["hrm_staff"] = Storage(
                 title_create = T("Add Staff Member"),
                 title_display = T("Staff Member Details"),
@@ -295,28 +299,32 @@ class S3HRModel(S3Model):
                                   sort=True
                                   )),
             widget = S3HumanResourceAutocompleteWidget()
-            crud_strings[tablename] = Storage(
-                title_create = T("Add Staff Member"),
-                title_display = T("Staff Member Details"),
-                title_list = T("Staff & Volunteers"),
-                title_update = T("Edit Record"),
-                title_search = T("Search Staff & Volunteers"),
-                title_upload =T("Search Staff & Volunteers"),
-                subtitle_create = T("Add New Staff Member"),
-                label_list_button = T("List Staff & Volunteers"),
-                label_create_button = T("Add Staff Member"),
-                label_delete_button = T("Delete Record"),
-                msg_record_created = T("Staff member added"),
-                msg_record_modified = T("Record updated"),
-                msg_record_deleted = T("Record deleted"),
-                msg_list_empty = T("No staff or volunteers currently registered"))
+            if contacts:
+                crud_strings[tablename] = crud_strings["hrm_staff"]
+            else:
+                crud_strings[tablename] = Storage(
+                    title_create = T("Add Staff Member"),
+                    title_display = T("Staff Member Details"),
+                    title_list = T("Staff & Volunteers"),
+                    title_update = T("Edit Record"),
+                    title_search = T("Search Staff & Volunteers"),
+                    title_upload =T("Search Staff & Volunteers"),
+                    subtitle_create = T("Add New Staff Member"),
+                    label_list_button = T("List Staff & Volunteers"),
+                    label_create_button = T("Add Staff Member"),
+                    label_delete_button = T("Delete Record"),
+                    msg_record_created = T("Staff member added"),
+                    msg_record_modified = T("Record updated"),
+                    msg_record_deleted = T("Record deleted"),
+                    msg_list_empty = T("No staff or volunteers currently registered"))
 
         tooltip = DIV(_class="tooltip",
                       _title="%s|%s" % (T("Human Resource"),
                                         T("Enter some characters to bring up a list of possible matches")))
         comment = S3AddResourceLink(c = "vol" if group == "volunteer" else "hrm",
                                     f = group or "staff",
-                                    label=crud_strings[tablename].label_create_button,
+                                    label=crud_strings["hrm_%s" % group].label_create_button if group else \
+                                          crud_strings[tablename].label_create_button,
                                     title=label,
                                     tooltip=tooltip)
 
@@ -447,9 +455,9 @@ class S3HRModel(S3Model):
             # Being added as a component to Org, Site or Project
             hrm_url = None
 
-        if settings.has_module("vol"):
+        if group == "vol":
             fields = ["organisation_id",
-                      "site_id",
+                      #"site_id",
                       "person_id",
                       "job_title_id",
                       "job_role_id",
@@ -475,10 +483,14 @@ class S3HRModel(S3Model):
         # Custom Form
         crud_form = s3forms.S3SQLCustomForm(*fields)
 
+        if settings.get_hrm_org_required():
+            mark_required = ["organisation_id"]
+        else:
+            mark_required = []
         self.configure(tablename,
                        crud_form = crud_form,
                        super_entity = "sit_trackable",
-                       mark_required = ["organisation_id"],
+                       mark_required = mark_required,
                        deletable = current.deployment_settings.get_hrm_deletable(),
                        search_method = human_resource_search,
                        onaccept = hrm_human_resource_onaccept,

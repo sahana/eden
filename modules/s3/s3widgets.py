@@ -2562,6 +2562,7 @@ class S3AddPersonWidget(FormWidget):
         request = current.request
         appname = request.application
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         formstyle = s3.crud.formstyle
 
@@ -2633,14 +2634,17 @@ class S3AddPersonWidget(FormWidget):
         fields = [ptable.first_name,
                   ptable.middle_name,
                   ptable.last_name,
-                  ptable.date_of_birth,
-                  ptable.gender]
+                  ]
+        if settings.get_pr_request_dob():
+            fields.append(ptable.date_of_birth)
+        if settings.get_pr_request_gender():
+            fields.append(ptable.gender)
 
         if controller == "hrm":
-            emailRequired = current.deployment_settings.get_hrm_email_required()
+            emailRequired = settings.get_hrm_email_required()
         elif controller == "vol":
             fields.append(s3db.pr_person_details.occupation)
-            emailRequired = current.deployment_settings.get_hrm_email_required()
+            emailRequired = settings.get_hrm_email_required()
         else:
             emailRequired = False
         if emailRequired:

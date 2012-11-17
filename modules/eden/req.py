@@ -279,6 +279,10 @@ class S3RequestModel(S3Model):
                                   s3_comments(comment=""),
                                   *s3_meta_fields())
 
+        # Virtual Fields
+        #table.details = Field.Lazy(req_details_field)
+        table.virtualfields.append(ReqVirtualFields())
+
         if len(req_type_opts) == 1:
             k, v = req_type_opts.popitem()
             field = table.type
@@ -386,11 +390,12 @@ class S3RequestModel(S3Model):
                        #"event_id",
                        ]
 
-        if len(settings.get_req_req_type()) > 1:
-            list_fields.append("type")
+        #if len(settings.get_req_req_type()) > 1:
+        #    list_fields.append("type")
         if settings.get_req_use_req_number():
             list_fields.append("req_ref")
         list_fields.append("priority")
+        list_fields.append((T("Details"), "details"))
         if use_commit:
             list_fields.append("commit_status")
         list_fields.append("transit_status")
@@ -496,6 +501,7 @@ class S3RequestModel(S3Model):
         table.transit_status.readable = table.transit_status.writable = False
         table.fulfil_status.readable = table.fulfil_status.writable = False
         table.cancel.readable = table.cancel.writable = False
+        table.date_recv.readable = table.date_recv.writable = False
         table.recv_by_id.readable = table.recv_by_id.writable = False
 
         req_types = current.deployment_settings.get_req_req_type()
@@ -504,16 +510,17 @@ class S3RequestModel(S3Model):
             # (gets turned-off by JS for other types)
             table.date_required_until.writable = True
 
-        # Script to inject into Pages which include Request create forms
-        s3 = current.response.s3
-        if "Summary" in req_types:
-            stable = current.s3db.req_summary_option
-            options = db(stable.deleted == False).select(stable.name,
-                                                         orderby=~stable.name)
-            summary_items = [opt.name for opt in options]
-            s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
+        if "type" not in current.request.vars:
+            # Script to inject into Pages which include Request create forms
+            s3 = current.response.s3
+            if "Summary" in req_types:
+                stable = current.s3db.req_summary_option
+                options = db(stable.deleted == False).select(stable.name,
+                                                             orderby=~stable.name)
+                summary_items = [opt.name for opt in options]
+                s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
 
-        req_helptext = '''
+            req_helptext = '''
 i18n.req_purpose="%s"
 i18n.req_site_id="%s"
 i18n.req_request_for_id="%s"
@@ -539,8 +546,8 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                                       T("Please enter the details on the next screen."),
                                       T("Please enter request details here."),
                                       T("Details field is required!"))
-        s3.js_global.append(req_helptext)
-        s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
+            s3.js_global.append(req_helptext)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
 
         return
 
@@ -1305,7 +1312,7 @@ class S3RequestSkillModel(S3Model):
                                    writable=False, # Populated from req_req 'Purpose'
                                    label = T("Task Details")),
                              self.hrm_multi_skill_id(
-                                    label=T("Required Skills"),
+                                    label = T("Required Skills"),
                                     comment = T("Leave blank to request an unskilled person")
                                     ),
                              # @ToDo: Add a minimum competency rating?
@@ -1330,10 +1337,12 @@ class S3RequestSkillModel(S3Model):
                                    label = T("Quantity Fulfilled"),
                                    default = 0,
                                    writable = quantities_writable),
-                             s3_comments(label = T("Task Details"),
-                                         comment = DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("Task Details"),
-                                                                        T("Include any special requirements such as equipment which they need to bring.")))),
+                             s3_comments(
+                                         #label = T("Task Details"),
+                                         #comment = DIV(_class="tooltip",
+                                         #              _title="%s|%s" % (T("Task Details"),
+                                         #                                T("Include any special requirements such as equipment which they need to bring.")))
+                                         ),
                              *s3_meta_fields())
 
         table.site_id.label = T("Requested From")
@@ -2086,6 +2095,79 @@ def req_skill_onaccept(form):
         table = s3db.project_task_req
         table.insert(task_id = task,
                      req_id = req_id)
+
+# =============================================================================
+def req_details_field(row):
+    """
+        Lazy VirtualField
+    """
+
+    type = row.type
+    if type == 1:
+        s3db = current.s3db
+        itable = s3db.supply_item
+        ltable = s3db.req_req_item
+        query = (ltable.deleted != True) & \
+                (ltable.req_id == row.id) & \
+                (ltable.item_id == itable.name)
+        items = current.db(query).select(itable.name)
+        if items:
+            return ",".join([item.name for item in items])
+
+    elif type == 3:
+        s3db = current.s3db
+        ltable = s3db.req_req_skill
+        query = (ltable.deleted != True) & \
+                (ltable.req_id == row.id)
+        skills = current.db(query).select(ltable.skill_id)
+        if skills:
+            represent = s3db.hrm_skill_multirepresent
+            return ",".join([represent(skill.skill_id) for skill in skills])
+
+    return current.messages.NONE
+
+# =============================================================================
+class ReqVirtualFields:
+    """
+        Virtual fields for Requests to show Details
+    """
+
+    extra_fields = ["type"]
+
+    # -------------------------------------------------------------------------
+    def details(self):
+        """
+            Show the requested items/skills
+        """
+
+        try:
+            id = self.req_req.id
+            type = self.req_req.type
+        except AttributeError:
+            return None
+
+        if type == 1:
+            s3db = current.s3db
+            itable = s3db.supply_item
+            ltable = s3db.req_req_item
+            query = (ltable.deleted != True) & \
+                    (ltable.req_id == id) & \
+                    (ltable.item_id == itable.name)
+            items = current.db(query).select(itable.name)
+            if items:
+                return ",".join([item.name for item in items])
+
+        elif type == 3:
+            s3db = current.s3db
+            ltable = s3db.req_req_skill
+            query = (ltable.deleted != True) & \
+                    (ltable.req_id == id)
+            skills = current.db(query).select(ltable.skill_id)
+            if skills:
+                represent = s3db.hrm_skill_multirepresent
+                return ",".join([represent(skill.skill_id) for skill in skills])
+
+        return current.messages.NONE
 
 # =============================================================================
 class req_site_virtualfields:

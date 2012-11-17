@@ -76,6 +76,8 @@ settings.auth.registration_link_user_to = {"staff":T("Staff"),
 
 settings.security.policy = 4 # Controller & Function ACLs
 
+settings.ui.update_label = "Edit"
+
 # Inventory Management
 # Uncomment to customise the label for Facilities in Inventory Management
 settings.inv.facility_label = "Facility"
@@ -93,12 +95,13 @@ settings.req.use_commit = False
 settings.req.requester_optional = True
 settings.req.quantities_writable = True
 settings.req.skill_quantities_writable = True
+settings.req.use_req_number = False
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations
 # empty list => disabled for all (including Admin)
-#settings.org.dependent_fields = \
-#    {"pr_person_details.mother_name"             : [],
+#settings.org.dependent_fields = { \
+#     "pr_person_details.mother_name"             : [],
 #     "pr_person_details.father_name"             : [],
 #     "pr_person_details.company"                 : [],
 #     "pr_person_details.affiliations"            : [],
@@ -109,11 +112,19 @@ settings.org.site_label = "Facility"
 #     }
 
 # -----------------------------------------------------------------------------
+# Persons
+# Uncomment to hide fields in S3AddPersonWidget
+settings.pr.request_dob = False
+settings.pr.request_gender = False
+
+# -----------------------------------------------------------------------------
 # Human Resource Management
 # Uncomment to chage the label for 'Staff'
 settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
+# Uncomment to allow Staff & Volunteers to be registered without an Organisation
+settings.hrm.org_required = False
 # Uncomment to show the Organisation name in HR represents
 settings.hrm.show_organisation = True
 # Uncomment to disable Staff experience

@@ -598,8 +598,8 @@ class S3PersonModel(S3Model):
                                    writable=False,
                                    default=False),
                              Field("first_name", notnull=True,
-                                   default = "?" if current.auth.permission.format != "html" else "",
                                    length=64, # Mayon Compatibility
+                                   #default = "?" if current.auth.permission.format != "html" else "",
                                    # NB Not possible to have an IS_NAME() validator here
                                    # http://eden.sahanafoundation.org/ticket/834
                                    requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),

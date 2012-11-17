@@ -64,6 +64,7 @@ class S3Config(Storage):
         self.inv = Storage()
         self.irs = Storage()
         self.org = Storage()
+        self.pr = Storage()
         self.proc = Storage()
         self.project = Storage()
         self.req = Storage()
@@ -822,6 +823,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("email_required", True)
 
+    def get_hrm_org_required(self):
+        """
+            If set to True then Staff & Volunteers require an Organisation
+        """
+        return self.hrm.get("org_required", True)
+
     def get_hrm_deletable(self):
         """
             If set to True then HRM records are deletable rather than just being able to be marked as obsolete
@@ -1082,6 +1089,15 @@ class S3Config(Storage):
             field.writable = enabled
 
         return enabled
+
+    # -------------------------------------------------------------------------
+    # Persons
+    def get_pr_request_dob(self):
+        """ Include Date of Birth in the AddPersonWidget """
+        return self.pr.get("request_dob", True)
+    def get_pr_request_gender(self):
+        """ Include Gender in the AddPersonWidget """
+        return self.pr.get("request_gender", True)
 
     # -------------------------------------------------------------------------
     # Proc
