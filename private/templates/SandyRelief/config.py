@@ -93,6 +93,7 @@ settings.req.req_type = ["People", "Stock"]#, "Summary"]
 settings.req.prompt_match = False
 settings.req.use_commit = False
 settings.req.requester_optional = True
+settings.req.date_writable = False
 settings.req.quantities_writable = True
 settings.req.skill_quantities_writable = True
 settings.req.use_req_number = False
