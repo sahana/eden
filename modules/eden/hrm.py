@@ -3263,30 +3263,18 @@ def hrm_skill_multirepresent(opt):
         for multiple=True options
     """
 
+    UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+    opts = [opt] if type(opt) is not list else opt
+    if not opts:
+        return current.messages.NONE
+
     table = current.s3db.hrm_skill
-    set = current.db(table.id > 0).select(table.id,
-                                          table.name).as_dict()
+    rows = current.db(table.id.belongs(opts)).select(table.id,
+                                                     table.name)
 
-    if not set:
-        return current.messages.NONE
-
-    if isinstance(opt, (list, tuple)):
-        opts = opt
-        try:
-            vals = [str(set.get(o)["name"]) for o in opts]
-        except:
-            return None
-    elif isinstance(opt, int):
-        opts = [opt]
-        vals = str(set.get(opt)["name"])
-    else:
-        return current.messages.NONE
-
-    if len(opts) > 1:
-        vals = ", ".join(vals)
-    else:
-        vals = len(vals) and vals[0] or ""
-    return vals
+    names = dict([(str(row.id), row.name) for row in rows])
+    return ", ".join([names.get(str(o), UNKNOWN_OPT) for o in opts])
 
 # =============================================================================
 def hrm_training_event_represent(id, row=None):

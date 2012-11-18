@@ -36,7 +36,7 @@ $(function() {
 
     // Append an error to a form field or row
     inline_append_error = function(formname, rowindex, fieldname, message) {
-        if (null == fieldname) {
+        if (null === fieldname) {
             if ('none' == rowindex) {
                 field_id = '#add-row-' + formname;
             } else {
@@ -67,7 +67,7 @@ $(function() {
     // Display all errors
     inline_display_errors = function(formname) {
         $('.'+formname+'_error').slideDown();
-    }
+    };
 
     // Remove all error messages from the form
     inline_remove_errors = function(formname) {
@@ -81,7 +81,7 @@ $(function() {
         $('#add-row-'+formname +' > td > select').attr('disabled', true);
         $('#add-row-'+formname +' > td > textarea').attr('disabled', true);
         $('#add-row-'+formname +' > td > .inline-add').addClass('hide');
-    };
+    }
 
     // Enable the add-row
     function enable_inline_add(formname)
@@ -90,7 +90,7 @@ $(function() {
         $('#add-row-'+formname +' > td > select').removeAttr('disabled');
         $('#add-row-'+formname +' > td > textarea').removeAttr('disabled');
         $('#add-row-'+formname +' > td > .inline-add').removeClass('hide');
-    };
+    }
 
     // Collect the data from the form
     function inline_collect_data(formname, data, rowindex) {
@@ -131,7 +131,7 @@ $(function() {
 
         // Return the row object
         return row;
-    };
+    }
 
     // Validate a new/updated row
     function inline_validate(formname, rowindex, data, row) {
@@ -141,14 +141,14 @@ $(function() {
         var f = data['function'];
         var url = S3.Ap.concat('/' + c + '/' + f + '/validate.json');
         var resource = data['resource'];
-        if (null != resource && typeof resource != 'undefined') {
+        if (null !== resource && typeof resource != 'undefined') {
             url += '?resource='+resource;
             concat = '&';
         } else {
             concat = '?';
         }
         var component = data['component'];
-        if (null != component && typeof component != 'undefined') {
+        if (null !== component && typeof component != 'undefined') {
             url += concat+'component='+component;
         }
 
@@ -189,7 +189,7 @@ $(function() {
             return response;
         }
 
-    };
+    }
 
     // Form actions -----------------------------------------------------------
 
@@ -213,7 +213,7 @@ $(function() {
             element = '#sub_' + formname + '_' + formname + '_' + fieldname + '_edit_0';
             $(element).val(value);
             // Populate text in autocompletes
-            text =  row[fieldname]['text']
+            text =  row[fieldname]['text'];
             element = '#dummy_sub_' + formname + '_' + formname + '_' + fieldname + '_edit_0';
             $(element).val(text);
         }
@@ -248,6 +248,9 @@ $(function() {
 
         // Enable the add-row
         enable_inline_add(formname);
+
+        // Reset catch-submit
+        inline_catch_submit(false, 'none', 'none');
     };
 
     // Add a new row
@@ -268,7 +271,9 @@ $(function() {
         // Validate the data
         var new_row = inline_validate(formname, rowindex, data, add_row);
 
-        if (null != new_row) {
+        var success = false;
+        if (null !== new_row) {
+            success = true;
             // Add a new row to the real_input JSON
             new_row['_changed'] = true; // mark as changed
             newindex = data['data'].push(new_row) - 1;
@@ -311,12 +316,13 @@ $(function() {
             read_row += '</tr>';
             // Append the new read-row to the table
             $('#sub-'+formname+' > table.embeddedComponent > tbody').append(read_row);
-            inline_form_events();
+            inline_button_events();
         }
 
         // Hide throbber, show add-button
-        $('#throbber-' + formname + '-' + rowindex).addClass('hide')
-        $('#add-' + formname + '-' + rowindex).removeClass('hide')
+        $('#throbber-' + formname + '-' + rowindex).addClass('hide');
+        $('#add-' + formname + '-' + rowindex).removeClass('hide');
+        return (success);
     };
 
     // Update row
@@ -324,7 +330,7 @@ $(function() {
         var rowname = formname + '-' + rowindex;
 
         // Hide rdy, show throbber
-        $('#rdy-' + formname + '-0').addClass('hide')
+        $('#rdy-' + formname + '-0').addClass('hide');
         $('#throbber-' + formname + '-0').removeClass('hide');
 
         // Remove any previous error messages
@@ -337,7 +343,10 @@ $(function() {
         // Validate the form data
         var new_row = inline_validate(formname, '0', data, edit_row);
 
+        var success = false;
         if (null != new_row) {
+            success = true;
+
             // Update the row in the real_input JSON
             new_row['_id'] = data['data'][rowindex]['_id'];
             new_row['_changed'] = true; // mark as changed
@@ -381,7 +390,7 @@ $(function() {
 
             $('#read-row-' + formname + '-' + rowindex + ' > td').remove();
             $('#read-row-' + formname + '-' + rowindex).html(read_row);
-            inline_form_events();
+            inline_button_events();
 
             // Hide and reset the edit row
             $('#edit-row-' + formname).addClass('hide');
@@ -399,10 +408,11 @@ $(function() {
         // Hide throbber, enable rdy
         $('#rdy-' + formname + '-0').removeClass('hide');
         $('#throbber-' + formname + '-0').addClass('hide');
-    }
+        return (success);
+    };
 
     // Remove a row
-    inline_remove = function(formname, rowindex) {
+    var inline_remove = function(formname, rowindex) {
         var rowname = formname + '-' + rowindex;
 
         // Confirmation dialog
@@ -417,6 +427,7 @@ $(function() {
 
         // Remove the read-row for this item
         $('#read-row-'+rowname).remove();
+        return true;
     };
 
     // Event handlers ---------------------------------------------------------
@@ -424,10 +435,16 @@ $(function() {
     // Submit the inline form which has currently the focus
     inline_row_submit = function() {
         if ('none' != inline_current_formname) {
+            var success = false;
             if ('none' == inline_current_rowindex) {
-                inline_add(inline_current_formname);
+                success = inline_add(inline_current_formname);
             } else {
-                inline_update(inline_current_formname, inline_current_rowindex);
+                success = inline_update(inline_current_formname, inline_current_rowindex);
+            }
+            if (success) {
+                var subform_id = '#sub-' + inline_current_formname;
+                inline_catch_submit(false, 'none', 'none');
+                $(subform_id).closest('form').submit();
             }
         } else {
             return true;
@@ -437,86 +454,121 @@ $(function() {
 
     // When an inline-form has focus, then pressing 'enter' should
     // submit this inline-form, and not the master form
-    inline_catch_submit = function(toggle) {
+    inline_catch_submit = function(toggle, formname, rowindex) {
         if (toggle) {
+            inline_current_formname = formname;
+            inline_current_rowindex = rowindex;
             $('form').unbind('submit', inline_row_submit);
             $('form').bind('submit', inline_row_submit);
         } else {
+            inline_current_formname = 'none';
+            inline_current_rowindex = 'none';
             $('form').unbind('submit', inline_row_submit);
         }
     };
 
     // Events -----------------------------------------------------------------
 
-    inline_form_events = function() {
-        $('.edit-row').unbind('focusin');
-        $('.edit-row').focusin(function() {
-            names = $(this).attr('id').split('-');
-            inline_current_formname = names.pop();
-            inline_current_rowindex = $(this).data('rowindex');
-            inline_catch_submit(true);
+    inline_form_events = function(id) {
+
+        // Enforce submission of the inline-row if changed
+        var enforce_inline_submit = function(i, add) {
+            var subform = $(i).parent().parent();
+            var names = subform.attr('id').split('-');
+            var rowindex = subform.data('rowindex');
+            if (add) {
+                rowindex = 'none';
+            }
+            inline_catch_submit(true, names.pop(), rowindex);
+        };
+        $('.edit-row input[type="text"], .edit-row textarea').bind('input', function() {
+            enforce_inline_submit(this, false);
         });
-        $('.edit-row').unbind('focusout');
-        $('.edit-row').focusout(function() {
-            inline_current_formname = 'none';
-            inline_current_rowindex = 'none';
-            inline_catch_submit(false);
+        $('.edit-row input[type!="text"], .edit-row select').bind('change', function() {
+            enforce_inline_submit(this, false);
         });
-        $('.add-row').unbind('focusin');
-        $('.add-row').focusin(function() {
-            names = $(this).attr('id').split('-');
-            inline_current_formname = names.pop();
-            inline_current_rowindex = 'none';
-            inline_catch_submit(true);
+        $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
+            enforce_inline_submit(this, true);
         });
-        $('.add-row').unbind('focusout');
-        $('.add-row').focusout(function() {
-            inline_current_formname = 'none';
-            inline_current_rowindex = 'none';
-            inline_catch_submit(false);
+        $('.add-row input[type!="text"], .add-row select').bind('change', function() {
+            enforce_inline_submit(this, true);
         });
+        // Submit the inline-row instead of the main form if pressing Enter
+        $('.edit-row input').keypress(function(e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        });
+        $('.edit-row input').keyup(function(e) {
+            if (e.which == 13) {
+                var subform = $(this).parent().parent();
+                var names = subform.attr('id').split('-');
+                inline_update(names.pop(), subform.data('rowindex'));
+            }
+        });
+        $('.add-row input').keypress(function(e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        });
+        $('.add-row input').keyup(function(e) {
+            if (e.which == 13) {
+                var subform = $(this).parent().parent();
+                var names = subform.attr('id').split('-');
+                inline_add(names.pop());
+            }
+        });
+    };
+    inline_form_events();
+
+    inline_button_events = function() {
+
         $('.inline-add').unbind('click');
         $('.inline-add').click(function() {
-            names = $(this).attr('id').split('-');
-            rowindex = names.pop();
-            formname = names.pop();
+            var names = $(this).attr('id').split('-');
+            var rowindex = names.pop();
+            var formname = names.pop();
             inline_add(formname);
             return false;
         });
         $('.inline-cnc').unbind('click');
         $('.inline-cnc').click(function() {
-            names = $(this).attr('id').split('-');
-            zero = names.pop();
-            formname = names.pop();
-            rowindex = $('#edit-row-'+formname).data('rowindex');
+            var names = $(this).attr('id').split('-');
+            var zero = names.pop();
+            var formname = names.pop();
+            var rowindex = $('#edit-row-'+formname).data('rowindex');
             inline_cancel(formname, rowindex);
             return false;
         });
         $('.inline-rdy').unbind('click');
         $('.inline-rdy').click(function() {
-            names = $(this).attr('id').split('-');
-            zero = names.pop();
-            formname = names.pop();
-            rowindex = $('#edit-row-'+formname).data('rowindex');
+            var names = $(this).attr('id').split('-');
+            var zero = names.pop();
+            var formname = names.pop();
+            var rowindex = $('#edit-row-'+formname).data('rowindex');
             inline_update(formname, rowindex);
             return false;
         });
         $('.inline-edt').unbind('click');
         $('.inline-edt').click(function() {
-            names = $(this).attr('id').split('-');
-            rowindex = names.pop();
-            formname = names.pop();
+            var names = $(this).attr('id').split('-');
+            var rowindex = names.pop();
+            var formname = names.pop();
             inline_edit(formname, rowindex);
             return false;
         });
         $('.inline-rmv').unbind('click');
         $('.inline-rmv').click(function() {
-            names = $(this).attr('id').split('-');
-            rowindex = names.pop();
-            formname = names.pop();
+            var names = $(this).attr('id').split('-');
+            var rowindex = names.pop();
+            var formname = names.pop();
             inline_remove(formname, rowindex);
             return false;
         });
     };
-    inline_form_events();
+    inline_button_events();
 });

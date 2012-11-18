@@ -659,7 +659,7 @@ class IS_ONE_OF_EMPTY(Validator):
 
             if self.multiple:
                 if isinstance(value, list):
-                    values = [int(v) for v in value]
+                    values = [str(v) for v in value]
                 elif isinstance(value, basestring) and \
                      value[0] == "|" and value[-1] == "|":
                     values = value[1:-1].split("|")
