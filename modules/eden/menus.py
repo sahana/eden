@@ -1347,6 +1347,7 @@ class S3OptionsMenu(object):
                         M("List/Add", f="group"),
                         M("Group Memberships", f="group_membership"),
                     ),
+                    M("InBox", f="inbox"),
                     M("Email InBox", f="email_inbox"),
                     M("Twilio SMS InBox", f="twilio_inbox"),
                     M("Log", f="log"),

@@ -60,6 +60,7 @@ except ImportError:
 from gluon import current, redirect
 from gluon.html import *
 
+from s3codec import S3Codec
 from s3crud import S3CRUD
 from s3utils import s3_debug
 from s3validators import IS_ONE_OF, IS_ONE_OF_EMPTY
@@ -1486,17 +1487,16 @@ class S3Msg(object):
         account = db(query).select(limitby=(0, 1)).first()
         if account:
             url = account.url
-            campaign_id = account.campaign_id
             username = account.username
             password = account.password
-            query = account.query
+            _query = account.query
             timestamp = account.timestmp
 
             url = "%s?campaign_id=%s" % (url, campaign_id)
             if timestamp:
                 url = "%s&start_time=%s" % (url, timestamp)
-            if query:
-                url = "%s&query=%s" % (url, query)
+            if _query:
+                url = "%s&query=%s" % (url, _query)
 
             # Create a password manager
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -1507,6 +1507,10 @@ class S3Msg(object):
             opener = urllib2.build_opener(authhandler)
             urllib2.install_opener(opener)
 
+            # Update the timestamp
+            # NB Ensure MCommons account is in UTC
+            db(query).update(timestmp = current.request.utcnow)
+
             table = s3db.msg_inbox
             try:
                 _response = urllib2.urlopen(url)
@@ -1514,16 +1518,19 @@ class S3Msg(object):
                 tree = etree.XML(sms_xml)
                 messages = tree.findall(".//message")
                 iinsert = table.insert
+                decode = S3Codec.decode_iso_datetime
                 for message in messages:
+                    sender_phone = message.find("phone_number").text
+                    body = message.find("body").text
+                    received_on = decode(message.find("received_at").text)
                     iinsert(channel = "MCommons: %s" % campaign_id,
-                            sender_phone = message.find("phone_number").text,
-                            body = message.find("body").text,
-                            received_on = message.find("received_at").text,
+                            sender_phone = sender_phone,
+                            body = body,
+                            received_on = received_on,
                             )
 
             except urllib2.HTTPError, e:
                 return "Error:" + str(e.code)
-            db.commit()
             return
 
     # -------------------------------------------------------------------------
@@ -1542,6 +1549,8 @@ class S3Msg(object):
             account_sid = account.account_sid
             auth_token = account.auth_token
 
+            # @ToDo: Do we really have to download *all* messages every time
+            # & then only import the ones we don't yet have?
             url += "/%s/SMS/Messages.json" % str(account_sid)
 
             # Create a password manager
@@ -1553,7 +1562,6 @@ class S3Msg(object):
             opener = urllib2.build_opener(authhandler)
             urllib2.install_opener(opener)
 
-            downloaded_sms = []
             itable = s3db.msg_twilio_inbox
             ltable = s3db.msg_log
             query = itable.deleted == False
@@ -1576,7 +1584,6 @@ class S3Msg(object):
 
             except urllib2.HTTPError, e:
                 return "Error:" + str(e.code)
-            db.commit()
             return
 
 # =============================================================================

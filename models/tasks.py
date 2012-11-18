@@ -147,7 +147,22 @@ if settings.has_module("msg"):
     tasks["msg_process_inbound_email"] = msg_process_inbound_email
 
     # -------------------------------------------------------------------------
-    def msg_twilio_inbound_sms(account, user_id):
+    def msg_mcommons_inbound_sms(campaign_id, user_id=None):
+        """
+            Poll an inbound SMS(Mobile Commons) source.
+
+            @param campaign_id: account name for the SMS source to read from.
+            This uniquely identifies one inbound SMS task.
+        """
+        # Run the Task & return the result
+        result = msg.mcommons_inbound_sms(campaign_id)
+        db.commit()
+        return result
+
+    tasks["msg_mcommons_inbound_sms"] = msg_mcommons_inbound_sms
+
+    # -------------------------------------------------------------------------
+    def msg_twilio_inbound_sms(account, user_id=None):
         """
             Poll an inbound SMS(Twilio) source.
 

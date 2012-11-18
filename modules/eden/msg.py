@@ -51,7 +51,8 @@ class S3MessagingModel(S3Model):
         - core models defined here
     """
 
-    names = ["msg_log",
+    names = ["msg_inbox",
+             "msg_log",
              "msg_limit",
              #"msg_tag",
              "msg_outbox",
@@ -479,7 +480,8 @@ class S3MCommonsModel(S3Model):
                                    ),
                              Field("username",
                                    requires=IS_NOT_EMPTY()),
-                             Field("password",
+                             Field("password", "password",
+                                   readable = False,
                                    requires=IS_NOT_EMPTY()),
                              Field("query"),
                              Field("timestmp", "datetime",
@@ -515,7 +517,8 @@ class S3TwilioModel(S3Model):
                                    ),
                              Field("account_sid", length=64,
                                    requires=IS_NOT_EMPTY()),
-                             Field("auth_token", length=64,
+                             Field("auth_token", "password", length=64,
+                                   readable = False,
                                    requires=IS_NOT_EMPTY()),
                              *s3_meta_fields())
 
