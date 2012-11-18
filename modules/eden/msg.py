@@ -30,6 +30,8 @@
 __all__ = ["S3MessagingModel",
            "S3InboundEmailModel",
            "S3SMSModel",
+           "S3MCommonsModel",
+           "S3TwilioModel",
            "S3SubscriptionModel",
            "S3TropoModel",
            "S3TwitterModel",
@@ -76,6 +78,17 @@ class S3MessagingModel(S3Model):
         }
 
 
+        # ---------------------------------------------------------------------
+        tablename = "msg_inbox"
+        table = define_table(tablename,
+                             Field("channel"),
+                             Field("sender_phone"),
+                             Field("received_on", "datetime"),
+                             Field("subject"),
+                             Field("body"),
+                             *s3_meta_fields()
+                             )
+       
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
         # ---------------------------------------------------------------------
@@ -351,16 +364,14 @@ class S3SMSModel(S3Model):
              "msg_modem_settings",
              "msg_api_settings",
              "msg_smtp_to_sms_settings",
-             "msg_twilio_inbound_settings",
-             "msg_twilio_inbox"
-            ]
+             ]
 
     def model(self):
 
         #T = current.T
 
         define_table = self.define_table
-        configure = self.configure
+
         # ---------------------------------------------------------------------
         # Settings
         tablename = "msg_setting"
@@ -437,6 +448,64 @@ class S3SMSModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
+        return Storage()
+
+# =============================================================================
+class S3MCommonsModel(S3Model):
+    """
+        Mobile Commons Inbound SMS Settings
+        - Outbound can use Web API
+    """
+
+    names = ["msg_mcommons_inbound_settings",
+             ]
+
+    def model(self):
+
+        #T = current.T
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        tablename = "msg_mcommons_inbound_settings"
+        table = define_table(tablename,
+                             Field("name"),
+                             Field("campaign_id",
+                                   requires=IS_NOT_EMPTY()),
+                             Field("url",
+                                   default = \
+                                   "https://secure.mcommons.com/api/messages",
+                                   requires = IS_URL()
+                                   ),
+                             Field("username",
+                                   requires=IS_NOT_EMPTY()),
+                             Field("password",
+                                   requires=IS_NOT_EMPTY()),
+                             Field("query"),
+                             Field("timestmp", "datetime",
+                                   writable=False),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        return Storage()
+
+# =============================================================================
+class S3TwilioModel(S3Model):
+    """
+        Twilio Inbound SMS Settings
+    """
+
+    names = ["msg_twilio_inbound_settings",
+             "msg_twilio_inbox"
+             ]
+
+    def model(self):
+
+        #T = current.T
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
         tablename = "msg_twilio_inbound_settings"
         table = define_table(tablename,
                              Field("account_name"),
@@ -460,12 +529,13 @@ class S3SMSModel(S3Model):
                              Field("received_on"),
                              *s3_meta_fields())
 
-        configure(tablename,
-                  list_fields = ["body",
-                                 "sender",
-                                 "received_on"
-                                 ]
-                  )
+        self.configure(tablename,
+                       list_fields = ["body",
+                                      "sender",
+                                      "received_on"
+                                      ]
+                       )
+
         # ---------------------------------------------------------------------
         return Storage()
 

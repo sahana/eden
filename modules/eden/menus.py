@@ -1759,6 +1759,7 @@ class S3OptionsMenu(object):
             M("Parsing Settings", c="msg", f="workflow"),
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),
+            M("Mobile Commons SMS Settings", c="msg", f="mcommons_inbound_settings"),
             M("Twilio SMS Settings", c="msg", f="twilio_inbound_settings"),
             M("Twitter Settings", c="msg", f="twitter_settings",
                 args=[1], m="update")

@@ -51,6 +51,12 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
+try:
+    from lxml import etree
+except ImportError:
+    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    raise
+
 from gluon import current, redirect
 from gluon.html import *
 
@@ -1257,7 +1263,7 @@ class S3Msg(object):
 
         return True
 
-    #-------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def fetch_inbound_email(self, username):
         """
             This is a simple mailbox polling script for the Messaging Module.
@@ -1452,7 +1458,8 @@ class S3Msg(object):
                 typ, response = M.store(number, "+FLAGS", r"(\Deleted)")
             M.close()
             M.logout()
-    # =============================================================================
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def source_id(username):
         """ Extracts the source_task_id from a given message. """
@@ -1463,7 +1470,63 @@ class S3Msg(object):
         for record in records:
             if record.vars.split(":") == ["{\"username\""," \"%s\"}" %username] :
                 return record.id
-    # =============================================================================
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def mcommons_inbound_sms(campaign_id):
+        """
+            Fetches the inbound SMS from Mobile Commons API
+            http://www.mobilecommons.com/mobile-commons-api/rest/#ListIncomingMessages
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.msg_mcommons_inbound_settings
+        query = (table.campaign_id == campaign_id)
+        account = db(query).select(limitby=(0, 1)).first()
+        if account:
+            url = account.url
+            campaign_id = account.campaign_id
+            username = account.username
+            password = account.password
+            query = account.query
+            timestamp = account.timestmp
+
+            url = "%s?campaign_id=%s" % (url, campaign_id)
+            if timestamp:
+                url = "%s&start_time=%s" % (url, timestamp)
+            if query:
+                url = "%s&query=%s" % (url, query)
+
+            # Create a password manager
+            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passman.add_password(None, url, username, password)
+
+            # Create the AuthHandler
+            authhandler = urllib2.HTTPBasicAuthHandler(passman)
+            opener = urllib2.build_opener(authhandler)
+            urllib2.install_opener(opener)
+
+            table = s3db.msg_inbox
+            try:
+                _response = urllib2.urlopen(url)
+                sms_xml = _response.read()
+                tree = etree.XML(sms_xml)
+                messages = tree.findall(".//message")
+                iinsert = table.insert
+                for message in messages:
+                    iinsert(channel = "MCommons: %s" % campaign_id,
+                            sender_phone = message.find("phone_number").text,
+                            body = message.find("body").text,
+                            received_on = message.find("received_at").text,
+                            )
+
+            except urllib2.HTTPError, e:
+                return "Error:" + str(e.code)
+            db.commit()
+            return
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def twilio_inbound_sms(account_name):
         """ Fetches the inbound sms from twilio API."""

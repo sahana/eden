@@ -395,6 +395,133 @@ def inbound_email_settings():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def mcommons_inbound_settings():
+    """
+        RESTful CRUD controller for Mobile Commons SMS settings
+            - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_mcommons_inbound_settings"
+    table = s3db[tablename]
+
+    table.name.label = T("Account Name")
+    table.name.comment = DIV(_class="tooltip",
+                             _title="%s|%s" % (T("Account Name"),
+                                               T("Name for your Twilio Account.")))
+
+    table.campaign_id.label = T("Campaign ID")
+
+    table.url.label = T("URL")
+    table.url.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("URL"),
+                                              T("URL for the Mobile Commons API")))
+
+    table.username.label = T("Username")
+    table.password.label = T("Password")
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Mobile Commons Setting Details"),
+        title_list = T("Mobile Commons Settings"),
+        title_create = T("Add Mobile Commons Settings"),
+        title_update = T("Edit Mobile Commons Settings"),
+        title_search = T("Search Mobile Commons Settings"),
+        label_list_button = T("View Mobile Commons Settings"),
+        label_create_button = T("Add Mobile Commons Settings"),
+        msg_record_created = T("Mobile Commons Setting added"),
+        msg_record_deleted = T("Mobile Commons Setting deleted"),
+        msg_list_empty = T("No Mobile Commons Settings currently defined"),
+        msg_record_modified = T("Mobile Commons settings updated")
+        )
+
+    def postp(r, output):
+
+        stable = s3db.scheduler_task
+        ttable = r.table
+
+        s3_action_buttons(r)
+        query = (stable.enabled == False)
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "account" in record.vars:
+                r = record.vars.split("\"account\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(ttable.account_name == s).select(ttable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_e = [str(row.id) for row in rows]
+
+        query = (stable.enabled == True)
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "account" in record.vars:
+                r = record.vars.split("\"account\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(ttable.account_name == s).select(ttable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_d = [str(row.id) for row in rows]
+
+        rows = []
+        records = db(stable.id > 0).select()
+        tasks = [record.vars for record in records]
+        sources = []
+        for task in tasks:
+            if "account" in task:
+                u = task.split("\"account\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+                sources += [v]
+
+        settings = db(ttable.deleted == False).select(ttable.ALL)
+        for setting in settings :
+            if setting.name:
+                if (setting.name not in sources):
+                    if setting:
+                        rows += [setting]
+
+        restrict_a = [str(row.id) for row in rows]
+
+        s3.actions = \
+        s3.actions + [
+                       dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_mcommons_sms",
+                                    args="[id]"),
+                            restrict = restrict_e)
+                       ]
+        s3.actions.append(dict(label=str(T("Disable")),
+                               _class="action-btn",
+                               url = URL(f = "disable_mcommons_sms",
+                                         args = "[id]"),
+                               restrict = restrict_d)
+                          )
+        s3.actions.append(dict(label=str(T("Activate")),
+                               _class="action-btn",
+                               url = URL(f = "schedule_mcommons_sms",
+                                         args = "[id]"),
+                               restrict = restrict_a)
+                          )
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def twilio_inbound_settings():
     """
         RESTful CRUD controller for twilio sms settings
@@ -423,21 +550,18 @@ def twilio_inbound_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-    title_display = T("Twilio Setting Details"),
-    title_list = T("Twilio Settings"),
-    title_create = T("Add Twilio Settings"),
-    title_update = T("Edit Twilio Settings"),
-    title_search = T("Search Twilio Settings"),
-    label_list_button = T("View Twilio Settings"),
-    label_create_button = T("Add Twilio Settings"),
-    msg_record_created = T("Twilio Setting added"),
-    msg_record_deleted = T("Twilio Setting deleted"),
-    msg_list_empty = T("No Twilio Settings currently defined"),
-    msg_record_modified = T("Twilio settings updated")
+        title_display = T("Twilio Setting Details"),
+        title_list = T("Twilio Settings"),
+        title_create = T("Add Twilio Settings"),
+        title_update = T("Edit Twilio Settings"),
+        title_search = T("Search Twilio Settings"),
+        label_list_button = T("View Twilio Settings"),
+        label_create_button = T("Add Twilio Settings"),
+        msg_record_created = T("Twilio Setting added"),
+        msg_record_deleted = T("Twilio Setting deleted"),
+        msg_list_empty = T("No Twilio Settings currently defined"),
+        msg_record_modified = T("Twilio settings updated")
         )
-
-    #response.menu_options = admin_menu_options
-    s3db.configure(tablename, listadd=True, deletable=True)
 
     def postp(r, output):
 
