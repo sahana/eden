@@ -34,10 +34,6 @@
     <xsl:include href="../commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
-    <!-- Indexes for faster processing -->
-    <xsl:key name="facility_type" match="row" use="col[@field='Type']"/>
-    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
-
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
 
@@ -46,6 +42,19 @@
             <xsl:with-param name="colname">Postcode</xsl:with-param>
         </xsl:call-template>
     </xsl:variable>
+
+    <xsl:variable name="OrgName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Organisation</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
+    <xsl:key name="facility_type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="organisation" match="row" use="col[contains(
+                    document(../labels.xml)/labels/column[@name='Organisation']/match/text(),
+                    concat('|', @field, '|'))]"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -56,7 +65,12 @@
             </xsl:for-each>
 
             <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('jobtitles',
+                                            col[contains(
+                                                document(../labels.xml)/labels/column[@name='Organisation']/match/text(),
+                                                concat('|', @field, '|'))]
+                                        )[1])]">
                 <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 
@@ -68,7 +82,6 @@
     <xsl:template match="row">
 
         <!-- Create the variables -->
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="FacilityName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
 
@@ -112,7 +125,6 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <xsl:if test="$OrgName!=''">
             <resource name="org_organisation">

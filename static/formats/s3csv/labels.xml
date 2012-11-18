@@ -152,6 +152,13 @@
         <label>zipcode</label>
     </column>
 
+   <column name="Organisation">
+        <label>Organisation</label>
+        <label>Organization</label>
+        <label>organisation</label>
+        <label>organization</label>
+    </column>
+
    <!-- ******************************************************************* -->
 
 </labels>

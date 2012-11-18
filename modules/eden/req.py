@@ -321,7 +321,7 @@ class S3RequestModel(S3Model):
             msg_list_empty = T("No Requests"))
 
         # Search method
-        req_req_search = (
+        req_req_search = [
             S3SearchOptionsWidget(
                 name="req_search_fulfil_status",
                 label=T("Fulfill Status"),
@@ -374,7 +374,16 @@ class S3RequestModel(S3Model):
                 location_level="L4",
                 cols = 3,
             ),
-            )
+            ]
+        if settings.use_commit():
+            widget = S3SearchOptionsWidget(
+                        name="req_search_commit_status",
+                        label=T("Commit Status"),
+                        field="commit_status",
+                        options = req_status_opts,
+                        cols = 3,
+                    )
+            req_search.insert(0, widget)
 
         report_fields = ["priority",
                          "site_id$organisation_id",

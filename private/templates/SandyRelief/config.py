@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+from gluon import current, TR, TD, DIV
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 settings = current.deployment_settings
@@ -69,7 +69,7 @@ settings.auth.registration_requires_approval = True
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 #settings.auth.always_notify_approver = False
 # Roles that newly-registered users get automatically
-settings.auth.registration_roles = { 0: ["super"]}
+settings.auth.registration_roles = { 0: ["comms_dispatch"]}
 
 settings.auth.registration_link_user_to = {"staff":T("Staff"),
                                            "volunteer":T("Volunteer")}
@@ -91,12 +91,12 @@ settings.inv.track_pack_values = False
 # Request Management
 settings.req.req_type = ["People", "Stock"]#, "Summary"]
 settings.req.prompt_match = False
-settings.req.use_commit = False
+#settings.req.use_commit = False
 settings.req.requester_optional = True
 settings.req.date_writable = False
 settings.req.quantities_writable = True
 settings.req.skill_quantities_writable = True
-settings.req.use_req_number = False
+#settings.req.use_req_number = False
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations
@@ -147,6 +147,41 @@ settings.hrm.use_description = False
 # Custom label for Organisations in HR module
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"
+
+# Formstyle
+def formstyle_row(id, label, widget, comment, hidden=False):
+    if hidden:
+        hide = "hide"
+    else:
+        hide = ""
+    row = TR(TD(DIV(label,
+                _id=id + "1",
+                _class="w2p_fl %s" % hide),
+            DIV(widget,
+                _id=id,
+                _class="w2p_fw %s" % hide),
+            DIV(comment,
+                _id=id, 
+                _class="w2p_fc %s" % hide),
+           ))
+    return row
+def form_style(self, xfields):
+    """
+        @ToDo: Requires further changes to code to use
+        - Adding a formstyle_row setting to use for indivdual rows
+        Use new Web2Py formstyle to generate form using DIVs & CSS
+        CSS can then be used to create MUCH more flexible form designs:
+        - Labels above vs. labels to left
+        - Multiple Columns 
+    """
+    form = DIV()
+
+    for id, a, b, c, in xfields:
+        form.append(formstyle_row(id, a, b, c))
+
+    return form
+settings.ui.formstyle_row = formstyle_row
+settings.ui.formstyle = formstyle_row
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
