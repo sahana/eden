@@ -197,12 +197,14 @@ _messages.registration_pending = settings.get_auth_registration_pending()
 _messages["approve_user"] = \
 """Your action is required to approve a New User for %(system_name)s:
 %(name_format)s
-Please go to %(base_url)s/admin/user to approve this user.""" \
+Please go to %(base_url)s/admin/user/%(id)s to approve this user.""" \
 % dict(system_name = settings.get_system_name(),
        name_format = \
 """%(first_name)s %(last_name)s
 %(email)s""",
-       base_url = s3.base_url)
+       base_url = s3.base_url,
+       id = "%(id)s"
+       )
 
 _messages["new_user"] = \
 """A New User has registered for %(system_name)s:

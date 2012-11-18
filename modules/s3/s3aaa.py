@@ -1420,7 +1420,8 @@ Thank you
             message = self.messages.approve_user % \
                         dict(first_name = user.first_name,
                              last_name = user.last_name,
-                             email = user.email)
+                             email = user.email,
+                             id = user.id)
         else:
             approved = True
             self.s3_approve_user(user)
