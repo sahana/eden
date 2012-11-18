@@ -383,7 +383,7 @@ class S3RequestModel(S3Model):
                         options = req_status_opts,
                         cols = 3,
                     )
-            req_search.insert(0, widget)
+            req_req_search.insert(0, widget)
 
         report_fields = ["priority",
                          "site_id$organisation_id",
