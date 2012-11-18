@@ -375,7 +375,7 @@ class S3RequestModel(S3Model):
                 cols = 3,
             ),
             ]
-        if settings.use_commit():
+        if use_commit:
             widget = S3SearchOptionsWidget(
                         name="req_search_commit_status",
                         label=T("Commit Status"),
