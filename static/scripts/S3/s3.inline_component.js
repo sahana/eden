@@ -484,14 +484,18 @@ $(function() {
         $('.edit-row input[type="text"], .edit-row textarea').bind('input', function() {
             enforce_inline_submit(this, false);
         });
-        $('.edit-row input[type!="text"], .edit-row select').bind('change', function() {
-            enforce_inline_submit(this, false);
+        $('.edit-row input[type!="text"], .edit-row select').bind('focusin', function() {
+            $('.edit-row input[type!="text"], .edit-row select').one('change', function() {
+                enforce_inline_submit(this, false);
+            });
         });
         $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
             enforce_inline_submit(this, true);
         });
-        $('.add-row input[type!="text"], .add-row select').bind('change', function() {
-            enforce_inline_submit(this, true);
+        $('.add-row input[type!="text"], .add-row select').bind('focusin', function() {
+            $('.add-row input[type!="text"], .add-row select').one('change', function() {
+                enforce_inline_submit(this, true);
+            });
         });
         // Submit the inline-row instead of the main form if pressing Enter
         $('.edit-row input').keypress(function(e) {
@@ -532,7 +536,10 @@ $(function() {
             var names = $(this).attr('id').split('-');
             var rowindex = names.pop();
             var formname = names.pop();
-            inline_add(formname);
+            var success = inline_add(formname);
+            if (success) {
+                inline_catch_submit(false, 'none', 'none');
+            }
             return false;
         });
         $('.inline-cnc').unbind('click');
@@ -542,6 +549,7 @@ $(function() {
             var formname = names.pop();
             var rowindex = $('#edit-row-'+formname).data('rowindex');
             inline_cancel(formname, rowindex);
+            inline_catch_submit(false, 'none', 'none');
             return false;
         });
         $('.inline-rdy').unbind('click');
@@ -550,7 +558,10 @@ $(function() {
             var zero = names.pop();
             var formname = names.pop();
             var rowindex = $('#edit-row-'+formname).data('rowindex');
-            inline_update(formname, rowindex);
+            var success = inline_update(formname, rowindex);
+            if (success) {
+                inline_catch_submit(false, 'none', 'none');
+            }
             return false;
         });
         $('.inline-edt').unbind('click');
@@ -559,6 +570,7 @@ $(function() {
             var rowindex = names.pop();
             var formname = names.pop();
             inline_edit(formname, rowindex);
+            inline_catch_submit(false, 'none', 'none');
             return false;
         });
         $('.inline-rmv').unbind('click');
@@ -567,6 +579,7 @@ $(function() {
             var rowindex = names.pop();
             var formname = names.pop();
             inline_remove(formname, rowindex);
+            inline_catch_submit(false, 'none', 'none');
             return false;
         });
     };
