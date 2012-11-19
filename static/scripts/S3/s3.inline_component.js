@@ -50,7 +50,7 @@ $(function() {
                       '</div></td></tr>';
         } else {
             field_id = '#sub_' +
-                       formname + '_' + formname + '_' +
+                       formname + '_' + formname + '_i_' +
                        fieldname + '_edit_' + rowindex;
             msg = '<div class="' + formname + '_error error">' +
                     message +
@@ -114,7 +114,7 @@ $(function() {
         for (var i=0; i<fields.length; i++) {
             fieldname = fields[i]['name'];
             element = '#sub_' +
-                      formname + '_' + formname + '_' +
+                      formname + '_' + formname + '_i_' +
                       fieldname + '_edit_' + rowindex;
             value = $(element).val();
             row[fieldname] = value;
@@ -210,11 +210,22 @@ $(function() {
         for (i=0; i<fields.length; i++) {
             fieldname = fields[i]['name'];
             value = row[fieldname]['value'];
-            element = '#sub_' + formname + '_' + formname + '_' + fieldname + '_edit_0';
+            element = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
+            // If the element is a select then we may need to add the option we're choosing
+            var select = $('select'+element);
+            if (select.length != 0) {
+                var option = $('select' + element + ' option[value="' + value + '"]');
+                if (option.length == 0) {
+                    // This option does not exist in the select, so add it
+                    // because otherwise val() won't work. Maybe the option
+                    // gets added later by a script (e.g. FilterFieldChange)
+                    select.append('<option value="' + value + '">-</option>');
+                }
+            }
             $(element).val(value);
             // Populate text in autocompletes
             text =  row[fieldname]['text'];
-            element = '#dummy_sub_' + formname + '_' + formname + '_' + fieldname + '_edit_0';
+            element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
             $(element).val(text);
         }
 
@@ -226,6 +237,7 @@ $(function() {
 
         // Show the edit row
         $('#edit-row-' + formname).removeClass('hide');
+        $('#edit-row-' + formname + ' select').change();
 
         // Disable the add-row while editing
         disable_inline_add(formname);
@@ -286,10 +298,10 @@ $(function() {
                 field = fields[i]['name'];
                 read_row += '<td>' + new_row[field]['text'] + '</td>';
                 // Reset add-field to default value
-                default_value = $('#sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
-                $('#sub_' + formname + '_' + formname + '_' + field + '_edit_none').val(default_value);
-                default_value = $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
-                $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_none').val(default_value);
+                default_value = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
+                $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
+                default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
+                $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
             }
             // Add edit-button
             edit = '#edt-' + formname + '-none';
@@ -360,10 +372,10 @@ $(function() {
                 field = fields[i]['name'];
                 read_row += '<td>' + new_row[field]['text'] + '</td>';
                 // Reset edit-field to default value
-                default_value = $('#sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
-                $('#sub_' + formname + '_' + formname + '_' + field + '_edit_0').val(default_value);
-                default_value = $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
-                $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_0').val(default_value);
+                default_value = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
+                $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
+                default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
+                $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
             }
             // Add edit-button
             edit = '#edt-' + formname + '-none';

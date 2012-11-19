@@ -277,7 +277,7 @@ def req_controller():
                 req_table.request_for_id.label = T("Deliver To")
                 req_table.requester_id.label = T("Site Contact")
                 req_table.recv_by_id.label = T("Delivered To")
-                
+
             elif type == 3: # Person
                 req_table.date_required_until.readable = req_table.date_required_until.writable = True
 
@@ -346,12 +346,13 @@ def req_controller():
                         itable = s3db.req_req_item
                         itable.item_id.widget = None
                         s3.jquery_ready.append('''
-S3FilterFieldChange({
- 'FilterField':'defaultreq_item_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultreq_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
+S3OptionsFilter({
+ 'triggerName':'item_id',
+ 'targetName':'item_pack_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item_pack',
+ 'lookupKey':'item_id',
+ 'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
