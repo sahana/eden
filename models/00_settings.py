@@ -203,8 +203,7 @@ Please go to %(base_url)s/admin/user/%(id)s to approve this user.""" \
 """%(first_name)s %(last_name)s
 %(email)s""",
        base_url = s3.base_url,
-       id = "%(id)s"
-       )
+       id = "%(id)s")
 
 _messages["new_user"] = \
 """A New User has registered for %(system_name)s:

@@ -335,7 +335,7 @@ def req_controller():
                     s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
-                if r.method != "update" and r.method != "read":
+                if r.method not in ("read", "update", "search"):
                     # Hide fields which don't make sense in a Create form
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself

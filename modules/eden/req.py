@@ -218,8 +218,8 @@ class S3RequestModel(S3Model):
                                               label = T("Date Needed By"),
                                               past=0,
                                               future=8760, # Hours, so 1 year
-                                              represent="date",
-                                              widget="date",
+                                              #represent="date",
+                                              #widget="date",
                                               ),
                                   s3_datetime("date_required_until",
                                               label = T("Date Required Until"),
@@ -408,6 +408,7 @@ class S3RequestModel(S3Model):
                                  label = T("Request"),
                                  ondelete = "CASCADE")
         list_fields = ["id",
+                       "date"
                        "site_id"
                        #"event_id",
                        ]
