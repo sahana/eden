@@ -87,6 +87,15 @@ settings.inv.facility_label = "Facility"
 settings.inv.stock_count = True
 # Uncomment to not track pack values
 settings.inv.track_pack_values = False
+settings.inv.shipment_types = {
+         #0: T("-"),
+         1: T("Other Warehouse"),
+         2: T("Distribution"),
+         #2: T("Donation"),
+         #3: T("Foreign Donation"),
+         #4: T("Local Purchases"),
+         #5: T("Confiscated Goods from Bureau Of Customs")
+    }
 
 # Request Management
 settings.req.req_type = ["People", "Stock"]#, "Summary"]

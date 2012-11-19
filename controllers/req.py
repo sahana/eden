@@ -448,6 +448,39 @@ S3FilterFieldChange({
                 auth.permitted_facilities(table=r.table,
                                           error_msg=T("You do not have permission for any facility to make a commitment."))
                 if r.interactive:
+                    # Dropdown not Autocomplete
+                    itable = s3db.req_commit_item
+                    itable.req_item_id.widget = None
+                    s3.jquery_ready.append('''
+S3FilterFieldChange({
+ 'FilterField':'defaultcommit_item_req_item_id_edit_none',
+ 'FieldKey':'item_id',
+ 'Field':'defaultcommit_item_item_pack_id_edit_none',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})''')
+                    # Custom Form
+                    s3forms = s3base.s3forms
+                    crud_form = s3forms.S3SQLCustomForm(
+                            "site_id",
+                            "date",
+                            "date_available",
+                            "committer_id",
+                            s3forms.S3SQLInlineComponent(
+                                "commit_item",
+                                label = T("Items"),
+                                fields = ["req_item_id",
+                                          "item_pack_id",
+                                          "quantity",
+                                          "comments"
+                                          ]
+                            ),
+                            "comments",
+                        )
+                    s3db.configure("req_commit", crud_form=crud_form)
                     # Redirect to the Items tab after creation
                     s3db.configure(table,
                                    create_next = URL(c="req", f="commit",
@@ -496,7 +529,7 @@ S3FilterFieldChange({
                     # This is appropriate to all
                     s3.actions.append(
                         dict(url = URL(c="req", f="req",
-                                       args=["[id]", "commit", "create"]),
+                                       args=["[id]", "commit_all"]),
                              _class = "action-btn",
                              label = str(T("Commit"))
                             )
@@ -899,6 +932,40 @@ def commit():
                     # Limit site_id to facilities the user has permissions for
                     auth.permitted_facilities(table=table,
                                               error_msg=T("You do not have permission for any facility to make a commitment.") )
+
+                    # Dropdown not Autocomplete
+                    itable = s3db.req_commit_item
+                    itable.req_item_id.widget = None
+                    s3.jquery_ready.append('''
+S3FilterFieldChange({
+ 'FilterField':'defaultcommit_item_req_item_id_edit_none',
+ 'FieldKey':'item_id',
+ 'Field':'defaultcommit_item_item_pack_id_edit_none',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})''')
+                    # Custom Form
+                    s3forms = s3base.s3forms
+                    crud_form = s3forms.S3SQLCustomForm(
+                            "site_id",
+                            "date",
+                            "date_available",
+                            "committer_id",
+                            s3forms.S3SQLInlineComponent(
+                                "commit_item",
+                                label = T("Items"),
+                                fields = ["req_item_id",
+                                          "item_pack_id",
+                                          "quantity",
+                                          "comments"
+                                          ]
+                            ),
+                            "comments",
+                        )
+                    s3db.configure("req_commit", crud_form=crud_form)
 
                 else:
                     # Non-Item commits can have an Organisation
