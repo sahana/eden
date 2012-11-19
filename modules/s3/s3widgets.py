@@ -2657,7 +2657,8 @@ class S3AddPersonWidget(FormWidget):
                              requires=validator,
                              label=T("Email Address")),
                        Field("mobile_phone",
-                             label=T("Mobile Phone Number"))])
+                             label=T("Mobile Phone Number"))
+                       ])
 
         labels, required = s3_mark_required(fields)
         if required:
@@ -2671,7 +2672,7 @@ class S3AddPersonWidget(FormWidget):
                                *fields)
         trs = []
         for tr in form[0]:
-            if not tr.attributes["_id"].startswith("submit_record"):
+            if not "_id" in t.attributes or not tr.attributes["_id"].startswith("submit_record"):
                 if "_class" in tr.attributes:
                     tr.attributes["_class"] = "%s box_middle" % \
                                                 tr.attributes["_class"]
