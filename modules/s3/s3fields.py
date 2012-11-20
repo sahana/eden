@@ -810,7 +810,7 @@ def s3_date(name="date", **attr):
     """
         Return a standard Date field
 
-        Additional options to normal S3ResuableField:
+        Additional options to normal S3ReusableField:
             default == "now" (in addition to usual meanings)
             past = x months
             future = x months
@@ -927,7 +927,7 @@ def s3_datetime(name="date", **attr):
     """
         Return a standard Datetime field
 
-        Additional options to normal S3ResuableField:
+        Additional options to normal S3ReusableField:
             default = "now" (in addition to usual meanings)
             represent = "date" (in addition to usual meanings)
             widget = "date" (in addition to usual meanings)

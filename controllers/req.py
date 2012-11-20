@@ -277,7 +277,7 @@ def req_controller():
                 req_table.request_for_id.label = T("Deliver To")
                 req_table.requester_id.label = T("Site Contact")
                 req_table.recv_by_id.label = T("Delivered To")
-                
+     
             elif type == 3: # Person
                 req_table.date_required_until.readable = req_table.date_required_until.writable = True
 
@@ -346,12 +346,13 @@ def req_controller():
                         itable = s3db.req_req_item
                         itable.item_id.widget = None
                         s3.jquery_ready.append('''
-S3FilterFieldChange({
- 'FilterField':'defaultreq_item_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultreq_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
+S3OptionsFilter({
+ 'triggerName':'item_id',
+ 'targetName':'item_pack_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item_pack',
+ 'lookupKey':'item_id',
+ 'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
@@ -456,12 +457,13 @@ S3FilterFieldChange({
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
                     s3.jquery_ready.append('''
-S3FilterFieldChange({
- 'FilterField':'defaultcommit_item_req_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultcommit_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
+S3OptionsFilter({
+ 'triggerName':'req_item_id',
+ 'targetName':'item_pack_id',
+ 'lookupPrefix':'req',
+ 'lookupResource':'req_item_packs',
+ 'lookupKey':'req_item_id',
+ 'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
@@ -702,9 +704,19 @@ def req_item_packs():
             particular Item
     """
 
+    req_item_id = None
+    args = request.args
+    if len(args) == 1 and args[0].isdigit():
+        req_item_id = args[0]
+    else:
+        for v in request.vars:
+            if "." in v and v.split(".", 1)[1] == "req_item_id":
+                req_item_id = request.vars[v]
+                break
+
     table = s3db.supply_item_pack
     ritable = s3db.req_req_item
-    query = (ritable.id == request.args[0]) & \
+    query = (ritable.id == req_item_id) & \
             (ritable.item_id == table.item_id)
 
     response.headers["Content-Type"] = "application/json"
@@ -964,15 +976,16 @@ $('#req_commit_site_id_link').click(function(){
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
                     jappend('''
-S3FilterFieldChange({
- 'FilterField':'defaultcommit_item_req_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultcommit_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+S3OptionsFilter({
+'triggerName':'req_item_id',
+'targetName':'item_pack_id',
+'lookupPrefix':'req',
+'lookupResource':'req_item_packs',
+'lookupKey':'req_item_id',
+'lookupField':'id',
+'msgNoRecords':i18n.no_packs,
+'fncPrep':fncPrepItem,
+'fncRepresent':fncRepresentItem
 })''')
                     # Custom Form
                     s3forms = s3base.s3forms

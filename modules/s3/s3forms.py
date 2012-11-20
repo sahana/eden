@@ -1913,7 +1913,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         validate = current.manager.validate
         for f in fields:
             fname = f["name"]
-            idxname = "%s_%s_%s_%s" % (formname, fname, rowtype, index)
+            idxname = "%s_i_%s_%s_%s" % (formname, fname, rowtype, index)
             formfield = self._rename_field(table[fname], idxname,
                                            skip_post_validation=True)
 
