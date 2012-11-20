@@ -8,7 +8,7 @@
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/bootstrap.min.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/ui.notify.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/smoothness/jquery-ui-1.8.13.custom.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/bootstrap-wysihtml5-0.0.2.css" media="screen">
+		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/bootstrap-wysihtml5.css" media="screen">
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/font-awesome.css" media="screen" />
 		<link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}/css/screen.css"/>
 		<link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}/css/debate.css"/>
@@ -26,7 +26,7 @@
 			google.load("jquery", "1.7.1", {uncompressed:false});
 			google.load("jqueryui", "1.8.16", {uncompressed:false});
 		</script>
-		<script src="{{ STATIC_URL }}/js/bootstrap-wysihtml5-0.0.2.js"></script>
+		<script src="{{ STATIC_URL }}/js/bootstrap-wysihtml5.js"></script>
     	<!-- End load JavaScript -->
        	{% block extrajs %}
        	{% endblock %}
@@ -58,7 +58,7 @@
         {% endif %}
     
         <div id="jsnotify">
-            <div id="basic-template">
+            <div class="hidden" id="basic-template">
                 <a class="ui-notify-cross ui-notify-close" href="#">x</a>
                 <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}/assets/icons/#{icon}" alt="warning" /></div>
                 <h1>#{title}</h1>
