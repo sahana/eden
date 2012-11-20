@@ -224,10 +224,11 @@ class S3ProjectModel(S3Model):
                                          represent = lambda opt, row=None: \
                                              multiref_represent(opt, "project_theme"),
                                          ondelete = "RESTRICT",
-                                         widget = lambda f, v: \
+                                         widget = lambda f, v, **attr: \
                                              s3_grouped_checkboxes_widget(f, v,
                                                                           cols=3,
-                                                                          help_field="comments")
+                                                                          help_field="comments",
+                                                                          **attr)
                                         )
 
         # Projects
@@ -298,10 +299,11 @@ class S3ProjectModel(S3Model):
                                           represent = lambda opt, row=None: \
                                               multiref_represent(opt, "project_hazard"),
                                           ondelete = "RESTRICT",
-                                          widget=lambda f, v: \
+                                          widget=lambda f, v, **attr: \
                                               s3_grouped_checkboxes_widget(f, v,
                                                                            cols=3,
-                                                                           help_field="comments")
+                                                                           help_field="comments",
+                                                                           **attr)
                                           )
 
         # ---------------------------------------------------------------------
@@ -383,8 +385,8 @@ class S3ProjectModel(S3Model):
                              multi_sector_id(
                                        readable = use_sectors,
                                        writable = use_sectors,
-                                       widget = lambda f, v: \
-                                        CheckboxesWidgetS3.widget(f, v, cols=3),
+                                       widget = lambda f, v, **attr: \
+                                        CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
                                        ),
                              multi_theme_id(
                                             readable = mode_3w and \
@@ -749,8 +751,8 @@ $(document).ready(function(){
                                                                           multiple=True)),
                                                  represent = lambda opt, row=None: \
                                                     multiref_represent(opt, "project_activity_type"),
-                                                 widget = lambda f, v: \
-                                                    s3_grouped_checkboxes_widget(f, v, cols=3),
+                                                 widget = lambda f, v, **attr: \
+                                                    s3_grouped_checkboxes_widget(f, v, cols=3, **attr),
                                                  ondelete = "RESTRICT")
 
         crud_form = s3forms.S3SQLCustomForm(

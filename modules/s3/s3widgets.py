@@ -42,6 +42,7 @@ __all__ = ["S3HiddenWidget",
            "S3PersonAutocompleteWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3SiteAutocompleteWidget",
+           "S3SiteAddressAutocompleteWidget",
            "S3LocationSelectorWidget",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
@@ -1100,6 +1101,122 @@ $('#%(dummy_input)s').autocomplete({
   name+=' ('+s3_site_lookup(item.instance_type)+')'
  }
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
+}
+$('#%(dummy_input)s').blur(function(){
+ if(!$('#%(dummy_input)s').val()){
+  $('#%(real_input)s').val('').change()
+  %(real_input)s.accept=true
+ }
+ if(!%(real_input)s.accept){
+  $('#%(dummy_input)s').val(%(real_input)s.val)
+ }else{
+  %(real_input)s.val=$('#%(dummy_input)s').val()
+ }
+ %(real_input)s.accept=false
+})''' % dict(dummy_input=dummy_input,
+             real_input=real_input)))
+
+        if value:
+            # Provide the representation for the current/default Value
+            text = str(field.represent(default["value"]))
+            if "<" in text:
+                # Strip Markup
+                try:
+                    markup = etree.XML(text)
+                    text = markup.xpath(".//text()")
+                    if text:
+                        text = " ".join(text)
+                    else:
+                        text = ""
+                except etree.XMLSyntaxError:
+                    pass
+            represent = text
+        else:
+            represent = ""
+
+        current.response.s3.jquery_ready.append(js_autocomplete)
+        return TAG[""](
+                        INPUT(_id=dummy_input,
+                              _class="string",
+                              _value=represent),
+                        IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                                 current.request.application,
+                            _height=32, _width=32,
+                            _id="%s_throbber" % dummy_input,
+                            _class="throbber hide"),
+                        INPUT(**attr),
+                        requires = field.requires
+                      )
+
+# =============================================================================
+class S3SiteAddressAutocompleteWidget(FormWidget):
+    """
+        Renders an org_site SELECT as an INPUT field with AJAX Autocomplete.
+        Differs from the S3AutocompleteWidget in that it searches both name & address fields
+        & uses these in the represent, along with the type
+    """
+
+    def __init__(self,
+                 post_process = "",
+                 delay = 450, # milliseconds
+                 min_length = 2):
+
+        self.auth = current.auth
+        self.post_process = post_process
+        self.delay = delay
+        self.min_length = min_length
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            _type = "text",
+            value = (value != None and str(value)) or "",
+            )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        # Hide the real field
+        attr["_class"] = "%s hide" % attr["_class"]
+
+        real_input = str(field).replace(".", "_")
+        dummy_input = "dummy_%s" % real_input
+        url = URL(c="org", f="site",
+                  args=["search.json", "address"],
+                  vars={"filter":"~"})
+
+        js_autocomplete = "".join(('''
+var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+$('#%(dummy_input)s').autocomplete({
+ source:'%(url)s',
+ delay:%(delay)d,
+ minLength:%(min_length)d,
+ search:function(event,ui){
+  $('#%(dummy_input)s_throbber').removeClass('hide').show()
+  return true
+ },
+ response:function(event,ui,content){
+  $('#%(dummy_input)s_throbber').hide()
+  return content
+ },
+ focus:function(event,ui){
+  var name+=ui.item.name
+  $('#%(dummy_input)s').val(name)
+  return false
+ },
+ select:function(event,ui){
+  var name=ui.item.name
+  $('#%(dummy_input)s').val(name)
+  $('#%(real_input)s').val(ui.item.site_id).change()
+''' % dict(dummy_input=dummy_input,
+           real_input=real_input,
+           url=url,
+           delay=self.delay,
+           min_length=self.min_length),
+        self.post_process, '''
+  %(real_input)s.accept=true
+  return false
+ }
+}).data('autocomplete')._renderItem=function(ul,item){
+ return $('<li></li>').data('item.autocomplete',item).append('<a>'+item.name+'</a>').appendTo(ul)
 }
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
@@ -2672,7 +2789,7 @@ class S3AddPersonWidget(FormWidget):
                                *fields)
         trs = []
         for tr in form[0]:
-            if not "_id" in t.attributes or not tr.attributes["_id"].startswith("submit_record"):
+            if not "_id" in tr.attributes or not tr.attributes["_id"].startswith("submit_record"):
                 if "_class" in tr.attributes:
                     tr.attributes["_class"] = "%s box_middle" % \
                                                 tr.attributes["_class"]

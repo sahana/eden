@@ -1043,6 +1043,18 @@ class S3Config(Storage):
         """
         return current.T(self.org.get("site_label", "Facility"))
 
+    def get_org_site_autocomplete(self):
+        """
+            Whether site_id fields should use an Autocomplete instead of a dropdown
+        """
+        return self.org.get("site_autocomplete", False)
+
+    def get_org_site_address_autocomplete(self):
+        """
+            Whether site_id Autocomplete fields should search Address fields as well as name
+        """
+        return self.org.get("site_address_autocomplete", False)
+
     def get_org_summary(self):
         """
             Whether to use Summary fields for Organisation/Office:

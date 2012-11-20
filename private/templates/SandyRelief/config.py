@@ -68,11 +68,17 @@ settings.auth.registration_requires_verification = True
 settings.auth.registration_requires_approval = True
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 #settings.auth.always_notify_approver = False
+# Uncomment this to request the Organisation when a user registers
+#settings.auth.registration_requests_organisation = True
+# Uncomment this to request the Site when a user registers
+settings.auth.registration_requests_site = True
+
 # Roles that newly-registered users get automatically
 settings.auth.registration_roles = { 0: ["comms_dispatch"]}
 
 settings.auth.registration_link_user_to = {"staff":T("Staff"),
-                                           "volunteer":T("Volunteer")}
+                                           #"volunteer":T("Volunteer")
+                                           }
 
 settings.security.policy = 4 # Controller & Function ACLs
 
@@ -120,6 +126,10 @@ settings.org.site_label = "Facility"
 #     "vol_volunteer_cluster.vol_cluster_id"          : [],
 #     "vol_volunteer_cluster.vol_cluster_position_id" : [],
 #     }
+# Uncomment to use an Autocomplete for Site lookup fields
+settings.org.site_autocomplete = True
+# Uncomment to have Site Autocompletes search within Address fields
+settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------
 # Persons

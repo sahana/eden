@@ -65,6 +65,8 @@ T = current.T
 #settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
 #settings.auth.registration_organisation_default = "My Organisation"
+# Uncomment this to request the Site when a user registers
+#settings.auth.registration_requests_site = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -246,6 +248,10 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_code_len = 3
 # Set the label for Sites
 #settings.org.site_label = "Facility"
+# Uncomment to use an Autocomplete for Site lookup fields
+#settings.org.site_autocomplete = True
+# Uncomment to have Site Autocompletes search within Address fields
+#settings.org.site_address_autocomplete = True
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True
 # Enable certain fields just for specific Organisations

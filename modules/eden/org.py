@@ -1254,7 +1254,16 @@ class S3SiteModel(S3Model):
                                   *s3_ownerstamp())
 
         # ---------------------------------------------------------------------
-        org_site_label = current.deployment_settings.get_org_site_label()
+        settings = current.deployment_settings
+        org_site_label = settings.get_org_site_label()
+        if settings.get_org_site_autocomplete():
+            widget=S3SiteAutocompleteWidget(),
+            comment=DIV(_class="tooltip",
+                        _title="%s|%s" % (org_site_label,
+                                          T("Enter some characters to bring up a list of possible matches")))
+        else:
+            widget = None
+            comment = None
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
                                   #readable = True,
@@ -1263,11 +1272,8 @@ class S3SiteModel(S3Model):
                                   represent=org_site_represent,
                                   orderby="org_site.name",
                                   sort=True,
-                                  # Comment these to use a Dropdown & not an Autocomplete
-                                  widget=S3SiteAutocompleteWidget(),
-                                  comment=DIV(_class="tooltip",
-                                              _title="%s|%s" % (org_site_label,
-                                                                T("Enter some characters to bring up a list of possible matches")))
+                                  widget=widget,
+                                  comment=comment
                                   )
 
         # Components
@@ -1577,10 +1583,11 @@ class S3FacilityModel(S3Model):
         org_facility_search = [
             S3SearchSimpleWidget(
                 name="facility_search_advanced",
-                label=T("Name, Org and/or Code"),
-                comment=T("To search for a facility, enter any of the names or code of the facility, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all facilities."),
+                label=T("Name, Address, Organization and/or Code"),
+                comment=T("To search for a facility, enter the name, address or code of the facility, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all facilities."),
                 field=["name",
                        "code",
+                       "location_id$address",
                        "organisation_id$name",
                        "organisation_id$acronym"
                        ]

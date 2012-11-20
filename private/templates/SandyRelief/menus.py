@@ -228,10 +228,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Requests", f="req")(
                         M("Request Items", m="create", vars={"type":1}),
                         M("Request People", m="create", vars={"type":3}),
-                        M("Fulfill Requests", m="search"),
-                        M("List All"),
+                        M("Search Requests", m="search"),
+                        #M("List All"),
                         M("List Recurring Requests", f="req_template"),
-                        M("Search", m="search"),
+                        #M("Search", m="search"),
                         M("Map", m="map"),
                         M("Report", m="report"),
                         M("Search All Requested Items", f="req_item", m="search"),
@@ -241,12 +241,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("New", m="create"),
                     #    M("List All"),
                     #),
-                    M("Sent Shipments", c="inv", f="send")(
-                        M("New", m="create"),
-                        M("List All"),
-                        M("Search Shipped Items", f="track_item", m="search"),
+                    M("Commitments", f="commit")(
+                        M("List All")
                     ),
-                    M("Items", c="supply", f="item")(
+                    M("Sent Shipments", f="send")(
+                        #M("New", m="create"),
+                        M("List All"),
+                        #M("Search Shipped Items", f="track_item", m="search"),
+                    ),
+                    M("Items", c="supply", f="item",
+                      restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),

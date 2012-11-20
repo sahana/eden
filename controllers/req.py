@@ -438,11 +438,15 @@ S3FilterFieldChange({
 
         if r.component and r.component.name == "commit":
             table = r.component.table
+            record = r.record
+            # If there are no commitments yet then run req_commit_all
+            if record.commit_status == 0:
+                redirect(URL(f="req", args=[record.id, "commit_all"]))
             # Allow commitments to be added when doing so as a component
             s3db.configure(table,
-                            listadd = True)
+                           listadd = True)
 
-            type = r.record.type
+            type = record.type
             if type == 1: # Items
                 # Limit site_id to facilities the user has permissions for
                 auth.permitted_facilities(table=r.table,
@@ -482,11 +486,11 @@ S3FilterFieldChange({
                         )
                     s3db.configure("req_commit", crud_form=crud_form)
                     # Redirect to the Items tab after creation
-                    s3db.configure(table,
-                                   create_next = URL(c="req", f="commit",
-                                                     args=["[id]", "commit_item"]),
-                                   update_next = URL(c="req", f="commit",
-                                                     args=["[id]", "commit_item"]))
+                    #s3db.configure(table,
+                    #               create_next = URL(c="req", f="commit",
+                    #                                 args=["[id]", "commit_item"]),
+                    #               update_next = URL(c="req", f="commit",
+                    #                                 args=["[id]", "commit_item"]))
             else:
                 # Non-Item commits can have an Organisation
                 # Check if user is affiliated to an Organisation
@@ -530,10 +534,12 @@ S3FilterFieldChange({
                     s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "commit_all"]),
-                             _class = "action-btn",
+                             _class = "action-btn commit-btn",
                              label = str(T("Commit"))
                             )
                         )
+                    s3.jquery_ready.append(
+'''S3ConfirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
                 # This is only appropriate for item requests
                 query = (r.table.type == 1)
                 rows = db(query).select(r.table.id)
@@ -928,15 +934,36 @@ def commit():
             #table.req_id.writable = False
 
             if r.record:
+                s3.crud.submit_button = T("Save Changes")
                 if r.record.type == 1: # Items
                     # Limit site_id to facilities the user has permissions for
                     auth.permitted_facilities(table=table,
                                               error_msg=T("You do not have permission for any facility to make a commitment.") )
 
+                    table.site_id.comment = A(T("Set as default Site"),
+                                              _id="req_commit_site_id_link",
+                                              _target="_blank",
+                                              _href=URL(c="default",
+                                                        f="user",
+                                                        args=["profile"]))
+                    
+                    jappend = s3.jquery_ready.append
+                    jappend('''
+$('#req_commit_site_id_link').click(function(){
+ var site_id=$('#req_commit_site_id').val()
+ if(site_id){
+  var url = $('#req_commit_site_id_link').attr('href')
+  var exists=url.indexOf('?')
+  if(exists=='-1'){
+   $('#req_commit_site_id_link').attr('href',url+'?site_id='+site_id)
+  }
+ }
+ return true
+})''')
                     # Dropdown not Autocomplete
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
-                    s3.jquery_ready.append('''
+                    jappend('''
 S3FilterFieldChange({
  'FilterField':'defaultcommit_item_req_item_id_edit_none',
  'FieldKey':'item_id',
@@ -1004,13 +1031,9 @@ S3FilterFieldChange({
                 #              sort=True
                 #              )
         return True
-
     s3.prep = prep
 
-    rheader = commit_rheader
-
-    output = s3_rest_controller(module, resourcename, rheader=rheader)
-
+    output = s3_rest_controller(rheader=commit_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1032,22 +1055,21 @@ def commit_rheader(r):
 
                 #req_record = db.req_req[record.req_id]
                 #req_date = req_record.date
-                rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),
-                                          table.req_id.represent(record.req_id),
-                                         ),
-                                      TR( TH( "%s: " % T("Committing Warehouse")),
-                                          s3db.org_site_represent(record.site_id),
-                                          TH( "%s: " % T("Commit Date")),
-                                          s3_date_represent(record.date),
-                                          ),
-                                      TR( TH( "%s: " % table.comments.label),
-                                          TD(record.comments, _colspan=3)
-                                          ),
-                                         ),
-                                        )
+                rheader = DIV(TABLE(TR(TH("%s: " % table.req_id.label),
+                                       table.req_id.represent(record.req_id),
+                                       ),
+                                    TR(TH("%s: " % T("Committing Warehouse")),
+                                       s3db.org_site_represent(record.site_id),
+                                       TH("%s: " % T("Commit Date")),
+                                       s3_date_represent(record.date),
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       TD(record.comments or "", _colspan=3)
+                                       ),
+                                    ),
+                                )
                 prepare_btn = A( T("Send Commitment"),
-                              _href = URL(c = "inv",
-                                          f = "send_commit",
+                              _href = URL(f = "send_commit",
                                           args = [record.id]
                                           ),
                               _id = "send_commit",
@@ -1057,8 +1079,7 @@ def commit_rheader(r):
                 s3.rfooter = TAG[""](prepare_btn)
 
 #                send_btn = A( T("Send Commitment as Shipment"),
-#                              _href = URL(c = "inv",
-#                                          f = "send_commit",
+#                              _href = URL(f = "send_commit",
 #                                          args = [record.id]
 #                                          ),
 #                              _id = "send_commit",
@@ -1112,6 +1133,29 @@ def commit_rheader(r):
 
             return rheader
     return None
+
+# =============================================================================
+def send():
+    """ RESTful CRUD controller """
+
+    s3db.configure("inv_send",
+                   listadd=False)
+
+    return s3db.inv_send_controller()
+
+# ==============================================================================
+def send_commit():
+    """
+        Send a Shipment containing all items in a Commitment
+    """
+
+    return s3db.req_send_commit()
+
+# -----------------------------------------------------------------------------
+def send_process():
+    """ Process a Shipment """
+
+    return s3db.inv_send_process()
 
 # =============================================================================
 def commit_item():

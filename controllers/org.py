@@ -84,6 +84,11 @@ def site():
         if r.representation != "json" or \
            r.method != "search":
             return False
+        if "address" in request.args:
+            s3db.configure("org_site",
+                           search_method=s3base.S3SiteSearch()
+                           )
+
         # Location Filter
         s3db.gis_location_filter(r)
         return True

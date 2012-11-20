@@ -27,6 +27,7 @@
 "comms_dispatch","Comms / Dispatch",,"org",,,"READ|UPDATE",,,
 "comms_dispatch","Comms / Dispatch",,"pr",,,"READ|CREATE|UPDATE",,,
 "comms_dispatch","Comms / Dispatch",,"req",,,"READ|CREATE|UPDATE",,,
+"comms_dispatch","Comms / Dispatch",,"req","commit",,"READ|CREATE|UPDATE|DELETE",,,
 "comms_dispatch","Comms / Dispatch",,"supply",,,"READ",,,
 "comms_dispatch","Comms / Dispatch",,"vol",,,"READ|CREATE|UPDATE",,,
 "comms_dispatch","Comms / Dispatch",,"vol","volunteer",,"READ|CREATE|UPDATE",,,

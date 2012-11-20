@@ -67,6 +67,7 @@ __all__ = ["S3SearchWidget",
            "S3PersonSearch",
            "S3HRSearch",
            "S3PentitySearch",
+           "S3SiteAddressSearch",
            ]
 
 MAX_RESULTS = 1000
@@ -2634,7 +2635,7 @@ class S3PentitySearch(S3Search):
         resource.add_filter(ptable.pe_id == table.pe_id)
 
         output = S3Exporter().json(resource, start=0, limit=limit,
-                                        fields=[table.pe_id], orderby=field)
+                                   fields=[table.pe_id], orderby=field)
         items = json.loads(output)
 
         # Add Groups
@@ -2646,10 +2647,10 @@ class S3PentitySearch(S3Search):
             resource.add_filter(query)
             resource.add_filter(gtable.pe_id == table.pe_id)
             output = S3Exporter().json(resource,
-                                            start=0,
-                                            limit=limit,
-                                            fields=[table.pe_id],
-                                            orderby=field)
+                                       start=0,
+                                       limit=limit,
+                                       fields=[table.pe_id],
+                                       orderby=field)
             items += json.loads(output)
 
         # Add Organisations
@@ -2661,10 +2662,10 @@ class S3PentitySearch(S3Search):
             resource.add_filter(query)
             resource.add_filter(otable.pe_id == table.pe_id)
             output = S3Exporter().json(resource,
-                                            start=0,
-                                            limit=limit,
-                                            fields=[table.pe_id],
-                                            orderby=field)
+                                       start=0,
+                                       limit=limit,
+                                       fields=[table.pe_id],
+                                       orderby=field)
             items += json.loads(output)
 
         items = [ { "id" : item[u'pe_id'],
@@ -2690,5 +2691,90 @@ class S3SearchOrgHierarchyWidget(S3SearchOptionsWidget):
             field_type = str(field.type)
 
         return S3OrganisationHierarchyWidget()(field, {}, **self.attr)
+
+# =============================================================================
+class S3SiteAddressSearch(S3Search):
+    """
+        Search method with specifics for Site records
+        - searches name & address
+    """
+
+    def search_json(self, r, **attr):
+        """
+            JSON search method for S3SiteAddressAutocompleteWidget
+
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        response = current.response
+        resource = self.resource
+        table = self.table
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = self.request.vars # should be request.get_vars?
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower().strip()
+
+        filter = _vars.filter
+
+        if filter and value:
+
+            if filter == "~":
+                query = (S3FieldSelector("name").lower().like(value + "%")) | \
+                        (S3FieldSelector("location_id$address").lower().like(value + "%"))
+
+            else:
+                output = current.xml.json_message(False, 400,
+                                "Unsupported filter! Supported filters: ~")
+                raise HTTP(400, body=output)
+
+        resource.add_filter(query)
+
+        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
+        else:
+            s3db = current.s3db
+            field = table.name
+            field2 = s3db.gis_location.address
+
+            # Fields to return
+            fields = [table.id, field, field2]
+
+            attributes = dict(orderby=field)
+            limitby = resource.limitby(start=0, limit=limit)
+            if limitby is not None:
+                attributes["limitby"] = limitby
+            rows = resource._load(*fields, **attributes)
+            output = []
+            append = output.append
+            represent = s3db.org_site_represent
+            for row in rows:
+                name = represent(row[table].name)
+                address = row.gis_location.address
+                if address:
+                        name = "%s, %s" % (name, address)
+                record = dict(
+                    id = row[table].id,
+                    name = name,
+                    )
+                append(record)
+            output = jsons(output)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
 
 # END =========================================================================

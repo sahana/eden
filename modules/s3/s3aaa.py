@@ -58,10 +58,10 @@ from gluon.utils import web2py_uuid
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3error import S3PermissionError
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
 from s3utils import s3_mark_required
-from s3error import S3PermissionError
 
 DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
@@ -1148,6 +1148,7 @@ Thank you
             Configure User Fields - for registration & user administration
         """
 
+        request = current.request
         messages = self.messages
         cmessages = current.messages
         settings = self.settings
@@ -1204,61 +1205,76 @@ Thank you
         except:
             pass
 
-        if deployment_settings.get_auth_registration_requests_organisation():
+        req_org = deployment_settings.get_auth_registration_requests_organisation()
+        if req_org:
             organisation_id = utable.organisation_id
             organisation_id.writable = True
             organisation_id.readable = True
             from s3validators import IS_ONE_OF
             organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
-                                                s3db.org_organisation_represent,
-                                                orderby="org_organisation.name",
-                                                sort=True)
+                                                 s3db.org_organisation_represent,
+                                                 orderby="org_organisation.name",
+                                                 sort=True)
             organisation_id.represent = s3db.org_organisation_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
             # no permissions for autocomplete on registration page
-            organisation_id.comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Organization"),
-                                                            T("Enter some characters to bring up a list of possible matches")))
+            #organisation_id.comment = DIV(_class="tooltip",
+            #                              _title="%s|%s" % (T("Organization"),
+            #                                                T("Enter some characters to bring up a list of possible matches")))
 
             if not deployment_settings.get_auth_registration_organisation_required():
                 organisation_id.requires = IS_NULL_OR(organisation_id.requires)
 
         if deployment_settings.get_auth_registration_requests_site():
-            site_id = utable.site_id
-            site_id.writable = True
-            site_id.readable = True
-            from s3validators import IS_ONE_OF
-            site_id.requires = IS_ONE_OF( db, "org_site.site_id",
-                                          s3db.org_site_represent,
-                                          orderby="org_site.name",
-                                          sort=True )
-            site_id.represent = s3db.org_site_represent
-            site_id.default = deployment_settings.get_auth_registration_organisation_id_default()
-            #from s3widgets import S3SiteAutocompleteWidget
-            #site_id.widget = S3SiteAutocompleteWidget()
-            # no permissions for autocomplete on registration page
-            site_id.comment = (DIV(_class="tooltip",
-                                   _title="%s|%s" % (deployment_settings.get_org_site_label(),
-                                                     T("Enter some characters to bring up a list of possible matches"))),
-                               SCRIPT(
+            site_id = request.get_vars.get("site_id", None)
+            if site_id:
+                field = utable.site_id
+                field.default = site_id
+                field.readable = True
+                field.represent = lambda v: s3db.org_site_represent(site_id)
+            else:
+                site_id = utable.site_id
+                site_id.writable = True
+                site_id.readable = True
+                if req_org:
+                    from s3validators import IS_ONE_OF_EMPTY_SELECT
+                    site_id.requires = IS_ONE_OF_EMPTY_SELECT(db, "org_site.site_id",
+                                                              s3db.org_site_represent,
+                                                              orderby="org_site.name",
+                                                              sort=True)
+                else:
+                    from s3validators import IS_ONE_OF
+                    site_id.requires = IS_ONE_OF(db, "org_site.site_id",
+                                                 s3db.org_site_represent,
+                                                 orderby="org_site.name",
+                                                 sort=True)
+                site_id.represent = s3db.org_site_represent
+                #site_id.default = deployment_settings.get_auth_registration_site_id_default()
+                #from s3widgets import S3SiteAutocompleteWidget
+                #site_id.widget = S3SiteAutocompleteWidget()
+                # no permissions for autocomplete on registration page
+                site_id.comment = DIV(_class="tooltip",
+                                      _title="%s|%s" % (T("Facility"),
+                                                        T("Select the default site.")))
+                current.response.s3.jquery_ready.append(
 '''S3FilterFieldChange({
  'FilterField':'organisation_id',
  'Field':'site_id',
  'FieldResource':'site',
  'url':S3.Ap.concat('/org/sites_for_org/')
 })''')
-                               )
+                if not deployment_settings.get_auth_registration_site_required():
+                    site_id.requires = IS_NULL_OR(site_id.requires)
 
-            if not deployment_settings.get_auth_registration_site_required():
-                site_id.requires = IS_NULL_OR(site_id.requires)
-
+        if "profile" in request.args:
+            return
         link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
         if link_user_to_opts:
             link_user_to = utable.link_user_to
             link_user_to_default = []
-            vars = current.request.vars
+            vars = request.vars
             for type in ["staff", "volunteer", "member"]:
                 if "link_user_to_%s" % type in vars:
                     link_user_to_default.append(type)

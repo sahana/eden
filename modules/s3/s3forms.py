@@ -628,16 +628,17 @@ class S3SQLCustomForm(S3SQLForm):
             labels = None
 
         # Choose formstyle
+        settings = s3.crud
         if format == "plain":
             # Default formstyle works best when we have no formatting
             formstyle = "table3cols"
         else:
-            formstyle = s3.crud.formstyle
+            formstyle = settings.formstyle
 
         # Retrieve the record
         record = None
         if record_id is not None:
-            query = (self.table._id==record_id)
+            query = (self.table._id == record_id)
             record = db(query).select(limitby=(0, 1)).first()
         self.record_id = record_id
         self.subrows = Storage()
@@ -738,7 +739,8 @@ class S3SQLCustomForm(S3SQLForm):
                                table_name = self.tablename,
                                upload = "default/download",
                                readonly = readonly,
-                               separator = "")
+                               separator = "",
+                               submit_button = settings.submit_button)
 
         # Process the form
         formname = "%s/%s" % (self.tablename, record_id)
@@ -1883,6 +1885,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         T = current.T
         appname = current.request.application
+        settings = current.response.s3.crud
 
         formname = self._formname()
 
@@ -1948,7 +1951,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                   formstyle=self._formstyle,
                                   upload = "default/download",
                                   readonly=readonly,
-                                  table_name=subform_name)
+                                  table_name=subform_name,
+                                  submit_button = settings.submit_button)
 
         for tr in subform[0]:
             if not tr.attributes["_id"] == "submit_record__row":

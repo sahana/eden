@@ -587,361 +587,21 @@ def inv_item_packs():
 def send():
     """ RESTful CRUD controller """
 
-    sendtable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-
-    # Limit site_id to sites the user has permissions for
-    error_msg = T("You do not have permission for any facility to send a shipment.")
-    auth.permitted_facilities(table=sendtable, error_msg=error_msg)
-
-    # Set Validator for checking against the number of items in the warehouse
-    vars = request.vars
-    if (vars.send_inv_item_id):
-        if not vars.item_pack_id:
-            vars.item_pack_id = s3db.inv_inv_item[vars.send_inv_item_id].item_pack_id
-        s3db.inv_track_item.quantity.requires = QUANTITY_INV_ITEM(db,
-                                                                 vars.send_inv_item_id,
-                                                                 vars.item_pack_id)
-
-    SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
-    SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
-    SHIP_STATUS_RECEIVED = s3db.inv_ship_status["RECEIVED"]
-    SHIP_STATUS_CANCEL = s3db.inv_ship_status["CANCEL"]
-    SHIP_STATUS_RETURNING  = s3db.inv_ship_status["RETURNING"]
-
-    def set_send_attr(status):
-        sendtable.send_ref.writable = False
-        if status == SHIP_STATUS_IN_PROCESS:
-            sendtable.send_ref.readable = False
-        else:
-            # Make all fields writable False
-            for field in sendtable.fields:
-                sendtable[field].writable = False
-
-    TRACK_STATUS_UNKNOWN    = s3db.inv_tracking_status["UNKNOWN"]
-    TRACK_STATUS_PREPARING  = s3db.inv_tracking_status["IN_PROCESS"]
-    TRACK_STATUS_TRANSIT    = s3db.inv_tracking_status["SENT"]
-    TRACK_STATUS_UNLOADING  = s3db.inv_tracking_status["UNLOADING"]
-    TRACK_STATUS_ARRIVED    = s3db.inv_tracking_status["RECEIVED"]
-    TRACK_STATUS_CANCELED   = s3db.inv_tracking_status["CANCEL"]
-    TRACK_STATUS_RETURNING  = s3db.inv_tracking_status["RETURNING"]
-
-    def set_track_attr(status):
-        # By default Make all fields writable False
-        for field in tracktable.fields:
-            tracktable[field].writable = False
-        # Hide some fields
-        tracktable.send_id.readable = False
-        tracktable.recv_id.readable = False
-        tracktable.bin.readable = False
-        tracktable.item_id.readable = False
-        tracktable.recv_quantity.readable = False
-        tracktable.return_quantity.readable = False
-        tracktable.expiry_date.readable = False
-        tracktable.owner_org_id.readable = False
-        tracktable.supply_org_id.readable = False
-        tracktable.adj_item_id.readable = False
-        if status == TRACK_STATUS_PREPARING:
-            # show some fields
-            tracktable.send_inv_item_id.writable = True
-            tracktable.item_pack_id.writable = True
-            tracktable.quantity.writable = True
-            tracktable.comments.writable = True
-            # hide some fields
-            tracktable.currency.readable = False
-            tracktable.pack_value.readable = False
-            tracktable.item_source_no.readable = False
-            tracktable.inv_item_status.readable = False
-        elif status == TRACK_STATUS_ARRIVED:
-            # Shipment arrived display some extra fields at the destination
-            tracktable.item_source_no.readable = True
-            tracktable.recv_quantity.readable = True
-            tracktable.return_quantity.readable = True
-            tracktable.recv_bin.readable = True
-            tracktable.currency.readable = True
-            tracktable.pack_value.readable = True
-        elif status == TRACK_STATUS_RETURNING:
-            tracktable.return_quantity.readable = True
-            tracktable.return_quantity.writable = True
-            tracktable.currency.readable = True
-            tracktable.pack_value.readable = True
-
-    def prep(r):
-        # Default to the Search tab in the location selector
-        s3.gis.tab = "search"
-        record = sendtable[r.id]
-        if record and record.status != SHIP_STATUS_IN_PROCESS:
-            # now that the shipment has been sent
-            # lock the record so that it can't be meddled with
-            s3db.configure("inv_send",
-                            create=False,
-                            listadd=False,
-                            editable=False,
-                            deletable=False,
-                           )
-
-        if r.component:
-            if record.status == SHIP_STATUS_RECEIVED or \
-               record.status == SHIP_STATUS_CANCEL:
-                list_fields = ["id",
-                               "status",
-                               "item_id",
-                               "item_pack_id",
-                               "bin",
-                               "quantity",
-                               "currency",
-                               "pack_value",
-                               "recv_quantity",
-                               "return_quantity",
-                               "owner_org_id",
-                               "supply_org_id",
-                               "inv_item_status",
-                               "comments",
-                              ]
-            elif record.status == SHIP_STATUS_RETURNING:
-                list_fields = ["id",
-                               "status",
-                               "item_id",
-                               "item_pack_id",
-                               "quantity",
-                               "currency",
-                               "pack_value",
-                               "return_quantity",
-                               "bin",
-                               "owner_org_id",
-                               "supply_org_id",
-                               "inv_item_status",
-                              ]
-            else:
-                list_fields = ["id",
-                               "status",
-                               "item_id",
-                               "item_pack_id",
-                               "quantity",
-                               "currency",
-                               "pack_value",
-                               "bin",
-                               "owner_org_id",
-                               "supply_org_id",
-                               "inv_item_status",
-                              ]
-            s3db.configure("inv_track_item",
-                            list_fields=list_fields,
-                           )
-
-            # Can only create or delete track items for a send record if the status is preparing
-            if r.method == "create" or r.method == "delete":
-                if record.status != SHIP_STATUS_IN_PROCESS:
-                    return False
-            if r.method == "delete":
-                return s3.inv_track_item_deleting(r.component_id)
-            if r.record.get("site_id"):
-                # Restrict to items from this warehouse only
-                tracktable.send_inv_item_id.requires = IS_ONE_OF(db,
-                                                         "inv_inv_item.id",
-                                                         s3db.inv_item_represent,
-                                                         orderby="inv_inv_item.id",
-                                                         sort=True,
-                                                         filterby = "site_id",
-                                                         filter_opts = [r.record.site_id]
-                                                        )
-            # Hide the values that will be copied from the inv_inv_item record
-            if r.component_id:
-                track_record = tracktable[r.component_id]
-                set_track_attr(track_record.status)
-                # if the track record is linked to a request item then
-                # the stock item has already been selected so make it read only
-                if track_record and track_record.get("req_item_id"):
-                    tracktable.send_inv_item_id.writable = False
-                    tracktable.item_pack_id.writable = False
-                    stock_qnty = track_record.send_inv_item_id.quantity
-                    tracktable.quantity.comment = T("%d in stock" % stock_qnty)
-                    tracktable.quantity.requires = QUANTITY_INV_ITEM(db,
-                                                                 track_record.send_inv_item_id,
-                                                                 track_record.item_pack_id)
-                # Hide the item id
-                tracktable.item_id.readable = False
-            else:
-                set_track_attr(TRACK_STATUS_PREPARING)
-            if r.interactive:
-                if r.record.status == SHIP_STATUS_IN_PROCESS:
-                    s3.crud_strings.inv_send.title_update = \
-                    s3.crud_strings.inv_send.title_display = T("Process Shipment to Send")
-                elif "site_id" in request.vars and r.record.status == SHIP_STATUS_SENT:
-                    s3.crud_strings.inv_send.title_update = \
-                    s3.crud_strings.inv_send.title_display = T("Review Incoming Shipment to Receive")
-        else:
-            if request.get_vars.received:
-                # Set the items to being received
-                sendtable[r.id] = dict(status = SHIP_STATUS_RECEIVED)
-                db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
-                response.message = T("Shipment received")
-            # else set the inv_send attributes
-            elif r.id:
-                record = sendtable[r.id]
-                set_send_attr(record.status)
-            else:
-                set_send_attr(SHIP_STATUS_IN_PROCESS)
-                sendtable.send_ref.readable = False
-        return True
-
-    if len(request.args) > 1 and request.args[1] == "track_item":
-        # Shouldn't fail but...
-        # if user enters the send id then it could so wrap in a try...
-        try:
-            status = sendtable[request.args[0]].status
-        except:
-            status = None
-        if status:
-            editable = False
-            if status == SHIP_STATUS_RETURNING:
-                editable = True
-            # remove CRUD generated buttons in the tabs
-            s3db.configure("inv_track_item",
-                            create=False,
-                            listadd=False,
-                            editable=editable,
-                            deletable=False,
-                           )
-
-
-    s3.prep = prep
-    output = s3_rest_controller(rheader=s3.inv_send_rheader)
-    return output
+    return s3db.inv_send_controller()
 
 # ==============================================================================
 def send_commit():
     """
+        Send a Shipment containing all items in a Commitment
     """
 
-    # Get the commit record
-    try:
-        commit_id = request.args[0]
-    except:
-        redirect(URL(c="req",
-                     f="commit"))
-
-    req_table = s3db.req_req
-    rim_table = s3db.req_req_item
-    com_table = s3db.req_commit
-    cim_table = s3db.req_commit_item
-    send_table = s3db.inv_send
-    track_table = s3db.inv_track_item
-
-    query = (com_table.id == commit_id) & \
-            (com_table.req_id == req_table.id) & \
-            (com_table.deleted == False)
-    record = db(query).select(limitby = (0, 1)).first()
-    # create a inv_send and link to the commit
-    send_id = send_table.insert(sender_id = record.req_commit.committer_id,
-                                site_id = record.req_commit.site_id,
-                                recipient_id = record.req_req.requester_id,
-                                to_site_id = record.req_req.site_id,
-                                status = 0)
-
-    # get all of the committed items
-    query = (cim_table.commit_id == commit_id) & \
-            (cim_table.req_item_id == rim_table.id) & \
-            (cim_table.deleted == False)
-    records = db(query).select()
-    # create inv_track_items for each commit item
-    for row in records:
-        id = track_table.insert(track_org_id = record.req_commit.organisation_id,
-                                send_id = send_id,
-                                status = 1,
-                                item_id = row.req_req_item.item_id,
-                                item_pack_id = row.req_req_item.item_pack_id,
-                                quantity = row.req_commit_item.quantity,
-                                currency = row.req_req_item.currency,
-                                req_item_id = row.req_req_item.id
-                                )
-        track_table(track_table.id == id).update(tracking_no = "TN:%6d" % (10000 + id))
-    # redirect to inv_send for the send id just created
-    redirect(URL(c = "inv",
-                 f = "send",
-                 args = [send_id, "track_item"]))
+    return s3db.req_send_commit()
 
 # -----------------------------------------------------------------------------
 def send_process():
-    """ Send a Shipment """
+    """ Process a Shipment """
 
-    try:
-        send_id = request.args[0]
-    except:
-        redirect(URL(c="inv",
-                     f="send"))
-
-    stable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-    siptable = s3db.supply_item_pack
-    rrtable = s3db.req_req
-    ritable = s3db.req_req_item
-
-    if not auth.s3_has_permission("update",
-                                  stable,
-                                  record_id=send_id):
-        session.error = T("You do not have permission to send this shipment.")
-
-    send_record = stable[send_id]
-
-    if send_record.status != eden.inv.inv_ship_status["IN_PROCESS"]:
-        session.error = T("This shipment has already been sent.")
-
-    # Get the track items that are part of this shipment
-    query = (tracktable.send_id == send_id ) & \
-            (tracktable.deleted == False)
-    track_items = db(query).select()
-    if not track_items:
-        session.error = T("No items have been selected for shipping.")
-
-    if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id]))
-
-    # Update Send record & lock for editing
-    stable[send_id] = dict(date = request.utcnow,
-                           status = eden.inv.inv_ship_status["SENT"],
-                           owned_by_user = None,
-                           owned_by_group = ADMIN)
-    # if this is linked to a request then update the quantity in transit
-    req_ref = send_record.req_ref
-    query = (rrtable.req_ref == req_ref)
-    req_rec = db(query).select(rrtable.id, limitby = (0, 1)).first()
-    if req_rec:
-        req_id = req_rec.id
-        for track_item in track_items:
-            if track_item.req_item_id:
-                req_i = ritable[track_item.req_item_id]
-                req_p_qnty = siptable[req_i.item_pack_id].quantity
-                t_qnty = track_item.quantity
-                t_pack_id = track_item.item_pack_id
-                inv_p_qnty = siptable[t_pack_id].quantity
-                transit_quantity = t_qnty * inv_p_qnty / req_p_qnty
-                db(ritable.id == track_item.req_item_id).update(quantity_transit = ritable.quantity_transit + transit_quantity)
-        s3db.req_update_status(req_id)
-    # Create a Receive record
-    rtable = s3db.inv_recv
-    recv_id = rtable.insert(sender_id = send_record.sender_id,
-                            send_ref = send_record.send_ref,
-                            req_ref = send_record.req_ref,
-                            from_site_id = send_record.site_id,
-                            eta = send_record.delivery_date,
-                            recipient_id = send_record.recipient_id,
-                            site_id = send_record.to_site_id,
-                            comments = send_record.comments,
-                            status = eden.inv.inv_ship_status["SENT"],
-                            type = 1, # 1:"Another Inventory"
-                           )
-    # Change the status for all track items in this shipment to In transit
-    # and link to the receive record
-    db(tracktable.send_id == send_id).update(status = 2,
-                                             recv_id = recv_id)
-
-    session.confirmation = T("Shipment Items sent from Warehouse")
-    redirect(URL(c = "inv",
-                 f = "send",
-                 args = [send_id, "track_item"]))
+    return s3db.inv_send_process()
 
 # -----------------------------------------------------------------------------
 def send_returns():
@@ -991,13 +651,18 @@ def send_returns():
     redirect(URL(c = "inv",
                  f = "send",
                  args = [send_id, "track_item"]))
+
 # -----------------------------------------------------------------------------
 def return_process():
     """
         Return some stock from a shipment back into the warehouse
     """
 
-    send_id = request.args[0]
+    try:
+        send_id = request.args[0]
+    except:
+        redirect(f="send")
+
     invtable = s3db.inv_inv_item
     stable = s3db.inv_send
     rtable = s3db.inv_recv
@@ -1046,11 +711,11 @@ def return_process():
                                status = eden.inv.inv_ship_status["RECEIVED"],
                                owned_by_user = None,
                                owned_by_group = ADMIN)
+
     # Change the status for all track items in this shipment to Received
     db(tracktable.send_id == send_id).update(status = eden.inv.inv_tracking_status["RECEIVED"])
 
-    redirect(URL(c = "inv",
-                 f = "send",
+    redirect(URL(f = "send",
                  args = [send_id]))
 
 # -----------------------------------------------------------------------------
@@ -1061,7 +726,11 @@ def send_cancel():
         @todo need to roll back commitments
     """
 
-    send_id = request.args[0]
+    try:
+        send_id = request.args[0]
+    except:
+        redirect(f="send")
+
     stable = s3db.inv_send
     rtable = s3db.inv_recv
     tracktable = s3db.inv_track_item
@@ -1110,8 +779,7 @@ def send_cancel():
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 
-    redirect(URL(c = "inv",
-                 f = "send",
+    redirect(URL(f = "send",
                  args = [send_id]))
 
 # =============================================================================
