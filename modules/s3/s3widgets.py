@@ -2672,7 +2672,7 @@ class S3AddPersonWidget(FormWidget):
                                *fields)
         trs = []
         for tr in form[0]:
-            if not "_id" in t.attributes or not tr.attributes["_id"].startswith("submit_record"):
+            if not "_id" in tr.attributes or not tr.attributes["_id"].startswith("submit_record"):
                 if "_class" in tr.attributes:
                     tr.attributes["_class"] = "%s box_middle" % \
                                                 tr.attributes["_class"]

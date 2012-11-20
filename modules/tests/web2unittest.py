@@ -247,8 +247,8 @@ class SeleniumUnitTest(Web2UnitTest):
                         "Unexpected %s to create record" %
                         (confirm and "success" or "failure"))
         result["after"] = self.getRows(table, id_data, dbcallback)
-        successMsg = "Record added to database"
-        failMsg = "Record not added to database"
+        successMsg = "Records added to database: %s" %id_data
+        failMsg = "Records not added to database %s" %id_data
         if success:
             self.assertTrue((len(result["after"]) - len(result["before"])) == 1,
                             failMsg)

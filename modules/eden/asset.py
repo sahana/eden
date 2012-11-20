@@ -405,6 +405,7 @@ $(document).ready(function(){
                              Field("check_in_to_person", "boolean",
                                    #label = T("Mobile"),      # Relabel?
                                    label = T("Track with this Person?"),
+                                   
                                    comment = DIV(_class="tooltip",
                                                  #_title="%s|%s" % (T("Mobile"),
                                                  _title="%s|%s" % (T("Track with this Person?"),
@@ -460,6 +461,7 @@ $(document).ready(function(){
                              Field("cancel", "boolean",
                                    default = False,
                                    label = T("Cancel Log Entry"),
+                                   represent = s3_yes_no_represent,
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Cancel Log Entry"),
                                                                    T("'Cancel' will indicate an asset log entry did not occur")))

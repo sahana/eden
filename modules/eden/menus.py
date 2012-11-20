@@ -1486,6 +1486,7 @@ class S3OptionsMenu(object):
                         M("Search", m="search"),
                      ),
                      M("Communities", f="location")(
+                        M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
                         M("Search", m="search"),

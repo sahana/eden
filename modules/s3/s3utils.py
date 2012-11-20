@@ -682,7 +682,13 @@ def s3_represent_name_translate(table):
             return current.messages["UNKNOWN_OPT"]
 
     return represent
-
+# =============================================================================
+def s3_yes_no_represent(value):
+    T = current.T
+    if value:
+        return T("Yes")
+    else:
+        return T("No")
 # =============================================================================
 def s3_include_debug_css():
     """
@@ -3392,5 +3398,8 @@ class S3DataTable(object):
                            action_col=action_col,
                            stringify=stringify,
                            **attr)
+        
+
+        
 
 # END =========================================================================

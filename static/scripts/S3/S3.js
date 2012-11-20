@@ -146,6 +146,7 @@ $(document).ready(function() {
                 return false;
             }
         });
+        $('input:text:visible:first').focus();
     }
 
     // accept comma as thousands separator

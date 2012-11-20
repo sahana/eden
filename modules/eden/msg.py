@@ -102,10 +102,10 @@ class S3MessagingModel(S3Model):
                              Field("subject", length=78),
                              Field("message", "text"),
                              #Field("attachment", "upload", autodelete = True), #TODO
-                             Field("verified", "boolean", default = False),
+                             Field("verified", "boolean", default = False, represent = s3_yes_no_represent),
                              Field("verified_comments", "text"),
-                             Field("actionable", "boolean", default = True),
-                             Field("actioned", "boolean", default = False),
+                             Field("actionable", "boolean", default = True, represent = s3_yes_no_represent),
+                             Field("actioned", "boolean", default = False, represent = s3_yes_no_represen),
                              Field("actioned_comments", "text"),
                              Field("priority", "integer", default = 1,
                                    requires = IS_NULL_OR(IS_IN_SET(msg_priority_opts)),
