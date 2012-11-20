@@ -103,18 +103,17 @@ class ProposalSet(models.Model):
                             help_text = _('Max: 200 characters'))
     ptype = models.CharField(_('Ponderation'), choices=PONDERATIONS,
         max_length=20, help_text=_('Ponderation types:<br><strong>Users: \
-        </strong>Users give support votes to the proposal, and that votes are \
-        added to the final voting.<br><strong>Fixed:</strong>Fixed ponderations \
-        are stablished by the process managers. It\'s a porcentual puntuation. \
-        That means that percetange is calculated after the voting and added to \
-        the final voting.<br><strong>None:</strong> No ponderation is applied \
-        to the final voting.'))
+        </strong>Users give support votes to the proposal, and that votes \
+        are added to the final voting.<br><strong>Fixed:</strong>Fixed \
+        ponderations are stablished by the process managers. It\'s a \
+        porcentual puntuation. That means that percetange is calculated \
+        after the voting and added to the final voting.<br><strong>None: \
+        </strong> No ponderation is applied to the final voting.'))
     space = models.ForeignKey(Space, blank=True, null=True)
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True)
     debate = models.ForeignKey(Debate, blank=True, null=True,
-                               help_text = _('Select the debate associated \
-                               with this proposal set'))
+        help_text = _('Select the debate associated with this proposal set'))
 
     def __unicode__(self):
         return self.name

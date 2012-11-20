@@ -300,7 +300,10 @@ class ViewDebate(DetailView):
         if datetime.date.today() >= debate.end_date \
         or datetime.date.today() <  debate.start_date:
             self.template_name = 'debate/debate_outdated.html'
-            return Debate.objects.none()
+            return debate
+            # We can't return none, if we do, the platform cannot show
+            # the start and end dates and the title
+            #return Debate.objects.none()
         
         return debate
 

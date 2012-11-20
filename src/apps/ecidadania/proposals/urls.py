@@ -28,41 +28,7 @@ from apps.ecidadania.proposals.views import ListProposalSet, AddProposalSet, \
     ViewProposal, DeleteProposal, EditProposal, AddProposal, ValidateVote
 from apps.ecidadania.proposals.url_names import *
 
-
-urlpatterns = patterns('',
-
-    url(_(r'^$'), ListProposals.as_view(), name=PROPOSAL_LIST),
-
-    url(_(r'^add/(?P<p_set>\w+)/'), AddProposal.as_view(), name=PROPOSAL_ADD),
-
-    url(_(r'^(?P<prop_id>\w+)/$'), ViewProposal.as_view(), name=PROPOSAL_VIEW),
-  
-    url(_(r'^(?P<prop_id>\w+)/edit/$'), EditProposal.as_view(),
-        name=PROPOSAL_EDIT),   
-    
-    url(_(r'^(?P<prop_id>\w+)/delete/$'), DeleteProposal.as_view(),
-        name=PROPOSAL_DELETE),
-)
-
-
-urlpatterns += patterns('',
-
-    url(_(r'^psets/(?P<set_id>\w+)/edit/'), EditProposalSet.as_view(),
-        name=PROPOSALSET_EDIT),
-       
-    url(_(r'^psets/(?P<set_id>\w+)/delete/'), DeleteProposalSet.as_view(),
-        name=PROPOSALSET_DELETE),
-    
-    url(_(r'^psets/(?P<set_id>\w+)/'), ViewProposalSet.as_view(),
-        name=PROPOSALSET_VIEW),
-
-    url(_(r'^psets/'), ListProposalSet.as_view(), name=PROPOSALSET_LIST),
-
-    url(_(r'^addset/'), AddProposalSet.as_view(), name=PROPOSALSET_ADD),
-)
-
-
-urlpatterns += patterns('apps.ecidadania.proposals.views',
+urlpatterns = patterns('apps.ecidadania.proposals.views',
 
     url(_(r'^merged/(?P<p_set>\w+)/'),'merged_proposal', name=PROPOSAL_MERGED),
 
@@ -82,3 +48,33 @@ urlpatterns += patterns('apps.ecidadania.proposals.views',
         ValidateVote.as_view(), name=VALIDATE_VOTE),
 )
 
+urlpatterns += patterns('',
+
+    url(_(r'^psets/(?P<set_id>\w+)/edit/'), EditProposalSet.as_view(),
+        name=PROPOSALSET_EDIT),
+       
+    url(_(r'^psets/(?P<set_id>\w+)/delete/'), DeleteProposalSet.as_view(),
+        name=PROPOSALSET_DELETE),
+    
+    url(_(r'^psets/(?P<set_id>\w+)/'), ViewProposalSet.as_view(),
+        name=PROPOSALSET_VIEW),
+
+    url(_(r'^psets/'), ListProposalSet.as_view(), name=PROPOSALSET_LIST),
+
+    url(_(r'^addset/'), AddProposalSet.as_view(), name=PROPOSALSET_ADD),
+)
+
+urlpatterns += patterns('',
+
+    url(_(r'^$'), ListProposals.as_view(), name=PROPOSAL_LIST),
+
+    url(_(r'^add/(?P<p_set>\w+)/'), AddProposal.as_view(), name=PROPOSAL_ADD),
+
+    url(_(r'^(?P<prop_id>\w+)/$'), ViewProposal.as_view(), name=PROPOSAL_VIEW),
+  
+    url(_(r'^(?P<prop_id>\w+)/edit/$'), EditProposal.as_view(),
+        name=PROPOSAL_EDIT),   
+    
+    url(_(r'^(?P<prop_id>\w+)/delete/$'), DeleteProposal.as_view(),
+        name=PROPOSAL_DELETE),
+)
