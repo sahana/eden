@@ -24,8 +24,8 @@ from e_cidadania.settings.defaults import *
 # during development than in production.
 EMAIL_HOST = ""
 EMAIL_PORT= 25
-EMAIL_HOST_USER=""
-EMAIL_HOST_PASSWORD=""
+EMAIL_HOST_USER= ""
+EMAIL_HOST_PASSWORD= ""
 DEFAULT_FROM_EMAIL = ""
 EMAIL_USE_TLS = True
 

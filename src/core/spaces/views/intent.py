@@ -28,6 +28,7 @@ from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
 
+from e_cidadania import settings
 from core.spaces.models import Space, Intent
 from helpers.cache import get_or_insert_object_in_cache
 from core.permissions import has_space_permission, has_all_permissions
@@ -66,7 +67,7 @@ def add_intent(request, space_url):
                 Please click on the link below to approve.\n {2}").format(
                 request.user.username, space.name, intent.get_approve_url())
         heading = _("Your request is being processed.")
-        send_mail(subject, body, "botizen@ecidadania.org", mails)
+        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, mails)
 
     return render_to_response('space_intent.html', {'space_name': space.name,
         'heading': heading}, context_instance=RequestContext(request))

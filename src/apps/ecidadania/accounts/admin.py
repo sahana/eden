@@ -25,6 +25,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail, send_mass_mail
 from django.template import RequestContext
 
+from e_cidadania import settings
 from apps.ecidadania.accounts.models import UserProfile
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -46,7 +47,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if 'sendmail' in request.POST:
             for obj in queryset:
                 get_user = get_object_or_404(User, id=obj.id)
-                send_mail(request.POST['massmail_subject'], request.POST['message'], 'botizen@ecidadania.org', [get_user.email])
+                send_mail(request.POST['massmail_subject'], request.POST['message'], settings.DEFAULT_FROM_EMAIL, [get_user.email])
             return HttpResponseRedirect(request.get_full_path())
         
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
