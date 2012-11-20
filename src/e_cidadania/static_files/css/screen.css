@@ -693,3 +693,11 @@ table {
   visibility:hidden;
 }
 /*^END VOTES AND POLLS */
+
+/************************************************
+ PATCH FOR FONT-AWESOME WITH BOOTSTRAP 2.2.1
+**************************************************/
+
+[class^="icon-"], [class*=" icon-"]{
+    background:none;
+  }
