@@ -1441,7 +1441,6 @@ Thank you
         else:
             approved = True
             self.s3_approve_user(user)
-            self.s3_send_welcome_email(user)
             session = current.session
             session.confirmation = self.messages.email_verified
             session.flash = self.messages.registration_successful
@@ -1540,6 +1539,9 @@ Thank you
 
         # Allow them to login
         db(utable.id == user_id).update(registration_key = "")
+
+        # Send Welcome mail
+        self.s3_send_welcome_email(user)
 
         return
 

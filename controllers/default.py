@@ -501,7 +501,6 @@ def user():
                 register_form=register_form,
                 self_registration=self_registration)
 
-
 # -----------------------------------------------------------------------------
 def person():
     """
