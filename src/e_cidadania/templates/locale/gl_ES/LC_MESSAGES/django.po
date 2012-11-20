@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: 2012-06-14 14:07+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -152,38 +152,13 @@ msgstr ""
 "Enviaremos ao escuadrón espagueti a reparalo. Mentres tanto pode volver ao "
 "índice."
 
-#: templates/base.html:111
-msgid "Pages"
-msgstr "Páxinas"
-
-#: templates/base.html:121
-msgid "Help"
-msgstr "Axuda"
-
-#: templates/base.html:122
-msgid "Mailing lists"
-msgstr "Listas de correo"
-
-#: templates/base.html:123
-msgid "Issues"
-msgstr "Incidencias"
-
-#: templates/base.html:124
-msgid "E-mail"
-msgstr "Correo"
-
-#: templates/base.html:125 templates/invite.html:15
-#: templates/invite_done.html:10
-msgid "Invite your friends"
-msgstr "Invitar as amizades"
-
-#: templates/base.html:137
-msgid "created by"
-msgstr "creado por"
-
 #: templates/invite.html:9 templates/invite_done.html:4
 msgid "Invite your friends to e-cidadania"
 msgstr "Invitar as amizades a e-cidadania"
+
+#: templates/invite.html:15 templates/invite_done.html:10
+msgid "Invite your friends"
+msgstr "Invitar as amizades"
 
 #: templates/invite.html:21
 msgid "Invite via E-mail"
@@ -299,95 +274,27 @@ msgstr ""
 "Pode <a href='/'>volver ao inicio</a> ou <a href='/accounts/'>volver ao seu "
 "perfil</a>"
 
-#: templates/site_index.html:8
+#: templates/site_index.html:5
 msgid "e-cidadania"
 msgstr "e-cidadania"
 
-#: templates/site_index.html:31
-msgid "Sign up <i>-it's free!-</i>"
-msgstr ""
-
-#: templates/site_index.html:31
-msgid "or"
-msgstr "ou"
-
-#: templates/site_index.html:31
-msgid "Log in"
-msgstr ""
-
-#: templates/site_index.html:51
-msgid "Features"
-msgstr ""
-
-#: templates/site_index.html:54
-msgid "Advanced Debate System"
-msgstr ""
-
-#: templates/site_index.html:55
-msgid ""
-"A new kind of debating system, based on a two-dimensional grid.\n"
-"            This feature will help the people to organize thier ideas and "
-"also to get conclusions for the debate.\n"
-"            The usual threaded debate systems are very unconclusive and "
-"ineffective. Let's start\n"
-"            getting conclusions!"
-msgstr ""
-
-#: templates/site_index.html:62
-msgid "Automated Reports"
-msgstr ""
-
-#: templates/site_index.html:63
-msgid ""
-"After every participative process, e-cidadania will generate an automatic\n"
-"            report based on all the data gathered during the process. After "
-"it's generated it will\n"
-"            be available for all participants of the process."
-msgstr ""
-
-#: templates/site_index.html:69
-msgid "Proposals and Voting"
-msgstr ""
-
-#: templates/site_index.html:70
-msgid ""
-"e-cidadania provides a way to do a complete participative process, from\n"
-"            the debates, passing by proposals system, a secure voting "
-"system, and you can start your\n"
-"            process at any point. e-cidadania will manage to follow it."
-msgstr ""
-
-#: templates/site_index.html:83
-msgid "Recent processes"
-msgstr "Procesos recentes"
-
-#: templates/site_index.html:90
+#: templates/site_index.html:37
 msgid "Public"
 msgstr "Público"
 
-#: templates/site_index.html:92
+#: templates/site_index.html:39
 msgid "Private"
 msgstr "Privado"
 
-#: templates/site_index.html:96
-msgid "There are no spaces."
+#: templates/site_index.html:43
+#, fuzzy
+msgid "There are no processes."
 msgstr "Non hai espazos"
 
-#: templates/site_index.html:106
-msgid "View all the spaces"
+#: templates/site_index.html:54
+#, fuzzy
+msgid "View all the processes"
 msgstr "Ver todos os espazos"
-
-#: templates/site_index.html:111
-msgid "Recent news"
-msgstr "Novas recentes"
-
-#: templates/site_index.html:116
-msgid "No public news."
-msgstr "Non hai novas públicas"
-
-#: templates/site_index.html:122
-msgid "Most active"
-msgstr ""
 
 #: templates/space_intent.html:4
 msgid "Participate"
@@ -509,14 +416,89 @@ msgstr "Publicar o seu comentario"
 msgid "or make changes"
 msgstr "ou facer cambios"
 
+#: templates/invite/invite.html:132
+msgid "Like"
+msgstr ""
+
+#: templates/invite/invite.html:138
+msgid "Tweet"
+msgstr "Tuitear"
+
+#: templates/invite/invite.html:163
+msgid "Connect with me on e-cidadania!"
+msgstr ""
+
+#: templates/invite/invite.html:187 templates/invite/invite_plain.txt:3
+msgid "Someone sent you an invitation to join e-cidadania!"
+msgstr ""
+
+#: templates/invite/invite.html:190
+#, python-format
+msgid ""
+"\n"
+"                                        <a href=\"http://ecidadania.org\">e-"
+"cidadania</a> is an e-democracy platform for citizen participation. More "
+"clearly, it's for direct democracy in every one if its shapes,\n"
+"                                        from 99%% movement, 15M to official "
+"participative budgets. The message that was sent to you follows:\n"
+"                                        "
+msgstr ""
+
+#: templates/invite/invite_plain.txt:4
+#, python-format
+msgid ""
+"\n"
+"You have been invited to join e-cidadania, an e-democracy platform for "
+"citizen participation. More clearly, it's for direct democracy in every one "
+"of its shapes, from 99%% movement, 15M to official participative budgets. "
+"The message that was sent to you follows:\n"
+msgstr ""
+
+#: templates/invite/invite_plain.txt:9
+msgid "Join e-cidadania today in http://ecidadania.org"
+msgstr ""
+
+#: templates/invite/invite_plain.txt:11
+msgid ""
+"If you have any questions dont hesitate and send us a mail to "
+"support@ecidadania.org."
+msgstr ""
+
+#~ msgid "Pages"
+#~ msgstr "Páxinas"
+
+#~ msgid "Help"
+#~ msgstr "Axuda"
+
+#~ msgid "Mailing lists"
+#~ msgstr "Listas de correo"
+
+#~ msgid "Issues"
+#~ msgstr "Incidencias"
+
+#~ msgid "E-mail"
+#~ msgstr "Correo"
+
+#~ msgid "created by"
+#~ msgstr "creado por"
+
+#~ msgid "or"
+#~ msgstr "ou"
+
+#~ msgid "Recent processes"
+#~ msgstr "Procesos recentes"
+
+#~ msgid "Recent news"
+#~ msgstr "Novas recentes"
+
+#~ msgid "No public news."
+#~ msgstr "Non hai novas públicas"
+
 #~ msgid "Profile"
 #~ msgstr "Perfil"
 
 #~ msgid "Share"
 #~ msgstr "Compartir"
-
-#~ msgid "Tweet"
-#~ msgstr "Tuitear"
 
 #~ msgid "Validate participation"
 #~ msgstr "Validar a participación"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: 2012-05-24 08:16+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
@@ -59,23 +59,23 @@ msgstr "Mensaje"
 msgid "Last modification time"
 msgstr "Última modificación"
 
-#: urls.py:35
+#: urls.py:36
 msgid "^add/"
 msgstr ""
 
-#: urls.py:37
+#: urls.py:38
 msgid "^update_position/"
 msgstr ""
 
-#: urls.py:39
+#: urls.py:40
 msgid "^update_note/"
 msgstr ""
 
-#: urls.py:41
+#: urls.py:42
 msgid "^create_note/"
 msgstr ""
 
-#: urls.py:43
+#: urls.py:44
 msgid "^delete_note/"
 msgstr ""
 
@@ -124,7 +124,7 @@ msgstr "Eliminar fila"
 msgid "Add row"
 msgstr "Añadir fila"
 
-#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:104
+#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:106
 msgid "Add new note"
 msgstr "Añadir nueva nota"
 
@@ -144,7 +144,7 @@ msgstr "Cancelar"
 
 #: templates/debate/debate_add.html:216
 #: templates/debate/debate_add_simple.html:120
-#: templates/debate/debate_view.html:140
+#: templates/debate/debate_view.html:142
 msgid "Save"
 msgstr "Guardar"
 
@@ -220,28 +220,36 @@ msgid "End date:"
 msgstr ""
 
 #: templates/debate/debate_view.html:78
-msgid "Delete note"
+msgid "View"
 msgstr ""
 
-#: templates/debate/debate_view.html:82
-msgid "View"
+#: templates/debate/debate_view.html:81
+msgid "Delete note"
 msgstr ""
 
 #: templates/debate/debate_view.html:85
 msgid "Edit"
 msgstr "Editar"
 
-#: templates/debate/debate_view.html:110
+#: templates/debate/debate_view.html:91
+msgid "comments"
+msgstr ""
+
+#: templates/debate/debate_view.html:112
 msgid "Edit note"
 msgstr "Editar nota"
 
-#: templates/debate/debate_view.html:116
+#: templates/debate/debate_view.html:118
 msgid "Note title"
 msgstr "Título de la nota"
 
-#: templates/debate/debate_view.html:120
+#: templates/debate/debate_view.html:122
 msgid "100 characters"
 msgstr "100 caracteres"
+
+#: templates/debate/debate_view.html:153
+msgid "Author:"
+msgstr ""
 
 #~ msgid "Scope"
 #~ msgstr "Ámbito"

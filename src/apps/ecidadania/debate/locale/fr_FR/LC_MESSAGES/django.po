@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: 2012-06-14 11:21+0000\n"
 "Last-Translator: hugodeslongchamps <hugo.deslongchamps@googlemail.com>\n"
 "Language-Team: French (http://www.transifex.net/projects/p/ecidadania/"
@@ -59,23 +59,23 @@ msgstr "Message"
 msgid "Last modification time"
 msgstr "Dernière modification"
 
-#: urls.py:35
+#: urls.py:36
 msgid "^add/"
 msgstr "^ajouter/"
 
-#: urls.py:37
+#: urls.py:38
 msgid "^update_position/"
 msgstr "^maj_position/"
 
-#: urls.py:39
+#: urls.py:40
 msgid "^update_note/"
 msgstr "^maj_note/"
 
-#: urls.py:41
+#: urls.py:42
 msgid "^create_note/"
 msgstr "^creer_note/"
 
-#: urls.py:43
+#: urls.py:44
 msgid "^delete_note/"
 msgstr "^supprimer_note/"
 
@@ -124,7 +124,7 @@ msgstr "Retirer la ligne"
 msgid "Add row"
 msgstr "Ajouter une ligne"
 
-#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:104
+#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:106
 msgid "Add new note"
 msgstr "Ajouter une nouvelle note"
 
@@ -144,7 +144,7 @@ msgstr "Annuler"
 
 #: templates/debate/debate_add.html:216
 #: templates/debate/debate_add_simple.html:120
-#: templates/debate/debate_view.html:140
+#: templates/debate/debate_view.html:142
 msgid "Save"
 msgstr "Sauvegarder"
 
@@ -222,28 +222,36 @@ msgid "End date:"
 msgstr "Date de fin:"
 
 #: templates/debate/debate_view.html:78
-msgid "Delete note"
-msgstr "Suprimer la note"
-
-#: templates/debate/debate_view.html:82
 msgid "View"
 msgstr "Afficher"
+
+#: templates/debate/debate_view.html:81
+msgid "Delete note"
+msgstr "Suprimer la note"
 
 #: templates/debate/debate_view.html:85
 msgid "Edit"
 msgstr "Éditer"
 
-#: templates/debate/debate_view.html:110
+#: templates/debate/debate_view.html:91
+msgid "comments"
+msgstr ""
+
+#: templates/debate/debate_view.html:112
 msgid "Edit note"
 msgstr "Modifier la note"
 
-#: templates/debate/debate_view.html:116
+#: templates/debate/debate_view.html:118
 msgid "Note title"
 msgstr "Titre de la note"
 
-#: templates/debate/debate_view.html:120
+#: templates/debate/debate_view.html:122
 msgid "100 characters"
 msgstr "100 Charactères"
+
+#: templates/debate/debate_view.html:153
+msgid "Author:"
+msgstr ""
 
 #~ msgid "View note"
 #~ msgstr "Afficher la note"

@@ -44,7 +44,8 @@ LANGUAGES = (
     ('es_ES', 'Español'),
     ('en_GB', 'English'),
     ('gl_ES', 'Galego'),
-    ('fr_FR', 'Français')
+    ('fr_FR', 'Français'),
+    ('mk_MK', 'Makedonski')
 )
 
 SITE_ID = 1

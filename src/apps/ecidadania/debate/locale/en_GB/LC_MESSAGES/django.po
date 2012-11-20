@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,23 +58,23 @@ msgstr ""
 msgid "Last modification time"
 msgstr ""
 
-#: urls.py:35
+#: urls.py:36
 msgid "^add/"
 msgstr ""
 
-#: urls.py:37
+#: urls.py:38
 msgid "^update_position/"
 msgstr ""
 
-#: urls.py:39
+#: urls.py:40
 msgid "^update_note/"
 msgstr ""
 
-#: urls.py:41
+#: urls.py:42
 msgid "^create_note/"
 msgstr ""
 
-#: urls.py:43
+#: urls.py:44
 msgid "^delete_note/"
 msgstr ""
 
@@ -121,7 +121,7 @@ msgstr ""
 msgid "Add row"
 msgstr ""
 
-#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:104
+#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:106
 msgid "Add new note"
 msgstr ""
 
@@ -141,7 +141,7 @@ msgstr ""
 
 #: templates/debate/debate_add.html:216
 #: templates/debate/debate_add_simple.html:120
-#: templates/debate/debate_view.html:140
+#: templates/debate/debate_view.html:142
 msgid "Save"
 msgstr ""
 
@@ -217,25 +217,33 @@ msgid "End date:"
 msgstr ""
 
 #: templates/debate/debate_view.html:78
-msgid "Delete note"
+msgid "View"
 msgstr ""
 
-#: templates/debate/debate_view.html:82
-msgid "View"
+#: templates/debate/debate_view.html:81
+msgid "Delete note"
 msgstr ""
 
 #: templates/debate/debate_view.html:85
 msgid "Edit"
 msgstr ""
 
-#: templates/debate/debate_view.html:110
+#: templates/debate/debate_view.html:91
+msgid "comments"
+msgstr ""
+
+#: templates/debate/debate_view.html:112
 msgid "Edit note"
 msgstr ""
 
-#: templates/debate/debate_view.html:116
+#: templates/debate/debate_view.html:118
 msgid "Note title"
 msgstr ""
 
-#: templates/debate/debate_view.html:120
+#: templates/debate/debate_view.html:122
 msgid "100 characters"
+msgstr ""
+
+#: templates/debate/debate_view.html:153
+msgid "Author:"
 msgstr ""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: 2012-06-13 20:43+0000\n"
 "Last-Translator: hugodeslongchamps <hugo.deslongchamps@googlemail.com>\n"
 "Language-Team: French (http://www.transifex.net/projects/p/ecidadania/"
@@ -80,15 +80,15 @@ msgstr ""
 msgid "Views"
 msgstr ""
 
-#: urls.py:28
+#: urls.py:30
 msgid "^add/$"
 msgstr "^ajouter/"
 
-#: urls.py:30
+#: urls.py:32
 msgid "^(?P<post_id>\\d+)/delete/$"
 msgstr "^(?P<post_id>\\d+)/supprimer/$"
 
-#: urls.py:32
+#: urls.py:35
 msgid "^(?P<post_id>\\d+)/edit/$"
 msgstr "^(?P<post_id>\\d+)/editer/$"
 
@@ -96,30 +96,74 @@ msgstr "^(?P<post_id>\\d+)/editer/$"
 msgid "News list"
 msgstr "Nouvelle Liste"
 
-#: templates/news/news_list.html:33
+#: templates/news/news_list.html:33 templates/news/post_archive.html:4
+#: templates/news/post_archive.html:33
 msgid "News archive"
 msgstr "Archive des actualités"
 
-#: templates/news/news_list.html:44
+#: templates/news/news_list.html:44 templates/news/post_archive.html:44
+#: templates/news/post_archive_month.html:49
+#: templates/news/post_archive_year.html:49
 msgid "There are no posts in this space."
 msgstr "Il n'y a pas de posts sur cet espace."
 
-#: templates/news/news_list.html:51
+#: templates/news/news_list.html:51 templates/news/post_archive.html:51
+#: templates/news/post_archive_month.html:56
+#: templates/news/post_archive_year.html:56
 msgid "previous"
 msgstr "précédent"
 
-#: templates/news/news_list.html:54
+#: templates/news/news_list.html:54 templates/news/post_archive.html:54
+#: templates/news/post_archive_month.html:59
+#: templates/news/post_archive_year.html:59
 msgid "of"
 msgstr "de"
 
-#: templates/news/news_list.html:57
+#: templates/news/news_list.html:57 templates/news/post_archive.html:57
+#: templates/news/post_archive_month.html:62
+#: templates/news/post_archive_year.html:62
 msgid "next"
 msgstr "suivant"
 
-#: templates/news/news_list.html:64 templates/news/post_confirm_delete.html:37
+#: templates/news/news_list.html:64 templates/news/post_archive.html:64
+#: templates/news/post_archive_month.html:69
+#: templates/news/post_archive_year.html:69
+#: templates/news/post_confirm_delete.html:37
 #: templates/news/post_form.html:186
 msgid "Go back"
 msgstr "Revenir en arrière"
+
+#: templates/news/post_archive_month.html:5
+#, python-format
+msgid ""
+"\n"
+"        Archive for %(m)s %(y)s\n"
+"    "
+msgstr ""
+
+#: templates/news/post_archive_month.html:38
+#, python-format
+msgid ""
+"\n"
+"                    Archive for %(m)s %(y)s\n"
+"                "
+msgstr ""
+
+#: templates/news/post_archive_year.html:5
+#, python-format
+msgid ""
+"\n"
+"        Archive for %(y)s\n"
+"    "
+msgstr ""
+
+#: templates/news/post_archive_year.html:38
+#, python-format
+msgid ""
+"\n"
+"                    Archive for %(y)s\n"
+"                "
+msgstr ""
 
 #: templates/news/post_confirm_delete.html:4
 msgid "Delete news"

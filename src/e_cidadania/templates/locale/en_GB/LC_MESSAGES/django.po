@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -148,37 +148,12 @@ msgid ""
 "to the index."
 msgstr ""
 
-#: templates/base.html:111
-msgid "Pages"
-msgstr ""
-
-#: templates/base.html:121
-msgid "Help"
-msgstr ""
-
-#: templates/base.html:122
-msgid "Mailing lists"
-msgstr ""
-
-#: templates/base.html:123
-msgid "Issues"
-msgstr ""
-
-#: templates/base.html:124
-msgid "E-mail"
-msgstr ""
-
-#: templates/base.html:125 templates/invite.html:15
-#: templates/invite_done.html:10
-msgid "Invite your friends"
-msgstr ""
-
-#: templates/base.html:137
-msgid "created by"
-msgstr ""
-
 #: templates/invite.html:9 templates/invite_done.html:4
 msgid "Invite your friends to e-cidadania"
+msgstr ""
+
+#: templates/invite.html:15 templates/invite_done.html:10
+msgid "Invite your friends"
 msgstr ""
 
 #: templates/invite.html:21
@@ -284,94 +259,24 @@ msgid ""
 "profile</a>"
 msgstr ""
 
-#: templates/site_index.html:8
+#: templates/site_index.html:5
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:31
-msgid "Sign up <i>-it's free!-</i>"
-msgstr ""
-
-#: templates/site_index.html:31
-msgid "or"
-msgstr ""
-
-#: templates/site_index.html:31
-msgid "Log in"
-msgstr ""
-
-#: templates/site_index.html:51
-msgid "Features"
-msgstr ""
-
-#: templates/site_index.html:54
-msgid "Advanced Debate System"
-msgstr ""
-
-#: templates/site_index.html:55
-msgid ""
-"A new kind of debating system, based on a two-dimensional grid.\n"
-"            This feature will help the people to organize thier ideas and "
-"also to get conclusions for the debate.\n"
-"            The usual threaded debate systems are very unconclusive and "
-"ineffective. Let's start\n"
-"            getting conclusions!"
-msgstr ""
-
-#: templates/site_index.html:62
-msgid "Automated Reports"
-msgstr ""
-
-#: templates/site_index.html:63
-msgid ""
-"After every participative process, e-cidadania will generate an automatic\n"
-"            report based on all the data gathered during the process. After "
-"it's generated it will\n"
-"            be available for all participants of the process."
-msgstr ""
-
-#: templates/site_index.html:69
-msgid "Proposals and Voting"
-msgstr ""
-
-#: templates/site_index.html:70
-msgid ""
-"e-cidadania provides a way to do a complete participative process, from\n"
-"            the debates, passing by proposals system, a secure voting "
-"system, and you can start your\n"
-"            process at any point. e-cidadania will manage to follow it."
-msgstr ""
-
-#: templates/site_index.html:83
-msgid "Recent processes"
-msgstr ""
-
-#: templates/site_index.html:90
+#: templates/site_index.html:37
 msgid "Public"
 msgstr ""
 
-#: templates/site_index.html:92
+#: templates/site_index.html:39
 msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:96
-msgid "There are no spaces."
+#: templates/site_index.html:43
+msgid "There are no processes."
 msgstr ""
 
-#: templates/site_index.html:106
-msgid "View all the spaces"
-msgstr ""
-
-#: templates/site_index.html:111
-msgid "Recent news"
-msgstr ""
-
-#: templates/site_index.html:116
-msgid "No public news."
-msgstr ""
-
-#: templates/site_index.html:122
-msgid "Most active"
+#: templates/site_index.html:54
+msgid "View all the processes"
 msgstr ""
 
 #: templates/space_intent.html:4
@@ -491,4 +396,52 @@ msgstr ""
 
 #: templates/comments/preview.html:20
 msgid "or make changes"
+msgstr ""
+
+#: templates/invite/invite.html:132
+msgid "Like"
+msgstr ""
+
+#: templates/invite/invite.html:138
+msgid "Tweet"
+msgstr ""
+
+#: templates/invite/invite.html:163
+msgid "Connect with me on e-cidadania!"
+msgstr ""
+
+#: templates/invite/invite.html:187 templates/invite/invite_plain.txt:3
+msgid "Someone sent you an invitation to join e-cidadania!"
+msgstr ""
+
+#: templates/invite/invite.html:190
+#, python-format
+msgid ""
+"\n"
+"                                        <a href=\"http://ecidadania.org\">e-"
+"cidadania</a> is an e-democracy platform for citizen participation. More "
+"clearly, it's for direct democracy in every one if its shapes,\n"
+"                                        from 99%% movement, 15M to official "
+"participative budgets. The message that was sent to you follows:\n"
+"                                        "
+msgstr ""
+
+#: templates/invite/invite_plain.txt:4
+#, python-format
+msgid ""
+"\n"
+"You have been invited to join e-cidadania, an e-democracy platform for "
+"citizen participation. More clearly, it's for direct democracy in every one "
+"of its shapes, from 99%% movement, 15M to official participative budgets. "
+"The message that was sent to you follows:\n"
+msgstr ""
+
+#: templates/invite/invite_plain.txt:9
+msgid "Join e-cidadania today in http://ecidadania.org"
+msgstr ""
+
+#: templates/invite/invite_plain.txt:11
+msgid ""
+"If you have any questions dont hesitate and send us a mail to "
+"support@ecidadania.org."
 msgstr ""

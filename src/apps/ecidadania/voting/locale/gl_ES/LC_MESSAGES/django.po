@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,25 +21,24 @@ msgstr ""
 msgid "Question"
 msgstr ""
 
-#: models.py:35
+#: models.py:36
 msgid "Max: 200 characters"
 msgstr ""
 
-#: models.py:36
+#: models.py:37
 msgid "Date"
 msgstr ""
 
-#: models.py:37 models.py:86
+#: models.py:38 models.py:87
 msgid "Last update"
 msgstr ""
 
-#: models.py:38
+#: models.py:39
 msgid "Author"
 msgstr ""
 
-#: models.py:39
-msgid ""
-"Change the user that will figure as the                             author"
+#: models.py:40
+msgid "Change the user that will figure as the author"
 msgstr ""
 
 #: models.py:41
@@ -47,39 +46,39 @@ msgid "Publish in"
 msgstr ""
 
 #: models.py:42
-msgid "If you want to post to the index leave this blank"
+msgid "If you want to post to the index leave this         blank"
 msgstr ""
 
-#: models.py:43
+#: models.py:44
 msgid ""
 "Insert here relevant words related with                             the poll"
 msgstr ""
 
-#: models.py:67
+#: models.py:68
 msgid "Choice"
 msgstr ""
 
-#: models.py:67
+#: models.py:68
 msgid "Enter choice to be voted upon"
 msgstr ""
 
-#: models.py:81
+#: models.py:82
 msgid "Title"
 msgstr ""
 
-#: models.py:82
+#: models.py:83
 msgid "Description"
 msgstr ""
 
-#: models.py:85
+#: models.py:86
 msgid "Date created"
 msgstr ""
 
-#: models.py:88
+#: models.py:89
 msgid "Start date"
 msgstr ""
 
-#: models.py:89
+#: models.py:90
 msgid "End date"
 msgstr ""
 

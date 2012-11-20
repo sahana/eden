@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-04 15:48+0200\n"
+"POT-Creation-Date: 2012-11-20 13:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -54,180 +54,207 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: models.py:50 models.py:156
+#: models.py:50 models.py:169
 msgid "Latitude"
 msgstr ""
 
-#: models.py:51 models.py:159
+#: models.py:51 models.py:172
 msgid "Longitude"
 msgstr ""
 
-#: models.py:68
+#: models.py:55
+msgid "Users"
+msgstr ""
+
+#: models.py:56
+msgid "Fixed"
+msgstr ""
+
+#: models.py:57
+msgid "No ponderation"
+msgstr ""
+
+#: models.py:73
 msgid "object ID"
 msgstr ""
 
-#: models.py:97
+#: models.py:102
 msgid "Name"
 msgstr ""
 
-#: models.py:98 models.py:142
+#: models.py:103 models.py:155
 msgid "Max: 200 characters"
 msgstr ""
 
-#: models.py:103
+#: models.py:104
+msgid "Ponderation"
+msgstr ""
+
+#: models.py:105
+msgid ""
+"Ponderation types:<br><strong>Users:         </strong>Users give support "
+"votes to the proposal, and that votes are         added to the final voting."
+"<br><strong>Fixed:</strong>Fixed ponderations         are stablished by the "
+"process managers. It's a porcentual puntuation.         That means that "
+"percetange is calculated after the voting and added to         the final "
+"voting.<br><strong>None:</strong> No ponderation is applied         to the "
+"final voting."
+msgstr ""
+
+#: models.py:116
 msgid ""
 "Select the debate associated                                with this "
 "proposal set"
 msgstr ""
 
-#: models.py:110
+#: models.py:123
 msgid "Proposal set"
 msgstr ""
 
-#: models.py:111
+#: models.py:124
 msgid "Proposal sets"
 msgstr ""
 
-#: models.py:139
+#: models.py:152
 msgid "Code"
 msgstr ""
 
-#: models.py:141
+#: models.py:154
 msgid "Title"
 msgstr ""
 
-#: models.py:145
+#: models.py:158
 msgid ""
 "Proposal set in which the                                     proposal "
 "resides"
 msgstr ""
 
-#: models.py:147
+#: models.py:160
 msgid "Description"
 msgstr ""
 
-#: models.py:151
+#: models.py:164
 msgid ""
 "Change the user that will figure                                as the author"
 msgstr ""
 
-#: models.py:154
+#: models.py:167
 msgid ""
 "Insert here relevant words related with the                                 "
 "proposal"
 msgstr ""
 
-#: models.py:158 models.py:161
+#: models.py:171 models.py:174
 msgid "Specify it in decimal"
 msgstr ""
 
-#: models.py:169
+#: models.py:182
 msgid "select proposals from the list"
 msgstr ""
 
-#: models.py:172
+#: models.py:185
 msgid "Votes from"
 msgstr ""
 
-#: models.py:190
+#: models.py:203
 msgid "Proposal"
 msgstr ""
 
-#: models.py:191
+#: models.py:204
 msgid "Proposals"
 msgstr ""
 
-#: models.py:212
+#: models.py:225
 msgid ""
 "Customizing proposal                                     form for a proposal "
 "set"
 msgstr ""
 
-#: models.py:215
+#: models.py:228
 msgid "Additional field that needed to added to the proposal form"
 msgstr ""
 
-#: models.py:221
+#: models.py:234
 msgid "ProposalField"
 msgstr ""
 
-#: models.py:222
+#: models.py:235
 msgid "ProposalFields"
 msgstr ""
 
-#: urls.py:32
+#: urls.py:34
 msgid "^$"
 msgstr ""
 
-#: urls.py:34
-msgid "^psets/(?P<set_id>\\w+)/edit/"
-msgstr ""
-
 #: urls.py:36
-msgid "^psets/(?P<set_id>\\w+)/delete/"
-msgstr ""
-
-#: urls.py:38
-msgid "^psets/(?P<set_id>\\w+)/"
-msgstr ""
-
-#: urls.py:40
 msgid "^add/(?P<p_set>\\w+)/"
 msgstr ""
 
-#: urls.py:42
-msgid "^merged/(?P<p_set>\\w+)/"
-msgstr ""
-
-#: urls.py:44
-msgid "^psets/"
-msgstr ""
-
-#: urls.py:46
-msgid "^addset/"
-msgstr ""
-
-#: urls.py:48
-msgid "^add_support_vote/"
-msgstr ""
-
-#: urls.py:50
-msgid "^merge_proposals/"
-msgstr ""
-
-#: urls.py:52
-msgid "^field_add/"
-msgstr ""
-
-#: urls.py:54
-msgid "^field_remove/"
-msgstr ""
-
-#: urls.py:56
-msgid "^select_set/"
-msgstr ""
-
-#: urls.py:58
+#: urls.py:38
 msgid "^(?P<prop_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:60
+#: urls.py:40
 msgid "^(?P<prop_id>\\w+)/edit/$"
 msgstr ""
 
-#: urls.py:62
+#: urls.py:43
 msgid "^(?P<prop_id>\\w+)/delete/$"
 msgstr ""
 
-#: urls.py:64
+#: urls.py:50
+msgid "^psets/(?P<set_id>\\w+)/edit/"
+msgstr ""
+
+#: urls.py:53
+msgid "^psets/(?P<set_id>\\w+)/delete/"
+msgstr ""
+
+#: urls.py:56
+msgid "^psets/(?P<set_id>\\w+)/"
+msgstr ""
+
+#: urls.py:59
+msgid "^psets/"
+msgstr ""
+
+#: urls.py:61
+msgid "^addset/"
+msgstr ""
+
+#: urls.py:67
+msgid "^merged/(?P<p_set>\\w+)/"
+msgstr ""
+
+#: urls.py:69
+msgid "^add_support_vote/"
+msgstr ""
+
+#: urls.py:71
+msgid "^merge_proposals/"
+msgstr ""
+
+#: urls.py:74
+msgid "^field_add/"
+msgstr ""
+
+#: urls.py:76
+msgid "^field_remove/"
+msgstr ""
+
+#: urls.py:79
+msgid "^select_set/"
+msgstr ""
+
+#: urls.py:81
 msgid "^(?P<space_url>\\w+)/vote/approve/(?P<token>\\w+)/$"
 msgstr ""
 
-#: views.py:202
+#: views.py:199
 msgid "New vote validation request"
 msgstr ""
 
-#: views.py:203
+#: views.py:200
 msgid ""
 "Hello {0}, \n"
 "                  You are getting this email because you wanted to support "
@@ -237,20 +264,20 @@ msgid ""
 "                  Thank you for your vote."
 msgstr ""
 
-#: views.py:218
+#: views.py:215
 msgid "The requested vote validation does not exist!"
 msgstr ""
 
-#: views.py:224
+#: views.py:221
 #, python-format
 msgid "The vote has been authorised for proposal             in space \"%s\"."
 msgstr ""
 
-#: views.py:226
+#: views.py:223
 msgid "Authorization successful"
 msgstr ""
 
-#: views.py:229
+#: views.py:226
 msgid "The requested intent does not exist!"
 msgstr ""
 
