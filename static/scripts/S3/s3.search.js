@@ -192,16 +192,9 @@ $(document).ready(function() {
         // No Action Required
     } else if ( undefined == $('.simple-form').val() ) {
         // Only an Advanced Form
-        $('.simple-form').addClass('hide').hide();
-        $('.advanced-form').removeClass('hide').show();
+        $('.simple-form').slideUp();
+        $('.advanced-form').slideDown();
     } else {
-        // Simple & Advanced Search Forms
-        if ($('#search-mode').attr('mode')=='advanced') {
-            $('.simple-form').addClass('hide').hide();
-            $('.advanced-form').removeClass('hide').show();
-        } else {
-            $('.advanced-form').addClass('hide').hide();
-        }
         $('.advanced-lnk').click(function(e) {
         	e.preventDefault();
             var selSearchForm = $('.search_form[fieldname="' + $(this).attr('fieldname') + '"]')
@@ -209,8 +202,8 @@ $(document).ready(function() {
                 // Not an Search Form embedded into a Big form, but a normal search page with a single form.
                 selSearchForm = $('.search_form');
             }
-            selSearchForm.find('.simple-form').addClass('hide').hide();
-            selSearchForm.find('.advanced-form').removeClass('hide').show();
+            selSearchForm.find('.simple-form').slideUp();
+            selSearchForm.find('.advanced-form').slideDown();
             return false;
         });
         $('.simple-lnk').click(function(e) {
@@ -220,8 +213,8 @@ $(document).ready(function() {
                 // Not an Search Form embedded into a Big form, but a normal search page with a single form.
                 selSearchForm = $('.search_form');
             }
-            selSearchForm.find('.advanced-form').addClass('hide').hide();
-            selSearchForm.find('.simple-form').removeClass('hide').show();
+            selSearchForm.find('.advanced-form').slideUp();
+            selSearchForm.find('.simple-form').slideDown();
             return false;
         });
     }

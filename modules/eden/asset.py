@@ -243,9 +243,7 @@ $(document).ready(function(){
         table.virtualfields.append(AssetVirtualFields())
 
         # Search Method
-        asset_search = S3Search(
-            # Advanced Search only
-            advanced=(
+        advanced_asset_search = (
                     S3SearchSimpleWidget(
                         name="asset_search_text",
                         label=T("Search"),
@@ -257,6 +255,19 @@ $(document).ready(function(){
                                 "comments",
                             ]
                       ),
+                      S3SearchOptionsWidget(
+                        name="asset_search_organisation_id",
+                        label=T("Organisation"),
+                        field="organisation_id",
+                        represent ="%(name)s",
+                        cols = 3
+                      ),
+                    S3SearchOptionsWidget(
+                        name="asset_search_L0",
+                        field="L1",
+                        location_level="L0",
+                        cols = 3
+                    ),
                     S3SearchOptionsWidget(
                         name="asset_search_L1",
                         field="L1",
@@ -278,14 +289,22 @@ $(document).ready(function(){
                         field="item_id$item_category_id",
                         label=T("Category"),
                         cols = 3
-                    ),
-            ))
+                    )
+                )
+        
+        
+        asset_search = S3Search(
+            # Advanced Search only
+            advanced = advanced_asset_search
+            )
 
         report_fields = [
                          "number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
-                         (org_site_label, "site"),
+                         "organisation_id",
+                         "site_id",
+                         (T("Country"),"L0"),
                          "L1",
                          "L2",
                          ]
@@ -299,26 +318,7 @@ $(document).ready(function(){
                   onaccept=self.asset_onaccept,
                   search_method=asset_search,
                   report_options=Storage(
-                        search=[
-                                S3SearchOptionsWidget(
-                                    name="asset_search_L1",
-                                    field="L1",
-                                    location_level="L1",
-                                    cols = 3
-                                ),
-                                S3SearchOptionsWidget(
-                                    name="asset_search_L2",
-                                    field="L2",
-                                    location_level="L2",
-                                    cols = 3
-                                ),
-                                S3SearchOptionsWidget(
-                                    name="asset_search_item_category",
-                                    field="item_id$item_category_id",
-                                    label=T("Category"),
-                                    cols = 3
-                                ),
-                            ],
+                        search=advanced_asset_search,
                         rows=report_fields,
                         cols=report_fields,
                         fact=[("number", "count", T("Number of items"))],
@@ -329,16 +329,17 @@ $(document).ready(function(){
                             )
                         ),
                   list_fields=["id",
-                               "number",
                                "item_id$item_category_id",
                                "item_id",
+                               "number",
                                "type",
-                               "purchase_date",
+                               #"purchase_date",
+                               (T("Assigned To"),"assigned_to_person"),
                                "organisation_id",
                                "site_id",
-                               #"location_id",
-                               "L0",
-                               "L1",
+                               (current.messages.COUNTRY, "location_id$L0"),
+                               "location_id$L1",
+                               #"L1",
                                #"L2",
                                #"L3",
                                "comments",
@@ -575,6 +576,7 @@ $(document).ready(function(){
         """
 
         db = current.db
+        s3db = current.s3db
         auth = current.auth
 
         vars = form.vars
@@ -593,6 +595,16 @@ $(document).ready(function(){
                           status = ASSET_LOG_SET_BASE,
                           site_id = site_id,
                           )
+            # Population location_id field
+            try:
+                stable = s3db.org_site
+                location_id = db(stable.id == site_id
+                                 ).select(stable.location_id,
+                                          limitby = (0,1)
+                                          ).first().location_id
+                db(atable.id == asset_id).update(location_id = location_id)
+            except:
+                pass
 
         return
 
@@ -968,6 +980,8 @@ def asset_rheader(r):
 # =============================================================================
 class AssetVirtualFields:
     """ Virtual fields as dimension classes for reports """
+    extra_fields = ["id",
+                    "location_id"]
 
     def site(self):
         # The site of the asset
@@ -987,6 +1001,11 @@ class AssetVirtualFields:
             if site:
                 return s3db.org_site_represent(site, show_link=False)
         return current.messages.NONE
+    
+    def assigned_to_person(self):
+        current_log = asset_get_current_log(self.asset_asset.id)
+        ltable = current.s3db.asset_log
+        return ltable.person_id.represent(current_log.person_id)
 
 # =============================================================================
 def asset_controller():

@@ -550,7 +550,6 @@ class S3Report(S3CRUD):
         opts = [(f.selector, f.label) for f in rfields
                 if f.show and
                    (f.field is None or f.field.name != table._id.name)]
-
         dummy_field = Storage(name=name, requires=IS_IN_SET(opts))
         return OptionsWidget.widget(dummy_field, value, **attr)
 
@@ -621,7 +620,7 @@ class S3Report(S3CRUD):
             if label is not None:
                 rfield.label = label
             else:
-                label = rfield.label if rfield.ftype != "id" else RECORDS
+                label = rfield.label if rfield.label != "Id" else RECORDS
 
             if len(opt) == 1:
                 is_amount = None
@@ -664,7 +663,7 @@ class S3Report(S3CRUD):
             if len(opt) == 3:
                 # field+method -> construct label
                 mlabel = self.mname(opt[2])
-                flabel = opt[0].label if opt[0].ftype != "id" else RECORDS
+                flabel = opt[0].label if opt[0].label != "Id" else RECORDS
                 label = current.T("%s (%s)") % (flabel, mlabel)
                 _methods.append((opt[0].selector, opt[2], label))
             else:

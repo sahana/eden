@@ -99,19 +99,23 @@ class S3MembersModel(S3Model):
             msg_list_empty = T("No membership types currently registered"))
 
         label_create = crud_strings[tablename].label_create_button
+
         if root_org:
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)
+
+        represent = s3_represent_id(table)
+
         membership_type_id = S3ReusableField("membership_type_id", table,
             sortby = "name",
             label = T("Type"),
             requires = IS_NULL_OR(
                         IS_ONE_OF(db, "member_membership_type.id",
-                                  self.membership_type_represent,
+                                  represent,
                                   filterby="organisation_id",
                                   filter_opts=filter_opts)),
-            represent = self.membership_type_represent,
+            represent = represent,
             comment=S3AddResourceLink(f="membership_type",
                                       label=label_create,
                                       title=label_create,
@@ -200,13 +204,11 @@ class S3MembersModel(S3Model):
                 _dict[opt.id] = opt.name
             return _dict
 
-        member_search = S3Search(
-            simple=(self.member_search_simple_widget("simple")),
-            advanced=(self.member_search_simple_widget("advanced"),
+        advanced_member_search = [
                       S3SearchOptionsWidget(
                         name="member_search_type",
                         label=T("Type"),
-                        field="type",
+                        field="membership_type_id",
                         cols = 3,
                         options = member_type_opts,
                       ),
@@ -220,6 +222,19 @@ class S3MembersModel(S3Model):
                                 T("overdue"):T("overdue"),
                                 T("expired"):T("expired"),
                             },
+                      ),
+                      S3SearchOptionsWidget(
+                        name="member_search_organisation_id",
+                        field="organisation_id",
+                        label=T("Organisation"),
+                        represent ="%(name)s",
+                        cols = 3
+                      ),
+                      S3SearchOptionsWidget(
+                        name="member_search_L0",
+                        field="location_id$L0",
+                        location_level="L0",
+                        cols = 3,
                       ),
                       S3SearchOptionsWidget(
                         name="member_search_L1",
@@ -248,14 +263,41 @@ class S3MembersModel(S3Model):
                       S3SearchLocationWidget(
                         name="member_search_map",
                         label=T("Map"),
-                      ),
-            )
+                      )
+            ]
+
+        member_search = S3Search(
+            simple=(self.member_search_simple_widget("simple")),
+            advanced=[self.member_search_simple_widget("advanced")] + advanced_member_search
         )
+
+        report_fields = [
+                         "person_id",
+                         "membership_type_id",
+                         "paid",
+                         "organisation_id",
+                         "location_id$L0",
+                         "location_id$L1",
+                         "location_id$L2",
+                         ]
 
         configure(tablename,
                   deduplicate = self.member_duplicate,
                   onaccept = self.member_onaccept,
                   search_method = member_search,
+                  report_options=Storage(
+                        search=advanced_member_search,
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list"],
+                        defaults=Storage(
+                                aggregate="count",
+                                cols="membership.organisation_id",
+                                fact="membership.person_id",
+                                rows="membership.membership_type_id"
+                            )
+                        ),
                   list_fields=["person_id",
                                "organisation_id",
                                "membership_type_id",
@@ -278,25 +320,6 @@ class S3MembersModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def membership_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.member_membership_type
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

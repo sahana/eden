@@ -274,7 +274,7 @@ def set_project_multi_theme_id_requires(sector_ids):
     table.multi_theme_id.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, 
                                                   "project_theme.id",
-                                                  s3db.project_theme_represent,
+                                                  s3base.s3_represent_id(s3db.project_theme),
                                                   filterby="id",
                                                   filter_opts=theme_ids,
                                                   sort=True,
@@ -305,7 +305,7 @@ def set_project_multi_activity_type_id_requires(sector_ids):
     s3db.project_location.multi_activity_type_id.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, 
                                                   "project_activity_type.id",
-                                                  s3db.project_activity_type_represent,
+                                                  s3base.s3_represent_id(s3db.project_activity_type),
                                                   filterby="id",
                                                   filter_opts=activity_type_ids,
                                                   sort=True,
