@@ -2600,6 +2600,8 @@ def org_rheader(r, tabs=[]):
                     (T("User Roles"), "roles"),
                     #(T("Tasks"), "task"),
                    ]
+            if settings.has_module("asset"):
+                tabs.insert(6,(T("Assets"), "asset"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         if table.multi_sector_id.readable and record.multi_sector_id:
@@ -2642,6 +2644,8 @@ def org_rheader(r, tabs=[]):
                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
             tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
+        if settings.has_module("asset"):
+            tabs.append((T("Assets"), "asset"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):

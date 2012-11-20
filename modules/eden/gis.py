@@ -72,6 +72,7 @@ class S3LocationModel(S3Model):
              "gis_location_id",
              "gis_country_id",
              "gis_countries_id",
+             "gis_country_requires",
              "gis_location_onvalidation",
              ]
 
@@ -241,15 +242,15 @@ class S3LocationModel(S3Model):
                                       #widget = S3LocationAutocompleteWidget(),
                                       ondelete = "RESTRICT")
 
+        country_requires = IS_NULL_OR(IS_ONE_OF(db, "gis_location.id",
+                                                self.gis_country_represent,
+                                                filterby = "level",
+                                                filter_opts = ["L0"],
+                                                sort=True))
         country_id = S3ReusableField("country_id", table,
                                      sortby = "name",
                                      label = messages.COUNTRY,
-                                     requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "gis_location.id",
-                                                              self.gis_country_represent,
-                                                              filterby = "level",
-                                                              filter_opts = ["L0"],
-                                                              sort=True)),
+                                     requires = country_requires,
                                      represent = self.gis_country_represent,
                                      ondelete = "RESTRICT")
 
@@ -322,6 +323,7 @@ class S3LocationModel(S3Model):
                     gis_location_id = location_id,
                     gis_country_id = country_id,
                     gis_countries_id = countries_id,
+                    gis_country_requires = country_requires,
                     gis_location_onvalidation = self.gis_location_onvalidation,
                 )
 

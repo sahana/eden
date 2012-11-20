@@ -1861,6 +1861,9 @@ class S3Method(object):
         if self.method == "_init":
             return None
 
+        settings = current.deployment_settings
+        settings.ui_customize(self.tablename)
+
         # Apply method
         output = self.apply_method(r, **attr)
 

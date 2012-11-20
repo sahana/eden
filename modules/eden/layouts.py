@@ -326,7 +326,7 @@ class S3AddResourceLink(S3NavigationItem):
 
         popup_link = A(item.label,
                        _href=item.url(format="popup"),
-                       _class="colorbox",
+                       _class="s3_add_resource_link colorbox",
                        _id="%s_add" % item.function,
                        _target="top",
                        _title=item.opts.info)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+
 from gluon import current
+from gluon import current, TAG, DIV
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 settings = current.deployment_settings
@@ -103,6 +105,147 @@ settings.project.organisation_roles = {
     2: T("Partner Organization"),
     3: T("Donor"),
 }
+
+# Formstyle
+def formstyle_row(id, label, widget, comment, hidden=False):
+    if hidden:
+        hide = "hide"
+    else:
+        hide = ""
+    row = DIV(
+           DIV(comment,label,
+                _id=id + "1",
+                _class="w2p_fl %s" % hide),
+          DIV(widget,
+                _id=id,
+                _class="w2p_fw %s" % hide),
+          _class = "w2p_r",
+             
+            )
+    return row
+def form_style(self, xfields):
+    """
+        @ToDo: Requires further changes to code to use
+        - Adding a formstyle_row setting to use for indivdual rows
+        Use new Web2Py formstyle to generate form using DIVs & CSS
+        CSS can then be used to create MUCH more flexible form designs:
+        - Labels above vs. labels to left
+        - Multiple Columns 
+    """
+    form = DIV()
+
+    for id, a, b, c, in xfields:
+        form.append(formstyle_row(id, a, b, c))
+
+    return form
+settings.ui.formstyle_row = formstyle_row
+settings.ui.formstyle = form_style
+
+def customize_project_project():
+    s3db = current.s3db
+    
+    current.response.s3.crud_strings.project_project.title_search = T("Project List")
+    table = s3db.project_project
+    table.budget.label = T("Total Funding")
+
+    # For Inline Forms
+    location_id = s3db.project_location.location_id
+    location_id.requires = s3db.gis_country_requires
+    location_id.widget = None
+
+    # In DRRPP this is a free field
+    table = s3db.project_organisation
+    table.comments.label = T("Role")
+    from gluon import SQLFORM
+    table.comments.widget = SQLFORM.widgets.string.widget
+    table.amount.label = T("Amount")
+
+    table = s3db.doc_document
+    table.file.widget = lambda field, value, download_url: SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
+    #table.file.widget = SQLFORM.widgets.upload.widget
+    table.comments.widget = SQLFORM.widgets.string.widget
+    
+
+settings.ui.customize_project_project = customize_project_project
+
+from s3 import s3forms
+settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
+        "name",
+        "code",
+        "status_id",
+        "start_date",
+        "end_date",
+        "drrpp.duration",
+        s3forms.S3SQLInlineComponent(
+            "location",
+            label=T("Countries"),
+            fields=["location_id"],
+        ),
+        "multi_hazard_id",
+        "multi_theme_id",
+        "objectives",
+        "drrpp.activities",
+        #Outputs
+        s3forms.S3SQLInlineComponent(
+            "output",
+            label=T("Outputs:"),
+            comment = "Bob",
+            fields=["output","status"],
+        ),
+        "hfa",
+        "drrpp.rfa",
+        "organisation_id",
+        #Partner Org
+        s3forms.S3SQLInlineComponent(
+            "organisation",
+            name = "partner",
+            label=T("Partner Organisations:"),
+            fields=["organisation_id","comments"],
+            filterby = dict(field = "role",
+                            options = "2"
+                            )
+        ),
+        # Donor
+        s3forms.S3SQLInlineComponent(
+            "organisation",
+            name = "donor",
+            label=T("Donor(s):"),
+            fields=["organisation_id","amount", "currency"],
+            filterby = dict(field = "role",
+                            options = "3"
+                            )
+        ),
+        "budget",
+        "currency",
+        "drrpp.focal_person",
+        "drrpp.organisation_id",
+        "drrpp.email",
+        #Files - Inline Forms don't support Files
+        s3forms.S3SQLInlineComponent(
+            "document",
+            name = "file",
+            label=T("Files"),
+            fields=["file","comments"],
+            filterby = dict(field = "url",
+                            options = None,
+                            invert = True,
+                            )
+        ),
+        #Links
+        s3forms.S3SQLInlineComponent(
+            "document",
+            name = "url",
+            label=T("Links"),
+            fields=["url","comments"],
+            filterby = dict(field = "file",
+                            options = "",
+                            invert = True,
+                            )
+        ),
+        "drrpp.parent_project",
+        "comments",
+        
+    )
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

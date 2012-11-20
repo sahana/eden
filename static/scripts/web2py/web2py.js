@@ -25,10 +25,6 @@ function web2py_ajax_init() {
     jQuery('.hidden').hide();
     jQuery('.error').hide().slideDown('slow');
     jQuery('.flash').click(function() { jQuery(this).fadeOut('slow'); return false; });
-    jQuery('input.string').attr('size', 62);
-    jQuery('input.upload').attr('size', 50);
-    jQuery('#login_box input.upload').attr('size', 36);
-    jQuery('textarea.text').attr('cols', 50).attr('rows', 5);
     if (i18n.language == 'ja') {
         // For Japanese IME
         jQuery('input.integer').blur(function() {

@@ -77,7 +77,12 @@ class S3CRUD(S3Method):
             @returns: output object to send to the view
         """
 
-        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
+        settings = current.deployment_settings
+        
+        self.sqlform = settings.get_ui_crud_form(self.tablename)
+        if not self.sqlform:
+            self.sqlform = self._config("crud_form",  S3SQLDefaultForm() )
+
         self.settings = current.response.s3.crud
 
         # Pre-populate create-form?
