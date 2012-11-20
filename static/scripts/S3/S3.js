@@ -984,6 +984,10 @@ function S3OptionsFilter(settings) {
         if (targetField.length == 1) {
             // SELECT
             currentValue = targetField.val();
+            if (!currentValue) {
+                // Options list not populated yet?
+                currentValue = targetField.attr('value');
+            }
         } else if (targetField.length > 1) {
             // Checkboxes
             currentValue = new Array();

@@ -1810,6 +1810,7 @@ class S3CommitModel(S3Model):
         """
         """
 
+        db = current.db
         s3db = current.s3db
         vars = form.vars
         # @ToDo: Will these always be in vars?
@@ -1842,13 +1843,15 @@ class S3CommitModel(S3Model):
             # Check for other Commits in-system
             # Our own will be added in the item_onaccept
             citable = s3db.req_commit_item
-            query = (citable.req_id == req_id) & \
+            query = (citable.commit_id == ctable.id) & \
+                    (ctable.req_id == req_id) & \
                     (citable.commit_id != id)
             citems = db(query).select(citable.item_pack_id,
                                       citable.quantity,
                                       # Virtual Field
                                       #citable.pack_quantity,
                                       )
+            print citems
             commit_qty = {}
             for item in citems:
                 item_pack_id = item.item_pack_id
@@ -1856,8 +1859,14 @@ class S3CommitModel(S3Model):
                     commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
                 else:
                     commit_qty[item_pack_id]
+
             for item in ritems:
-                db(ritable.id == item.id).update(commit_quantity=commit_qty[item.item_pack_id])
+                item_pack_id = item.item_pack_id
+                if item_pack_id in commit_qty:
+                    db(ritable.id == item.id).update(commit_quantity=commit_qty[item_pack_id])
+                else:
+                    # Something has been committed that hasn't been requested
+                    pass
 
         #elif type == 3: # People
         #    # @ToDo: Changes for inline items

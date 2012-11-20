@@ -453,12 +453,13 @@ S3OptionsFilter({
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
                     s3.jquery_ready.append('''
-S3FilterFieldChange({
- 'FilterField':'defaultcommit_item_req_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultcommit_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
+S3OptionsFilter({
+ 'triggerName':'req_item_id',
+ 'targetName':'item_pack_id',
+ 'lookupPrefix':'req',
+ 'lookupResource':'req_item_packs',
+ 'lookupKey':'req_item_id',
+ 'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
@@ -697,9 +698,19 @@ def req_item_packs():
             particular Item
     """
 
+    req_item_id = None
+    args = request.args
+    if len(args) == 1 and args[0].isdigit():
+        req_item_id = args[0]
+    else:
+        for v in request.vars:
+            if "." in v and v.split(".", 1)[1] == "req_item_id":
+                req_item_id = request.vars[v]
+                break
+
     table = s3db.supply_item_pack
     ritable = s3db.req_req_item
-    query = (ritable.id == request.args[0]) & \
+    query = (ritable.id == req_item_id) & \
             (ritable.item_id == table.item_id)
 
     response.headers["Content-Type"] = "application/json"
@@ -937,16 +948,18 @@ def commit():
                     # Dropdown not Autocomplete
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
-                    s3.jquery_ready.append('''
-S3FilterFieldChange({
- 'FilterField':'defaultcommit_item_req_item_id_edit_none',
- 'FieldKey':'item_id',
- 'Field':'defaultcommit_item_item_pack_id_edit_none',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+                    if not r.component:
+                        s3.jquery_ready.append('''
+S3OptionsFilter({
+'triggerName':'req_item_id',
+'targetName':'item_pack_id',
+'lookupPrefix':'req',
+'lookupResource':'req_item_packs',
+'lookupKey':'req_item_id',
+'lookupField':'id',
+'msgNoRecords':i18n.no_packs,
+'fncPrep':fncPrepItem,
+'fncRepresent':fncRepresentItem
 })''')
                     # Custom Form
                     s3forms = s3base.s3forms
