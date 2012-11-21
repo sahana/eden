@@ -451,9 +451,9 @@ class S3Merge(S3Method):
                           TD(label, _class="w2p_fl")))
 
             # Append widget row
-            trs.append(TR(TD(owidget),
+            trs.append(TR(TD(owidget, _class="mwidget"),
                           TD(swap),
-                          TD(dwidget)))
+                          TD(dwidget, _class="mwidget")))
 
         # Show created_on/created_by for each record
         if "created_on" in table:

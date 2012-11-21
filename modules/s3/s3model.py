@@ -929,7 +929,6 @@ class S3Model(object):
 
         super_keys = Storage()
         for tn, s, key, shared in updates:
-
             data = Storage([(fn, _record[shared[fn]]) for fn in shared])
             data.instance_type = tablename
             if has_deleted:
@@ -947,15 +946,17 @@ class S3Model(object):
 
             if row:
                 # Update the super-entity record
-                success = db(s._id == skey).update(**data)
-                if success:
-                    super_keys[key] = skey
-                    data[key] = skey
-                    form = Storage(vars=data)
-                    onaccept = get_config(tn, "update_onaccept",
-                               get_config(tn, "onaccept", None))
-                    if onaccept:
-                        onaccept(form)
+                try:
+                    db(s._id == skey).update(**data)
+                except:
+                    continue
+                super_keys[key] = skey
+                data[key] = skey
+                form = Storage(vars=data)
+                onaccept = get_config(tn, "update_onaccept",
+                           get_config(tn, "onaccept", None))
+                if onaccept:
+                    onaccept(form)
             else:
                 # Insert a new super-entity record
                 k = s.insert(**data)

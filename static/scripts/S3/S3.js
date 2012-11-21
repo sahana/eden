@@ -300,25 +300,35 @@ S3.deduplication = function() {
         var name = id.slice(5);
 
         var original = $('#original_' + name);
-        var original_name = original.attr('name');
         var original_id = original.attr('id');
-        var original_parent = original.parent();
+        original.attr('id', 'swap_original_id');
+        var original_name = original.attr('name');
+        original.attr('name', 'swap_original_name');
+        var original_parent = original.parent().closest('td.mwidget');
 
         var duplicate = $('#duplicate_' + name);
-        var duplicate_name = duplicate.attr('name');
         var duplicate_id = duplicate.attr('id');
-        var duplicate_parent = duplicate.parent();
+        duplicate.attr('id', 'swap_duplicate_id');
+        var duplicate_name = duplicate.attr('name');
+        duplicate.attr('name', 'swap_duplicate_name');
+        var duplicate_parent = duplicate.parent().closest('td.mwidget');
 
-        var o = original.detach();
-        o.attr('id', duplicate_id);
-        o.attr('name', duplicate_name);
+        // Swap elements
+        original_parent.before('<td id="swap_original_placeholder"></td>');
+        var o = original_parent.detach();
+        duplicate_parent.before('<td id="swap_duplicate_placeholder"></td>');
+        var d = duplicate_parent.detach();
+        $('#swap_original_placeholder').after(d);
+        $('#swap_original_placeholder').remove();
+        $('#swap_duplicate_placeholder').after(o);
+        $('#swap_duplicate_placeholder').remove();
 
-        var d = duplicate.detach();
-        d.attr('id', original_id);
-        d.attr('name', original_name);
+        // Rename
+        original.attr('id', duplicate_id);
+        original.attr('name', duplicate_name);
 
-        o.appendTo(duplicate_parent);
-        d.appendTo(original_parent);
+        duplicate.attr('id', original_id);
+        duplicate.attr('name', original_name);
     });
 }
 

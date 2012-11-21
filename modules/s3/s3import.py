@@ -2188,12 +2188,12 @@ class S3ImportItem(object):
                     del data[MCI]
                 query = (table._id == self.id)
                 try:
-                    success = db(query).update(**dict(data))
+                    db(query).update(**dict(data))
                 except:
                     self.error = sys.exc_info()[1]
                     self.skip = True
                     return False
-                if success:
+                else:
                     self.committed = True
             else:
                 # Nothing to update

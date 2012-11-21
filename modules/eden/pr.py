@@ -3771,7 +3771,7 @@ def pr_update_affiliations(table, record):
             return
         pr_organisation_update_affiliations(record)
 
-    elif rtype == "org_site":
+    elif rtype == "org_site" or rtype in current.auth.org_site_types:
 
         pr_site_update_affiliations(record)
 
