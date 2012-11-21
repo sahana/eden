@@ -1,0 +1,86 @@
+@charset "UTF-8";
+
+div.w2p_r:nth-child(2n+1) {
+    background: none repeat scroll 0 0 #E8E8E8;
+    overflow: hidden;
+    clear: both;
+}
+
+div.w2p_fl {
+    float: left;
+    width: 120px;
+    margin:  8px 0 8px 25px;
+}
+
+div.w2p_fw {
+    float: left;
+    padding: 5px 10px 5px 10px;
+}
+div.w2p_fc {
+    float: left;
+    clear: left;
+    width: 15px;
+    margin: 0 5px;
+}
+
+.w2p_fl label {
+    text-transform: uppercase;
+}
+
+.tooltip {
+    background: url("img/icon_help15px.png") no-repeat scroll 0 0 transparent;
+    height: 16px;
+    float: left;
+    margin: 10px 0 0 -20px;
+    width: 16px;
+}
+
+.s3_add_resource_link {
+    display: none;
+}
+
+/* Required Field indicator */
+.red {
+    color: red;
+}
+.req {
+    color: red;
+    font-weight: bold;
+}
+
+/* Styling for Inline Components */
+table.embeddedComponent {
+    border: 1px solid #B3B3B3;
+    border-top: 0;
+    border-right: 0;
+}
+form table.embeddedComponent td {
+    border: 1px solid #B3B3B3;
+    padding: 0 5px;
+    border-bottom: 0;
+    border-left: 0;
+}
+table.embeddedComponent tr.label-row td {
+    text-align: center;
+    color: #B3B3B3;
+}
+div.form-container form .embeddedComponent input.string,
+div.form-container form .embeddedComponent  textarea  {
+    width: auto;
+}
+
+/* Styling for specific fields */
+[name*="partnerorganisation_organisation_id"],
+[name*="donororganisation_organisation_id"] {
+    width: 300px;
+}
+div.form-container form .embeddedComponent input[name*="partnerorganisation_comments"],
+div.form-container form .embeddedComponent input[name*="urldocument_url"],
+div.form-container form .embeddedComponent input[name*="document_comments"] {
+    width: 250px;
+}
+
+{
+    width: 250px;
+    height: 16px;
+}

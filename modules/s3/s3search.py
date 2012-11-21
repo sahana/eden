@@ -1350,11 +1350,6 @@ i18n.edit_saved_search="%s"
             response.view = self._view(r, "plain.html")
             return output
 
-        if s3.simple_search:
-            form.append(DIV(_id="search-mode", _mode="simple"))
-        else:
-            form.append(DIV(_id="search-mode", _mode="advanced"))
-
         # Complete the output form-DIV()
         if simple_form is not None:
             # Insert the save button next to the submit button
@@ -1622,7 +1617,7 @@ i18n.edit_saved_search="%s"
 
         opts = Storage(r.get_vars)
         opts["clear_opts"] = "1"
-        clear_opts = A(T("Reset all filters"),
+        clear_opts = A(T("Clear"),
                        _href=r.url(vars=opts),
                        _class="action-lnk")
 
@@ -1642,18 +1637,19 @@ i18n.edit_saved_search="%s"
 
         # Advanced search form
         if advanced:
+            attr = {}
             if simple and not r.representation == "plain":
-                switch_link = A(T("Simple Search"), _href="#",
+                switch_link = A(T("Basic Search"), _href="#",
                                 _class="action-lnk simple-lnk")
-                _class = "%s hide"
+                attr["_style"] = "display:none;"
             else:
                 switch_link = ""
-                _class = "%s"
             advanced_form = self._build_form(advanced,
                                              form_values=form_values,
                                              clear=clear_opts,
                                              switch=switch_link,
-                                             _class=_class % "advanced-form")
+                                             _class="advanced-form",
+                                             **attr)
 
         return (simple_form, advanced_form)
 
@@ -1703,9 +1699,10 @@ i18n.edit_saved_search="%s"
                 tr.append(DIV(DIV(_class="tooltip",
                                   _title="%s|%s" % (label, comment))))
             trows.append(tr)
-
+        if switch:
+            trows.append(TR("", switch))
         trows.append(TR("", TD(INPUT(_type="submit", _value=T("Search")),
-                               clear, switch)))
+                               clear)))
         form = FORM(TABLE(trows), **attr)
         return form
 
@@ -1966,14 +1963,15 @@ i18n.edit_saved_search="%s"
                 switch_link = ""
 
             if simple:
-                _class = "hide"
+                atrr = {}
             else:
-                _class = None
+                attr["_style"] = "display:none;"
             advanced_form = DIV(autocomplete_widget,
                                 TABLE(trows),
                                 TABLE(TR(switch_link)),
-                                _class="%s advanced-form" % _class,
+                                _class="advanced-form",
                                 #_resourcename = resource.name
+                                **attr
                                 )
             form.append(advanced_form)
 

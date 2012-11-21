@@ -2860,6 +2860,8 @@ def inv_warehouse_rheader(r):
                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
             tabs.append((T("Assign Staff"), "human_resource_site"))
+        if settings.has_module("asset"):
+            tabs.insert(6,(T("Assets"), "asset"))
         tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):
             tabs = tabs + s3db.req_tabs(r)

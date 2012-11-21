@@ -74,6 +74,7 @@
     <xsl:key name="supply_items" match="row" use="concat(col[@field='Name'], ', ',
                                                          col[@field='Model'], ', ',
                                                          col[@field='Brand'])"/>
+    <xsl:key name="supplier_organisation" match="row" use="col[@field='Supplier/Donor']"/>
 
     <!-- ****************************************************************** -->
 
@@ -83,7 +84,10 @@
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('organisations',
                                                         col[@field='Organisation']/text())[1])]">
-                <xsl:call-template name="Organisation"/>
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName" select="col[@field='Organisation']/text()"/>
+                    <xsl:with-param name="OrgAcronym" select="col[@field='Acronym']/text()"/>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Offices -->
@@ -141,6 +145,11 @@
                 <xsl:call-template name="SupplyItem"/>
             </xsl:for-each>
 
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('supplier_organisation', col[@field='Supplier/Donor'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName" select="col[@field='Supplier/Donor']"/>
+                </xsl:call-template>
+            </xsl:for-each>
 
             <xsl:apply-templates select="table/row"/>
         </s3xml>
@@ -182,9 +191,12 @@
             <xsl:if test="col[@field='Type'] != ''">
                 <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Supplier'] != ''">
-                <data field="supplier"><xsl:value-of select="col[@field='Supplier']"/></data>
-            </xsl:if>
+            <!-- Link to Supplier/Donor org -->
+            <reference field="supply_org_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Supplier/Donor']/text()"/>
+                </xsl:attribute>
+            </reference>
             <xsl:if test="col[@field='Date'] != ''">
                 <data field="purchase_date"><xsl:value-of select="col[@field='Date']"/></data>
             </xsl:if>
@@ -268,8 +280,8 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OrgAcronym" select="col[@field='Acronym']/text()"/>
+        <xsl:param name="OrgName"/>
+        <xsl:param name="OrgAcronym"/>
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
