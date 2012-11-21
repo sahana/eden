@@ -330,6 +330,7 @@ class HospitalDataModel(S3Model):
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
                   search_method=hms_hospital_search,
                   deduplicate = self.hms_hospital_duplicate,
+                  onaccept = self.hms_hospital_onaccept,
                   report_options = Storage(
                         search=[
                           S3SearchOptionsWidget(
@@ -966,6 +967,16 @@ class HospitalDataModel(S3Model):
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_hospital_onaccept(form):
+        """
+            Update Affiliation, record ownership and component ownership
+        """
+
+        s3db = current.s3db
+        s3db.pr_update_affiliations(s3db.hms_hospital, form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod
