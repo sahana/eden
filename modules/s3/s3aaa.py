@@ -317,7 +317,7 @@ Thank you
                                           readable=False,
                                           label=messages.label_password))
 
-            utable = define_table(uname, 
+            utable = define_table(uname,
                                   migrate = migrate,
                                   fake_migrate=fake_migrate,
                                   *utable_fields)

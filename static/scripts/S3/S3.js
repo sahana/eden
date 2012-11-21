@@ -301,17 +301,20 @@ S3.deduplication = function() {
 
         var original = $('#original_' + name);
         var original_id = original.attr('id');
-        original.attr('id', 'swap_original_id');
         var original_name = original.attr('name');
-        original.attr('name', 'swap_original_name');
         var original_parent = original.parent().closest('td.mwidget');
-
         var duplicate = $('#duplicate_' + name);
         var duplicate_id = duplicate.attr('id');
-        duplicate.attr('id', 'swap_duplicate_id');
         var duplicate_name = duplicate.attr('name');
-        duplicate.attr('name', 'swap_duplicate_name');
         var duplicate_parent = duplicate.parent().closest('td.mwidget');
+
+        // Rename with placeholder names
+        original.attr('id', 'swap_original_id');
+        original.attr('name', 'swap_original_name');
+        $('#dummy' + original_id).attr('id', 'dummy_swap_original_id');
+        duplicate.attr('id', 'swap_duplicate_id');
+        duplicate.attr('name', 'swap_duplicate_name');
+        $('#dummy' + duplicate_id).attr('id', 'dummy_swap_duplicate_id');
 
         // Swap elements
         original_parent.before('<td id="swap_original_placeholder"></td>');
@@ -323,12 +326,13 @@ S3.deduplication = function() {
         $('#swap_duplicate_placeholder').after(o);
         $('#swap_duplicate_placeholder').remove();
 
-        // Rename
+        // Rename to original names
         original.attr('id', duplicate_id);
         original.attr('name', duplicate_name);
-
+        $('#dummy_swap_original_id').attr('id', 'dummy' + duplicate_id);
         duplicate.attr('id', original_id);
         duplicate.attr('name', original_name);
+        $('#dummy_swap_duplicate').attr('id', 'dummy' + original_id);
     });
 }
 

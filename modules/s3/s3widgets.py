@@ -419,7 +419,10 @@ class S3AutocompleteWidget(FormWidget):
         # Hide the real field
         attr["_class"] = attr["_class"] + " hide"
 
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
 
         # Script defined in static/scripts/S3/S3.js
@@ -698,7 +701,10 @@ class S3PersonAutocompleteWidget(FormWidget):
         # Hide the real field
         attr["_class"] = "%s hide" % attr["_class"]
 
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
         url = URL(c=self.c,
                   f=self.f,
@@ -842,7 +848,10 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
         # Hide the real field
         attr["_class"] = "%s hide" % attr["_class"]
 
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
         group = self.group
         if group == "staff":
@@ -1030,7 +1039,10 @@ class S3SiteAutocompleteWidget(FormWidget):
         # Hide the real field
         attr["_class"] = "%s hide" % attr["_class"]
 
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
         url = URL(c="org", f="site",
                   args="search.json",
@@ -1180,7 +1192,10 @@ class S3SiteAddressAutocompleteWidget(FormWidget):
         # Hide the real field
         attr["_class"] = "%s hide" % attr["_class"]
 
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
         url = URL(c="org", f="site",
                   args=["search.json", "address"],
@@ -1296,7 +1311,10 @@ def S3GenericAutocompleteTemplate(post_process,
     # Hide the real field
     attr["_class"] = attr["_class"] + " hide"
 
-    real_input = str(field).replace(".", "_")
+    if "_id" in attr:
+        real_input = attr["_id"]
+    else:
+        real_input = str(field).replace(".", "_")
     dummy_input = "dummy_%s" % real_input
     js_autocomplete = "".join(('''
 var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
@@ -2687,7 +2705,10 @@ class S3AddPersonWidget(FormWidget):
         formstyle = s3.crud.formstyle
 
         # Main Input
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         default = dict(_type = "text",
                        value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, default, **attributes)
@@ -3271,7 +3292,10 @@ class S3EmbedComponentWidget(FormWidget):
             selected = None
 
         # Main Input
-        real_input = str(field).replace(".", "_")
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
         dummy = "dummy_%s" % real_input
         default = dict(_type = "text",
                        value = (value != None and str(value)) or "")

@@ -6353,14 +6353,15 @@ class S3RecordMerger(object):
         form = Storage(vars = Storage([(f, row[f])
                               for f in table.fields if f in row]))
         form.vars.update(data)
-        success = current.db(table._id==row[table._id]).update(**data)
-        if success:
+        try:
+            current.db(table._id==row[table._id]).update(**data)
+        except:
+            self.raise_error("Could not update %s.%s" %
+                            (table._tablename, id))
+        else:
             current.s3db.update_super(table, form.vars)
             current.auth.s3_set_record_owner(table, row[table._id], force_update=True)
             current.manager.onaccept(table, form, method="update")
-        else:
-            self.raise_error("Could not update %s.%s" %
-                            (table._tablename, id))
         return form.vars
 
     # -------------------------------------------------------------------------
@@ -6667,6 +6668,10 @@ class S3RecordMerger(object):
                 if fn in table.fields:
                     data[fn] = v
         if len(data):
+            # @todo: Deal with unique keys
+            # If a field in data is a unique key and duplicate[fn] == data[fn],
+            # then must change the value in duplicate before updating the
+            # original
             update_record(table, original_id, original, data)
 
         # Delete the duplicate
