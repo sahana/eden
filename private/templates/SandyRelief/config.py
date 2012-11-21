@@ -82,6 +82,9 @@ settings.auth.registration_link_user_to = {"staff":T("Staff"),
 
 settings.security.policy = 4 # Controller & Function ACLs
 
+# Resource which need approval
+#settings.auth.record_approval_required_for = ["org_facility"]
+
 settings.ui.update_label = "Edit"
 
 # Inventory Management
@@ -130,6 +133,8 @@ settings.org.site_label = "Facility"
 settings.org.site_autocomplete = True
 # Uncomment to have Site Autocompletes search within Address fields
 settings.org.site_address_autocomplete = True
+# Uncomment to hide inv & req tabs from Sites
+settings.org.site_inv_req_tabs = False
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -332,12 +337,12 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 3,
         )),
-    #("project", Storage(
-    #        name_nice = T("Projects"),
-    #        #description = "Tracking of Projects, Activities and Tasks",
-    #        restricted = True,
-    #        module_type = 2
-    #    )),
+    ("project", Storage(
+            name_nice = T("Projects"),
+            #description = "Tracking of Projects, Activities and Tasks",
+            restricted = True,
+            module_type = 10
+        )),
     #("survey", Storage(
     #        name_nice = T("Surveys"),
     #        #description = "Create, enter, and manage surveys.",

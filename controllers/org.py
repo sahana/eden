@@ -43,8 +43,8 @@ def index():
 
     if not item:
         #item = H2(module_name)
-        # Just redirect to the Facilities Map
-        redirect(URL(f="facility", args=["map"]))
+        # Just redirect to the Facilities
+        redirect(URL(f="facility", args=["search"]))
 
     # tbc
     report = ""

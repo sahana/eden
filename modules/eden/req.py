@@ -850,20 +850,20 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             @ToDo: Roll these up like inv_tabs in inv.py
         """
 
-        s3_has_permission = current.auth.s3_has_permission
         settings = current.deployment_settings
-        if settings.has_module("req") and \
-           s3_has_permission("read", "req_req", c="req"):
-            tabs= [(T("Requests"), "req")]
-            if s3_has_permission("read", "req_req",
-                                 c=current.request.controller,
-                                 f="req_match"):
-                tabs.append((T("Match Requests"), "req_match/"))
-            if settings.get_req_use_commit():
-                tabs.append((T("Commit"), "commit"))
-            return tabs
-        else:
-            return []
+        if settings.get_org_site_inv_req_tabs():
+            s3_has_permission = current.auth.s3_has_permission
+            if settings.has_module("req") and \
+               s3_has_permission("read", "req_req", c="req"):
+                tabs= [(T("Requests"), "req")]
+                if s3_has_permission("read", "req_req",
+                                     c=current.request.controller,
+                                     f="req_match"):
+                    tabs.append((T("Match Requests"), "req_match/"))
+                if settings.get_req_use_commit():
+                    tabs.append((T("Commit"), "commit"))
+                return tabs
+        return []
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1778,7 +1778,9 @@ class S3CommitModel(S3Model):
                         # Commitments should only be made to a specific request
                         listadd = False,
                         onvalidation = self.commit_onvalidation,
-                        onaccept = self.commit_onaccept)
+                        onaccept = self.commit_onaccept,
+                        ondelete = self.commit_ondelete,
+                        )
 
         # Components
         # Commitment Items as component of Commitment
@@ -1843,6 +1845,7 @@ class S3CommitModel(S3Model):
     @staticmethod
     def commit_onaccept(form):
         """
+            Update Status of Request & components
         """
 
         db = current.db
@@ -1925,6 +1928,94 @@ class S3CommitModel(S3Model):
                 # Assume Complete not partial
                 # @ToDo: Provide a way for the committer to specify this
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def commit_ondelete(row):
+        """
+            Update Status of Request & components
+        """
+
+        db = current.db
+        s3db = current.s3db
+        id = row.id
+        # Find the request
+        ctable = s3db.req_commit
+        rtable = s3db.req_req
+        query = (ctable.id == id) & \
+                (rtable.id == ctable.req_id)
+        req = db(query).select(rtable.id,
+                               rtable.type,
+                               rtable.commit_status,
+                               limitby=(0, 1)).first()
+        if not req:
+            return
+        req_id = req.id
+        type = req.type
+        if type == 1:
+            # Items
+            # Update Commit Status for Items in the Request
+            # Get the full list of items in the request
+            ritable = s3db.req_req_item
+            query = (ritable.req_id == req_id) & \
+                    (ritable.deleted == False)
+            ritems = db(query).select(ritable.id,
+                                      ritable.item_pack_id,
+                                      ritable.quantity,
+                                      # Virtual Field
+                                      #ritable.pack_quantity,
+                                      )
+            # Get all Commits in-system
+            # - less those from this commit
+            citable = s3db.req_commit_item
+            query = (ctable.req_id == req_id) & \
+                    (citable.commit_id == ctable.id) & \
+                    (citable.commit_id != id) & \
+                    (citable.deleted == False)
+            citems = db(query).select(citable.item_pack_id,
+                                      citable.quantity,
+                                      # Virtual Field
+                                      #citable.pack_quantity,
+                                      )
+            commit_qty = {}
+            for item in citems:
+                item_pack_id = item.item_pack_id
+                if item_pack_id in commit_qty:
+                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                else:
+                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+            complete = False
+            for item in ritems:
+                if item.item_pack_id in commit_qty:
+                    quantity_commit = commit_qty[item.item_pack_id]
+                    db(ritable.id == item.id).update(quantity_commit=quantity_commit)
+                    req_quantity = item.quantity * item.pack_quantity
+                    if quantity_commit >= req_quantity:
+                        complete = True
+                    else:
+                        complete = False
+
+            # Update overall Request Status
+            if complete:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            else:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
+
+        #elif type == 3: # People
+        #    # @ToDo: Changes for inline items
+        #    # If no organisation_id, then this is a single person commitment, so create the commit_person record automatically
+        #    table = s3db.req_commit_person
+        #    table.insert(commit_id = vars.id,
+        #                 #skill_id = ???,
+        #                 person_id = auth.s3_logged_in_person())
+        #    # @ToDo: Mark Person's allocation status as 'Committed'
+
+        elif type == 9:
+            # Other
+            if req.commit_status != REQ_STATUS_NONE:
+                # Assume Complete not partial
+                # @ToDo: Provide a way for the committer to specify this
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_NONE)
 
 # =============================================================================
 class S3CommitItemModel(S3Model):

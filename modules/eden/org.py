@@ -1597,6 +1597,7 @@ class S3FacilityModel(S3Model):
                 label=T("Type"),
                 field="facility_type_id",
                 options = get_facility_opts,
+                cols=2,
             ),
             #S3SearchOptionsWidget(
             #  name="facility_search_L1",
@@ -1632,8 +1633,8 @@ class S3FacilityModel(S3Model):
                          "location_id$L3",
                          "location_id$L4",
                          ]
-
-        if current.deployment_settings.has_module("req"):
+        settings = current.deployment_settings
+        if settings.has_module("req"):
             # Add Req virtual fields
             table.virtualfields.append(self.req_site_virtualfields(tablename))
             widget = S3SearchOptionsWidget(

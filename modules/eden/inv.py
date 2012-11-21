@@ -2779,58 +2779,58 @@ def inv_tabs(r):
     """
 
     settings = current.deployment_settings
+    if settings.get_org_site_inv_req_tabs():
+        if settings.has_module("inv") and \
+           current.auth.s3_has_permission("read", "inv_inv_item", c="inv"):
 
-    if settings.has_module("inv") and \
-       current.auth.s3_has_permission("read", "inv_inv_item", c="inv"):
+            T = current.T
+            s3 = current.session.s3
 
-        T = current.T
-        s3 = current.session.s3
-
-        collapse_tabs = settings.get_inv_collapse_tabs()
-        tablename, record = s3_rheader_resource(r)
-        if collapse_tabs and not (tablename == "inv_warehouse"):
-            # Test if the tabs are collapsed
-            show_collapse = True
-            show_inv = r.get_vars.show_inv
-            if show_inv == "True":
+            collapse_tabs = settings.get_inv_collapse_tabs()
+            tablename, record = s3_rheader_resource(r)
+            if collapse_tabs and not (tablename == "inv_warehouse"):
+                # Test if the tabs are collapsed
+                show_collapse = True
+                show_inv = r.get_vars.show_inv
+                if show_inv == "True":
+                    show_inv = True
+                elif show_inv == "False":
+                    show_inv = False
+                else:
+                    show_inv = None
+                if show_inv == True or show_inv == False:
+                    if not s3.show_inv:
+                        s3.show_inv = Storage()
+                    s3.show_inv["%s_%s" %  (r.name, r.id)] = show_inv
+                elif s3.show_inv:
+                    show_inv = s3.show_inv.get("%s_%s" %  (r.name, r.id))
+                else:
+                    show_inv = False
+            else:
                 show_inv = True
-            elif show_inv == "False":
-                show_inv = False
-            else:
-                show_inv = None
-            if show_inv == True or show_inv == False:
-                if not s3.show_inv:
-                    s3.show_inv = Storage()
-                s3.show_inv["%s_%s" %  (r.name, r.id)] = show_inv
-            elif s3.show_inv:
-                show_inv = s3.show_inv.get("%s_%s" %  (r.name, r.id))
-            else:
-                show_inv = False
-        else:
-            show_inv = True
-            show_collapse = False
+                show_collapse = False
 
-        if show_inv:
-            if settings.get_inv_shipment_name() == "order":
-                recv_tab = T("Orders")
+            if show_inv:
+                if settings.get_inv_shipment_name() == "order":
+                    recv_tab = T("Orders")
+                else:
+                    recv_tab = T("Receive")
+                inv_tabs = [(T("Stock"), "inv_item"),
+                            #(T("Incoming"), "incoming/"),
+                            (recv_tab, "recv"),
+                            (T("Send"), "send"),
+                            ]
+                if settings.has_module("proc"):
+                    inv_tabs.append((T("Planned Procurements"), "plan"))
+                if show_collapse:
+                    inv_tabs.append(("- %s" % T("Warehouse"),
+                                     None, dict(show_inv="False")))
             else:
-                recv_tab = T("Receive")
-            inv_tabs = [(T("Stock"), "inv_item"),
-                        #(T("Incoming"), "incoming/"),
-                        (recv_tab, "recv"),
-                        (T("Send"), "send"),
-                        ]
-            if settings.has_module("proc"):
-                inv_tabs.append((T("Planned Procurements"), "plan"))
-            if show_collapse:
-                inv_tabs.append(("- %s" % T("Warehouse"),
-                                 None, dict(show_inv="False")))
-        else:
-            inv_tabs = [("+ %s" % T("Warehouse"), "inv_item",
-                        dict(show_inv="True"))]
-        return inv_tabs
-    else:
-        return []
+                inv_tabs = [("+ %s" % T("Warehouse"), "inv_item",
+                            dict(show_inv="True"))]
+            return inv_tabs
+
+    return []
 
 # =============================================================================
 def inv_warehouse_rheader(r):

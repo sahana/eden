@@ -30,7 +30,7 @@ def index():
                            A(T("Edit"),
                              _href=URL(c="cms", f="post",
                                        args=[_item.id, "update"],
-                                       vars={"module":module}),
+                                       vars={"module": module}),
                              _class="action-btn"))
             else:
                 item = XML(_item.body)
@@ -44,7 +44,7 @@ def index():
     if not item:
         #item = H2(module_name)
         # Just redirect to the list of Requests
-        redirect(URL(f="req"))
+        redirect(URL(f="req", args=["search"]))
 
     # tbc
     report = ""
@@ -1081,7 +1081,7 @@ def commit_rheader(r):
                                        ),
                                     ),
                                 )
-                prepare_btn = A( T("Send Commitment"),
+                prepare_btn = A( T("Prepare Shipment"),
                               _href = URL(f = "send_commit",
                                           args = [record.id]
                                           ),

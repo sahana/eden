@@ -194,6 +194,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Facilities", f="facility")(
                         M("New", m="create"),
                         M("List All"),
+                        #M("Review/Approve New", m="review"),
                         M("Map", m="map"),
                         M("Search", m="search"),
                         M("Import", m="import")

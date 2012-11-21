@@ -252,6 +252,8 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_autocomplete = True
 # Uncomment to have Site Autocompletes search within Address fields
 #settings.org.site_address_autocomplete = True
+# Uncomment to hide inv & req tabs from Sites
+#settings.org.site_inv_req_tabs = False
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True
 # Enable certain fields just for specific Organisations

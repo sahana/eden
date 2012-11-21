@@ -36,7 +36,7 @@
 "super","Super Editor",,"hrm","human_resource",,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"hrm","job_role",,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"inv",,,"READ|CREATE|UPDATE|DELETE",,,
-"super","Super Editor",,"org",,,"READ|CREATE|UPDATE|DELETE",,,
+"super","Super Editor",,"org",,,"READ|CREATE|UPDATE|DELETE|APPROVE",,,
 "super","Super Editor",,"pr",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"req",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"supply",,,"READ|CREATE|UPDATE|DELETE",,,

@@ -1043,6 +1043,12 @@ class S3Config(Storage):
         """
         return current.T(self.org.get("site_label", "Facility"))
 
+    def get_org_site_inv_req_tabs(self):
+        """
+            Whether Sites should have Tabs for Inv/Req
+        """
+        return self.org.get("site_inv_req_tabs", True)
+
     def get_org_site_autocomplete(self):
         """
             Whether site_id fields should use an Autocomplete instead of a dropdown
