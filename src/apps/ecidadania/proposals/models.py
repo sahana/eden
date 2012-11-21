@@ -60,8 +60,8 @@ PONDERATIONS = (
 class BaseProposalAbstractModel(models.Model):
 
     """
-    Integrated generic relation into the proposal module, which will allow the proposal module 
-    to be related to any other module in e-cidadania. 
+    Integrated generic relation into the proposal module, which will allow
+    the proposal module to be related to any other module in e-cidadania. 
 
     .. versionadded:: 0.1.5b
     
@@ -80,8 +80,8 @@ class BaseProposalAbstractModel(models.Model):
 class Category(BaseProposalAbstractModel):
 
     """
-    Dummy class for proposal categories. Inherits directly from :class:`BaseClass`
-    without adding any fields.
+    Dummy class for proposal categories. Inherits directly from
+    :class:`BaseClass` without adding any fields.
     """
     pass
 
@@ -160,7 +160,8 @@ class Proposal(BaseProposalAbstractModel):
     space = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
                                blank=True, null=True, 
-                               help_text = _('Change the user that will figure \
+                               help_text = _('Change the user that will \
+                            figure \
                                as the author'))
     #debatelink = models.ForeignKey()
     tags = TagField(help_text = _('Insert here relevant words related with the \
@@ -221,10 +222,10 @@ class ProposalField(models.Model):
 
     """
 
-    proposalset= models.ForeignKey(ProposalSet, help_text= _('Customizing proposal \
-                                    form for a proposal set'), unique=False)
-    field_name = models.CharField(max_length=100, choices=OPTIONAL_FIELDS,help_text \
-                                    = _('Additional field that needed to added to the proposal form'))
+    proposalset= models.ForeignKey(ProposalSet, help_text= _('Customizing \
+        proposal form for a proposal set'), unique=False)
+    field_name = models.CharField(max_length=100, choices=OPTIONAL_FIELDS,help_text = _('Additional field that needed to added to the proposal \
+        form'))
 
     def __unicode__(self):
         return self.field_name

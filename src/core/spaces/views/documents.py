@@ -90,8 +90,8 @@ class EditDocument(UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(EditDocument, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, 
-            url=self.kwargs['space_url'])
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = space
         context['user_is_admin'] = (has_space_permission(self.request.user,
             space, allow=['admins', 'mods']) or has_all_permissions(
             self.request.user)) 
