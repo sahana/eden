@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 
 """
     Organization Registry - Controllers
@@ -86,7 +86,7 @@ def site():
             return False
         if "address" in request.args:
             s3db.configure("org_site",
-                           search_method=s3base.S3SiteSearch()
+                           search_method=s3base.S3SiteAddressSearch()
                            )
 
         # Location Filter

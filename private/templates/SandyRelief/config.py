@@ -87,6 +87,9 @@ settings.security.policy = 4 # Controller & Function ACLs
 
 settings.ui.update_label = "Edit"
 
+# Uncomment to disable that LatLons are within boundaries of their parent
+settings.gis.check_within_parent_boundaries = False
+
 # Inventory Management
 # Uncomment to customise the label for Facilities in Inventory Management
 settings.inv.facility_label = "Facility"
@@ -171,6 +174,16 @@ settings.hrm.use_description = False
 # Custom label for Organisations in HR module
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"
+
+# Projects
+# Uncomment this to use settings suitable for detailed Task management
+settings.project.mode_task = True
+# Uncomment this to use Activities for projects
+settings.project.activities = True
+# Uncomment this to use Milestones in project/task.
+settings.project.milestones = True
+# Uncomment this to disable Sectors in projects
+settings.project.sectors = False
 
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):

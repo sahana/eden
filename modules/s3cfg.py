@@ -388,6 +388,11 @@ class S3Config(Storage):
     def get_gis_building_name(self):
         " Display Building Name when selecting Locations "
         return self.gis.get("building_name", True)
+    def get_gis_check_within_parent_boundaries(self):
+        """
+            Whether location Lat/Lons should be within the boundaries of the parent
+        """
+        return self.gis.get("check_within_parent_boundaries", True)
     def get_gis_latlon_selector(self):
         " Display a Lat/Lon boxes when selecting Locations "
         return self.gis.get("latlon_selector", True)

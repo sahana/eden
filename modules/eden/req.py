@@ -35,6 +35,7 @@ __all__ = ["S3RequestModel",
            "S3CommitModel",
            "S3CommitItemModel",
            "S3CommitPersonModel",
+           "S3CommitSkillModel",
            "req_item_onaccept",
            "req_update_status",
            "req_rheader",
@@ -145,6 +146,19 @@ class S3RequestModel(S3Model):
         req_ask_transport = settings.get_req_ask_transport()
         date_writable = settings.get_req_date_writable()
 
+        # Comment these to use a Dropdown & not an Autocomplete
+        #if settings.get_org_site_autocomplete():
+        #    if settings.get_org_site_address_autocomplete():
+        #        site_widget = S3SiteAddressAutocompleteWidget()
+        #    else:
+        #        site_widget = S3SiteAutocompleteWidget()
+        #    site_comment = DIV(_class="tooltip",
+        #                       _title="%s|%s" % (T("Requested By Facility"),
+        #                                         T("Enter some characters to bring up a list of possible matches")))          
+        #else:
+        site_widget = None
+        site_comment = None
+
         # ---------------------------------------------------------------------
         # Requests
         tablename = "req_req"
@@ -191,11 +205,8 @@ class S3RequestModel(S3Model):
                                                   #required = True,
                                                   instance_types = auth.org_site_types,
                                                   updateable = True,
-                                                  # Comment these to use a Dropdown & not an Autocomplete
-                                                  #widget = S3SiteAutocompleteWidget(),
-                                                  #comment = DIV(_class="tooltip",
-                                                  #              _title="%s|%s" % (T("Requested By Facility"),
-                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
+                                                  widget = site_widget,
+                                                  comment = site_comment,
                                                   represent = self.org_site_represent
                                                   ),
                                   #Field("location",
@@ -427,6 +438,7 @@ class S3RequestModel(S3Model):
 
         self.configure(tablename,
                        onaccept = self.req_onaccept,
+                       ondelete = self.req_req_ondelete,
                        deduplicate = self.req_req_duplicate,
                        listadd = False,
                        orderby = ~table.date,
@@ -788,27 +800,27 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             # Mark Request as Committed
             db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
 
-        #elif type == 3:
-        #    # People @ToDo: Add req_commit_skill table
-        #    rstable = s3db.req_req_skill
-        #    skills = db(rstable.req_id == req_id).select(rstable.id,
-        #                                                 rstable.skill_id,
-        #                                                 rstable.quantity,
-        #                                                 rstable.comments)
-        #    if skills:
-        #        cstable = s3db.req_commit_skill
-        #        insert = cstable.insert
-        #        for skill in skills:
-        #            id = skill.id
-        #            quantity = skill.quantity
-        #            insert(commit_id=cid,
-        #                   skill_id=skill.skill_id,
-        #                   quantity=quantity,
-        #                   comments=skill.comments)
-        #            # Mark Item in the Request as Committed
-        #            db(rstable.id == skill.id).update(quantity_commit=quantity)
-        #    # Mark Request as Committed
-        #    db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+        elif type == 3:
+            # People
+            rstable = s3db.req_req_skill
+            skills = db(rstable.req_id == req_id).select(rstable.id,
+                                                         rstable.skill_id,
+                                                         rstable.quantity,
+                                                         rstable.comments)
+            if skills:
+                cstable = s3db.req_commit_skill
+                insert = cstable.insert
+                for skill in skills:
+                    id = skill.id
+                    quantity = skill.quantity
+                    insert(commit_id=cid,
+                           skill_id=skill.skill_id,
+                           quantity=quantity,
+                           comments=skill.comments)
+                    # Mark Item in the Request as Committed
+                    db(rstable.id == skill.id).update(quantity_commit=quantity)
+            # Mark Request as Committed
+            db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
 
         else:
             # Other
@@ -1071,6 +1083,20 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                            update_next = URL(c="req",
                                              f=f,
                                              args=["[id]", "job"]))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_req_ondelete(row):
+        """
+            Cleanup any scheduled tasks
+        """
+
+        if row.is_template:
+            db = current.db
+            table = db.scheduler_task
+            query = (table.function == "req_add_from_template") & \
+                    (table.args == "[%s]" % row.id)
+            db(query).delete()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1783,12 +1809,16 @@ class S3CommitModel(S3Model):
                         )
 
         # Components
-        # Commitment Items as component of Commitment
+        # Committed Items as component of Commitment
         add_component("req_commit_item",
                       req_commit="commit_id")
 
-        # Commitment Persons as component of Commitment
+        # Committed Persons as component of Commitment
         add_component("req_commit_person",
+                      req_commit="commit_id")
+
+        # Committed Skills as component of Commitment
+        add_component("req_commit_skill",
                       req_commit="commit_id")
 
         # ---------------------------------------------------------------------
@@ -1913,14 +1943,61 @@ class S3CommitModel(S3Model):
             else:
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
-        #elif type == 3: # People
-        #    # @ToDo: Changes for inline items
-        #    # If no organisation_id, then this is a single person commitment, so create the commit_person record automatically
-        #    table = s3db.req_commit_person
-        #    table.insert(commit_id = vars.id,
-        #                 #skill_id = ???,
-        #                 person_id = auth.s3_logged_in_person())
-        #    # @ToDo: Mark Person's allocation status as 'Committed'
+        elif type == 3:
+            # People
+            ## If this is a single person commitment, then create the commit_person record automatically
+            #table = s3db.req_commit_person
+            #table.insert(commit_id = vars.id,
+            #             #skill_id = ???,
+            #             person_id = auth.s3_logged_in_person())
+            ## @ToDo: Mark Person's allocation status as 'Committed'
+
+            # Update Commit Status for Skills in the Request
+            # Get the full list of skills in the request
+            # @ToDo: Breakdown to component Skills within multi
+            rstable = s3db.req_req_skill
+            query = (rstable.req_id == req_id) & \
+                    (rstable.deleted == False)
+            rskills = db(query).select(rstable.id,
+                                       rstable.skill_id,
+                                       rstable.quantity,
+                                       )
+            # Get all Commits in-system
+            cstable = s3db.req_commit_skill
+            query = (ctable.req_id == req_id) & \
+                    (cstable.commit_id == ctable.id) & \
+                    (cstable.deleted == False)
+            cskills = db(query).select(cstable.skill_id,
+                                       cstable.quantity,
+                                       )
+            commit_qty = {}
+            for skill in cskills:
+                multi_skill_id = skill.skill_id
+                for skill_id in multi_skill_id:
+                    if skill_id in commit_qty:
+                        commit_qty[skill_id] += skill.quantity
+                    else:
+                        commit_qty[skill_id] = skill.quantity
+            complete = False
+            for skill in rskills:
+                multi_skill_id = skill.skill_id
+                quantity_commit = 0
+                for skill_id in multi_skill_id:
+                    if skill_id in commit_qty:
+                        if commit_qty[skill_id] > quantity_commit:
+                            quantity_commit = commit_qty[skill_id]
+                db(rstable.id == skill.id).update(quantity_commit=quantity_commit)
+                req_quantity = skill.quantity
+                if quantity_commit >= req_quantity:
+                    complete = True
+                else:
+                    complete = False
+
+            # Update overall Request Status
+            if complete:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            else:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
         elif type == 9:
             # Other
@@ -2001,14 +2078,61 @@ class S3CommitModel(S3Model):
             else:
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
-        #elif type == 3: # People
-        #    # @ToDo: Changes for inline items
-        #    # If no organisation_id, then this is a single person commitment, so create the commit_person record automatically
-        #    table = s3db.req_commit_person
-        #    table.insert(commit_id = vars.id,
-        #                 #skill_id = ???,
-        #                 person_id = auth.s3_logged_in_person())
-        #    # @ToDo: Mark Person's allocation status as 'Committed'
+        elif type == 3:
+            # People
+            ## If this is a single person commitment, then create the commit_person record automatically
+            #table = s3db.req_commit_person
+            #table.insert(commit_id = vars.id,
+            #             #skill_id = ???,
+            #             person_id = auth.s3_logged_in_person())
+            ## @ToDo: Mark Person's allocation status as 'Committed'
+            # Update Commit Status for Skills in the Request
+            # Get the full list of skills in the request
+            rstable = s3db.req_req_skill
+            query = (rstable.req_id == req_id) & \
+                    (rstable.deleted == False)
+            rskills = db(query).select(rstable.id,
+                                       rstable.skill_id,
+                                       rstable.quantity,
+                                       )
+            # Get all Commits in-system
+            # - less those from this commit
+            cstable = s3db.req_commit_skill
+            query = (ctable.req_id == req_id) & \
+                    (cstable.commit_id == ctable.id) & \
+                    (cstable.commit_id != id) & \
+                    (cstable.deleted == False)
+            cskills = db(query).select(cstable.skill_id,
+                                       cstable.quantity,
+                                       )
+            commit_qty = {}
+            for skill in cskills:
+                multi_skill_id = skill.skill_id
+                for skill_id in multi_skill_id:
+                    if skill_id in commit_qty:
+                        commit_qty[skill_id] += skill.quantity
+                    else:
+                        commit_qty[skill_id] = skill.quantity
+            complete = False
+            for skill in rskills:
+                multi_skill_id = skill.skill_id
+                quantity_commit = 0
+                for skill_id in multi_skill_id:
+                    if skill_id in commit_qty:
+                        if commit_qty[skill_id] > quantity_commit:
+                            quantity_commit = commit_qty[skill_id]
+                db(rstable.id == skill.id).update(quantity_commit=quantity_commit)
+                req_quantity = skill.quantity
+                if quantity_commit >= req_quantity:
+                    complete = True
+                else:
+                    complete = False
+
+            # Update overall Request Status
+            if complete:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            else:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
         elif type == 9:
             # Other
@@ -2093,7 +2217,7 @@ class S3CommitItemModel(S3Model):
         # Get the req_id
         ritable = db.req_req_item
         req = db(ritable.id == req_item_id).select(ritable.req_id,
-                                                            limitby=(0, 1)).first()
+                                                   limitby=(0, 1)).first()
         if not req:
             return
         req_id = req.req_id
@@ -2223,6 +2347,7 @@ class S3CommitItemModel(S3Model):
 # =============================================================================
 class S3CommitPersonModel(S3Model):
     """
+        Commit a named individual to a Request
     """
 
     names = ["req_commit_person"]
@@ -2308,6 +2433,121 @@ class S3CommitPersonModel(S3Model):
         # Update status_commit of the req record
         s3mgr.store_session("req", "req_skill", r_req_skill.id)
         req_skill_onaccept(None)
+
+# =============================================================================
+class S3CommitSkillModel(S3Model):
+    """
+        Commit anonymous people to a Request
+    """
+
+    names = ["req_commit_skill"]
+
+    def model(self):
+
+        T = current.T
+
+        # -----------------------------------------------------------------
+        # Committed Skills
+        #
+        tablename = "req_commit_skill"
+        table = self.define_table(tablename,
+                                  self.req_commit_id(),
+                                  self.hrm_multi_skill_id(),
+                                  Field("quantity", "double", notnull=True,
+                                        label = T("Quantity")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        # CRUD strings
+        ADD_COMMIT_SKILL = T("Add People to Commitment")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_COMMIT_SKILL,
+            title_display = T("Committed People Details"),
+            title_list = T("Committed People"),
+            title_update = T("Edit Committed People"),
+            title_search = T("Search Committed People"),
+            subtitle_create = T("Add People to Commitment"),
+            label_list_button = T("List Committed People"),
+            label_create_button = ADD_COMMIT_SKILL,
+            label_delete_button = T("Remove People from Commitment"),
+            msg_record_created = T("People added to Commitment"),
+            msg_record_modified = T("Committed People updated"),
+            msg_record_deleted = T("People removed from Commitment"),
+            msg_list_empty = T("No People currently committed"))
+
+        self.configure(tablename,
+                       onaccept = self.commit_skill_onaccept)
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (s3.*)
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def commit_skill_onaccept(form):
+        """
+            Update the Commit Status for the Request Skill & Request
+        """
+
+        db = current.db
+
+        vars = form.vars
+        req_skill_id = vars.req_skill_id
+
+        # Get the req_id
+        rstable = db.req_req_skill
+        req = db(rstable.id == req_skill_id).select(rstable.req_id,
+                                                    limitby=(0, 1)).first()
+        if not req:
+            return
+        req_id = req.req_id
+        
+        # Get the full list of skills in the request
+        query = (rstable.req_id == req_id) & \
+                (rstable.deleted == False)
+        rskills = db(query).select(rstable.id,
+                                   rstable.skill_id,
+                                   rstable.quantity,
+                                   )
+        # Get all Commits in-system
+        ctable = db.req_commit
+        cstable = db.req_commit_skill
+        query = (ctable.req_id == req_id) & \
+                (cstable.commit_id == ctable.id) & \
+                (cstable.deleted == False)
+        cskills = db(query).select(cstable.skill_id,
+                                   cstable.quantity,
+                                   )
+        commit_qty = {}
+        for skill in cskills:
+            multi_skill_id = skill.skill_id
+            for skill_id in multi_skill_id:
+                if skill_id in commit_qty:
+                    commit_qty[skill_id] += skill.quantity
+                else:
+                    commit_qty[skill_id] = skill.quantity
+        complete = False
+        for skill in rskills:
+            multi_skill_id = skill.skill_id
+            quantity_commit = 0
+            for skill_id in multi_skill_id:
+                if skill_id in commit_qty:
+                    if commit_qty[skill_id] > quantity_commit:
+                        quantity_commit = commit_qty[skill_id]
+            db(rstable.id == skill.id).update(quantity_commit=quantity_commit)
+            req_quantity = skill.quantity
+            if quantity_commit >= req_quantity:
+                complete = True
+            else:
+                complete = False
+
+        # Update overall Request Status
+        rtable = db.req_req
+        if complete:
+            db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+        else:
+            db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
 # =============================================================================
 def req_item_onaccept(form):

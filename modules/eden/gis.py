@@ -471,7 +471,7 @@ class S3LocationModel(S3Model):
             #if lat not in (None, "") and lon not in (None, ""):
             if lat and lon:
                 name = vars.name
-                if parent:
+                if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
                     # Check within Bounds of the Parent
                     # Rough (Bounding Box)
                     min_lat, min_lon, max_lat, max_lon, parent_name = gis.get_bounds(parent=parent)

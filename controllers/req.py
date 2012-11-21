@@ -493,6 +493,45 @@ S3OptionsFilter({
                     #                                 args=["[id]", "commit_item"]),
                     #               update_next = URL(c="req", f="commit",
                     #                                 args=["[id]", "commit_item"]))
+
+            elif type == 3: # People
+                # Limit site_id to orgs the user has permissions for
+                # @ToDo: Make this customisable between Site/Org
+                # @ToDo: is_affiliated()
+                auth.permitted_facilities(table=r.table,
+                                          error_msg=T("You do not have permission for any facility to make a commitment."))
+                # Limit organisation_id to organisations the user has permissions for
+                #auth.permitted_organisations(table=r.table, redirect_on_error=False)
+                if r.interactive:
+                    #table.organisation_id.readable = True
+                    #table.organisation_id.writable = True
+                    # Dropdown not Autocomplete
+                    itable = s3db.req_commit_skill
+                    itable.skill_id.widget = None
+                    # Custom Form
+                    s3forms = s3base.s3forms
+                    crud_form = s3forms.S3SQLCustomForm(
+                            "site_id",
+                            "date",
+                            "date_available",
+                            "committer_id",
+                            s3forms.S3SQLInlineComponent(
+                                "commit_skill",
+                                label = T("Skills"),
+                                fields = ["quantity",
+                                          "skill_id",
+                                          "comments"
+                                          ]
+                            ),
+                            "comments",
+                        )
+                    s3db.configure("req_commit", crud_form=crud_form)
+                    # Redirect to the Skills tab after creation
+                    #s3db.configure(table,
+                    #               create_next = URL(c="req", f="commit",
+                    #                                 args=["[id]", "commit_skill"]),
+                    #               update_next = URL(c="req", f="commit",
+                    #                                 args=["[id]", "commit_skill"]))
             else:
                 # Non-Item commits can have an Organisation
                 # Check if user is affiliated to an Organisation
@@ -509,14 +548,14 @@ S3OptionsFilter({
                 # Non-Item commits shouldn't have a From Inventory
                 # @ToDo: Assets do? (Well, a 'From Site')
                 table.site_id.readable = table.site_id.writable = False
-                if r.interactive and r.record.type == 3: # People
-                    # Redirect to the Persons tab after creation
-                    s3db.configure(table,
-                                   create_next = URL(c="req", f="commit",
-                                                     args=["[id]", "commit_person"]),
-                                   update_next = URL(c="req", f="commit",
-                                                     args=["[id]", "commit_person"])
-                                   )
+                #if r.interactive and r.record.type == 3: # People
+                #    # Redirect to the Persons tab after creation
+                #    s3db.configure(table,
+                #                   create_next = URL(c="req", f="commit",
+                #                                     args=["[id]", "commit_person"]),
+                #                   update_next = URL(c="req", f="commit",
+                #                                     args=["[id]", "commit_person"])
+                #                   )
         else:
             # Limit site_id to facilities the user has permissions for
             # @ToDo: Non-Item requests shouldn't be bound to a Facility?
@@ -940,10 +979,7 @@ def commit():
 
         if r.interactive:
             # Commitments created through UI should be done via components
-            # @ToDo: Block Direct Create attempts
             table = r.table
-            #table.req_id.default = request.vars["req_id"]
-            #table.req_id.writable = False
 
             if r.record:
                 s3.crud.submit_button = T("Save Changes")
@@ -1007,8 +1043,45 @@ S3OptionsFilter({
                         )
                     s3db.configure("req_commit", crud_form=crud_form)
 
+                elif r.record.type == 3: # People
+                    # Limit site_id to sites the user has permissions for
+                    auth.permitted_facilities(table=r.table,
+                          error_msg=T("You do not have permission for any facility to make a commitment."))
+                    table.site_id.comment = A(T("Set as default Site"),
+                                              _id="req_commit_site_id_link",
+                                              _target="_blank",
+                                              _href=URL(c="default",
+                                                        f="user",
+                                                        args=["profile"]))
+                    # Limit organisation_id to organisations the user has permissions for
+                    #auth.permitted_organisations(table=r.table, redirect_on_error=False)
+                    #table.organisation_id.readable = True
+                    #table.organisation_id.writable = True
+                    # Dropdown not Autocomplete
+                    stable = s3db.req_commit_skill
+                    stable.skill_id.widget = None
+                    # Custom Form
+                    s3forms = s3base.s3forms
+                    crud_form = s3forms.S3SQLCustomForm(
+                            #"organisation_id",
+                            "site_id",
+                            "date",
+                            "date_available",
+                            "committer_id",
+                            s3forms.S3SQLInlineComponent(
+                                "commit_skill",
+                                label = T("People"),
+                                fields = ["quantity",
+                                          "skill_id",
+                                          "comments"
+                                          ]
+                            ),
+                            "comments",
+                        )
+                    s3db.configure("req_commit", crud_form=crud_form)
+
                 else:
-                    # Non-Item commits can have an Organisation
+                    # Commits to Other requests can have an Organisation
                     # Limit organisation_id to organisations the user has permissions for
                     auth.permitted_organisations(table=r.table, redirect_on_error=False)
                     table.organisation_id.readable = True
@@ -1106,24 +1179,25 @@ def commit_rheader(r):
                 #rheader.append(send_btn_confirm)
 
             elif type == 3:
-                tabs.append((T("People"), "commit_person"))
+                #tabs.append((T("People"), "commit_person"))
+                tabs.append((T("People"), "commit_skill"))
 
                 #req_record = db.req_req[record.req_id]
                 #req_date = req_record.date
                 organisation_represent = s3db.org_organisation_represent
-                rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),
-                                          table.req_id.represent(record.req_id),
-                                         ),
-                                      TR( TH( "%s: " % T("Committing Organization")),
-                                          organisation_represent(record.organisation_id),
-                                          TH( "%s: " % T("Commit Date")),
-                                          s3_date_represent(record.date),
-                                          ),
-                                      TR( TH( "%s: " % table.comments.label),
-                                          TD(record.comments, _colspan=3)
-                                          ),
-                                         ),
-                                        )
+                rheader = DIV(TABLE(TR(TH("%s: " % table.req_id.label),
+                                       table.req_id.represent(record.req_id),
+                                       ),
+                                    TR(TH("%s: " % T("Committing Organization")),
+                                       organisation_represent(record.organisation_id),
+                                       TH("%s: " % T("Commit Date")),
+                                       s3_date_represent(record.date),
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       TD(record.comments, _colspan=3)
+                                       ),
+                                    ),
+                                )
             else:
                 # Other (& Assets/Shelter)
                 rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),

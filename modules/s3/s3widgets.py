@@ -1198,7 +1198,7 @@ $('#%(dummy_input)s').autocomplete({
   return content
  },
  focus:function(event,ui){
-  var name+=ui.item.name
+  var name=ui.item.name
   $('#%(dummy_input)s').val(name)
   return false
  },

@@ -225,6 +225,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.edit_GR = True
 # Note that editing of locations used as regions for the Regions menu is always
 # restricted to MapAdmins.
+# Uncomment to disable that LatLons are within boundaries of their parent
+#settings.gis.check_within_parent_boundaries = False
 
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
