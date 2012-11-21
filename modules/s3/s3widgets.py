@@ -158,7 +158,10 @@ class S3DateWidget(FormWidget):
 
         attr["_class"] = "date"
 
-        selector = str(field).replace(".", "_")
+        if "_id" in attr:
+            selector = attr["_id"]
+        else:
+            selector = str(field).replace(".", "_")
 
         current.response.s3.jquery_ready.append(
 '''$('#%(selector)s').datepicker('option',{
