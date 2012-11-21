@@ -13,17 +13,16 @@
 {% block extrajs %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
     <script type="text/javascript">
-                                $.datepicker.setDefaults(
-                                    { onSelect: function(dateText) {
-                                        var date = $(this).datepicker("getDate");
-                                        var month = date.getMonth() + 1;
-                                        var year = date.getFullYear();
-                                        window.location = "calendar/" + year + "/" + month + "/";
-                                      }
-                                    }
-                                );
-                                $( "#datepicker" ).datepicker( $.datepicker.regional[ "{{ LANGUAGE_CODE }}" ] );
-                            </script>
+        $.datepicker.setDefaults({
+            onSelect: function(dateText) {
+                var date = $(this).datepicker("getDate");
+                var month = date.getMonth() + 1;
+                var year = date.getFullYear();
+                window.location = "calendar/" + year + "/" + month + "/";
+            }
+        });
+        $( "#datepicker" ).datepicker( $.datepicker.regional[ "{{ LANGUAGE_CODE }}" ] );
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -516,9 +515,29 @@
                 <div class="tab-pane" id="events">
                     <div class="row">
                         <div class="span8">
-                            <div id="datepicker"></div>
+                            <h4>{% trans "Next events" %}</h4>
+                            <ul class="unstyled">
+                                {% for e in event %}
+                                    {% if not e.is_due %}
+                                        <li><a href="{% url 'view-event' get_place.url e.id %}">{{ e.title }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                            <h4>{% trans "Past events" %}</h4>
+                            <ul class="unstyled">
+                                {% for e in event %}
+                                    {% if e.is_due %}
+                                        <li><a href="{% url 'view-event' get_place.url e.id %}">{{ e.title }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
                         </div>
                         <div class="span4">
+                            <div class="alert fade in">
+                                <button type="button" class="close" data-dismiss="alert">×</button>
+                                {% trans "<strong>Hey!</strong> You can click on a day to see a bigger calendar with the events." %}
+                            </div>
+                            <div id="datepicker"></div>
                             {% if user_is_admin %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
