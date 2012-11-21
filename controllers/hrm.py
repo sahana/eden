@@ -395,6 +395,8 @@ def person():
                               insertable = False,
                               editable = False,
                               deletable = False)
+                elif r.component_name == "group_membership":
+                    s3db.hrm_configure_pr_group_membership()
 
             resource = r.resource
             if mode is not None:
@@ -583,100 +585,7 @@ def group():
         Team controller
         - uses the group table from PR
     """
-
-    tablename = "pr_group"
-    table = s3db[tablename]
-
-    _group_type = table.group_type
-    _group_type.label = T("Team Type")
-    table.description.label = T("Team Description")
-    table.name.label = T("Team Name")
-    mtable = s3db.pr_group_membership
-    mtable.group_id.label = T("Team ID")
-    mtable.group_head.label = T("Team Leader")
-
-    # Set Defaults
-    _group_type.default = 3  # 'Relief Team'
-    _group_type.readable = _group_type.writable = False
-
-    # Only show Relief Teams
-    # Do not show system groups
-    s3.filter = (table.system == False) & \
-                (_group_type == 3)
-
-    # CRUD Strings
-    ADD_TEAM = T("Add Team")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_TEAM,
-        title_display = T("Team Details"),
-        title_list = T("Teams"),
-        title_update = T("Edit Team"),
-        title_search = T("Search Teams"),
-        subtitle_create = T("Add New Team"),
-        label_list_button = T("List Teams"),
-        label_create_button = T("Add New Team"),
-        label_search_button = T("Search Teams"),
-        msg_record_created = T("Team added"),
-        msg_record_modified = T("Team updated"),
-        msg_record_deleted = T("Team deleted"),
-        msg_list_empty = T("No Teams currently registered"))
-
-    s3.crud_strings["pr_group_membership"] = Storage(
-        title_create = T("Add Member"),
-        title_display = T("Membership Details"),
-        title_list = T("Team Members"),
-        title_update = T("Edit Membership"),
-        title_search = T("Search Member"),
-        subtitle_create = T("Add New Member"),
-        label_list_button = T("List Members"),
-        label_create_button = T("Add Team Member"),
-        label_delete_button = T("Delete Membership"),
-        msg_record_created = T("Team Member added"),
-        msg_record_modified = T("Membership updated"),
-        msg_record_deleted = T("Membership deleted"),
-        msg_list_empty = T("No Members currently registered"))
-
-    s3db.configure(tablename, main="name", extra="description",
-                    # Redirect to member list when a new group has been created
-                    create_next = URL(f="group",
-                                      args=["[id]", "group_membership"]))
-    s3db.configure("pr_group_membership",
-                    list_fields=["id",
-                                 "person_id",
-                                 "group_head",
-                                 "description"])
-
-    # Post-process
-    def postp(r, output):
-
-        if r.interactive:
-            if not r.component:
-                update_url = URL(args=["[id]", "group_membership"])
-                s3_action_buttons(r, deletable=False, update_url=update_url)
-                if "msg" in settings.modules and \
-                   auth.permission.has_permission("update", c="hrm", f="compose"):
-                    s3.actions.append({
-                        "url": URL(f="compose",
-                                   vars = {"group_id": "[id]"}),
-                        "_class": "action-btn",
-                        "label": str(T("Send Notification"))})
-
-        return output
-    s3.postp = postp
-
-    tabs = [
-            (T("Team Details"), None),
-            # Team should be contacted either via the Leader or
-            # simply by sending a message to the group as a whole.
-            #(T("Contact Data"), "contact"),
-            (T("Members"), "group_membership")
-            ]
-
-    output = s3_rest_controller("pr", resourcename,
-                                rheader=lambda r: s3db.pr_rheader(r, tabs=tabs))
-
-    return output
-
+    return s3db.hrm_group_controller()
 
 # =============================================================================
 # Jobs

@@ -88,7 +88,7 @@ table.embeddedComponent {
     border-top: 0;
     border-right: 0;
 }
-form tr td table.embeddedComponent td {
+form table.embeddedComponent td {
     border: 1px solid #B3B3B3;
     padding: 0 5px;
     border-bottom: 0;

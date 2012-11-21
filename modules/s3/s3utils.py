@@ -638,48 +638,55 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_represent_name(table):
+def s3_represent_id( table,
+                     fieldname = "name",
+                     translate = False):
     """
-        Returns a represent function for the common case where we return
-        the name of the record.
+        Returns a represent function for a record id.
     """
 
     def represent(id, row=None):
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        r = current.db(table._id == id).select(table.name,
-                                               limitby=(0, 1)
-                                               ).first()
+        if not row:
+            if not id:
+                return current.messages["NONE"]
+            row  = current.db(table._id == id).select(table[fieldname],
+                                                   limitby=(0, 1)
+                                                   ).first()
         try:
-            return r.name
+            if translate:
+                return current.T(row.name)
+            else:
+                return row.name
         except:
             return current.messages["UNKNOWN_OPT"]
 
     return represent
-
 # =============================================================================
-def s3_represent_name_translate(table):
+def s3_represent_multi_id( table,
+                           fieldname = "name",
+                           translate = False):
     """
-        Returns a represent function for the common case where we return
-        a translated version of the name of the record.
+        Returns a represent function for a record id.
     """
 
-    def represent(id, row=None):
-        if row:
-            return current.T(row.name)
-        elif not id:
+    def represent(ids, row=None):
+        if not ids:
             return current.messages["NONE"]
 
-        r = current.db(table._id == id).select(table.name,
-                                               limitby=(0, 1)
-                                               ).first()
+        ids = [ids] if type(ids) is not list else ids
+
+        row = current.db(table.id.belongs(ids)).select(table.id,
+                                                       table[fieldname]).as_dict()
+
         try:
-            return current.T(r.name)
+            strings = [str(row.get(id)[fieldname]) for id in ids]
         except:
-            return current.messages["UNKNOWN_OPT"]
+            return current.messages["NONE"]
+    
+        if strings:
+            return ", ".join(strings)
+        else:
+            return current.messages["NONE"]
 
     return represent
 
