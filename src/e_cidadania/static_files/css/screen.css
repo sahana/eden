@@ -26,6 +26,11 @@ a {
 img {
 	border: none;
 }
+
+textarea {
+    width: 510px;
+    margin: 10px;
+}
 /* END HTML TAGS DEFINITION */
 
 /* COMMON CUSTOMIZATIONS */
