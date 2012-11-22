@@ -101,14 +101,14 @@ class ProposalSet(models.Model):
 
     name = models.CharField(_('Name'), max_length=200, unique=True,
                             help_text = _('Max: 200 characters'))
-    ptype = models.CharField(_('Ponderation'), choices=PONDERATIONS,
-        max_length=20, help_text=_('Ponderation types:<br><strong>Users: \
-        </strong>Users give support votes to the proposal, and that votes \
-        are added to the final voting.<br><strong>Fixed:</strong>Fixed \
-        ponderations are stablished by the process managers. It\'s a \
-        porcentual puntuation. That means that percetange is calculated \
-        after the voting and added to the final voting.<br><strong>None: \
-        </strong> No ponderation is applied to the final voting.'))
+    # ptype = models.CharField(_('Ponderation'), choices=PONDERATIONS,
+    #     max_length=20, help_text=_('Ponderation types:<br><strong>Users: \
+    #     </strong>Users give support votes to the proposal, and that votes \
+    #     are added to the final voting.<br><strong>Fixed:</strong>Fixed \
+    #     ponderations are stablished by the process managers. It\'s a \
+    #     porcentual puntuation. That means that percetange is calculated \
+    #     after the voting and added to the final voting.<br><strong>None: \
+    #     </strong> No ponderation is applied to the final voting.'))
     space = models.ForeignKey(Space, blank=True, null=True)
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True)
@@ -210,15 +210,17 @@ class Proposal(BaseProposalAbstractModel):
             'space_url': self.space.url,
             'prop_id': str(self.id)})
 
+
 class ProposalField(models.Model):
     
     """
-    Proposal Fields data model. This will store details of addition form fields which can be 
-    optionally added the proposal form which is residing in a particular proposal set.
+    Proposal Fields data model. This will store details of addition form
+    fields which can be optionally added the proposal form which is residing
+    in a particular proposal set.
 
     user filled fields: proposalset, field_name
-    const:`OPTIONAL_FIELD` for class:ProposalField is hardcoded with three field values, more \
-            field can be added as need.
+    const:`OPTIONAL_FIELD` for class:ProposalField is hardcoded with three
+    field values, more fields can be added as need.
 
     """
 
