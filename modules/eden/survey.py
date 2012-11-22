@@ -3242,28 +3242,29 @@ class S3TranslateModel(S3Model):
         CODE_HELP = T("This is the short code of the language and will be used as the name of the file. This should be the ISO 639 code.")
         tablename = "survey_translate"
         table = self.define_table(tablename,
-                                template_id(),
-                                Field("language",
-                                       readable=True,
-                                       writable=True,
-                                       comment = DIV(_class="tooltip",
-                                                     _title="%s|%s" % (T("Language"),
-                                                            LANG_HELP))
-                                       ),
-                                Field("code",
-                                       readable=True,
-                                       writable=True,
-                                       comment = DIV(_class="tooltip",
-                                                     _title="%s|%s" % (T("Language Code"),
-                                                            CODE_HELP))
-                                       ),
-                                Field("file",
-                                      "upload",
-                                      autodelete=True),
-                                Field("filename",
-                                      readable=False,
-                                      writable=False),
-                                *s3_meta_fields())
+                                  template_id(),
+                                  Field("language",
+                                        readable=True,
+                                        writable=True,
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Language"),
+                                                                        LANG_HELP))
+                                        ),
+                                  Field("code",
+                                        readable=True,
+                                        writable=True,
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Language Code"),
+                                                                        CODE_HELP))
+                                        ),
+                                  Field("file",
+                                        "upload",
+                                        autodelete=True),
+                                  Field("filename",
+                                        readable=False,
+                                        writable=False),
+                                  *s3_meta_fields())
+
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add new translation language"),
         )

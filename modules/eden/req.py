@@ -799,6 +799,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                     db(ritable.id == item.id).update(quantity_commit=quantity)
             # Mark Request as Committed
             db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            msg = T("You have committed to all items in this Request. Please check that all details are correct and update as-required.")
 
         elif type == 3:
             # People
@@ -821,13 +822,15 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                     db(rstable.id == skill.id).update(quantity_commit=quantity)
             # Mark Request as Committed
             db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            msg = T("You have committed for all people in this Request. Please check that all details are correct and update as-required.")
 
         else:
             # Other
             # Mark Request as Committed
             db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            msg = T("You have committed to this Request. Please check that all details are correct and update as-required.")
 
-        current.session.confirmation = T("You have committed to all items in this Request. Please check that all details are correct and update as-required.")
+        current.session.confirmation = msg
         redirect(URL(c="req", f="commit", args=[cid]))
 
     # -------------------------------------------------------------------------
