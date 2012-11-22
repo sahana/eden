@@ -2704,15 +2704,16 @@ class S3AddPersonWidget(FormWidget):
 
         formstyle = s3.crud.formstyle
 
+        default = dict(_type = "text",
+                       value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "hide"
+
         # Main Input
         if "_id" in attr:
             real_input = attr["_id"]
         else:
             real_input = str(field).replace(".", "_")
-        default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = "hide"
 
         if self.select_existing:
             _class ="box_top"
@@ -3292,15 +3293,16 @@ class S3EmbedComponentWidget(FormWidget):
             selected = None
 
         # Main Input
+        default = dict(_type = "text",
+                       value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "hide"
+
         if "_id" in attr:
             real_input = attr["_id"]
         else:
             real_input = str(field).replace(".", "_")
         dummy = "dummy_%s" % real_input
-        default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = "hide"
 
         if self.select_existing:
             _class ="box_top"

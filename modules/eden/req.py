@@ -404,7 +404,7 @@ class S3RequestModel(S3Model):
                          "site_id$location_id$L4",
                          ]
         # @ToDo: id gets stripped in _select_field
-        fact_fields = report_fields + ["id"]
+        fact_fields = report_fields + [(T("Requests"), "id")]
 
         # Reusable Field
         req_id = S3ReusableField("req_id", table, sortby="date",

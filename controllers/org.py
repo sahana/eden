@@ -81,8 +81,7 @@ def site():
 
     # Pre-processor
     def prep(r):
-        if r.representation != "json" or \
-           r.method != "search":
+        if r.representation != "json":
             return False
         if "address" in request.args:
             s3db.configure("org_site",
@@ -231,7 +230,7 @@ def facility():
                     field.writable = False
                     field.comment = None
                     # Filter out people which are already staff for this office
-                    s3_filter_staff(r)
+                    s3base.s3_filter_staff(r)
 
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form

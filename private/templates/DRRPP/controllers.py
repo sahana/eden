@@ -135,11 +135,11 @@ class index():
                        _id="what_box")
 
         how_help_box = DIV(H1("HOW WOULD THIS INFORMATION HELP?"),
-                           H2("National Government"),
+                           B("National Government"),
                            UL("Gain clarity on types of support that may be accessed from regional level and thus receive coherent regional assistance"),
-                           H2("Organisation Implementing DRR Projects"),
+                           B("Organisation Implementing DRR Projects"),
                            UL("Plan better-knowing who does what, and where; Find partners and scale up implementation; and Learn from past and ongoing work of partners"),
-                           H2("Donor Agencies"),
+                           B("Donor Agencies"),
                            UL("Identify priorities to match your policy and programmatic imperatives; and minimise overlap; maximise resources"),
                            _id="how_help_box")
 
@@ -217,7 +217,7 @@ class index():
                     _id="stats_div")
 
         market = DIV(DIV(I("Under Development...")),
-                     H2("DRR Project Marketplace"),
+                     H3("DRR Project Marketplace"),
                      DIV("A platform to coordinate and collaborate on future DRR Projects."),
                      _id = "market_div")
 

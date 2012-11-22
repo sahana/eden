@@ -948,12 +948,13 @@ class S3StatsGroupModel(S3Model):
                                         label=T("Name")),
                                   )
         # Reusable Field
+        represent = s3_represent_id(table)
         source_id = S3ReusableField("source_id", table,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db,
                                                           "stats_source.source_id",
-                                                          stats_source_represent)),
-                                    represent = stats_source_represent,
+                                                          represent)),
+                                    represent = represent,
                                     label = T("Source"),
                                     ondelete = "CASCADE")
 
@@ -1012,12 +1013,13 @@ class S3StatsGroupModel(S3Model):
                              *s3_meta_fields()
                              )
         # Reusable Field
+        represent = s3_represent_id(table)
         group_type_id = S3ReusableField("group_type_id", table,
                             requires = IS_NULL_OR(
                                         IS_ONE_OF(db,
                                                   "stats_group_type.id",
-                                                  stats_group_type_represent)),
-                            represent = stats_group_type_represent,
+                                                  represent)),
+                            represent = represent,
                             label = T("Source Type"),
                             ondelete = "CASCADE")
         # Resource Configuration
@@ -1250,29 +1252,11 @@ def stats_demographic_data_controller():
     return output
 
 # =============================================================================
-def stats_group_type_represent(id, row=None):
-    """ FK representation """
-
-    if row:
-        return row.display
-    elif not id:
-        return current.messages.NONE
-
-    db = current.db
-    table = db.stats_group_type
-    r = db(table._id == id).select(table.display,
-                                   limitby=(0, 1)).first()
-    try:
-        return r.display
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
 def stats_group_represent(id, row=None):
     """ FK representation """
 
     if row:
-        return stats_source_represent(row.source_id)
+        return represent(s3db.stats_source)(row.source_id)
     elif not id:
         return current.messages.NONE
 
@@ -1283,25 +1267,6 @@ def stats_group_represent(id, row=None):
             (stable._id == table.source_id)
     r = current.db(query).select(stable.name,
                                  limitby=(0, 1)).first()
-    try:
-        return r.name
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def stats_source_represent(id, row=None):
-    """ FK representation """
-
-    if row:
-        return row.name
-    elif not id:
-        return current.messages.NONE
-    elif isinstance(id, Row):
-        return id.name
-
-    table = current.s3db.stats_source
-    r = current.db(table._id == id).select(table.name,
-                                           limitby=(0, 1)).first()
     try:
         return r.name
     except:
