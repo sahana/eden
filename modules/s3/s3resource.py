@@ -4634,6 +4634,8 @@ class S3ResourceQuery(object):
                 return "(%s in %s)" % (r, l)
             elif op == self.BELONGS:
                 return "(%s in %s)" % (l, r)
+            elif op == self.ANYOF:
+                return "(%s contains any of %s)" % (l, r)
             elif op == self.LIKE:
                 return "(%s like %s)" % (l, r)
             elif op == self.LT:

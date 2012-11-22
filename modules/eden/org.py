@@ -857,6 +857,7 @@ class S3OrganisationModel(S3Model):
         od = OrderedDict()
         for opt in opts:
             od[opt.id] = current.T(opt.name)
+        od[None] = current.messages.NONE
         return od
 
     # -------------------------------------------------------------------------
