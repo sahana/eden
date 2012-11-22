@@ -527,12 +527,12 @@ $(document).ready(function(){
             s3db = current.s3db
             potable = s3db.project_organisation
             otable = s3db.org_organisation
-            
+
             query = (potable.deleted == False) & \
                         (potable.organisation_id == otable.id)
             if role:
                 query = query & (potable.role == role)
-    
+
             rows = db(query).select(otable.name,
                                     orderby=otable.name)
             opts = {}
@@ -1351,7 +1351,7 @@ class S3Project3WModel(S3Model):
                     cols = 1,
                     options = self.project_theme_opts,
                 )
-                
+
         advanced_search = [
             simple,
             # This is only suitable for deployments with a few projects
@@ -2746,13 +2746,14 @@ class S3ProjectThemeModel(S3Model):
 def project_rfa_opts():
     T = current.T
     return {
-    1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
-    2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
-    3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
-    4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
-    5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
-    6: T("RFA6: Reduction of Underlying Risk Factors"),
-}
+        1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
+        2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
+        3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
+        4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
+        5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
+        6: T("RFA6: Reduction of Underlying Risk Factors"),
+    }
+
 class S3ProjectDRRPPModel(S3Model):
     """
         Models for DRR Project Portal extensions
