@@ -155,6 +155,7 @@ hr { /* This hr replaces the bootstrap one */
 }
 
 .postinfo {
+    margin-top: -10px;
     padding-top: 5px;
     padding-bottom: 5px;
     border-bottom: 1px solid #DDD;

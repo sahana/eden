@@ -116,7 +116,7 @@ automatically if found in the data models.
             {% endif %}
 
             <div class="control-group {% if form.title.errors %}error{% endif %}">
-                <label>{{ form.title.label }}</label>
+                <label class="control-label">{{ form.title.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.title }}
@@ -135,7 +135,7 @@ automatically if found in the data models.
             </div>
 
             <div class="control-group {% if form.theme.errors %}error{% endif %}">
-                <label>{{ form.theme.label }}</label>
+                <label class="control-label">{{ form.theme.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.theme }}
@@ -154,7 +154,7 @@ automatically if found in the data models.
             </div>
 
             <div class="control-group {% if form.start_date.errors %}error{% endif %}">
-                <label>{{ form.start_date.label }}</label>
+                <label class="control-label">{{ form.start_date.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         <input type="text" name="start_date" id="datepicker-start" class="hasDatePicker">
@@ -173,7 +173,7 @@ automatically if found in the data models.
             </div>
 
             <div class="control-group {% if form.end_date.errors %}error{% endif %}">
-                <label>{{ form.end_date.label }}</label>
+                <label class="control-label">{{ form.end_date.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         <input type="text" name="end_date" id="datepicker-end" class="hasDatePicker">
@@ -192,7 +192,7 @@ automatically if found in the data models.
             </div>
 
             <div class="control-group {% if form.description.errors %}error{% endif %}">
-                <label>{{ form.description.label }}</label>
+                <label class="control-label">{{ form.description.label }}</label>
                 <div class="controls">
                     <div class="input-prepend">
                         {{ form.description }}

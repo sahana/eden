@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-20 13:47+0100\n"
+"POT-Creation-Date: 2012-11-22 11:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -132,7 +132,7 @@ msgid ""
 msgstr ""
 
 #: templates/voting/poll_confirm_delete.html:40
-#: templates/voting/poll_edit.html:187 templates/voting/poll_form.html:181
+#: templates/voting/poll_edit.html:187 templates/voting/poll_form.html:185
 #: templates/voting/poll_list.html:64
 #: templates/voting/voting_confirm_delete.html:40
 #: templates/voting/voting_form.html:221
@@ -165,12 +165,12 @@ msgstr ""
 msgid "Edit poll"
 msgstr ""
 
-#: templates/voting/poll_edit.html:145 templates/voting/poll_form.html:139
+#: templates/voting/poll_edit.html:145 templates/voting/poll_form.html:143
 #: templates/voting/voting_form.html:179
 msgid "Staff members options"
 msgstr ""
 
-#: templates/voting/poll_edit.html:188 templates/voting/poll_form.html:182
+#: templates/voting/poll_edit.html:188 templates/voting/poll_form.html:186
 #: templates/voting/voting_form.html:222
 msgid "Publish"
 msgstr ""

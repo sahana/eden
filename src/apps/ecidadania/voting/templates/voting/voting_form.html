@@ -61,7 +61,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
             {% endif %}
 
             <div class="control-group {% if form.title.errors %}error{% endif%}">
-                <label>{{ form.title.label }}</label>
+                <label class="control-label">{{ form.title.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.title }}
@@ -79,7 +79,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                 </div>
             </div>
             <div class="control-group {% if form.description.errors %}error{% endif%}">
-                <label>{{ form.description.label }}</label>
+                <label class="control-label">{{ form.description.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.description }}
@@ -98,7 +98,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
             </div>
 
             <div class="control-group {% if form.proposalsets.errors %}error{% endif%}">
-                <label>{{ form.proposalsets.label }}</label>
+                <label class="control-label">{{ form.proposalsets.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.proposalsets }}
@@ -116,7 +116,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                 </div>
             </div>
             <div class="control-group {% if form.proposals.errors %}error{% endif%}">
-                <label>{{ form.proposals.label }}</label>
+                <label class="control-label">{{ form.proposals.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.proposals }}
@@ -134,7 +134,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                 </div>
             </div>
             <div class="control-group {% if form.start_date.errors %}error{% endif%}">
-                <label>{{ form.start_date.label }}</label>
+                <label class="control-label">{{ form.start_date.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {% if form.title.value %}
@@ -156,7 +156,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                 </div>
             </div>
             <div class="control-group {% if form.end_date.errors %}error{% endif%}">
-                <label>{{ form.end_date.label }}</label>
+                <label class="control-label">{{ form.end_date.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         <input type="text" name="end_date" id="datepicker-end" class="hasDatePicker">
@@ -179,7 +179,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
             <h3>{% trans "Staff members options" %}</h3>
 
             <div class="control-group {% if form.author.errors %}error{% endif%}">
-                <label>{{ form.author.label }}</label>
+                <label class="control-label">{{ form.author.label }}</label>
                 <div class="controls">
                     <div class="input-prepend">
                         {{ form.author }}
@@ -198,7 +198,7 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
             </div>
 
             <div class="control-group {% if form.space.errors %}error{% endif%}">
-                <label>{{ form.space.label }}</label>
+                <label class="control-label">{{ form.space.label }}</label>
                 <div class="controls">
                     <div class="input-prepend">
                         {{ form.space }}

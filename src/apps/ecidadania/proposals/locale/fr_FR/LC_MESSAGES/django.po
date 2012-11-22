@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-20 13:47+0100\n"
+"POT-Creation-Date: 2012-11-22 11:43+0100\n"
 "PO-Revision-Date: 2012-06-14 11:49+0000\n"
 "Last-Translator: hugodeslongchamps <hugo.deslongchamps@googlemail.com>\n"
 "Language-Team: French (http://www.transifex.net/projects/p/ecidadania/"
@@ -83,7 +83,7 @@ msgstr "ID de l'objet"
 msgid "Name"
 msgstr "Prénom"
 
-#: models.py:103 models.py:155
+#: models.py:103 models.py:154
 msgid "Max: 200 characters"
 msgstr ""
 
@@ -95,51 +95,50 @@ msgstr "Lieu"
 #: models.py:105
 msgid ""
 "Ponderation types:<br><strong>Users:         </strong>Users give support "
-"votes to the proposal, and that votes are         added to the final voting."
-"<br><strong>Fixed:</strong>Fixed ponderations         are stablished by the "
-"process managers. It's a porcentual puntuation.         That means that "
-"percetange is calculated after the voting and added to         the final "
-"voting.<br><strong>None:</strong> No ponderation is applied         to the "
+"votes to the proposal, and that votes         are added to the final voting."
+"<br><strong>Fixed:</strong>Fixed         ponderations are stablished by the "
+"process managers. It's a         porcentual puntuation. That means that "
+"percetange is calculated         after the voting and added to the final "
+"voting.<br><strong>None:         </strong> No ponderation is applied to the "
 "final voting."
 msgstr ""
 
 #: models.py:116
-msgid ""
-"Select the debate associated                                with this "
-"proposal set"
+msgid "Select the debate associated with this proposal set"
 msgstr ""
 
-#: models.py:123
+#: models.py:122
 #, fuzzy
 msgid "Proposal set"
 msgstr "EnsembledePropositions"
 
-#: models.py:124
+#: models.py:123
 #, fuzzy
 msgid "Proposal sets"
 msgstr "EnsemblesdePropositions"
 
-#: models.py:152
+#: models.py:151
 msgid "Code"
 msgstr "Code"
 
-#: models.py:154
+#: models.py:153
 msgid "Title"
 msgstr "Titre"
 
-#: models.py:158
+#: models.py:157
 msgid ""
 "Proposal set in which the                                     proposal "
 "resides"
 msgstr ""
 
-#: models.py:160
+#: models.py:159
 msgid "Description"
 msgstr "Description"
 
-#: models.py:164
+#: models.py:163
 msgid ""
-"Change the user that will figure                                as the author"
+"Change the user that will                             "
+"figure                                as the author"
 msgstr ""
 
 #: models.py:167
@@ -170,13 +169,11 @@ msgid "Proposals"
 msgstr "Propositions"
 
 #: models.py:225
-msgid ""
-"Customizing proposal                                     form for a proposal "
-"set"
+msgid "Customizing         proposal form for a proposal set"
 msgstr ""
 
-#: models.py:228
-msgid "Additional field that needed to added to the proposal form"
+#: models.py:227
+msgid "Additional field that needed to added to the proposal         form"
 msgstr ""
 
 #: models.py:234
@@ -189,77 +186,77 @@ msgstr "Proposition"
 msgid "ProposalFields"
 msgstr "Propositions"
 
-#: urls.py:34
-msgid "^$"
-msgstr "^$"
-
-#: urls.py:36
-#, fuzzy
-msgid "^add/(?P<p_set>\\w+)/"
-msgstr "^enspropositons/(?P<set_id>\\w+)/"
-
-#: urls.py:38
-msgid "^(?P<prop_id>\\w+)/$"
-msgstr "^(?P<prop_id>\\w+)/$"
-
-#: urls.py:40
-msgid "^(?P<prop_id>\\w+)/edit/$"
-msgstr "^(?P<prop_id>\\w+)/editer/$"
-
-#: urls.py:43
-msgid "^(?P<prop_id>\\w+)/delete/$"
-msgstr "^(?P<prop_id>\\w+)/supprimer/$"
-
-#: urls.py:50
-msgid "^psets/(?P<set_id>\\w+)/edit/"
-msgstr "^enspropositons/(?P<set_id>\\w+)/editer/"
-
-#: urls.py:53
-msgid "^psets/(?P<set_id>\\w+)/delete/"
-msgstr "^enspropositons/(?P<set_id>\\w+)/supprimer/"
-
-#: urls.py:56
-msgid "^psets/(?P<set_id>\\w+)/"
-msgstr "^enspropositons/(?P<set_id>\\w+)/"
-
-#: urls.py:59
-msgid "^psets/"
-msgstr "^enspropositons/"
-
-#: urls.py:61
-msgid "^addset/"
-msgstr "^ajouterensemble/"
-
-#: urls.py:67
+#: urls.py:33
 #, fuzzy
 msgid "^merged/(?P<p_set>\\w+)/"
 msgstr "^enspropositons/(?P<set_id>\\w+)/"
 
-#: urls.py:69
+#: urls.py:35
 msgid "^add_support_vote/"
 msgstr "^ajouter_un_vote_de_support/"
 
-#: urls.py:71
+#: urls.py:37
 #, fuzzy
 msgid "^merge_proposals/"
 msgstr "Voir les propositions"
 
-#: urls.py:74
+#: urls.py:40
 #, fuzzy
 msgid "^field_add/"
 msgstr "^ajouter/"
 
-#: urls.py:76
+#: urls.py:42
 msgid "^field_remove/"
 msgstr ""
 
-#: urls.py:79
+#: urls.py:45
 msgid "^select_set/"
 msgstr ""
 
-#: urls.py:81
+#: urls.py:47
 msgid "^(?P<space_url>\\w+)/vote/approve/(?P<token>\\w+)/$"
 msgstr ""
+
+#: urls.py:53
+msgid "^psets/(?P<set_id>\\w+)/edit/"
+msgstr "^enspropositons/(?P<set_id>\\w+)/editer/"
+
+#: urls.py:56
+msgid "^psets/(?P<set_id>\\w+)/delete/"
+msgstr "^enspropositons/(?P<set_id>\\w+)/supprimer/"
+
+#: urls.py:59
+msgid "^psets/(?P<set_id>\\w+)/"
+msgstr "^enspropositons/(?P<set_id>\\w+)/"
+
+#: urls.py:62
+msgid "^psets/"
+msgstr "^enspropositons/"
+
+#: urls.py:64
+msgid "^addset/"
+msgstr "^ajouterensemble/"
+
+#: urls.py:69
+msgid "^$"
+msgstr "^$"
+
+#: urls.py:71
+#, fuzzy
+msgid "^add/(?P<p_set>\\w+)/"
+msgstr "^enspropositons/(?P<set_id>\\w+)/"
+
+#: urls.py:73
+msgid "^(?P<prop_id>\\w+)/$"
+msgstr "^(?P<prop_id>\\w+)/$"
+
+#: urls.py:75
+msgid "^(?P<prop_id>\\w+)/edit/$"
+msgstr "^(?P<prop_id>\\w+)/editer/$"
+
+#: urls.py:78
+msgid "^(?P<prop_id>\\w+)/delete/$"
+msgstr "^(?P<prop_id>\\w+)/supprimer/$"
 
 #: views.py:199
 msgid "New vote validation request"

@@ -48,7 +48,7 @@ automatically if found in the data models.
             {% endif %}
 
             <div class="control-group {% if form.title.errors %}error{% endif %}">
-                <label>{{ form.title.label }}</label>
+                <label class="control-label">{{ form.title.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.title }}
@@ -65,7 +65,7 @@ automatically if found in the data models.
             </div>
 
             <div class="control-group {% if form.description.errors %}error{% endif %}">
-                <label>{{ form.description.label }}</label>
+                <label class="control-label">{{ form.description.label }}</label>
                 <div class="controls">
                     <div class="input-prepend">
                         {{ form.description }}
@@ -83,7 +83,7 @@ automatically if found in the data models.
             </div>
             {% if "latitude" in form_field %}
             <div class="control-group {% if form.latitude.errors %}error{% endif %}">
-                <label>{{ form.latitude.label }}</label>
+                <label class="control-label">{{ form.latitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.latitude }}
@@ -101,7 +101,7 @@ automatically if found in the data models.
             {% endif %}
             {% if "longitude" in form_field %}
             <div class="control-group {% if form.longitude.errors %}error{% endif %}">
-                <label>{{ form.longitude.label }}</label>
+                <label class="control-label">{{ form.longitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.longitude }}
@@ -119,7 +119,7 @@ automatically if found in the data models.
             {% endif %}
             {% if "tags" in form_field %}
             <div class="control-group {% if form.tags.errors %}error{% endif %}">
-                <label>{{ form.tags.label }}</label>
+                <label class="control-label">{{ form.tags.label }}</label>
                 <div class="controls">
                     <div class="input-append">
                         {{ form.tags }}

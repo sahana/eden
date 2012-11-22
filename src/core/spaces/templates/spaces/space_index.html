@@ -199,26 +199,31 @@
                 <div class="tab-pane" id="voting">
                     <div class="row">
                         <div class="span8">
-                            <h4>Polls</h4>
-                            {% for poll in polls %}
-                                <h4 class="posttitle"><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a>
-                                    {% if user_is_admin %}
-                                       {% if perms.voting.change_poll %}
-                                            <a href="{% url 'edit-poll' get_place.url poll.id %}" title="{% trans 'Edit' %}">
-                                                <i class="icon-edit" style="font-size:16px;"></i>
-                                            </a>
+                            <h4>{% trans "Polls" %}</h4>
+                            <ul class="unstyled">
+                                {% for poll in polls %}
+                                    <li><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a></li>
+                                        {% if user_is_admin %}
+                                            {% if perms.voting.change_poll %}
+                                                <a href="{% url 'edit-poll' get_place.url poll.id %}" title="{% trans 'Edit' %}">
+                                                    <i class="icon-edit" style="font-size:16px;"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if perms.voting.delete_poll %}
+                                                <a href="{% url 'delete-poll' get_place.url poll.id %}" title="{% trans 'Delete' %}">
+                                                    <i class="icon-trash" style="font-size:16px;"></i>
+                                                </a>
+                                            {% endif %}
                                         {% endif %}
-                                        {% if perms.voting.delete_poll %}
-                                            <a href="{% url 'delete-poll' get_place.url poll.id %}" title="{% trans 'Delete' %}">
-                                                <i class="icon-trash" style="font-size:16px;"></i>
-                                            </a>
-                                        {% endif %}
-                                    {% endif %}                             
-                                </h4>
-                            {% endfor %}
-                            <h4>Voting</h4>
-                            {% for voting in votings %}
-                                <h4 class="posttitle"><a href="{% url 'view-voting' get_place.url voting.id %}">{{ voting.title }}</a>
+                                {% empty %}
+                                    <li>{% trans "There are no polls at this moment." %}</li>
+                                {% endfor %}
+                            </ul>
+
+                            <h4>{% trans "Voting" %}</h4>
+                            <ul class="unstyled">
+                                {% for voting in votings %}    
+                                    <li><a href="{% url 'view-voting' get_place.url voting.id %}">{{ voting.title }}</a></li>
                                     {% if user_is_admin %}
                                        {% if perms.voting.change_voting %}
                                             <a href="{% url 'edit-voting' get_place.url voting.id %}" title="{% trans 'Edit' %}">
@@ -230,9 +235,11 @@
                                                 <i class="icon-trash" style="font-size:16px;"></i>
                                             </a>
                                         {% endif %}
-                                    {% endif %}                             
-                                </h4>
-                            {% endfor %}
+                                    {% endif %} 
+                                {% empty %}
+                                    <li>{% trans "There are no votings at this moment." %}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
                         <div class="span4 space-sidebar">
                             {% if user_is_admin %}
@@ -487,7 +494,7 @@
                                     {% endif %}
                                     </li>
                                 {% empty %}
-                                    <li>{% trans "No documents available." %}</li>
+                                    <li>{% trans "No documents or files available." %}</li>
                                 {% endfor %}
                             </ul>
                         </div>
