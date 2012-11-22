@@ -1510,7 +1510,7 @@ class MergeOrganisationsTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testMergeReplace(self):
-        """ Test merge with replace"""
+        """ Test merge with replace """
 
         success = self.resource.merge(self.id1, self.id2,
                                       replace = ["acronym", "website"])
@@ -1533,6 +1533,25 @@ class MergeOrganisationsTests(unittest.TestCase):
         self.assertEqual(org2.acronym, "MTOrg")
         self.assertEqual(org2.country, "US")
         self.assertEqual(org2.website, "http://www.example.com")
+
+    # -------------------------------------------------------------------------
+    def testMergeReplaceUnique(self):
+        """ Test merge with replace of a unique-field """
+
+        success = self.resource.merge(self.id1, self.id2,
+                                      replace = ["name"])
+        self.assertTrue(success)
+        org1, org2 = self.get_records()
+
+        self.assertNotEqual(org1, None)
+        self.assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        self.assertTrue(org2.deleted)
+        self.assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        self.assertEqual(org1.name, "Merger Test Organisation")
+        self.assertEqual(org2.name, "Merge Test Organisation")
 
     # -------------------------------------------------------------------------
     def testMergeReplaceAndUpdate(self):

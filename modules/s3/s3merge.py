@@ -31,6 +31,8 @@
 
 __all__ = ["S3Merge"]
 
+import sys
+
 from gluon import *
 from gluon.html import BUTTON
 from gluon.storage import Storage
@@ -557,12 +559,17 @@ class S3Merge(S3Method):
             resource = s3db.resource(tablename)
             try:
                 resource.merge(original[table._id],
-                                duplicate[table._id],
-                                update=data)
+                               duplicate[table._id],
+                               update=data)
             except current.auth.permission.error:
                 r.unauthorized()
             except KeyError:
                 r.error(404, r.ERROR.BAD_RECORD)
+            except:
+                r.error(424,
+                        T("Could not merge records. (Internal Error: %s)") %
+                            sys.exc_info()[1],
+                        next=r.url())
             else:
                 # Cleanup bookmark list
                 if mode == "Inclusive":

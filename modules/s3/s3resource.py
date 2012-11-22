@@ -6668,11 +6668,16 @@ class S3RecordMerger(object):
                 if fn in table.fields:
                     data[fn] = v
         if len(data):
-            # @todo: Deal with unique keys
-            # If a field in data is a unique key and duplicate[fn] == data[fn],
-            # then must change the value in duplicate before updating the
-            # original
+            r = None
+            p = Storage([(fn, "__deduplicate_%s__" % fn)
+                         for fn in data
+                         if table[fn].unique and table[fn].type == "string"])
+            if p:
+                r = Storage([(fn, original[fn]) for fn in p])
+                update_record(table, duplicate_id, duplicate, p)
             update_record(table, original_id, original, data)
+            if r:
+                update_record(table, duplicate_id, duplicate, r)
 
         # Delete the duplicate
         if not is_super_entity:
