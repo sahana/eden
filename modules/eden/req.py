@@ -2107,13 +2107,15 @@ class S3CommitModel(S3Model):
         id = row.id
         # Find the request
         ctable = s3db.req_commit
+        fks = db(ctable.id == id).select(ctable.deleted_fk,
+                                         limitby=(0, 1)
+                                         ).first().deleted_fk
+        req_id = json.loads(fks)["req_id"]
         rtable = s3db.req_req
-        query = (ctable.id == id) & \
-                (rtable.id == ctable.req_id)
-        req = db(query).select(rtable.id,
-                               rtable.type,
-                               rtable.commit_status,
-                               limitby=(0, 1)).first()
+        req = db(rtable.id == req_id).select(rtable.id,
+                                             rtable.type,
+                                             rtable.commit_status,
+                                             limitby=(0, 1)).first()
         if not req:
             return
         req_id = req.id
@@ -2164,6 +2166,8 @@ class S3CommitModel(S3Model):
             # Update overall Request Status
             if complete:
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            elif not citems:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_NONE)
             else:
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
@@ -2220,6 +2224,8 @@ class S3CommitModel(S3Model):
             # Update overall Request Status
             if complete:
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            elif not cskills:
+                db(rtable.id == req_id).update(commit_status=REQ_STATUS_NONE)
             else:
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_PARTIAL)
 
