@@ -36,3 +36,10 @@
     margin-top: 5px;
     margin-bottom: 5px;
 }
+.pivot-table-toggle, .hide-chart {
+    font-size: 10px;
+    cursor: pointer;
+    color: #003399;
+    text-decoration: underline;
+    margin-bottom: 3px;
+}

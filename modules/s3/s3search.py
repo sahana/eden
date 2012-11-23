@@ -652,7 +652,11 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
                 opt_list = []
                 for opt_value in opt_values:
-                    opt_represent = represent % represent_rows[opt_value]
+                    if opt_value not in represent_rows:
+                        continue
+                        #opt_represent = current.messages.NONE
+                    else:
+                        opt_represent = represent % represent_rows[opt_value]
                     if opt_represent:
                         opt_list.append([opt_value, opt_represent])
             else:
