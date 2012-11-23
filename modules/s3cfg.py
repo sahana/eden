@@ -1225,9 +1225,11 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Request Settings
     def get_req_type_inv_label(self):
-        return self.req.get("type_inv_label", current.T("Warehouse Stock"))
+        return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
     def get_req_type_hrm_label(self):
-        return self.req.get("type_hrm_label", current.T("People"))
+        return current.T(self.req.get("type_hrm_label", "People"))
+    def get_req_requester_label(self):
+        return current.T(self.req.get("requester_label", "Requester"))
     def get_req_date_writable(self):
         """ Whether Request Date should be manually editable """
         return self.req.get("date_writable", True)

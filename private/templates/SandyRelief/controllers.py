@@ -59,7 +59,7 @@ class index():
             
         # Big Buttons
         big_buttons = DIV(
-                        A(DIV(T("Request Items"),
+                        A(DIV(T("Request Supplies"),
                               _class = "menu-btn-r"),
                           _class = "menu-btn-l",
                           _href = URL(c="req", f="req", args=["create"], vars={"type":1})

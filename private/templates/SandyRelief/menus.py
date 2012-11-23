@@ -227,7 +227,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="req")(
                     M("Requests", f="req")(
-                        M("Request Items", m="create", vars={"type":1}),
+                        M("Request Supplies", m="create", vars={"type":1}),
                         M("Request People", m="create", vars={"type":3}),
                         M("Search Requests", m="search"),
                         #M("List All"),
