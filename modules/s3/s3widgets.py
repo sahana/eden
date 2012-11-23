@@ -2814,13 +2814,22 @@ class S3AddPersonWidget(FormWidget):
                                *fields)
         trs = []
         for tr in form[0]:
-            if not "_id" in tr.attributes or not tr.attributes["_id"].startswith("submit_record"):
-                if "_class" in tr.attributes:
-                    tr.attributes["_class"] = "%s box_middle" % \
-                                                tr.attributes["_class"]
-                else:
-                    tr.attributes["_class"] = "box_middle"
-                trs.append(tr)
+            if "_id" in tr.attributes:
+                # Standard formstyle
+                if tr.attributes["_id"].startswith("submit_record"):
+                    # skip submit row
+                    continue
+            elif "_id" in tr[0][0].attributes:
+                # DIV-based formstyle
+                if tr[0][0].attributes["_id"].startswith("submit_record"):
+                    # skip submit row
+                    continue
+            if "_class" in tr.attributes:
+                tr.attributes["_class"] = "%s box_middle" % \
+                                            tr.attributes["_class"]
+            else:
+                tr.attributes["_class"] = "box_middle"
+            trs.append(tr)
 
         table = DIV(*trs)
 
