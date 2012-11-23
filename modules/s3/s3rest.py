@@ -1862,7 +1862,7 @@ class S3Method(object):
             return None
 
         if r.representation == "html":
-            current.settings.ui_customize(self.tablename)
+            current.deployment_settings.ui_customize(self.tablename)
 
         # Apply method
         output = self.apply_method(r, **attr)

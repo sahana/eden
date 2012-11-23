@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-from gluon import current
 from gluon import current, TAG, DIV
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
@@ -161,10 +159,10 @@ def customize_project_project():
     table.amount.label = T("Amount")
 
     table = s3db.doc_document
-    table.file.widget = lambda field, value, download_url: SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
+    table.file.widget = lambda field, value, download_url: \
+        SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
     #table.file.widget = SQLFORM.widgets.upload.widget
     table.comments.widget = SQLFORM.widgets.string.widget
-    
 
 settings.ui.customize_project_project = customize_project_project
 
@@ -185,7 +183,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "multi_theme_id",
         "objectives",
         "drrpp.activities",
-        #Outputs
+        # Outputs
         s3forms.S3SQLInlineComponent(
             "output",
             label=T("Outputs:"),
@@ -195,7 +193,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "hfa",
         "drrpp.rfa",
         "organisation_id",
-        #Partner Org
+        # Partner Org
         s3forms.S3SQLInlineComponent(
             "organisation",
             name = "partner",
@@ -220,7 +218,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "drrpp.focal_person",
         "drrpp.organisation_id",
         "drrpp.email",
-        #Files - Inline Forms don't support Files
+        # Files - Inline Forms don't support Files
         s3forms.S3SQLInlineComponent(
             "document",
             name = "file",
@@ -231,7 +229,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
                             invert = True,
                             )
         ),
-        #Links
+        # Links
         s3forms.S3SQLInlineComponent(
             "document",
             name = "url",
