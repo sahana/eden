@@ -108,7 +108,7 @@ class S3MessagingModel(S3Model):
                              Field("actionable", "boolean", default = True,
                                    represent = s3_yes_no_represent),
                              Field("actioned", "boolean", default = False,
-                                   represent = s3_yes_no_represen),
+                                   represent = s3_yes_no_represent),
                              Field("actioned_comments", "text"),
                              Field("priority", "integer", default = 1,
                                    requires = IS_NULL_OR(IS_IN_SET(msg_priority_opts)),
