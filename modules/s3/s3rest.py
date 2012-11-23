@@ -1861,8 +1861,9 @@ class S3Method(object):
         if self.method == "_init":
             return None
 
-        if r.representation == "html":
-            current.deployment_settings.ui_customize(self.tablename)
+        if r.interactive and r.representation == "html":
+            settings = current.deployment_settings
+            attr = settings.ui_customize(self.tablename, **attr)
 
         # Apply method
         output = self.apply_method(r, **attr)

@@ -44,7 +44,7 @@ strong {
     font-weight: bold;
     line-height: 1em;
     margin: 0 0 5px 10px;
-    clear: left;
+    clear: both;
 }
 
 #content h3	{
@@ -122,11 +122,13 @@ textarea:focus {
     background-color: #ffffcc;
 }
 
-/* Add Projects */
-.form-container>form>table>tbody>tr:nth-child(odd) {
-    background: #E8E8E8;
+/* Add Projects Form */
+div.w2p_r:nth-child(2n+1) {
+    background: none repeat scroll 0 0 #E8E8E8;
+    overflow: hidden;
+    clear: both;
 }
-#submit_record__row {
+div.w2p_r:last-child {
     background: white;
 }
 
@@ -279,12 +281,15 @@ div.tabs span.tab_here {
     padding-bottom: 2px;
 }
 button,
+.action-btn,
+.delete-btn,
 div.form-container form input[type=submit] {
     color: inherit;
     text-transform: uppercase;
     border: 1px solid #d6d6d6;
-    border-top-width: 2px;
+    /*border-top-width: 2px;*/
     border-radius: 12px;
+    box-shadow: 2px 2px 3px #D6D6D6;
     padding: 0.2em 0.5em;
     background-color: white;
 }
@@ -295,4 +300,42 @@ div.form-container form input[type=submit] {
 }
 #about_logos li {
     display: inline;
+}
+
+/* Search */
+div.form-container div.search_form>form>table>tbody>tr>td {
+    padding: 5px 0;
+}
+
+.s3-checkboxes-widget-filter {
+    font-style:italic;
+}
+div.search_form .w2p_fl {
+    color: grey;
+    text-transform: uppercase;
+}
+
+.advanced-lnk, .simple-lnk {
+    font-style: bold;
+    color: #F5902E;
+    margin: 0 0 5px;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+div.dataTables_info {
+    float: left;
+    color: #F5902E;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+div.dataTables_paginate {
+    float: right;
+}
+div.dataTables_length {
+     margin-right: 20px;
+}
+div.dataTables_filter {
+    clear: left;
 }

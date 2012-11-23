@@ -1235,9 +1235,11 @@ class S3CRUD(S3Method):
                 s3.no_formats = True
                 datatable = current.T("No records to review")
             else:
+                dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
                 datatable = dt.html(totalrows, displayrows, "list",
                                     dt_pagination=dt_pagination,
-                                    dt_displayLength=display_length)
+                                    dt_displayLength=display_length,
+                                    dt_sDom = dt_sDom)
                 s3.actions = [{"label": str(current.T("Review")),
                                "url": r.url(id="[id]", method="review"),
                                "_class": "action-btn"}]
