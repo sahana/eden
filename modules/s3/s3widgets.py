@@ -3496,7 +3496,7 @@ def s3_richtext_widget(field, value):
 # =============================================================================
 def s3_grouped_checkboxes_widget(field,
                                  value,
-                                 size = 20,
+                                 size = 24,
                                  **attributes):
     """
         Displays checkboxes for each value in the table column "field".
@@ -3680,6 +3680,11 @@ def s3_checkboxes_widget(field,
             # not a reference - no expand
             # option text = field representation
             ktablename = None
+
+        if isinstance(help_field,dict):
+            # Convert the keys to strings (That's what the options are)
+            for key in help_field.keys():
+                help_text[str(key)] = help_field[key]
 
         if ktablename is not None:
             if "." in ktablename:

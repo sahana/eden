@@ -409,10 +409,15 @@ $(document).ready(function(){
                                    label = T("HFA Priorities"),
                                    readable = mode_drr,
                                    writable = mode_drr,
-                                   requires = IS_NULL_OR(IS_IN_SET(project_hfa_opts,
+                                   requires = IS_NULL_OR(IS_IN_SET(project_hfa_opts.keys(),
+                                                                   labels = ["HFA %s" % hfa for hfa in project_hfa_opts.keys()],
                                                                    multiple = True)),
                                    represent = self.hfa_opts_represent,
-                                   widget = CheckboxesWidgetS3.widget),
+                                   widget = lambda f, v, **attr: \
+                                              s3_grouped_checkboxes_widget(f, v,
+                                                                           help_field=project_hfa_opts,
+                                                                           **attr)
+                                   ),
                              Field("objectives", "text",
                                    readable = mode_3w,
                                    writable = mode_3w,
@@ -507,19 +512,29 @@ $(document).ready(function(){
                         cols = 4
                     ))
         if mode_drr:
+            options = {}
+            #options = {None:NONE} To search NO HFA
+            for key in project_hfa_opts.keys():
+                options[key] = "HFA %s" % key
             append(S3SearchOptionsWidget(
                         name = "project_search_hfa",
                         label = T("HFA"),
                         field = "hfa",
-                        options = project_hfa_opts,
+                        options = options,
+                        help_field = project_hfa_opts,
                     ))
 
         if settings.get_template() == "DRRPP":
+            options = {}
+            #options = {None:NONE} To search NO RFA
+            for key in project_rfa_opts().keys():
+                options[key] = "RFA %s" % key
             append(S3SearchOptionsWidget(
                         name = "project_search_rfa",
-                        label = T("RFA"),
+                        label = T("HFA"),
                         field = "rfa",
-                        options = project_rfa_opts(),
+                        options = options,
+                        help_field = project_rfa_opts(),
                     ))
 
         def project_organisation_opts(role = None):
@@ -1132,7 +1147,7 @@ $(document).ready(function(){
             opts = [opt]
         elif not isinstance(opt, (list, tuple)):
             return NONE
-        vals = [str(project_hfa_opts.get(o, NONE)) for o in opts]
+        vals = ["HFA %s" % o for o in opts]
         return ", ".join(vals)
 
     # -------------------------------------------------------------------------
@@ -2797,10 +2812,14 @@ class S3ProjectDRRPPModel(S3Model):
                            ),
                      Field("rfa", "list:integer",
                            label = T("RFA Priorities"),
-                           requires = IS_NULL_OR(IS_IN_SET(project_rfa_opts(),
+                           requires = IS_NULL_OR(IS_IN_SET(project_rfa_opts().keys(),
+                                                           labels = ["RFA %s" % rfa for rfa in project_rfa_opts().keys()],
                                                            multiple = True)),
                            represent = self.rfa_opts_represent,
-                           widget = CheckboxesWidgetS3.widget,
+                           widget = lambda f, v, **attr: \
+                                      s3_grouped_checkboxes_widget(f, v,
+                                                                   help_field=project_rfa_opts(),
+                                                                   **attr),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("RFA Priorities"),
                                                            T("Applicable to projects in Pacific countries only")))),

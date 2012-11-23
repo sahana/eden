@@ -139,7 +139,7 @@ def form_style(self, xfields):
 settings.ui.formstyle_row = formstyle_row
 settings.ui.formstyle = form_style
 
-def customize_project_project():
+def customize_project_project(**attr):
     s3db = current.s3db
     
     current.response.s3.crud_strings.project_project.title_search = T("Project List")
@@ -163,6 +163,12 @@ def customize_project_project():
         SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
     #table.file.widget = SQLFORM.widgets.upload.widget
     table.comments.widget = SQLFORM.widgets.string.widget
+    
+    current.response.s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+    
+    current.response.s3.formats = Storage(xls= None, xml = None)
+    
+    return attr
 
 settings.ui.customize_project_project = customize_project_project
 

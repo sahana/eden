@@ -1,11 +1,8 @@
 @charset "UTF-8";
 
-div.w2p_r:nth-child(2n+1) {
-    background: none repeat scroll 0 0 #E8E8E8;
-    overflow: hidden;
-    clear: both;
+div.form-container {
+    margin-bottom: 0;
 }
-
 div.w2p_fl {
     float: left;
     width: 120px;
@@ -31,7 +28,7 @@ div.w2p_fc {
     background: url("img/icon_help15px.png") no-repeat scroll 0 0 transparent;
     height: 16px;
     float: left;
-    margin: 10px 0 0 -20px;
+    margin: 2px 0 0 -20px;
     width: 16px;
 }
 
@@ -70,17 +67,12 @@ div.form-container form .embeddedComponent  textarea  {
 }
 
 /* Styling for specific fields */
-[name*="partnerorganisation_organisation_id"],
-[name*="donororganisation_organisation_id"] {
+[name*="partnerorganisation_i_organisation_id"],
+[name*="donororganisation_i_organisation_id"] {
     width: 300px;
 }
-div.form-container form .embeddedComponent input[name*="partnerorganisation_comments"],
-div.form-container form .embeddedComponent input[name*="urldocument_url"],
-div.form-container form .embeddedComponent input[name*="document_comments"] {
+div.form-container form .embeddedComponent input[name*="partnerorganisation_i_comments"],
+div.form-container form .embeddedComponent input[name*="urldocument_i_url"],
+div.form-container form .embeddedComponent input[name*="document_i_comments"] {
     width: 250px;
-}
-
-{
-    width: 250px;
-    height: 16px;
 }
