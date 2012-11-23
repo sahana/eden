@@ -184,6 +184,7 @@ class S3HRModel(S3Model):
                                         #readable = False,
                                         #writable = False,
                                         label = T("Essential Staff?"),
+                                        represent = s3_yes_no_represent,
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Essential Staff?"),
                                                                         T("If the person counts as essential staff when evacuating all non-essential staff.")))),

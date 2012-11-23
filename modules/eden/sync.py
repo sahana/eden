@@ -161,6 +161,7 @@ class SyncDataModel(S3Model):
                                    writable=False,
                                    label=T("Last status")),
                              Field("accept_push", "boolean",
+                                   represent = s3_yes_no_represent,
                                    default=False,
                                    label=T("Accept Push")),
                              *s3_meta_fields())
