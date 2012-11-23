@@ -691,11 +691,13 @@ def s3_represent_multi_id( table,
     return represent
 # =============================================================================
 def s3_yes_no_represent(value):
-    T = current.T
+    " Represent a Boolean field as Yes/No instead of True/False "
+
     if value:
-        return T("Yes")
+        return current.T("Yes")
     else:
-        return T("No")
+        return current.T("No")
+
 # =============================================================================
 def s3_include_debug_css():
     """
