@@ -1402,18 +1402,18 @@ class S3HRSkillModel(S3Model):
 
         represent = s3_represent_id(table)
         skill_id = S3ReusableField("skill_id", table,
-                        sortby = "name",
-                        label = T("Skill"),
-                        requires = IS_NULL_OR(
-                                    IS_ONE_OF(db, "hrm_skill.id",
-                                              represent,
-                                              sort=True
-                                              )),
-                        represent = represent,
-                        comment = skill_help,
-                        ondelete = "SET NULL",
-                        widget = widget
-                        )
+                                   sortby = "name",
+                                   label = T("Skill"),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "hrm_skill.id",
+                                                          represent,
+                                                          sort=True
+                                                          )),
+                                   represent = represent,
+                                   comment = skill_help,
+                                   ondelete = "SET NULL",
+                                   widget = widget
+                                   )
 
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
                                          sortby = "name",
@@ -1428,7 +1428,7 @@ class S3HRSkillModel(S3Model):
                                          #comment = skill_help,
                                          ondelete = "SET NULL",
                                          widget = S3MultiSelectWidget()
-                                        )
+                                         )
 
         configure("hrm_skill",
                   deduplicate=self.hrm_skill_duplicate)

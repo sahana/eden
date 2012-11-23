@@ -638,9 +638,7 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_represent_id( table,
-                     fieldname = "name",
-                     translate = False):
+def s3_represent_id(table, fieldname="name", translate=False):
     """
         Returns a represent function for a record id.
     """
@@ -650,8 +648,8 @@ def s3_represent_id( table,
             if not id:
                 return current.messages["NONE"]
             row  = current.db(table._id == id).select(table[fieldname],
-                                                   limitby=(0, 1)
-                                                   ).first()
+                                                      limitby=(0, 1)
+                                                      ).first()
         try:
             if translate:
                 return current.T(row.name)
@@ -661,34 +659,33 @@ def s3_represent_id( table,
             return current.messages["UNKNOWN_OPT"]
 
     return represent
+
 # =============================================================================
-def s3_represent_multi_id( table,
-                           fieldname = "name",
-                           translate = False):
+def s3_represent_multi_id(table, fieldname="name", translate=False):
     """
         Returns a represent function for a record id.
     """
 
-    def represent(ids, row=None):
+    def represent(ids):
         if not ids:
             return current.messages["NONE"]
 
         ids = [ids] if type(ids) is not list else ids
 
-        row = current.db(table.id.belongs(ids)).select(table.id,
-                                                       table[fieldname]).as_dict()
+        rows = current.db(table.id.belongs(ids)).select(table[fieldname])
 
         try:
-            strings = [str(row.get(id)[fieldname]) for id in ids]
+            strings = [str(row[fieldname]) for row in rows]
         except:
             return current.messages["NONE"]
-    
+
         if strings:
             return ", ".join(strings)
         else:
             return current.messages["NONE"]
 
     return represent
+
 # =============================================================================
 def s3_yes_no_represent(value):
     " Represent a Boolean field as Yes/No instead of True/False "
