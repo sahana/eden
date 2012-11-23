@@ -2868,17 +2868,21 @@ class S3DataTable(object):
         iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
                             _onclick="s3FormatRequest('pdf','%s','%s');" % (id, url),
                             _alt=T("Export in PDF format"),
+                            _title=T("Export in PDF format"),
                             ))
         url = s3.formats.xls if s3.formats.xls else default_url
         iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % application,
                             _onclick="s3FormatRequest('xls','%s','%s');" % (id, url),
                             _alt=T("Export in XLS format"),
+                            _title=T("Export in XLS format"),
                             ))
         url = s3.formats.rss if s3.formats.rss else default_url
         iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % application,
                             _onclick="s3FormatRequest('rss','%s','%s');" % (id, url),
                             _alt=T("Export in RSS format"),
+                            _title=T("Export in RSS format"),
                             ))
+
         div = DIV(_class='list_formats')
         if permalink is not None:
             link = A(T("Link to this result"),
@@ -2892,11 +2896,19 @@ class S3DataTable(object):
             iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
                                 _onclick="s3FormatRequest('have','%s','%s');" % (id, s3.formats.have),
                                 _alt=T("Export in HAVE format"),
+                                _title=T("Export in HAVE format"),
                                 ))
         if "kml" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
                                 _onclick="s3FormatRequest('kml','%s','%s');" % (id, s3.formats.kml),
                                 _alt=T("Export in KML format"),
+                                _title=T("Export in KML format"),
+                                ))
+        if "xml" in s3.formats:
+            iconList.append(IMG(_src="/%s/static/img/icon-xml.png" % application,
+                                _onclick="s3FormatRequest('xml','%s','%s');" % (id, url),
+                                _alt=T("Export in XML format"),
+                                _title=T("Export in XML format"),
                                 ))
         elif rfields:
             kml_list = ["location_id",

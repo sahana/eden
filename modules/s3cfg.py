@@ -660,11 +660,13 @@ class S3Config(Storage):
         """ Get custom crud_forms for diffent tables """
         return self.ui.get("crud_form_%s" % tablename, None)
 
-    def ui_customize(self, tablename):
+    def ui_customize(self, tablename, **attr):
         """ Customizes field settings on a table"""
         customize = self.ui.get("customize_%s" % tablename)
         if customize:
-            customize()
+            return customize(**attr)
+        else:
+            return attr
 
     # =========================================================================
     # Messaging
