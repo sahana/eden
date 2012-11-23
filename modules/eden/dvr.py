@@ -87,6 +87,7 @@ class S3DVRModel(S3Model):
                                             dvr_damage_opts.get(opt, UNKNOWN_OPT),
                                         label= T("Damage Assessment")),
                                   Field("insurance", "boolean",
+                                        represent = s3_yes_no_represent,
                                         label = T("Insurance")),
                                   Field("status", "integer",
                                         default = 1,

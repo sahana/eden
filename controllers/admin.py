@@ -925,10 +925,11 @@ def result_automated():
     """
         Selenium Test Result Reports list
     """
-
     file_list_automated = UL()
     static_path = os.path.join(request.folder, "static", "test_automated")
-    for filename in os.listdir(static_path):
+    filenames = os.listdir(static_path)
+    filenames.reverse()
+    for filename in filenames:
         link = A(filename,
                  _href = URL(c = "static",
                              f = "test_automated",
@@ -945,7 +946,9 @@ def result_smoke():
 
     file_list_smoke = UL()
     static_path = os.path.join(request.folder, "static", "test_smoke")
-    for filename in os.listdir(static_path):
+    filenames = os.listdir(static_path)
+    filenames.reverse()
+    for filename in filenames:
         link = A(filename,
                  _href = URL(c = "static",
                              f = "test_smoke",
@@ -962,7 +965,9 @@ def result_roles():
 
     file_list_roles = UL()
     static_path = os.path.join(request.folder, "static", "test_roles")
-    for filename in os.listdir(static_path):
+    filenames = os.listdir(static_path)
+    filenames.reverse()
+    for filename in filenames:
         link = A(filename,
                  _href = URL(c = "static",
                              f = "test_roles",

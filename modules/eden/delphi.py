@@ -72,6 +72,7 @@ class S3DelphiModel(S3Model):
                              Field("description", "text",
                                    label = T("Description")),
                              Field("active", "boolean", default=True,
+                                   represent = s3_yes_no_represent,
                                    label = T("Active")),
                              *s3_meta_fields()
                             )
@@ -140,6 +141,7 @@ class S3DelphiModel(S3Model):
                                    label = T("Description")),
                              # @ToDo: Change how Membership Requests work
                              Field("req", "boolean", default=False,
+                                   represent = s3_yes_no_represent,
                                    label = T("Request")), # Membership Request
                              Field("status", "integer", default=3,
                                    label = T("Status"),
@@ -195,6 +197,7 @@ class S3DelphiModel(S3Model):
                               Field("criteria", "text", notnull=True,
                                     label = T("Criteria")),
                               Field("active", "boolean", default=True,
+                                    represent = s3_yes_no_represent,
                                     label = T("Active")),
                               *s3_meta_fields()
                             )
