@@ -918,9 +918,8 @@ function S3OptionsFilter(settings) {
      * @todo: migrate all use-cases to this version
      *
      * Settings:
-     *
-     *          triggerName: the trigger field name (not the HTML element name!)
-     *          targetName: the target field name (not the HTML element name!)
+     *          triggerName: the trigger field name (not the HTML element name)
+     *          targetName: the target field name (not the HTML element name)
      *
      *          lookupPrefix: the lookup controller prefix
      *          lookupResource: the lookup resource (=function to call)
@@ -935,7 +934,7 @@ function S3OptionsFilter(settings) {
      *          msgNoRecords: internationalized message for "no records"
      *          targetWidget: the target widget (if different from target field)
      *          fncPrep: function to pre-process the target options
-     *          fncRepresent: function to represent of the target options
+     *          fncRepresent: function to represent the target options
      */
 
     var triggerName = settings.triggerName
@@ -1020,9 +1019,16 @@ function S3OptionsFilter(settings) {
         }
 
         // Construct the URL for the Ajax request
+        var lookupResource = settings.lookupResource;
         if (settings.lookupURL) {
             var url = settings.lookupURL;
         } else {
+            var lookupPrefix = settings.lookupPrefix;
+            var url = S3.Ap.concat('/', lookupPrefix, '/', lookupResource, '.json');
+        }
+        var q;
+        // Append lookup key to the URL
+        if (lookupValue) {
             var lookupKey;
             if (typeof settings.lookupKey == 'undefined') {
                 // Same field name in both tables
@@ -1030,13 +1036,6 @@ function S3OptionsFilter(settings) {
             } else {
                 lookupKey = settings.lookupKey;
             }
-            var lookupPrefix = settings.lookupPrefix;
-            var lookupResource = settings.lookupResource;
-            var url = S3.Ap.concat('/', lookupPrefix, '/', lookupResource, '.json');
-        }
-        var q;
-        // Append lookup key to the URL
-        if (lookupValue) {
             q = lookupResource + '.' + lookupKey + '=' + lookupValue;
             if (url.indexOf('?') != -1) {
                 url = url.concat('&' + q);
@@ -1145,11 +1144,11 @@ function S3OptionsFilter(settings) {
                             if (i == 0) {
                                 var currentValue = data[i][lookupField];
                             }
-                            options += '<option value="' +  data[i][lookupField] + '">';
+                            options += '<option value="' + data[i][lookupField] + '">';
                             options += fncRepresent(data[i], prepResult);
                             options += '</option>';
                         }
-                        if (this.Optional) {
+                        if (this.optional) {
                             currentValue = 0;
                             options = '<option value=""></option>' + options;
                         }
@@ -1168,7 +1167,8 @@ function S3OptionsFilter(settings) {
                                    .show();
                     } else {
                         // No options available => disable the target field
-                        targetField.attr('disabled', 'disabled');
+                        targetField.attr('disabled', 'disabled')
+                                   .show();
                     }
 
                     // Modify URL for Add-link and show the Add-link

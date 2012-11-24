@@ -345,11 +345,14 @@ settings.L10n.decimal_separator = "."
 #settings.req.type_hrm_label = "Volunteers"
 # Label for Requester
 #settings.req.requester_label = "Site Contact"
+# Filter Requester as being from the Site 
+#settings.req.requester_from_site = True
 #settings.req.date_writable = False
 # Allow the status for requests to be set manually,
 # rather than just automatically from commitments and shipments
 #settings.req.status_writable = False
-#settings.req.quantities_writable = True
+#settings.req.item_quantities_writable = True
+#settings.req.skill_quantities_writable = True
 #settings.req.show_quantity_transit = False
 #settings.req.multiple_req_items = False
 #settings.req.prompt_match = False

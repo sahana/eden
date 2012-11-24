@@ -115,11 +115,13 @@ settings.req.prompt_match = False
 #settings.req.use_commit = False
 settings.req.requester_optional = True
 settings.req.date_writable = False
-settings.req.quantities_writable = True
+settings.req.item_quantities_writable = True
 settings.req.skill_quantities_writable = True
 #settings.req.use_req_number = False
 # Label for Requester
 settings.req.requester_label = "Site Contact"
+# Filter Requester as being from the Site 
+settings.req.requester_from_site = True
 # Label for Inventory Requests
 settings.req.type_inv_label = "Supplies"
 

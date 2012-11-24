@@ -548,6 +548,8 @@ class S3RequestModel(S3Model):
         """
 
         db = current.db
+        s3 = current.response.s3
+        settings = current.deployment_settings
 
         # Hide fields which don't make sense in a Create form
         table = db.req_req
@@ -559,7 +561,21 @@ class S3RequestModel(S3Model):
         table.date_recv.readable = table.date_recv.writable = False
         table.recv_by_id.readable = table.recv_by_id.writable = False
 
-        req_types = current.deployment_settings.get_req_req_type()
+        if settings.get_req_requester_from_site():
+            # Filter the list of Contacts to those for the site
+            table.requester_id.widget = None
+            s3.jquery_ready.append('''
+S3OptionsFilter({
+ 'triggerName':'site_id',
+ 'targetName':'requester_id',
+ 'lookupPrefix':'hrm',
+ 'lookupResource':'staff',
+ 'lookupURL':S3.Ap.concat('/hrm/staff_for_site'),
+ 'msgNoRecords':'%s',
+ 'optional':true,
+})''' % T("No contacts yet defined for this site"))
+
+        req_types = settings.get_req_req_type()
         if "People" in req_types:
             # Show the Required Until Field
             # (gets turned-off by JS for other types)
@@ -567,7 +583,6 @@ class S3RequestModel(S3Model):
 
         if "type" not in current.request.vars:
             # Script to inject into Pages which include Request create forms
-            s3 = current.response.s3
             if "Summary" in req_types:
                 stable = current.s3db.req_summary_option
                 options = db(stable.deleted == False).select(stable.name,
@@ -605,7 +620,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % current.request.application)
 
         else:
-            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
         return
 
     # -------------------------------------------------------------------------
@@ -627,8 +642,6 @@ S3OptionsFilter({
  'targetName':'item_pack_id',
  'lookupPrefix':'supply',
  'lookupResource':'item_pack',
- 'lookupKey':'item_id',
- 'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
@@ -944,7 +957,7 @@ S3OptionsFilter({
             Hide the Update Quantity Status Fields from Request create forms
         """
 
-        if not current.deployment_settings.get_req_quantities_writable():
+        if not current.deployment_settings.get_req_item_quantities_writable():
             table.quantity_commit.writable = table.quantity_commit.readable = False
             table.quantity_transit.writable = table.quantity_transit.readable= False
             table.quantity_fulfil.writable = table.quantity_fulfil.readable = False
@@ -1241,7 +1254,7 @@ class S3RequestItemModel(S3Model):
         db = current.db
 
         settings = current.deployment_settings
-        quantities_writable = settings.get_req_quantities_writable()
+        quantities_writable = settings.get_req_item_quantities_writable()
         use_commit = settings.get_req_use_commit()
         track_pack_values = settings.get_inv_track_pack_values()
 
@@ -1455,7 +1468,7 @@ S3FilterFieldChange({
         """
 
         if quantity and show_link and \
-           not current.deployment_settings.get_req_quantities_writable():
+           not current.deployment_settings.get_req_item_quantities_writable():
             return TAG[""]( quantity,
                             A(DIV(_class = "quantity %s ajax_more collapsed" % type
                                   ),
@@ -1536,7 +1549,7 @@ class S3RequestSkillModel(S3Model):
         req_id = self.req_req_id
 
         settings = current.deployment_settings
-        quantities_writable = settings.get_req_quantities_writable()
+        quantities_writable = settings.get_req_item_quantities_writable()
         use_commit = settings.get_req_use_commit()
 
         define_table = self.define_table
@@ -3032,20 +3045,9 @@ def req_rheader(r, check_page=False):
                     transit_status = (TH("%s: " % T("Transit Status")),
                                       transit_status)
                 else:
-                    transit_status = ("", "")
+                    transit_status = ("")
 
                 table = r.table
-
-                if is_template:
-                    fulfil_status = ("", "")
-                    row2 = ""
-                else:
-                    fulfil_status = (TH("%s: " % table.fulfil_status.label),
-                                     table.fulfil_status.represent(record.fulfil_status))
-                    row2 = TR(TH("%s: " % table.date.label),
-                              table.date.represent(record.date),
-                              *transit_status
-                              )
 
                 if settings.get_req_use_req_number() and not is_template:
                     headerTR = TR(TH("%s: " % table.req_ref.label),
@@ -3063,28 +3065,40 @@ def req_rheader(r, check_page=False):
                     if logo:
                         headerTR.append(TD(logo, _colspan=2))
 
-                if use_commit:
-                    row = TR(TH("%s: " % table.date_required.label),
-                             table.date_required.represent(record.date_required),
-                             TH("%s: " % table.commit_status.label),
-                             table.commit_status.represent(record.commit_status),
-                             )
-                elif not is_template:
-                    row = TR(TH("%s: " % table.date_required.label),
-                             table.date_required.represent(record.date_required),
-                             )
+                if is_template:
+                    commit_status = ("")
+                    fulfil_status = ("")
+                    row1 = ""
+                    row3 = ""
                 else:
-                    row = ""
+                    if use_commit:
+                        commit_status = (TH("%s: " % table.commit_status.label),
+                                         table.commit_status.represent(record.commit_status))
+                    else:
+                        commit_status = ("")
+                    fulfil_status = (TH("%s: " % table.fulfil_status.label),
+                                     table.fulfil_status.represent(record.fulfil_status))
+                    row1 = TR(TH("%s: " % table.date.label),
+                              table.date.represent(record.date),
+                              *commit_status
+                              )
+                    row3 = TR(TH("%s: " % table.date_required.label),
+                              table.date_required.represent(record.date_required),
+                              *fulfil_status
+                              )
 
                 rData = TABLE(headerTR,
-                              TR(TH("%s: " % table.purpose.label),
-                                 record.purpose
-                                 ),
-                              row,
-                              row2,
+                              row1,
                               TR(TH("%s: " % table.site_id.label),
                                  table.site_id.represent(site_id),
-                                 *fulfil_status
+                                 *transit_status
+                                 ),
+                              TR(TH("%s: " % table.requester_id.label),
+                                 table.requester_id.represent(record.requester_id),
+                                 ),
+                              row3,
+                              TR(TH("%s: " % table.purpose.label),
+                                 record.purpose
                                  ),
                               TR(TH("%s: " % table.comments.label),
                                  TD(record.comments or "", _colspan=3)

@@ -706,15 +706,15 @@ Thank you
         self.user = user
         self.s3_set_roles()
 
+        # Set a Cookie to present user with login box by default
+        self.set_cookie()
+
         # Read their language from the Profile
         language = user.language
         current.T.force(language)
         session.s3.language = language
 
         session.confirmation = self.messages.logged_in
-
-        # Set a Cookie to present user with login box by default
-        self.set_cookie()
 
         # Update the timestamp of the User so we know when they last logged-in
         utable = settings.table_user
@@ -922,6 +922,9 @@ Thank you
                         form.vars.language = T.accepted_language
                     user = Storage(utable._filter_fields(form.vars, id=True))
                     self.login_user(user)
+
+            # Set a Cookie to present user with login box by default
+            self.set_cookie()
 
             if log:
                 self.log_event(log % form.vars)
