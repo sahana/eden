@@ -652,7 +652,11 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
                 opt_list = []
                 for opt_value in opt_values:
-                    opt_represent = represent % represent_rows[opt_value]
+                    if opt_value not in represent_rows:
+                        continue
+                        #opt_represent = current.messages.NONE
+                    else:
+                        opt_represent = represent % represent_rows[opt_value]
                     if opt_represent:
                         opt_list.append([opt_value, opt_represent])
             else:
@@ -677,19 +681,20 @@ class S3SearchOptionsWidget(S3SearchWidget):
             any_all = DIV(
                 T("Filter type "),
                 INPUT(_name="%s_filter" % name,
-                      _id="%s_filter_all" % name,
-                      _type="radio",
-                      _value="all",
-                      value=self.filter_type),
-                LABEL(T("All"),
-                      _for="%s_filter_all" % name),
-                INPUT(_name="%s_filter" % name,
                       _id="%s_filter_any" % name,
                       _type="radio",
                       _value="any",
                       value=self.filter_type),
                 LABEL(T("Any"),
                       _for="%s_filter_any" % name),
+                INPUT(_name="%s_filter" % name,
+                      _id="%s_filter_all" % name,
+                      _type="radio",
+                      _value="all",
+                      value=self.filter_type),
+                LABEL(T("All"),
+                      _for="%s_filter_all" % name),
+
                 _class="s3-checkboxes-widget-filter"
             )
         else:
@@ -1362,6 +1367,8 @@ i18n.edit_saved_search="%s"
                                vars=search_url_vars)
         s3.formats.rss = r.url(method="",
                                vars=search_url_vars)
+        s3.formats.xml = r.url(method="",
+                               vars=search_url_vars)
 
         if representation == "plain":
             # Map popup filter
@@ -1448,10 +1455,12 @@ i18n.edit_saved_search="%s"
             datatable = self.crud_string(tablename, "msg_no_match")
             s3.no_formats = True
         else:
+            dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
             datatable = dt.html(totalrows, displayrows, "list",
                                 dt_pagination=dt_pagination,
                                 dt_displayLength=display_length,
-                                dt_permalink=search_url)
+                                dt_permalink=search_url,
+                                dt_sDom = dt_sDom)
 
         # Add items to output
         output["items"] = datatable

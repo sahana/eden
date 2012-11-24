@@ -220,11 +220,13 @@ class S3SupplyModel(S3Model):
                                    default=True,
                                    readable=asset,
                                    writable=asset,
+                                   represent = s3_yes_no_represent,
                                    label=T("Items in Category can be Assets")),
                              Field("is_vehicle", "boolean",
                                    default=False,
                                    readable=vehicle,
                                    writable=vehicle,
+                                   represent = s3_yes_no_represent,
                                    label=T("Items in Category are Vehicles")),
                              s3_comments(),
                              *s3_meta_fields())

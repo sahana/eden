@@ -335,84 +335,15 @@ def req_controller():
                     s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
-                if r.method not in ("read", "update", "search"):
+                method = r.method
+                if method not in ("map", "read", "search", "update"):
                     # Hide fields which don't make sense in a Create form
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
-                    s3db.req_create_form_mods()
+                    s3.req_create_form_mods()
 
-                    if type == 1:
-                        # Dropdown not Autocomplete
-                        itable = s3db.req_req_item
-                        itable.item_id.widget = None
-                        s3.jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'item_id',
- 'targetName':'item_pack_id',
- 'lookupPrefix':'supply',
- 'lookupResource':'item_pack',
- 'lookupKey':'item_id',
- 'lookupField':'id',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
-})''')
-                        # We don't want to force people to enter quantities
-                        #itable.quantity.default = 0
-                        # Custom Form
-                        s3forms = s3base.s3forms
-                        crud_form = s3forms.S3SQLCustomForm(
-                                # If not generated automatically
-                                #"req_ref",
-                                "site_id",
-                                "is_template",
-                                "requester_id",
-                                "date",
-                                "priority",
-                                "date_required",
-                                "purpose",
-                                s3forms.S3SQLInlineComponent(
-                                    "req_item",
-                                    label = T("Items"),
-                                    fields = ["item_id",
-                                              "item_pack_id",
-                                              "quantity",
-                                              "comments"
-                                              ]
-                                ),
-                                #"date_recv",
-                                "comments",
-                            )
-                        s3db.configure("req_req", crud_form=crud_form)
-
-                    elif type == 3:
-                        # Custom Form
-                        stable = s3db.req_req_skill
-                        stable.skill_id.label = T("Required Skills (optional)")
-                        stable.skill_id.widget = None
-                        s3forms = s3base.s3forms
-                        crud_form = s3forms.S3SQLCustomForm(
-                                # If not generated automatically
-                                #"req_ref",
-                                "site_id",
-                                "is_template",
-                                "requester_id",
-                                "date",
-                                "priority",
-                                "date_required",
-                                "date_required_until",
-                                "purpose",
-                                s3forms.S3SQLInlineComponent(
-                                    "req_skill",
-                                    label = T("Skills"),
-                                    fields = ["quantity",
-                                              "skill_id",
-                                              "comments"
-                                              ]
-                                ),
-                                "comments",
-                            )
-                        s3db.configure("req_req", crud_form=crud_form)
+                    # Inline Forms
+                    s3.req_inline_form(type)
 
                     # Get the default Facility for this user
                     # @ToDo: Use site_id in User Profile (like current organisation_id)
@@ -424,9 +355,16 @@ S3OptionsFilter({
                         if site:
                             r.table.site_id.default = site.site_id
 
-                    if r.method == "map":
-                        # Tell the client to request per-feature markers
-                        s3db.configure("req_req", marker_fn=marker_fn)
+                elif method == "map":
+                    # Tell the client to request per-feature markers
+                    s3db.configure("req_req", marker_fn=marker_fn)
+
+                elif method == "search":
+                    r.table.requester_id.represent = requester_represent
+
+                elif method == "update":
+                    # Inline Forms
+                    s3.req_inline_form(type)
 
         elif r.representation == "plain":
             # Map Popups
@@ -582,29 +520,29 @@ S3OptionsFilter({
                     s3.jquery_ready.append(
 '''S3ConfirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
                 # This is only appropriate for item requests
-                query = (r.table.type == 1)
-                rows = db(query).select(r.table.id)
-                restrict = [str(row.id) for row in rows]
-                s3.actions.append(
-                    dict(url = URL(c="req", f="req",
-                                   args=["[id]", "req_item"]),
-                         _class = "action-btn",
-                         label = str(T("View Items")),
-                         restrict = restrict
-                        )
-                    )
+                #query = (r.table.type == 1)
+                #rows = db(query).select(r.table.id)
+                #restrict = [str(row.id) for row in rows]
+                #s3.actions.append(
+                #    dict(url = URL(c="req", f="req",
+                #                   args=["[id]", "req_item"]),
+                #         _class = "action-btn",
+                #         label = str(T("View Items")),
+                #         restrict = restrict
+                #        )
+                #    )
                 # This is only appropriate for people requests
-                query = (r.table.type == 3)
-                rows = db(query).select(r.table.id)
-                restrict = [str(row.id) for row in rows]
-                s3.actions.append(
-                    dict(url = URL(c="req", f="req",
-                                   args=["[id]", "req_skill"]),
-                         _class = "action-btn",
-                         label = str(T("View Skills")),
-                         restrict = restrict
-                        )
-                    )
+                #query = (r.table.type == 3)
+                #rows = db(query).select(r.table.id)
+                #restrict = [str(row.id) for row in rows]
+                #s3.actions.append(
+                #    dict(url = URL(c="req", f="req",
+                #                   args=["[id]", "req_skill"]),
+                #         _class = "action-btn",
+                #         label = str(T("View Skills")),
+                #         restrict = restrict
+                #        )
+                #    )
             elif r.component.name == "req_item" and settings.get_req_prompt_match():
                 req_item_inv_item_btn = dict(url = URL(c = "req",
                                                        f = "req_item_inv_item",
@@ -640,6 +578,56 @@ S3OptionsFilter({
                                 rheader=eden.req.req_rheader)
 
     return output
+
+# =============================================================================
+def requester_represent(id, show_link=True):
+    """
+        Represent a Requester as Name + Tel#
+    """
+
+    if not id:
+        return current.messages["NONE"]
+
+    htable = s3db.hrm_human_resource
+    ptable = s3db.pr_person
+    ctable = s3db.pr_contact
+
+    query = (htable.id == id) & \
+            (htable.person_id == ptable.id)
+    left = ctable.on((ctable.pe_id == ptable.pe_id) & \
+                     (ctable.contact_method == "SMS"))
+    row = db(query).select(htable.type,
+                           ptable.first_name,
+                           ptable.middle_name,
+                           ptable.last_name,
+                           ctable.value,
+                           left=left,
+                           limitby=(0, 1)).first()
+
+    try:
+        hr = row["hrm_human_resource"]
+    except:
+        return current.messages.UNKNOWN_OPT
+
+    person = row["pr_person"]
+    repr = s3_fullname(person)
+    if row.pr_contact.value:
+        repr = "%s %s" % (repr, row.pr_contact.value)
+    if show_link:
+        if hr.type == 1:
+            controller = "hrm"
+            function = "staff"
+        else:
+            controller = "vol"
+            function = "volunteer"
+        current.request.extension = "html"
+        return A(repr,
+                 _href = URL(c = controller,
+                             f = function,
+                             args = [id]
+                             )
+                 )
+    return repr
 
 # =============================================================================
 def req_item():

@@ -660,11 +660,13 @@ class S3Config(Storage):
         """ Get custom crud_forms for diffent tables """
         return self.ui.get("crud_form_%s" % tablename, None)
 
-    def ui_customize(self, tablename):
+    def ui_customize(self, tablename, **attr):
         """ Customizes field settings on a table"""
         customize = self.ui.get("customize_%s" % tablename)
         if customize:
-            customize()
+            return customize(**attr)
+        else:
+            return attr
 
     # =========================================================================
     # Messaging
@@ -1131,6 +1133,13 @@ class S3Config(Storage):
     def get_pr_request_gender(self):
         """ Include Gender in the AddPersonWidget """
         return self.pr.get("request_gender", True)
+    def get_pr_select_existing(self):
+        """
+            Whether the AddPersonWidget allows selecting existing PRs
+            - set to True if Persons can be found in multiple contexts
+            - set to False if just a single context
+        """
+        return self.pr.get("select_existing", True)
 
     # -------------------------------------------------------------------------
     # Proc
@@ -1223,9 +1232,11 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Request Settings
     def get_req_type_inv_label(self):
-        return self.req.get("type_inv_label", current.T("Warehouse Stock"))
+        return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
     def get_req_type_hrm_label(self):
-        return self.req.get("type_hrm_label", current.T("People"))
+        return current.T(self.req.get("type_hrm_label", "People"))
+    def get_req_requester_label(self):
+        return current.T(self.req.get("requester_label", "Requester"))
     def get_req_date_writable(self):
         """ Whether Request Date should be manually editable """
         return self.req.get("date_writable", True)

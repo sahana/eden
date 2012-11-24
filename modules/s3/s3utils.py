@@ -638,9 +638,7 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_represent_id( table,
-                     fieldname = "name",
-                     translate = False):
+def s3_represent_id(table, fieldname="name", translate=False):
     """
         Returns a represent function for a record id.
     """
@@ -650,8 +648,8 @@ def s3_represent_id( table,
             if not id:
                 return current.messages["NONE"]
             row  = current.db(table._id == id).select(table[fieldname],
-                                                   limitby=(0, 1)
-                                                   ).first()
+                                                      limitby=(0, 1)
+                                                      ).first()
         try:
             if translate:
                 return current.T(row.name)
@@ -661,34 +659,41 @@ def s3_represent_id( table,
             return current.messages["UNKNOWN_OPT"]
 
     return represent
+
 # =============================================================================
-def s3_represent_multi_id( table,
-                           fieldname = "name",
-                           translate = False):
+def s3_represent_multi_id(table, fieldname="name", translate=False):
     """
         Returns a represent function for a record id.
     """
 
-    def represent(ids, row=None):
+    def represent(ids):
         if not ids:
             return current.messages["NONE"]
 
         ids = [ids] if type(ids) is not list else ids
 
-        row = current.db(table.id.belongs(ids)).select(table.id,
-                                                       table[fieldname]).as_dict()
+        rows = current.db(table.id.belongs(ids)).select(table[fieldname])
 
         try:
-            strings = [str(row.get(id)[fieldname]) for id in ids]
+            strings = [str(row[fieldname]) for row in rows]
         except:
             return current.messages["NONE"]
-    
+
         if strings:
             return ", ".join(strings)
         else:
             return current.messages["NONE"]
 
     return represent
+
+# =============================================================================
+def s3_yes_no_represent(value):
+    " Represent a Boolean field as Yes/No instead of True/False "
+
+    if value:
+        return current.T("Yes")
+    else:
+        return current.T("No")
 
 # =============================================================================
 def s3_include_debug_css():
@@ -2868,17 +2873,21 @@ class S3DataTable(object):
         iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
                             _onclick="s3FormatRequest('pdf','%s','%s');" % (id, url),
                             _alt=T("Export in PDF format"),
+                            _title=T("Export in PDF format"),
                             ))
         url = s3.formats.xls if s3.formats.xls else default_url
         iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % application,
                             _onclick="s3FormatRequest('xls','%s','%s');" % (id, url),
                             _alt=T("Export in XLS format"),
+                            _title=T("Export in XLS format"),
                             ))
         url = s3.formats.rss if s3.formats.rss else default_url
         iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % application,
                             _onclick="s3FormatRequest('rss','%s','%s');" % (id, url),
                             _alt=T("Export in RSS format"),
+                            _title=T("Export in RSS format"),
                             ))
+
         div = DIV(_class='list_formats')
         if permalink is not None:
             link = A(T("Link to this result"),
@@ -2892,11 +2901,19 @@ class S3DataTable(object):
             iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
                                 _onclick="s3FormatRequest('have','%s','%s');" % (id, s3.formats.have),
                                 _alt=T("Export in HAVE format"),
+                                _title=T("Export in HAVE format"),
                                 ))
         if "kml" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
                                 _onclick="s3FormatRequest('kml','%s','%s');" % (id, s3.formats.kml),
                                 _alt=T("Export in KML format"),
+                                _title=T("Export in KML format"),
+                                ))
+        if "xml" in s3.formats:
+            iconList.append(IMG(_src="/%s/static/img/icon-xml.png" % application,
+                                _onclick="s3FormatRequest('xml','%s','%s');" % (id, url),
+                                _alt=T("Export in XML format"),
+                                _title=T("Export in XML format"),
                                 ))
         elif rfields:
             kml_list = ["location_id",
@@ -3399,5 +3416,8 @@ class S3DataTable(object):
                            action_col=action_col,
                            stringify=stringify,
                            **attr)
+        
+
+        
 
 # END =========================================================================

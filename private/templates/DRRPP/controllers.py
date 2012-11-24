@@ -732,6 +732,8 @@ class organisations():
         request = current.request
         response = current.response
 
+        current.response.s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+
         response.title = "DRR Projects Portal - Regional Organizations"
         view = path.join(request.folder, "private", "templates",
                          "DRRPP", "views", "organisations.html")
@@ -746,7 +748,7 @@ class organisations():
         table = request.vars.get("table", None)
 
         # URL format breaks the REST controller conventions
-        request.args.pop()
+        #request.args.pop()
 
         if table is None or table == "regional":
             s3request, field_list = self._regional()
@@ -899,7 +901,7 @@ class organisations():
                 }
             ],
             "aoColumns": [{"sName": col["name"]} for col in cols],
-            "sDom": "frltpi",
+            "sDom": 'rifpl<"dataTable_table"t>p'
         })
 
         table = Storage(

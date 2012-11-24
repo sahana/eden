@@ -47,6 +47,14 @@ div.form-container form input.string,
 div.form-container form textarea  {
     width: 500px;
 }
+div#login_form form table,
+div#register_form form table {
+    width: 95%;
+}
+div#login_form input.string,
+div#register_form input.string {
+    width: 95%;
+}
 div.form-container form input[type="checkbox"],
 div.form-container form input[type="radio"] {
     margin: 2px 5px;
@@ -139,7 +147,7 @@ table.dataTable thead th {
 }
 
 div#table-container th {
-	text-align: left;
+    text-align: center;
     border: 1px solid #ccc;
 }
 div#table-container th.rtotal {

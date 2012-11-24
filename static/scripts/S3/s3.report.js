@@ -378,7 +378,14 @@ function reportRenderBreakdown(json, dim) {
     });
 }
 
-$(function() {
+function emptyChart() {
+    $('#chart-container').removeClass('hide');
+    $('#chart').unbind('plothover');
+    $('#chart').unbind('plotclick');
+    $('#chart').empty();
+}
+
+$(document).ready(function() {
 
     // json_data comes with the page, and contains these attributes:
     //
@@ -392,57 +399,42 @@ $(function() {
     // f - URL query variables of the report filter widgets
 
     $('#pie_chart_rows').click(function() {
-        $('#chart-container').removeClass('hide');
-        $('#chart').unbind('plothover');
-        $('#chart').unbind('plotclick');
-        $('#chart').empty();
+        emptyChart();
         reportRenderPieChart(json_data, 0);
     });
     $('#pie_chart_cols').click(function() {
-        $('#chart-container').removeClass('hide');
-        $('#chart').unbind('plothover');
-        $('#chart').unbind('plotclick');
-        $('#chart').empty();
+        emptyChart();
         reportRenderPieChart(json_data, 1);
     });
     $('#vbar_chart_rows').click(function() {
-        $('#chart-container').removeClass('hide');
-        $('#chart').unbind('plothover');
-        $('#chart').unbind('plotclick');
-        $('#chart').empty();
+        emptyChart();
         reportRenderBarChart(json_data, 0);
     });
     $('#vbar_chart_cols').click(function() {
-        $('#chart-container').removeClass('hide');
-        $('#chart').unbind('plothover');
-        $('#chart').unbind('plotclick');
-        $('#chart').empty();
+        emptyChart();
         reportRenderBarChart(json_data, 1);
     });
     $('#bd_chart_rows').click(function() {
-        $('#chart-container').removeClass('hide');
-        $('#chart').unbind('plothover');
-        $('#chart').unbind('plotclick');
-        $('#chart').empty();
+        emptyChart();
         reportRenderBreakdown(json_data, 0);
     });
     $('#bd_chart_cols').click(function() {
-        $('#chart-container').removeClass('hide');
-        $('#chart').unbind('plothover');
-        $('#chart').unbind('plotclick');
-        $('#chart').empty();
+        emptyChart();
         reportRenderBreakdown(json_data, 1);
     });
-    $('#hide-chart').click(function(){
+    $('.hide-chart').click(function(){
         $('#chart-container').addClass('hide');
     });
-
     // Toggle the report options
     $('#reportform legend').click(function(){
         $(this).siblings().toggle();
         $(this).children().toggle();
     });
-
+    // Toggle pivot table
+    $('.pivot-table-control').click(function(){
+        $(this).siblings().toggle();
+        $(this).children().toggle();
+    });
     /*
      * User can click on a magnifying glass in the cell to show
      * the list of values for each cell layer
@@ -478,9 +470,26 @@ $(function() {
             }
         }
     });
-});
-
-$(document).ready(function() {
     // Hide the report options when the page loads
     $('#report_options legend').siblings().toggle();
+
+    // Render default chart
+    if (undefined !== chart_opts) {
+        var t = chart_opts.type, d = chart_opts.dim;
+        if (d == 'cols') {
+            d = 1;
+        } else {
+            d = 0;
+        }
+        if (t == 'piechart') {
+            emptyChart();
+            reportRenderPieChart(json_data, d);
+        } else if (t == 'barchart') {
+            emptyChart();
+            reportRenderBarChart(json_data, d);
+        } else if (t == 'breakdown') {
+            emptyChart();
+            reportRenderBreakdown(json_data, d);
+        }
+    }
 });

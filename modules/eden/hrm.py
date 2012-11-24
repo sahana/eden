@@ -113,7 +113,7 @@ class S3HRModel(S3Model):
         controller = request.controller
         group = request.get_vars.get("group", None)
         if not group:
-            if controller in ["hrm", "org", "inv", "cr", "hms"]:
+            if controller in ["hrm", "org", "inv", "cr", "hms", "req"]:
                 group = "staff"
             elif controller == "vol":
                 group = "volunteer"
@@ -184,6 +184,7 @@ class S3HRModel(S3Model):
                                         #readable = False,
                                         #writable = False,
                                         label = T("Essential Staff?"),
+                                        represent = s3_yes_no_represent,
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Essential Staff?"),
                                                                         T("If the person counts as essential staff when evacuating all non-essential staff.")))),
@@ -273,32 +274,32 @@ class S3HRModel(S3Model):
         if group == "staff":
             label = STAFF
             crud_strings[tablename] = crud_strings["hrm_staff"]
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
                                   sort=True,
                                   filterby="type",
                                   filter_opts=(1,)
-                                  )),
+                                  ))
             widget = S3HumanResourceAutocompleteWidget(group="staff")
         elif group == "volunteer":
             label = T("Volunteer")
             crud_strings[tablename] = crud_strings["hrm_volunteer"]
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
                                   sort=True,
                                   filterby="type",
                                   filter_opts=(2,)
-                                  )),
+                                  ))
             widget = S3HumanResourceAutocompleteWidget(group="volunteer")
         else:
             label = T("Human Resource")
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
                                   sort=True
-                                  )),
+                                  ))
             widget = S3HumanResourceAutocompleteWidget()
             if contacts:
                 crud_strings[tablename] = crud_strings["hrm_staff"]
@@ -1284,7 +1285,7 @@ class S3HRSkillModel(S3Model):
         site_id = self.org_site_id
 
         messages = current.messages
-        NONE = messages.NONE
+        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -1401,18 +1402,18 @@ class S3HRSkillModel(S3Model):
 
         represent = s3_represent_id(table)
         skill_id = S3ReusableField("skill_id", table,
-                        sortby = "name",
-                        label = T("Skill"),
-                        requires = IS_NULL_OR(
-                                    IS_ONE_OF(db, "hrm_skill.id",
-                                              represent,
-                                              sort=True
-                                              )),
-                        represent = represent,
-                        comment = skill_help,
-                        ondelete = "SET NULL",
-                        widget = widget
-                        )
+                                   sortby = "name",
+                                   label = T("Skill"),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "hrm_skill.id",
+                                                          represent,
+                                                          sort=True
+                                                          )),
+                                   represent = represent,
+                                   comment = skill_help,
+                                   ondelete = "SET NULL",
+                                   widget = widget
+                                   )
 
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
                                          sortby = "name",
@@ -1427,7 +1428,7 @@ class S3HRSkillModel(S3Model):
                                          #comment = skill_help,
                                          ondelete = "SET NULL",
                                          widget = S3MultiSelectWidget()
-                                        )
+                                         )
 
         configure("hrm_skill",
                   deduplicate=self.hrm_skill_duplicate)
@@ -2363,7 +2364,7 @@ class S3HRSkillModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.hrm_certificate
@@ -2490,7 +2491,7 @@ class S3HRSkillModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.hrm_competency_rating
@@ -2538,7 +2539,7 @@ class S3HRSkillModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.hrm_course
@@ -2615,7 +2616,7 @@ class S3HRSkillModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.hrm_skill_type
@@ -3076,7 +3077,7 @@ def hrm_human_resource_represent(id, row=None, show_link=False):
     if row:
         id = row.id
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     s3db = current.s3db
     htable = s3db.hrm_human_resource
@@ -3126,7 +3127,7 @@ def hrm_training_event_represent(id, row=None):
     """ Represent a Training Event """
 
     if not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     s3db = current.s3db
     table = s3db.hrm_training_event
@@ -3171,7 +3172,7 @@ def hrm_training_event_represent(id, row=None):
 #    if row:
 #        id = row.id
 #    elif not id:
-#        return current.messages.NONE
+#        return current.messages["NONE"]
 #    db = current.db
 #    s3db = current.s3db
 #    table = s3db.hrm_position
@@ -3189,7 +3190,7 @@ def hrm_training_event_represent(id, row=None):
 #            represent = "%s (%s)" % (represent,
 #                                     position.org_organisation.name)
 #    except:
-#        return current.messages.NONE
+#        return current.messages["NONE"]
 #    return represent
 
 # =============================================================================
@@ -3781,7 +3782,7 @@ def hrm_service_record(r, **attr):
                                 ttable.hours,
                                 left=ctable.on(ttable.course_id == ctable.id),
                                 orderby = ~ttable.date)
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
         for row in rows:
             _row = row["hrm_training"]
             hours[_row.date.date()] = dict(
@@ -3869,7 +3870,7 @@ class HRMVirtualFields:
                 names = [cert.name for cert in certs]
                 return ",".join(names)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def course(self):
@@ -3893,7 +3894,7 @@ class HRMVirtualFields:
                 names = [course.name for course in courses]
                 return ",".join(names)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def email(self):
@@ -3917,7 +3918,7 @@ class HRMVirtualFields:
                 values = [contact.value for contact in contacts]
                 return ",".join(values)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def phone(self):
@@ -3942,7 +3943,7 @@ class HRMVirtualFields:
                 values = [contact.value for contact in contacts]
                 return ",".join(values)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class HRMProgrammeVirtualFields:
@@ -3970,7 +3971,7 @@ class HRMProgrammeVirtualFields:
             if programme:
                 return programme.name
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def active(self):
@@ -3999,7 +4000,7 @@ class HRMProgrammeVirtualFields:
                              _style="color:red;")
             return active
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class HRMProgrammePersonVirtualFields:
@@ -4027,7 +4028,7 @@ class HRMProgrammePersonVirtualFields:
             if programme:
                 return programme.name
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def active(self):
@@ -4056,7 +4057,7 @@ class HRMProgrammePersonVirtualFields:
                              _style="color:red;")
             return active
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class HRMTrainingVirtualFields:
@@ -4077,7 +4078,7 @@ class HRMTrainingVirtualFields:
         if date:
             return "%s/%02d" % (date.year, date.month)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def year(self):
@@ -4090,7 +4091,7 @@ class HRMTrainingVirtualFields:
         if date:
             return date.year
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def job_title(self):
@@ -4122,7 +4123,7 @@ class HRMTrainingVirtualFields:
                         output = repr
                 return output
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def organisation(self):
@@ -4152,7 +4153,7 @@ class HRMTrainingVirtualFields:
                         output = repr
                 return output
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 def hrm_rheader(r, tabs=[],

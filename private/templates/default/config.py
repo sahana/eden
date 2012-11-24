@@ -244,6 +244,7 @@ settings.L10n.decimal_separator = "."
 # Uncomment to hide fields in S3AddPersonWidget
 #settings.pr.request_dob = False
 #settings.pr.request_gender = False
+#settings.pr.select_existing = False
 
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
@@ -338,8 +339,12 @@ settings.L10n.decimal_separator = "."
 #    }
 
 # Requests Management
-#settings.req.type_inv_label = T("Donations")
-#settings.req.type_hrm_label = T("Volunteers")
+# Label for Inventory Requests
+#settings.req.type_inv_label = "Donations"
+# Label for People Requests
+#settings.req.type_hrm_label = "Volunteers"
+# Label for Requester
+#settings.req.requester_label = "Site Contact"
 #settings.req.date_writable = False
 # Allow the status for requests to be set manually,
 # rather than just automatically from commitments and shipments

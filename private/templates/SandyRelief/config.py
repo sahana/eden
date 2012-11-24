@@ -80,7 +80,7 @@ settings.auth.registration_link_user_to = {"staff":T("Staff"),
                                            #"volunteer":T("Volunteer")
                                            }
 
-settings.security.policy = 4 # Controller & Function ACLs
+settings.security.policy = 5 # Controller, Function & Table ACLs
 
 # Resource which need approval
 #settings.auth.record_approval_required_for = ["org_facility"]
@@ -118,6 +118,10 @@ settings.req.date_writable = False
 settings.req.quantities_writable = True
 settings.req.skill_quantities_writable = True
 #settings.req.use_req_number = False
+# Label for Requester
+settings.req.requester_label = "Site Contact"
+# Label for Inventory Requests
+settings.req.type_inv_label = "Supplies"
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations
@@ -144,6 +148,7 @@ settings.org.site_inv_req_tabs = False
 # Uncomment to hide fields in S3AddPersonWidget
 settings.pr.request_dob = False
 settings.pr.request_gender = False
+settings.pr.select_existing = False
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

@@ -117,6 +117,7 @@ class S3EventModel(S3Model):
                                    label=T("Zero Hour")),
                              Field("closed", "boolean",
                                    default = False,
+                                   represent = s3_yes_no_represent,
                                    label=T("Closed")),
                              s3_comments(),
                              *s3_meta_fields())
@@ -206,6 +207,7 @@ class S3EventModel(S3Model):
                                    label=T("Zero Hour")),
                              Field("closed", "boolean",
                                    default = False,
+                                   represent = s3_yes_no_represent,
                                    label=T("Closed")),
                              s3_comments(),
                              *s3_meta_fields())

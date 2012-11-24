@@ -12,7 +12,7 @@
 {{except:}}{{pass}}
 </div>
 <div id='map'></div>
-{{try:}}{{items = items}}
+{{try:}}{{pivot_table = pivot_table}}
   {{try:}}
     {{if report_data is not None:}}
     {{s3.actions=None}}
@@ -39,22 +39,21 @@
   {{pass}}
 {{except:}}{{pass}}
 <div id='chart-container' class='hide' style='width: 800px;'>
-  <div class='chart-control'>
-    {{=A(T("Hide Chart"), _href="#", _id="hide-chart", _class="action-lnk")}}
-  </div>
+  {{=DIV(T("Hide Chart"), _class="hide-chart")}}
   <div class='chart-contents'>
     <div id='chart-header'></div>
     <div id='chart' style='height:360px;'></div>
   </div>
 </div>
 <div id='table-container'>
-  {{=items}}
+  {{=pivot_table}}
 </div>
 {{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
 <script type='text/javascript'>//<![CDATA[
+{{try:}}{{if chart_opts:}}{{=XML(chart_opts)}}{{pass}}{{except:}}{{pass}}
 {{try:}}
 {{if report_data:}}var json_data={{=XML(report_data.json_data)}}
 {{else:}}var json_data={cols:null, rows:null}{{pass}}

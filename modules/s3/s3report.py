@@ -135,7 +135,7 @@ class S3Report(S3CRUD):
 
             # Do we have URL options?
             url_options = Storage([(k, last(v))
-                                   for k, v in r.get_vars.iteritems() if v])
+                                   for k, v in r.get_vars.iteritems() if v and k not in ("table", "chart")])
             if url_options:
                 form_values = url_options
                 if not form_values._formname:
@@ -307,7 +307,45 @@ class S3Report(S3CRUD):
                 else:
                     items = self.crud_string(tablename, "msg_no_match")
 
-                output = dict(items=items,
+                report_options = self._config("report_options", None)
+
+                # Display options
+
+                # Show or hide the pivot table by default?
+                # either report_options.table=True|False or URL ?table=1|0
+                get_vars = r.get_vars
+                hide, show = {}, {"_style": "display:none;"}
+                if "table" in get_vars and r.get_vars["table"] != "1" or \
+                   report_options and report_options.get("table", False):
+                    hide, show = show, hide
+
+                # Which chart to show by default?
+                # either report_options.chart="type:dim" or URL ?chart=type:dim
+                # type=piechart|barchart|breakdown|hide (defaults to hide)
+                # dim=rows|cols (defaults to rows)
+                chart_opt = get_vars.get("chart", report_options.get("chart", None))
+                chart_dim = "rows"
+                if chart_opt:
+                    if ":" in chart_opt:
+                        chart_type, chart_dim = chart_opt.split(":", 1)
+                    else:
+                        chart_type = chart_opt
+                else:
+                    chart_type = "hide"
+                chart_opts = '''chart_opts=%s''' % json.dumps({"type":chart_type, "dim": chart_dim})
+
+                # Render the pivot table + controls
+                pivot_table = DIV(
+                    DIV(
+                        DIV(T("Hide Pivot Table"), _class="pivot-table-toggle", **hide),
+                        DIV(T("Show Pivot Table"), _class="pivot-table-toggle", **show),
+                        _class="pivot-table-control"
+                    ),
+                    DIV(items, _class="pivot-table-contents", **hide),
+                    _id="pivot-table"
+                )
+                output = dict(pivot_table=pivot_table,
+                              chart_opts=chart_opts,
                               report_data=report_data)
 
                 # Other output options
@@ -316,7 +354,7 @@ class S3Report(S3CRUD):
                 s3.no_formats = True
                 s3.no_sspag = True
                 s3.actions = []
-                output.update(sortby=[[0,'asc']])
+                output["sortby"] = [[0,'asc']]
 
             else:
                 r.error(501, current.manager.ERROR.BAD_FORMAT)
@@ -472,11 +510,12 @@ class S3Report(S3CRUD):
         # Layer selector ------------------------------------------------------
 
         layer, hidden = self._method_select("fact",
-                                            report_options,
-                                            form_values)
+                                            report_options, form_values)
+        single_opt = {"_class": "report-fact-single-option"} \
+                     if hidden else {}
         if layer:
             selectors.append(TR(label(T("Value"), _for="report-fact"),
-                                TD(layer)))
+                                TD(layer), **single_opt))
 
         # Show Totals switch --------------------------------------------------
 
