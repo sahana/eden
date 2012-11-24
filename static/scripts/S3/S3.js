@@ -149,13 +149,16 @@ $(document).ready(function() {
         $('input:text:visible:first').focus();
     }
 
-    // accept comma as thousands separator
+    // Accept comma as thousands separator
     $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
     $('input.float_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g,'').reverse();});
     // Auto-capitalize first names
     $('input[name="first_name"]').focusout(function() {this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);})
     // Hide password verification field in admin/user until changed
-    $('input[name="password"]').keyup(function() {$('.verify-password').removeClass('hide'); $('#password_two').removeAttr('disabled');});
+    $('input[name="password"]').keyup(function() {
+        $('.verify-password').removeClass('hide');
+        $('#password_two').removeAttr('disabled');
+    });
 
     // Resizable textareas
     $('textarea.resizable:not(.textarea-processed)').each(function() {
@@ -213,22 +216,27 @@ $(document).ready(function() {
     // Colorbox Popups
     $('a.colorbox').attr('href', function(index, attr) {
         // Add the caller to the URL vars so that the popup knows which field to refresh/set
-        var caller = '';
-        try {
-            caller = $(this).parents('tr').attr('id').replace(/__row/, '');
-        } catch(e) {
-            // Do nothing
-            if(caller == '') return attr;
+        var caller = $(this).parents('tr').attr('id');
+        if (!caller) {
+            // DIV-based formstyle
+            caller = $(this).parent().parent().attr('id');
         }
+        caller = caller.replace(/__row/, '');
         // Avoid Duplicate callers
         var url_out = attr;
-        if (attr.indexOf('&caller=') == -1){
+        if (attr.indexOf('&caller=') == -1) {
             url_out = attr + '&caller=' + caller;
         }
         return url_out;
     });
-    $('.colorbox').click(function(){
-        $.fn.colorbox({iframe:true, width:'99%', height:'99%', href:this.href, title:this.title});
+    $('.colorbox').click(function() {
+        $.fn.colorbox({
+            iframe: true,
+            width: '99%',
+            height: '99%',
+            href: this.href,
+            title: this.title
+        });
         return false;
     });
 

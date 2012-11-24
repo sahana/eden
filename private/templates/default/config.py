@@ -244,6 +244,7 @@ settings.L10n.decimal_separator = "."
 # Uncomment to hide fields in S3AddPersonWidget
 #settings.pr.request_dob = False
 #settings.pr.request_gender = False
+#settings.pr.select_existing = False
 
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10

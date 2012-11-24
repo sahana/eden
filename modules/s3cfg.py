@@ -1133,6 +1133,13 @@ class S3Config(Storage):
     def get_pr_request_gender(self):
         """ Include Gender in the AddPersonWidget """
         return self.pr.get("request_gender", True)
+    def get_pr_select_existing(self):
+        """
+            Whether the AddPersonWidget allows selecting existing PRs
+            - set to True if Persons can be found in multiple contexts
+            - set to False if just a single context
+        """
+        return self.pr.get("select_existing", True)
 
     # -------------------------------------------------------------------------
     # Proc

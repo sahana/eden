@@ -148,6 +148,7 @@ settings.org.site_inv_req_tabs = False
 # Uncomment to hide fields in S3AddPersonWidget
 settings.pr.request_dob = False
 settings.pr.request_gender = False
+settings.pr.select_existing = False
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

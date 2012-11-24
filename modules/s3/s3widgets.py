@@ -712,6 +712,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         js_autocomplete = "".join((
 '''var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+try{
 $('#%(dummy_input)s').autocomplete({
  source:'%(url)s',
  delay:%(delay)d,
@@ -763,7 +764,7 @@ $('#%(dummy_input)s').autocomplete({
   name+=' '+item.last
  }
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
-}
+}}catch(e){}
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
   $('#%(real_input)s').val('').change()
@@ -2688,11 +2689,14 @@ class S3AddPersonWidget(FormWidget):
 
     def __init__(self,
                  controller = None,
-                 select_existing = True):
+                 select_existing = None):
 
         # Controller to retrieve the person record
         self.controller = controller
-        self.select_existing = select_existing
+        if select_existing is not None:
+            self.select_existing = select_existing
+        else:
+            self.select_existing = current.deployment_settings.get_pr_select_existing()
 
     def __call__(self, field, value, **attributes):
 
@@ -2715,59 +2719,78 @@ class S3AddPersonWidget(FormWidget):
         else:
             real_input = str(field).replace(".", "_")
 
-        if self.select_existing:
-            _class ="box_top"
-        else:
-            _class = "hide"
-
         if self.controller is None:
             controller = request.controller
         else:
             controller = self.controller
 
-        # Select from registry buttons
-        select_row = TR(TD(A(T("Select from registry"),
-                             _href="#",
-                             _id="select_from_registry",
-                             _class="action-btn"),
-                           A(T("Remove selection"),
-                             _href="#",
-                             _onclick="clear_person_form();",
-                             _id="clear_form_link",
-                             _class="action-btn hide",
-                             _style="padding-left:15px;"),
-                           A(T("Edit Details"),
-                             _href="#",
-                             _onclick="edit_selected_person_form();",
-                             _id="edit_selected_person_link",
-                             _class="action-btn hide",
-                             _style="padding-left:15px;"),
-                           IMG(_src="/%s/static/img/ajax-loader.gif" % appname,
-                               _height=32,
-                               _width=32,
-                               _id="person_load_throbber",
-                               _class="throbber hide",
-                               _style="padding-left:85px;"),
-                           _class="w2p_fw"),
+        if self.select_existing:
+            # Autocomplete
+            select = '''select_person($('#%s').val())''' % real_input
+            widget = S3PersonAutocompleteWidget(post_process=select)
+            ac_row = TR(TD(LABEL("%s: " % T("Name"),
+                                 _class="hide",
+                                 _id="person_autocomplete_label"),
+                           widget(field,
+                                  None,
+                                  _class="hide")),
                         TD(),
-                        _id="select_from_registry_row",
-                        _class=_class,
-                        _controller=controller,
-                        _field=real_input,
-                        _value=str(value))
+                        _id="person_autocomplete_row",
+                        _class="box_top")
+            # Select from registry buttons
+            _class ="box_top"
+            select_row = TR(TD(A(T("Select from registry"),
+                                 _href="#",
+                                 _id="select_from_registry",
+                                 _class="action-btn"),
+                               A(T("Remove selection"),
+                                 _href="#",
+                                 _onclick="clear_person_form();",
+                                 _id="clear_form_link",
+                                 _class="action-btn hide",
+                                 _style="padding-left:15px;"),
+                               A(T("Edit Details"),
+                                 _href="#",
+                                 _onclick="edit_selected_person_form();",
+                                 _id="edit_selected_person_link",
+                                 _class="action-btn hide",
+                                 _style="padding-left:15px;"),
+                               IMG(_src="/%s/static/img/ajax-loader.gif" % appname,
+                                   _height=32,
+                                   _width=32,
+                                   _id="person_load_throbber",
+                                   _class="throbber hide",
+                                   _style="padding-left:85px;"),
+                               _class="w2p_fw"),
+                            TD(),
+                            _id="select_from_registry_row",
+                            _class=_class,
+                            _controller=controller,
+                            _field=real_input,
+                            _value=str(value))
 
-        # Autocomplete
-        select = '''select_person($('#%s').val())''' % real_input
-        widget = S3PersonAutocompleteWidget(post_process=select)
-        ac_row = TR(TD(LABEL("%s: " % T("Name"),
-                             _class="hide",
-                             _id="person_autocomplete_label"),
-                       widget(field,
-                              None,
-                              _class="hide")),
-                    TD(),
-                    _id="person_autocomplete_row",
-                    _class="box_top")
+        else:
+            _class = "hide"
+            ac_row = ""
+            select_row = TR(TD(A(T("Edit Details"),
+                                 _href="#",
+                                 _onclick="edit_selected_person_form();",
+                                 _id="edit_selected_person_link",
+                                 _class="action-btn hide",
+                                 _style="padding-left:15px;"),
+                               IMG(_src="/%s/static/img/ajax-loader.gif" % appname,
+                                   _height=32,
+                                   _width=32,
+                                   _id="person_load_throbber",
+                                   _class="throbber hide",
+                                   _style="padding-left:85px;"),
+                               _class="w2p_fw"),
+                            TD(),
+                            _id="select_from_registry_row",
+                            _class=_class,
+                            _controller=controller,
+                            _field=real_input,
+                            _value=str(value))
 
         # Embedded Form
         s3db = current.s3db
@@ -2839,7 +2862,7 @@ class S3AddPersonWidget(FormWidget):
                      _class="box_bottom")
 
         # JS
-        s3.jquery_ready.append('''addPersonWidget()''');
+        s3.jquery_ready.append('''addPersonWidget()''')
 
         # Overall layout of components
         return TAG[""](select_row,

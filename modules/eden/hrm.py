@@ -113,7 +113,7 @@ class S3HRModel(S3Model):
         controller = request.controller
         group = request.get_vars.get("group", None)
         if not group:
-            if controller in ["hrm", "org", "inv", "cr", "hms"]:
+            if controller in ["hrm", "org", "inv", "cr", "hms", "req"]:
                 group = "staff"
             elif controller == "vol":
                 group = "volunteer"
@@ -274,32 +274,32 @@ class S3HRModel(S3Model):
         if group == "staff":
             label = STAFF
             crud_strings[tablename] = crud_strings["hrm_staff"]
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
                                   sort=True,
                                   filterby="type",
                                   filter_opts=(1,)
-                                  )),
+                                  ))
             widget = S3HumanResourceAutocompleteWidget(group="staff")
         elif group == "volunteer":
             label = T("Volunteer")
             crud_strings[tablename] = crud_strings["hrm_volunteer"]
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
                                   sort=True,
                                   filterby="type",
                                   filter_opts=(2,)
-                                  )),
+                                  ))
             widget = S3HumanResourceAutocompleteWidget(group="volunteer")
         else:
             label = T("Human Resource")
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
                                   sort=True
-                                  )),
+                                  ))
             widget = S3HumanResourceAutocompleteWidget()
             if contacts:
                 crud_strings[tablename] = crud_strings["hrm_staff"]

@@ -138,10 +138,13 @@ def staff():
                not r.id and \
                r.method in [None, "create"]:
                 # Don't redirect
+                table = r.table
+                site_id = request.get_vars.get("site_id", None)
+                if site_id:
+                    table.site_id.default = site_id
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
 
-                table = r.table
                 table.site_id.comment = DIV(DIV(_class="tooltip",
                                                 _title="%s|%s|%s" % (settings.get_org_site_label(),
                                                                      T("The facility where this position is based."),

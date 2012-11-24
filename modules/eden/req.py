@@ -49,6 +49,7 @@ import datetime
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 REQ_STATUS_NONE       = 0
 REQ_STATUS_PARTIAL    = 1
@@ -146,6 +147,7 @@ class S3RequestModel(S3Model):
         req_ask_security = settings.get_req_ask_security()
         req_ask_transport = settings.get_req_ask_transport()
         date_writable = settings.get_req_date_writable()
+        requester_label = settings.get_req_requester_label()
 
         # Comment these to use a Dropdown & not an Autocomplete
         #if settings.get_org_site_autocomplete():
@@ -242,10 +244,15 @@ class S3RequestModel(S3Model):
                                               writable = False
                                               ),
                                   human_resource_id("requester_id",
-                                                    label = settings.get_req_requester_label(),
+                                                    label = requester_label,
                                                     empty = settings.get_req_requester_optional(),
                                                     #writable = False,
-                                                    #comment = None,
+                                                    comment = S3AddResourceLink(c="hrm",
+                                                                                f="staff",
+                                                                                vars = dict(child="requester_id",
+                                                                                            parent="req"),
+                                                                                title=crud_strings["hrm_staff"].title_create,
+                                                                                tooltip=T("Enter some characters to bring up a list of possible matches")),
                                                     #default = auth.s3_logged_in_human_resource()
                                                     ),
                                   human_resource_id("assigned_to_id", # This field should be in req_commit, but that complicates the UI
@@ -595,10 +602,10 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                                       T("Please enter request details here."),
                                       T("Details field is required!"))
             s3.js_global.append(req_helptext)
-            s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % current.request.application)
 
         else:
-            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.req_schedule.js" % current.request.application)
+            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
         return
 
     # -------------------------------------------------------------------------
