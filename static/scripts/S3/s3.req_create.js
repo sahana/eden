@@ -22,8 +22,8 @@ $(document).ready(function() {
     add_site_to_staff_add_url();
     // onChange
     $('#req_req_site_id').change(function() {
-        add_site_to_staff_add_url();
-        return false;
+        // This is already being done somewhere else!
+        //add_site_to_staff_add_url();
     });
 
     $('#req_req_is_template').change(function() {

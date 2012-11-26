@@ -142,6 +142,7 @@ def staff():
                 site_id = request.get_vars.get("site_id", None)
                 if site_id:
                     table.site_id.default = site_id
+                    table.site_id.writable = False
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
 

@@ -354,7 +354,7 @@ class S3Report(S3CRUD):
                 s3.no_formats = True
                 s3.no_sspag = True
                 s3.actions = []
-                output["sortby"] = [[0,'asc']]
+                output["sortby"] = [[0, "asc"]]
 
             else:
                 r.error(501, current.manager.ERROR.BAD_FORMAT)

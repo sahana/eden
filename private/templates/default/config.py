@@ -331,6 +331,7 @@ settings.L10n.decimal_separator = "."
 #settings.inv.send_ref_field_name = "Tally Out Number"
 #settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
 #settings.inv.recv_shortname = "ARDR"
+# Types common to both Send and Receive
 #settings.inv.shipment_types = {
 #         0: T("-"),
 #         1: T("Other Warehouse"),
@@ -339,6 +340,21 @@ settings.L10n.decimal_separator = "."
 #         4: T("Local Purchases"),
 #         5: T("Confiscated Goods from Bureau Of Customs")
 #    }
+#settings.inv.send_types = {
+#        21: T("Distribution")
+#    }
+#settings.inv.send_type_default = 1
+#settings.inv.recv_types = {
+#        32: T("Donation"),
+#        34: T("Purchase"),
+#    }
+#settings.inv.item_status = {
+#        0: current.messages["NONE"],
+#        1: T("Dump"),
+#        2: T("Sale"),
+#        3: T("Reject"),
+#        4: T("Surplus")
+#   }
 
 # Requests Management
 # Label for Inventory Requests

@@ -941,6 +941,7 @@ class S3TrackingModel(S3Model):
         SITE_LABEL = settings.get_org_site_label()
         show_org = settings.get_inv_send_show_org()
         show_transport = settings.get_inv_send_show_mode_of_transport()
+        type_default = settings.get_inv_send_type_default()
 
         add_component = self.add_component
         configure = self.configure
@@ -999,7 +1000,9 @@ class S3TrackingModel(S3Model):
                                    represent = lambda opt: \
                                     send_type_opts.get(opt, UNKNOWN_OPT),
                                    label = T("Shipment Type"),
-                                   default = 0,
+                                   default = type_default,
+                                   readable = not type_default,
+                                   writable = not type_default,
                                    ),
                              # This is a reference, not a super-link, so we can override
                              Field("to_site_id", self.org_site,
