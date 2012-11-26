@@ -1159,12 +1159,16 @@ S3OptionsFilter({
             f = "req"
 
             # If the req_ref is None then set it up
-            if settings.get_req_use_req_number() and not table[id].req_ref:
-                code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
-                                                  table[id].site_id,
-                                                  table.req_ref,
-                                                 )
-                db(table.id == id).update(req_ref = code)
+            if settings.get_req_use_req_number():
+                record = db(table.id == id).select(table.req_ref,
+                                                   table.site_id,
+                                                   limitby=(0, 1)).first()
+                if not record.req_ref:
+                    code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
+                                                      record.site_id,
+                                                      table.req_ref,
+                                                      )
+                    db(table.id == id).update(req_ref = code)
 
         # Configure the next page to go to based on the request type
         tablename = "req_req"

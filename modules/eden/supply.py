@@ -475,7 +475,7 @@ S3FilterFieldChange({
         add_component("inv_inv_item", supply_item="item_id")
 
         # Order Items as component of Items
-        add_component("inv_recv_item", supply_item="item_id")
+        add_component("inv_track_item", supply_item="item_id")
 
         # Procurement Plan Items as component of Items
         add_component("proc_plan_item", supply_item="item_id")
@@ -793,7 +793,7 @@ S3OptionsFilter({
         #
         item_types = Storage(
                             inv_inv_item = T("Warehouse Stock"),
-                            inv_recv_item = T("Order Item"),
+                            inv_track_item = T("Order Item"),
                             proc_plan_item = T("Planned Procurement Item"),
                             )
 
@@ -1004,7 +1004,7 @@ S3OptionsFilter({
         T = current.T
         if instance_type == "inv_inv_item":
             item_str = T("In Stock")
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             s3db = current.s3db
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1342,10 +1342,8 @@ class SupplyItemPackVirtualFields(dict, object):
                 item_pack = self.req_req_item.item_pack_id
             elif self.tablename == "req_commit_item":
                 item_pack = self.req_commit_item.item_pack_id
-            elif self.tablename == "inv_recv_item":
-                item_pack = self.inv_recv_item.item_pack_id
-            elif self.tablename == "inv_send_item":
-                item_pack = self.inv_send_item.item_pack_id
+            elif self.tablename == "inv_track_item":
+                item_pack = self.inv_track_item.item_pack_id
             else:
                 item_pack = None
         except AttributeError:
@@ -1401,7 +1399,7 @@ class item_entity_virtualfields:
                                               limitby=(0, 1)).first()
             if record:
                 country = record.L0 or current.T("Unknown")
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             tablename = instance_type
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1476,7 +1474,7 @@ class item_entity_virtualfields:
             if record:
                 organisation = organisation_represent(record.organisation_id,
                                                       acronym=False)
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             tablename = instance_type
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1515,7 +1513,7 @@ class item_entity_virtualfields:
                 return None
             record = current.db(query).select(itable.site_id,
                                               limitby=(0, 1)).first()
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             tablename = instance_type
             itable = s3db[instance_type]
             rtable = s3db.inv_recv

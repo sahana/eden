@@ -1126,6 +1126,25 @@ class S3TrackingModel(S3Model):
         send_item_url = URL(c="inv", f="send", args=["[id]",
                                                      "track_item"])
 
+        list_fields = ["id",
+                       "send_ref",
+                       "req_ref",
+                       "sender_id",
+                       "site_id",
+                       "date",
+                       "recipient_id",
+                       "delivery_date",
+                       "to_site_id",
+                       "status",
+                       "vehicle_plate_no",
+                       "driver_name",
+                       "time_out",
+                       "comments"
+                       ]
+        if time_in:
+            list_fields.insert(12, "time_in")
+        if show_transport:
+            list_fields.insert(10, "transport_type")
         configure(tablename,
                   # It shouldn't be possible for the user to delete a send item
                   # unless *maybe* if it is pending and has no items referencing it
@@ -1134,23 +1153,7 @@ class S3TrackingModel(S3Model):
                   onvalidation = self.inv_send_onvalidation,
                   create_next = send_item_url,
                   update_next = send_item_url,
-                  list_fields = ["id",
-                                 "send_ref",
-                                 "req_ref",
-                                 "sender_id",
-                                 "site_id",
-                                 "date",
-                                 "recipient_id",
-                                 "delivery_date",
-                                 "to_site_id",
-                                 "status",
-                                 "transport_type",
-                                 "vehicle_plate_no",
-                                 "driver_name",
-                                 "time_in",
-                                 "time_out",
-                                 "comments"
-                                ],
+                  list_fields = list_fields,
                   orderby=~table.date,
                   sortby=[[5, "desc"], [1, "asc"]],
                   )
@@ -1528,9 +1531,9 @@ $(document).ready(function(){
   'fncRepresent':fncRepresentItem
  })
 })''')),
-                            item_id(ondelete = "RESTRICT"),
-                            item_pack_id(ondelete = "SET NULL"),
-                            Field("quantity", "double", notnull=True,
+                             item_id(ondelete = "RESTRICT"),
+                             item_pack_id(ondelete = "SET NULL"),
+                             Field("quantity", "double", notnull=True,
                                    label = T("Quantity Sent"),
                                    requires = IS_NOT_EMPTY()),
                              Field("recv_quantity", "double",
@@ -1887,7 +1890,7 @@ $(document).ready(function(){
             if record:
                 status = record.status
                 if status != SHIP_STATUS_IN_PROCESS:
-                    # Now that the shipment has been sent
+                    # Now that the shipment has been sent,
                     # lock the record so that it can't be meddled with
                     s3db.configure("inv_send",
                                    create=False,
@@ -1897,6 +1900,7 @@ $(document).ready(function(){
                                    )
 
             if r.component:
+                values = current.deployment_settings.get_inv_track_pack_values()
                 if status in (SHIP_STATUS_RECEIVED, SHIP_STATUS_CANCEL):
                     list_fields = ["id",
                                    "status",
@@ -1904,42 +1908,45 @@ $(document).ready(function(){
                                    "item_pack_id",
                                    "bin",
                                    "quantity",
-                                   "currency",
-                                   "pack_value",
                                    "recv_quantity",
                                    "return_quantity",
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
                                    "comments",
-                                  ]
+                                   ]
+                    if values:
+                        list_fields.insert(7, "pack_value")
+                        list_fields.insert(7, "currency")
                 elif status == SHIP_STATUS_RETURNING:
                     list_fields = ["id",
                                    "status",
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
-                                   "currency",
-                                   "pack_value",
                                    "return_quantity",
                                    "bin",
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
-                                  ]
+                                   ]
+                    if values:
+                        list_fields.insert(5, "pack_value")
+                        list_fields.insert(5, "currency")
                 else:
                     list_fields = ["id",
                                    "status",
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
-                                   "currency",
-                                   "pack_value",
                                    "bin",
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
-                                  ]
+                                   ]
+                    if values:
+                        list_fields.insert(6, "pack_value")
+                        list_fields.insert(6, "currency")
                 s3db.configure("inv_track_item",
                                list_fields=list_fields,
                                )
@@ -1969,7 +1976,7 @@ $(document).ready(function(){
                                                                               tracktable.status,
                                                                               limitby=(0, 1))
                     set_track_attr(track_record.status)
-                    # if the track record is linked to a request item then
+                    # If the track record is linked to a request item then
                     # the stock item has already been selected so make it read only
                     if track_record and track_record.get("req_item_id"):
                         tracktable.send_inv_item_id.writable = False
@@ -1992,11 +1999,62 @@ $(document).ready(function(){
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
             else:
-                if request.get_vars.received:
+                if request.get_vars.get("received", None):
                     # Set the items to being received
-                    sendtable[r.id] = dict(status = SHIP_STATUS_RECEIVED)
+                    db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
                     db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
-                    response.message = T("Shipment received")
+                    req_ref = r.record.req_ref
+                    if req_ref:
+                        # Update the Request Status
+                        rtable = s3db.req_req
+                        req_id = db(rtable.req_ref == req_ref).select(rtable.id,
+                                                                               limitby=(0, 1)).first()
+                        # Get the full list of items in the request
+                        ritable = s3db.req_req_item
+                        query = (ritable.req_id == req_id) & \
+                                (ritable.deleted == False)
+                        ritems = db(query).select(ritable.id,
+                                                  ritable.item_pack_id,
+                                                  ritable.quantity,
+                                                  # Virtual Field
+                                                  #ritable.pack_quantity,
+                                                  )
+                        # Get all Received Shipments in-system for this request
+                        query = (sendtable.status == SHIP_STATUS_RECEIVED) & \
+                                (sendtable.req_ref == req_ref) & \
+                                (tracktable.send_id == r.id) & \
+                                (tracktable.deleted == False)
+                        sitems = db(query).select(tracktable.item_pack_id,
+                                                  tracktable.quantity,
+                                                  # Virtual Field
+                                                  #tracktable.pack_quantity,
+                                                  )
+                        fulfil_qty = {}
+                        for item in sitems:
+                            item_pack_id = item.item_pack_id
+                            if item_pack_id in fulfil_qty:
+                                fulfil_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                            else:
+                                fulfil_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                        complete = False
+                        for item in ritems:
+                            if item.item_pack_id in fulfil_qty:
+                                quantity_fulfil = fulfil_qty[item.item_pack_id]
+                                db(ritable.id == item.id).update(quantity_fulfil=quantity_fulfil)
+                                req_quantity = item.quantity * item.pack_quantity
+                                if quantity_fulfil >= req_quantity:
+                                    complete = True
+                                else:
+                                    complete = False
+
+                        # Update overall Request Status
+                        if complete:
+                            # REQ_STATUS_COMPLETE
+                            db(rtable.id == req_id).update(fulfil_status=2)
+                        else:
+                            # REQ_STATUS_PARTIAL
+                            db(rtable.id == req_id).update(fulfil_status=1)
+                    response.confirmation = T("Shipment received")
                 # else set the inv_send attributes
                 elif r.id:
                     record = db(sendtable.id == r.id).select(sendtable.status,
@@ -2190,7 +2248,7 @@ $(document).ready(function(){
                         pdf_paper_alignment = "Landscape",
                         pdf_table_autogrow = "B",
                         **attr
-                       )
+                        )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2595,7 +2653,9 @@ $(document).ready(function(){
         record = form.record
 
         if form.vars.send_inv_item_id:
-            stock_item = inv_item_table[form.vars.send_inv_item_id]
+            stock_item = db(inv_item_table.id == form.vars.send_inv_item_id).select(inv_item_table.quantity,
+                                                                                    inv_item_table.item_pack_id,
+                                                                                    limitby=(0, 1)).first()
         elif record:
             stock_item = record.send_inv_item_id
         else:
@@ -2608,17 +2668,20 @@ $(document).ready(function(){
         # It will be there on an import and so the value will be deducted correctly
         if form.vars.quantity and stock_item:
             stock_quantity = stock_item.quantity
+            # @ToDo: Optimise
             stock_pack = siptable[stock_item.item_pack_id].quantity
             if record:
                 if record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
+                    # @ToDo: Optimise
                     old_track_pack_quantity = siptable[record.item_pack_id].quantity
                     stock_quantity = supply_item_add(stock_quantity,
                                                      stock_pack,
                                                      record.quantity,
                                                      old_track_pack_quantity
-                                                    )
+                                                     )
             try:
+                # @ToDo: Optimise
                 new_track_pack_quantity = siptable[form.vars.item_pack_id].quantity
             except:
                 new_track_pack_quantity = record.item_pack_id.quantity
@@ -2626,13 +2689,16 @@ $(document).ready(function(){
                                        stock_pack,
                                        - float(form.vars.quantity),
                                        new_track_pack_quantity
-                                      )
+                                       )
             db(inv_item_table.id == stock_item).update(quantity = newTotal)
         if form.vars.send_id and form.vars.recv_id:
+            # @ToDo: Optimise
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
         if record and record.req_item_id:
+            # @ToDo: Optimise
             req_id = ritable[record.req_item_id].req_id
+            # @ToDo: Optimise
             req_ref = rrtable[req_id].req_ref
             db(stable.id == form.vars.send_id).update(req_ref = req_ref)
             if form.vars.recv_id:
@@ -2643,6 +2709,7 @@ $(document).ready(function(){
         # Finally change the status to 4 arrived
         if record and record.status == TRACK_STATUS_UNLOADING and record.recv_quantity:
             # Look for the item in the site already
+            # @ToDo: Optimise
             recv_rec = rtable[record.recv_id]
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \
@@ -2667,6 +2734,7 @@ $(document).ready(function(){
                 # Add a new item
                 source_type = 0
                 if form.vars.send_inv_item_id:
+                    # @ToDo: Optimise
                     source_type = inv_item_table[form.vars.send_inv_item_id].source_type
                 else:
                     if recv_rec.type == 2:
@@ -2674,30 +2742,33 @@ $(document).ready(function(){
                     else:
                         source_type = 2 # Procured
                 inv_item_id = inv_item_table.insert(site_id = recv_site_id,
-                                             item_id = record.item_id,
-                                             item_pack_id = record.item_pack_id,
-                                             currency = record.currency,
-                                             pack_value = record.pack_value,
-                                             expiry_date = record.expiry_date,
-                                             bin = record.recv_bin,
-                                             owner_org_id = record.owner_org_id,
-                                             supply_org_id = record.supply_org_id,
-                                             quantity = record.recv_quantity,
-                                             item_source_no = record.item_source_no,
-                                             source_type = source_type,
-                                             status = record.inv_item_status,
-                                            )
+                                                    item_id = record.item_id,
+                                                    item_pack_id = record.item_pack_id,
+                                                    currency = record.currency,
+                                                    pack_value = record.pack_value,
+                                                    expiry_date = record.expiry_date,
+                                                    bin = record.recv_bin,
+                                                    owner_org_id = record.owner_org_id,
+                                                    supply_org_id = record.supply_org_id,
+                                                    quantity = record.recv_quantity,
+                                                    item_source_no = record.item_source_no,
+                                                    source_type = source_type,
+                                                    status = record.inv_item_status,
+                                                    )
             # if this is linked to a request then update the quantity fulfil
             if record.req_item_id:
+                # @ToDo: Optimise
                 req_item = ritable[record.req_item_id]
                 req_quantity = req_item.quantity_fulfil
+                # @ToDo: Optimise
                 req_pack_quantity = siptable[req_item.item_pack_id].quantity
+                # @ToDo: Optimise
                 track_pack_quantity = siptable[record.item_pack_id].quantity
                 quantity_fulfil = supply_item_add(req_quantity,
                                                   req_pack_quantity,
                                                   record.recv_quantity,
                                                   track_pack_quantity
-                                                 )
+                                                  )
                 db(ritable.id == record.req_item_id).update(quantity_fulfil = quantity_fulfil)
                 s3db.req_update_status(req_id)
 
@@ -2711,13 +2782,15 @@ $(document).ready(function(){
                 query = (tracktable.recv_id == record.recv_id) & \
                         (tracktable.adj_item_id != None)
                 adj_rec = db(query).select(tracktable.adj_item_id,
-                                          limitby = (0, 1)).first()
+                                           limitby = (0, 1)).first()
                 adjitemtable = s3db.inv_adj_item
                 if adj_rec:
+                    # @ToDo: Optimise
                     adj_id = adjitemtable[adj_rec.adj_item_id].adj_id
                 # If we don't yet have an adj record then create it
                 else:
                     adjtable = s3db.inv_adj
+                    # @ToDo: Optimise
                     recv_rec = s3db.inv_recv[record.recv_id]
                     adj_id = adjtable.insert(adjuster_id = recv_rec.recipient_id,
                                              site_id = recv_rec.site_id,
@@ -2725,7 +2798,7 @@ $(document).ready(function(){
                                              category = 0,
                                              status = 1,
                                              comments = recv_rec.comments,
-                                            )
+                                             )
                 # Now create the adj item record
                 adj_item_id = adjitemtable.insert(reason = 0,
                                                   adj_id = adj_id,
@@ -3194,7 +3267,7 @@ def inv_send_rheader(r):
                         action.append(A(T("Confirm Shipment Received"),
                                         _href = URL(f = "send",
                                                     args = [record.id],
-                                                    vars = dict(received = True),
+                                                    vars = {"received": 1},
                                                     ),
                                         _id = "send_receive",
                                         _class = "action-btn",
