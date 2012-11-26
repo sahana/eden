@@ -825,7 +825,7 @@ S3OptionsFilter({
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def req_form (r, **attr):
+    def req_form(r, **attr):
         """
             Generate a PDF of a Request Form
         """
@@ -842,7 +842,7 @@ S3OptionsFilter({
                            "quantity_commit",
                            "quantity_transit",
                            "quantity_fulfil",
-                          ]
+                           ]
         elif record.type == 3:
             pdf_componentname = "req_req_skill"
             list_fields = ["skill_id",
@@ -850,7 +850,7 @@ S3OptionsFilter({
                            "quantity_commit",
                            "quantity_transit",
                            "quantity_fulfil",
-                          ]
+                           ]
         else:
             # Not Supported - redirect to normal PDF
             redirect(URL(args=current.request.args[0], extension="pdf"))
@@ -1112,19 +1112,19 @@ S3OptionsFilter({
                 else:
                     status = SPAN(T("NO"), _class = "req_status_none"),
 
-                items.append(TR( #A(req_item.id),
-                                 supply_item_represent(req_item.item_id),
-                                 req_item.quantity,
-                                 item_pack_represent(req_item.item_pack_id),
-                                 # This requires an action btn to get the req_id
-                                 req_item.quantity_commit,
-                                 req_item.quantity_transit,
-                                 req_item.quantity_fulfil,
-                                 #req_quantity_represent(req_item.quantity_commit, "commit"),
-                                 #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
-                                 #req_quantity_represent(req_item.quantity_transit, "transit"),
-                                 inv_quantity,
-                                 status,
+                items.append(TR(#A(req_item.id),
+                                supply_item_represent(req_item.item_id),
+                                req_item.quantity,
+                                item_pack_represent(req_item.item_pack_id),
+                                # This requires an action btn to get the req_id
+                                req_item.quantity_commit,
+                                req_item.quantity_transit,
+                                req_item.quantity_fulfil,
+                                #req_quantity_represent(req_item.quantity_commit, "commit"),
+                                #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
+                                #req_quantity_represent(req_item.quantity_transit, "transit"),
+                                inv_quantity,
+                                status,
                                 )
                             )
                 output["items"] = items
@@ -1227,12 +1227,11 @@ S3OptionsFilter({
             Cleanup any scheduled tasks
         """
 
-        if row.is_template:
-            db = current.db
-            table = db.scheduler_task
-            query = (table.function == "req_add_from_template") & \
-                    (table.args == "[%s]" % row.id)
-            db(query).delete()
+        db = current.db
+        table = db.scheduler_task
+        query = (table.function_name == "req_add_from_template") & \
+                (table.args == "[%s]" % row.id)
+        db(query).delete()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1496,12 +1495,12 @@ S3FilterFieldChange({
 
         if quantity and show_link and \
            not current.deployment_settings.get_req_item_quantities_writable():
-            return TAG[""]( quantity,
-                            A(DIV(_class = "quantity %s ajax_more collapsed" % type
-                                  ),
-                                _href = "#",
-                              )
+            return TAG[""](quantity,
+                           A(DIV(_class = "quantity %s ajax_more collapsed" % type
+                                 ),
+                            _href = "#",
                             )
+                           )
         else:
             return quantity
 
@@ -3003,36 +3002,27 @@ def req_rheader(r, check_page=False):
 
                 site_id = request.vars.site_id
                 if site_id and not is_template:
-                    site_name = s3db.org_site_represent(site_id, show_link = False)
-                    commit_btn = TAG[""](
-# Removed to try and simplify the workflow - GF
-#                                A(T("Commit from %s") % site_name,
-#                                   _href = URL(c = "req",
-#                                               f = "commit_req",
-#                                               args = [r.id],
-#                                               vars = dict(site_id = site_id)
-#                                               ),
-#                                   _class = "action-btn"
-#                                  ),
-                                A(T("Send from %s") % site_name,
-                                  _href = URL(c = "req",
-                                              f = "send_req",
-                                              args = [r.id],
-                                              vars = dict(site_id = site_id)
-                                              ),
-                                  _class = "action-btn"
-                                  )
-                                )
-                #else:
-                #    commit_btn = A( T("Commit"),
-                #                    _href = URL(c = "req",
-                #                                f = "commit",
-                #                                args = ["create"],
-                #                                vars = dict(req_id = r.id)
-                #                                ),
-                #                    _class = "action-btn"
-                #                   )
-                    s3.rfooter = commit_btn
+                    site_name = s3db.org_site_represent(site_id, show_link=False)
+                    commit_btn = A(T("Send from %s") % site_name,
+                                   _href = URL(c = "req",
+                                               f = "send_req",
+                                               args = [r.id],
+                                               vars = dict(site_id = site_id)
+                                               ),
+                                   _class = "action-btn"
+                                   )
+                    s3.rfooter = TAG[""](commit_btn)
+                elif r.component and \
+                     r.component_name == "commit" and \
+                     r.component_id:
+                    prepare_btn = A(T("Prepare Shipment"),
+                                    _href = URL(f = "send_commit",
+                                                args = [r.component_id]
+                                                ),
+                                    _id = "send_commit",
+                                    _class = "action-btn"
+                                    )
+                    s3.rfooter = TAG[""](prepare_btn)
 
                 site_id = record.site_id
                 if site_id:

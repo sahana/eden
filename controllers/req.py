@@ -1154,13 +1154,13 @@ def commit_rheader(r):
                                        ),
                                     ),
                                 )
-                prepare_btn = A( T("Prepare Shipment"),
-                              _href = URL(f = "send_commit",
-                                          args = [record.id]
-                                          ),
-                              _id = "send_commit",
-                              _class = "action-btn"
-                              )
+                prepare_btn = A(T("Prepare Shipment"),
+                                _href = URL(f = "send_commit",
+                                            args = [record.id]
+                                            ),
+                                _id = "send_commit",
+                                _class = "action-btn"
+                                )
 
                 s3.rfooter = TAG[""](prepare_btn)
 

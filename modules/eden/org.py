@@ -2455,8 +2455,12 @@ def org_site_represent(id, row=None, show_link=True):
         db = current.db
         s3db = current.s3db
         stable = s3db.org_site
-        row = db(stable._id == id).select(stable.instance_type,
-                                          limitby=(0, 1)).first()
+        try:
+            row = db(stable._id == id).select(stable.instance_type,
+                                              limitby=(0, 1)).first()
+        except:
+            # Bad data (e.g. list:reference)
+            return current.messages.UNKNOWN_OPT
     else:
         return current.messages["NONE"]
 
