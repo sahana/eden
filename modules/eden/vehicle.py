@@ -138,7 +138,7 @@ class S3VehicleModel(S3Model):
                                                               "vehicle_vehicle.id",
                                                               "%(name)s")),
                                       represent = lambda id: \
-                                        (id and [db.vehicle_vehicle[id].name] or [current.messages.NONE])[0],
+                                        (id and [db.vehicle_vehicle[id].name] or [current.messages["NONE"]])[0],
                                       label = T("Vehicle"),
                                       ondelete = "RESTRICT")
 

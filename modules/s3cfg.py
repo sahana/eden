@@ -964,6 +964,18 @@ class S3Config(Storage):
         """
         return self.inv.get("direct_stock_edits", False)
 
+    def get_inv_send_show_mode_of_transport(self):
+        """
+            Show mode of transport on Sent Shipments
+        """
+        return self.inv.get("show_mode_of_transport", False)
+
+    def get_inv_send_show_org(self):
+        """
+            Show Organisation on Sent Shipments
+        """
+        return self.inv.get("send_show_org", True)
+
     def get_inv_stock_count(self):
         """
             Call Stock Adjustments 'Stock Counts'
@@ -1281,6 +1293,11 @@ class S3Config(Storage):
             Should Requests ask whether Transportation is required?
         """
         return self.req.get("ask_transport", False)
+    def get_req_items_ask_purpose(self):
+        """
+            Should Requests for Items ask for Purpose?
+        """
+        return self.req.get("items_ask_purpose", True)
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)

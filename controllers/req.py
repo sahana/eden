@@ -275,7 +275,8 @@ def req_controller():
             if type == 1: # Item
                 table.date_recv.readable = table.date_recv.writable = True
 
-                table.purpose.label = T("What the Items will be used for")
+                if settings.get_req_items_ask_purpose():
+                    table.purpose.label = T("What the Items will be used for")
                 table.site_id.label = T("Deliver To")
                 table.request_for_id.label = T("Deliver To")
                 table.requester_id.label = T("Site Contact")
@@ -312,7 +313,7 @@ def req_controller():
                 elif r.component.name == "req_item":
                     ctable = r.component.table
                     ctable.site_id.writable = ctable.site_id.readable = False
-                    s3.req_hide_quantities(table)
+                    s3.req_hide_quantities(ctable)
 
                 elif r.component.name == "req_skill":
                     s3.req_hide_quantities(r.component.table)
@@ -336,7 +337,7 @@ def req_controller():
                                                                  orderby=~stable.name)
                     summary_items = [opt.name for opt in options]
                     s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update_summary.js" % appname)
 
                 method = r.method
                 if method not in ("map", "read", "search", "update"):
@@ -365,6 +366,7 @@ def req_controller():
                 elif method == "update":
                     # Inline Forms
                     s3.req_inline_form(type)
+                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
         elif r.representation == "plain":
             # Map Popups
@@ -378,9 +380,6 @@ def req_controller():
         if r.component and r.component.name == "commit":
             table = r.component.table
             record = r.record
-            # If there are no commitments yet then run req_commit_all
-            if record.commit_status == 0:
-                redirect(URL(f="req", args=[record.id, "commit_all"]))
             # Allow commitments to be added when doing so as a component
             s3db.configure(table,
                            listadd = True)
@@ -551,6 +550,20 @@ S3OptionsFilter({
                                              label = str(T("Request from Facility")),
                                              )
                 s3.actions.append(req_item_inv_item_btn)
+            elif r.component.name == "commit":
+                if "form" in output:
+                    id = r.record.id
+                    ctable = s3db.req_commit
+                    query = (ctable.deleted == False) & \
+                            (ctable.req_id == id)
+                    exists = current.db(query).select(ctable.id, limitby=(0, 1))
+                    if not exists:
+                        output["form"] = A(T("Commit All"),
+                                           _href=URL(args=[id, "commit_all"]),
+                                           _class="action-btn",
+                                           _id="commit-btn")
+                        s3.jquery_ready.append('''
+S3ConfirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
             elif r.component.alias == "job":
                 s3.actions = [
                     dict(label=str(T("Open")),

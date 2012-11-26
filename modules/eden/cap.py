@@ -639,7 +639,7 @@ class S3CAPModel(S3Model):
         if row:
             pass
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.cap_alert
@@ -655,7 +655,7 @@ class S3CAPModel(S3Model):
                 sent = row.sent or row.created_on
                 return "%s - %s - %s" % (row.msg_type, sent, row.sender)
         except:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -667,7 +667,7 @@ class S3CAPModel(S3Model):
         if row:
             id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.cap_alert
@@ -716,7 +716,7 @@ class S3CAPModel(S3Model):
         if row:
             pass
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.cap_info

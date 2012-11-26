@@ -281,6 +281,10 @@ settings.project.organisation_roles = {
 }
 
 # -----------------------------------------------------------------------------
+# Inventory Management
+settings.inv.show_mode_of_transport = True
+
+# -----------------------------------------------------------------------------
 # Request Management
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False

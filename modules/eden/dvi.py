@@ -165,7 +165,7 @@ class S3DVIModel(S3Model):
                              Field("obsolete", "boolean",
                                 label = T("Obsolete"),
                                 represent = lambda bool: \
-                                  (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                  (bool and [T("Obsolete")] or [messages["NONE"]])[0],
                                 default = False,
                                 readable = False,
                                 writable = False),
@@ -468,7 +468,7 @@ class S3DVIModel(S3Model):
     def morgue_represent(id):
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.dvi_morgue

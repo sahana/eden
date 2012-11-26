@@ -75,7 +75,7 @@ class S3ClimateModel(S3Model):
         s3 = current.response.s3
         utcnow = current.request.utcnow
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         configure = self.configure
         define_table = self.define_table
@@ -513,7 +513,7 @@ def climate_station_represent(id, row=None):
     if row_name and row_name.name:
         represent = "%s%s" % (row_name.name, represent)
 
-    return represent or current.messages.NONE
+    return represent or current.messages["NONE"]
 
 # =============================================================================
 def sample_table_spec_represent(id, row=None):
@@ -535,7 +535,7 @@ def sample_table_spec_represent(id, row=None):
             row.name
         )
     else:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # =============================================================================
 class station_parameters_virtualfields(dict, object):
@@ -552,14 +552,14 @@ class station_parameters_virtualfields(dict, object):
                 station_id = self.climate_station_parameter.station_id,
             )
         except AttributeError:
-            return current.messages.NONE
+            return current.messages["NONE"]
         date  = current.db.executesql(query)[0][0]
         if date is not None:
             import ClimateDataPortal
             year, month = ClimateDataPortal.month_number_to_year_month(date)
             return "%s-%s" % (month, year)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def range_to(self):
@@ -573,14 +573,14 @@ class station_parameters_virtualfields(dict, object):
                 station_id = self.climate_station_parameter.station_id,
             )
         except AttributeError:
-            return current.messages.NONE
+            return current.messages["NONE"]
         date  = current.db.executesql(query)[0][0]
         if date is not None:
             import ClimateDataPortal
             year, month = ClimateDataPortal.month_number_to_year_month(date)
             return "%s-%s" % (month, year)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
 # =============================================================================
 def CRUD_strings(tablename,

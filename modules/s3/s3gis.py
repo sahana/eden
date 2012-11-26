@@ -1467,7 +1467,8 @@ class GIS(object):
         config = GIS.get_config()
 
         if config.default_location_id:
-            return self.get_parent_country(config.default_location_id)
+            return self.get_parent_country(config.default_location_id,
+                                           key_type=key_type)
 
         return None
 

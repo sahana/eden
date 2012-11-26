@@ -324,6 +324,8 @@ settings.L10n.decimal_separator = "."
 #settings.inv.shipment_name = "order"
 # Uncomment to not track pack values
 #settings.inv.track_pack_values = False
+#settings.inv.show_mode_of_transport = True
+#settings.inv.send_show_org = False
 #settings.inv.send_form_name = "Tally Out Sheet"
 #settings.inv.send_short_name = "TO"
 #settings.inv.send_ref_field_name = "Tally Out Number"
@@ -356,6 +358,7 @@ settings.L10n.decimal_separator = "."
 #settings.req.show_quantity_transit = False
 #settings.req.multiple_req_items = False
 #settings.req.prompt_match = False
+#settings.req.items_ask_purpose = False
 #settings.req.use_commit = False
 #settings.req.requester_optional = True
 # Should Requests ask whether Security is required?

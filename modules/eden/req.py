@@ -231,7 +231,7 @@ class S3RequestModel(S3Model):
                                         ),
                                   s3_datetime("date_required",
                                               label = T("Date Needed By"),
-                                              past=0,
+                                              past=1, # Allow time for people to fill out form
                                               future=8760, # Hours, so 1 year
                                               #represent="date",
                                               #widget="date",
@@ -617,7 +617,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                                       T("Please enter request details here."),
                                       T("Details field is required!"))
             s3.js_global.append(req_helptext)
-            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_summary.js" % current.request.application)
 
         else:
             s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
@@ -649,28 +649,51 @@ S3OptionsFilter({
             # We don't want to force people to enter quantities
             #itable.quantity.default = 0
             # Custom Form
-            crud_form = s3forms.S3SQLCustomForm(
-                    # If not generated automatically
-                    #"req_ref",
-                    "site_id",
-                    "is_template",
-                    "requester_id",
-                    "date",
-                    "priority",
-                    "date_required",
-                    "purpose",
-                    s3forms.S3SQLInlineComponent(
-                        "req_item",
-                        label = T("Items"),
-                        fields = ["item_id",
-                                  "item_pack_id",
-                                  "quantity",
-                                  "comments"
-                                  ]
-                    ),
-                    #"date_recv",
-                    "comments",
-                )
+            if current.deployment_settings.get_req_items_ask_purpose():
+                crud_form = s3forms.S3SQLCustomForm(
+                        # If not generated automatically
+                        #"req_ref",
+                        "site_id",
+                        "is_template",
+                        "requester_id",
+                        "date",
+                        "priority",
+                        "date_required",
+                        "purpose",
+                        s3forms.S3SQLInlineComponent(
+                            "req_item",
+                            label = T("Items"),
+                            fields = ["item_id",
+                                      "item_pack_id",
+                                      "quantity",
+                                      "comments"
+                                      ]
+                        ),
+                        #"date_recv",
+                        "comments",
+                    )
+            else:
+                crud_form = s3forms.S3SQLCustomForm(
+                        # If not generated automatically
+                        #"req_ref",
+                        "site_id",
+                        "is_template",
+                        "requester_id",
+                        "date",
+                        "priority",
+                        "date_required",
+                        s3forms.S3SQLInlineComponent(
+                            "req_item",
+                            label = T("Items"),
+                            fields = ["item_id",
+                                      "item_pack_id",
+                                      "quantity",
+                                      "comments"
+                                      ]
+                        ),
+                        #"date_recv",
+                        "comments",
+                    )
             s3db.configure("req_req", crud_form=crud_form)
 
         elif type == 3:
@@ -1630,7 +1653,7 @@ class S3RequestSkillModel(S3Model):
                        "comments",
                     ]
         if use_commit:
-            list_fields.insert(4, "quantity_commit")
+            list_fields.insert(3, "quantity_commit")
         self.configure(tablename,
                        onaccept=req_skill_onaccept,
                        # @ToDo: Produce a custom controller like req_item_inv_item?
@@ -2457,7 +2480,9 @@ class S3CommitItemModel(S3Model):
         # Redirect to inv_send for the send id just created
         redirect(URL(#c = "inv", or "req"
                      f = "send",
-                     args = [send_id, "track_item"]))
+                     #args = [send_id, "track_item"]
+                     args = [send_id]
+                     ))
 
 # =============================================================================
 class S3CommitPersonModel(S3Model):
@@ -2965,20 +2990,12 @@ def req_rheader(r, check_page=False):
                 if is_template:
                     tabs.append((T("Schedule"), "job"))
                 elif use_commit:
-                    ctable = s3db.req_commit
-                    query = (ctable.deleted == False) & \
-                            (ctable.req_id == record.id)
-                    exists = current.db(query).select(ctable.id, limitby=(0, 1))
-                    if exists:
-                        tabs.append((T("Commitments"), "commit"))
-                    else:
-                        tabs.append((T("Commit"), "commit"))
+                    tabs.append((T("Commitments"), "commit"))
 
                 if not check_page:
                     rheader_tabs = s3_rheader_tabs(r, tabs)
                 else:
                     rheader_tabs = DIV()
-
 
                 site_id = request.vars.site_id
                 if site_id and not is_template:

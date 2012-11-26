@@ -1185,7 +1185,7 @@ def stats_parameter_represent(id, row=None):
     if row:
         return row.name
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     db = current.db
     table = db.stats_parameter
@@ -1258,7 +1258,7 @@ def stats_group_represent(id, row=None):
     if row:
         return represent(s3db.stats_source)(row.source_id)
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     s3db = current.s3db
     table = s3db.stats_group

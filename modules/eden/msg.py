@@ -259,7 +259,7 @@ class S3MessagingModel(S3Model):
         """ Represent a Message in the Log """
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.msg_log

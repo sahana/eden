@@ -57,7 +57,7 @@ class S3DocumentLibrary(S3Model):
         organisation_id = self.org_organisation_id
 
         messages = current.messages
-        NONE = messages.NONE
+        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
@@ -254,7 +254,7 @@ class S3DocumentLibrary(S3Model):
             return A(table.file.retrieve(file)[0],
                      _href=URL(c="default", f="download", args=[file]))
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -353,7 +353,7 @@ def doc_image_represent(filename):
     """
 
     if not filename:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     return DIV(A(IMG(_src=URL(c="default", f="download",
                               args=filename),

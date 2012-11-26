@@ -99,6 +99,7 @@ settings.inv.facility_label = "Facility"
 settings.inv.stock_count = True
 # Uncomment to not track pack values
 settings.inv.track_pack_values = False
+settings.inv.send_show_org = False
 settings.inv.shipment_types = {
          #0: T("-"),
          1: T("Other Warehouse"),
@@ -117,6 +118,7 @@ settings.req.requester_optional = True
 settings.req.date_writable = False
 settings.req.item_quantities_writable = True
 settings.req.skill_quantities_writable = True
+settings.req.items_ask_purpose = False
 #settings.req.use_req_number = False
 # Label for Requester
 settings.req.requester_label = "Site Contact"

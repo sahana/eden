@@ -1161,7 +1161,7 @@ class S3GroupModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.pr_group
@@ -1643,7 +1643,7 @@ class S3PersonImageModel(S3Model):
         """ Representation """
 
         if not image:
-            return current.messages.NONE
+            return current.messages["NONE"]
         url_full = URL(c="default", f="download", args=image)
         if size is None:
             size = (None, 60)
@@ -3260,7 +3260,7 @@ def pr_pentity_represent(id, row=None, show_label=True,
         s3db = current.s3db
         pe_table = s3db.pr_pentity
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
     else:
         db = current.db
         s3db = current.s3db
@@ -3331,7 +3331,7 @@ def pr_person_represent(id, row=None, show_link=False):
         name = s3_fullname(row)
         id = row.id
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
     else:
         name = current.cache.ram("pr_person_%s" % id,
                                  lambda: s3_fullname(id),
@@ -4842,7 +4842,7 @@ def pr_url_represent(url):
     """ Representation """
 
     if not url:
-        return current.messages.NONE
+        return current.messages["NONE"]
     parts = url.split("/")
     image = parts[-1]
     size = (None, 60)

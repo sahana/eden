@@ -25,7 +25,7 @@
 "comms_dispatch","Comms / Dispatch",,"hrm","job_role",,"READ",,,
 "comms_dispatch","Comms / Dispatch",,"inv",,,"READ|CREATE|UPDATE",,,
 "comms_dispatch","Comms / Dispatch",,,,"inv_send","READ|CREATE|UPDATE",,,
-"comms_dispatch","Comms / Dispatch",,"org",,,"READ|UPDATE",,,
+"comms_dispatch","Comms / Dispatch",,"org",,,"READ",,,
 "comms_dispatch","Comms / Dispatch",,"pr",,,"READ|CREATE|UPDATE",,,
 "comms_dispatch","Comms / Dispatch",,"req",,,"READ|CREATE|UPDATE|DELETE",,,"Want to be able to delete Commits & Line Items"
 "comms_dispatch","Comms / Dispatch",,,,"req_req","READ|CREATE|UPDATE",,,"But not delete Requests"

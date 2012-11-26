@@ -94,7 +94,7 @@ class S3OrganisationModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        NONE = messages.NONE
+        NONE = messages["NONE"]
         ORGANISATION = messages.ORGANISATION
 
         location = current.session.s3.location_filter
@@ -169,17 +169,18 @@ class S3OrganisationModel(S3Model):
                                            title=SECTOR,
                                            tooltip=help)
 
+        represent = s3_represent_id(table)
         sector_id = S3ReusableField("sector_id", "reference org_sector",
                                     sortby="abrv",
                                     requires=IS_NULL_OR(
                                                 IS_ONE_OF(db, "org_sector.id",
-                                                          self.org_sector_represent,
+                                                          represent,
                                                           sort=True,
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
                                                           )
                                                         ),
-                                    represent=self.org_sector_multirepresent,
+                                    represent=represent,
                                     comment=sector_comment,
                                     label=SECTOR,
                                     ondelete="SET NULL")
@@ -188,14 +189,14 @@ class S3OrganisationModel(S3Model):
                                     sortby="abrv",
                                     requires=IS_NULL_OR(
                                                 IS_ONE_OF(db, "org_sector.id",
-                                                          self.org_sector_represent,
+                                                          represent,
                                                           sort=True,
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
                                                           multiple=True
                                                           )
                                                         ),
-                                    represent=self.org_sector_multirepresent,
+                                    represent=s3_represent_multi_id(table),
                                     comment=sector_comment,
                                     label=SECTOR,
                                     ondelete="SET NULL")
@@ -706,7 +707,6 @@ class S3OrganisationModel(S3Model):
                     org_sector_id=sector_id,
                     org_multi_sector_id=multi_sector_id,
                     org_sector_opts=self.org_sector_opts,
-                    org_sector_represent = self.org_sector_represent,
                     org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
                 )
@@ -780,63 +780,6 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_sector_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.org_sector
-        r = db(table.id == id).select(table.name,
-                                      limitby=(0, 1)).first()
-        try:
-            return current.T(r.name)
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_sector_multirepresent(opt):
-        """ Sector/Cluster representation for multiple=True options """
-
-        if not opt:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.org_sector
-        set = db(table.id > 0).select(table.id,
-                                      table.abrv).as_dict()
-
-        if isinstance(opt, (list, tuple)):
-            opts = opt
-            vals = [str(set.get(o)["abrv"]) for o in opts]
-            multiple = True
-        elif isinstance(opt, int):
-            opts = [opt]
-            vals = str(set.get(opt)["abrv"])
-            multiple = False
-        else:
-            try:
-                opt = int(opt)
-            except:
-                return current.messages.NONE
-            else:
-                opts = [opt]
-                vals = str(set.get(opt)["abrv"])
-                multiple = False
-
-        if multiple:
-            if len(opts) > 1:
-                vals = ", ".join(vals)
-            else:
-                vals = len(vals) and vals[0] or ""
-        return vals
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def org_sector_opts():
         """
             Provide the options for Sector search filters
@@ -857,7 +800,7 @@ class S3OrganisationModel(S3Model):
         od = OrderedDict()
         for opt in opts:
             od[opt.id] = current.T(opt.name)
-        od[None] = current.messages.NONE
+        od[None] = current.messages["NONE"]
         return od
 
     # -------------------------------------------------------------------------
@@ -890,7 +833,7 @@ class S3OrganisationModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_subsector
@@ -930,7 +873,7 @@ class S3OrganisationModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_organisation_type
@@ -990,7 +933,7 @@ class S3OrganisationModel(S3Model):
             opts = [opt]
             vals = str(set.get(opt)["name"])
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         if len(opts) > 1:
             vals = ", ".join(vals)
@@ -1004,7 +947,7 @@ class S3OrganisationModel(S3Model):
         """ Representation of donor record IDs """
 
         if not donor_ids:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_organisation
@@ -1248,7 +1191,7 @@ class S3SiteModel(S3Model):
                                         label=T("Obsolete"),
                                         represent=lambda bool: \
                                           (bool and [T("Obsolete")] or
-                                           [current.messages.NONE])[0],
+                                           [current.messages["NONE"]])[0],
                                         default=False,
                                         readable=False,
                                         writable=False),
@@ -1445,7 +1388,7 @@ class S3FacilityModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Facility Types (generic)
@@ -1545,7 +1488,7 @@ class S3FacilityModel(S3Model):
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
-                                     (bool and [T("Obsolete")] or [current.messages.NONE])[0],
+                                     (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
                                    default=False,
                                    readable=False,
                                    writable=False),
@@ -1720,7 +1663,7 @@ class S3FacilityModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_facility_type
@@ -1737,7 +1680,7 @@ class S3FacilityModel(S3Model):
         """ Represent a facility type in list views """
 
         if not opt:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_facility_type
@@ -1898,7 +1841,7 @@ class S3RoomModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_room
@@ -2025,7 +1968,7 @@ class S3OfficeModel(S3Model):
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
-                                    (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                    (bool and [T("Obsolete")] or [messages["NONE"]])[0],
                                    default=False,
                                    readable=False,
                                    writable=False),
@@ -2150,7 +2093,7 @@ class S3OfficeModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_office_type
@@ -2169,7 +2112,7 @@ class S3OfficeModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.org_office
@@ -2466,7 +2409,7 @@ def org_organisation_represent(id, row=None, show_link=False,
                                         table.acronym,
                                         limitby=(0, 1)).first()
     else:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     try:
         represent = row.name
@@ -2515,7 +2458,7 @@ def org_site_represent(id, row=None, show_link=True):
         row = db(stable._id == id).select(stable.instance_type,
                                           limitby=(0, 1)).first()
     else:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     instance_type = row.instance_type
     instance_type_nice = stable.instance_type.represent(instance_type)
@@ -2880,7 +2823,7 @@ def org_organisation_controller():
                         if row:
                             widget = row[field]
                         else:
-                            widget = current.messages.NONE
+                            widget = current.messages["NONE"]
                         field_id = "%s_%s" % (table._tablename, field.name)
                         label = field.label
                         label = LABEL(label, _for=field_id,
@@ -3032,7 +2975,7 @@ def org_office_controller():
                         if row:
                             widget = row[field]
                         else:
-                            widget = current.messages.NONE
+                            widget = current.messages["NONE"]
                         field_id = "%s_%s" % (table._tablename, field.name)
                         label = field.label
                         label = LABEL(label, _for=field_id,

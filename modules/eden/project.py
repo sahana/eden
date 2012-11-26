@@ -109,7 +109,7 @@ class S3ProjectModel(S3Model):
         human_resource_id = self.hrm_human_resource_id
 
         messages = current.messages
-        NONE = messages.NONE
+        NONE = messages["NONE"]
 
         settings = current.deployment_settings
         mode_3w = settings.get_project_mode_3w()
@@ -1138,7 +1138,7 @@ $(document).ready(function(){
     def hfa_opts_represent(opt, row=None):
         """ Option representation """
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         project_hfa_opts = current.response.s3.project_hfa_opts
 
@@ -1239,7 +1239,7 @@ class S3Project3WModel(S3Model):
         project_id = self.project_project_id
 
         messages = current.messages
-        NONE = messages.NONE
+        NONE = messages["NONE"]
         COUNTRY = messages.COUNTRY
         ORGANISATION = messages.ORGANISATION
 
@@ -1291,7 +1291,7 @@ class S3Project3WModel(S3Model):
                     title_display = T("Community Details"),
                     title_list = T("Communities"),
                     title_update = T("Edit Community Details"),
-                    title_search = T("Search Community"),
+                    title_search = T("Search Communities"),
                     title_upload = T("Import Community Data"),
                     title_report = T("3W Report"),
                     title_map = T("Map of Communities"),
@@ -1947,7 +1947,7 @@ class S3Project3WModel(S3Model):
         if row:
             return row.name
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.project_beneficiary_type
@@ -1966,7 +1966,7 @@ class S3Project3WModel(S3Model):
         if row:
             return row.type
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.project_beneficiary
@@ -2398,7 +2398,7 @@ class S3ProjectActivityModel(S3Model):
             project = db(ptable.id == row.project_id).select(ptable.code,
                                                              limitby=(0, 1)).first()
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.project_activity
@@ -2638,7 +2638,7 @@ class S3ProjectFrameworkModel(S3Model):
         if row:
             return row.name
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.project_framework
@@ -2891,7 +2891,7 @@ class S3ProjectDRRPPModel(S3Model):
     def rfa_opts_represent(opt, row=None):
         """ Option representation """
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         opts = opt
         if isinstance(opt, int):
@@ -3666,7 +3666,7 @@ class S3ProjectTaskModel(S3Model):
             else:
                 instance_type = None
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         s3db = current.s3db
@@ -3716,7 +3716,7 @@ class S3ProjectTaskModel(S3Model):
                                    args=[row.id]))
             return represent
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.project_task
@@ -4208,7 +4208,7 @@ def project_project_represent(id, row=None, show_link=True):
                                         table.code,
                                         limitby=(0, 1)).first()
     else:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     try:
         if current.deployment_settings.get_project_codes():
@@ -4231,7 +4231,7 @@ def multi_theme_percentage_represent(id):
     """
 
     if not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     s3db = current.s3db
     table = s3db.project_theme_percentage
@@ -4265,7 +4265,7 @@ def project_location_represent(id, row=None):
     """
 
     if not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     if not row:
         db = current.db
@@ -4328,7 +4328,7 @@ class S3ProjectDRRPPVirtualFields:
         if row:
             return row.rfa
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
 # =============================================================================
 class S3ProjectOrganisationVirtualFields:
@@ -4355,7 +4355,7 @@ class S3ProjectOrganisationVirtualFields:
             donors = [row.name for row in rows]
             return ", ".join(donors)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def partners(self):
@@ -4378,7 +4378,7 @@ class S3ProjectOrganisationVirtualFields:
             donors = [row.name for row in rows]
             return ", ".join(donors)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
 # =============================================================================
 class S3ProjectOrganisationFundingVirtualFields:
@@ -4585,7 +4585,7 @@ class S3ProjectThemeVirtualFields:
                                           ltable.percentage)
 
         if not themes:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         represent = ""
         for theme in themes:
@@ -4693,7 +4693,7 @@ class S3ProjectTimeVirtualFields:
         try:
             task_id = self.project_time.task_id
         except AttributeError:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         s3db = current.s3db
@@ -4710,7 +4710,7 @@ class S3ProjectTimeVirtualFields:
         if activity:
             return activity.name
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def sectors(self):

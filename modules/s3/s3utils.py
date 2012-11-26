@@ -638,7 +638,7 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_represent_id(table, fieldname="name", translate=False):
+def s3_represent_id(table):
     """
         Returns a represent function for a record id.
     """
@@ -647,21 +647,18 @@ def s3_represent_id(table, fieldname="name", translate=False):
         if not row:
             if not id:
                 return current.messages["NONE"]
-            row  = current.db(table._id == id).select(table[fieldname],
+            row  = current.db(table._id == id).select(table.name,
                                                       limitby=(0, 1)
                                                       ).first()
         try:
-            if translate:
-                return current.T(row.name)
-            else:
-                return row.name
+            return row.name
         except:
-            return current.messages["UNKNOWN_OPT"]
+            return current.messages.UNKNOWN_OPT
 
     return represent
 
 # =============================================================================
-def s3_represent_multi_id(table, fieldname="name", translate=False):
+def s3_represent_multi_id(table):
     """
         Returns a represent function for a record id.
     """
@@ -672,7 +669,7 @@ def s3_represent_multi_id(table, fieldname="name", translate=False):
 
         ids = [ids] if type(ids) is not list else ids
 
-        rows = current.db(table.id.belongs(ids)).select(table[fieldname])
+        rows = current.db(table.id.belongs(ids)).select(table.name)
 
         try:
             strings = [str(row[fieldname]) for row in rows]
