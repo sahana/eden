@@ -105,6 +105,8 @@ class S3RequestModel(S3Model):
         # Multiple Item/Skill Types per Request?
         multiple_req_items = settings.get_req_multiple_req_items()
 
+        req_status_writable = settings.get_req_status_writable()
+
         req_status = S3ReusableField("req_status", "integer",
                                      label = T("Request Status"),
                                      requires = IS_NULL_OR(IS_IN_SET(req_status_opts,
@@ -112,8 +114,8 @@ class S3RequestModel(S3Model):
                                      represent = lambda opt: \
                                         req_status_opts.get(opt, UNKNOWN_OPT),
                                      default = REQ_STATUS_NONE,
-                                     writable = settings.get_req_status_writable(),
-                                    )
+                                     writable = req_status_writable,
+                                     )
 
         req_ref = S3ReusableField("req_ref", "string",
                                   label = rn_label,
@@ -294,8 +296,8 @@ class S3RequestModel(S3Model):
                                                     #default = auth.s3_logged_in_human_resource()
                                                     ),
                                   req_status("commit_status",
-                                             readable = not use_commit,
-                                             writable = not use_commit,
+                                             readable = use_commit,
+                                             writable = req_status_writable and use_commit,
                                              label = T("Commit. Status")),
                                   req_status("transit_status",
                                              label = T("Transit Status")),
@@ -431,6 +433,7 @@ class S3RequestModel(S3Model):
                                  ondelete = "CASCADE")
         list_fields = ["id",
                        "date",
+                       "date_required",
                        "site_id",
                        "requester_id",
                        #"event_id",
@@ -446,7 +449,6 @@ class S3RequestModel(S3Model):
         list_fields.append("fulfil_status")
         if settings.get_req_use_req_number():
             list_fields.append("req_ref")
-        list_fields.append("date_required")
 
         self.configure(tablename,
                        onaccept = self.req_onaccept,
@@ -625,7 +627,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_inline_form(type):
+    def req_inline_form(type, method):
         """
             Function to be called from REST prep functions
              - to add req_skill & req_skill components as inline forms
@@ -649,50 +651,76 @@ S3OptionsFilter({
             # We don't want to force people to enter quantities
             #itable.quantity.default = 0
             # Custom Form
-            if current.deployment_settings.get_req_items_ask_purpose():
+            settings = current.deployment_settings
+            if settings.get_req_items_ask_purpose():
                 crud_form = s3forms.S3SQLCustomForm(
-                        # If not generated automatically
-                        #"req_ref",
-                        "site_id",
-                        "is_template",
-                        "requester_id",
-                        "date",
-                        "priority",
-                        "date_required",
-                        "purpose",
-                        s3forms.S3SQLInlineComponent(
-                            "req_item",
-                            label = T("Items"),
-                            fields = ["item_id",
-                                      "item_pack_id",
-                                      "quantity",
-                                      "comments"
-                                      ]
-                        ),
-                        #"date_recv",
-                        "comments",
+                    # If not generated automatically
+                    #"req_ref",
+                    "site_id",
+                    "is_template",
+                    "requester_id",
+                    "date",
+                    "priority",
+                    "date_required",
+                    "purpose",
+                    s3forms.S3SQLInlineComponent(
+                        "req_item",
+                        label = T("Items"),
+                        fields = ["item_id",
+                                  "item_pack_id",
+                                  "quantity",
+                                  "comments"
+                                  ]
+                    ),
+                    #"date_recv",
+                    "comments",
+                    )
+            elif method == "update" and \
+                 settings.get_req_status_writable():
+                crud_form = s3forms.S3SQLCustomForm(
+                    # If not generated automatically
+                    #"req_ref",
+                    "site_id",
+                    "requester_id",
+                    "date",
+                    "priority",
+                    "date_required",
+                    s3forms.S3SQLInlineComponent(
+                        "req_item",
+                        label = T("Items"),
+                        fields = ["item_id",
+                                  "item_pack_id",
+                                  "quantity",
+                                  "comments"
+                                  ]
+                    ),
+                    #"date_recv",
+                    "commit_status",
+                    "transit_status",
+                    "fulfil_status",
+                    "comments",
                     )
             else:
                 crud_form = s3forms.S3SQLCustomForm(
-                        # If not generated automatically
-                        #"req_ref",
-                        "site_id",
-                        "is_template",
-                        "requester_id",
-                        "date",
-                        "priority",
-                        "date_required",
-                        s3forms.S3SQLInlineComponent(
-                            "req_item",
-                            label = T("Items"),
-                            fields = ["item_id",
-                                      "item_pack_id",
-                                      "quantity",
-                                      "comments"
-                                      ]
-                        ),
-                        #"date_recv",
-                        "comments",
+                    # If not generated automatically
+                    #"req_ref",
+                    "site_id",
+                    "is_template",
+                    "requester_id",
+                    "date",
+                    "priority",
+                    "date_required",
+                    s3forms.S3SQLInlineComponent(
+                        "req_item",
+                        label = T("Items"),
+                        fields = ["item_id",
+                                  "item_pack_id",
+                                  "quantity",
+                                  "comments"
+                                  ]
+                    ),
+                    #"date_recv",
+                    "comments",
                     )
             s3db.configure("req_req", crud_form=crud_form)
 
@@ -701,7 +729,34 @@ S3OptionsFilter({
             stable = s3db.req_req_skill
             stable.skill_id.label = T("Required Skills (optional)")
             stable.skill_id.widget = None
-            crud_form = s3forms.S3SQLCustomForm(
+            if method == "update" and \
+               current.deployment_settings.get_req_status_writable():
+                crud_form = s3forms.S3SQLCustomForm(
+                    # If not generated automatically
+                    #"req_ref",
+                    "site_id",
+                    "is_template",
+                    "requester_id",
+                    "date",
+                    "priority",
+                    "date_required",
+                    "date_required_until",
+                    "purpose",
+                    s3forms.S3SQLInlineComponent(
+                        "req_skill",
+                        label = T("Skills"),
+                        fields = ["quantity",
+                                  "skill_id",
+                                  "comments"
+                                  ]
+                    ),
+                    "commit_status",
+                    "transit_status",
+                    "fulfil_status",
+                    "comments",
+                    )
+            else:
+                crud_form = s3forms.S3SQLCustomForm(
                     # If not generated automatically
                     #"req_ref",
                     "site_id",
@@ -721,7 +776,7 @@ S3OptionsFilter({
                                   ]
                     ),
                     "comments",
-                )
+                    )
             s3db.configure("req_req", crud_form=crud_form)
 
     # -------------------------------------------------------------------------
@@ -2904,19 +2959,23 @@ class ReqVirtualFields:
             query = (ltable.deleted != True) & \
                     (ltable.req_id == id) & \
                     (ltable.item_id == itable.id)
-            items = current.db(query).select(itable.name)
+            items = current.db(query).select(itable.name,
+                                             ltable.quantity)
             if items:
-                return ",".join([item.name for item in items])
+                items = ["%s %s" % (item.req_req_item.quantity, item.supply_item.name) for item in items]
+                return ",".join(items)
 
         elif type == 3:
             s3db = current.s3db
             ltable = s3db.req_req_skill
             query = (ltable.deleted != True) & \
                     (ltable.req_id == id)
-            skills = current.db(query).select(ltable.skill_id)
+            skills = current.db(query).select(ltable.skill_id,
+                                              ltable.quantity)
             if skills:
                 represent = s3_represent_multi_id(s3db.hrm_skill)
-                return ",".join([represent(skill.skill_id) for skill in skills])
+                skills = ["%s %s" % (skill.quantity, represent(skill.skill_id)) for skill in skills]
+                return ",".join(skills)
 
         return current.messages["NONE"]
 

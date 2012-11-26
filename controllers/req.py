@@ -170,17 +170,18 @@ def req_template():
 
     else:
         # Main Req
-        for fieldname in ["req_ref",
-                          "date",
-                          "date_required",
-                          "date_required_until",
-                          "date_recv",
-                          "recv_by_id",
-                          "commit_status",
-                          "transit_status",
-                          "fulfil_status",
-                          "cancel",
-                          ]:
+        fields = ["req_ref",
+                  "date",
+                  "date_required",
+                  "date_required_until",
+                  "date_recv",
+                  "recv_by_id",
+                  "cancel",
+                  "commit_status",
+                  "transit_status",
+                  "fulfil_status",
+                  ]
+        for fieldname in fields:
             field = table[fieldname]
             field.readable = field.writable = False
         table.purpose.label = T("Details")
@@ -347,7 +348,7 @@ def req_controller():
                     s3.req_create_form_mods()
 
                     # Inline Forms
-                    s3.req_inline_form(type)
+                    s3.req_inline_form(type, method)
 
                     # Get the default Facility for this user
                     # @ToDo: Use site_id in User Profile (like current organisation_id)
@@ -365,7 +366,7 @@ def req_controller():
 
                 elif method == "update":
                     # Inline Forms
-                    s3.req_inline_form(type)
+                    s3.req_inline_form(type, method)
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
         elif r.representation == "plain":
@@ -1364,7 +1365,7 @@ def send_req():
     code = s3db.inv_get_shipping_code("WB",
                                       site_id,
                                       s3db.inv_send.send_ref
-                                     )
+                                      )
     send_id = sendtable.insert(send_ref = code,
                                req_ref = r_req.req_ref,
                                sender_id = auth.s3_logged_in_person(),
@@ -1373,7 +1374,7 @@ def send_req():
                                recipient_id = r_req.requester_id,
                                to_site_id = r_req.site_id,
                                status = s3db.inv_ship_status["IN_PROCESS"],
-                              )
+                               )
 
     # Get the items for this request that have not been fulfilled (in transit)
     query = (ritable.req_id == req_id) & \
