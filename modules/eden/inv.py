@@ -942,6 +942,7 @@ class S3TrackingModel(S3Model):
         show_org = settings.get_inv_send_show_org()
         show_transport = settings.get_inv_send_show_mode_of_transport()
         type_default = settings.get_inv_send_type_default()
+        time_in = settings.get_inv_send_show_time_in()
 
         add_component = self.add_component
         configure = self.configure
@@ -1033,7 +1034,9 @@ class S3TrackingModel(S3Model):
                              person_id("recipient_id",
                                        label = T("To Person"),
                                        ondelete = "SET NULL",
-                                       comment = self.pr_person_comment(child="recipient_id")),
+                                       comment = self.pr_person_comment(child="recipient_id"),
+                                       represent = self.pr_person_phone_represent
+                                       ),
                              Field("transport_type",
                                    label = T("Type of Transport"),
                                    readable = show_transport,
@@ -1055,6 +1058,8 @@ class S3TrackingModel(S3Model):
                              Field("time_in", "time",
                                    label = T("Time In"),
                                    represent = s3_string_represent,
+                                   readable = time_in,
+                                   writable = time_in,
                                    ),
                              Field("time_out", "time",
                                    label = T("Time Out"),

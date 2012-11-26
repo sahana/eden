@@ -976,6 +976,12 @@ class S3Config(Storage):
         """
         return self.inv.get("send_show_org", True)
 
+    def get_inv_send_show_time_in(self):
+        """
+            Show Time In on Sent Shipments
+        """
+        return self.inv.get("send_show_time_in", False)
+
     def get_inv_stock_count(self):
         """
             Call Stock Adjustments 'Stock Counts'

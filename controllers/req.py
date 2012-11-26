@@ -631,7 +631,7 @@ def requester_represent(id, show_link=True):
         else:
             controller = "vol"
             group = "volunteer"
-        current.request.extension = "html"
+        request.extension = "html"
         return A(repr,
                  _href = URL(c = controller,
                              f = "person",
