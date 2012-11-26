@@ -21,35 +21,38 @@
 Module to store proposal related url names.
 """
 
+# Note: the order of the url names is the same as in the urls.py file. Or at
+# least it shoudl be.
+
 PROPOSAL_LIST = 'list-proposals'
-
-PROPOSAL_EDIT = 'edit-proposal'
-
-PROPOSAL_ADD = 'add-proposal'
 
 PROPOSAL_VIEW = 'view-proposal'
 
+PROPOSALSET_VIEW = 'view-proposalset'
+
+PROPOSAL_ADD = 'add-proposal'
+
+PROPOSALSET_ADD = 'add-proposalset'
+
+PROPOSALSET_LIST = 'list-proposalset'
+
+PROPOSALFIELD_ADD = 'add_fields'
+
+PROPOSAL_EDIT = 'edit-proposal'
+
+PROPOSALSET_EDIT = 'edit-proposalset'
+
 PROPOSAL_DELETE = 'delete-proposal'
+
+PROPOSALSET_DELETE = 'delete-proposalset'
+
+PROPOSALFIELD_DELETE = 'delete_fields'
 
 PROPOSAL_VOTE = 'vote-proposal'
 
 PROPOSAL_MERGED = 'merged_proposal'
 
 PROPOSAL_MERGEDTOSET = 'merge_proposal'
-
-PROPOSALFIELD_ADD = 'add_fields'
-
-PROPOSALFIELD_DELETE = 'delete_fields'
-
-PROPOSALSET_ADD = 'add-proposalset'
-
-PROPOSALSET_EDIT = 'edit-proposalset'
-
-PROPOSALSET_DELETE = 'delete-proposalset'
-
-PROPOSALSET_LIST = 'list-proposalset'
-
-PROPOSALSET_VIEW = 'view-proposalset'
 
 SELECT_SET = 'select_set'
 

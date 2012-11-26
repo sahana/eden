@@ -105,6 +105,15 @@ hr { /* This hr replaces the bootstrap one */
 }
 /* END COMMON CUSTOMIZATIONS */
 
+/* BOOTSTRAP OVERRIDES */
+.modal {
+    width: 700px;
+    height: 500px;
+    margin: -250px 0 0 -350px;
+    overflow: auto;
+}
+/* END BOOTSTRAP OVERRIDES */
+
 /* MAIN INDEX */
 .introtitle {
     font-size: 3em;

@@ -90,7 +90,8 @@ class ProposalSet(models.Model):
 
     """
     ProposalSet date model. This will contain a group of proposal
-    which will be created after the debate using the debate note after it is finished.
+    which will be created after the debate using the debate note after it is
+    finished.
 
     .. addedversion:: 0.1.5b
 
@@ -145,41 +146,34 @@ class Proposal(BaseProposalAbstractModel):
     :admin fields (auto): Closed_by
     :extra permissions: proposal_view
 
-    :const:`CLOSE_REASONS` for :class:Proposal data model is hardcoded with four
-    values, which will fit most of the requirements.
+    :const:`CLOSE_REASONS` for :class:Proposal data model is hardcoded with four values, which will fit most of the requirements.
     """
     code = models.CharField(_('Code'), max_length=50, blank=True,
-                            null=True)
+        null=True)
     title = models.CharField(_('Title'), max_length=100, unique=True,
-                             help_text = _('Max: 200 characters'))
+        help_text = _('Max: 200 characters'))
     proposalset = models.ForeignKey(ProposalSet, related_name='proposal_in',
-                                    blank=True, null=True,
-                                    help_text=_('Proposal set in which the \
-                                    proposal resides'))
+        blank=True, null=True, help_text=_('Proposal set in which the \
+        proposal resides'))
     description = models.TextField(_('Description'), max_length=300)
     space = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
-                               blank=True, null=True, 
-                               help_text = _('Change the user that will \
-                            figure \
-                               as the author'))
-    #debatelink = models.ForeignKey()
-    tags = TagField(help_text = _('Insert here relevant words related with the \
-                                proposal'))
+        blank=True, null=True, help_text = _('Change the user that will \
+        figure as the author'))
+    tags = TagField(help_text = _('Insert here relevant words related with \
+        the proposal'))
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
-                                   max_digits=8, decimal_places=6, 
-                                   help_text =_('Specify it in decimal'))
+        max_digits=8, decimal_places=6, help_text =_('Specify it in decimal'))
     longitude = models.DecimalField(_('Longitude'), blank=True, null=True,
-                                    max_digits=8, decimal_places=6, 
-                                    help_text =_('Specify it in decimal'))
+        max_digits=8, decimal_places=6, help_text =_('Specify it in decimal'))
     closed = models.NullBooleanField(default=False, blank=True)
     closed_by = models.ForeignKey(User, blank=True, null=True,
-                                  related_name='proposal_closed_by')
+        related_name='proposal_closed_by')
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
-                                            blank=True)
+        blank=True)
     merged = models.NullBooleanField(default=False, blank=True, null=True)
-    merged_proposals = models.ManyToManyField('self', blank=True, null=True, help_text = \
-                                                _("select proposals from the list"))
+    merged_proposals = models.ManyToManyField('self', blank=True, null=True,
+        help_text = _("Select proposals from the list"))
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),

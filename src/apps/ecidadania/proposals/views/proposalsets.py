@@ -50,216 +50,7 @@ from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
 
-class AddProposal(FormView):
-
-    """
-    Create a new proposal.
-    
-    :parameters: space_url
-    :rtype: HTML Form
-    :context: form, get_place
-    """
-    form_class = ProposalForm
-    template_name = 'proposals/proposal_form.html'
-    
-    def get_success_url(self):
-        space = self.kwargs['space_url']
-        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
-        
-    def form_valid(self, form):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        form_uncommited = form.save(commit=False)
-        if int(self.kwargs['p_set']) != 0:
-            form_uncommited.proposalset = get_object_or_404(ProposalSet, pk=self.kwargs['p_set'])
-        form_uncommited.space = self.space
-        form_uncommited.author = self.request.user
-        form_uncommited.save()
-        return super(AddProposal, self).form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super(AddProposal, self).get_context_data(**kwargs)
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        self.field = ProposalField.objects.filter(proposalset=self.kwargs['p_set'])
-        context['get_place'] = self.space
-        context['form_field'] = [f_name.field_name for f_name in self.field]
-        return context
-        
-    def dispatch(self, *args, **kwargs):
-        return super(AddProposal, self).dispatch(*args, **kwargs)
-
-
-class ViewProposal(DetailView):
-
-    """
-    Detail view of a proposal. Inherits from django :class:`DetailView` generic
-    view.
-
-    :rtype: object
-    :context: proposal
-    """
-    context_object_name = 'proposal'
-    template_name = 'proposals/proposal_detail.html'
-
-    def get_object(self):
-        prop_id = self.kwargs['prop_id']
-        return get_object_or_404(Proposal, pk = prop_id)
-
-    def get_context_data(self, **kwargs):
-        context = super(ViewProposal, self).get_context_data(**kwargs)
-        current_space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        support_votes_count = Proposal.objects.filter(space=current_space)\
-                             .annotate(Count('support_votes'))
-        # We are going to get the proposal position in the list
-        self.get_position = 0
-        proposal = get_object_or_404(Proposal, pk=self.kwargs['prop_id'])
-        if proposal.merged == True:
-            context['merged_proposal'] = proposal.merged_proposals.all()
-        for i,x in enumerate(support_votes_count):
-            if x.id == int(self.kwargs['prop_id']):
-                self.get_position = i
-        context['get_place'] = current_space
-        context['support_votes_count'] = support_votes_count[int(self.get_position)].support_votes__count
-        context['location'] = Proposal.objects.get(pk=self.kwargs['prop_id'])
-        return context
-
-
-class EditProposal(UpdateView):
-
-    """
-    The proposal can be edited by space and global admins, but also by their
-    creator.
-
-    :rtype: HTML Form
-    :context: get_place
-    :parameters: space_url, prop_id
-    """
-    model = Proposal
-    template_name = 'proposals/proposal_form.html'
-    
-    def get_success_url(self):
-        space = self.kwargs['space_url']
-        proposal = self.kwargs['prop_id']
-        return reverse(urln_prop.PROPOSAL_VIEW, kwargs={'space_url':space,
-                                                        'prop_id':proposal})
-        
-    def get_object(self):
-        prop_id = self.kwargs['prop_id']
-        return get_object_or_404(Proposal, pk = prop_id)
-        
-    def get_context_data(self, **kwargs):
-        context = super(EditProposal, self).get_context_data(**kwargs)
-        self.p_set = Proposal.objects.get(pk = self.kwargs['prop_id'])
-        self.field = ProposalField.objects.filter(proposalset = self.p_set.proposalset)
-        context['form_field'] = [f_name.field_name for f_name in self.field]
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return context
-        
-    @method_decorator(permission_required('proposals.edit_proposal'))
-    def dispatch(self, *args, **kwargs):
-        return super(EditProposal, self).dispatch(*args, **kwargs)
-                             
-            
-class DeleteProposal(DeleteView):
-
-    """
-    Delete a proposal.
-
-    :rtype: Confirmation
-    :context: get_place
-    """
-    def get_object(self):
-        return get_object_or_404(Proposal, pk = self.kwargs['prop_id'])
-
-    def get_success_url(self):
-        space = self.kwargs['space_url']
-        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
-
-    def get_context_data(self, **kwargs):
-        context = super(DeleteProposal, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
-        return context                 
-                  
-           
-@require_POST
-def vote_proposal(request, space_url):
-
-    """
-    Send email to user to validate vote before is calculated.
-    :attributes: - prop: current proposal
-    :rtype: multiple entity objects.
-    """
-    prop = get_object_or_404(Proposal, pk=request.POST['propid'])
-    try:
-         intent = ConfirmVote.objects.get(user=request.user, proposal=prop)
-    except ConfirmVote.DoesNotExist:
-        token = hashlib.md5("%s%s%s" % (request.user, prop,
-                            datetime.datetime.now())).hexdigest()
-        intent = ConfirmVote(user=request.user, proposal=prop, token=token)
-        intent.save()
-        subject = _("New vote validation request")
-        body = _("Hello {0}, \n \
-                 You are getting this email because you wanted to support proposal {1}.\n\
-                 Please click on the link below to vefiry your vote.\n {2} \n \
-                 Thank you for your vote."
-                 .format(request.user.username, prop.title,
-                 intent.get_approve_url()))
-        send_mail(subject=subject, message=body,
-                   from_email="noreply@ecidadania.org",
-                   recipient_list=[request.user.email])
-
-class ValidateVote(DetailView):
-
-    """
-    Validates the vote. It adds the user to the list of users who voted it everything checks ok.
-    """
-    status = _("The requested vote validation does not exist!")
-
-    def get_object(self):
-        try:
-            intent = ConfirmVote.objects.get(token=self.kwargs['token'])
-            intent.proposal.support_votes.add(intent.user)
-            self.status = _("The vote has been authorised for proposal \
-            in space \"%s\"." % intent.proposal.title)
-            messages.success(self.request, _("Authorization successful"))
-
-        except ConfirmVote.DoesNotExist:
-            self.status  = _("The requested intent does not exist!")
-
-        return intent.proposal
-
-    def get_context_data(self, **kwargs):
-        context = super(ValidateVote, self).get_context_data(**kwargs)
-        context['status'] = self.status
-        context['request_user'] = ConfirmVote.objects.get(
-            token=self.kwargs['token']).user
-        return context
-
-class ListProposals(ListView):
-
-    """
-    List all proposals stored whithin a space. Inherits from django :class:`ListView`
-    generic view.
-
-    :rtype: Object list
-    :context: proposal
-    """
-    paginate_by = 50
-    context_object_name = 'proposal'
-
-    def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_url'])
-        objects = Proposal.objects.annotate(Count('support_votes')).filter(space=place.id).order_by('pub_date')
-        return objects
-
-    def get_context_data(self, **kwargs):
-        context = super(ListProposals, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])   
-        return context
-
-
-
-
-def add_proposal_fields(request, space_url):
+def add_proposal_field(request, space_url):
     
     """
     Adds a new form field to the proposal form. The admin can customize the proposal form for a 
@@ -272,8 +63,6 @@ def add_proposal_fields(request, space_url):
     :context:form, get_place, prop_fields, form_data, prop_fields
 
     """
-    
-    
     form = ProposalFieldForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
     if request.method == 'POST':
@@ -293,7 +82,7 @@ def add_proposal_fields(request, space_url):
 
 
 
-def remove_proposal_field(request, space_url):
+def delete_proposal_field(request, space_url):
     
     """
     Removes a form field from proposal form. Only for proposals which are in proposal set.
@@ -372,42 +161,6 @@ def mergedproposal_to_set(request, space_url):
         context_instance = RequestContext(request))
 
    
-def merged_proposal(request, space_url, p_set):
-    
-    """
-    Create a new merged proposal. This proposal can be linked to many other proposals which are in the
-    same proposal set. Only admin and moderator can create merged proposals.
-
-    .. versionadded:: 0.1.5
-
-    :arguments: space_url, p_set
-    :context:form, get_place, form_field
-
-    """
-    get_place = get_object_or_404(Space, url=space_url)
-    field = ProposalField.objects.filter(proposalset=p_set)
-    form_field = [f_name.field_name for f_name in field]
-    if request.method == 'POST':
-        merged_form = ProposalForm(request.POST)
-        if merged_form.is_valid():
-            form_data = merged_form.save(commit=False)
-            form_data.proposalset = get_object_or_404(ProposalSet, pk=p_set)
-            form_data.space = get_object_or_404(Space, url=space_url)
-            form_data.author = request.user
-            form_data.merged = True
-            field = ProposalField.objects.filter(proposalset=p_set)
-            form_field = [f_name.field_name for f_name in field]
-            form_data.save()
-            merged_form.save_m2m()
-
-            return reverse(urln_space.SPACE_INDEX,
-                kwargs={'space_url':space_url})
-    else: 
-        merged_form = ProposalMergeForm(initial={'p_set':p_set})
-
-    return render_to_response("proposals/proposal_merged.html",
-        {'form':merged_form, 'get_place':get_place, 'form_field':form_field},
-        context_instance = RequestContext(request))
 #
 # Proposal Sets
 #

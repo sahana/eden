@@ -20,6 +20,7 @@ var errorSave = gettext("Couldn't save note.");
 var errorSavePos = gettext("Couldn't save note position.");
 var errorDelete = gettext("Couldn't delete note.");
 var confirmDelete = gettext('Are you sure?');
+var comment = gettext('Comment');
 
 /*
     NOTE FUNCTIONS
@@ -106,13 +107,13 @@ function viewNote(obj) {
         $('span#view-note-author').text(note.author.name);
 
         var html = '';
-        var comment_count = "<h5 class='note-comment-title'>Comments (" + note.comments.length + ")</h5>";
-for(var i=0; i<note.comments.length; i++) {
+        var comment_count = "<h5 class='note-comment-title'>" + comment + " (" + note.comments.length + ")</h5>";
+        for(var i=0; i<note.comments.length; i++) {
             var item = note.comments[i];
-        html += "<div class='comment-bubble' id='comment" + i +"'>" + "<p id='username' class='viewer'>"+ item.username + "</p>";
-        html += "<p id='date' class='viewer-date'>"+ item.submit_date +"</p>";
-        html += "<p id='comments" + i + "' class='viewer-comment'>" + item.comment +"</p><img src='/static/img/arrow-2.png' width='20' height='21'></div>";
-}
+            html += "<div class='comment-bubble' id='comment" + i +"'>" + "<p id='username' class='viewer'>"+ item.username + "</p>";
+            html += "<p id='date' class='viewer-date'>"+ item.submit_date +"</p>";
+            html += "<p id='comments" + i + "' class='viewer-comment'>" + item.comment +"</p><img src='/static/img/arrow-2.png' width='20' height='21'></div>";
+        }
         $('div#comments').html(html);
         $('span#num-comments').html(comment_count);
         $('form#form_comments div.kopce').html(note.form_html);
