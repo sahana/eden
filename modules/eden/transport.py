@@ -127,7 +127,7 @@ class S3TransportModel(S3Model):
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
-                                     (bool and [T("Obsolete")] or [current.messages.NONE])[0],
+                                     (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
                                    default=False,
                                    readable=False,
                                    writable=False),

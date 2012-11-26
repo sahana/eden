@@ -1292,7 +1292,7 @@ Thank you
                                                   multiple = True
                                                   )
                 link_user_to.represent = lambda ids: \
-                    ids and ", ".join([str(link_user_to_opts[id]) for id in ids]) or cmessages.NONE
+                    ids and ", ".join([str(link_user_to_opts[id]) for id in ids]) or cmessages["NONE"]
                 link_user_to.widget = SQLFORM.widgets.checkboxes.widget
                 link_user_to.comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (link_user_to.label,

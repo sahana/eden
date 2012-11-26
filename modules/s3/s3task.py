@@ -102,7 +102,7 @@ class S3Task(object):
         """
 
         T = current.T
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
         UNLIMITED = T("unlimited")
 
         tablename = self.TASK_TABLENAME

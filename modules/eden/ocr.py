@@ -51,7 +51,7 @@ class OCRDataModel(S3Model):
 
         #messages = current.messages
         #UNKNOWN_OPT = messages.UNKNOWN_OPT
-        #NONE = messages.NONE
+        #NONE = messages["NONE"]
 
         define_table = self.define_table
 

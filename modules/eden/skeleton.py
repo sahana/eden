@@ -170,7 +170,7 @@ def skeleton_example_represent(id):
     if not id:
         # Don't do a DB lookup if we have no id
         # Instead return a consistenct representation of a null value
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # Your function may need to access tables. If a table isn't defined
     # at the point when this function gets called, then this:

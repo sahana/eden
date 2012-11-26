@@ -57,7 +57,7 @@ class S3MembersModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -578,7 +578,7 @@ class MemberVirtualFields:
             else:
                 return OVERDUE
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def email(self):
@@ -602,7 +602,7 @@ class MemberVirtualFields:
                 values = [contact.value for contact in contacts]
                 return ",".join(values)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def phone(self):
@@ -626,6 +626,6 @@ class MemberVirtualFields:
                 values = [contact.value for contact in contacts]
                 return ",".join(values)
 
-        return current.messages.NONE
+        return current.messages["NONE"]
 
 # END =========================================================================

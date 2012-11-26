@@ -207,7 +207,7 @@ class S3ScenarioModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.scenario_scenario

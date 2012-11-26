@@ -654,7 +654,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 for opt_value in opt_values:
                     if opt_value not in represent_rows:
                         continue
-                        #opt_represent = current.messages.NONE
+                        #opt_represent = current.messages["NONE"]
                     else:
                         opt_represent = represent % represent_rows[opt_value]
                     if opt_represent:
@@ -664,9 +664,9 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_list = [(opt_value, s3_unicode(opt_value))
                             for opt_value in opt_values if opt_value]
 
-            options = OrderedDict([(o or "__NONE__", v) for o, v in opt_list])
+            options = OrderedDict([("__NONE__" if o is None else o, v) for o, v in opt_list])
         else:
-            options = OrderedDict([(o or "__NONE__", v) for o, v in options.items()])
+            options = OrderedDict([("__NONE__" if o is None else o, v) for o, v in options.items()])
 
         # Dummy field
         dummy_field = Storage(name=name,

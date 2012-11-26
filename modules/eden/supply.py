@@ -94,7 +94,7 @@ class S3SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         # =====================================================================
         # Brand
@@ -934,7 +934,7 @@ S3OptionsFilter({
             # @ToDo: Optimise so we don't need to do the first query
             item_category_id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             item_category_id = id
 
@@ -984,7 +984,7 @@ S3OptionsFilter({
         """
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
 
@@ -1032,7 +1032,7 @@ S3OptionsFilter({
             # @ToDo: Optimised query where we don't need to do the join
             id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.supply_item
@@ -1080,7 +1080,7 @@ S3OptionsFilter({
             # @ToDo: Optimised query where we don't need to do the join
             id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.supply_item_pack
@@ -1319,7 +1319,7 @@ def supply_item_rheader(r):
                                     table.brand_id.represent(item.brand_id),
                                   ),
                                 TR( TH("%s: " % table.model.label),
-                                    item.model or current.messages.NONE,
+                                    item.model or current.messages["NONE"],
                                   ),
                                ),
                           rheader_tabs
@@ -1379,7 +1379,7 @@ class item_entity_virtualfields:
         if record:
             return table.item_category_id.represent(record.item_category_id)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def country(self):
@@ -1435,8 +1435,8 @@ class item_entity_virtualfields:
                 country = record.L0 or current.T("Unknown")
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
-        return country or current.messages.NONE
+            return current.messages["NONE"]
+        return country or current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def organisation(self):
@@ -1495,13 +1495,13 @@ class item_entity_virtualfields:
                                                       acronym=False)
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
-        return organisation or current.messages.NONE
+            return current.messages["NONE"]
+        return organisation or current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     #def site(self):
     def contacts(self):
-        #site = current.messages.NONE
+        #site = current.messages["NONE"]
         s3db = current.s3db
         etable = s3db.supply_item_entity
         instance_type = self.supply_item_entity.instance_type
@@ -1541,7 +1541,7 @@ class item_entity_virtualfields:
                                       limitby=(0, 1)).first()
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         #site = s3db.org_site_represent(record.site_id)
         #return site
@@ -1556,12 +1556,12 @@ class item_entity_virtualfields:
             if record.comments:
                 return record.comments
             else:
-                return current.messages.NONE
+                return current.messages["NONE"]
         elif record.comments:
             comments = s3_comments_represent(record.comments,
                                              show_link=False)
         else:
-            comments = current.messages.NONE
+            comments = current.messages["NONE"]
         return A(comments,
                  _href = URL(f="office",
                              args = [record.id]))
@@ -1626,8 +1626,8 @@ class item_entity_virtualfields:
                     status = T("On Order")
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
-        return status or current.messages.NONE
+            return current.messages["NONE"]
+        return status or current.messages["NONE"]
 
 # =============================================================================
 def supply_item_controller():

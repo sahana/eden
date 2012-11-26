@@ -223,7 +223,7 @@ class S3PatientModel(S3Model):
         if row:
             pass
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.patient_patient
