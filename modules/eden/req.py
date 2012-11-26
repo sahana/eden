@@ -1294,7 +1294,7 @@ class S3RequestItemModel(S3Model):
                                   self.supply_item_id(),
                                   self.supply_item_pack_id(),
                                   Field("quantity", "double", notnull=True,
-                                        requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                        requires = IS_FLOAT_IN_RANGE(minimum=1),
                                         represent=lambda v: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   Field("pack_value", "double",
@@ -1596,8 +1596,9 @@ class S3RequestSkillModel(S3Model):
                                     comment = T("Leave blank to request an unskilled person")
                                     ),
                              # @ToDo: Add a minimum competency rating?
-                             Field("quantity", "integer", notnull = True,
+                             Field("quantity", "integer", notnull=True,
                                    default = 1,
+                                   requires = IS_INT_IN_RANGE(1, 999),
                                    label = T("Number of People Required"),
                                    ),
                              self.org_site_id,

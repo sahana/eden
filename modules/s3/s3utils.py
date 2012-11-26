@@ -672,7 +672,7 @@ def s3_represent_multi_id(table):
         rows = current.db(table.id.belongs(ids)).select(table.name)
 
         try:
-            strings = [str(row[fieldname]) for row in rows]
+            strings = [str(row.name) for row in rows]
         except:
             return current.messages["NONE"]
 
