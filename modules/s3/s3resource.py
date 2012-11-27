@@ -657,7 +657,6 @@ class S3Resource(object):
         if not virtual:
             vf = table.virtualfields
             osetattr(table, "virtualfields", [])
-
         # Count the rows
         numrows = None
         ids = None
@@ -4016,7 +4015,7 @@ class S3ResourceField(object):
                     resource._attach(tn, hook)
             if tn in resource.components:
                 c = resource.components[tn]
-                distinct = c.link is not None or c.multiple
+                distinct = True # c.link is not None or c.multiple
                 j = c.get_join()
                 l = c.get_left_join()
                 tn = c._alias
