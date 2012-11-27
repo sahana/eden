@@ -1467,7 +1467,8 @@ class GIS(object):
         config = GIS.get_config()
 
         if config.default_location_id:
-            return self.get_parent_country(config.default_location_id)
+            return self.get_parent_country(config.default_location_id,
+                                           key_type=key_type)
 
         return None
 
@@ -6431,6 +6432,12 @@ class Layer(object):
         # Flag to show whether we've set the default baselayer
         # (otherwise a config higher in the hierarchy can overrule one lower down)
         base = True
+        # Layers requested to be visible via URL (e.g. embedded map)
+        visible = current.request.get_vars.get("layers", None)
+        if visible:
+            visible = visible.split(".")
+        else:
+            visible = []
         for _record in rows:
             record = _record[tablename]
             # Check if we've already seen this layer
@@ -6448,7 +6455,7 @@ class Layer(object):
             if role_required and not s3_has_role(role_required):
                 continue
             # All OK - add SubLayer
-            record["visible"] = _config.visible
+            record["visible"] = _config.visible or str(layer_id) in visible
             if base and _config.base:
                 # name can't conflict with OSM/WMS/ArcREST layers
                 record["_base"] = True

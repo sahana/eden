@@ -215,7 +215,7 @@ class S3SecurityModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.security_zone_type
@@ -234,7 +234,7 @@ class S3SecurityModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.security_zone
@@ -253,7 +253,7 @@ class S3SecurityModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.security_staff_type
@@ -286,7 +286,7 @@ class S3SecurityModel(S3Model):
             try:
                 opt = int(opt)
             except:
-                return current.messages.NONE
+                return current.messages["NONE"]
             else:
                 opts = [opt]
                 vals = str(set.get(opt)["name"])

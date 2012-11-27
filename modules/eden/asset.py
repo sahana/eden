@@ -546,7 +546,7 @@ $(document).ready(function(){
         if row:
             id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.asset_asset
@@ -868,7 +868,7 @@ def asset_rheader(r):
             s3db = current.s3db
             s3 = current.response.s3
 
-            NONE = current.messages.NONE
+            NONE = current.messages["NONE"]
 
             if record.type == ASSET_TYPE_VEHICLE:
                 tabs = [(T("Asset Details"), None),
@@ -1002,7 +1002,7 @@ class AssetVirtualFields:
                                             limitby=(0, 1)).first()
             if site:
                 return s3db.org_site_represent(site, show_link=False)
-        return current.messages.NONE
+        return current.messages["NONE"]
     
     def assigned_to_person(self):
         current_log = asset_get_current_log(self.asset_asset.id)

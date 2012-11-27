@@ -594,7 +594,7 @@ class S3IRSModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.irs_ireport
@@ -1062,7 +1062,7 @@ class S3IRSResponseModel(S3Model):
 
         def response_represent(opt):
             if opt is None:
-                return current.messages.NONE
+                return current.messages["NONE"]
             elif opt:
                 return T("Yes")
             else:

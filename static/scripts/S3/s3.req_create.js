@@ -2,11 +2,9 @@
    - inserted into page in req_create_form_mods()
 */
 
-$(document).ready(function() {
-    
-    // onChange
-    $('#req_req_site_id').change(function() {
-        var site_id = $('#req_req_site_id').val();
+function add_site_to_staff_add_url() {
+    var site_id = $('#req_req_site_id').val();
+    if (site_id) {
         var url = $('#staff_add').attr('href');
         if (url.indexOf('&site_id=') == -1) {
             // Add to URL
@@ -16,6 +14,16 @@ $(document).ready(function() {
             url = url.replace(/&site_id=.*/, '&site_id=' + site_id);
         }
         $('#staff_add').attr('href', url);
+    }
+}
+
+$(document).ready(function() {
+    // Read current value
+    add_site_to_staff_add_url();
+    // onChange
+    $('#req_req_site_id').change(function() {
+        // This is already being done somewhere else!
+        //add_site_to_staff_add_url();
     });
 
     $('#req_req_is_template').change(function() {

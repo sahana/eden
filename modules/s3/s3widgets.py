@@ -1604,7 +1604,7 @@ class S3LocationSelectorWidget(FormWidget):
                     if id not in countries:
                         # Add the default country to the list of possibles
                         countries[id] = defaults["L0"].name
-                country_snippet = "S3.gis.country = '%s';\n" % \
+                country_snippet = '''S3.gis.country="%s"\n''' % \
                     gis.get_default_country(key_type="code")
         elif len(countries) == 1:
             default_L0.id = countries.keys()[0]
@@ -2135,7 +2135,14 @@ S3.gis.geocoder=true'''
                                _style="cursor:pointer; cursor:hand",
                                _id="gis_location_map-btn",
                                _class="action-btn")
-            map_button_row = TR(map_button, TD(),
+            if geocoder:
+                geocoder_button = A(T("Geocode"),
+                                    _style="cursor:pointer; cursor:hand",
+                                    _id="gis_location_geocoder-btn",
+                                    _class="action-btn")
+            else:
+                geocoder_button = ""
+            map_button_row = TR(TD(geocoder_button, map_button),
                                 _id="gis_location_map_button_row",
                                 _class="locselect box_middle")
         else:

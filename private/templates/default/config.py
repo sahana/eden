@@ -324,11 +324,15 @@ settings.L10n.decimal_separator = "."
 #settings.inv.shipment_name = "order"
 # Uncomment to not track pack values
 #settings.inv.track_pack_values = False
+#settings.inv.show_mode_of_transport = True
+#settings.inv.send_show_org = False
+#settings.inv.send_show_time_in = True
 #settings.inv.send_form_name = "Tally Out Sheet"
 #settings.inv.send_short_name = "TO"
 #settings.inv.send_ref_field_name = "Tally Out Number"
 #settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
 #settings.inv.recv_shortname = "ARDR"
+# Types common to both Send and Receive
 #settings.inv.shipment_types = {
 #         0: T("-"),
 #         1: T("Other Warehouse"),
@@ -337,6 +341,21 @@ settings.L10n.decimal_separator = "."
 #         4: T("Local Purchases"),
 #         5: T("Confiscated Goods from Bureau Of Customs")
 #    }
+#settings.inv.send_types = {
+#        21: T("Distribution")
+#    }
+#settings.inv.send_type_default = 1
+#settings.inv.recv_types = {
+#        32: T("Donation"),
+#        34: T("Purchase"),
+#    }
+#settings.inv.item_status = {
+#        0: current.messages["NONE"],
+#        1: T("Dump"),
+#        2: T("Sale"),
+#        3: T("Reject"),
+#        4: T("Surplus")
+#   }
 
 # Requests Management
 # Label for Inventory Requests
@@ -345,14 +364,18 @@ settings.L10n.decimal_separator = "."
 #settings.req.type_hrm_label = "Volunteers"
 # Label for Requester
 #settings.req.requester_label = "Site Contact"
+# Filter Requester as being from the Site 
+#settings.req.requester_from_site = True
 #settings.req.date_writable = False
 # Allow the status for requests to be set manually,
 # rather than just automatically from commitments and shipments
 #settings.req.status_writable = False
-#settings.req.quantities_writable = True
+#settings.req.item_quantities_writable = True
+#settings.req.skill_quantities_writable = True
 #settings.req.show_quantity_transit = False
 #settings.req.multiple_req_items = False
 #settings.req.prompt_match = False
+#settings.req.items_ask_purpose = False
 #settings.req.use_commit = False
 #settings.req.requester_optional = True
 # Should Requests ask whether Security is required?

@@ -60,7 +60,7 @@ class SyncDataModel(S3Model):
 
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
-        NONE = messages.NONE
+        NONE = messages["NONE"]
 
         crud_strings = s3.crud_strings
         define_table = self.define_table

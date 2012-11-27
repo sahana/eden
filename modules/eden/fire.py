@@ -102,7 +102,7 @@ class S3FireStationModel(S3Model):
                              Field("obsolete", "boolean",
                                    label = T("Obsolete"),
                                    represent = lambda bool: \
-                                     (bool and [T("Obsolete")] or [current.messages.NONE])[0],
+                                     (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
                                    default = False,
                                    readable = False,
                                    writable = False),
@@ -295,7 +295,7 @@ class S3FireStationModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.fire_station
@@ -316,7 +316,7 @@ class S3FireStationModel(S3Model):
         if row:
             pass
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.fire_shift

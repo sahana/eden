@@ -964,6 +964,24 @@ class S3Config(Storage):
         """
         return self.inv.get("direct_stock_edits", False)
 
+    def get_inv_send_show_mode_of_transport(self):
+        """
+            Show mode of transport on Sent Shipments
+        """
+        return self.inv.get("show_mode_of_transport", False)
+
+    def get_inv_send_show_org(self):
+        """
+            Show Organisation on Sent Shipments
+        """
+        return self.inv.get("send_show_org", True)
+
+    def get_inv_send_show_time_in(self):
+        """
+            Show Time In on Sent Shipments
+        """
+        return self.inv.get("send_show_time_in", False)
+
     def get_inv_stock_count(self):
         """
             Call Stock Adjustments 'Stock Counts'
@@ -982,7 +1000,7 @@ class S3Config(Storage):
         """
         T = current.T
         return self.inv.get("item_status", {
-                0: current.messages.NONE,
+                0: current.messages["NONE"],
                 1: T("Dump"),
                 2: T("Sale"),
                 3: T("Reject"),
@@ -1002,8 +1020,8 @@ class S3Config(Storage):
         """
             Shipment types which are common to both Send & Receive
         """
-        return self.inv.get("shipment_type", {
-                0 : current.messages.NONE,
+        return self.inv.get("shipment_types", {
+                0 : current.messages["NONE"],
                 11: current.T("Internal Shipment"),
             })
 
@@ -1011,16 +1029,22 @@ class S3Config(Storage):
         """
             Shipment types which are just for Send
         """
-        return self.inv.get("send_type", {
+        return self.inv.get("send_types", {
                 21: current.T("Distribution"),
             })
+
+    def get_inv_send_type_default(self):
+        """
+            Which Shipment type is default 
+        """
+        return self.inv.get("send_type_default", 0)
 
     def get_inv_recv_types(self):
         """
             Shipment types which are just for Receive
         """
         T = current.T
-        return self.inv.get("recv_type", {
+        return self.inv.get("recv_types", {
                 #31: T("Other Warehouse"), Same as Internal Shipment
                 32: T("Donation"),
                 #33: T("Foreign Donation"),
@@ -1138,6 +1162,7 @@ class S3Config(Storage):
             Whether the AddPersonWidget allows selecting existing PRs
             - set to True if Persons can be found in multiple contexts
             - set to False if just a single context
+            @ToDo: Fix (form fails to submit)
         """
         return self.pr.get("select_existing", True)
 
@@ -1237,15 +1262,19 @@ class S3Config(Storage):
         return current.T(self.req.get("type_hrm_label", "People"))
     def get_req_requester_label(self):
         return current.T(self.req.get("requester_label", "Requester"))
+    def get_req_requester_optional(self):
+        return self.req.get("requester_optional", False)
+    def get_req_requester_from_site(self):
+        return self.req.get("requester_from_site", False)
     def get_req_date_writable(self):
         """ Whether Request Date should be manually editable """
         return self.req.get("date_writable", True)
     def get_req_status_writable(self):
         """ Whether Request Status should be manually editable """
         return self.req.get("status_writable", True)
-    def get_req_quantities_writable(self):
+    def get_req_item_quantities_writable(self):
         """ Whether Item Quantities should be manually editable """
-        return self.req.get("quantities_writable", False)
+        return self.req.get("item_quantities_writable", False)
     def get_req_skill_quantities_writable(self):
         """ Whether People Quantities should be manually editable """
         return self.req.get("skill_quantities_writable", False)
@@ -1267,8 +1296,6 @@ class S3Config(Storage):
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
-    def get_req_requester_optional(self):
-        return self.req.get("requester_optional", False)
     def get_req_ask_security(self):
         """
             Should Requests ask whether Security is required?
@@ -1279,6 +1306,11 @@ class S3Config(Storage):
             Should Requests ask whether Transportation is required?
         """
         return self.req.get("ask_transport", False)
+    def get_req_items_ask_purpose(self):
+        """
+            Should Requests for Items ask for Purpose?
+        """
+        return self.req.get("items_ask_purpose", True)
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)

@@ -99,15 +99,22 @@ settings.inv.facility_label = "Facility"
 settings.inv.stock_count = True
 # Uncomment to not track pack values
 settings.inv.track_pack_values = False
+settings.inv.send_show_org = False
+# Types common to both Send and Receive
 settings.inv.shipment_types = {
-         #0: T("-"),
-         1: T("Other Warehouse"),
-         2: T("Distribution"),
-         #2: T("Donation"),
-         #3: T("Foreign Donation"),
-         #4: T("Local Purchases"),
-         #5: T("Confiscated Goods from Bureau Of Customs")
+        1: T("Other Warehouse")
     }
+settings.inv.send_types = {
+        #21: T("Distribution")
+    }
+settings.inv.send_type_default = 1
+settings.inv.item_status = {
+        #0: current.messages["NONE"],
+        #1: T("Dump"),
+        #2: T("Sale"),
+        #3: T("Reject"),
+        #4: T("Surplus")
+   }
 
 # Request Management
 settings.req.req_type = ["People", "Stock"]#, "Summary"]
@@ -115,11 +122,14 @@ settings.req.prompt_match = False
 #settings.req.use_commit = False
 settings.req.requester_optional = True
 settings.req.date_writable = False
-settings.req.quantities_writable = True
+settings.req.item_quantities_writable = True
 settings.req.skill_quantities_writable = True
+settings.req.items_ask_purpose = False
 #settings.req.use_req_number = False
 # Label for Requester
 settings.req.requester_label = "Site Contact"
+# Filter Requester as being from the Site 
+settings.req.requester_from_site = True
 # Label for Inventory Requests
 settings.req.type_inv_label = "Supplies"
 
@@ -148,7 +158,8 @@ settings.org.site_inv_req_tabs = False
 # Uncomment to hide fields in S3AddPersonWidget
 settings.pr.request_dob = False
 settings.pr.request_gender = False
-settings.pr.select_existing = False
+# Doesn't yet work (form fails to submit)
+#settings.pr.select_existing = False
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

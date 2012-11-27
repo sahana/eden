@@ -335,7 +335,7 @@ class S3LocationModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.gis_location
@@ -352,7 +352,7 @@ class S3LocationModel(S3Model):
         """ FK representation """
 
         if not ids:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         if not isinstance(ids, (list, tuple)):
             ids = [ids]
@@ -609,7 +609,7 @@ class S3LocationModel(S3Model):
     @staticmethod
     def gis_level_represent(level):
         if not level:
-            return current.messages.NONE
+            return current.messages["NONE"]
         elif level == "L0":
             return current.messages.COUNTRY
         else:
@@ -1021,7 +1021,7 @@ class S3GISConfigModel(S3Model):
 
         location_id = self.gis_location_id
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         # Shortcuts
         add_component = self.add_component
@@ -1591,7 +1591,7 @@ class S3GISConfigModel(S3Model):
         """
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.gis_config
@@ -1709,7 +1709,7 @@ class S3GISConfigModel(S3Model):
         """
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         if isinstance(id, Row):
             record = id
@@ -1881,7 +1881,7 @@ class S3LayerEntityModel(S3Model):
         marker_id = self.gis_marker_id
         symbology_id = self.gis_symbology_id
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         # Shortcuts
         add_component = self.add_component
@@ -3551,7 +3551,7 @@ class S3GISThemeModel(S3Model):
         """
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         db = current.db
         table = db.gis_layer_theme
         query = (table.id == id)
@@ -3733,7 +3733,7 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
         db = current.db
         table = db.gis_location
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
     else:
         db = current.db
         table = db.gis_location
@@ -3888,7 +3888,7 @@ def gis_location_lx_represent(id):
     """
 
     if not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
 
     s3db = current.s3db
     table = s3db.gis_location
@@ -3922,7 +3922,7 @@ def gis_layer_represent(id, row=None, show_link=True):
         s3db = current.s3db
         ltable = s3db.gis_layer_entity
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
     else:
         db = current.db
         s3db = current.s3db

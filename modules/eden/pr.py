@@ -45,6 +45,7 @@ __all__ = ["S3PersonEntity",
            "pr_get_entities",
            "pr_pentity_represent",
            "pr_person_represent",
+           "pr_person_phone_represent",
            "pr_person_comment",
            "pr_image_represent",
            "pr_url_represent",
@@ -1161,7 +1162,7 @@ class S3GroupModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.pr_group
@@ -1643,7 +1644,7 @@ class S3PersonImageModel(S3Model):
         """ Representation """
 
         if not image:
-            return current.messages.NONE
+            return current.messages["NONE"]
         url_full = URL(c="default", f="download", args=image)
         if size is None:
             size = (None, 60)
@@ -3260,7 +3261,7 @@ def pr_pentity_represent(id, row=None, show_label=True,
         s3db = current.s3db
         pe_table = s3db.pr_pentity
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
     else:
         db = current.db
         s3db = current.s3db
@@ -3331,7 +3332,7 @@ def pr_person_represent(id, row=None, show_link=False):
         name = s3_fullname(row)
         id = row.id
     elif not id:
-        return current.messages.NONE
+        return current.messages["NONE"]
     else:
         name = current.cache.ram("pr_person_%s" % id,
                                  lambda: s3_fullname(id),
@@ -3351,6 +3352,54 @@ def pr_person_represent(id, row=None, show_link=False):
         name = A(name,
                  _href = URL(c=controller, f="person", args=[id]))
     return name
+
+# =============================================================================
+def pr_person_phone_represent(id, show_link=True):
+    """
+        Represent a Person with their phone number
+
+        @param show_link: whether to make the output into a hyperlink
+    """
+
+    if not id:
+        return current.messages["NONE"]
+
+    s3db = current.s3db
+    ptable = s3db.pr_person
+    ctable = s3db.pr_contact
+    query = (ptable.id == id)
+    left = ctable.on((ctable.pe_id == ptable.pe_id) & \
+                     (ctable.contact_method == "SMS"))
+    row = current.db(query).select(ptable.first_name,
+                                   ptable.middle_name,
+                                   ptable.last_name,
+                                   ctable.value,
+                                   left=left,
+                                   limitby=(0, 1)).first()
+
+    try:
+        person = row["pr_person"]
+    except:
+        return current.messages.UNKNOWN_OPT
+
+    repr = s3_fullname(person)
+    if row.pr_contact.value:
+        repr = "%s %s" % (repr, row.pr_contact.value)
+    if show_link:
+        request = current.request
+        group = request.get_vars.get("group", None)
+        c = request.controller
+        if group == "staff" or \
+           c == "hrm":
+            controller = "hrm"
+        elif group == "volunteer" or \
+             c == "vol":
+            controller = "vol"
+        else:
+            controller = "pr"
+        repr = A(repr,
+                 _href = URL(c=controller, f="person", args=[id, "contact"]))
+    return repr
 
 # =============================================================================
 def pr_person_comment(title=None, comment=None, caller=None, child=None):
@@ -4842,7 +4891,7 @@ def pr_url_represent(url):
     """ Representation """
 
     if not url:
-        return current.messages.NONE
+        return current.messages["NONE"]
     parts = url.split("/")
     image = parts[-1]
     size = (None, 60)

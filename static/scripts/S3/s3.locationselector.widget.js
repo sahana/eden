@@ -31,14 +31,16 @@ function s3_gis_locationselector_jQuery_onReady() {
         }
 
         // Load Google API for Geocoder
-        try {
-            if (google && S3.gis.geocoder) {
-                // Google already loaded, so don't load again
-                s3_gis_initGeocoder();
-            } else if (S3.gis.geocoder) {
+        if (S3.gis.geocoder) {
+            try {
+                if (google) {
+                    s3_gis_initGeocoder();
+                }
+            } catch(err) {
+                // Google not yet loaded, so load
                 s3_gis_loadGoogle();
             }
-        } catch(err) {};
+        }
 
         // Set initial Autocompletes
         s3_gis_autocompletes();
@@ -646,7 +648,7 @@ function s3_gis_l0_select() {
         success: function(data) {
             if (data.id == L0) {
                 // Store the code (for the Geocoder)
-                S3.gis.country = data.code
+                S3.gis.country = data.code;
                 // Read which hierarchy levels we have & their labels
                 for (level = 1; level < 6; level++) {
                     var _level = 'L' + level;
@@ -713,7 +715,6 @@ function s3_gis_l0_select() {
     $('#gis_location_L4_ac').autocomplete('option', 'source', s3_gis_ac_set_source(4));
     $('#gis_location_L5_ac').autocomplete('option', 'source', s3_gis_ac_set_source(5));
 }
-
 
 function s3_gis_zoomMap(left, bottom, right, top) {
     // Zoom the Map to the specified bounds
@@ -1190,119 +1191,149 @@ function s3_gis_loadGoogle() {
     document.body.appendChild(script);
 }
 function s3_gis_initGeocoder() {
-    // Do Geocoder lookups if changes made to Street Address, Postcode & L3
-    $('#gis_location_street').blur( function() {
-        s3_gis_geocode();
-    });
-    $('#gis_location_postcode').blur( function() {
-        s3_gis_geocode();
-    });
-    $('#gis_location_L3_ac').blur( function() {
-        s3_gis_geocode();
-    });
+    try {
+        if (google) {
+            // Active Geocoder request
+            $('#gis_location_geocoder-btn').click(function() {
+                //var url = 'http://maps.googleapis.com/maps/api/geocode/xml?sensor=false&address=';
+                var latlon = s3_gis_geocode();
+                $('#gis_location_lat').val(latlon[0]);
+                $('#gis_location_lon').val(latlon[1]);
+            });
+
+            // Do Geocoder lookups if changes made to Street Address, Postcode & L3
+            $('#gis_location_street').blur(function() {
+                // Address has been changed - do a Geocoder lookup
+                var lat = $('#gis_location_lat').val();
+                var lon = $('#gis_location_lon').val();
+                // Only do the Geocoder lookup if we don't already have LatLon
+                if (!lat && !lon) {
+                    s3_gis_geocode();
+                }
+            });
+            $('#gis_location_postcode').blur(function() {
+                // Address has been changed - do a Geocoder lookup
+                var lat = $('#gis_location_lat').val();
+                var lon = $('#gis_location_lon').val();
+                // Only do the Geocoder lookup if we don't already have LatLon
+                if (!lat && !lon) {
+                    s3_gis_geocode();
+                }
+            });
+            $('#gis_location_L3_ac').blur(function() {
+                // Address has been changed - do a Geocoder lookup
+                var lat = $('#gis_location_lat').val();
+                var lon = $('#gis_location_lon').val();
+                // Only do the Geocoder lookup if we don't already have LatLon
+                if (!lat && !lon) {
+                    s3_gis_geocode();
+                }
+            });
+        }
+    } catch(err) {
+        // Hide Geocoder button
+        $('#gis_location_geocoder-btn').hide();
+    }
 }
 function s3_gis_geocode() {
-    // Address has been changed - do a Geocoder lookup
-    var lat = $('#gis_location_lat').val();
-    var lon = $('#gis_location_lon').val();
-    // Only do the Geocoder lookup if we don't already have LatLon
-    if (!lat && !lon) {
-        // Read the Street Address
-        var address = $('#gis_location_street').val();
-        if (address) {
-            // Strip the leading digits as they cause NO_RESULTS
-            var start = address.search(/[A-z]/);
-            address = address.substr(start);
-        }
-        // Read Postcode to be able to fine-tune the results
-        var postcode = $('#gis_location_postcode').val();
-        if (postcode) {
-            address += ' ' + postcode
-        }
-        // Read any Lx set to be able to fine-tune the results
-        var L5 = $('#gis_location_L5_ac').val();
-        if (L5) {
-            address += ' ' + L5
-        }
-        var L4 = $('#gis_location_L4_ac').val();
-        if (L4) {
-            address += ' ' + L4
-        }
-        var L3 = $('#gis_location_L3_ac').val();
-        if (L3) {
-            address += ' ' + L3
-        }
-        var L2 = $('#gis_location_L2_ac').val();
-        if (L2) {
-            address += ' ' + L2
-        }
-        var L1 = $('#gis_location_L1_ac').val();
-        if (L1) {
-            address += ' ' + L1
-        }
-        // Build the Query
-        var query = { 'address': address }
-        // Restrict results to the country if we have it available.
-        if (S3.gis.country) {
-            query['region'] = S3.gis.country;
-        }
-        // @ToDo: Restrict results to the bounds if we have them available.
-        //if () {
-        //    // Convert to LatLngBounds
-        //    var myLatLngBounds;
-        //    query['bounds'] = myLatLngBounds;
-        //}
-        // Query the Geocoder service
-        var geocoder = new google.maps.Geocoder();
-        geocoder.geocode( query, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-
-                // Parse the returned Location
-                var myLatLng = results[0].geometry.location;
-                // Convert to OpenLayers format
-                var lat = myLatLng.lat();
-                var lon = myLatLng.lng();
-                var newPoint = new OpenLayers.LonLat(lon, lat);
-
-                var myLatLngBounds = results[0].geometry.viewport;
-                if (myLatLngBounds) {
-                    // Zoom to the Viewport (Bounds)
-                    var northEast = myLatLngBounds.getNorthEast();
-                    var southWest = myLatLngBounds.getSouthWest();
-                    var left = southWest.lng();
-                    var bottom = southWest.lat();
-                    var right = northEast.lng();
-                    var top = northEast.lat();
-                    s3_gis_zoomMap(left, bottom, right, top);
-                } else if (S3.gis.mapWin.rendered) {
-                    // Map has been opened, so center directly
-                    newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
-                    map.setCenter(newPoint);
-                } else {
-                    // Map hasn't yet been opened, so change the mapPanel ready for when it is
-                    S3.gis.mapPanel.center = newPoint;
-                }
-
-                // @ToDo: Set the Marker to the center of this viewport?
-                // Better to let the user do this manually?
-                //var marker = new google.maps.Marker({
-                //    map: map,
-                //    position: results[0].geometry.location
-                //});
-
-                // @ToDo: Populate the Lx Hierarchy
-                //var L1 = $('#gis_location_L1_ac').val();
-                //if (!L1) {
-                    //results[0].address_components administrative_area_level_1
-                //}
-                // results[0].address_components postal_code
-
-            } else {
-                // @ToDo: Visible notification?
-                s3_debug('Geocode was not successful for the following reason', status);
-            }
-        });
+    // Read the Street Address
+    var address = $('#gis_location_street').val();
+    if (address) {
+        // Strip the leading digits as they cause NO_RESULTS
+        var start = address.search(/[A-z]/);
+        address = address.substr(start);
     }
+    // Read Postcode to be able to fine-tune the results
+    var postcode = $('#gis_location_postcode').val();
+    if (postcode) {
+        address += ', ' + postcode;
+    }
+    // Read any Lx set to be able to fine-tune the results
+    var L5 = $('#gis_location_L5_ac').val();
+    if (L5) {
+        address += ', ' + L5;
+    }
+    var L4 = $('#gis_location_L4_ac').val();
+    if (L4) {
+        address += ', ' + L4;
+    }
+    var L3 = $('#gis_location_L3_ac').val();
+    if (L3) {
+        address += ', ' + L3;
+    }
+    var L2 = $('#gis_location_L2_ac').val();
+    if (L2) {
+        address += ', ' + L2;
+    }
+    var L1 = $('#gis_location_L1_ac').val();
+    if (L1) {
+        address += ', ' + L1;
+    }
+    // Build the Query
+    var query = { 'address': address }
+    // Restrict results to the country if we have it available.
+    if (S3.gis.country) {
+        query['region'] = S3.gis.country;
+    }
+    // @ToDo: Restrict results to the bounds if we have them available.
+    //if () {
+    //    // Convert to LatLngBounds
+    //    var myLatLngBounds;
+    //    query['bounds'] = myLatLngBounds;
+    //}
+    // Query the Geocoder service
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode(query, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+
+            // Parse the returned Location
+            var myLatLng = results[0].geometry.location;
+            // Convert to OpenLayers format
+            var lat = myLatLng.lat();
+            var lon = myLatLng.lng();
+            var newPoint = new OpenLayers.LonLat(lon, lat);
+
+            var myLatLngBounds = results[0].geometry.viewport;
+            if (myLatLngBounds) {
+                // Zoom to the Viewport (Bounds)
+                var northEast = myLatLngBounds.getNorthEast();
+                var southWest = myLatLngBounds.getSouthWest();
+                var left = southWest.lng();
+                var bottom = southWest.lat();
+                var right = northEast.lng();
+                var top = northEast.lat();
+                s3_gis_zoomMap(left, bottom, right, top);
+            } else if (S3.gis.mapWin.rendered) {
+                // Map has been opened, so center directly
+                newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
+                map.setCenter(newPoint);
+            } else {
+                // Map hasn't yet been opened, so change the mapPanel ready for when it is
+                S3.gis.mapPanel.center = newPoint;
+            }
+
+            // @ToDo: Set the Marker to the center of this viewport?
+            // Better to let the user do this manually?
+            //var marker = new google.maps.Marker({
+            //    map: map,
+            //    position: results[0].geometry.location
+            //});
+
+            // @ToDo: Populate the Lx Hierarchy
+            //var L1 = $('#gis_location_L1_ac').val();
+            //if (!L1) {
+                //results[0].address_components administrative_area_level_1
+            //}
+            // results[0].address_components postal_code
+
+            // Return for active Geocodes
+            return [lat, lon];
+
+        } else {
+            // @ToDo: Visible notification?
+            s3_debug('Geocode was not successful for the following reason', status);
+        }
+    });
 }
 
 // Save

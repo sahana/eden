@@ -366,7 +366,7 @@ class S3DelphiModel(S3Model):
                                             table.name,
                                             limitby = (0, 1)).first()
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         try:
             return A(row.name,
@@ -389,7 +389,7 @@ class S3DelphiModel(S3Model):
                                             table.name,
                                             limitby = (0, 1)).first()
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         try:
             if show_link:
@@ -411,7 +411,7 @@ class S3DelphiModel(S3Model):
         if row:
             return row.name
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.delphi_solution

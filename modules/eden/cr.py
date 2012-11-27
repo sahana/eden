@@ -261,7 +261,7 @@ class S3CampDataModel(S3Model):
                              Field("obsolete", "boolean",
                                    label = T("Obsolete"),
                                    represent = lambda bool: \
-                                     (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                     (bool and [T("Obsolete")] or [messages["NONE"]])[0],
                                    default = False,
                                    readable = False,
                                    writable = False),
@@ -555,7 +555,7 @@ class S3CampDataModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.cr_shelter
@@ -600,7 +600,7 @@ class S3CampDataModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.cr_shelter_type
@@ -637,7 +637,7 @@ class S3CampDataModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.cr_shelter_service
@@ -654,7 +654,7 @@ class S3CampDataModel(S3Model):
         """
         """
         if not shelter_service_ids:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.cr_shelter_service

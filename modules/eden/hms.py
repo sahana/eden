@@ -931,7 +931,7 @@ class HospitalDataModel(S3Model):
         if row:
             return row.name
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.hms_hospital
@@ -1300,7 +1300,7 @@ class HMSHospitalVirtualFields:
         if r:
             return s3_unicode(field.represent(r.facility_status))
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
 # =============================================================================
 def hms_hospital_rheader(r, tabs=[]):
@@ -1358,7 +1358,7 @@ def hms_hospital_rheader(r, tabs=[]):
             status = lambda k: (s is not None and
                                 [stable[k].represent(s[k])] or
                                 [T("n/a")])[0]
-            NONE = current.messages.NONE
+            NONE = current.messages["NONE"]
             total_beds = hospital.total_beds
             if total_beds is None:
                 total_beds = NONE

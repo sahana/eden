@@ -71,7 +71,7 @@ class S3ProcurementModel(S3Model):
         # =====================================================================
         # Planned Procurements
         #
-        proc_shipping_opts = { 0: messages.NONE,
+        proc_shipping_opts = { 0: messages["NONE"],
                                1: T("Air"),
                                2: T("Rail"),
                                3: T("Road"),
@@ -267,7 +267,7 @@ class S3ProcurementModel(S3Model):
         if row:
             table = current.db.proc_plan
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             db = current.db
             table = db.proc_plan

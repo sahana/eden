@@ -142,6 +142,7 @@ def staff():
                 site_id = request.get_vars.get("site_id", None)
                 if site_id:
                     table.site_id.default = site_id
+                    table.site_id.writable = False
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
 
@@ -780,7 +781,6 @@ def staff_org_site_json():
 
     table = s3db.hrm_human_resource
     otable = s3db.org_organisation
-    #db.req_commit.date.represent = lambda dt: dt[:10]
     query = (table.person_id == request.args[0]) & \
             (table.organisation_id == otable.id)
     records = db(query).select(table.site_id,
@@ -789,6 +789,43 @@ def staff_org_site_json():
 
     response.headers["Content-Type"] = "application/json"
     return records.json()
+
+# =============================================================================
+def staff_for_site():
+    """
+        Used by the Req/Req/Create page
+    """
+
+    try:
+        site_id = request.get_vars.get("staff.site_id")
+    except:
+        result = current.xml.json_message(False, 400, "No Site provided!")
+    else:
+        table = s3db.hrm_human_resource
+        ptable = db.pr_person
+        query = (table.site_id == site_id) & \
+                (table.deleted == False) & \
+                (table.status == 1) & \
+                ((table.end_date == None) | \
+                 (table.end_date > request.utcnow)) & \
+                (ptable.id == table.person_id)
+        rows = db(query).select(table.id,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
+                                orderby=ptable.first_name)
+        result = []
+        append = result.append
+        for row in rows:
+            id = row.hrm_human_resource.id
+            append({
+                    "id"   : id,
+                    "name" : s3_fullname(row.pr_person)
+                })
+        result = json.dumps(result)
+
+    response.headers["Content-Type"] = "application/json"
+    return result
 
 # =============================================================================
 # Messaging

@@ -94,7 +94,7 @@ class S3SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        NONE = current.messages.NONE
+        NONE = current.messages["NONE"]
 
         # =====================================================================
         # Brand
@@ -475,7 +475,7 @@ S3FilterFieldChange({
         add_component("inv_inv_item", supply_item="item_id")
 
         # Order Items as component of Items
-        add_component("inv_recv_item", supply_item="item_id")
+        add_component("inv_track_item", supply_item="item_id")
 
         # Procurement Plan Items as component of Items
         add_component("proc_plan_item", supply_item="item_id")
@@ -793,7 +793,7 @@ S3OptionsFilter({
         #
         item_types = Storage(
                             inv_inv_item = T("Warehouse Stock"),
-                            inv_recv_item = T("Order Item"),
+                            inv_track_item = T("Order Item"),
                             proc_plan_item = T("Planned Procurement Item"),
                             )
 
@@ -934,7 +934,7 @@ S3OptionsFilter({
             # @ToDo: Optimise so we don't need to do the first query
             item_category_id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
         else:
             item_category_id = id
 
@@ -984,7 +984,7 @@ S3OptionsFilter({
         """
 
         if not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
 
@@ -1004,7 +1004,7 @@ S3OptionsFilter({
         T = current.T
         if instance_type == "inv_inv_item":
             item_str = T("In Stock")
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             s3db = current.s3db
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1032,7 +1032,7 @@ S3OptionsFilter({
             # @ToDo: Optimised query where we don't need to do the join
             id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.supply_item
@@ -1080,7 +1080,7 @@ S3OptionsFilter({
             # @ToDo: Optimised query where we don't need to do the join
             id = row.id
         elif not id:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         db = current.db
         table = db.supply_item_pack
@@ -1319,7 +1319,7 @@ def supply_item_rheader(r):
                                     table.brand_id.represent(item.brand_id),
                                   ),
                                 TR( TH("%s: " % table.model.label),
-                                    item.model or current.messages.NONE,
+                                    item.model or current.messages["NONE"],
                                   ),
                                ),
                           rheader_tabs
@@ -1342,10 +1342,8 @@ class SupplyItemPackVirtualFields(dict, object):
                 item_pack = self.req_req_item.item_pack_id
             elif self.tablename == "req_commit_item":
                 item_pack = self.req_commit_item.item_pack_id
-            elif self.tablename == "inv_recv_item":
-                item_pack = self.inv_recv_item.item_pack_id
-            elif self.tablename == "inv_send_item":
-                item_pack = self.inv_send_item.item_pack_id
+            elif self.tablename == "inv_track_item":
+                item_pack = self.inv_track_item.item_pack_id
             else:
                 item_pack = None
         except AttributeError:
@@ -1379,7 +1377,7 @@ class item_entity_virtualfields:
         if record:
             return table.item_category_id.represent(record.item_category_id)
         else:
-            return current.messages.NONE
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def country(self):
@@ -1401,7 +1399,7 @@ class item_entity_virtualfields:
                                               limitby=(0, 1)).first()
             if record:
                 country = record.L0 or current.T("Unknown")
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             tablename = instance_type
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1435,8 +1433,8 @@ class item_entity_virtualfields:
                 country = record.L0 or current.T("Unknown")
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
-        return country or current.messages.NONE
+            return current.messages["NONE"]
+        return country or current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def organisation(self):
@@ -1476,7 +1474,7 @@ class item_entity_virtualfields:
             if record:
                 organisation = organisation_represent(record.organisation_id,
                                                       acronym=False)
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             tablename = instance_type
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1495,13 +1493,13 @@ class item_entity_virtualfields:
                                                       acronym=False)
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
-        return organisation or current.messages.NONE
+            return current.messages["NONE"]
+        return organisation or current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     #def site(self):
     def contacts(self):
-        #site = current.messages.NONE
+        #site = current.messages["NONE"]
         s3db = current.s3db
         etable = s3db.supply_item_entity
         instance_type = self.supply_item_entity.instance_type
@@ -1515,7 +1513,7 @@ class item_entity_virtualfields:
                 return None
             record = current.db(query).select(itable.site_id,
                                               limitby=(0, 1)).first()
-        elif instance_type == "inv_recv_item":
+        elif instance_type == "inv_track_item":
             tablename = instance_type
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
@@ -1541,7 +1539,7 @@ class item_entity_virtualfields:
                                       limitby=(0, 1)).first()
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
+            return current.messages["NONE"]
 
         #site = s3db.org_site_represent(record.site_id)
         #return site
@@ -1556,12 +1554,12 @@ class item_entity_virtualfields:
             if record.comments:
                 return record.comments
             else:
-                return current.messages.NONE
+                return current.messages["NONE"]
         elif record.comments:
             comments = s3_comments_represent(record.comments,
                                              show_link=False)
         else:
-            comments = current.messages.NONE
+            comments = current.messages["NONE"]
         return A(comments,
                  _href = URL(f="office",
                              args = [record.id]))
@@ -1626,8 +1624,8 @@ class item_entity_virtualfields:
                     status = T("On Order")
         else:
             # @ToDo: Assets and req_items
-            return current.messages.NONE
-        return status or current.messages.NONE
+            return current.messages["NONE"]
+        return status or current.messages["NONE"]
 
 # =============================================================================
 def supply_item_controller():
