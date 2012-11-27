@@ -1322,7 +1322,7 @@ i18n.edit_saved_search="%s"
                     if "clear_opts" in r.get_vars:
                         session_options = Storage()
                     else:
-                        session_options = session_options[tablename]
+                        session_options = session_options[tablename] or Storage()
                 else:
                     # unfiltered
                     session_options = Storage()

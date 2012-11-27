@@ -1123,8 +1123,12 @@ class S3TrackingModel(S3Model):
                    action=self.inv_send_form)
 
         # Redirect to the Items tabs after creation
-        send_item_url = URL(c="inv", f="send", args=["[id]",
-                                                     "track_item"])
+        if current.request.controller == "req":
+            c = "req"
+        else:
+            c = "inv"
+        send_item_url = URL(c=c, f="send", args=["[id]",
+                                                 "track_item"])
 
         list_fields = ["id",
                        "send_ref",

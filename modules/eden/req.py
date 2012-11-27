@@ -447,6 +447,7 @@ class S3RequestModel(S3Model):
 
         #if len(settings.get_req_req_type()) > 1:
         #    list_fields.append("type")
+        list_fields.append((T("Drivers"), "drivers"))
         list_fields.append("priority")
         list_fields.append((T("Details"), "details"))
         if use_commit:
@@ -2991,10 +2992,12 @@ def req_details_field(row):
 # =============================================================================
 class ReqVirtualFields:
     """
-        Virtual fields for Requests to show Details
+        Virtual fields for Requests to show Item Details & Driver
     """
 
-    extra_fields = ["type"]
+    extra_fields = ["req_ref",
+                    "type",
+                    ]
 
     # -------------------------------------------------------------------------
     def details(self):
@@ -3018,7 +3021,7 @@ class ReqVirtualFields:
             items = current.db(query).select(itable.name,
                                              ltable.quantity)
             if items:
-                items = ["%s %s" % (item.req_req_item.quantity, item.supply_item.name) for item in items]
+                items = ["%s %s" % (int(item.req_req_item.quantity), item.supply_item.name) for item in items]
                 return ",".join(items)
 
         elif type == 3:
@@ -3030,8 +3033,39 @@ class ReqVirtualFields:
                                               ltable.quantity)
             if skills:
                 represent = s3_represent_multi_id(s3db.hrm_skill)
-                skills = ["%s %s" % (skill.quantity, represent(skill.skill_id)) for skill in skills]
+                skills = ["%s %s" % (skill.quantity,
+                                     represent(skill.skill_id)) \
+                          for skill in skills]
                 return ",".join(skills)
+
+        return current.messages["NONE"]
+
+# -------------------------------------------------------------------------
+    def drivers(self):
+        """
+            Show the driver(s) details
+        """
+
+        try:
+            req_ref = self.req_req.req_ref
+            type = self.req_req.type
+        except AttributeError:
+            return None
+
+        if type == 1:
+            s3db = current.s3db
+            stable = s3db.inv_send
+            query = (stable.deleted != True) & \
+                    (stable.req_ref == req_ref)
+            drivers = current.db(query).select(stable.driver_name,
+                                               stable.driver_phone,
+                                               stable.vehicle_plate_no)
+            if drivers:
+                drivers = ["%s %s %s" % (driver.driver_name,
+                                         driver.driver_phone,
+                                         driver.vehicle_plate_no) \
+                           for driver in drivers]
+                return ",".join(drivers)
 
         return current.messages["NONE"]
 
