@@ -1326,7 +1326,6 @@ class S3Config(Storage):
             Select one or more from:
             * People
             * Stock
-            * Summary
             * Other
             tbc: Assets, Shelter, Food
         """

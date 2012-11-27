@@ -1060,7 +1060,7 @@ class S3QuestionModel(S3Model):
             survey_updateMetaData(record,
                                   vars.type,
                                   vars.metadata
-                                 )
+                                  )
 
     # -------------------------------------------------------------------------
     @staticmethod

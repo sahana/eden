@@ -389,7 +389,7 @@ settings.L10n.decimal_separator = "."
 #settings.req.req_form_name = "Request Issue Form"
 #settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
-# list are ["Stock", "People", "Summary", "Other"]. If this is commented out then
+# list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
 #settings.req.req_type = ["Stock"]
 

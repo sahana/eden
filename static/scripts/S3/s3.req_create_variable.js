@@ -35,26 +35,6 @@ $(document).ready(function() {
         }
     }
 
-    function type_8() {
-        // Summary
-        $('#req_req_date_required_until__row1').hide();
-        $('#req_req_date_required_until__row').hide();
-        $('#req_req_site_id__row1 label').html(i18n.req_site_id + ':' + span);
-        $('#req_req_request_for_id__row1 label').html(i18n.req_request_for_id + ':');
-        $('#req_req_recv_by_id__row1 label').html(i18n.req_recv_by_id + ':');
-        if (($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
-            $('#req_req_comments').val('');
-        }
-        // Replace the Purpose field with a list of checkboxes
-        $('#req_req_purpose__row1').hide();
-        $('#req_req_purpose__row').hide();
-        for (var i=0; i < req_summary_items.length; i++) {
-            var item = req_summary_items[i];
-            var row = '<tr class="summary_item"><td>' + item + '</td><td><input type="checkbox" id="req_summary_' + idescape(item) + '"></td></tr>';
-            $('#req_req_purpose__row').after(row);
-        }
-    }
-
     function type_next(type) {
         // Items or People/Skills
         if (type == 1) {
@@ -97,8 +77,6 @@ $(document).ready(function() {
     var type = $('#req_req_type').val();
     if (type == 9) {
         type_9();
-    } else if (type == 8) {
-        type_8();
     } else {
         type_next(type);
     }
@@ -108,8 +86,6 @@ $(document).ready(function() {
         var type = $('#req_req_type').val();
         if (type == 9) {
             type_9();
-        } else if (type == 8) {
-            type_8();
         } else {
             type_next(type);
         }
