@@ -316,7 +316,7 @@ class S3Report(S3CRUD):
                 else:
                     items = self.crud_string(tablename, "msg_no_match")
 
-                report_options = self._config("report_options", None)
+                report_options = self._config("report_options", Storage())
 
                 # Display options
 
@@ -417,6 +417,11 @@ class S3Report(S3CRUD):
         filter_options = self._filter_options(form_values)
         report_options, hidden = self._report_options(form_values)
 
+        if filter_options is None:
+            filter_options = ""
+        if report_options is None:
+            report_options = ""
+        
         form = FORM(filter_options,
                     report_options,
                     DIV(INPUT(_value=current.T("Submit"),
