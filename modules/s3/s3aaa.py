@@ -2312,7 +2312,8 @@ Thank you
             query = (mtable.deleted != True) & \
                     (mtable.user_id == user_id) & \
                     (mtable.group_id != None)
-            rows = db(query).select(mtable.group_id, mtable.pe_id)
+            rows = db(query).select(mtable.group_id, mtable.pe_id,
+                                    cacheable=True)
 
             # Add all group_ids to session.s3.roles
             session.s3.roles.extend(list(set([row.group_id for row in rows])))
@@ -2393,7 +2394,8 @@ Thank you
                                 (rtable.id == dtable.role_id)
                         rows = db(query).select(rtable.pe_id,
                                                 dtable.group_id,
-                                                atable.pe_id)
+                                                atable.pe_id,
+                                                cacheable=True)
 
                         extensions = []
                         partners = []
@@ -5279,7 +5281,7 @@ class S3Permission(object):
         if q:
             query &= q
             query &= (table.group_id == gtable.id)
-            rows = db(query).select(gtable.id, table.ALL)
+            rows = db(query).select(gtable.id, table.ALL, cacheable=True)
         else:
             rows = []
 

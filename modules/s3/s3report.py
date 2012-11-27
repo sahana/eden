@@ -211,9 +211,18 @@ class S3Report(S3CRUD):
                 form.vars = form_values
 
             # Use the form values to generate the filter
-            query, errors = self._process_filter_options(form)
+            dq, vq, errors = self._process_filter_options(form)
             if not errors:
-                self.resource.add_filter(query)
+                self.resource.add_filter(dq)
+                self.resource.add_filter(vq)
+                query = dq
+                if vq is not None:
+                    if query is not None:
+                        query &= vq
+                    else:
+                        query = vq
+            else:
+                query = None
 
         else:
             query = None
@@ -740,7 +749,7 @@ class S3Report(S3CRUD):
             @return: tuple containing (query object, validation errors)
         """
 
-        default = (None, None)
+        default = (None, None, None)
 
         report_options = self._config("report_options", None)
         if not report_options:
@@ -751,7 +760,7 @@ class S3Report(S3CRUD):
             return default
 
         resource = self.resource
-        query, errors = default
+        dq, vq, errors = default
         build_query = S3Search._build_widget_query
         for widget in filter_widgets:
             if hasattr(widget, "name"):
@@ -759,12 +768,12 @@ class S3Report(S3CRUD):
             else:
                 name = widget.attr.get("_name", None)
 
-            query, errors = build_query(resource, name, widget, form, query)
+            dq, vq, errors = build_query(resource, name, widget, form, dq, vq)
             if errors:
                 form.errors.update(errors)
 
         errors = form.errors
-        return (query, errors)
+        return (dq, vq, errors)
 
     # -------------------------------------------------------------------------
     @staticmethod

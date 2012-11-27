@@ -2946,7 +2946,7 @@ class S3HRProgrammeModel(S3Model):
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)
-            
+
         represent = s3_represent_id(table)
         programme_id = S3ReusableField("programme_id", table,
                                 sortby = "name",
@@ -4546,11 +4546,11 @@ def hrm_configure_pr_group_membership():
     s3 = current.response.s3
     s3db = current.s3db
     T = current.T
-    
+
     mtable = s3db.pr_group_membership
     mtable.group_id.label = T("Team ID")
     mtable.group_head.label = T("Team Leader")
-    
+
     s3.crud_strings["pr_group_membership"] = Storage(
         title_create = T("Add Member"),
         title_display = T("Membership Details"),
@@ -4578,7 +4578,7 @@ def hrm_group_controller():
         - uses the group table from PR
     """
     s3 = current.response.s3
-    
+
     s3db = current.s3db
     T = current.T
     tablename = "pr_group"
@@ -4619,7 +4619,7 @@ def hrm_group_controller():
                     # Redirect to member list when a new group has been created
                     create_next = URL(f="group",
                                       args=["[id]", "group_membership"]))
-    
+
     hrm_configure_pr_group_membership()
 
     # Post-process
