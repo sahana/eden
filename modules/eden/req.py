@@ -159,7 +159,7 @@ class S3RequestModel(S3Model):
         #        site_widget = S3SiteAutocompleteWidget()
         #    site_comment = DIV(_class="tooltip",
         #                       _title="%s|%s" % (T("Requested By Facility"),
-        #                                         T("Enter some characters to bring up a list of possible matches")))          
+        #                                         T("Enter some characters to bring up a list of possible matches")))
         #else:
         site_widget = None
         site_comment = None
@@ -700,11 +700,11 @@ S3OptionsFilter({
                       ]
             if method == "update":
                 if settings.get_req_status_writable():
-                    fields.insert(7, "fulfil_status")               
+                    fields.insert(7, "fulfil_status")
                     if settings.get_req_show_quantity_transit():
-                        fields.insert(7, "transit_status")               
+                        fields.insert(7, "transit_status")
                     if settings.get_req_use_commit():
-                        fields.insert(7, "commit_status")               
+                        fields.insert(7, "commit_status")
                 fields.insert(7, "date_recv")
             if settings.get_req_items_ask_purpose():
                 fields.insert(6, "purpose")
@@ -742,11 +742,11 @@ S3OptionsFilter({
                       ]
             if method == "update":
                 if settings.get_req_status_writable():
-                    fields.insert(8, "fulfil_status")               
+                    fields.insert(8, "fulfil_status")
                     if settings.get_req_show_quantity_transit():
-                        fields.insert(8, "transit_status")               
+                        fields.insert(8, "transit_status")
                     if settings.get_req_use_commit():
-                        fields.insert(8, "commit_status")               
+                        fields.insert(8, "commit_status")
                 fields.insert(8, "date_recv")
             else:
                 fields.insert(1, "is_template")
@@ -1561,7 +1561,7 @@ S3FilterFieldChange({
         """
             Update the
         """
-        h 
+        h
     # -------------------------------------------------------------------------
     @staticmethod
     def req_item_duplicate(job):
@@ -2421,7 +2421,7 @@ class S3CommitItemModel(S3Model):
         if not req:
             return
         req_id = req.req_id
-        
+
         # Get the full list of items in the request
         query = (ritable.req_id == req_id) & \
                 (ritable.deleted == False)
@@ -2704,7 +2704,7 @@ class S3CommitSkillModel(S3Model):
         if not req:
             return
         req_id = req.req_id
-        
+
         # Get the full list of skills in the request
         query = (rstable.req_id == req_id) & \
                 (rstable.deleted == False)
@@ -2791,9 +2791,9 @@ def req_item_ondelete(row):
 
     db = current.db
     ritable = db.req_req_item
-    item = db(ritable.id == row.id).select(ritable.deleted_fks,
+    item = db(ritable.id == row.id).select(ritable.deleted_fk,
                                            limitby=(0, 1)).first()
-    fks = json.loads(item.deleted_fks)
+    fks = json.loads(item.deleted_fk)
     req_id = fks["req_id"]
     item_id = fks["item_id"]
     sitable = db.supply_item
