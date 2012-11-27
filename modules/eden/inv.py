@@ -1140,8 +1140,9 @@ class S3TrackingModel(S3Model):
                        "delivery_date",
                        "to_site_id",
                        "status",
-                       "vehicle_plate_no",
                        "driver_name",
+                       "driver_phone",
+                       "vehicle_plate_no",
                        "time_out",
                        "comments"
                        ]
@@ -3140,12 +3141,21 @@ def inv_send_rheader(r):
             stable = s3db.org_site
             if site_id:
                 site = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                            stable.phone1,
-                                                            stable.phone2,
-                                                            limitby=(0, 1)).first()
+                                                            stable.instance_type,
+                                                            limitby=(0, 1)
+                                                            ).first()
                 org_id = site.organisation_id
-                phone1 = site.phone1
-                phone2 = site.phone2
+                instance_table = s3db[site.instance_type]
+                if "phone1" in instance_table.fields:
+                    site = db(instance_table.site_id == site_id).select(instance_table.phone1,
+                                                                        instance_table.phone2,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+                    phone1 = site.phone1
+                    phone2 = site.phone2
+                else:
+                    phone1 = None
+                    phone2 = None
             else:
                 org_id = None
                 phone1 = None
