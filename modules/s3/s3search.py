@@ -1528,6 +1528,8 @@ i18n.edit_saved_search="%s"
         # Store search options in session (do this only here after the
         # search has successfully returned a result - prevent re-run of
         # unsuccessful options whenever the user opens the search page)
+        if "search_options" not in session.s3:
+            session.s3.search_options = Storage()
         session.s3.search_options[tablename] = s3.search_options[tablename]
 
         # View
