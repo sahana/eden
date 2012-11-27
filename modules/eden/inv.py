@@ -2653,7 +2653,8 @@ $(document).ready(function(){
         record = form.record
 
         if form.vars.send_inv_item_id:
-            stock_item = db(inv_item_table.id == form.vars.send_inv_item_id).select(inv_item_table.quantity,
+            stock_item = db(inv_item_table.id == form.vars.send_inv_item_id).select(inv_item_table.id,
+                                                                                    inv_item_table.quantity,
                                                                                     inv_item_table.item_pack_id,
                                                                                     limitby=(0, 1)).first()
         elif record:
