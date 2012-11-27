@@ -2276,8 +2276,11 @@ Thank you
         session = current.session
         settings = current.deployment_settings
 
-        if "permissions" in current.response.s3:
-            del current.response.s3["permissions"]
+        s3 = current.response.s3
+        if "permissions" in s3:
+            del s3["permissions"]
+        if "restricted_tables" in s3:
+            del s3["restricted_tables"]
 
         system_roles = self.get_system_roles()
         ANONYMOUS = system_roles.ANONYMOUS
@@ -4285,8 +4288,11 @@ class S3Permission(object):
             # ACLs not relevant to this security policy
             return None
 
-        if "permissions" in current.response.s3:
-            del current.response.s3["permissions"]
+        s3 = current.response.s3
+        if "permissions" in s3:
+            del s3["permissions"]
+        if "restricted_tables" in s3:
+            del s3["restricted_tables"]
 
         if c is None and f is None and t is None:
             return None
@@ -5267,8 +5273,7 @@ class S3Permission(object):
                 q = q | tq
             else:
                 q = tq
-            any_acl = db((table.deleted != True) & tq).select(limitby=(0, 1))
-            table_restricted = len(any_acl) > 0
+            table_restricted = self.table_restricted(t)
 
         # Retrieve the ACLs
         if q:
@@ -5492,6 +5497,28 @@ class S3Permission(object):
              c in modules and not modules[c].restricted:
             return False
         return True
+
+    # -------------------------------------------------------------------------
+    def table_restricted(self, t=None):
+        """
+            Check whether access to a table is restricted
+
+            @param t: the table name or Table
+        """
+
+        s3 = current.response.s3
+
+        if not "restricted_tables" in s3:
+
+            table = self.table
+            query = (table.deleted != True) & \
+                    (table.controller == None) & \
+                    (table.function == None)
+            rows = current.db(query).select(table.tablename,
+                                            groupby=table.tablename)
+            s3.restricted_tables = [row.tablename for row in rows]
+
+        return str(t) in s3.restricted_tables
 
     # -------------------------------------------------------------------------
     def hidden_modules(self):

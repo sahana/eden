@@ -1719,6 +1719,7 @@ class AccessibleQueryTests(unittest.TestCase):
         # Remove session ownership
         auth.s3_clear_session_ownership()
         auth.s3_impersonate(None)
+
         settings.auth.record_approval = False
 
     # -------------------------------------------------------------------------
