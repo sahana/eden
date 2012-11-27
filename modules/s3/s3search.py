@@ -596,27 +596,17 @@ class S3SearchOptionsWidget(S3SearchWidget):
                             values = row[field]
                             if values:
                                 opt_extend([v for v in values
-                                            if v not in opt_values])
+                                            if v is not None and
+                                               v not in opt_values])
                     else:
                         for row in rows:
                             v = row[field]
-                            if v not in opt_values:
+                            if v is not None and v not in opt_values:
                                 opt_append(v)
 
         if len(opt_values) < 1:
             msg = attr.get("_no_opts", T("No options available"))
             return SPAN(msg, _class="no-options-available")
-
-        if field:
-            requires = field.requires
-            if not isinstance(requires, (tuple, list)):
-                requires = [requires]
-        else:
-            requires = [None]
-        if None not in opt_values and \
-           "" not in opt_values and \
-           not isinstance(requires[0], IS_NOT_EMPTY):
-            opt_values.append(None)
 
         if self.options is None:
             opt_list = []
@@ -664,9 +654,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_list = [(opt_value, s3_unicode(opt_value))
                             for opt_value in opt_values if opt_value]
 
-            options = OrderedDict([("__NONE__" if o is None else o, v) for o, v in opt_list])
-        else:
-            options = OrderedDict([("__NONE__" if o is None else o, v) for o, v in options.items()])
+            options = dict(opt_list)
 
         # Dummy field
         dummy_field = Storage(name=name,
@@ -694,6 +682,13 @@ class S3SearchOptionsWidget(S3SearchWidget):
                       value=self.filter_type),
                 LABEL(T("All"),
                       _for="%s_filter_all" % name),
+                INPUT(_name="%s_filter" % name,
+                      _id="%s_filter_none" % name,
+                      _type="radio",
+                      _value="none",
+                      value=self.filter_type),
+                LABEL(T("None"),
+                      _for="%s_filter_none" % name),
 
                 _class="s3-checkboxes-widget-filter"
             )
@@ -715,8 +710,13 @@ class S3SearchOptionsWidget(S3SearchWidget):
         """
 
         field_name = self.field
+        try:
+            filter_type = self.filter_type
+        except:
+            filter_type = None
+            
 
-        if value:
+        if value or filter_type == "none":
             if not isinstance(value, (list, tuple)):
                 value = [value]
 
@@ -728,18 +728,18 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 table_field = None
 
             query = None
-            if "__NONE__" in value:
+            if filter_type == "none":
                 if rfield.ftype in ("string", "text", "virtual") and \
                    "" not in value:
                     value.append("")
                 query = (fs == None)
-                value = [v for v in value if v not in ("__NONE__", None)]
+                value = [v for v in value if v != None]
 
             if table_field and rfield.ftype.startswith("list"):
                 if query is not None:
                     query |= (fs == [])
                 if value:
-                    if self.filter_type == "any":
+                    if filter_type == "any":
                         q = fs.anyof(value)
                     else:
                         q = fs.contains(value)

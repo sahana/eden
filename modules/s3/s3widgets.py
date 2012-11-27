@@ -3739,7 +3739,7 @@ def s3_checkboxes_widget(field,
             lookup_field = help_field
 
             if lookup_field in ktable.fields:
-                query = ktable[pkey].belongs([k for k, v in options])
+                query = ktable[pkey].belongs([k for k, v in options if k != "__NONE__"])
                 rows = current.db(query).select(ktable[pkey],
                                                 ktable[lookup_field]
                                                 )
