@@ -296,6 +296,7 @@ class S3RequestModel(S3Model):
                                   req_status("commit_status",
                                              readable = use_commit,
                                              writable = req_status_writable and use_commit,
+                                             represent = self.req_commit_status_represent,
                                              label = T("Commit. Status")),
                                   req_status("transit_status",
                                              label = T("Transit Status")),
@@ -443,6 +444,8 @@ class S3RequestModel(S3Model):
                        #"event_id",
                        ]
 
+        if settings.get_req_use_req_number():
+            list_fields.insert(1, "req_ref")
         #if len(settings.get_req_req_type()) > 1:
         #    list_fields.append("type")
         list_fields.append((T("Drivers"), "drivers"))
@@ -452,8 +455,6 @@ class S3RequestModel(S3Model):
             list_fields.append("commit_status")
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
-        if settings.get_req_use_req_number():
-            list_fields.append("req_ref")
 
         self.configure(tablename,
                        onaccept = self.req_onaccept,
@@ -806,10 +807,26 @@ S3OptionsFilter({
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def req_ref_represent(value, show_link=False):
+    def req_commit_status_represent(opt):
+        """
+            Represet the Commitment Status of the Request
+        """
+
+        if opt == REQ_STATUS_COMPLETE:
+            # Include the Site Name of the Committer if we can
+            # @ToDo: figure out how!
+            return SPAN(T("Complete"),
+                        _class = "req_status_complete")
+        else:
+            return req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_ref_represent(value, show_link=True, pdf=False):
         """
             Represent for the Request Reference
-            if show_link is True then it will generate a link to the pdf
+            if show_link is True then it will generate a link to the record
+            if pdf is True then it will generate a link to the PDF
         """
 
         if value:
@@ -820,11 +837,15 @@ S3OptionsFilter({
                                                             limitby=(0, 1)
                                                             ).first()
                 if req_row:
+                    if pdf:
+                        args = [req_row.id, "form"]
+                    else:
+                        args = [req_row.id]
                     return A(value,
                              _href = URL(c = "req", f = "req",
-                                         args = [req_row.id, "form"]
-                                        ),
-                            )
+                                         args = args
+                                         ),
+                             )
             return B(value)
 
         return current.messages["NONE"]
