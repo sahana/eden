@@ -198,11 +198,12 @@ class S3DateTimeWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
+        settings = current.deployment_settings
         if self.format:
             # default: "%Y-%m-%d %T"
             format = str(self.format)
         else:
-            format = str(current.deployment_settings.get_L10n_datetime_format())
+            format = str(settings.get_L10n_datetime_format())
         request = current.request
         s3 = current.response.s3
 
@@ -241,10 +242,11 @@ class S3DateTimeWidget(FormWidget):
             s3.scripts.append("%s/anytimec.js" % script_dir)
             s3.stylesheets.append("plugins/anytimec.css")
 
+        firstDOW = settings.get_L10n_firstDOW()
         s3.jquery_ready.append(
 '''$('#%(selector)s').AnyTime_picker({
  askSecond:false,
- firstDOW:1,
+ firstDOW:%(firstDOW)s,
  earliest:'%(earliest)s',
  latest:'%(latest)s',
  format:'%(format)s',
@@ -254,6 +256,7 @@ clear_button=$('<input type="button" value="clear"/>').click(function(e){
 })
 $('#%(selector)s').after(clear_button)''' % \
         dict(selector=selector,
+             firstDOW=firstDOW,
              earliest=earliest,
              latest=latest,
              format=format.replace("%M", "%i")))

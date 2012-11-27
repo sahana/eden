@@ -48,7 +48,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import S3DateTime, s3_get_foreign_key, s3_unicode
+from s3utils import s3_get_foreign_key, s3_unicode
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 from s3export import S3Exporter

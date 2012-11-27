@@ -518,6 +518,8 @@ class S3Config(Storage):
         return self.L10n.get("datetime_format", T("%Y-%m-%d %H:%M"))
     def get_L10n_utc_offset(self):
         return self.L10n.get("utc_offset", "UTC +0000")
+    def get_L10n_firstDOW(self):
+        return self.L10n.get("firstDOW", 1)
 
     def get_L10n_lat_lon_format(self):
         """

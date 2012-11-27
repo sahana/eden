@@ -255,7 +255,7 @@ class S3RequestModel(S3Model):
                                                                                             parent="req"),
                                                                                 title=crud_strings["hrm_staff"].title_create,
                                                                                 tooltip=T("Enter some characters to bring up a list of possible matches")),
-                                                    #default = auth.s3_logged_in_human_resource()
+                                                    default = auth.s3_logged_in_human_resource()
                                                     ),
                                   human_resource_id("assigned_to_id", # This field should be in req_commit, but that complicates the UI
                                                     readable = False,
@@ -361,6 +361,13 @@ class S3RequestModel(S3Model):
                 cols = 3,
             ),
             S3SearchOptionsWidget(
+                name="req_search_priority",
+                label=T("Priority"),
+                field="priority",
+                options = req_priority_opts,
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
                 name="req_search_type",
                 label=T("Type"),
                 field="type",
@@ -368,10 +375,9 @@ class S3RequestModel(S3Model):
                 cols = 3,
             ),
             S3SearchOptionsWidget(
-                name="req_search_priority",
-                label=T("Priority"),
-                field="priority",
-                options = req_priority_opts,
+                name="req_search_item_category",
+                label=T("Item Category"),
+                field="item_category.name",
                 cols = 3,
             ),
             #S3SearchOptionsWidget(
@@ -504,6 +510,12 @@ class S3RequestModel(S3Model):
         add_component("req_commit",
                       req_req="req_id")
 
+        # Item Categories as a component of Requests
+        add_component("supply_item_category",
+                      req_req=dict(link="req_req_item_category",
+                                   joinby="req_id",
+                                   key="item_category_id"))
+
         # Request Jobs as a component of Requests
         add_component(S3Task.TASK_TABLENAME,
                       req_req=dict(name="job",
@@ -576,6 +588,26 @@ S3OptionsFilter({
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
+            table.site_id.comment = A(T("Set as default Site"),
+                                      _id="req_req_site_id_link",
+                                      _target="_blank",
+                                      _href=URL(c="default",
+                                                f="user",
+                                                args=["profile"]))
+
+            jappend = s3.jquery_ready.append
+            jappend('''
+$('#req_req_site_id_link').click(function(){
+ var site_id=$('#req_req_site_id').val()
+ if(site_id){
+  var url = $('#req_req_site_id_link').attr('href')
+  var exists=url.indexOf('?')
+  if(exists=='-1'){
+   $('#req_req_site_id_link').attr('href',url+'?site_id='+site_id)
+  }
+ }
+ return true
+})''')
 
         req_types = settings.get_req_req_type()
         if "People" in req_types:
@@ -648,80 +680,40 @@ S3OptionsFilter({
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
 })''')
-            # We don't want to force people to enter quantities
-            #itable.quantity.default = 0
             # Custom Form
             settings = current.deployment_settings
+            fields = ["site_id",
+                      "requester_id",
+                      "date",
+                      "priority",
+                      "date_required",
+                      s3forms.S3SQLInlineComponent(
+                        "req_item",
+                        label = T("Items"),
+                        fields = ["item_id",
+                                  "item_pack_id",
+                                  "quantity",
+                                  "comments"
+                                  ]
+                      ),
+                      "comments",
+                      ]
+            if method == "update":
+                if settings.get_req_status_writable():
+                    fields.insert(7, "fulfil_status")               
+                    if settings.get_req_show_quantity_transit():
+                        fields.insert(7, "transit_status")               
+                    if settings.get_req_use_commit():
+                        fields.insert(7, "commit_status")               
+                fields.insert(7, "date_recv")
             if settings.get_req_items_ask_purpose():
-                crud_form = s3forms.S3SQLCustomForm(
-                    # If not generated automatically
-                    #"req_ref",
-                    "site_id",
-                    "is_template",
-                    "requester_id",
-                    "date",
-                    "priority",
-                    "date_required",
-                    "purpose",
-                    s3forms.S3SQLInlineComponent(
-                        "req_item",
-                        label = T("Items"),
-                        fields = ["item_id",
-                                  "item_pack_id",
-                                  "quantity",
-                                  "comments"
-                                  ]
-                    ),
-                    #"date_recv",
-                    "comments",
-                    )
-            elif method == "update" and \
-                 settings.get_req_status_writable():
-                crud_form = s3forms.S3SQLCustomForm(
-                    # If not generated automatically
-                    #"req_ref",
-                    "site_id",
-                    "requester_id",
-                    "date",
-                    "priority",
-                    "date_required",
-                    s3forms.S3SQLInlineComponent(
-                        "req_item",
-                        label = T("Items"),
-                        fields = ["item_id",
-                                  "item_pack_id",
-                                  "quantity",
-                                  "comments"
-                                  ]
-                    ),
-                    #"date_recv",
-                    "commit_status",
-                    "transit_status",
-                    "fulfil_status",
-                    "comments",
-                    )
-            else:
-                crud_form = s3forms.S3SQLCustomForm(
-                    # If not generated automatically
-                    #"req_ref",
-                    "site_id",
-                    "is_template",
-                    "requester_id",
-                    "date",
-                    "priority",
-                    "date_required",
-                    s3forms.S3SQLInlineComponent(
-                        "req_item",
-                        label = T("Items"),
-                        fields = ["item_id",
-                                  "item_pack_id",
-                                  "quantity",
-                                  "comments"
-                                  ]
-                    ),
-                    #"date_recv",
-                    "comments",
-                    )
+                fields.insert(6, "purpose")
+            if method != "update":
+                fields.insert(1, "is_template")
+            if settings.get_req_use_req_number() and \
+               not settings.get_req_generate_req_number():
+                fields.insert(0, "req_ref")
+            crud_form = s3forms.S3SQLCustomForm(*fields)
             s3db.configure("req_req", crud_form=crud_form)
 
         elif type == 3:
@@ -729,54 +721,39 @@ S3OptionsFilter({
             stable = s3db.req_req_skill
             stable.skill_id.label = T("Required Skills (optional)")
             stable.skill_id.widget = None
-            if method == "update" and \
-               current.deployment_settings.get_req_status_writable():
-                crud_form = s3forms.S3SQLCustomForm(
-                    # If not generated automatically
-                    #"req_ref",
-                    "site_id",
-                    "is_template",
-                    "requester_id",
-                    "date",
-                    "priority",
-                    "date_required",
-                    "date_required_until",
-                    "purpose",
-                    s3forms.S3SQLInlineComponent(
+            # Custom Form
+            settings = current.deployment_settings
+            fields = ["site_id",
+                      "requester_id",
+                      "date",
+                      "priority",
+                      "date_required",
+                      "date_required_until",
+                      "purpose",
+                      s3forms.S3SQLInlineComponent(
                         "req_skill",
                         label = T("Skills"),
                         fields = ["quantity",
                                   "skill_id",
                                   "comments"
                                   ]
-                    ),
-                    "commit_status",
-                    "transit_status",
-                    "fulfil_status",
-                    "comments",
-                    )
+                      ),
+                      "comments",
+                      ]
+            if method == "update":
+                if settings.get_req_status_writable():
+                    fields.insert(8, "fulfil_status")               
+                    if settings.get_req_show_quantity_transit():
+                        fields.insert(8, "transit_status")               
+                    if settings.get_req_use_commit():
+                        fields.insert(8, "commit_status")               
+                fields.insert(8, "date_recv")
             else:
-                crud_form = s3forms.S3SQLCustomForm(
-                    # If not generated automatically
-                    #"req_ref",
-                    "site_id",
-                    "is_template",
-                    "requester_id",
-                    "date",
-                    "priority",
-                    "date_required",
-                    "date_required_until",
-                    "purpose",
-                    s3forms.S3SQLInlineComponent(
-                        "req_skill",
-                        label = T("Skills"),
-                        fields = ["quantity",
-                                  "skill_id",
-                                  "comments"
-                                  ]
-                    ),
-                    "comments",
-                    )
+                fields.insert(1, "is_template")
+            if settings.get_req_use_req_number() and \
+               not settings.get_req_generate_req_number():
+                fields.insert(0, "req_ref")
+            crud_form = s3forms.S3SQLCustomForm(*fields)
             s3db.configure("req_req", crud_form=crud_form)
 
     # -------------------------------------------------------------------------
@@ -1327,6 +1304,7 @@ class S3RequestItemModel(S3Model):
     names = ["req_req_item",
              "req_item_id",
              "req_item_represent",
+             "req_req_item_category",
              ]
 
     def model(self):
@@ -1337,55 +1315,57 @@ class S3RequestItemModel(S3Model):
         settings = current.deployment_settings
         quantities_writable = settings.get_req_item_quantities_writable()
         use_commit = settings.get_req_use_commit()
+        show_qty_transit = settings.get_req_show_quantity_transit()
         track_pack_values = settings.get_inv_track_pack_values()
+
+        define_table = self.define_table
+        req_id = self.req_req_id
 
         # -----------------------------------------------------------------
         # Request Items
         #
         tablename = "req_req_item"
-        table = self.define_table(tablename,
-                                  self.req_req_id(),
-                                  self.supply_item_entity_id,
-                                  self.supply_item_id(),
-                                  self.supply_item_pack_id(),
-                                  Field("quantity", "double", notnull=True,
-                                        requires = IS_FLOAT_IN_RANGE(minimum=1),
-                                        represent=lambda v: \
-                                            IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                                  Field("pack_value", "double",
-                                        readable=track_pack_values,
-                                        writable=track_pack_values,
-                                        label = T("Estimated Value per Pack")),
-                                  # @ToDo: Move this into a Currency Widget for the pack_value field
-                                  s3_currency(readable=track_pack_values,
-                                              writable=track_pack_values),
-                                  self.org_site_id,
-                                  Field("quantity_commit", "double",
-                                        label = T("Quantity Committed"),
-                                        represent = self.req_qnty_commit_represent,
-                                        default = 0,
-                                        requires = IS_FLOAT_IN_RANGE(minimum=0),
-                                        readable = use_commit,
-                                        writable = use_commit and quantities_writable),
-                                  Field("quantity_transit", "double",
-                                        label = T("Quantity in Transit"),
-                                        represent = self.req_qnty_transit_represent,
-                                        default = 0,
-                                        requires = IS_FLOAT_IN_RANGE(minimum=0),
-                                        writable = quantities_writable),
-                                  Field("quantity_fulfil", "double",
-                                        label = T("Quantity Fulfilled"),
-                                        represent = self.req_qnty_fulfil_represent,
-                                        default = 0,
-                                        requires = IS_FLOAT_IN_RANGE(minimum=0),
-                                        writable = quantities_writable),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             req_id(),
+                             self.supply_item_entity_id,
+                             self.supply_item_id(),
+                             self.supply_item_pack_id(),
+                             Field("quantity", "double", notnull=True,
+                                   requires = IS_FLOAT_IN_RANGE(minimum=1),
+                                   represent=lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                             Field("pack_value", "double",
+                                   readable=track_pack_values,
+                                   writable=track_pack_values,
+                                   label = T("Estimated Value per Pack")),
+                             # @ToDo: Move this into a Currency Widget for the pack_value field
+                             s3_currency(readable=track_pack_values,
+                                         writable=track_pack_values),
+                             self.org_site_id,
+                             Field("quantity_commit", "double",
+                                   label = T("Quantity Committed"),
+                                   represent = self.req_qnty_commit_represent,
+                                   default = 0,
+                                   requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                   readable = use_commit,
+                                   writable = use_commit and quantities_writable),
+                             Field("quantity_transit", "double",
+                                   label = T("Quantity in Transit"),
+                                   represent = self.req_qnty_transit_represent,
+                                   default = 0,
+                                   requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                   readable = show_qty_transit,
+                                   writable = show_qty_transit and quantities_writable),
+                             Field("quantity_fulfil", "double",
+                                   label = T("Quantity Fulfilled"),
+                                   represent = self.req_qnty_fulfil_represent,
+                                   default = 0,
+                                   requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                   writable = quantities_writable),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         table.site_id.label = T("Requested From")
-
-        if not settings.get_req_show_quantity_transit():
-            table.quantity_transit.writable = table.quantity_transit.readable= False
 
         # pack_quantity virtual field
         table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
@@ -1453,18 +1433,34 @@ S3FilterFieldChange({
         list_fields.append("quantity")
         if use_commit:
             list_fields.append("quantity_commit")
-        list_fields.append("quantity_transit")
+        if show_qty_transit:
+            list_fields.append("quantity_transit")
         list_fields.append("quantity_fulfil")
         list_fields.append("comments")
 
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        onaccept = req_item_onaccept,
+                       ondelete = req_item_ondelete,
                        create_next = create_next,
                        deletable = settings.get_req_multiple_req_items(),
                        deduplicate = self.req_item_duplicate,
                        list_fields = list_fields,
                        )
+
+        # ---------------------------------------------------------------------
+        #
+        # Req <> Item Category link table
+        #
+        # - used to provide a search filter
+        # - populated onaccept/ondelete of req_item
+        #
+        tablename = "req_req_item_category"
+        table = define_table(tablename,
+                             req_id(),
+                             self.supply_item_category_id(),
+                             *s3_meta_fields()
+                             )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)
@@ -1559,6 +1555,13 @@ S3FilterFieldChange({
         else:
             return quantity
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_item_delete(row):
+        """
+            Update the
+        """
+        h 
     # -------------------------------------------------------------------------
     @staticmethod
     def req_item_duplicate(job):
@@ -1992,12 +1995,12 @@ class S3CommitModel(S3Model):
                                     ondelete = "CASCADE")
 
         self.configure(tablename,
-                        # Commitments should only be made to a specific request
-                        listadd = False,
-                        onvalidation = self.commit_onvalidation,
-                        onaccept = self.commit_onaccept,
-                        ondelete = self.commit_ondelete,
-                        )
+                       # Commitments should only be made to a specific request
+                       listadd = False,
+                       onvalidation = self.commit_onvalidation,
+                       onaccept = self.commit_onaccept,
+                       ondelete = self.commit_ondelete,
+                       )
 
         # Components
         # Committed Items as component of Commitment
@@ -2751,10 +2754,6 @@ class S3CommitSkillModel(S3Model):
 # =============================================================================
 def req_item_onaccept(form):
     """
-        Update req_req. commit_status, transit_status, fulfil_status
-        None => quantity = 0 for ALL items
-        Partial => some items have quantity > 0
-        Complete => quantity_x = quantity(requested) for ALL items
     """
 
     req_id = form.vars.get("req_id", None)
@@ -2763,11 +2762,68 @@ def req_item_onaccept(form):
     if not req_id:
         raise HTTP(500, "can not get req_id")
 
+    # Update Request Status
     req_update_status(req_id)
+
+    # Update req_item_category link table
+    item_id = form.vars.get("item_id", None)
+    db = current.db
+    sitable = db.supply_item
+    item = db(sitable.id == item_id).select(sitable.item_category_id,
+                                            limitby=(0, 1)
+                                            ).first()
+    if item:
+        item_category_id = item.item_category_id
+        rictable = db.req_req_item_category
+        query = (rictable.deleted == False) & \
+                (rictable.req_id == req_id) & \
+                (rictable.item_category_id == item_category_id)
+        exists = db(query).select(rictable.id,
+                                  limitby=(0, 1))
+        if not exists:
+            rictable.insert(req_id = req_id,
+                            item_category_id = item_category_id)
+
+# =============================================================================
+def req_item_ondelete(row):
+    """
+    """
+
+    db = current.db
+    ritable = db.req_req_item
+    item = db(ritable.id == row.id).select(ritable.deleted_fks,
+                                           limitby=(0, 1)).first()
+    fks = json.loads(item.deleted_fks)
+    req_id = fks["req_id"]
+    item_id = fks["item_id"]
+    sitable = db.supply_item
+    item = db(sitable.id == item_id).select(sitable.item_category_id,
+                                            limitby=(0, 1)
+                                            ).first()
+    if item:
+        item_category_id = item.item_category_id
+        # Check if we have other req_items in the same category
+        query = (ritable.deleted == False) & \
+                (ritable.req_id == req_id) & \
+                (ritable.item_id == sitable.id) & \
+                (sitable.item_category_id == item_category_id)
+        others = db(query).select(ritable.id,
+                                  limitby=(0, 1))
+        if not others:
+            # Delete req_item_category link table
+            rictable = db.req_req_item_category
+            query = (rictable.req_id == req_id) & \
+                    (rictable.item_category_id == item_category_id)
+            db(query).delete()
 
 # =============================================================================
 def req_update_status(req_id):
     """
+        Update Request Status
+            commit_status, transit_status, fulfil_status
+        None => quantity = 0 for ALL items
+        Partial => some items have quantity > 0
+        Complete => quantity_x = quantity(requested) for ALL items
     """
 
     db = current.db
