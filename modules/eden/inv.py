@@ -3139,10 +3139,17 @@ def inv_send_rheader(r):
             site_id = record.site_id
             stable = s3db.org_site
             if site_id:
-                org_id = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                              limitby=(0, 1)).first().organisation_id
+                site = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                            stable.phone1,
+                                                            stable.phone2,
+                                                            limitby=(0, 1)).first()
+                org_id = site.organisation_id
+                phone1 = site.phone1
+                phone2 = site.phone2
             else:
                 org_id = None
+                phone1 = None
+                phone2 = None
             logo = s3db.org_organisation_logo(org_id) or ""
             status = record.status
             gtable = s3db.gis_location
@@ -3181,6 +3188,11 @@ def inv_send_rheader(r):
                              table.status.represent(status),
                              TH("%s: " % table.recipient_id.label),
                              table.recipient_id.represent(record.recipient_id),
+                             ),
+                          TR(TH("%s: " % T("Complete? Please call")),
+                             phone1 or "",
+                             TH("%s: " % T("Problems? Please call")),
+                             phone2 or phone1 or "",
                              ),
                           TR(TH("%s: " % table.comments.label),
                              TD(record.comments or "", _colspan=3)
