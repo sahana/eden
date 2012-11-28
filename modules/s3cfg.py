@@ -670,6 +670,12 @@ class S3Config(Storage):
         else:
             return attr
 
+    def get_ui_hide_report_options(self):
+        """
+            Hide report options form by default
+        """
+        return self.ui.get("hide_report_options", True)
+            
     # =========================================================================
     # Messaging
     # -------------------------------------------------------------------------

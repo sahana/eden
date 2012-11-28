@@ -471,7 +471,9 @@ $(document).ready(function() {
         }
     });
     // Hide the report options when the page loads
-    $('#report_options legend').siblings().toggle();
+    if (json_data.h) {
+        $('#report_options legend').siblings().toggle();
+    }
 
     // Render default chart
     if (undefined !== chart_opts) {

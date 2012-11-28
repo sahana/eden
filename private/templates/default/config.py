@@ -240,6 +240,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.label_postcode = "ZIP Code"
 # Enable Social Media share buttons
 #settings.ui.social_buttons = True
+# Enable this to show pivot table options form by default
+#settings.ui.hide_report_options = False
 
 # -----------------------------------------------------------------------------
 # Persons
