@@ -2607,14 +2607,15 @@ class S3ACLWidget(CheckboxesWidget):
 class CheckboxesWidgetS3(OptionsWidget):
     """
         S3 version of gluon.sqlhtml.CheckboxesWidget:
+        - configurable number of columns
         - supports also integer-type keys in option sets
-        - has an identifiable class
+        - has an identifiable class for styling
 
-        Used in Sync, Projects
+        Used in Sync, Projects, Assess
     """
 
-    @staticmethod
-    def widget(field, value, **attributes):
+    @classmethod
+    def widget(cls, field, value, **attributes):
         """
         generates a TABLE tag, including INPUT checkboxes (multiple allowed)
 
@@ -2675,6 +2676,8 @@ class CheckboxesWidgetS3(OptionsWidget):
                 tds.append(TD(INPUT(_type="checkbox",
                                     _name=field.name,
                                     _id=input_id,
+                                    # Hide checkboxes without a label
+                                    _class="" if v else "hide",
                                     requires=attr.get("requires", None),
                                     hideerror=True,
                                     _value=k,

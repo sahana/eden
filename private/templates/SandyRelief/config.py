@@ -284,7 +284,7 @@ settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 8,     # 8th item in the menu
+            module_type = 9,     # 8th item in the menu
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
@@ -373,6 +373,12 @@ settings.modules = OrderedDict([
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
             module_type = 10
+        )),
+    ("assess", Storage(
+            name_nice = T("Assessments"),
+            #description = "Rapid Assessments & Flexible Impact Assessments",
+            restricted = True,
+            module_type = 7,
         )),
     #("survey", Storage(
     #        name_nice = T("Surveys"),
@@ -486,14 +492,6 @@ settings.modules = OrderedDict([
     #("building", Storage(
     #        name_nice = T("Building Assessments"),
     #        #description = "Building Safety Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    # Deprecated by Surveys module
-    # - depends on CR, IRS & Impact
-    #("assess", Storage(
-    #        name_nice = T("Assessments"),
-    #        #description = "Rapid Assessments & Flexible Impact Assessments",
     #        restricted = True,
     #        module_type = 10,
     #    )),
