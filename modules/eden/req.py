@@ -140,8 +140,6 @@ class S3RequestModel(S3Model):
             req_type_opts[3] = settings.get_req_type_hrm_label()
         #if settings.has_module("cr") and "Shelter" in req_types_deployed:
         #    req_type_opts[4] = T("Shelter")
-        if "Summary" in req_types_deployed:
-            req_type_opts[8] = T("Summary")
         if "Other" in req_types_deployed:
             req_type_opts[9] = T("Other")
 
@@ -298,6 +296,7 @@ class S3RequestModel(S3Model):
                                   req_status("commit_status",
                                              readable = use_commit,
                                              writable = req_status_writable and use_commit,
+                                             represent = self.req_commit_status_represent,
                                              label = T("Commit. Status")),
                                   req_status("transit_status",
                                              label = T("Transit Status")),
@@ -445,16 +444,17 @@ class S3RequestModel(S3Model):
                        #"event_id",
                        ]
 
+        if settings.get_req_use_req_number():
+            list_fields.insert(1, "req_ref")
         #if len(settings.get_req_req_type()) > 1:
         #    list_fields.append("type")
+        list_fields.append((T("Drivers"), "drivers"))
         list_fields.append("priority")
         list_fields.append((T("Details"), "details"))
         if use_commit:
             list_fields.append("commit_status")
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
-        if settings.get_req_use_req_number():
-            list_fields.append("req_ref")
 
         self.configure(tablename,
                        onaccept = self.req_onaccept,
@@ -617,13 +617,6 @@ $('#req_req_site_id_link').click(function(){
 
         if "type" not in current.request.vars:
             # Script to inject into Pages which include Request create forms
-            if "Summary" in req_types:
-                stable = current.s3db.req_summary_option
-                options = db(stable.deleted == False).select(stable.name,
-                                                             orderby=~stable.name)
-                summary_items = [opt.name for opt in options]
-                s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-
             req_helptext = '''
 i18n.req_purpose="%s"
 i18n.req_site_id="%s"
@@ -651,7 +644,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                                       T("Please enter request details here."),
                                       T("Details field is required!"))
             s3.js_global.append(req_helptext)
-            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_summary.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % current.request.application)
 
         else:
             s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
@@ -814,10 +807,26 @@ S3OptionsFilter({
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def req_ref_represent(value, show_link=False):
+    def req_commit_status_represent(opt):
+        """
+            Represet the Commitment Status of the Request
+        """
+
+        if opt == REQ_STATUS_COMPLETE:
+            # Include the Site Name of the Committer if we can
+            # @ToDo: figure out how!
+            return SPAN(T("Complete"),
+                        _class = "req_status_complete")
+        else:
+            return req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_ref_represent(value, show_link=True, pdf=False):
         """
             Represent for the Request Reference
-            if show_link is True then it will generate a link to the pdf
+            if show_link is True then it will generate a link to the record
+            if pdf is True then it will generate a link to the PDF
         """
 
         if value:
@@ -828,32 +837,18 @@ S3OptionsFilter({
                                                             limitby=(0, 1)
                                                             ).first()
                 if req_row:
+                    if pdf:
+                        args = [req_row.id, "form"]
+                    else:
+                        args = [req_row.id]
                     return A(value,
                              _href = URL(c = "req", f = "req",
-                                         args = [req_row.id, "form"]
-                                        ),
-                            )
+                                         args = args
+                                         ),
+                             )
             return B(value)
 
         return current.messages["NONE"]
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def req_purpose_represent(text):
-        """
-            Represent the purpose of a Request
-            - decode the Summary
-        """
-
-        if not text:
-            return current.messages["NONE"]
-        elif text.startswith("["):
-            # Decode the JSON
-            vals = json.loads(text)
-            output = ", ".join(vals)
-            return output
-        else:
-            return text
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1770,7 +1765,7 @@ class S3RequestSummaryModel(S3Model):
     """
     """
 
-    names = ["req_summary_option",
+    names = ["req_site_needs",
             ]
 
     def model(self):
@@ -1778,62 +1773,30 @@ class S3RequestSummaryModel(S3Model):
         T = current.T
 
         # -----------------------------------------------------------------
-        # Request Summary
-        # Items which should appear on a Summary Request
+        # Summary of Needs for a site
         #
-        # @ToDo: Different lookup lists for different Orgs(/?)
+        # @ToDo: Convert the simple text boxes into a widget
+        # e.g. modified ui.multiselect.js
         #
-        tablename = "req_summary_option"
+        tablename = "req_site_needs"
         table = self.define_table(tablename,
-                                  Field("name",
-                                        label=T("Name")),
-                                  s3_comments(),
+                                  self.super_link("site_id", "org_site"),
+                                  s3_comments("green",
+                                              label=T("We are actively seeking more"),
+                                              comment=None),
+                                  s3_comments("yellow",
+                                              label=T("We are accepting donations"),
+                                              comment=None),
+                                  s3_comments("red",
+                                              label=T("We have too much"),
+                                              comment=None),
                                   *s3_meta_fields())
-
-        # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Option to Summary Requests"),
-            title_display = T("Summary Request Option Details"),
-            title_list = T("Summary Request Options"),
-            title_update = T("Edit Summary Request Option"),
-            title_search = T("Search Summary Request Options"),
-            title_upload = T("Import Summary Request Options"),
-            subtitle_create = T("Add Summary Request Option"),
-            label_list_button = T("List Summary Request Options"),
-            label_create_button = T("Add New Summary Request Option"),
-            label_delete_button = T("Delete Summary Request Option"),
-            msg_record_created = T("Summary Request Option added"),
-            msg_record_modified = T("Summary Request Option updated"),
-            msg_record_deleted = T("Summary Request Option deleted"),
-            msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Summary Request Options defined"))
-
-        self.configure(tablename,
-                       deduplicate = self.req_summary_option_duplicate)
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)
         #
         return Storage(
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_summary_option_duplicate(job):
-        """
-            De-duplicate Request Summary Options
-        """
-
-        if job.tablename == "req_summary_option":
-            table = job.table
-            name = job.data.get("name", None)
-            query = (table.name == name)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestRecurringModel(S3Model):
@@ -1898,7 +1861,7 @@ class S3RequestRecurringModel(S3Model):
     @staticmethod
     def req_recurring_duplicate(job):
         """
-            De-duplicate Request Summary Options
+            De-duplicate Recurring Request Jobs
         """
 
         if job.tablename == "req_recurring":
@@ -1934,17 +1897,18 @@ class S3CommitModel(S3Model):
         tablename = "req_commit"
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site",
-                                                   label = T("From Facility"),
-                                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                                   # Non-Item Requests make False in the prep
-                                                   writable = True,
-                                                   readable = True,
-                                                   # Comment these to use a Dropdown & not an Autocomplete
-                                                   #widget = S3SiteAutocompleteWidget(),
-                                                   #comment = DIV(_class="tooltip",
-                                                   #              _title="%s|%s" % (T("From Facility"),
-                                                   #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                   represent = self.org_site_represent),
+                                                  label = T("From Facility"),
+                                                  default = auth.user.site_id if auth.is_logged_in() else None,
+                                                  # Non-Item Requests make False in the prep
+                                                  writable = True,
+                                                  readable = True,
+                                                  # Comment these to use a Dropdown & not an Autocomplete
+                                                  #widget = S3SiteAutocompleteWidget(),
+                                                  #comment = DIV(_class="tooltip",
+                                                  #              _title="%s|%s" % (T("From Facility"),
+                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
+                                                  represent = self.org_site_represent
+                                                  ),
                                   # Non-Item Requests make True in the prep
                                   self.org_organisation_id(
                                                 readable = False,
@@ -2991,10 +2955,12 @@ def req_details_field(row):
 # =============================================================================
 class ReqVirtualFields:
     """
-        Virtual fields for Requests to show Details
+        Virtual fields for Requests to show Item Details & Driver
     """
 
-    extra_fields = ["type"]
+    extra_fields = ["req_ref",
+                    "type",
+                    ]
 
     # -------------------------------------------------------------------------
     def details(self):
@@ -3018,7 +2984,7 @@ class ReqVirtualFields:
             items = current.db(query).select(itable.name,
                                              ltable.quantity)
             if items:
-                items = ["%s %s" % (item.req_req_item.quantity, item.supply_item.name) for item in items]
+                items = ["%s %s" % (int(item.req_req_item.quantity), item.supply_item.name) for item in items]
                 return ",".join(items)
 
         elif type == 3:
@@ -3030,8 +2996,39 @@ class ReqVirtualFields:
                                               ltable.quantity)
             if skills:
                 represent = s3_represent_multi_id(s3db.hrm_skill)
-                skills = ["%s %s" % (skill.quantity, represent(skill.skill_id)) for skill in skills]
+                skills = ["%s %s" % (skill.quantity,
+                                     represent(skill.skill_id)) \
+                          for skill in skills]
                 return ",".join(skills)
+
+        return current.messages["NONE"]
+
+    # -------------------------------------------------------------------------
+    def drivers(self):
+        """
+            Show the driver(s) details
+        """
+
+        try:
+            req_ref = self.req_req.req_ref
+            type = self.req_req.type
+        except AttributeError:
+            return None
+
+        if type == 1:
+            s3db = current.s3db
+            stable = s3db.inv_send
+            query = (stable.deleted != True) & \
+                    (stable.req_ref == req_ref)
+            drivers = current.db(query).select(stable.driver_name,
+                                               stable.driver_phone,
+                                               stable.vehicle_plate_no)
+            if drivers:
+                drivers = ["%s %s %s" % (driver.driver_name or "",
+                                         driver.driver_phone or "",
+                                         driver.vehicle_plate_no or "") \
+                           for driver in drivers]
+                return ",".join(drivers)
 
         return current.messages["NONE"]
 
@@ -3261,7 +3258,10 @@ def req_match():
     else:
         return output
 
-    site_id = s3db[tablename][id].site_id
+    table = s3db[tablename]
+    site_id = current.db(table.id == id).select(table.site_id,
+                                                limitby=(0, 1)
+                                                ).site_id
     actions = [
             dict(url = URL(c = "req",
                            f = "req",

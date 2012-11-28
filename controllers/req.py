@@ -331,15 +331,6 @@ def req_controller():
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
 
-                if type == 8:
-                    table.purpose.label = T("Details")
-                    stable = current.s3db.req_summary_option
-                    options = db(stable.deleted == False).select(stable.name,
-                                                                 orderby=~stable.name)
-                    summary_items = [opt.name for opt in options]
-                    s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update_summary.js" % appname)
-
                 method = r.method
                 if method not in ("map", "read", "search", "update"):
                     # Hide fields which don't make sense in a Create form

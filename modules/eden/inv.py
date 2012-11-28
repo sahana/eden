@@ -1123,8 +1123,12 @@ class S3TrackingModel(S3Model):
                    action=self.inv_send_form)
 
         # Redirect to the Items tabs after creation
-        send_item_url = URL(c="inv", f="send", args=["[id]",
-                                                     "track_item"])
+        if current.request.controller == "req":
+            c = "req"
+        else:
+            c = "inv"
+        send_item_url = URL(c=c, f="send", args=["[id]",
+                                                 "track_item"])
 
         list_fields = ["id",
                        "send_ref",
@@ -1136,8 +1140,9 @@ class S3TrackingModel(S3Model):
                        "delivery_date",
                        "to_site_id",
                        "status",
-                       "vehicle_plate_no",
                        "driver_name",
+                       "driver_phone",
+                       "vehicle_plate_no",
                        "time_out",
                        "comments"
                        ]
@@ -3135,10 +3140,26 @@ def inv_send_rheader(r):
             site_id = record.site_id
             stable = s3db.org_site
             if site_id:
-                org_id = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                              limitby=(0, 1)).first().organisation_id
+                site = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                            stable.instance_type,
+                                                            limitby=(0, 1)
+                                                            ).first()
+                org_id = site.organisation_id
+                instance_table = s3db[site.instance_type]
+                if "phone1" in instance_table.fields:
+                    site = db(instance_table.site_id == site_id).select(instance_table.phone1,
+                                                                        instance_table.phone2,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+                    phone1 = site.phone1
+                    phone2 = site.phone2
+                else:
+                    phone1 = None
+                    phone2 = None
             else:
                 org_id = None
+                phone1 = None
+                phone2 = None
             logo = s3db.org_organisation_logo(org_id) or ""
             status = record.status
             gtable = s3db.gis_location
@@ -3177,6 +3198,11 @@ def inv_send_rheader(r):
                              table.status.represent(status),
                              TH("%s: " % table.recipient_id.label),
                              table.recipient_id.represent(record.recipient_id),
+                             ),
+                          TR(TH("%s: " % T("Complete? Please call")),
+                             phone1 or "",
+                             TH("%s: " % T("Problems? Please call")),
+                             phone2 or phone1 or "",
                              ),
                           TR(TH("%s: " % table.comments.label),
                              TD(record.comments or "", _colspan=3)

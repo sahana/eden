@@ -13,6 +13,7 @@ current.models = models
 current.s3db = s3db = S3Model()
 
 # Explicit import statements to have them reload automatically in debug mode
+import eden.assess
 import eden.asset
 import eden.auth
 import eden.cap

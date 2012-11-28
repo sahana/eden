@@ -1692,9 +1692,9 @@ class S3FacilityModel(S3Model):
                                         limitby=(0, len(opts)))
         vals = dict([(r.id, r.name) for r in rows])
 
-        UNKNOWN_OPT = current.messages["UNKNOWN_OPT"]
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         names = [vals[k] if k in vals else UNKNOWN_OPT for k in opts]
-        return ", ".join(vals)
+        return ", ".join(names)
 
 # -----------------------------------------------------------------------------
 def org_facility_rheader(r, tabs=[]):
