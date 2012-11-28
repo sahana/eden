@@ -6504,7 +6504,8 @@ class S3RecordMerger(object):
         form.vars.update(data)
         try:
             current.db(table._id==row[table._id]).update(**data)
-        except:
+        except Exception, e:
+            print e
             self.raise_error("Could not update %s.%s" %
                             (table._tablename, id))
         else:
@@ -6820,7 +6821,9 @@ class S3RecordMerger(object):
             r = None
             p = Storage([(fn, "__deduplicate_%s__" % fn)
                          for fn in data
-                         if table[fn].unique and table[fn].type == "string"])
+                         if table[fn].unique and \
+                            table[fn].type == "string" and \
+                            data[fn] == duplicate[fn]])
             if p:
                 r = Storage([(fn, original[fn]) for fn in p])
                 update_record(table, duplicate_id, duplicate, p)
