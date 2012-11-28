@@ -32,6 +32,8 @@ PROPOSALSET_VIEW = 'view-proposalset'
 
 PROPOSAL_ADD = 'add-proposal'
 
+PROPOSAL_ADD_INSET = 'add-proposal-inset'
+
 PROPOSALSET_ADD = 'add-proposalset'
 
 PROPOSALSET_LIST = 'list-proposalset'

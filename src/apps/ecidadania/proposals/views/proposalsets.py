@@ -38,7 +38,7 @@ from django.contrib import messages
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.utils.decorators import method_decorator
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 
 from apps.ecidadania.proposals import url_names as urln_prop
@@ -48,7 +48,44 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField, ConfirmVote
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
-        ProposalMergeForm, ProposalFieldDeleteForm
+        ProposalMergeForm, ProposalFieldDeleteForm, ProposalFormInSet
+from apps.ecidadania.debate.models import Debate
+
+class AddProposalInSet(FormView):
+
+    """
+    Create a new single (not tied to a set) proposal.
+    
+    :parameters: space_url
+    :rtype: HTML Form
+    :context: form, get_place
+    """
+    form_class = ProposalFormInSet
+    template_name = 'proposals/proposal_form_in_set.html'
+    
+    def get_success_url(self):
+        space = self.kwargs['space_url']
+        return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
+    
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        form_uncommited = form.save(commit=False)
+        form_uncommited.space = self.space
+        form_uncommited.author = self.request.user
+        form_uncommited.save()
+        return super(AddProposalInSet, self).form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super(AddProposalInSet, self).get_context_data(**kwargs)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        self.field = ProposalField.objects.filter(proposalset=self.kwargs['set_id'])
+        context['get_place'] = self.space
+        context['form_field'] = [f_name.field_name for f_name in self.field]
+        return context
+        
+    def dispatch(self, *args, **kwargs):
+        return super(AddProposalInSet, self).dispatch(*args, **kwargs)
+
 
 def add_proposal_field(request, space_url):
     
@@ -68,7 +105,8 @@ def add_proposal_field(request, space_url):
     if request.method == 'POST':
         if form.is_valid():
             form_data = form.save()
-            proposal_fields = ProposalField.objects.filter(proposalset=form_data.proposalset)
+            proposal_fields = ProposalField.objects.filter(
+                proposalset=form_data.proposalset)
             return render_to_response("proposals/proposal_add_fields.html",
                 {'form_data':form_data,
                  'get_place':get_place,
@@ -130,8 +168,8 @@ def proposal_to_set(request, space_url):
     if request.method == 'POST':
         if sel_form.is_valid():
             pset = request.POST['proposalset']
-            return reverse(urln_prop.PROPOSAL_ADD,
-                kwargs={'space_url':space_url, 'p_set':pset})
+            return HttpResponseRedirect(reverse(urln_prop.PROPOSAL_ADD_INSET,
+                kwargs={'space_url':space_url, 'set_id':pset}))
 
     return render_to_response("proposals/proposalset_select_form.html",
         {'form':sel_form, 'get_place':get_place},
@@ -154,7 +192,7 @@ def mergedproposal_to_set(request, space_url):
     if request.method == 'POST':
         if sel_form.is_valid():
             pset = request.POST['proposalset']
-            return reverse(urln_prop.PROPOSAL_MERGED, kwargs={'space_url':space_url, 'p_set':pset})
+            return HttpResponseRedirect(reverse(urln_prop.PROPOSAL_MERGED, kwargs={'space_url':space_url, 'p_set':pset}))
 
     return render_to_response("proposals/mergedproposal_in_set.html",
         {'form':sel_form, 'get_place':get_place},
@@ -205,12 +243,14 @@ class ViewProposalSet(ListView):
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_url'])
-        objects = Proposal.objects.all().filter(proposalset=self.kwargs['set_id']).order_by('pub_date')
+        objects = Proposal.objects.all().filter(
+            proposalset=self.kwargs['set_id']).order_by('pub_date')
         return objects
     
     def get_context_data(self, **kwargs):
         context = super(ViewProposalSet, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = get_object_or_404(Space,
+            url=self.kwargs['space_url'])
         return context
 
 
@@ -233,6 +273,11 @@ class AddProposalSet(FormView):
         space = self.kwargs['space_url']
         return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
     
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(AddProposalSet, self).get_form_kwargs(**kwargs)
+        kwargs['initial']['space'] = self.kwargs['space_url']
+        return kwargs
+
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         form_uncommited = form.save(commit=False)

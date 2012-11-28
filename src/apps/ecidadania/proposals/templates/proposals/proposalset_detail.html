@@ -46,7 +46,7 @@
             {% endfor %}
     
             <hr />
-            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+            <a href="{% url 'space-index' get_place.url %}" class="btn small">&laquo; {% trans "Go back" %}</a>
   
             {% if is_paginated %}
                 <div class="pagination">
