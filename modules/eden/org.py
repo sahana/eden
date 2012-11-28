@@ -1543,6 +1543,12 @@ class S3FacilityModel(S3Model):
                 options = get_facility_opts,
                 cols=2,
             ),
+            S3SearchOptionsWidget(
+                name="facility_search_org",
+                label=T("Organization"),
+                field="organisation_id",
+                cols=3,
+            ),
             #S3SearchOptionsWidget(
             #  name="facility_search_L1",
             #  field="location_id$L1",

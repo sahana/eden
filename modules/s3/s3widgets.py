@@ -230,6 +230,11 @@ class S3DateTimeWidget(FormWidget):
         earliest = now - timedelta(hours = self.past)
         latest = now + timedelta(hours = self.future)
 
+        # Round to the nearest half hour.
+        seconds = (earliest - earliest.min).seconds
+        rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
+        rounded = earliest + datetime.timedelta(0, rounding - seconds, -earliest.microsecond)
+        rounded = rounded.strftime(format)
         earliest = earliest.strftime(format)
         latest = latest.strftime(format)
 
@@ -244,18 +249,23 @@ class S3DateTimeWidget(FormWidget):
 
         firstDOW = settings.get_L10n_firstDOW()
         s3.jquery_ready.append(
-'''$('#%(selector)s').AnyTime_picker({
- askSecond:false,
- firstDOW:%(firstDOW)s,
- earliest:'%(earliest)s',
- latest:'%(latest)s',
- format:'%(format)s',
-})
+'''$('#%(selector)s').click(function(){
+if (!$('#%(selector)s').val()){
+ $('#%(selector)s').val('%(rounded)s')
+ $('#%(selector)s').AnyTime_picker({
+  askSecond:false,
+  firstDOW:%(firstDOW)s,
+  earliest:'%(earliest)s',
+  latest:'%(latest)s',
+  format:'%(format)s'
+ }).focus()
+}})
 clear_button=$('<input type="button" value="clear"/>').click(function(e){
  $('#%(selector)s').val('')
 })
 $('#%(selector)s').after(clear_button)''' % \
-        dict(selector=selector,
+        dict(rounded=rounded,
+             selector=selector,
              firstDOW=firstDOW,
              earliest=earliest,
              latest=latest,
