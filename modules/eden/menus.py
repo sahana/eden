@@ -410,7 +410,7 @@ class S3OptionsMenu(object):
                     M("Building Assessments", f="building")(
                         M("New", m="create"),
                         M("List All"),
-                        #M("Search", m="search"),
+                        M("Search", m="search"),
                     ),
                     #M("Rapid Assessments", f="rat")(
                     #    M("New", m="create"),
