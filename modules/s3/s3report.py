@@ -1050,6 +1050,7 @@ class S3ContingencyTable(TABLE):
             filter_vars = filter_query.serialize_url(resource=report.resource)
         else:
             filter_vars = {}
+        hide_opts = current.deployment_settings.get_ui_hide_report_options()
         json_data = json.dumps(dict(t=layer_label,
                                     x=col_label,
                                     y=row_label,
@@ -1058,6 +1059,7 @@ class S3ContingencyTable(TABLE):
                                     d=report.compact(n=50, represent=True),
                                     u=url,
                                     f=filter_vars,
+                                    h=hide_opts,
                                     cell_lookup_table=cell_lookup_table))
         self.report_data = Storage(row_label=row_label,
                                    col_label=col_label,
