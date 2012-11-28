@@ -69,9 +69,11 @@ class AddProposalInSet(FormView):
     
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        pset = get_object_or_404(ProposalSet, pk = self.kwargs['set_id'])
         form_uncommited = form.save(commit=False)
         form_uncommited.space = self.space
         form_uncommited.author = self.request.user
+        form_uncommited.proposalset = pset
         form_uncommited.save()
         return super(AddProposalInSet, self).form_valid(form)
     
@@ -192,7 +194,7 @@ def mergedproposal_to_set(request, space_url):
     if request.method == 'POST':
         if sel_form.is_valid():
             pset = request.POST['proposalset']
-            return HttpResponseRedirect(reverse(urln_prop.PROPOSAL_MERGED, kwargs={'space_url':space_url, 'p_set':pset}))
+            return HttpResponseRedirect(reverse(urln_prop.PROPOSAL_MERGED, kwargs={'space_url':space_url, 'set_id':pset}))
 
     return render_to_response("proposals/mergedproposal_in_set.html",
         {'form':sel_form, 'get_place':get_place},

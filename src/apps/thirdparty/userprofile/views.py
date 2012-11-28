@@ -71,6 +71,8 @@ if not os.path.isfile(DEFAULT_AVATAR):
     import shutil
     image = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                          "generic.jpg")
+    print image
+    print DEFAULT_AVATAR
     shutil.copy(image, DEFAULT_AVATAR)
 
 GOOGLE_MAPS_API_KEY = hasattr(settings, "GOOGLE_MAPS_API_KEY") and \

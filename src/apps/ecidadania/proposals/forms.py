@@ -68,7 +68,7 @@ class ProposalForm(ModelForm):
     """
     class Meta:
         model = Proposal
-        exclude = ('contenttype','object_pk','content_object', 'proposalset')
+        exclude = ('contenttype','object_pk','content_object')
 
 
 class ProposalFormInSet(ModelForm):
@@ -97,11 +97,13 @@ class ProposalMergeForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         if len(kwargs) > 0:
-            self.p_set = kwargs['initial']['p_set']
+            p_set = kwargs['initial']['set_id']
+            print "form - set id: " + p_set
             super(ProposalMergeForm, self).__init__(*args, **kwargs)
             if self.instance:
-                self.fields['merged_proposals'].widget = forms.SelectMultiple()
-                self.fields['merged_proposals'].queryset = Proposal.objects.filter(proposalset=self.p_set)
+                #self.fields['merged_proposals'].widget = forms.SelectMultiple()
+                print Proposal.objects.filter(proposalset=p_set)
+                self.fields['merged_proposals'].queryset = Proposal.objects.filter(proposalset=p_set)
 
            
 class VoteProposal(ModelForm):

@@ -164,7 +164,7 @@ class ListProposals(ListView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])   
         return context
 
-def merge_proposal(request, space_url, p_set):
+def merge_proposal(request, space_url, set_id):
     
     """
     Create a new merged proposal. This proposal can be linked to many other proposals which are in the
@@ -177,25 +177,27 @@ def merge_proposal(request, space_url, p_set):
 
     """
     get_place = get_object_or_404(Space, url=space_url)
-    field = ProposalField.objects.filter(proposalset=p_set)
+    field = ProposalField.objects.filter(proposalset=set_id)
     form_field = [f_name.field_name for f_name in field]
+
     if request.method == 'POST':
         merged_form = ProposalForm(request.POST)
         if merged_form.is_valid():
             form_data = merged_form.save(commit=False)
-            form_data.proposalset = get_object_or_404(ProposalSet, pk=p_set)
+            form_data.proposalset = get_object_or_404(ProposalSet, pk=set_id)
             form_data.space = get_object_or_404(Space, url=space_url)
             form_data.author = request.user
             form_data.merged = True
-            field = ProposalField.objects.filter(proposalset=p_set)
+            field = ProposalField.objects.filter(proposalset=set_id)
             form_field = [f_name.field_name for f_name in field]
             form_data.save()
             merged_form.save_m2m()
 
             return reverse(urln_space.SPACE_INDEX,
                 kwargs={'space_url':space_url})
-    else: 
-        merged_form = ProposalMergeForm(initial={'p_set':p_set})
+    else:
+        print "id: " + set_id
+        merged_form = ProposalMergeForm(initial={'set_id':set_id})
 
     return render_to_response("proposals/proposal_merged.html",
         {'form':merged_form, 'get_place':get_place, 'form_field':form_field},

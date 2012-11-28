@@ -69,7 +69,7 @@ urlpatterns = patterns('apps.ecidadania.proposals.views',
 
     url(_(r'^support/'),'common.support_proposal', name=PROPOSAL_VOTE),
 
-    url(_(r'^merged/(?P<p_set>\w+)/'),'proposals.merge_proposal',
+    url(_(r'^merge/(?P<set_id>\w+)/'),'proposals.merge_proposal',
         name=PROPOSAL_MERGED),
     
     url(_(r'^merge_proposals/'),'proposalsets.mergedproposal_to_set',
