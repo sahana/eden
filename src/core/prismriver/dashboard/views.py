@@ -7,8 +7,8 @@ from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
-from prismriver.settings import CUSTOM_MENU, DEFAULT_LABELS
-from prismriver.dashboard.models import Plugin
+from core.prismriver.settings import CUSTOM_MENU, DEFAULT_LABELS
+from core.prismriver.dashboard.models import Plugin
 
 def separate_class_path(class_path):
     path = class_path.split(".")

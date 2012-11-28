@@ -27,8 +27,8 @@ Plase refer to the 'configuration' section of the documentation for guidance.
 import os
 
 # e-cidadania version and current status
-__version__ = "0.1.6"
-__status__ = "alpha"
+__version__ = "0.1.7"
+__status__ = "pre"
 
 # Get the current working directory so we can fill automatically other variables.
 cwd = os.path.dirname(os.path.realpath(__file__)).strip('settings')
@@ -157,15 +157,6 @@ ECIDADANIA_MODULES = (
     'apps.ecidadania.cal',
     'extras.custom_stuff',
     'apps.ecidadania.voting',
-)
-
-#Defining user roles
-
-USER_ROLES = (
-    'space_admin',
-    'space_moderator',
-    'user',
-    'anonymous'
 )
 
 # A sample logging configuration. The only tangible logging

@@ -49,8 +49,6 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += i18n_patterns('',
-
-    (r'^grappelli/', include('grappelli.urls')),
     
     # Django administration
     (r'^admin/', include(admin.site.urls)),

@@ -1,9 +1,9 @@
 from django import template
 from django.core.urlresolvers import reverse
 from django.template.context import Context
-from prismriver.settings import CUSTOM_MENU
-from prismriver.views import load_apps, load_custom_models
-from prismriver.settings import SIDEBAR_APP_MENU, SIDEBAR_LAST_ACTIONS
+from core.prismriver.settings import CUSTOM_MENU
+from core.prismriver.views import load_apps, load_custom_models
+from core.prismriver.settings import SIDEBAR_APP_MENU, SIDEBAR_LAST_ACTIONS
 from django.template.loader import get_template
 from copy import deepcopy
 

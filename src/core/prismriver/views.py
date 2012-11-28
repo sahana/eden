@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
-from prismriver.settings import CUSTOM_MENU, DEFAULT_LABELS
+from core.prismriver.settings import CUSTOM_MENU, DEFAULT_LABELS
 
 def load_apps(request):
     current_url = request.path.replace(reverse('admin:index'), "")

@@ -1,10 +1,10 @@
 from django.core.urlresolvers import reverse
 from django.template.context import Context
 from django.template.loader import get_template
-from prismriver.dashboard.plugins import pluginbase
-from prismriver.settings import CUSTOM_MENU
-from prismriver.dashboard.settings import APP_MENU
-from prismriver.views import load_apps, load_custom_models
+from core.prismriver.dashboard.plugins import pluginbase
+from core.prismriver.settings import CUSTOM_MENU
+from core.prismriver.dashboard.settings import APP_MENU
+from core.prismriver.views import load_apps, load_custom_models
 from copy import deepcopy
 
 
