@@ -41,7 +41,7 @@ def index():
         # Add a full-screen window which will inherit these components
         s3.jquery_ready.append(
 '''$('#gis_fullscreen_map-btn').click(function(evt){
- if (navigator.appVersion.indexOf("MSIE")!=-1){
+ if(navigator.appVersion.indexOf("MSIE")!=-1){
  }else{
  S3.gis.mapWestPanelContainer.removeAll(false)
  S3.gis.mapPanelContainer.removeAll(false)
@@ -50,7 +50,13 @@ def index():
  S3.gis.mapWin.destroy()
  addMapWindow()
  evt.preventDefault()
- }
+ if(document.body.requestFullScreen){
+  document.body.requestFullScreen()
+ }else if(document.body.webkitRequestFullScreen){
+  document.body.webkitRequestFullScreen()
+ }else if(document.body.mozRequestFullScreen){
+  document.body.mozRequestFullScreen()
+}}
 })''')
 
     # Include an embedded Map on the index page

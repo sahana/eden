@@ -229,10 +229,7 @@ class S3AssessBuildingModel(S3Model):
                                   Field("phone",
                                         requires=IS_NULL_OR(s3_phone_requires),
                                         label=T("Phone Number")),
-                                  Field("address1",
-                                        label=T("Address (line 1)")),
-                                  Field("address2",
-                                        label=T("Address (line 2)")),
+                                  self.gis_location_id(),
                                   Field("homeowner_availability",
                                         label=T("Homeowner Availability")),
                                   Field("type_of_property", "list:integer",
@@ -253,6 +250,16 @@ class S3AssessBuildingModel(S3Model):
                                                     IS_INT_IN_RANGE(1800, 2012)
                                                     ),
                                         label=T("Year Built")),
+                                  Field("current_residence", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(yes_no_opts)
+                                                ),
+                                        represent = lambda opt: \
+                                            yes_no_opts.get(opt,
+                                                            UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                        label=T("Ownership")),
                                   Field("ownership", "integer",
                                         requires=IS_EMPTY_OR(
                                                     IS_IN_SET(ownership_opts)

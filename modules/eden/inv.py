@@ -473,7 +473,9 @@ class S3InventoryModel(S3Model):
                                   # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                                   Field("status", "integer",
                                         label = T("Status"),
-                                        requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                                        requires = IS_NULL_OR(
+                                                    IS_IN_SET(inv_item_status_opts)
+                                                    ),
                                         represent = lambda opt: \
                                             inv_item_status_opts.get(opt, UNKNOWN_OPT),
                                         default = 0,),
@@ -1071,7 +1073,9 @@ class S3TrackingModel(S3Model):
                                      label = T("Estimated Delivery Date"),
                                      writable = False),
                              Field("status", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(shipment_status)),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(shipment_status)
+                                                ),
                                    represent = lambda opt: \
                                     shipment_status.get(opt, UNKNOWN_OPT),
                                    default = SHIP_STATUS_IN_PROCESS,
@@ -1241,7 +1245,9 @@ class S3TrackingModel(S3Model):
                                        default = auth.s3_logged_in_person(),
                                        comment = self.pr_person_comment(child="recipient_id")),
                              Field("status", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(shipment_status)),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(shipment_status)
+                                                ),
                                    represent = lambda opt: \
                                     shipment_status.get(opt, UNKNOWN_OPT),
                                    default = SHIP_STATUS_IN_PROCESS,
@@ -1249,7 +1255,9 @@ class S3TrackingModel(S3Model):
                                    writable = False,
                                    ),
                              Field("grn_status", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(ship_doc_status)),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(ship_doc_status)
+                                                ),
                                    represent = lambda opt: \
                                     ship_doc_status.get(opt, UNKNOWN_OPT),
                                    default = SHIP_DOC_PENDING,
@@ -1264,7 +1272,9 @@ class S3TrackingModel(S3Model):
                                                                                                                                     GRN_name=settings.get_inv_recv_form_name()))),
                                    ),
                              Field("cert_status", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(ship_doc_status)),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(ship_doc_status)
+                                                ),
                                    represent = lambda opt: \
                                     ship_doc_status.get(opt, UNKNOWN_OPT),
                                    default = SHIP_DOC_PENDING,
@@ -1591,7 +1601,9 @@ $(document).ready(function(){
                                              ondelete = "SET NULL"),
                              Field("inv_item_status", "integer",
                                    label = T("Item Status"),
-                                   requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(inv_item_status_opts)
+                                                ),
                                    represent = lambda opt: \
                                         inv_item_status_opts.get(opt, UNKNOWN_OPT),
                                    default = 0,),
@@ -2713,10 +2725,13 @@ $(document).ready(function(){
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
-        if record and record.status == TRACK_STATUS_UNLOADING and record.recv_quantity:
+        if record and record.status == TRACK_STATUS_UNLOADING and \
+                      record.recv_quantity:
             # Look for the item in the site already
             # @ToDo: Optimise
-            recv_rec = rtable[record.recv_id]
+            recv_rec = db(rtable.id == record.recv_id).select(rtable.site_id,
+                                                              rtable.type,
+                                                              ).first()
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \
                     (inv_item_table.item_id == record.item_id) & \
