@@ -45,6 +45,7 @@ import eden.req
 import eden.scenario
 import eden.security
 import eden.stats
+import eden.suggestions
 import eden.supply
 import eden.support
 import eden.survey
