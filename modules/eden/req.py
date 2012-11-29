@@ -595,20 +595,6 @@ S3OptionsFilter({
                                                 f="user",
                                                 args=["profile"]))
 
-            jappend = s3.jquery_ready.append
-            jappend('''
-$('#req_req_site_id_link').click(function(){
- var site_id=$('#req_req_site_id').val()
- if(site_id){
-  var url = $('#req_req_site_id_link').attr('href')
-  var exists=url.indexOf('?')
-  if(exists=='-1'){
-   $('#req_req_site_id_link').attr('href',url+'?site_id='+site_id)
-  }
- }
- return true
-})''')
-
         req_types = settings.get_req_req_type()
         if "People" in req_types:
             # Show the Required Until Field
