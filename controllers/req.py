@@ -331,15 +331,6 @@ def req_controller():
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
 
-                if type == 8:
-                    table.purpose.label = T("Details")
-                    stable = current.s3db.req_summary_option
-                    options = db(stable.deleted == False).select(stable.name,
-                                                                 orderby=~stable.name)
-                    summary_items = [opt.name for opt in options]
-                    s3.js_global.append('''req_summary_items=%s''' % json.dumps(summary_items))
-                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update_summary.js" % appname)
-
                 method = r.method
                 if method not in ("map", "read", "search", "update"):
                     # Hide fields which don't make sense in a Create form
@@ -479,8 +470,9 @@ S3OptionsFilter({
                     table.organisation_id.readable = table.organisation_id.writable = True
                 else:
                     # Unaffiliated people can't commit on behalf of others
-                    r.component.table.committer_id.writable = False
-                    r.component.table.committer_id.comment = None
+                    field = r.component.table.committer_id
+                    field.writable = False
+                    field.comment = None
 
                 # Non-Item commits shouldn't have a From Inventory
                 # @ToDo: Assets do? (Well, a 'From Site')
@@ -1314,15 +1306,20 @@ def commit_req():
         commit_item_quantity = commit_item_quantity / req_item.req_req_item.pack_quantity
 
         if commit_item_quantity:
+            req_item_id = req_item.req_req_item.id
             commit_item_id = citable.insert(commit_id = commit_id,
-                                            req_item_id = req_item.req_req_item.id,
+                                            req_item_id = req_item_id,
                                             item_pack_id = req_item.req_req_item.item_pack_id,
                                             quantity = commit_item_quantity
                                             )
 
-            # Update the req_item.commit_quantity  & req.commit_status
+            # Update the req_item.commit_quantity & req.commit_status
             s3mgr.store_session("req", "commit_item", commit_item_id)
-            s3db.req_commit_item_onaccept(None)
+            form = Storage()
+            form.vars = Storage(
+                    req_item_id = req_item_id
+                )
+            s3db.req_commit_item_onaccept(form)
 
     # Redirect to commit
     redirect(URL(c="req", f="commit",

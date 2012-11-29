@@ -31,6 +31,8 @@ settings.L10n.utc_offset = "UTC +0500"
 settings.L10n.date_format = T("%m-%d-%Y")
 settings.L10n.time_format = T("%H:%M:%S")
 settings.L10n.datetime_format = T("%m-%d-%Y %H:%M")
+# Start week on Sunday
+settings.L10n.firstDOW = 0
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = "."
@@ -282,7 +284,7 @@ settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 8,     # 8th item in the menu
+            module_type = 9,     # 8th item in the menu
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
@@ -371,6 +373,12 @@ settings.modules = OrderedDict([
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
             module_type = 10
+        )),
+    ("assess", Storage(
+            name_nice = T("Assessments"),
+            #description = "Rapid Assessments & Flexible Impact Assessments",
+            restricted = True,
+            module_type = 7,
         )),
     #("survey", Storage(
     #        name_nice = T("Surveys"),
@@ -484,14 +492,6 @@ settings.modules = OrderedDict([
     #("building", Storage(
     #        name_nice = T("Building Assessments"),
     #        #description = "Building Safety Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    # Deprecated by Surveys module
-    # - depends on CR, IRS & Impact
-    #("assess", Storage(
-    #        name_nice = T("Assessments"),
-    #        #description = "Rapid Assessments & Flexible Impact Assessments",
     #        restricted = True,
     #        module_type = 10,
     #    )),

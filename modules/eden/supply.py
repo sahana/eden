@@ -65,6 +65,7 @@ class S3SupplyModel(S3Model):
     names = ["supply_brand",
              "supply_catalog",
              "supply_item_category",
+             "supply_item_category_id",
              "supply_item",
              "supply_item_entity",
              "supply_catalog_item",
@@ -871,6 +872,7 @@ S3OptionsFilter({
         return Storage(
                 supply_item_id = supply_item_id,
                 supply_item_entity_id = item_id,
+                supply_item_category_id = item_category_id,
                 supply_item_pack_id = item_pack_id,
                 supply_item_represent = self.supply_item_represent,
                 supply_item_category_represent = self.item_category_represent,

@@ -48,7 +48,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import S3DateTime, s3_get_foreign_key, s3_unicode
+from s3utils import s3_get_foreign_key, s3_unicode
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 from s3export import S3Exporter
@@ -752,7 +752,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
                     query |= q
                 else:
                     query = q
-
             return query
         else:
             return None
@@ -1067,7 +1066,7 @@ class S3Search(S3CRUD):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _build_widget_query(resource, name, widget, form, query):
+    def _build_widget_query(resource, name, widget, form, dq=None, vq=None):
         """
             @todo: docstring
         """
@@ -1075,8 +1074,7 @@ class S3Search(S3CRUD):
         errors = None
         if hasattr(widget, "names"):
             value = Storage([(name, form.vars[name])
-                             for name in widget.names
-                             if name in form.vars])
+                             for name in widget.names if name in form.vars])
         elif name in form.vars:
             value = form.vars[name]
         else:
@@ -1087,13 +1085,19 @@ class S3Search(S3CRUD):
         if not errors:
             q = widget.query(resource, value)
 
-            if q is not None:
-                if query is None:
-                    query = q
+            if q:
+                if q.query(resource) is not None:
+                    if dq is None:
+                        dq = q
+                    else:
+                        dq &= q
                 else:
-                    query = query & q
+                    if vq is None:
+                        vq = q
+                    else:
+                        vq &= q
 
-        return (query, errors)
+        return (dq, vq, errors)
 
     # -------------------------------------------------------------------------
     def save_search_widget(self, r, query, **attr):
@@ -1306,7 +1310,8 @@ i18n.edit_saved_search="%s"
             # POST
             form_values = r.post_vars
         else:
-            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            url_options = Storage([(k, v)
+                                   for k, v in r.get_vars.iteritems() if v])
             if url_options:
                 # GET
                 form_values = url_options
@@ -1317,7 +1322,7 @@ i18n.edit_saved_search="%s"
                     if "clear_opts" in r.get_vars:
                         session_options = Storage()
                     else:
-                        session_options = session_options[tablename]
+                        session_options = session_options[tablename] or Storage()
                 else:
                     # unfiltered
                     session_options = Storage()
@@ -1327,48 +1332,47 @@ i18n.edit_saved_search="%s"
             if "clear_opts" in r.vars:
                 del r.vars["clear_opts"]
 
-        # Remove the existing session filter if this is a new
-        # search (@todo: do not store the filter in session)
-        if r.http == "GET" and r.representation != "aadata":
-            if "filter" in session.s3:
-                del session.s3["filter"]
+        # Remove the existing session filter if this is a new search
+        if r.http == "GET" and r.representation != "aadata" and \
+           "filter" in session.s3:
+            del session.s3["filter"]
 
         # Build the search forms
         simple_form, advanced_form = self.build_forms(r, form_values)
 
         # Process the search forms
-        query, errors = self.process_forms(r,
-                                           simple_form,
-                                           advanced_form,
-                                           form_values)
-
+        dq, vq, errors = self.process_forms(r,
+                                            simple_form,
+                                            advanced_form,
+                                            form_values)
         search_url = None
         search_url_vars = Storage()
         save_search = ""
         if not errors:
-            if hasattr(query, "serialize_url"):
-                search_url_vars = query.serialize_url(resource)
-                search_url = r.url(method = "",
-                                   vars = search_url_vars)
+            if (dq is None or hasattr(dq, "serialize_url")) and \
+               (vq is None or hasattr(vq, "serialize_url")):
+                query = dq
+                if vq is not None:
+                    if query is not None:
+                        query &= vq
+                    else:
+                        query = vq
+                if query is not None:
+                    search_url_vars = query.serialize_url(resource)
+                search_url = r.url(method = "", vars = search_url_vars)
 
                 # Create a Save Search widget
                 save_search = self.save_search_widget(r, query, **attr)
 
-            resource.add_filter(query)
+            # Add sub-queries
+            resource.add_filter(dq)
+            resource.add_filter(vq)
+
             search_vars = dict(simple=False,
                                advanced=True,
                                criteria=form_values)
         else:
             search_vars = dict()
-
-        s3.formats.pdf = r.url(method="",
-                               vars=search_url_vars)
-        s3.formats.xls = r.url(method="",
-                               vars=search_url_vars)
-        s3.formats.rss = r.url(method="",
-                               vars=search_url_vars)
-        s3.formats.xml = r.url(method="",
-                               vars=search_url_vars)
 
         if representation == "plain":
             # Map popup filter
@@ -1389,6 +1393,12 @@ i18n.edit_saved_search="%s"
             form.append(advanced_form)
         output["form"] = form
 
+        # Store format URLs - @todo: this is currently broken
+        formats = s3.formats
+        format_url = r.url(method="", vars=search_url_vars)
+        for f in ("pdf", "xls", "rss", "xml"):
+            formats[f] = format_url
+
         # List fields
         if not list_fields:
             fields = resource.readable_fields()
@@ -1402,10 +1412,6 @@ i18n.edit_saved_search="%s"
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])
 
-        # Count rows
-        totalrows = resource.count()
-        displayrows = totalrows
-
         # How many records per page?
         if s3.dataTable_iDisplayLength:
             display_length = s3.dataTable_iDisplayLength
@@ -1416,23 +1422,9 @@ i18n.edit_saved_search="%s"
         if not s3.no_sspag:
             dt_pagination = "true"
             limit = 2 * display_length
-
-            # Build session filter for data tables
-            # @todo: do not use session to store filter
-            ids = resource.get_id()
-            if ids:
-                if not isinstance(ids, list):
-                    ids = str(ids)
-                else:
-                    ids = ",".join([str(i) for i in ids])
-                session.s3.filter = {"%s.id" % resource.name: ids}
-
         else:
-            limit = None
             dt_pagination = "false"
-
-        if not orderby:
-            orderby = fields[0]
+            limit = None
 
         # Truncate long texts
         if r.interactive or representation == "aadata":
@@ -1443,48 +1435,55 @@ i18n.edit_saved_search="%s"
         # Remove the dataTables search box to avoid confusion
         s3.dataTable_NobFilter = True
 
-        # Get the data table
-        dt = resource.datatable(fields=list_fields,
-                                start=None,
-                                limit=limit,
-                                #left=left,
-                                #distinct=distinct,
-                                orderby=orderby)
+        # Get the results
+        if not orderby:
+            orderby = fields[0]
+        dt, totalrows, ids = resource.datatable(fields=list_fields,
+                                                start=None,
+                                                limit=limit,
+                                                orderby=orderby,
+                                                getids=True)
+        displayrows = totalrows
 
+        # Render the datatable and add it to the output
+        if not s3.no_sspag and ids:
+            # Session filter for datatable's Ajax-requests
+            ids = ",".join([str(i) for i in ids])
+            session.s3.filter = {"%s.id" % resource.name: ids}
         if dt is None:
+            # No results
             datatable = self.crud_string(tablename, "msg_no_match")
             s3.no_formats = True
         else:
+            # Data table
             dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
             datatable = dt.html(totalrows, displayrows, "list",
                                 dt_pagination=dt_pagination,
                                 dt_displayLength=display_length,
                                 dt_permalink=search_url,
                                 dt_sDom = dt_sDom)
-
-        # Add items to output
         output["items"] = datatable
+        output["sortby"] = sortby
 
-        items = output["items"]
-        if isinstance(items, DIV):
+        # Construct list|map|msg tabs as appropriate
+        tabs = []
+        if dt is not None:
             filter = session.s3.filter
             app = request.application
 
-            tabs = []
-            if "location_id" in table or \
-               "site_id" in table:
-                # Add a map for search results
+            if "location_id" in table or "site_id" in table:
+                # Add a map-tab for search results
                 # (this same map is also used by the Map Search Widget, if-present)
+
                 tabs.append((T("Map"), "map"))
                 app = request.application
+
                 # Build URL to load the features onto the map
                 if query:
-                    vars = query.serialize_url(resource=resource)
+                    vars = search_url_vars #query.serialize_url(resource=resource)
                 else:
                     vars = None
-                url = URL(extension="geojson",
-                          args=None,
-                          vars=vars)
+                url = URL(extension="geojson", args=None, vars=vars)
                 gis = current.gis
                 feature_resources = [{
                         "name"      : T("Search Results"),
@@ -1512,53 +1511,29 @@ i18n.edit_saved_search="%s"
             if settings.has_module("msg") and \
                ("pe_id" in table or "person_id" in table) and \
                current.auth.permission.has_permission("update", c="msg"):
-                # Provide the ability to Message person entities in search results
+                # Add a msg-tab to provide the ability to send messages to
+                # all person entities in the search result
                 tabs.append((T("Message"), "compose"))
 
             if tabs:
+                # If we have tabs, then "List" becomes the first one
                 tabs.insert(0, ((T("List"), None)))
 
-            # @todo: this needs rework
-            #        - s3FormatRequest must retain any URL filters
-            #        - s3FormatRequest must remove the "search" method
-            #        - other data formats could have other list_fields,
-            #          hence applying the datatable sorting/filters is
-            #          not transparent
-
-            #if not s3.datatable_ajax_source:
-                #s3.datatable_ajax_source = str(r.url(representation = "aaData"))
-            #s3.formats.pdf = r.url(method="")
-            #s3.formats.xls = r.url(method="")
-            #s3.formats.rss = r.url(method="")
-            #attr = S3DataTable.getConfigData()
-            #items = S3DataTable.htmlConfig(items,
-                                           #"list",
-                                           #sortby, # order by
-                                           ##filter, # the filter string
-                                           #None, # the rfields
-                                           #**attr
-                                           #)
-            #items[0].insert(0, sep)
-            #items[0].insert(0, link)
-        else:
-            tabs = []
-
-        output["items"] = items
-        output["sortby"] = sortby
-
-        # Search Tabs
-        search_tabs = s3_search_tabs(r, tabs)
-        output["search_tabs"] = search_tabs
+        output["search_tabs"] = s3_search_tabs(r, tabs)
 
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
         output["subtitle"] = self.crud_string(tablename, "msg_match")
 
+        # Store search options in session (do this only here after the
+        # search has successfully returned a result - prevent re-run of
+        # unsuccessful options whenever the user opens the search page)
+        if "search_options" not in session.s3:
+            session.s3.search_options = Storage()
+        session.s3.search_options[tablename] = s3.search_options[tablename]
+
         # View
         response.view = self._view(r, "search.html")
-
-        # RHeader gets added later in S3Method()
-
         return output
 
     # -------------------------------------------------------------------------
@@ -1568,12 +1543,11 @@ i18n.edit_saved_search="%s"
             and return a query object. Otherwise return an empty query and
             the errors.
 
-            If valid, save the values into the users' session.
         """
 
-        s3 = current.session.s3
+        s3 = current.response.s3
 
-        query = None
+        dq, vq = None, None
         errors = None
 
         # Create a container in the session to saves search options
@@ -1586,21 +1560,21 @@ i18n.edit_saved_search="%s"
             if simple_form.accepts(form_values,
                                    formname="search_simple"):
                 for name, widget in self.simple:
-                    query, errors = self._build_widget_query(self.resource,
-                                                             name,
-                                                             widget,
-                                                             simple_form,
-                                                             query)
+                    dq, vq, errors = self._build_widget_query(self.resource,
+                                                              name,
+                                                              widget,
+                                                              simple_form,
+                                                              dq, vq)
                     if errors:
                         simple_form.errors.update(errors)
                 errors = simple_form.errors
 
-                # Save the form values into the session
+                # Remember the form values
                 s3.search_options[self.tablename] = \
                     Storage([(k, v) for k, v in form_values.iteritems() if v])
             elif simple_form.errors:
                 errors = simple_form.errors
-                return query, errors, simple
+                return dq, vq, errors
 
         # Process the advanced search form:
         if advanced_form is not None:
@@ -1609,25 +1583,24 @@ i18n.edit_saved_search="%s"
                 simple = False
                 resource = self.resource
                 for name, widget in self.advanced:
-                    query, errors = self._build_widget_query(resource,
-                                                             name,
-                                                             widget,
-                                                             advanced_form,
-                                                             query)
+                    dq, vq, errors = self._build_widget_query(resource,
+                                                              name,
+                                                              widget,
+                                                              advanced_form,
+                                                              dq, vq)
                     if errors:
                         advanced_form.errors.update(errors)
 
                 errors = advanced_form.errors
 
-                # Save the form values into the session
+                # Remember the form values
                 s3.search_options[self.tablename] = \
                     Storage([(k, v) for k, v in form_values.iteritems() if v])
             elif advanced_form.errors:
                 simple = False
 
-        current.response.s3.simple_search = simple
-
-        return (query, errors)
+        s3.simple_search = simple
+        return dq, vq, errors
 
     # -------------------------------------------------------------------------
     def build_forms(self, r, form_values=None):
@@ -1647,23 +1620,27 @@ i18n.edit_saved_search="%s"
 
         opts = Storage(r.get_vars)
         opts["clear_opts"] = "1"
-        clear_opts = A(T("Clear"),
-                       _href=r.url(vars=opts),
-                       _class="action-lnk")
+        clear_opts = A(T("Clear"), _href=r.url(vars=opts), _class="action-lnk")
 
         # Simple search form
         if simple:
-            # Switch-link
+            attr = {}
             if advanced:
                 switch_link = A(T("Advanced Search"), _href="#",
                                 _class="action-lnk advanced-lnk")
+                # Hide if the advanced form has been submitted
+                if r.http == "POST" and \
+                   r.post_vars.get("advanced_submit", False):
+                    attr["_style"] = "display:none;"
             else:
                 switch_link = ""
             simple_form = self._build_form(simple,
                                            form_values=form_values,
                                            clear=clear_opts,
                                            switch=switch_link,
-                                           _class="simple-form")
+                                           submit="simple_submit",
+                                           _class="simple-form",
+                                           **attr)
 
         # Advanced search form
         if advanced:
@@ -1671,13 +1648,18 @@ i18n.edit_saved_search="%s"
             if simple and not r.representation == "plain":
                 switch_link = A(T("Basic Search"), _href="#",
                                 _class="action-lnk simple-lnk")
-                attr["_style"] = "display:none;"
+                # Hide for initial GET or if simple form has been submitted
+                if r.http == "GET" or \
+                   r.http == "POST" and \
+                   r.post_vars.get("simple_submit", False):
+                    attr["_style"] = "display:none;"
             else:
                 switch_link = ""
             advanced_form = self._build_form(advanced,
                                              form_values=form_values,
                                              clear=clear_opts,
                                              switch=switch_link,
+                                             submit="advanced_submit",
                                              _class="advanced-form",
                                              **attr)
 
@@ -1688,15 +1670,17 @@ i18n.edit_saved_search="%s"
                     form_values=None,
                     clear="",
                     switch="",
+                    submit="search_submit",
                     **attr):
         """
             Render a search form.
 
             @param widgets: the widgets
-            @param form_values: the form values (as dict) to pass to
-                                the widgets
+            @param form_values: the form values (as dict) to pass to the
+                                widgets
             @param clear: the clear-values action link
             @param switch: the switch-forms action link
+            @param submit: the HTML name attribute for the submit button
             @param attr: HTML attributes for the form
 
             @returns: a FORM instance
@@ -1729,10 +1713,20 @@ i18n.edit_saved_search="%s"
                 tr.append(DIV(DIV(_class="tooltip",
                                   _title="%s|%s" % (label, comment))))
             trows.append(tr)
+
         if switch:
             trows.append(TR("", switch))
-        trows.append(TR("", TD(INPUT(_type="submit", _value=T("Search")),
-                               clear)))
+
+        trows.append(
+                     TR("",
+                        TD(INPUT(_type="submit",
+                                 _name=submit,
+                                 _value=T("Search")),
+                           clear
+                          )
+                        )
+                     )
+
         form = FORM(TABLE(trows), **attr)
         return form
 
@@ -2014,7 +2008,7 @@ i18n.edit_saved_search="%s"
             @todo: docstring
         """
 
-        query = None
+        dq, vq = None, None
         errors = True
 
         request = self.request
@@ -2027,28 +2021,29 @@ i18n.edit_saved_search="%s"
         if self.simple and request.vars.simple_form:
             for name, widget in self.simple:
                 # Pass request instead of form - it contains the vars
-                query, errors = self._build_widget_query(resource,
-                                                         name,
-                                                         widget,
-                                                         request,
-                                                         query)
+                dq, vq, errors = self._build_widget_query(resource,
+                                                          name,
+                                                          widget,
+                                                          request,
+                                                          dq, vq)
                 if errors:
                     break
         # Process the advanced search form:
         elif self.advanced:
             for name, widget in self.advanced:
                 # Pass request instead of form - it contains the vars
-                query, errors = self._build_widget_query(resource,
-                                                         name,
-                                                         widget,
-                                                         request,
-                                                         query)
+                dq, vq, errors = self._build_widget_query(resource,
+                                                          name,
+                                                          widget,
+                                                          request,
+                                                          dq, vq)
                 if errors:
                     break
         else:
             errors = True
 
-        resource.add_filter(query)
+        resource.add_filter(dq)
+        resource.add_filter(vq)
         try:
             get_fieldname = request.vars.get("get_fieldname", "id")
             field = resource.table[get_fieldname]

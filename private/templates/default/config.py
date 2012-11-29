@@ -119,6 +119,8 @@ T = current.T
 #settings.L10n.date_format = T("%m-%d-%Y")
 #settings.L10n.time_format = T("%H:%M:%S")
 #settings.L10n.datetime_format = T("%m-%d-%Y %H:%M")
+# Start week on Sunday
+#settings.L10n.firstDOW = 0
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = "."
@@ -238,6 +240,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.label_postcode = "ZIP Code"
 # Enable Social Media share buttons
 #settings.ui.social_buttons = True
+# Enable this to show pivot table options form by default
+#settings.ui.hide_report_options = False
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -387,7 +391,7 @@ settings.L10n.decimal_separator = "."
 #settings.req.req_form_name = "Request Issue Form"
 #settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
-# list are ["Stock", "People", "Summary", "Other"]. If this is commented out then
+# list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
 #settings.req.req_type = ["Stock"]
 

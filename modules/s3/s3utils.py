@@ -442,14 +442,10 @@ def s3_represent_facilities(db, site_ids, link=True):
                                        table.facility_type_id,
                                        table.site_id,
                                        table.name)
-            ttable = db.org_facility_type
-            type_ids = [r.facility_type_id[0] for r in records if r.facility_type_id]
-            facility_types = db(ttable.id.belongs(type_ids)).select(ttable.id,
-                                                                    ttable.name)
-            facility_types = facility_types.as_dict()
+            type_represent = table.facility_type_id.represent
             for record in records:
                 if record.facility_type_id:
-                    facility_type = facility_types[record.facility_type_id[0]]["name"]
+                    facility_type = type_represent(record.facility_type_id[:1])
                     site_str = "%s (%s)" % (record.name, facility_type)
                 else:
                     site_str = "%s (%s)" % (record.name, instance_type_nice)
@@ -3413,8 +3409,8 @@ class S3DataTable(object):
                            action_col=action_col,
                            stringify=stringify,
                            **attr)
-        
 
-        
+
+
 
 # END =========================================================================

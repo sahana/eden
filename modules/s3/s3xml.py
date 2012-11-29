@@ -51,7 +51,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3codec import S3Codec
-from s3utils import s3_get_foreign_key, s3_unicode
+from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper
 
 try:
     from lxml import etree
@@ -1517,10 +1517,14 @@ class S3XML(S3Codec):
                 fields.set(self.ATTRIBUTE.resource, tablename)
             for f in table.fields:
                 ftype = str(table[f].type)
-                # Skip super entity references without ID
-                if ftype[:9] == "reference" and \
-                   not "id" in current.db[ftype[10:]].fields:
-                    continue
+                # Skip own super links
+                if ftype[:9] == "reference":
+                    ktablename = ftype[10:]
+                    s = current.s3db.get_config(tablename, "super_entity")
+                    if not isinstance(s, (list, tuple)):
+                        s = [s]
+                    if ktablename in s:
+                        continue
                 if f in self.IGNORE_FIELDS or ftype == "id":
                     continue
                 if f in self.FIELDS_TO_ATTRIBUTES:
@@ -1555,15 +1559,12 @@ class S3XML(S3Codec):
                         comment = s3_unicode(comment)
                     if comment and "<" in comment:
                         try:
-                            markup = etree.XML(comment)
-                            comment = markup.xpath(".//text()")
-                            if comment:
-                                comment = " ".join(comment)
-                            else:
-                                comment = ""
-                        except etree.XMLSyntaxError:
-                            comment = comment.replace(
-                                        "<", "<!-- <").replace(">", "> -->")
+                            stripper = S3MarkupStripper()
+                            stripper.feed(comment)
+                            comment = stripper.stripped()
+                        except Exception, e:
+                            print e
+                            pass
                     if comment:
                         field.set(self.ATTRIBUTE.comment, comment)
         return fields

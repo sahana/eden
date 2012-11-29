@@ -407,25 +407,30 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="assess")(
-                    M("Rapid Assessments", f="rat")(
+                    M("Building Assessments", f="building")(
                         M("New", m="create"),
                         M("List All"),
-                        #M("Search", m="search"),
+                        M("Search", m="search"),
                     ),
-                    M("Impact Assessments", f="assess")(
-                        #M("New", m="create"),
-                        M("New", f="basic_assess", p="create"),
-                        M("List All"),
-                        M("Mobile", f="mobile_basic_assess"),
-                        #M("Search", m="search"),
-                    ),
-                    #M("Baseline Data")(
-                        #M("Population", f="population"),
+                    #M("Rapid Assessments", f="rat")(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #    #M("Search", m="search"),
                     #),
-                    M("Edit Options", restrict=ADMIN)(
-                        M("List / Add Baseline Types", f="baseline_type"),
-                        M("List / Add Impact Types", f="impact_type"),
-                    )
+                    #M("Impact Assessments", f="assess")(
+                    #    #M("New", m="create"),
+                    #    M("New", f="basic_assess", p="create"),
+                    #    M("List All"),
+                    #    M("Mobile", f="mobile_basic_assess"),
+                    #    #M("Search", m="search"),
+                    #),
+                    ##M("Baseline Data")(
+                    #    #M("Population", f="population"),
+                    ##),
+                    #M("Edit Options", restrict=ADMIN)(
+                    #    M("List / Add Baseline Types", f="baseline_type"),
+                    #    M("List / Add Impact Types", f="impact_type"),
+                    #)
                 )
 
 
@@ -1613,7 +1618,6 @@ class S3OptionsMenu(object):
 
         settings = current.deployment_settings
         use_commit = lambda i: settings.get_req_use_commit()
-        use_summary = lambda i: "Summary" in settings.get_req_req_type()
         req_items = lambda i: "Stock" in settings.get_req_req_type()
         req_skills = lambda i: "People" in settings.get_req_req_type()
 
@@ -1632,10 +1636,6 @@ class S3OptionsMenu(object):
                     ),
                     M("Commitments", f="commit", check=use_commit)(
                         M("List All")
-                    ),
-                    M("Priority Items", f="summary_option", check=use_summary)(
-                        M("New", m="create"),
-                        M("List All"),
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),

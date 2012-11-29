@@ -484,7 +484,10 @@ class S3Resource(object):
                orderby=None,
                groupby=None,
                distinct=False,
-               virtual=True):
+               virtual=True,
+               count=False,
+               getids=False,
+               cacheable=False):
         """
             Select records from this resource, applying the current filters.
 
@@ -496,6 +499,13 @@ class S3Resource(object):
             @param groupby: SQL groupby (make sure all groupby-fields are selected!)
             @param distinct: SQL distinct
             @param virtual: False to turn off computation of virtual fields
+            @param count: count the total number of rows matching the query
+            @param getids: get the record IDs of all rows matching the query
+            @param cacheable: render the rows cacheable (also omits the web2py
+                              dynamic row functions, which increases the DAL
+                              throughput)
+
+            @return: the rows (with count/getids option a tuple (rows, count, ids))
         """
 
         db = current.db
@@ -647,17 +657,77 @@ class S3Resource(object):
         if not virtual:
             vf = table.virtualfields
             osetattr(table, "virtualfields", [])
+        # Count the rows
+        numrows = None
+        ids = None
+        if limitby is not None:
+            # No vfilter present
+            if getids:
+                if virtual:
+                    vf = table.virtualfields
+                    osetattr(table, "virtualfields", [])
+                rows = db(query).select(self._id,
+                                        distinct=distinct,
+                                        left=attributes.get("left", None),
+                                        orderby=self._id,
+                                        cacheable=True)
+                if virtual:
+                    osetattr(table, "virtualfields", vf)
+                numrows = len(rows)
+                ids = list(set([row[table._id] for row in rows]))
+            elif count:
+                c = self._id.count()
+                row = db(query).select(c,
+                                       distinct=distinct,
+                                       left=attributes.get("left", None)).first()
+                numrows = row[c]
+                ids = []
+        else:
+            # No limitby present => count/collect ids from the rows
+            numrows = None
+            ids = None
+
         # Retrieve the rows
-        rows = db(query).select(*qfields, **attributes)
+        attributes["cacheable"] = cacheable
+        if numrows != 0:
+            rows = db(query).select(*qfields, **attributes)
+
+            if vfltr is None:
+                if count and numrows is None:
+                    numrows = len(rows)
+                if getids and ids is None:
+                    ids = list(set([row[table._id] for row in rows]))
+        else:
+            rows = [] # None?
+
         # Restore virtual fields
         if not virtual:
             osetattr(table, "virtualfields", vf)
 
         # Apply virtual fields filter
         if rows and vfltr is not None:
-            rows = rfilter(rows, start=start, limit=limit)
 
-        return rows
+            if count:
+                rows = rfilter(rows)
+                numrows = len(rows)
+                if limit and start is None:
+                    start = 0
+                if start is not None and limit is not None:
+                    rows = rows[start:start+limit]
+                elif start is not None:
+                    rows = rows[start:]
+            else:
+                rows = rfilter(rows, start=start, limit=limit)
+
+            if getids:
+                ids = list(set([row[table._id] for row in rows]))
+
+        if not getids:
+            ids = []
+        if count or getids:
+            return rows, numrows, ids
+        else:
+            return rows
 
     # -------------------------------------------------------------------------
     def insert(self, **fields):
@@ -1172,7 +1242,8 @@ class S3Resource(object):
                   limit=None,
                   left=None,
                   orderby=None,
-                  distinct=False):
+                  distinct=False,
+                  getids=False):
         """
             Generate a data table of this resource
 
@@ -1182,8 +1253,12 @@ class S3Resource(object):
             @param left: additional left joins for DB query
             @param orderby: orderby for DB query
             @param distinct: distinct-flag for DB query
+            @param getids: return the record IDs of all records matching the
+                           query (used in search to create a filter)
 
-            @return: an S3DataTable instance
+            @return: tuple (S3DataTable, numrows, ids), where numrows represents
+                     the total number of rows in the table that match the query;
+                     ids is empty unless getids=True
         """
 
         # Choose fields
@@ -1201,21 +1276,22 @@ class S3Resource(object):
         rfields = self.resolve_selectors(fields, extra_fields=False)[0]
 
         # Retrieve the rows
-        rows = self.select(fields=selectors,
-                           start=start,
-                           limit=limit,
-                           orderby=orderby,
-                           left=left,
-                           distinct=distinct)
+        rows, numrows, ids = self.select(fields=selectors,
+                                         start=start,
+                                         limit=limit,
+                                         orderby=orderby,
+                                         left=left,
+                                         distinct=distinct,
+                                         count=True,
+                                         getids=getids,
+                                         cacheable=True)
 
         # Generate the data table
         if rows:
-            data = self.extract(rows,
-                                selectors,
-                                represent=True)
-            return S3DataTable(rfields, data)
+            data = self.extract(rows, selectors, represent=True)
+            return S3DataTable(rfields, data), numrows, ids
         else:
-            return None
+            return None, 0, []
 
     # -------------------------------------------------------------------------
     def pivottable(self, rows, cols, layers):
@@ -1344,7 +1420,7 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     # Data Object API
     # -------------------------------------------------------------------------
-    def load(self, start=None, limit=None, orderby=None, virtual=True):
+    def load(self, start=None, limit=None, orderby=None, virtual=True, cacheable=False):
         """
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
@@ -1377,7 +1453,8 @@ class S3Resource(object):
                            start=start,
                            limit=limit,
                            orderby=orderby,
-                           virtual=virtual)
+                           virtual=virtual,
+                           cacheable=cacheable)
 
         ids = self._ids = []
         new_id = ids.append
@@ -1834,7 +1911,7 @@ class S3Resource(object):
         # Facility Map search needs VFs for reqs (marker_fn & filter)
         # @ToDo: Lazy VirtualFields
         #self.load(start=start, limit=limit, orderby=orderby, virtual=False)
-        self.load(start=start, limit=limit, orderby=orderby)
+        self.load(start=start, limit=limit, orderby=orderby, cacheable=True)
 
         format = current.auth.permission.format
         request = current.request
@@ -3938,7 +4015,7 @@ class S3ResourceField(object):
                     resource._attach(tn, hook)
             if tn in resource.components:
                 c = resource.components[tn]
-                distinct = c.link is not None or c.multiple
+                distinct = True # c.link is not None or c.multiple
                 j = c.get_join()
                 l = c.get_left_join()
                 tn = c._alias
@@ -4283,6 +4360,76 @@ class S3ResourceQuery(object):
             return [l.name]
         else:
             return []
+
+    # -------------------------------------------------------------------------
+    def split(self, resource):
+        """
+            Split this query into a real query and a virtual one (AND)
+
+            @param resource: the S3Resource
+            @return: tuple (DAL-translatable sub-query, virtual filter),
+                     both S3ResourceQuery instances
+        """
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        if op == self.AND:
+            lq, lf = l.split(resource)
+            rq, rf = r.split(resource)
+            q = lq
+            if rq is not None:
+                if q is not None:
+                    q &= rq
+                else:
+                    q = rq
+            f = lf
+            if rf is not None:
+                if f is not None:
+                    f &= rf
+                else:
+                    f = rf
+            return q, f
+        elif op == self.OR:
+            lq, lf = l.split(resource)
+            rq, rf = r.split(resource)
+            if lf is not None or rf is not None:
+                return None, self
+            else:
+                q = lq
+                if rq is not None:
+                    if q is not None:
+                        q |= rq
+                    else:
+                        q = rq
+                return q, None
+        elif op == self.NOT:
+            if l.op == self.OR:
+                i = (~(l.left)) & (~(l.right))
+                return i.split(resource)
+            else:
+                q, f = l.split(resource)
+                if q is not None and f is not None:
+                    return None, self
+                elif q is not None:
+                    return ~q, None
+                elif f is not None:
+                    return None, ~f
+
+        try:
+            lfield = S3ResourceField(resource, self.left)
+        except:
+            lfield = None
+        try:
+            rfield = S3ResourceField(resource, self.right)
+        except:
+            rfield = None
+        if not (lfield and rfield) or \
+           lfield.field is None or rfield.field is None:
+            return None, self
+        else:
+            return self.query(resource), None
 
     # -------------------------------------------------------------------------
     def query(self, resource):
@@ -6357,7 +6504,8 @@ class S3RecordMerger(object):
         form.vars.update(data)
         try:
             current.db(table._id==row[table._id]).update(**data)
-        except:
+        except Exception, e:
+            print e
             self.raise_error("Could not update %s.%s" %
                             (table._tablename, id))
         else:
@@ -6673,7 +6821,9 @@ class S3RecordMerger(object):
             r = None
             p = Storage([(fn, "__deduplicate_%s__" % fn)
                          for fn in data
-                         if table[fn].unique and table[fn].type == "string"])
+                         if table[fn].unique and \
+                            table[fn].type == "string" and \
+                            data[fn] == duplicate[fn]])
             if p:
                 r = Storage([(fn, original[fn]) for fn in p])
                 update_record(table, duplicate_id, duplicate, p)

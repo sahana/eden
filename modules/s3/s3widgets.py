@@ -198,11 +198,12 @@ class S3DateTimeWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
+        settings = current.deployment_settings
         if self.format:
             # default: "%Y-%m-%d %T"
             format = str(self.format)
         else:
-            format = str(current.deployment_settings.get_L10n_datetime_format())
+            format = str(settings.get_L10n_datetime_format())
         request = current.request
         s3 = current.response.s3
 
@@ -229,6 +230,11 @@ class S3DateTimeWidget(FormWidget):
         earliest = now - timedelta(hours = self.past)
         latest = now + timedelta(hours = self.future)
 
+        # Round to the nearest half hour.
+        seconds = (earliest - earliest.min).seconds
+        rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
+        rounded = earliest + datetime.timedelta(0, rounding - seconds, -earliest.microsecond)
+        rounded = rounded.strftime(format)
         earliest = earliest.strftime(format)
         latest = latest.strftime(format)
 
@@ -241,19 +247,26 @@ class S3DateTimeWidget(FormWidget):
             s3.scripts.append("%s/anytimec.js" % script_dir)
             s3.stylesheets.append("plugins/anytimec.css")
 
+        firstDOW = settings.get_L10n_firstDOW()
         s3.jquery_ready.append(
-'''$('#%(selector)s').AnyTime_picker({
- askSecond:false,
- firstDOW:1,
- earliest:'%(earliest)s',
- latest:'%(latest)s',
- format:'%(format)s',
-})
+'''$('#%(selector)s').click(function(){
+if (!$('#%(selector)s').val()){
+ $('#%(selector)s').val('%(rounded)s')
+ $('#%(selector)s').AnyTime_picker({
+  askSecond:false,
+  firstDOW:%(firstDOW)s,
+  earliest:'%(earliest)s',
+  latest:'%(latest)s',
+  format:'%(format)s'
+ }).focus()
+}})
 clear_button=$('<input type="button" value="clear"/>').click(function(e){
  $('#%(selector)s').val('')
 })
 $('#%(selector)s').after(clear_button)''' % \
-        dict(selector=selector,
+        dict(rounded=rounded,
+             selector=selector,
+             firstDOW=firstDOW,
              earliest=earliest,
              latest=latest,
              format=format.replace("%M", "%i")))
@@ -2604,14 +2617,15 @@ class S3ACLWidget(CheckboxesWidget):
 class CheckboxesWidgetS3(OptionsWidget):
     """
         S3 version of gluon.sqlhtml.CheckboxesWidget:
+        - configurable number of columns
         - supports also integer-type keys in option sets
-        - has an identifiable class
+        - has an identifiable class for styling
 
-        Used in Sync, Projects
+        Used in Sync, Projects, Assess
     """
 
-    @staticmethod
-    def widget(field, value, **attributes):
+    @classmethod
+    def widget(cls, field, value, **attributes):
         """
         generates a TABLE tag, including INPUT checkboxes (multiple allowed)
 
@@ -2672,6 +2686,8 @@ class CheckboxesWidgetS3(OptionsWidget):
                 tds.append(TD(INPUT(_type="checkbox",
                                     _name=field.name,
                                     _id=input_id,
+                                    # Hide checkboxes without a label
+                                    _class="" if v else "hide",
                                     requires=attr.get("requires", None),
                                     hideerror=True,
                                     _value=k,

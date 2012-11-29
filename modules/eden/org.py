@@ -1543,6 +1543,12 @@ class S3FacilityModel(S3Model):
                 options = get_facility_opts,
                 cols=2,
             ),
+            S3SearchOptionsWidget(
+                name="facility_search_org",
+                label=T("Organization"),
+                field="organisation_id",
+                cols=3,
+            ),
             #S3SearchOptionsWidget(
             #  name="facility_search_L1",
             #  field="location_id$L1",
@@ -1682,35 +1688,19 @@ class S3FacilityModel(S3Model):
         if not opt:
             return current.messages["NONE"]
 
-        db = current.db
-        table = db.org_facility_type
-        set = db(table.id > 0).select(table.id,
-                                      table.name).as_dict()
+        opts = opt if type(opt) is list else [opt]
 
-        if isinstance(opt, (list, tuple)):
-            opts = opt
-            vals = [str(set.get(o)["name"]) for o in opts]
-            multiple = True
-        elif isinstance(opt, int):
-            opts = [opt]
-            vals = str(set.get(opt)["name"])
-            multiple = False
-        else:
-            try:
-                opt = int(opt)
-            except:
-                return current.messages.UNKNOWN_OPT
-            else:
-                opts = [opt]
-                vals = str(set.get(opt)["name"])
-                multiple = False
+        table = current.s3db.org_facility_type
+        query = table.id.belongs(opts)
+        rows = current.db(query).select(table.id,
+                                        table.name,
+                                        cacheable=True,
+                                        limitby=(0, len(opts)))
+        vals = dict([(r.id, r.name) for r in rows])
 
-        if multiple:
-            if len(opts) > 1:
-                vals = ", ".join(vals)
-            else:
-                vals = len(vals) and vals[0] or ""
-        return vals
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        names = [vals[k] if k in vals else UNKNOWN_OPT for k in opts]
+        return ", ".join(names)
 
 # -----------------------------------------------------------------------------
 def org_facility_rheader(r, tabs=[]):

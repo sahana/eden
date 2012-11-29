@@ -529,8 +529,11 @@ class S3SQLDefaultForm(S3SQLForm):
             done = []
             while tr:
                 f = tr.attributes.get("_id", None)
+                if not f:
+                    # DIV-based form-style
+                    f = tr[0][0].attributes.get("_id", None)
                 if f.startswith(tablename):
-                    f = f[len(tablename)+1:-6]
+                    f = f[len(tablename) + 1 : -6]
                     for k in subheadings.keys():
                         if k in done:
                             continue
@@ -1674,7 +1677,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if fname in form.vars:
 
             # Retrieve the data
-            data = json.loads(form.vars[fname])
+            try:
+                data = json.loads(form.vars[fname])
+            except ValueError:
+                return
             if "component" not in data:
                 return
 
