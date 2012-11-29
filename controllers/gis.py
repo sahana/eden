@@ -50,6 +50,13 @@ def index():
  S3.gis.mapWin.destroy()
  addMapWindow()
  evt.preventDefault()
+  if(document.body.requestFullScreen) {
+  document.body.requestFullScreen();
+  } else if (document.body.webkitRequestFullScreen) {
+  document.body.webkitRequestFullScreen();
+  } else if (document.body.mozRequestFullScreen) {
+  document.body.mozRequestFullScreen();
+  }
  }
 })''')
 
