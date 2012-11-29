@@ -94,6 +94,7 @@ from gluon.storage import Storage
 from s3utils import *
 from s3validators import *
 
+ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
 # =============================================================================
@@ -3723,52 +3724,31 @@ def s3_checkboxes_widget(field,
             raise SyntaxError, "widget cannot determine options of %s" % field
 
     help_text = Storage()
-
     if help_field:
-        ftype = str(field.type)
 
-        if ftype[:9] == "reference":
-            ktablename = ftype[10:]
-        elif ftype[:14] == "list:reference":
-            ktablename = ftype[15:]
-        else:
-            # not a reference - no expand
-            # option text = field representation
-            ktablename = None
+        ktablename, pkey, multiple = s3_get_foreign_key(field)
 
-        if isinstance(help_field,dict):
-            # Convert the keys to strings (That's what the options are)
+        if isinstance(help_field, dict):
+            # Convert the keys to strings (that's what the options are)
             for key in help_field.keys():
                 help_text[str(key)] = help_field[key]
 
-        if ktablename is not None:
-            if "." in ktablename:
-                ktablename, pkey = ktablename.split(".", 1)
-            else:
-                pkey = None
+        elif ktablename is not None:
 
             ktable = current.s3db[ktablename]
-
-            if pkey is None:
-                pkey = ktable._id.name
-
-            lookup_field = help_field
-
-            if lookup_field in ktable.fields:
-                query = ktable[pkey].belongs([k for k, v in options])
+            if hasattr(ktable, help_field):
+                keys = [k for k, v in options if str(k).isdigit()]
+                query = ktable[pkey].belongs(keys)
                 rows = current.db(query).select(ktable[pkey],
-                                                ktable[lookup_field]
-                                                )
-
+                                                ktable[help_field])
                 for row in rows:
-                    help_text[str(row[ktable[pkey]])] = row[ktable[lookup_field]]
+                    help_text[str(row[pkey])] = row[help_field]
             else:
                 # Error => no comments available
                 pass
         else:
             # No lookup table => no comments available
             pass
-
 
     options = [(k, v) for k, v in options if k != ""]
     options = sorted(options, key=lambda option: option[1])

@@ -575,6 +575,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
             opt_values = options.keys()
         else:
+            options = None
             if field_type == "boolean":
                 opt_values = (True, False)
             else:
@@ -603,20 +604,26 @@ class S3SearchOptionsWidget(S3SearchWidget):
                             if v not in opt_values:
                                 opt_append(v)
 
-        if len(opt_values) < 1:
+        # Translate empty-option
+        EMPTY = T("None")
+
+        # Append empty-option if field can be empty
+        #if field:
+            #requires = field.requires
+            #if not isinstance(requires, (tuple, list)):
+                #requires = [requires]
+        #else:
+            #requires = [None]
+        #if None not in opt_values and "" not in opt_values and \
+           #isinstance(requires[0], IS_EMPTY_OR):
+            #opt_values.append(None)
+            #if options is not None and None not in options:
+                #options[None] = EMPTY
+
+        if len(opt_values) < 1 or \
+           len(opt_values) == 1 and not opt_values[0]:
             msg = attr.get("_no_opts", T("No options available"))
             return SPAN(msg, _class="no-options-available")
-
-        if field:
-            requires = field.requires
-            if not isinstance(requires, (tuple, list)):
-                requires = [requires]
-        else:
-            requires = [None]
-        if None not in opt_values and \
-           "" not in opt_values and \
-           not isinstance(requires[0], IS_NOT_EMPTY):
-            opt_values.append(None)
 
         if self.options is None:
             opt_list = []
@@ -633,9 +640,11 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 args = {"show_link": False} \
                        if "show_link" in represent.func_code.co_varnames else {}
                 if multiple:
-                    repr_opt = lambda opt: (opt, represent([opt], **args))
+                    repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
+                                           (opt, represent([opt], **args))
                 else:
-                    repr_opt = lambda opt: (opt, represent(opt, **args))
+                    repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
+                                           (opt, represent(opt, **args))
                 opt_list = map(repr_opt, opt_values)
 
             elif isinstance(represent, str) and field_type[:9] == "reference":
@@ -647,14 +656,13 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 fieldnames = ["id"]
                 fieldnames += re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
                 represent_fields = [ktable[fieldname] for fieldname in fieldnames]
-                query = (ktable.id.belongs(opt_values)) & \
+                query = (ktable.id.belongs([k for k in opt_values if str(k).isdigit()])) & \
                         (ktable.deleted == False)
                 represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
                 opt_list = []
                 for opt_value in opt_values:
                     if opt_value not in represent_rows:
                         continue
-                        #opt_represent = current.messages["NONE"]
                     else:
                         opt_represent = represent % represent_rows[opt_value]
                     if opt_represent:
@@ -664,9 +672,11 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_list = [(opt_value, s3_unicode(opt_value))
                             for opt_value in opt_values if opt_value]
 
-            options = OrderedDict([("__NONE__" if o is None else o, v) for o, v in opt_list])
+            options = OrderedDict([("__NONE__" if o is None else o, v)
+                                   for o, v in opt_list])
         else:
-            options = OrderedDict([("__NONE__" if o is None else o, v) for o, v in options.items()])
+            options = OrderedDict([("__NONE__" if o is None else o, v)
+                                   for o, v in options.items()])
 
         # Dummy field
         dummy_field = Storage(name=name,
