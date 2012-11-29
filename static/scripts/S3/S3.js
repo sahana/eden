@@ -868,7 +868,15 @@ function S3FilterFieldChange(setting) {
                     }
                     /* Show "Add" Button & modify link */
                     var selFieldAdd = $('#' + FieldResource + '_add');
-                    var href = selFieldAdd.attr('href') + '&' + FilterField + '=' + selFilterField.val();
+                    var href = selFieldAdd.attr('href');
+                    if (href.indexOf(FilterField) == -1) {
+                        // Add to URL
+                        href = href + '&' + FilterField + '=' + selFilterField.val();
+                    } else {
+                        // Update URL
+                        var re = new RegExp(FilterField + '=.*', 'g');
+                        href = href.replace(re, FilterField + '=' + selFilterField.val());
+                    }
                     selFieldAdd.attr('href', href)
                                .show();
 
@@ -1177,7 +1185,15 @@ function S3OptionsFilter(settings) {
                     if (targetFieldAdd.length !== 0) {
                         var href = targetFieldAdd.attr('href');
                         var triggerField = $('[name = "' + this.triggerSelector + '"]');
-                        href += '&' + this.triggerName + '=' + triggerField.val();
+                        var triggerName = this.triggerName;
+                        if (href.indexOf(triggerName) == -1) {
+                            // Add to URL
+                            href += '&' + triggerName + '=' + triggerField.val();
+                        } else {
+                            // Update URL
+                            var re = new RegExp(triggerName + '=.*', 'g');
+                            href = href.replace(re, triggerName + '=' + triggerField.val());
+                        }
                         targetFieldAdd.attr('href', href).show();
                     }
 

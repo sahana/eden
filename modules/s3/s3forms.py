@@ -529,8 +529,11 @@ class S3SQLDefaultForm(S3SQLForm):
             done = []
             while tr:
                 f = tr.attributes.get("_id", None)
+                if not f:
+                    # DIV-based form-style
+                    f = tr[0][0].attributes.get("_id", None)
                 if f.startswith(tablename):
-                    f = f[len(tablename)+1:-6]
+                    f = f[len(tablename) + 1 : -6]
                     for k in subheadings.keys():
                         if k in done:
                             continue
