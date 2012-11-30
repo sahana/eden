@@ -1510,6 +1510,9 @@ class S3LocationSelectorWidget(FormWidget):
                 @ToDo: Inactive Tab: 'Move Location': Defaults to Searching for an Existing Location, with a button to 'Create New Location'
 
         @see: http://eden.sahanafoundation.org/wiki/BluePrintGISLocationSelector
+
+        @ToDo: Support multiple in a page:
+               http://eden.sahanafoundation.org/ticket/1223
     """
 
     def __init__(self,
@@ -1532,6 +1535,10 @@ class S3LocationSelectorWidget(FormWidget):
         settings = current.deployment_settings
         response = current.response
         s3 = current.response.s3
+        if s3.gis.location_selector_loaded:
+            # We don't yet support multiple in a page
+            return TAG[""]()
+
         appname = current.request.application
 
         locations = s3db.gis_location
@@ -1609,8 +1616,9 @@ class S3LocationSelectorWidget(FormWidget):
                                                 locations.name).first()
             if default_location.level:
                 # Add this one to the defaults too
-                defaults[default_location.level] = Storage(name = default_location.name,
-                                                           id = config.default_location_id)
+                defaults[default_location.level] = Storage(name=default_location.name,
+                                                           id=config.default_location_id
+                                                           )
             if "L0" in defaults:
                 default_L0 = defaults["L0"]
                 if default_L0:
@@ -2201,18 +2209,18 @@ i18n.gis_place_on_map='%s'
 i18n.gis_view_on_map='%s'
 i18n.gis_name_required='%s'
 i18n.gis_country_required="%s"''' % (country_snippet,
-                                        geocoder,
-                                        navigate_away_confirm,
-                                        no_latlon,
-                                        no_map,
-                                        tab,
-                                        attr["_id"],    # Name of the real location or site field
-                                        site,
-                                        PLACE_ON_MAP,
-                                        VIEW_ON_MAP,
-                                        NAME_REQUIRED,
-                                        COUNTRY_REQUIRED
-                                        )
+                                     geocoder,
+                                     navigate_away_confirm,
+                                     no_latlon,
+                                     no_map,
+                                     tab,
+                                     attr["_id"],    # Name of the real location or site field
+                                     site,
+                                     PLACE_ON_MAP,
+                                     VIEW_ON_MAP,
+                                     NAME_REQUIRED,
+                                     COUNTRY_REQUIRED
+                                     )
 
         s3.js_global.append(js_location_selector)
         if s3.debug:
@@ -2221,7 +2229,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
             script = "s3.locationselector.widget.min.js"
 
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
-
+        
         if self.polygon:
             hidden = ""
             if value:
@@ -2252,6 +2260,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
             wkt_input_row = ""
 
         # The overall layout of the components
+        s3.gis.location_selector_loaded = 1
         return TAG[""](
                         TR(INPUT(**attr)),  # Real input, which is hidden
                         label_row,
