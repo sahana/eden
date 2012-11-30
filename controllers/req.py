@@ -497,8 +497,19 @@ S3OptionsFilter({
     def postp(r, output):
 
         if r.interactive:
-            s3_action_buttons(r)
             if not r.component:
+                s3_action_buttons(r, copyable=True)
+                if "buttons" in output:
+                    buttons = output["buttons"]
+                    if "delete_btn" in buttons:
+                        delete_btn = buttons["delete_btn"]
+                        delete_btn = DIV(delete_btn,
+                                         A(T("Copy Request"),
+                                           _href=URL(args=[r.id, "copy"],
+                                                     #vars={"type":r.record.type}
+                                                     ),
+                                           _class="action-btn"))
+                        output["buttons"]["delete_btn"] = delete_btn
                 if settings.get_req_use_commit():
                     # This is appropriate to all
                     s3.actions.append(
@@ -534,47 +545,46 @@ S3OptionsFilter({
                 #         restrict = restrict
                 #        )
                 #    )
-            elif r.component.name == "req_item" and settings.get_req_prompt_match():
-                req_item_inv_item_btn = dict(url = URL(c = "req",
-                                                       f = "req_item_inv_item",
-                                                       args = ["[id]"]
-                                                      ),
-                                             _class = "action-btn",
-                                             label = str(T("Request from Facility")),
-                                             )
-                s3.actions.append(req_item_inv_item_btn)
-            elif r.component.name == "commit":
-                if "form" in output:
-                    id = r.record.id
-                    ctable = s3db.req_commit
-                    query = (ctable.deleted == False) & \
-                            (ctable.req_id == id)
-                    exists = current.db(query).select(ctable.id, limitby=(0, 1))
-                    if not exists:
-                        output["form"] = A(T("Commit All"),
-                                           _href=URL(args=[id, "commit_all"]),
-                                           _class="action-btn",
-                                           _id="commit-btn")
-                        s3.jquery_ready.append('''
-S3ConfirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
-            elif r.component.alias == "job":
-                s3.actions = [
-                    dict(label=str(T("Open")),
-                         _class="action-btn",
-                         url=URL(c="req", f="req_template",
-                                 args=[str(r.id), "job", "[id]"])),
-                    dict(label=str(T("Reset")),
-                         _class="action-btn",
-                         url=URL(c="req", f="req_template",
-                                 args=[str(r.id), "job", "[id]", "reset"])),
-                    dict(label=str(T("Run Now")),
-                         _class="action-btn",
-                         url=URL(c="req", f="req_template",
-                                 args=[str(r.id), "job", "[id]", "run"])),
-                    ]
             else:
-                # We don't yet have other components
-                pass
+                s3_action_buttons(r)
+                if r.component.name == "req_item" and settings.get_req_prompt_match():
+                    req_item_inv_item_btn = dict(url = URL(c = "req",
+                                                           f = "req_item_inv_item",
+                                                           args = ["[id]"]
+                                                          ),
+                                                 _class = "action-btn",
+                                                 label = str(T("Request from Facility")),
+                                                 )
+                    s3.actions.append(req_item_inv_item_btn)
+                if r.component.name == "commit":
+                    if "form" in output:
+                        id = r.record.id
+                        ctable = s3db.req_commit
+                        query = (ctable.deleted == False) & \
+                                (ctable.req_id == id)
+                        exists = current.db(query).select(ctable.id, limitby=(0, 1))
+                        if not exists:
+                            output["form"] = A(T("Commit All"),
+                                               _href=URL(args=[id, "commit_all"]),
+                                               _class="action-btn",
+                                               _id="commit-btn")
+                            s3.jquery_ready.append('''
+S3ConfirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
+                if r.component.alias == "job":
+                    s3.actions = [
+                        dict(label=str(T("Open")),
+                             _class="action-btn",
+                             url=URL(c="req", f="req_template",
+                                     args=[str(r.id), "job", "[id]"])),
+                        dict(label=str(T("Reset")),
+                             _class="action-btn",
+                             url=URL(c="req", f="req_template",
+                                     args=[str(r.id), "job", "[id]", "reset"])),
+                        dict(label=str(T("Run Now")),
+                             _class="action-btn",
+                             url=URL(c="req", f="req_template",
+                                     args=[str(r.id), "job", "[id]", "run"])),
+                        ]
 
         return output
     s3.postp = postp
