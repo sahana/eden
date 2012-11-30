@@ -1719,7 +1719,7 @@ class S3FacilityModel(S3Model):
         db = current.db
         s3db = current.s3db
         stable = s3db.org_facility
-        gtable = s3db.gis_location
+        gtable = db.gis_location
         ntable = s3db.req_site_needs
 
         # Limit the number of decimal places
@@ -1728,7 +1728,7 @@ class S3FacilityModel(S3Model):
         # All Facilities
         query = (stable.deleted == False) & \
                 (gtable.id == stable.location_id)
-        left = ntable.on(ntable.site_id == stable.site_id)
+        #left = ntable.on(ntable.site_id == stable.site_id)
         facs = db(query).select(stable.name,
                                 stable.facility_type_id,
                                 stable.opening_times,
@@ -1736,9 +1736,9 @@ class S3FacilityModel(S3Model):
                                 stable.phone2,
                                 stable.email,
                                 stable.website,
-                                ntable.green,
-                                ntable.red,
-                                ntable.yellow,
+                                #ntable.green,
+                                #ntable.red,
+                                #ntable.yellow,
                                 gtable.addr_street,
                                 gtable.lat,
                                 gtable.lon,
@@ -1762,13 +1762,14 @@ class S3FacilityModel(S3Model):
                     "name": f.org_facility.name,
                     "type": represent(f.org_facility.facility_type_id),
                     "open": f.org_facility.opening_times,
+                    "addr": f.gis_location.addr_street,
                     "ph1": f.org_facility.phone1,
                     "ph2": f.org_facility.phone2,
                     "email": f.org_facility.email,
                     "web": f.org_facility.website,
-                    "need": f.req_site_needs.red,
-                    "accept": f.req_site_needs.yellow,
-                    "no": f.req_site_needs.green,
+                    #"need": f.req_site_needs.red,
+                    #"accept": f.req_site_needs.yellow,
+                    #"no": f.req_site_needs.green,
                     },
                 geometry = json.loads(geojson)
                 )
@@ -1786,7 +1787,7 @@ class S3FacilityModel(S3Model):
         path = os.path.join(current.request.folder,
                             "static", "cache",
                             filename)
-        File = open(filename, "w")
+        File = open(path, "w")
         File.write(output)
         File.close()
 
