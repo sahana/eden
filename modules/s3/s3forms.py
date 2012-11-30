@@ -28,6 +28,8 @@
 
 """
 
+import os
+
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -1438,6 +1440,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                       fails, otherwise None
         """
 
+        # @todo: catch uploads during validation errors
         if isinstance(value, basestring):
             try:
                 value = json.loads(value)
@@ -1470,6 +1473,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         s3 = current.response.s3
         appname = current.request.application
+
+        self.upload = Storage()
 
         if value is None:
             value = field.default
@@ -1602,9 +1607,21 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             widget = current.T("No entries currently available")
 
+        if self.upload:
+            hidden = DIV(_class="hidden", _style="display:none;")
+            for k, v in self.upload.items():
+                hidden.append(INPUT(_type="text",
+                                    _id=k,
+                                    _name=k,
+                                    _value=v,
+                                    _style="display:none;"))
+        else:
+            hidden = ""
+
         # Render output HTML
         output = DIV(
                     INPUT(**attr),
+                    hidden,
                     widget,
                     _id=self._formname(separator="-"),
                     _field=real_input
@@ -1716,15 +1733,26 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 values = Storage()
                 for f, d in item.iteritems():
                     if f[0] != "_" and d and isinstance(d, dict):
-                        # Must run through validator again (despite pre-validation)
-                        # in order to post-process widget output properly (e.g. UTC
-                        # offset subtraction)
-                        try:
-                            value, error = validate(table, None, f, d["value"])
-                        except AttributeError:
+
+                        field = table[f]
+                        if table[f].type == "upload":
+                            # Find, rename and store the uploaded file
+                            rowindex = item.get("_index", None)
+                            if rowindex is not None:
+                                filename = self._store_file(table, f, rowindex)
+                                if filename:
+                                    values[f] = filename
                             continue
-                        if not error:
-                            values[f] = value
+                        else:
+                            # Must run through validator again (despite pre-validation)
+                            # in order to post-process widget output properly (e.g. UTC
+                            # offset subtraction)
+                            try:
+                                value, error = validate(table, None, f, d["value"])
+                            except AttributeError:
+                                continue
+                            if not error:
+                                values[f] = value
 
                 if "_id" in item:
                     record_id = item["_id"]
@@ -1938,11 +1966,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 formfield.default = default
 
             if index is not None and item and fname in item:
-                value = item[fname]["value"]
-                value, error = validate(table, None, fname, value)
-                if error:
-                    value = None
-                data[idxname] = value
+                if formfield.type == "upload":
+                    filename = item[fname]["value"]
+                    if current.request.env.request_method == "POST":
+                        if "_index" in item and item.get("_changed", False):
+                            rowindex = item["_index"]
+                            filename = self._store_file(table, fname, rowindex)
+                    data[idxname] = filename
+                else:
+                    value = item[fname]["value"]
+                    value, error = validate(table, None, fname, value)
+                    if error:
+                        value = None
+                    data[idxname] = value
             formfields.append(formfield)
         if not data:
             data = None
@@ -2155,6 +2191,38 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     subset.append(o)
 
         return subset
+
+    # -------------------------------------------------------------------------
+    def _store_file(self, table, fieldname, rowindex):
+        """
+            Find, rename and store an uploaded file and return it's
+            new pathname
+        """
+
+        field = table[fieldname]
+        
+        formname = self._formname()
+        upload = "upload_%s_%s_%s" % (formname, fieldname, rowindex)
+
+        post_vars = current.request.post_vars
+        if upload in post_vars:
+
+            f = post_vars[upload]
+
+            if hasattr(f, "file"):
+                # Newly uploaded file (FieldStorage)
+                (sfile, ofilename) = (f.file, f.filename)
+                nfilename = field.store(sfile,
+                                        ofilename,
+                                        field.uploadfolder)
+                self.upload[upload] = nfilename
+                return nfilename
+
+            elif isinstance(f, basestring):
+                # Previously uploaded file
+                return f
+
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
