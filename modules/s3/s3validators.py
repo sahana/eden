@@ -1018,7 +1018,8 @@ class IS_LOCATION_SELECTOR(Validator):
                 if L0:
                     location = db(table.id == L1).select(table.name,
                                                          table.parent,
-                                                         limitby=(0, 1)).first()
+                                                         limitby=(0, 1)
+                                                         ).first()
                     if location and (location.parent != int(L0)):
                         db(query).update(parent = L0)
                         location["level"] = "L1"

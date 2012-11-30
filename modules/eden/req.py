@@ -379,6 +379,12 @@ class S3RequestModel(S3Model):
                 field="item_category.name",
                 cols = 3,
             ),
+            S3SearchOptionsWidget(
+                name="req_search_created_by",
+                label=T("Logged By"),
+                field="created_by",
+                cols = 3,
+            ),
             #S3SearchOptionsWidget(
             #  name="req_search_L1",
             #  field="site_id$location_id$L1",

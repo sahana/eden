@@ -1729,7 +1729,8 @@ class S3FacilityModel(S3Model):
         query = (stable.deleted == False) & \
                 (gtable.id == stable.location_id)
         #left = ntable.on(ntable.site_id == stable.site_id)
-        facs = db(query).select(stable.name,
+        facs = db(query).select(stable.id,
+                                stable.name,
                                 stable.facility_type_id,
                                 stable.opening_times,
                                 stable.phone1,
@@ -1747,8 +1748,8 @@ class S3FacilityModel(S3Model):
         append = features.append
         represent = stable.facility_type_id.represent
         for f in facs:
-            x = f.gis_location.lat
-            y = f.gis_location.lon
+            x = f.gis_location.lon
+            y = f.gis_location.lat
             if x is None or y is None:
                 continue
             x = float(format(x, formatter))
@@ -1756,21 +1757,30 @@ class S3FacilityModel(S3Model):
             shape = Point(x, y)
             # Compact Encoding
             geojson = dumps(shape, separators=(",", ":"))
+            properties = {
+                    "id": f.org_facility.id,
+                    "name": f.org_facility.name,
+                    }
+            if f.org_facility.facility_type_id:
+                properties.update(type=represent(f.org_facility.facility_type_id))
+            if f.org_facility.opening_times:
+                properties.update(open=f.org_facility.opening_times)
+            if f.gis_location.addr_street:
+                properties.update(addr=f.gis_location.addr_street)
+            if f.org_facility.phone1:
+                properties.update(ph1=f.org_facility.phone1)
+            if f.org_facility.phone2:
+                properties.update(ph2=f.org_facility.phone2)
+            if f.org_facility.email:
+                properties.update(email=f.org_facility.email)
+            if f.org_facility.website:
+                properties.update(web=f.org_facility.website)
+            #"need": f.req_site_needs.red,
+            #"accept": f.req_site_needs.yellow,
+            #"no": f.req_site_needs.green,
             f = dict(
                 type = "Feature",
-                properties = {
-                    "name": f.org_facility.name,
-                    "type": represent(f.org_facility.facility_type_id),
-                    "open": f.org_facility.opening_times,
-                    "addr": f.gis_location.addr_street,
-                    "ph1": f.org_facility.phone1,
-                    "ph2": f.org_facility.phone2,
-                    "email": f.org_facility.email,
-                    "web": f.org_facility.website,
-                    #"need": f.req_site_needs.red,
-                    #"accept": f.req_site_needs.yellow,
-                    #"no": f.req_site_needs.green,
-                    },
+                properties = properties,
                 geometry = json.loads(geojson)
                 )
             append(f)
