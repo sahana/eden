@@ -1442,7 +1442,12 @@ class S3LocationDropdownWidget(FormWidget):
 
         s3db = current.s3db
         table = s3db.gis_location
-        query = (table.level == level)
+        if level:
+            query = (table.deleted != True) & \
+                    (table.level == level)
+        else:
+            # Workaround for merge form
+            query = (table.id == value)
         locations = current.db(query).select(table.name,
                                              table.id,
                                              cache=s3db.cache)
@@ -1452,9 +1457,10 @@ class S3LocationDropdownWidget(FormWidget):
             if not value and default and location.name == default:
                 value = location.id
         locations = locations.as_dict()
-        attr_dropdown = OptionsWidget._attributes(field,
-                                                  dict(_type = "int",
-                                                       value = value))
+        attr = dict(attributes)
+        attr["_type"] = "int"
+        attr["value"] = value
+        attr_dropdown = OptionsWidget._attributes(field, attr)
         requires = IS_IN_SET(locations)
         if empty:
             requires = IS_NULL_OR(requires)
