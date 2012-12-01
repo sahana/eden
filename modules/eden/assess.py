@@ -219,7 +219,7 @@ class S3AssessBuildingModel(S3Model):
                                         widget = lambda f, v, **attr: \
                                             SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
                                         label=T("Status")),
-                                  s3_date(label=T("Intake Date/Time")),
+                                  s3_date(label=T("Intake Date")),
                                   Field("assessor1",
                                         label=T("Assessor 1")),
                                   Field("assessor2",

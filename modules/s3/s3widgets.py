@@ -231,10 +231,17 @@ class S3DateTimeWidget(FormWidget):
         earliest = now - timedelta(hours = self.past)
         latest = now + timedelta(hours = self.future)
 
-        # Round to the nearest half hour.
-        seconds = (earliest - earliest.min).seconds
+        # Round to the nearest half hour
+        if value:
+            start = value
+        elif earliest < now < latest:
+            start = now
+        else:
+            start = earliest
+        seconds = (start - start.min).seconds
         rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
-        rounded = earliest + datetime.timedelta(0, rounding - seconds, -earliest.microsecond)
+        rounded = start + datetime.timedelta(0, rounding - seconds, -start.microsecond)
+
         rounded = rounded.strftime(format)
         earliest = earliest.strftime(format)
         latest = latest.strftime(format)
