@@ -65,9 +65,14 @@ S3.Utf8 = {
 
 // Used by Scenario module currently, but may be deprecated as not great UI
 var popupWin = null;
-function openPopup(url) {
+function openPopup(url, center) {
     if ( !popupWin || popupWin.closed ) {
-        popupWin = window.open(url, 'popupWin', 'width=640, height=480');
+        var params = 'width=640,height=480';
+        if (center == true) {
+            params += ',left=' + (screen.width - 640)/2 +
+                ',top=' + (screen.height - 480)/2;
+        }
+        popupWin = window.open(url, 'popupWin', params);
     } else popupWin.focus();
 }
 
@@ -621,21 +626,9 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
 }
 function s3_showMap(feature_id) {
-    // Display a Feature on a BaseMap within an iframe
+    // Display a Feature on a BaseMap in a popup window
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
-	new Ext.Window({
-		autoWidth: true,
-		floating: true,
-		items: [{
-			xtype: 'component',
-			autoEl: {
-				tag: 'iframe',
-				width: 650,
-				height: 490,
-				src: url
-			}
-		}]
-	}).show();
+  	openPopup(url, true);
 }
 
 // ============================================================================
