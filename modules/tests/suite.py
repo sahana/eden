@@ -85,6 +85,7 @@ def loadAllTests():
 
     # Create Members
     addTests(loadTests(CreateMember))
+    addTests(loadTests(SearchMember))
 
     return suite
 
@@ -211,6 +212,7 @@ if args["suite"] == "smoke" or args["suite"] == "complete":
     config.record_timings = args["record_timings"]
     if config.record_timings:
         path = args["html_path"]
+        config.path = path
         config.record_timings_filename = os.path.join(path, "Sahana-Eden-record-timings.xls")
         config.record_summary_filename = os.path.join(path, "Sahana-Eden-record-summary.xls")
 
