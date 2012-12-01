@@ -208,11 +208,14 @@ class S3DateTimeWidget(FormWidget):
         request = current.request
         s3 = current.response.s3
 
-        datevalue = value
         if isinstance(value, datetime.datetime):
+            datevalue = value
             value = value.strftime(format)
         elif value is None:
             value = ""
+        else:
+            from dateutil import parser
+            datevalue = parser.parse(value)
 
         default = dict(_type = "text",
                        # Prevent default "datetime" calendar from showing up:
