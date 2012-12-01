@@ -1376,6 +1376,7 @@ class S3FacilityModel(S3Model):
 
     names = ["org_facility_type",
              "org_facility",
+             "org_facility_geojson",
              ]
 
     def model(self):
@@ -1621,6 +1622,7 @@ class S3FacilityModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage(
+                    org_facility_geojson = self.org_facility_geojson
                 )
 
     # -------------------------------------------------------------------------
@@ -1701,6 +1703,103 @@ class S3FacilityModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         names = [vals[k] if k in vals else UNKNOWN_OPT for k in opts]
         return ", ".join(names)
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_geojson(jsonp=True,
+                             decimals=4):
+        """
+            Produce a static GeoJSON[P] feed of Facility data
+            Designed to be run on a schedule to serve a high-volume website
+        """
+
+        from shapely.geometry import Point
+        from ..geojson import dumps
+
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.org_facility
+        gtable = db.gis_location
+        ntable = s3db.req_site_needs
+
+        # Limit the number of decimal places
+        formatter = ".%sf" % decimals
+
+        # All Facilities
+        query = (stable.deleted == False) & \
+                (gtable.id == stable.location_id)
+        #left = ntable.on(ntable.site_id == stable.site_id)
+        facs = db(query).select(stable.id,
+                                stable.name,
+                                stable.facility_type_id,
+                                stable.opening_times,
+                                stable.phone1,
+                                stable.phone2,
+                                stable.email,
+                                stable.website,
+                                #ntable.green,
+                                #ntable.red,
+                                #ntable.yellow,
+                                gtable.addr_street,
+                                gtable.lat,
+                                gtable.lon,
+                                )
+        features = []
+        append = features.append
+        represent = stable.facility_type_id.represent
+        for f in facs:
+            x = f.gis_location.lon
+            y = f.gis_location.lat
+            if x is None or y is None:
+                continue
+            x = float(format(x, formatter))
+            y = float(format(y, formatter))
+            shape = Point(x, y)
+            # Compact Encoding
+            geojson = dumps(shape, separators=(",", ":"))
+            properties = {
+                    "id": f.org_facility.id,
+                    "name": f.org_facility.name,
+                    }
+            if f.org_facility.facility_type_id:
+                properties.update(type=represent(f.org_facility.facility_type_id))
+            if f.org_facility.opening_times:
+                properties.update(open=f.org_facility.opening_times)
+            if f.gis_location.addr_street:
+                properties.update(addr=f.gis_location.addr_street)
+            if f.org_facility.phone1:
+                properties.update(ph1=f.org_facility.phone1)
+            if f.org_facility.phone2:
+                properties.update(ph2=f.org_facility.phone2)
+            if f.org_facility.email:
+                properties.update(email=f.org_facility.email)
+            if f.org_facility.website:
+                properties.update(web=f.org_facility.website)
+            #"need": f.req_site_needs.red,
+            #"accept": f.req_site_needs.yellow,
+            #"no": f.req_site_needs.green,
+            f = dict(
+                type = "Feature",
+                properties = properties,
+                geometry = json.loads(geojson)
+                )
+            append(f)
+        data = dict(
+                    type = "FeatureCollection",
+                    features = features
+                    )
+        output = json.dumps(data)
+        if jsonp:
+            filename = "facility.geojsonp"
+            output = "grid(%s)" % output
+        else:
+            filename = "facility.geojson"
+        path = os.path.join(current.request.folder,
+                            "static", "cache",
+                            filename)
+        File = open(path, "w")
+        File.write(output)
+        File.close()
 
 # -----------------------------------------------------------------------------
 def org_facility_rheader(r, tabs=[]):
@@ -1942,13 +2041,21 @@ class S3OfficeModel(S3Model):
                                             ),
                              self.gis_location_id(),
                              Field("phone1", label=T("Phone 1"),
-                                   requires=IS_NULL_OR(s3_phone_requires)),
+                                   requires=IS_NULL_OR(s3_phone_requires),
+                                   represent = lambda v: v or "",
+                                   ),
                              Field("phone2", label=T("Phone 2"),
-                                   requires=IS_NULL_OR(s3_phone_requires)),
+                                   requires=IS_NULL_OR(s3_phone_requires),
+                                   represent = lambda v: v or "",
+                                   ),
                              Field("email", label=T("Email"),
-                                   requires=IS_NULL_OR(IS_EMAIL())),
+                                   requires=IS_NULL_OR(IS_EMAIL()),
+                                   represent = lambda v: v or "",
+                                   ),
                              Field("fax", label=T("Fax"),
-                                   requires=IS_NULL_OR(s3_phone_requires)),
+                                   requires=IS_NULL_OR(s3_phone_requires),
+                                   represent = lambda v: v or "",
+                                   ),
                              # @ToDo: Move to Fixed Assets
                              #Field("number_of_vehicles", "integer",
                              #      label = T("# of Vehicles"),

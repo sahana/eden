@@ -5314,6 +5314,9 @@ class GIS(object):
         if not response.warning:
             response.warning = ""
         s3 = response.s3
+        if s3.gis.location_selector_loaded:
+            # Already loaded, bail
+            return ""
         session = current.session
         T = current.T
         db = current.db
@@ -6279,17 +6282,14 @@ i18n.gis_feature_info="%s"
             ready = '''%s
 S3.gis.show_map()''' % ready
         else:
-            ready = "S3.gis.show_map();"
+            ready = "S3.gis.show_map()"
         # Tell YepNope to load all our scripts asynchronously & then run the callback
         script = '''yepnope({
  load:['%s'],
- complete:function(){
-  %s
- }
-})''' % (script, ready)
-
+ complete:function(){%s}})''' % (script, ready)
         html_append(SCRIPT(script))
 
+        s3.gis.location_selector_loaded = 1
         return html
 
 # =============================================================================

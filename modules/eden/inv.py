@@ -1052,6 +1052,7 @@ class S3TrackingModel(S3Model):
                              Field("driver_phone",
                                    label = T("Driver Phone Number"),
                                    requires = IS_NULL_OR(s3_phone_requires),
+                                   represent = lambda v: v or "",
                                    ),
                              Field("vehicle_plate_no",
                                    label = T("Vehicle Plate Number"),
@@ -3192,7 +3193,9 @@ def inv_send_rheader(r):
                              TD(logo, _colspan=2),
                              ),
                           TR(TH("%s: " % table.send_ref.label),
-                             TD(table.send_ref.represent(record.send_ref))
+                             TD(table.send_ref.represent(record.send_ref)),
+                             TH("%s: " % table.req_ref.label),
+                             TD(table.req_ref.represent(record.req_ref)),
                              ),
                           TR(TH("%s: " % table.date.label),
                              table.date.represent(record.date),

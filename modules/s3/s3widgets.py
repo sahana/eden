@@ -94,6 +94,7 @@ from gluon.storage import Storage
 from s3utils import *
 from s3validators import *
 
+ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
 # =============================================================================
@@ -230,10 +231,17 @@ class S3DateTimeWidget(FormWidget):
         earliest = now - timedelta(hours = self.past)
         latest = now + timedelta(hours = self.future)
 
-        # Round to the nearest half hour.
-        seconds = (earliest - earliest.min).seconds
+        # Round to the nearest half hour
+        if value:
+            start = value
+        elif earliest < now < latest:
+            start = now
+        else:
+            start = earliest
+        seconds = (start - start.min).seconds
         rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
-        rounded = earliest + datetime.timedelta(0, rounding - seconds, -earliest.microsecond)
+        rounded = start + datetime.timedelta(0, rounding - seconds, -start.microsecond)
+
         rounded = rounded.strftime(format)
         earliest = earliest.strftime(format)
         latest = latest.strftime(format)
@@ -1434,7 +1442,12 @@ class S3LocationDropdownWidget(FormWidget):
 
         s3db = current.s3db
         table = s3db.gis_location
-        query = (table.level == level)
+        if level:
+            query = (table.deleted != True) & \
+                    (table.level == level)
+        else:
+            # Workaround for merge form
+            query = (table.id == value)
         locations = current.db(query).select(table.name,
                                              table.id,
                                              cache=s3db.cache)
@@ -1444,9 +1457,10 @@ class S3LocationDropdownWidget(FormWidget):
             if not value and default and location.name == default:
                 value = location.id
         locations = locations.as_dict()
-        attr_dropdown = OptionsWidget._attributes(field,
-                                                  dict(_type = "int",
-                                                       value = value))
+        attr = dict(attributes)
+        attr["_type"] = "int"
+        attr["value"] = value
+        attr_dropdown = OptionsWidget._attributes(field, attr)
         requires = IS_IN_SET(locations)
         if empty:
             requires = IS_NULL_OR(requires)
@@ -1509,6 +1523,9 @@ class S3LocationSelectorWidget(FormWidget):
                 @ToDo: Inactive Tab: 'Move Location': Defaults to Searching for an Existing Location, with a button to 'Create New Location'
 
         @see: http://eden.sahanafoundation.org/wiki/BluePrintGISLocationSelector
+
+        @ToDo: Support multiple in a page:
+               http://eden.sahanafoundation.org/ticket/1223
     """
 
     def __init__(self,
@@ -1531,6 +1548,10 @@ class S3LocationSelectorWidget(FormWidget):
         settings = current.deployment_settings
         response = current.response
         s3 = current.response.s3
+        if s3.gis.location_selector_loaded:
+            # We don't yet support multiple in a page
+            return TAG[""]()
+
         appname = current.request.application
 
         locations = s3db.gis_location
@@ -1608,8 +1629,9 @@ class S3LocationSelectorWidget(FormWidget):
                                                 locations.name).first()
             if default_location.level:
                 # Add this one to the defaults too
-                defaults[default_location.level] = Storage(name = default_location.name,
-                                                           id = config.default_location_id)
+                defaults[default_location.level] = Storage(name=default_location.name,
+                                                           id=config.default_location_id
+                                                           )
             if "L0" in defaults:
                 default_L0 = defaults["L0"]
                 if default_L0:
@@ -2200,18 +2222,18 @@ i18n.gis_place_on_map='%s'
 i18n.gis_view_on_map='%s'
 i18n.gis_name_required='%s'
 i18n.gis_country_required="%s"''' % (country_snippet,
-                                        geocoder,
-                                        navigate_away_confirm,
-                                        no_latlon,
-                                        no_map,
-                                        tab,
-                                        attr["_id"],    # Name of the real location or site field
-                                        site,
-                                        PLACE_ON_MAP,
-                                        VIEW_ON_MAP,
-                                        NAME_REQUIRED,
-                                        COUNTRY_REQUIRED
-                                        )
+                                     geocoder,
+                                     navigate_away_confirm,
+                                     no_latlon,
+                                     no_map,
+                                     tab,
+                                     attr["_id"],    # Name of the real location or site field
+                                     site,
+                                     PLACE_ON_MAP,
+                                     VIEW_ON_MAP,
+                                     NAME_REQUIRED,
+                                     COUNTRY_REQUIRED
+                                     )
 
         s3.js_global.append(js_location_selector)
         if s3.debug:
@@ -2220,7 +2242,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
             script = "s3.locationselector.widget.min.js"
 
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
-
+        
         if self.polygon:
             hidden = ""
             if value:
@@ -2251,6 +2273,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
             wkt_input_row = ""
 
         # The overall layout of the components
+        s3.gis.location_selector_loaded = 1
         return TAG[""](
                         TR(INPUT(**attr)),  # Real input, which is hidden
                         label_row,
@@ -3723,52 +3746,31 @@ def s3_checkboxes_widget(field,
             raise SyntaxError, "widget cannot determine options of %s" % field
 
     help_text = Storage()
-
     if help_field:
-        ftype = str(field.type)
 
-        if ftype[:9] == "reference":
-            ktablename = ftype[10:]
-        elif ftype[:14] == "list:reference":
-            ktablename = ftype[15:]
-        else:
-            # not a reference - no expand
-            # option text = field representation
-            ktablename = None
+        ktablename, pkey, multiple = s3_get_foreign_key(field)
 
-        if isinstance(help_field,dict):
-            # Convert the keys to strings (That's what the options are)
+        if isinstance(help_field, dict):
+            # Convert the keys to strings (that's what the options are)
             for key in help_field.keys():
                 help_text[str(key)] = help_field[key]
 
-        if ktablename is not None:
-            if "." in ktablename:
-                ktablename, pkey = ktablename.split(".", 1)
-            else:
-                pkey = None
+        elif ktablename is not None:
 
             ktable = current.s3db[ktablename]
-
-            if pkey is None:
-                pkey = ktable._id.name
-
-            lookup_field = help_field
-
-            if lookup_field in ktable.fields:
-                query = ktable[pkey].belongs([k for k, v in options])
+            if hasattr(ktable, help_field):
+                keys = [k for k, v in options if str(k).isdigit()]
+                query = ktable[pkey].belongs(keys)
                 rows = current.db(query).select(ktable[pkey],
-                                                ktable[lookup_field]
-                                                )
-
+                                                ktable[help_field])
                 for row in rows:
-                    help_text[str(row[ktable[pkey]])] = row[ktable[lookup_field]]
+                    help_text[str(row[pkey])] = row[help_field]
             else:
                 # Error => no comments available
                 pass
         else:
             # No lookup table => no comments available
             pass
-
 
     options = [(k, v) for k, v in options if k != ""]
     options = sorted(options, key=lambda option: option[1])

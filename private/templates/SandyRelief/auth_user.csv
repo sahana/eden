@@ -1,0 +1,4 @@
+"First Name","Last Name","Email","Password","Role","Organisation"
+"Admin","User","admin@example.com","testing","ADMIN",
+"Normal","User","normaluser@example.com","testing","",
+"Super","Editor","super@example.com","testing","super",

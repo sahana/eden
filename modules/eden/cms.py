@@ -44,6 +44,8 @@ class S3ContentModel(S3Model):
 
     names = ["cms_series",
              "cms_post",
+             "cms_tag",
+             "cms_tag_post",
              "cms_comment",
              ]
 
@@ -203,6 +205,64 @@ class S3ContentModel(S3Model):
 
         # Components
         add_component("cms_comment", cms_post="post_id")
+
+        # ---------------------------------------------------------------------
+        # Tags
+        #
+        tablename = "cms_tag"
+        table = define_table(tablename,
+                             Field("name",
+                                   label=T("Tag")),
+                             s3_comments(),
+                             # Multiple Roles (@ToDo: Implement the restriction)
+                             #s3_roles_permitted(
+                             #                   readable = False,
+                             #                   writable = False
+                             #                   ),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_TAG = T("Add Tag")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_TAG,
+            title_display = T("Tag Details"),
+            title_list = T("Tags"),
+            title_update = T("Edit Tag"),
+            title_search = T("Search Tags"),
+            title_upload = T("Import Tags"),
+            subtitle_create = T("Add New Tag"),
+            label_list_button = T("List Tags"),
+            label_create_button = ADD_TAG,
+            msg_record_created = T("Tag added"),
+            msg_record_modified = T("Tag updated"),
+            msg_record_deleted = T("Tag deleted"),
+            msg_list_empty = T("No tags currently defined"))
+
+        # ---------------------------------------------------------------------
+        # Tags <> Posts link table
+        #
+        tablename = "cms_tag"
+        table = define_table(tablename,
+                             post_id(),
+                             Field("tag_id", "reference cms_tag"),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_TAG = T("Tag Post")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_TAG,
+            title_display = T("Tag Details"),
+            title_list = T("Tags"),
+            title_update = T("Edit Tag"),
+            title_search = T("Search Tags"),
+            title_upload = T("Import Tags"),
+            subtitle_create = T("Add New Tag"),
+            label_list_button = T("List Tagged Posts"),
+            label_create_button = ADD_TAG,
+            msg_record_created = T("Post Tagged"),
+            msg_record_modified = T("Tag updated"),
+            msg_record_deleted = T("Tag removed"),
+            msg_list_empty = T("No posts currently tagged"))
 
         # ---------------------------------------------------------------------
         # Comments

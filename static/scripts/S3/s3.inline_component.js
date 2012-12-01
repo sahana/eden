@@ -116,6 +116,17 @@ $(function() {
             element = '#sub_' +
                       formname + '_' + formname + '_i_' +
                       fieldname + '_edit_' + rowindex;
+            if ($(element).attr('type') == 'file') {
+                // Store the upload at the end of the form
+                form = $(element).closest('form');
+                upload = $(element).clone();
+                upload_id = 'upload_' + formname + '_' + fieldname + '_' + rowindex;
+                $('#'+upload_id).remove();
+                upload.attr('id', upload_id);
+                upload.attr('name', upload_id);
+                upload.css({display: 'none'});
+                form.append(upload);
+            }
             value = $(element).val();
             row[fieldname] = value;
         }
@@ -222,7 +233,20 @@ $(function() {
                     select.append('<option value="' + value + '">-</option>');
                 }
             }
-            $(element).val(value);
+            if ($(element).attr('type') != 'file') {
+                $(element).val(value);
+            } else {
+                // Update the existing upload item, if there is one
+                upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
+                if (upload.length) {
+                    var id = $(element).attr('id');
+                    var name = $(element).attr('name');
+                    $(element).replaceWith(upload);
+                    upload.attr('id', id);
+                    upload.attr('name', name);
+                    upload.css({display: ''});
+                }
+            }
             // Populate text in autocompletes
             text =  row[fieldname]['text'];
             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
@@ -289,6 +313,7 @@ $(function() {
             // Add a new row to the real_input JSON
             new_row['_changed'] = true; // mark as changed
             newindex = data['data'].push(new_row) - 1;
+            new_row['_index'] = newindex;
             inline_serialize(formname, data);
 
             // Create a new read-row, clear add-row
@@ -296,10 +321,27 @@ $(function() {
             fields = data['fields'];
             for (i=0; i<fields.length; i++) {
                 field = fields[i]['name'];
+                // Update all uploads to the new index
+                upload = $('#upload_' + formname + '_' + field + '_none');
+                if (upload.length) {
+                    upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
+                    $('#'+upload_id).remove();
+                    upload.attr('id', upload_id);
+                    upload.attr('name', upload_id);
+                }
                 read_row += '<td>' + new_row[field]['text'] + '</td>';
                 // Reset add-field to default value
-                default_value = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
-                $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
+                var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
+                var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
+                if (f.attr('type') == 'file') {
+                    var empty = d.clone();
+                    empty.attr('id', f.attr('id'));
+                    empty.attr('name', f.attr('name'));
+                    f.replaceWith(empty);
+                } else {
+                    default_value = d.val();
+                    f.val(default_value);
+                }
                 default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                 $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
             }
@@ -362,6 +404,7 @@ $(function() {
             // Update the row in the real_input JSON
             new_row['_id'] = data['data'][rowindex]['_id'];
             new_row['_changed'] = true; // mark as changed
+            new_row['_index'] = rowindex;
             data['data'][rowindex] = new_row;
             inline_serialize(formname, data);
 
@@ -372,8 +415,17 @@ $(function() {
                 field = fields[i]['name'];
                 read_row += '<td>' + new_row[field]['text'] + '</td>';
                 // Reset edit-field to default value
-                default_value = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
-                $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
+                var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
+                var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
+                if (f.attr('type') == 'file') {
+                    var empty = d.clone();
+                    empty.attr('id', f.attr('id'));
+                    empty.attr('name', f.attr('name'));
+                    f.replaceWith(empty);
+                } else {
+                    default_value = d.val();
+                    f.val(default_value);
+                }
                 default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                 $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
             }
@@ -439,6 +491,10 @@ $(function() {
 
         // Remove the read-row for this item
         $('#read-row-'+rowname).remove();
+
+        // Remove all uploads for this item
+        $('input[name^="' + 'upload_' + formname + '_"][name$="_' + rowindex + '"]').remove();
+
         return true;
     };
 

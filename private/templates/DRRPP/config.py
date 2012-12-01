@@ -230,8 +230,8 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             name = "file",
             label=T("Files"),
             fields=["file","comments"],
-            filterby = dict(field = "url",
-                            options = None,
+            filterby = dict(field = "file",
+                            options = "",
                             invert = True,
                             )
         ),
@@ -241,8 +241,8 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             name = "url",
             label=T("Links"),
             fields=["url","comments"],
-            filterby = dict(field = "file",
-                            options = "",
+            filterby = dict(field = "url",
+                            options = None,
                             invert = True,
                             )
         ),
