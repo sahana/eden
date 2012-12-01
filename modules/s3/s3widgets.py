@@ -209,6 +209,7 @@ class S3DateTimeWidget(FormWidget):
         s3 = current.response.s3
 
         if isinstance(value, datetime.datetime):
+            datevalue = value
             value = value.strftime(format)
         elif value is None:
             value = ""
@@ -233,7 +234,7 @@ class S3DateTimeWidget(FormWidget):
 
         # Round to the nearest half hour
         if value:
-            start = value
+            start = datevalue
         elif earliest < now < latest:
             start = now
         else:

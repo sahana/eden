@@ -65,12 +65,21 @@ S3.Utf8 = {
 
 // Used by Scenario module currently, but may be deprecated as not great UI
 var popupWin = null;
-function openPopup(url) {
+// function openPopup(url) {
+    // if ( !popupWin || popupWin.closed ) {
+        // popupWin = window.open(url, 'popupWin', 'width=640, height=480');
+    // } else popupWin.focus();
+// }
+function openPopup(url, center) {
     if ( !popupWin || popupWin.closed ) {
-        popupWin = window.open(url, 'popupWin', 'width=640, height=480');
+        var params = 'width=640, height=480';
+        if (center == true) {
+            params += ',left=' + (screen.width - 640)/2 +
+                ',top=' + (screen.height - 480)/2;
+        }
+        popupWin = window.open(url, 'popupWin', params);
     } else popupWin.focus();
 }
-
 S3.addTooltips = function() {
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
@@ -623,19 +632,20 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
 function s3_showMap(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
-	new Ext.Window({
-		autoWidth: true,
-		floating: true,
-		items: [{
-			xtype: 'component',
-			autoEl: {
-				tag: 'iframe',
-				width: 650,
-				height: 490,
-				src: url
-			}
-		}]
-	}).show();
+	// new Ext.Window({
+		// autoWidth: true,
+		// floating: true,
+		// items: [{
+			// xtype: 'component',
+			// autoEl: {
+				// tag: 'iframe',
+				// width: 650,
+				// height: 490,
+				// src: url
+			// }
+		// }]
+	// }).show();
+    openPopup(url, true);
 }
 
 // ============================================================================

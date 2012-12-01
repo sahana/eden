@@ -412,6 +412,11 @@ class S3OptionsMenu(object):
                         M("List All"),
                         M("Search", m="search"),
                     ),
+                    M("Canvassing", f="canvass")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                    ),
                     #M("Rapid Assessments", f="rat")(
                     #    M("New", m="create"),
                     #    M("List All"),
