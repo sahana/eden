@@ -215,7 +215,7 @@ class S3DateTimeWidget(FormWidget):
             value = ""
         else:
             from dateutil import parser
-            datevalue = parser.parse(value)
+            datevalue = parser.parse(value, ignoretz=True)
 
         default = dict(_type = "text",
                        # Prevent default "datetime" calendar from showing up:
