@@ -22,4 +22,10 @@ def building():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def canvass():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================
