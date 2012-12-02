@@ -26,7 +26,7 @@ div.survey_scrollable {
     width:900px;
     overflow:scroll;
 }
-/* ========================================================================= */
+/*****************************************************************************/
 /* REQUEST MODULE */
 .req_status_none {
     color: red;
@@ -37,13 +37,14 @@ div.survey_scrollable {
 .req_status_complete {
     color: green;
 }
-/* ========================================================================= */
-/* TRANSLATION MODULE */
+/*****************************************************************************/
+/* Translation Functionality */
 table.translation_module_table {
     width: 55%;
 }
-/* ========================================================================= */
-/* PROJECT MODULE */
+/*****************************************************************************/
+/* Project Task */
+
 textarea#project_task_description {
     height: 200px;
 }
@@ -55,33 +56,3 @@ select#sub_defaulttime_defaulttime_person_id_edit_none {
 input#sub_defaulttime_defaulttime_hours_edit_none {
     width: 60px;
 }
-/* ========================================================================= */
-/* HUMAN RESOURCES MODULE */
-.hrm_avatar {
-    float: left;
-    clear: right;
-}
-/* ========================================================================= */
-/* PERSON REGISTRY MODULE */
-/* Contacts */
-.contacts-wrapper {
-}
-
-.contacts-wrapper p {
-}
-.contacts-wrapper div.margin {
-}
-
-.contacts-wrapper .contact.saving .editBtn,
-.contacts-wrapper .contact.edit .editBtn {
-    display: none;
-}
-/* ========================================================================= */
-/* GIS MODULE */
-/* Except here */
-ul.x-tab-strip,
-ul.x-tree-node-ct,
-ul.x-tree-root-ct {
-    list-style: none outside none;
-}
-

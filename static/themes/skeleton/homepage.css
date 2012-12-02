@@ -25,6 +25,7 @@
 #login_box {
 	width: 450px;
 	float: left;
+    clear: left;
 }
 
 #menu_box_center #login_box div {
@@ -43,6 +44,7 @@
 #facility_box {
 	width: auto;
 	float: right;
+    clear: left;
     margin-right: 9px;
 }
 
@@ -98,6 +100,8 @@
 
 #login_form,
 #register_form {
+    clear: both;
+    padding: 10px 0 10px 0;
 }
 #about{
     clear: both;
