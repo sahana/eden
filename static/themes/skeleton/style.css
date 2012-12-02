@@ -18,22 +18,7 @@ ol, ul {
     list-style: disc inside none;
 }
 
-/* Logo in Menu */
-.S3menulogo {
-	
-    background: url(../../img/S3menu_logo.png) left top no-repeat;
-    text-shadow: none;
-    padding: none;
-    width: 35px;
-    height: 28px;
-    display: inline-block;
-    position: absolute;
-    top: 3px;
-    left: 2px;
-}
-.S3menuHome {
-    padding-left: 20px;
-}
+
 
 /*** Typography ***/
 #content {

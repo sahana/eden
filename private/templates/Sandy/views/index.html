@@ -1,10 +1,14 @@
+
 {{extend "layout.html"}}
 <div id='home'>
 {{try:}}
 <h2 align='center'>{{=title}}</h2>
 {{except:}}{{pass}}
 {{=XML(item)}}
+
 <div id='menu_box_center'>
+
+
 {{if AUTHENTICATED not in session.s3.roles:}}
  <div id='login_box' class='menu_box'>
   {{if not self_registration or registered:}}
@@ -27,8 +31,9 @@
   {{pass}}
  </div>
 {{pass}}
-{{=hospital_box}}
+
 </div>
+
 </div>
 <div id='about'>
  <p>
