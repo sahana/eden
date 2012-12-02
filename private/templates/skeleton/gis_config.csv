@@ -1,0 +1,3 @@
+"UUID",Name,Region,Default,Zoom,Lat,Lon,Projection,Symbology,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
+"SITE_DEFAULT",Default,,,2,22.593723263,5.28516253,900913,US,-90,90,-180,180,
+,WGS84,,,2,22.593723263,5.28516253,4326,US,-90,90,-180,180,

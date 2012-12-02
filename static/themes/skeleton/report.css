@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+.chart-icon {
+    cursor: default;
+}
+.chart-icon:hover {
+    cursor: pointer;
+}
+.legend tr td {
+    padding-bottom: 4px;
+}
+.legendLabel {
+    padding-left: 4px;
+    padding-right: 6px;
+}
+.reportTooltipLabel {
+    font-size: 12px;
+    font-weight: bold;
+}
+.reportTooltipValue {
+    font-size: 11px;
+}
+#chart-header {
+    color: #999;
+}
+#chart-header h4 {
+    font-size: 15px;
+    font-weight: bold;
+    border: 0;
+}
+.chart-contents {
+    background-color: #FFFDF6;
+    padding-left: 8px;
+    padding-right: 8px;
+    border: 1px solid #999;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.pivot-table-toggle, .hide-chart {
+    font-size: 10px;
+    cursor: pointer;
+    color: #003399;
+    text-decoration: underline;
+    margin-bottom: 3px;
+}
