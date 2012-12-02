@@ -50,6 +50,7 @@ from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 from eden.layouts import S3AddResourceLink
+from s3.s3utils import s3_auth_user_represent_name
 
 REQ_STATUS_NONE       = 0
 REQ_STATUS_PARTIAL    = 1
@@ -307,6 +308,9 @@ class S3RequestModel(S3Model):
                                         default = False),
                                   s3_comments(comment=""),
                                   *s3_meta_fields())
+
+        #Represent the Logged by search filter by names instead of email
+        table.created_by.represent = lambda id: s3_auth_user_represent_name(id)
 
         # Virtual Fields
         #table.details = Field.Lazy(req_details_field)
