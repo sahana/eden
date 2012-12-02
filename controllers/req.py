@@ -498,18 +498,19 @@ S3OptionsFilter({
 
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, copyable=True)
-                if "buttons" in output:
-                    buttons = output["buttons"]
-                    if "delete_btn" in buttons:
-                        delete_btn = buttons["delete_btn"]
-                        delete_btn = DIV(delete_btn,
-                                         A(T("Copy Request"),
-                                           _href=URL(args=[r.id, "copy"],
-                                                     #vars={"type":r.record.type}
-                                                     ),
-                                           _class="action-btn"))
-                        output["buttons"]["delete_btn"] = delete_btn
+                s3_action_buttons(r)
+                #s3_action_buttons(r, copyable=True)
+                # if "buttons" in output:
+                    # buttons = output["buttons"]
+                    # if "delete_btn" in buttons:
+                        # delete_btn = buttons["delete_btn"]
+                        # delete_btn = DIV(delete_btn,
+                                         # A(T("Copy Request"),
+                                           # _href=URL(args=[r.id, "copy"],
+                                                     ##vars={"type":r.record.type}
+                                                     # ),
+                                           # _class="action-btn"))
+                        # output["buttons"]["delete_btn"] = delete_btn
                 if settings.get_req_use_commit():
                     # This is appropriate to all
                     s3.actions.append(

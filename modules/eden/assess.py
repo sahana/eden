@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AssessBuildingModel"
+__all__ = ["S3AssessBuildingModel",
+           "S3AssessCanvassModel",
            ]
 
 from gluon import *
@@ -585,7 +586,7 @@ class S3AssessBuildingModel(S3Model):
                       S3SearchOptionsWidget(
                         name="building_search_status",
                         label=T("Status"),
-                        field="facility_type",
+                        field="status",
                         options = assess_status_opts,
                         cols = 3
                       ))
@@ -594,10 +595,103 @@ class S3AssessBuildingModel(S3Model):
         self.configure(tablename,
                        search_method = building_search,
                        subheadings = {
-                        T("Current Residence"): "intention",
                         T("Damages"): "electricity",
                         }
-                    )
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (s3.*)
+        #
+        return Storage()
+
+# =============================================================================
+class S3AssessCanvassModel(S3Model):
+    """
+        Building Canvassing form
+    """
+
+    names = ["assess_canvass",
+             ]
+
+    def model(self):
+
+        T = current.T
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Canvassing
+        #
+        status_opts = {
+            1 : T("Not actioned"),
+            2 : T("Actioned"),
+            }
+
+        tablename = "assess_canvass"
+        table = self.define_table(tablename,
+                                  Field("status", "integer",
+                                        default = 1,
+                                        requires = IS_IN_SET(status_opts),
+                                        represent = lambda opt:
+                                            status_opts.get(opt,
+                                                                   UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
+                                        label=T("Status")),
+                                  s3_date(),
+                                  self.gis_location_id(),
+                                  Field("type_of_property", "list:integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(assess_property_type_opts,
+                                                              multiple=True)
+                                                ),
+                                        represent = lambda ids: \
+                                            assess_multi_type_represent(ids,
+                                                                        assess_property_type_opts),
+                                        widget = lambda f, v, **attr: \
+                                            CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
+                                        label=T("Type of Property")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_ASSESS = T("Add Assessment")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_ASSESS,
+            title_display = T("Assessment Details"),
+            title_list = T("Assessments"),
+            title_update = T("Edit Assessment"),
+            title_search = T("Search Assessments"),
+            subtitle_create = T("Add New Assessment"),
+            label_list_button = T("List Assessments"),
+            label_create_button = ADD_ASSESS,
+            label_delete_button = T("Delete Assessment"),
+            msg_record_created = T("Assessment added"),
+            msg_record_modified = T("Assessment updated"),
+            msg_record_deleted = T("Assessment deleted"),
+            msg_list_empty = T("No Assessments found")
+        )
+
+        canvass_search = S3Search(
+            advanced=(S3SearchSimpleWidget(
+                        name="canvass_search_advanced",
+                        label=T("Building Name or Address"),
+                        comment=T("To search for a building canvass assessment, enter the Building Name or Addresss. You may use % as wildcard. Press 'Search' without input to list all assessments."),
+                        field=["location_id$name",
+                               "location_id$addr_street",
+                               ]
+                      ),
+                      S3SearchOptionsWidget(
+                        name="canvass_search_status",
+                        label=T("Status"),
+                        field="status",
+                        options = status_opts,
+                        cols = 3
+                      ))
+            )
+
+        self.configure(tablename,
+                       search_method = canvass_search,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)

@@ -209,9 +209,13 @@ class S3DateTimeWidget(FormWidget):
         s3 = current.response.s3
 
         if isinstance(value, datetime.datetime):
+            datevalue = value
             value = value.strftime(format)
         elif value is None:
             value = ""
+        else:
+            from dateutil import parser
+            datevalue = parser.parse(value, ignoretz=True)
 
         default = dict(_type = "text",
                        # Prevent default "datetime" calendar from showing up:
@@ -233,7 +237,7 @@ class S3DateTimeWidget(FormWidget):
 
         # Round to the nearest half hour
         if value:
-            start = value
+            start = datevalue
         elif earliest < now < latest:
             start = now
         else:
