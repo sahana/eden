@@ -421,7 +421,7 @@ class S3HRModel(S3Model):
                       S3SearchOptionsWidget(
                         name="human_resource_search_training",
                         label=T("Training"),
-                        field="course",
+                        field="person_id$training.course_id",
                         cols = 3,
                         options = self.hrm_course_opts,
                       ),
