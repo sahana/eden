@@ -145,11 +145,10 @@ function addLayers() {
     // Simple Features
     if (S3.gis.features) {
         for (i = 0; i < S3.gis.features.length; i++) {
-            var point = new OpenLayers.Geometry.Point(S3.gis.features[i].lon, S3.gis.features[i].lat);
-            point.transform(S3.gis.proj4326, S3.gis.projection_current);
-            S3.gis.draftLayer.addFeatures(
-                new OpenLayers.Feature.Vector(point)
-            );
+            var feature = S3.gis.format_geojson.parseFeature(S3.gis.features[i]);
+            feature.geometry.transform(S3.gis.proj4326,
+                                       S3.gis.projection_current);
+            S3.gis.draftLayer.addFeatures([feature]);
         }
     }
 }

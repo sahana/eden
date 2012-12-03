@@ -2370,7 +2370,7 @@ def display_feature():
                                                 table.parent,
                                                 table.lat,
                                                 table.lon,
-                                                #table.wkt,
+                                                table.wkt,
                                                 limitby=(0, 1)).first()
 
     if not feature:
@@ -2399,8 +2399,7 @@ def display_feature():
     bounds = gis.get_bounds(features=[feature])
 
     map = gis.show_map(
-        features = [{"lat"  : lat,
-                     "lon"  : lon}],
+        features = [feature.wkt],
         lat = lat,
         lon = lon,
         #zoom = zoom,
@@ -2460,13 +2459,15 @@ def display_features():
     accessible = auth.s3_accessible_query("read", ltable)
     query2 = query2 & accessible
 
-    features = db(query).select(ltable.ALL, left = [ltable.on(query2)])
+    features = db(query).select(ltable.wkt,
+                                left = [ltable.on(query2)]
+                                )
 
     # Calculate an appropriate BBox
     bounds = gis.get_bounds(features=features)
 
     map = gis.show_map(
-        features = features,
+        features = [f.wkt for f in features],
         bbox = bounds,
         window = True,
         closable = False,

@@ -510,6 +510,8 @@ class GIS(object):
             @param features: A list of point features
             @param parent: A location_id to provide a polygonal bounds suitable
                            for validating child locations
+
+            @ToDo: Support Polygons (separate function?)
         """
 
         if parent:
@@ -2160,7 +2162,8 @@ class GIS(object):
                     latlons[row[tablename].id] = (_location.lat, _location.lon)
 
         _latlons = {}
-        _latlons[tablename] = latlons
+        if latlons:
+            _latlons[tablename] = latlons
         _wkts = {}
         _wkts[tablename] = wkts
         _geojsons = {}
@@ -5245,10 +5248,7 @@ class GIS(object):
             @param add_polygon: Whether to include a DrawFeature control to allow drawing a polygon over the map
             @param add_polygon_active: Whether the DrawFeature control should be active by default
             @param features: Simple Features to overlay on Map (no control over appearance & not interactive)
-                [{
-                  "lat": lat,
-                  "lon": lon
-                }]
+                [wkt]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
                 [{
                   "name"   : T("MyLabel"), # A string: the label for the layer
@@ -5839,20 +5839,19 @@ S3.gis.lon=%s
         # Simple Features added to the Draft layer
         # - used by the Location Selector
         #
-        _features = ""
         if features:
-            _features = '''S3.gis.features=new Array()\n'''
-            counter = -1
+            simplify = GIS.simplify
+            _f = []
+            append = _f.append
             for feature in features:
-                counter = counter + 1
-                if feature["lat"] and feature["lon"]:
-                    # Generate JS snippet to pass to static
-                    _features += '''S3.gis.features[%i]={
- lat:%f,
- lon:%f
-}\n''' % (counter,
-          feature["lat"],
-          feature["lon"])
+                geojson = simplify(feature, output="geojson")
+                f = dict(type = "Feature",
+                         geometry = json.loads(geojson))
+                append(f)
+            # Generate JS snippet to pass to static
+            _features = '''S3.gis.features=%s\n''' % json.dumps(_f)
+        else:
+            _features = ""
 
         # ---------------------------------------------------------------------
         # Feature Queries
