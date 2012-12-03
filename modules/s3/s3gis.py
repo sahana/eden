@@ -7548,29 +7548,38 @@ class S3Map(S3Search):
             r.http = "POST"
 
         # Process the search forms
-        query, errors = self.process_forms(r,
-                                           simple_form,
-                                           advanced_form,
-                                           form_values)
+        dq, vq, errors = self.process_forms(r,
+                                            simple_form,
+                                            advanced_form,
+                                            form_values)
 
+        search_url = None
+        search_url_vars = Storage()
+        save_search = ""
         if not errors:
             resource = self.resource
-            resource.add_filter(query)
+            if (dq is None or hasattr(dq, "serialize_url")) and \
+               (vq is None or hasattr(vq, "serialize_url")):
+                query = dq
+                if vq is not None:
+                    if query is not None:
+                        query &= vq
+                    else:
+                        query = vq
+                if query is not None:
+                    search_url_vars = query.serialize_url(resource)
+                search_url = r.url(method = "", vars = search_url_vars)
 
-            # Save Search Widget
-            if session.auth and \
-               current.deployment_settings.get_save_search_widget():
+                # Create a Save Search widget
                 save_search = self.save_search_widget(r, query, **attr)
-            else:
-                save_search = DIV()
+
+            # Add sub-queries
+            resource.add_filter(dq)
+            resource.add_filter(vq)
 
             # Add a map for search results
             # (this same map is also used by the Map Search Widget, if-present)
             # Build URL to load the features onto the map
-            if hasattr(query, "serialize_url"):
-                vars = query.serialize_url(resource)
-            else:
-                vars = None
             gis = current.gis
             request = self.request
             marker_fn = s3db.get_config(tablename, "marker_fn")
@@ -7581,7 +7590,7 @@ class S3Map(S3Search):
                                         request.function)
             url = URL(extension="geojson",
                       args=None,
-                      vars=vars)
+                      vars=search_url_vars)
             feature_resources = [{
                     "name"      : T("Search Results"),
                     "id"        : "search_results",
