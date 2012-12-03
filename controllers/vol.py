@@ -785,6 +785,9 @@ def certificate_skill():
 def training():
     """ Training Controller - used for Searching for Participants """
 
+    table = s3db.hrm_human_resource
+    s3.filter = ((table.type == 2) & \
+                 (s3db.hrm_training.person_id == table.person_id))
     return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
