@@ -1258,15 +1258,18 @@ class S3SiteModel(S3Model):
                       org_site="site_id")
         add_component("req_commit",
                       org_site="site_id")
+        add_component("req_site_needs",
+                      org_site=dict(joinby="site_id",
+                                    multiple=False))
 
         self.configure(tablename,
                        onaccept=self.org_site_onaccept,
                        list_fields=["id",
-                                     "code",
-                                     "instance_type",
-                                     "name",
-                                     "organistion_id",
-                                     "location_id"]
+                                    "code",
+                                    "instance_type",
+                                    "name",
+                                    "organistion_id",
+                                    "location_id"]
                        )
 
         # ---------------------------------------------------------------------
@@ -1726,9 +1729,10 @@ class S3FacilityModel(S3Model):
         formatter = ".%sf" % decimals
 
         # All Facilities
-        query = (stable.deleted == False) & \
+        query = (stable.deleted != True) & \
+                (stable.obsolete != True) & \
                 (gtable.id == stable.location_id)
-        #left = ntable.on(ntable.site_id == stable.site_id)
+        left = ntable.on(ntable.site_id == stable.site_id)
         facs = db(query).select(stable.id,
                                 stable.name,
                                 stable.facility_type_id,
@@ -1737,9 +1741,9 @@ class S3FacilityModel(S3Model):
                                 stable.phone2,
                                 stable.email,
                                 stable.website,
-                                #ntable.green,
-                                #ntable.red,
-                                #ntable.yellow,
+                                ntable.urgently_needed,
+                                ntable.needed,
+                                ntable.not_needed,
                                 gtable.addr_street,
                                 gtable.lat,
                                 gtable.lon,
@@ -1748,8 +1752,9 @@ class S3FacilityModel(S3Model):
         append = features.append
         represent = stable.facility_type_id.represent
         for f in facs:
-            x = f.gis_location.lon
-            y = f.gis_location.lat
+            g = f.gis_location
+            x = g.lon
+            y = g.lat
             if x is None or y is None:
                 continue
             x = float(format(x, formatter))
@@ -1757,27 +1762,33 @@ class S3FacilityModel(S3Model):
             shape = Point(x, y)
             # Compact Encoding
             geojson = dumps(shape, separators=(",", ":"))
+            o = f.org_facility
             properties = {
-                    "id": f.org_facility.id,
-                    "name": f.org_facility.name,
+                    "id": o.id,
+                    "name": o.name,
                     }
-            if f.org_facility.facility_type_id:
-                properties.update(type=represent(f.org_facility.facility_type_id))
-            if f.org_facility.opening_times:
-                properties.update(open=f.org_facility.opening_times)
-            if f.gis_location.addr_street:
-                properties.update(addr=f.gis_location.addr_street)
-            if f.org_facility.phone1:
-                properties.update(ph1=f.org_facility.phone1)
-            if f.org_facility.phone2:
-                properties.update(ph2=f.org_facility.phone2)
-            if f.org_facility.email:
-                properties.update(email=f.org_facility.email)
-            if f.org_facility.website:
-                properties.update(web=f.org_facility.website)
-            #"need": f.req_site_needs.red,
-            #"accept": f.req_site_needs.yellow,
-            #"no": f.req_site_needs.green,
+            if o.facility_type_id:
+                properties.update(type=represent(o.facility_type_id))
+            if o.opening_times:
+                properties.update(open=o.opening_times)
+            if g.addr_street:
+                properties.update(addr=g.addr_street)
+            if o.phone1:
+                properties.update(ph1=o.phone1)
+            if o.phone2:
+                properties.update(ph2=o.phone2)
+            if o.email:
+                properties.update(email=o.email)
+            if o.website:
+                properties.update(web=o.website)
+            n = f.req_site_needs
+            if n:
+                if n.urgently_needed:
+                    properties.update(urgent=n.urgently_needed)
+                if n.needed:
+                    properties.update(need=n.needed)
+                if n.not_needed:
+                    properties.update(no=n.not_needed)
             f = dict(
                 type = "Feature",
                 properties = properties,
@@ -1803,6 +1814,9 @@ class S3FacilityModel(S3Model):
 
 # -----------------------------------------------------------------------------
 def org_facility_rheader(r, tabs=[]):
+    """
+        RHeader for facilities when doing a req_match
+    """
 
     T = current.T
     s3db = current.s3db
@@ -2689,6 +2703,8 @@ def org_rheader(r, tabs=[]):
                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
             tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
+        if settings.get_req_summary():
+            tabs.append((T("Needs"), "site_needs"))
         if settings.has_module("asset"):
             tabs.append((T("Assets"), "asset"))
         if settings.has_module("inv"):

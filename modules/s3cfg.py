@@ -1306,6 +1306,11 @@ class S3Config(Storage):
             Whether a Requester is prompted to match each line item in an Item request
         """
         return self.req.get("prompt_match", True)
+    def get_req_summary(self):
+        """
+            Whether to use Summary Needs for Sites (Office/Facility currently):
+        """
+        return self.req.get("summary", False)
     def get_req_use_commit(self):
         """
             Whether there is a Commit step in Requests Management
