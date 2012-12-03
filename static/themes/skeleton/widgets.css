@@ -1,0 +1,616 @@
+@charset "UTF-8";
+/* ========================================================================= */
+/* Form Layout Styles */
+form label {
+    cursor: pointer;
+}
+
+p.legend {
+}
+p.legend em {
+}
+div.form-container {
+}
+div.form-container form {
+}
+div.form-container p {
+}
+div.form-container form p {
+}
+div.form-container form p.note {
+}
+div.form-container form input,
+div.form-container form button,
+div.form-container form select,
+div.form-container form textarea {
+}
+div.form-container form input.string,
+div.form-container form textarea  {
+}
+div#login_form form table,
+div#register_form form table {
+}
+div#login_form input.string,
+div#register_form input.string {
+}
+div.form-container form input[type="checkbox"],
+div.form-container form input[type="radio"] {
+}
+div.form-container form fieldset {
+}
+div.form-container form legend {
+}
+div.form-container form td.w2p_fl,
+div.item-container form td.w2p_fl {
+}
+div.form-container form tr td,
+div.item-container form tr td {
+}
+div.form-container div.controlset label,
+div.form-container div.controlset input {
+}
+div.form-container div.controlset div {
+}
+div.form-container div.buttonrow {
+}
+
+/* Styling for Inline Components */
+table.embeddedComponent {
+    border: 1px solid #B3B3B3;
+    border-top: 0;
+    border-right: 0;
+}
+form table.embeddedComponent td {
+    border: 1px solid #B3B3B3;
+    padding: 0 5px;
+    border-bottom: 0;
+    border-left: 0;
+}
+table.embeddedComponent tr.label-row td {
+    text-align: center;
+    color: #B3B3B3;
+}
+div.form-container form .embeddedComponent input.string,
+div.form-container form .embeddedComponent  textarea  {
+    width: auto;
+}
+/* ========================================================================= */
+
+textarea.comments {
+    height: 50px;
+}
+textarea.richtext {
+    height: 100px;
+}
+
+/* Used to display the list-add with the list-add-btn */
+#list-btn-add {
+}
+
+#list-add {
+    display: none; /* Hide by default */
+}
+
+/* Tabular data view */
+div#table-container {
+
+}
+table.dataTable thead th {
+
+}
+
+div#table-container th {
+
+}
+div#table-container th.rtotal {
+}
+div#table-container tr.even td {
+
+}
+div#table-container tr.odd td {
+
+}
+div#table-container tr.odd td.rtotal,
+div#table-container tr.even td.rtotal {
+}
+div#table-container tr.totals_row {
+}
+div#table-container td.totals_header {
+}
+
+.list_formats {
+    float: right;
+}
+.list_formats img {
+}
+/* msg_list_empty */
+.empty {
+}
+
+/* dataTables Styling */
+div .dataTable_table {
+    /* Scroll the table not the wrapper */
+    overflow: auto;
+    clear: both;
+}
+table.dataTable {
+    width: 100%;
+}
+table.dataTable tr td {
+    vertical-align: top;
+}
+table.dataTable.group {
+}
+table.dataTable tr.level_1{
+}
+table.dataTable tr.level_1 a{
+}
+table.dataTable tr.activeRow.level_1 {
+}
+table.dataTable tr.level_2{
+}
+table.dataTable tr.level_2 a{
+}
+table.dataTable tr.activeRow.level_2{
+}
+
+div.dataTables_filter {
+    width: auto;
+    float: left;
+}
+div.dataTables_processing {
+....float: left;
+}
+div.dataTables_info  {
+    width: auto;
+    float: right;
+    clear: none;
+}
+div.dataTables_length {
+    float: right;
+}
+div.dataTables_paginate {
+    float: left;
+}
+div.paging_full_numbers {
+....width: auto;
+}
+
+.sorting_disabled {
+    /* background: no-repeat scroll right center transparent; */
+}
+table.dataTable .row_selected td {
+}
+
+table.dataTable tr.dtalert .action-btn,
+table.dataTable tr.dtalert .delete-btn {
+}
+table.dataTable tr.dtalert .action-btn:hover,
+table.dataTable tr.dtalert .delete-btn:hover {
+}
+table.dataTable tr.dtdisable {
+}
+table.dataTable tr.even.row_selected td { 
+}
+table.dataTable tr.even.row_selected td.sorting_1 {
+}
+table.display tr.odd.row_selected td {
+}
+table.display tr.odd.row_selected td.sorting_1 {
+}
+
+table.dataTable tr.odd.dtalert {
+}
+table.dataTable tr.odd.dtalert td.sorting_1 {
+}
+table.dataTable tr.odd.dtalert td.sorting_2 {
+}
+table.dataTable tr.odd.dtalert td.sorting_3 {
+}
+table.dataTable tr.even.dtalert {
+}
+table.dataTable tr.even.dtalert td.sorting_1 {
+}
+table.dataTable tr.even.dtalert td.sorting_2 {
+}
+table.dataTable tr.even.dtalert td.sorting_3 {
+}
+
+table.dataTable tr.odd.dtwarning {
+}
+table.dataTable tr.odd.dtwarning td.sorting_1 {
+}
+table.dataTable tr.odd.dtwarning td.sorting_2 {
+}
+table.dataTable tr.odd.dtwarning td.sorting_3 {
+}
+table.dataTable tr.even.dtwarning {
+}
+table.dataTable tr.even.dtwarning td.sorting_1 {
+}
+table.dataTable tr.even.dtwarning td.sorting_2 {
+}
+table.dataTable tr.even.dtwarning td.sorting_3 {
+}
+table.dataTable tr.dtwarning .action-btn,
+table.dataTable tr.dtwarning .delete-btn{
+}
+table.dataTable tr.dtwarning .action-btn:hover,
+table.dataTable tr.dtwarning .delete-btn:hover {
+}
+
+span.dataTable-btn {
+}
+span.dataTable-btn:hover {
+}
+
+table.importItem {
+}
+
+/* Display view */
+div.item-container {
+}
+
+/* Default text for INPUT fields */
+.default-text {
+}
+
+ul.ui-autocomplete {
+}
+
+/* Embedded Map */
+div#map {
+}
+
+/* Required Field indicator */
+.req {
+}
+
+/* For Key - ugly! */
+.red {
+    color: red;
+}
+
+/* Help Popup */
+.tooltip,
+.tooltipbody,
+.stickytip,
+.ajaxtip {
+    /* @ToDo: Add help/alt text */
+    background-image: url(../../img/help_off.gif);
+}
+.tooltip span,
+.tooltipbody span,
+.stickytip span,
+.ajaxtip span {
+    /* display:none; */
+}
+.tooltip:hover,
+.tooltipbody:hover,
+.stickytip:hover,
+.ajaxtip:hover {
+    background-image: url(../../img/help_on.gif);
+}
+
+/* Form Popup */
+div#popup {
+}
+
+/* Message Flash styles */
+.confirmation,
+.error,
+.information,
+.warning {
+    clear: left; /* Added to avoid merging with breadcrumbs */
+}
+
+/* AutoCompletes */
+.throbber {
+}
+
+/* Resource Header */
+div#rheader {
+}
+div#rheader th,
+div#rheader td {
+}
+div#rheader th {
+}
+
+/* Tabs */
+div.tabs {
+}
+div.tabs span {
+}
+span.tab_last,
+span.tab_other {
+}
+div.tabs span a {
+}
+/* To overlap component border */
+div.tabs span.tab_here {
+}
+form div.tabs span.tab_here {
+}
+div.tabs span.tab_here a {
+}
+span.tab_last a:hover,
+span.tab_other a:hover {
+}
+span.tab_last:hover,
+span.tab_other:hover {
+}
+span.tab_prev_active {
+}
+span.tab_next_active {
+}
+span.tab_prev_inactive {
+}
+span.tab_next_inactive {
+}
+span.tab_prev_active a,
+span.tab_next_active a {
+}
+span.tab_prev_inactive a,
+span.tab_next_inactive a {
+}
+
+/* Component */
+div#component {
+    float: left;
+    width: 100%;
+}
+
+/* Resource Footer */
+div#rfooter {
+	padding: 15px 0;
+	clear: both;
+}
+
+/* Last Update Meta-data */
+div#last_update {
+    float: right;
+    clear: right;
+}
+
+.authorinfo {
+}
+
+/* Action Buttons */
+.action-btn,
+.delete-btn {
+}
+.action-btn:hover,
+.delete-btn:hover {
+}
+#delete-btn {
+    /* @ToDo Is this needed? */
+}
+#markDuplicate {
+}
+.cancel-btn {
+}
+.action-lnk {
+}
+
+.sublabels {
+}
+
+/* Expand section button */
+.plus {
+    /* @ToDo Alternative +/- text */
+}
+.minus {
+    /* @ToDo Alternative +/- text */
+}
+.expand {
+    /* @ToDo Alternative +/- text  - combine with plus?*/
+}
+.expanded {
+}
+
+/* Embed Widget */
+tr.box_top {
+}
+tr.box_middle {
+}
+tr.box_bottom {
+}
+
+/* Subheadings */
+td.subheading {
+}
+tr.after_subheading td {
+}
+
+select[disabled='disabled'],
+input[disabled='disabled'] {
+    /* Make the cursor not change to editable */
+    cursor: default;
+}
+
+/* Grow Input */
+.rfilter {
+}
+
+/* Comments */
+#comments ul, ol {
+    list-style: none outside none;
+}
+#comments div.comment-text ul {
+}
+#comments div.comment-text ol {
+}
+#comments div.comment-text li {
+    padding: 0;
+}
+/* Over-ride Ext! */
+#comments em {
+}
+#comments strong {
+}
+#comment-form {
+}
+.avatar {
+    float: left;
+}
+
+/* HRM RHeader */
+.hrm_avatar {
+    float: left;
+    clear: right;
+}
+.comment-box {
+    display: block;
+    overflow: hidden;
+}
+.comment-text {
+    float: left;
+}
+.comment-header {
+}
+.comment-footer {
+    clear: left;
+}
+.comment-date {
+}
+
+/* Popup text for represents of Long text fields */
+.popup {
+    display: none;
+    position: absolute;
+}
+
+/* Drag and Drop */
+div#template_sections {
+}
+div#template_sections li,
+div#master_sections li {
+    list-style: none;
+}
+.ui-droppable {
+    padding-bottom: 25px;
+}
+li.ui-draggable:hover,
+li.ui-draggable-dragging {
+    cursor: pointer;
+    list-style: none;
+}
+
+/* Ext button (e.g. on Bulk Upload form */
+#show-dialog-btn {
+}
+
+/* Contacts */
+.contacts-wrapper {
+}
+
+.contacts-wrapper p {
+}
+.contacts-wrapper div.margin {
+}
+
+.contacts-wrapper .contact.saving .editBtn,
+.contacts-wrapper .contact.edit .editBtn {
+    display: none;
+}
+
+/* GIS */
+/* Except here */
+ul.x-tab-strip,
+ul.x-tree-node-ct,
+ul.x-tree-root-ct {
+    list-style: none outside none;
+}
+
+/* Search Form */
+.search_select_letter_label,
+.s3-grouped-checkboxes-widget-label {
+
+}
+.search_select_letter_label.expanded,
+.s3-grouped-checkboxes-widget-label.expanded {
+    /* @ToDo: re-use   existing style*/
+}
+
+.search_select_letter_widget,
+.s3-grouped-checkboxes-widget .s3-checkboxes-widget {
+
+}
+
+div.form-container form fieldset .search_select_letter_widget label,
+div.form-container form fieldset  .s3-checkboxes-widget label {
+}
+/* Checkboxes with title attributes */
+/*
+.checkbox-tooltip {
+    border-bottom: 1px dotted black;
+}
+.checkbox-tooltip:after {
+    content: " ?";
+}
+*/
+/* when S3SearchOptionsWidget has nothing to show */
+.no-options-available {
+}
+
+.checkboxes-widget-s3 input,
+.s3-checkboxes-widget input {
+    float: left;
+}
+.s3-checkboxes-widget-filter input {
+}
+
+.search_form td,
+#filter_options td {
+}
+.search_form tr:first-child > td,
+#filter_options tr:first-child > td {
+}
+.search_form table.s3-checkboxes-widget td,
+.search_form table.s3searchminmaxwidget td,
+#filter_options table.s3-checkboxes-widget td,
+#filter_options table.s3searchminmaxwidget td {
+}
+
+.widget-org-hierarchy-menu {
+    overflow:auto;
+}
+.widget-org-hierarchy-menu .ui-menu {
+    position:absolute;
+    top:0;
+    bottom:0;
+    overflow:auto;
+}
+.widget-org-hierarchy-menu .ui-menu a {
+}
+
+.widget-org-hierarchy-crumbs {
+}
+.widget-org-hierarchy-crumbs li {
+}
+.widget-org-hierarchy-crumbs li:after {
+    content: " > ";
+}
+.widget-org-hierarchy-crumbs li a {
+}
+.widget-org-hierarchy-crumbs li.selected a {
+}
+
+table.report a.report-cell-zoom {
+    width: 16px;
+    height: 16px;
+    float: right;
+    background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
+    cursor: pointer;
+}
+table.report a.report-cell-zoom.opened {
+}
+table.report td {
+}
+
+.ui-datepicker-trigger {
+}
+
+.resizable-textarea .grippie {
+}

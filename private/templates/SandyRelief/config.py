@@ -21,7 +21,7 @@ settings.base.system_name = "Sandy Relief"
 settings.base.system_name_short = "SandyRelief"
 
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "SandyRelief"
+settings.base.theme = "skeleton"
 
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
