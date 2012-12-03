@@ -1,8 +1,18 @@
 <a href='/{{=appname}}/default/index/contact' class='action-btn'>HELP</a>
 {{if auth.is_logged_in():}}
-<a href='http://sandyrelief.sahanafoundation.org:9090?nick={{="SR%s_%s" % (s3_fullname(auth.user).replace(" ", "_"), s3db.org_site_represent(auth.user.site_id, show_link=False).replace(" ", "_"))}}&channels=SandyRelief' target='_blank' class='action-btn'>Online Chat</a>
+<a id="sandychat" href='http://sandyrelief.sahanafoundation.org:9090?nick={{="SR%s_%s" % (s3_fullname(auth.user).replace(" ", "_"), s3db.org_site_represent(auth.user.site_id, show_link=False).replace(" ", "_"))}}&channels=SandyRelief' target='_blank' class='action-btn'>Online Chat</a>
 {{pass}}
 <p id='poweredby'>
     <img src='/{{=appname}}/static/img/S3menu_logo.png' width='30' height='28' style='vertical-align: middle;' alt='{{=T("Powered by Sahana Eden")}}' /><a target='_blank' href='http://eden.sahanafoundation.org' title='{{=T("Powered by Sahana Eden")}}'>{{=T("Powered by Sahana Eden")}}</a>
 </p>
 <div class='cf'></div>
+{{if auth.is_logged_in():}}
+<script type="text/javascript">
+jQuery(function() {
+	jQuery("#sandychat").click( function() {
+		splitview('http://sandyrelief.sahanafoundation.org:9090?nick={{="SR%s_%s" % (s3_fullname(auth.user).replace(" ", "_"), s3db.org_site_represent(auth.user.site_id, show_link=False).replace(" ", "_"))}}&channels=SandyRelief', "Help chat", 0.4);
+		return false;
+	});
+});
+</script>
+{{pass}}
