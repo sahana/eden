@@ -22,6 +22,7 @@ from tests.org import *
 from tests.project import *
 from tests.staff import *
 from tests.volunteer import *
+from tests.helpers import *
 
 def loadAllTests():
 
@@ -85,6 +86,9 @@ def loadAllTests():
 
     # Create Members
     addTests(loadTests(CreateMember))
+
+    # Test helpers
+    addTests(loadTests(ReportTestHelper))
 
     return suite
 
