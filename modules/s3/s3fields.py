@@ -67,7 +67,7 @@ from gluon import *
 from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 
-from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_group_represent
+from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
 from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
 
@@ -278,19 +278,22 @@ def s3_deletion_status():
 s3_meta_created_on = S3ReusableField("created_on", "datetime",
                                      readable=False,
                                      writable=False,
-                                     default=lambda: datetime.datetime.utcnow())
+                                     default=lambda: \
+                                        datetime.datetime.utcnow())
 
 s3_meta_modified_on = S3ReusableField("modified_on", "datetime",
                                       readable=False,
                                       writable=False,
-                                      default=lambda: datetime.datetime.utcnow(),
-                                      update=lambda: datetime.datetime.utcnow())
+                                      default=lambda: \
+                                        datetime.datetime.utcnow(),
+                                      update=lambda: \
+                                        datetime.datetime.utcnow())
 
 def s3_timestamp():
     return (s3_meta_created_on(),
             s3_meta_modified_on())
 
-# =========================================================================
+# =============================================================================
 # Record authorship meta-fields
 def s3_authorstamp():
     """
@@ -305,13 +308,18 @@ def s3_authorstamp():
     else:
         current_user = None
 
+    if current.deployment_settings.get_ui_auth_user_represent() == "name":
+        represent = s3_auth_user_represent_name
+    else:
+        represent = s3_auth_user_represent
+
     # Author of a record
     s3_meta_created_by = S3ReusableField("created_by", utable,
                                          readable=False,
                                          writable=False,
                                          requires=None,
                                          default=current_user,
-                                         represent=s3_auth_user_represent,
+                                         represent=represent,
                                          ondelete="RESTRICT")
 
     # Last author of a record
@@ -321,13 +329,13 @@ def s3_authorstamp():
                                           requires=None,
                                           default=current_user,
                                           update=current_user,
-                                          represent=s3_auth_user_represent,
+                                          represent=represent,
                                           ondelete="RESTRICT")
 
     return (s3_meta_created_by(),
             s3_meta_modified_by())
 
-# =========================================================================
+# =============================================================================
 def s3_ownerstamp():
     """
         Record ownership meta-fields
@@ -346,7 +354,7 @@ def s3_ownerstamp():
                                                         else None,
                                             represent=lambda id: \
                                                 id and s3_auth_user_represent(id) or \
-                                                       current.messages["UNKNOWN_OPT"],
+                                                       current.messages.UNKNOWN_OPT,
                                             ondelete="RESTRICT")
 
     # Role of users who collectively own the record
@@ -366,12 +374,12 @@ def s3_ownerstamp():
                                               # use a lambda here as we don't
                                               # want the model to be loaded yet
                                               represent=lambda val: \
-                                                        current.s3db.pr_pentity_represent(val))
+                                                current.s3db.pr_pentity_represent(val))
     return (s3_meta_owned_by_user(),
             s3_meta_owned_by_group(),
             s3_meta_realm_entity())
 
-# =========================================================================
+# =============================================================================
 def s3_meta_fields():
     """
         Normal meta-fields added to every table
@@ -401,7 +409,7 @@ def s3_meta_fields():
 def s3_all_meta_field_names():
     return [field.name for field in s3_meta_fields()]
 
-# =========================================================================
+# =============================================================================
 # Reusable roles fields
 
 def s3_role_required():
@@ -430,7 +438,7 @@ def s3_role_required():
     return f()
 
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def s3_roles_permitted(name="roles_permitted", **attr):
     """
         List of Roles Permitted to access a resource

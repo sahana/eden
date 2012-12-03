@@ -601,7 +601,28 @@ def s3_auth_user_represent(id, row=None):
     try:
         return user.email
     except:
-        return current.messages["UNKNOWN_OPT"]
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+def s3_auth_user_represent_name(id):
+    """
+        Represent users by their names
+    """
+
+    if not id:
+        return current.messages["NONE"]
+
+    db = current.db
+    table = db.auth_user
+    user = db(table.id == id).select(table.first_name,
+                                     table.last_name,
+                                     limitby=(0, 1)).first()
+    try:
+        return s3_format_fullname(user.first_name.strip(),
+                                  None,
+                                  user.last_name.strip())
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def s3_auth_group_represent(opt):
@@ -1373,6 +1394,7 @@ class CrudS3(Crud):
         """ Initialise parent class & make any necessary modifications """
         Crud.__init__(self, current.db)
 
+
     def select(
         self,
         table,
@@ -1761,6 +1783,7 @@ class S3BulkImporter(object):
                     f = urllib2.urlopen(req)
                 except urllib2.HTTPError, e:
                     self.errorList.append("Could not access %s: %s" % (filename, e.read()))
+
                     return
                 except:
                     self.errorList.append(errorString % filename)

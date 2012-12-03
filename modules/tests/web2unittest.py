@@ -109,6 +109,124 @@ class SeleniumUnitTest(Web2UnitTest):
             rows = dbcallback(table, data, rows)
         return rows
 
+# -------------------------------------------------------------------------
+    def search(self, form_type, results_expected, params, row_count, **kwargs):
+        '''
+        Generic method to test the validity of search results.
+
+        @param form_type: This can either be search.simple_form or
+                          search.advanced_form
+
+        @param results_expected: Are results expected?
+
+        @param params: A dictionary mapping from XPath queries for search form
+                       fields to their respective values.
+        
+        @param row_counts: Expected row counts as a tuple: (start, length, end)
+
+        Keyword arguments:
+
+        These let you specify the kinds of checks to perform on the resulting
+        datatable. Here are some of the options:
+
+        1. data - You can pass in your own function here that receives the data
+        from the results table as an argument. Return true if your check is
+        successful and false otherwise. This directly corresponds to the
+        'dt_data' function.
+
+        2. manual_check - You can pass in your own function here, and it'll
+        receive this instance as an argument. This can be used for all other
+        kinds of checks.
+
+        3. match_row - You can use this to match a series of values to a row in
+        the result data table. The first value must be the index of the row to
+        match against.
+
+        4. match_column - You can use this to match a series of values to a
+        column in the result data table. The first value must be the index of
+        the row to match against.
+        '''
+
+        browser = self.browser
+
+        simple_form = 0
+        advanced_form = 1
+
+        # NB If there's any form which has the advanced form as the default,
+        # this will not work.
+        if form_type == advanced_form:
+            link = browser.find_element_by_xpath("//a[@class='action-lnk advanced-lnk']")
+        else:
+            link = browser.find_element_by_xpath("//a[@class='action-lnk simple-lnk']")
+
+        link.click()
+
+        for query_type, field_query in params.keys():
+            if query_type == "xpath":
+                element = browser.find_element_by_xpath(field_query)
+            elif query_type == "id":
+                element = browser.find_element_by_id(field_query)
+            elif query_type == "name":
+                element = browser.find_element_by_name(field_query)
+            elif query_type == "label":
+                element = browser.find_element_by_xpath(
+                    "//label[contains(text(),'{0}')]".format(field_query))
+            params[element] = params[(query_type, field_query)]
+            del params[(query_type, field_query)]
+
+        # More data types could be added here as and when they're required
+
+        for element, value in params.iteritems():
+            
+            if isinstance(value, basestring): # Text input fields
+                element.send_keys(value)
+            elif isinstance(value, bool) and value: # Checkboxes
+                element.click()
+
+        #params.keys()[-1].submit()
+        browser.find_element_by_name(("simple_submit", "advanced_submit")[form_type]).click()
+        
+        if results_expected == True:
+            self.assertFalse(
+            browser.find_element_by_id("table-container").text
+                    == "No Records Found",
+                "No results found, when results expected.")
+            
+        # We"re done entering and submitting data; now we need to check if the
+        # results produced are valid.
+
+        valid = True
+
+        self.assertTrue(row_count == self.dt_row_cnt()[:3],
+                        "Row count did not match.")
+        
+        if "data" in kwargs.keys():
+            self.assertTrue(bool(kwargs["data"](self.dt_data())),
+                "Data verification failed.")
+
+        if "manual_check" in kwargs.keys():
+            self.assertTrue(bool(kwargs["manual_check"](self)),
+                "Manual checks failed.")
+        
+        if "match_row" in kwargs.keys():
+            data = self.dt_data(row_list=(kwargs["match_row"][0]))
+            kwargs["match_row"] = kwargs["match_row"][1:]
+            for a, b in zip(kwargs["match_row"], data):
+                self.assertTrue(a == b,
+                    "Row match failed.")
+
+        if "match_column" in kwargs.keys():
+            column_index = kwargs["match_column"][0]
+            kwargs["match_column"] = kwargs["match_column"][1:]
+            for i, value in enumerate(kwargs["match_column"], 1):
+                self.assertTrue(self.dt_data_item(column=column_index,
+                    row=i) == value, "Column match failed.")
+
+        return self.dt_data()
+
+    search.simple_form = 0
+    search.advanced_form = 1
+
     # -------------------------------------------------------------------------
     def create(self,
                tablename,
@@ -258,6 +376,67 @@ class SeleniumUnitTest(Web2UnitTest):
                             successMsg)
             self.reporter(failMsg)
         return result
+
+    # -------------------------------------------------------------------------
+    class InvalidReportOrGroupException(Exception):
+        pass
+
+    def report(self, report_of, grouped_by, show_totals, *args):
+        browser = self.browser
+
+        # Open the report options fieldset:
+        report_options = browser.find_element_by_css_selector("#report_options button")
+        if report_options.is_displayed():
+            report_options.click()
+
+        # Select the item to make a report of:
+        rows_select = browser.find_element_by_id("report-rows")
+        rows_select.click()
+        found = False
+        for _ in rows_select.find_elements_by_tag_name("option"):
+            if _.text == report_of:
+                _.click()
+                found = True
+                break
+        if not found:
+            raise self.InvalidReportOrGroupException()
+
+        # Select the value to group by:
+        cols_select = browser.find_element_by_id("report-cols")
+        cols_select.click()
+        found = False
+        for _ in cols_select.find_elements_by_tag_name("option"):
+            if _.text == grouped_by:
+                _.click()
+                found = True
+                break
+        if not found:
+            raise self.InvalidReportOrGroupException()
+
+        browser.find_element_by_xpath("//input[@type='submit']").click()
+
+        # Now, check the generated report:
+        for check in args:
+            row = self.dt_find(check[0])
+            if not row:
+                raise self.InvalidReportOrGroupException()
+            else:
+                row = row[0][0]
+            col = 1
+            e = browser.find_element_by_xpath(".//*[@id='list']/thead/tr[2]/th[1]")
+            while True:
+                if e.text.strip() == check[1]:
+                    break
+                else:
+                    col += 1
+                    try:
+                        e = browser.find_element_by_xpath(
+                            ".//*[@id='list']/thead/tr[2]/th[{0}]".format(col))
+                    except NoSuchElementException:
+                        raise self.InvalidReportOrGroupException()
+
+            self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
+                "Report check failed.")
 
     # -------------------------------------------------------------------------
     def dt_filter(self,

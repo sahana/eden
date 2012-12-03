@@ -738,14 +738,11 @@ class S3Msg(object):
 
         limit = settings.get_mail_limit()
         if limit:
-            db = current.db
-            s3db = current.db
-            table = s3db.msg_limit
             # Check whether we've reached our daily limit
             day = datetime.timedelta(hours=24)
             cutoff = current.request.utcnow - day
-            query = (table.created_on > cutoff)
-            check = db(query).count()
+            table = current.s3db.msg_limit
+            check = current.db(table.created_on > cutoff).count()
             if check >= limit:
                 return False
             # Log the sending
