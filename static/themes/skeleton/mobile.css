@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+/*
+ * Media queries for responsive design
+ */
+
+@media all and (orientation:portrait) {
+  /* Style adjustments for portrait mode goes here */
+
+}
+
+@media all and (orientation:landscape) {
+  /* Style adjustments for landscape mode goes here */
+
+}
+
+/* Grade-A Mobile Browsers (Opera Mobile, iPhone Safari, Android Chrome)
+   Consider this: www.cloudfour.com/css-media-query-for-mobile-is-fools-gold/ */
+@media screen and (max-device-width: 480px) {
+
+
+  /* Uncomment if you don't want iOS and WinMobile to mobile-optimize the text for you
+     j.mp/textsizeadjust
+  html { -webkit-text-size-adjust:none; -ms-text-size-adjust:none; } */
+}
+
+/* For the less-enabled mobile browsers like Opera Mini */
+@media handheld {
+    * {
+        float: none;       /* Screens are not big enough to account for floats */
+        font-size: 80%;    /* Slightly reducing font size to reduce need to scroll */
+        background: #fff;  /*  As much contrast as possible */
+        color: #000;
+    }
+}

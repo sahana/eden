@@ -133,9 +133,9 @@ class S3HRModel(S3Model):
                                   self.org_organisation_id(
                                     label = organisation_label,
                                     requires = self.org_organisation_requires(updateable=True),
-                                    widget = None,
-                                    #widget=S3OrganisationAutocompleteWidget(
-                                    #    default_from_profile=True),
+                                    #widget = None,
+                                    widget=S3OrganisationAutocompleteWidget(
+                                        default_from_profile=True),
                                     empty = not settings.get_hrm_org_required(),
                                     ),
                                   super_link("site_id", "org_site",
