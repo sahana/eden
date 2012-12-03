@@ -242,6 +242,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.social_buttons = True
 # Enable this to show pivot table options form by default
 #settings.ui.hide_report_options = False
+# Uncomment to show created_by/modified_by using Names not Emails
+#settings.ui.auth_user_represent = "name"
 
 # -----------------------------------------------------------------------------
 # Persons
