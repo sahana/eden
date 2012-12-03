@@ -1761,13 +1761,10 @@ S3.gis.tab="%s"''' % s3.gis.tab
                             map_lon = lon
 
                         query = (locations.id == value)
-                        row = db(query).select(locations.lat,
-                                               locations.lon,
+                        row = db(query).select(locations.wkt,
                                                limitby=(0, 1)).first()
                         if row:
-                            feature = {"lat"  : row.lat,
-                                       "lon"  : row.lon }
-                            features = [feature]
+                            features = [row.wkt]
                         else:
                             features = []
                         map_popup = gis.show_map(
