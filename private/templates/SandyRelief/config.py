@@ -203,6 +203,8 @@ settings.project.milestones = True
 # Uncomment this to disable Sectors in projects
 settings.project.sectors = False
 
+# Uncomment to show created_by/modified_by using Names not Emails
+settings.ui.auth_user_represent = "name"
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
     if hidden:

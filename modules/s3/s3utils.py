@@ -601,28 +601,28 @@ def s3_auth_user_represent(id, row=None):
     try:
         return user.email
     except:
-        return current.messages["UNKNOWN_OPT"]
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-def s3_auth_user_represent_name(id, row=None):
+def s3_auth_user_represent_name(id):
     """
         Represent users by their names
     """
 
-    if row:
-        return row.first_name
-    elif not id:
+    if not id:
         return current.messages["NONE"]
 
     db = current.db
     table = db.auth_user
     user = db(table.id == id).select(table.first_name,
-                                     limitby=(0, 1),
-                                     cache=current.s3db.cache).first()
+                                     table.last_name,
+                                     limitby=(0, 1)).first()
     try:
-        return user.first_name
+        return s3_format_fullname(user.first_name.strip(),
+                                  None,
+                                  user.last_name.strip())
     except:
-        return current.messages["UNKNOWN_OPT"]
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def s3_auth_group_represent(opt):
