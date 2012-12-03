@@ -168,6 +168,10 @@ parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
                     action='store_const',
                     const = True)
+parser.add_argument("--browser",
+                    help = "Set the browser to use (Firefox/Chrome)",
+                    action = "store",
+                    default = "Firefox")
 
 desc = """Run the smoke tests even if debug is set to true.
 
@@ -188,6 +192,8 @@ parser.add_argument("--threshold",
                     help = desc)
 argsObj = parser.parse_args()
 args = argsObj.__dict__
+active_driver = {'firefox': webdriver.Firefox,
+          'chrome': webdriver.Chrome}[args['browser'].lower()]
 
 # Read Settings
 settings = current.deployment_settings
@@ -222,7 +228,7 @@ config.verbose = args["verbose"]
 browser_open = False
 # @todo test with invalid class and methods passed as CLA
 if args["method"]:
-    browser = config.browser = webdriver.Firefox()
+    browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
     if args["class"]:
@@ -233,7 +239,7 @@ if args["method"]:
                                                     globals()[args["class"]]
                                                     )
 elif args["class"]:
-    browser = config.browser = webdriver.Firefox()
+    browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
     suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["class"]])
@@ -273,7 +279,7 @@ elif args["suite"] == "roles":
     #suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
 
 elif args["suite"] == "complete":
-    browser = config.browser = webdriver.Firefox()
+    browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
     suite = loadAllTests()
@@ -291,7 +297,7 @@ elif args["suite"] == "complete":
 
 else:
     # Run all Tests
-    browser = config.browser = webdriver.Firefox()
+    browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
     suite = loadAllTests()
