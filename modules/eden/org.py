@@ -1732,7 +1732,9 @@ class S3FacilityModel(S3Model):
         query = (stable.deleted != True) & \
                 (stable.obsolete != True) & \
                 (gtable.id == stable.location_id)
-        left = ntable.on(ntable.site_id == stable.site_id)
+        lquery = (ntable.deleted != True) & \
+                 (ntable.site_id == stable.site_id)
+        left = ntable.on(lquery)
         facs = db(query).select(stable.id,
                                 stable.name,
                                 stable.facility_type_id,
@@ -1747,6 +1749,7 @@ class S3FacilityModel(S3Model):
                                 gtable.addr_street,
                                 gtable.lat,
                                 gtable.lon,
+                                left=left,
                                 )
         features = []
         append = features.append

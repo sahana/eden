@@ -117,7 +117,7 @@
             <xsl:if test="col[@field='Urgently Needed']!='' or 
                           col[@field='Needed']!='' or
                           col[@field='Not Needed']!=''">
-                <resource="req_site_needs">
+                <resource name="req_site_needs">
                     <data field="urgently_needed"><xsl:value-of select="col[@field='Urgently Needed']"/></data>
                     <data field="needed"><xsl:value-of select="col[@field='Needed']"/></data>
                     <data field="not_needed"><xsl:value-of select="col[@field='Not Needed']"/></data>
