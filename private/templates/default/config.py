@@ -396,6 +396,8 @@ settings.L10n.decimal_separator = "."
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
 #settings.req.req_type = ["Stock"]
+# Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
+#settings.req.summary = True
 
 # Custom Crud Strings for specific req_req types
 #settings.req.req_crud_strings = dict()

@@ -1769,20 +1769,31 @@ class S3RequestSummaryModel(S3Model):
         #
         # @ToDo: Convert the simple text boxes into a widget
         # e.g. modified ui.multiselect.js
+        # http://eden.sahanafoundation.org/ticket/1199
         #
         tablename = "req_site_needs"
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site"),
-                                  s3_comments("green",
-                                              label=T("We are actively seeking more"),
+                                  s3_comments("urgently_needed",
+                                              label=T("Urgently Needed"),
                                               comment=None),
-                                  s3_comments("yellow",
-                                              label=T("We are accepting donations"),
+                                  s3_comments("needed",
+                                              label=T("Needed"),
                                               comment=None),
-                                  s3_comments("red",
-                                              label=T("We have too much"),
-                                              comment=None),
+                                  s3_comments("not_needed",
+                                              label=T("Not Needed"),
+                                              comment=T("Please do NOT send")),
                                   *s3_meta_fields())
+
+        # CRUD strings
+        ADD_NEEDS = T("Add Site Needs")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_display=T("Site Needs"),
+            title_update=T("Edit Site Needs"),
+            label_delete_button=T("Delete Site Needs"),
+            msg_record_created=T("Site Needs added"),
+            msg_record_modified=T("Site Needs updated"),
+            msg_record_deleted=T("Site Needs deleted"))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)
