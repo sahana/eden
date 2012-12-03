@@ -134,6 +134,8 @@ settings.req.requester_label = "Site Contact"
 settings.req.requester_from_site = True
 # Label for Inventory Requests
 settings.req.type_inv_label = "Supplies"
+# Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
+settings.req.summary = True
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations
