@@ -233,7 +233,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         #M("Search", m="search"),
-                        M("Map", m="map"),
+                        #M("Map", m="map"),
                         M("Report", m="report"),
                         M("Search All Requested Items", f="req_item", m="search"),
                         M("Search All Requested Skills", f="req_skill", m="search"),
