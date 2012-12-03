@@ -248,8 +248,8 @@ p {
 }
 
 h1 {font-size: 36px; .condensed;}
-h2 {font-size: 22px; .caps;}
-h3 {font-size: 18px;}
+h2 {font-size: 22px; .condensed;}
+h3 {font-size: 18px; .caps;}
 h4 {font-size: 14px;}
 h5 {font-size: 13px;}
 h6 {font-size: 12px;}
@@ -416,6 +416,21 @@ dd {
 }
 
 
+
+
+/******* STATES *******/
+
+.is-disabled {
+    
+}
+
+
+/******* THEME *******/
+
+.fullpage {
+    background: #EEE;
+}
+
 ol.counter {
 	counter-reset: li;
 	margin: 2em 25px!important;
@@ -443,19 +458,6 @@ ol.counter {
 		color: #BBB;	    
 	}
 }
-
-
-
-/* forms */
-
-.form-item {
-	margin-top: 2em;
-	line-height: 1.5em;
-}
-.required {
-	color: @flag;
-}
-
 
 
 
@@ -513,10 +515,6 @@ ol.counter {
 /* header and footer */
 
 
-.S3menulogo {
-    display: none;
-}
-
 #modulenav {
 	.menu;
 	clear: both;
@@ -558,21 +556,28 @@ ol.counter {
 	li:last-child {
     	display: none;
 	}
-
-    .S3menuHome a {
-        color: @flag;
+    .S3menulogo {
+        display: none;
+    }
+    .submenu {
+        background: @white;
+        margin: -8px 0 0;
+        li {
+            .sans;
+            .caps;
+            font-size: 12px;
+            line-height: 1.2em;
+            border-bottom: 1px dotted @shadeE;
+        }
+        a {
+            padding: 8px 15px 9px;
+        }
+        hr {
+            display: none;
+        }
     }
 }
 
-.submenu {
-    background: @white;
-    li {
-        .sans;
-        .caps;
-        font-size: 14px;
-        line-height: 1em;
-    }
-}
 
 
 #poweredby {
@@ -592,28 +597,62 @@ ol.counter {
     display: none;
 }
 
+
+.rightside .form-container table {
+    width: 100%;
+    .w2p_fl {
+        width: 200px;
+    }
+    .colorbox {
+        font-size: 12px;
+        margin-left: 200px;
+    }
+}
+
 /******* MODULES *******/
 
 
-.buttons-side, .menu-side {
-	list-style: none;
-	li  {
-		margin-bottom: 10px;
-	}
+/* left nav */
+
+.aside {
+    margin: 10px;
+    background: @white;
 }
 
-.widget {
-	padding: 10px 15px;
-	border-top: 1px solid @shadeE;
-	h3 {
-		.condensed;
-	}
+#subnav {
+    padding: 15px;
+    div a {
+        .condensed;
+        font-size: 20px;
+        color: @body;
+        &:hover {
+            color: @anchor;
+        }
+    }
+    .submenu {
+        border-bottom: 1px solid @shadeE;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        li {
+            font-size: 12px;
+            line-height: 1.2em;
+            margin-bottom: .5em;
+        }
+    }
 }
-.widget:first-child {
-	border: 0;
+
+.rightside {
+    margin-left: 240px;
+    margin-top: 10px;
+    h2 {
+        font-size: 36px;
+        line-height: 1em;
+        margin: 20px 0;
+    }
 }
 
 
+/* home pages */
 
 .home {
 	background: url('img/bg/520clinton.jpg') no-repeat center center fixed; 
@@ -686,19 +725,17 @@ ol.counter {
     padding-right: 10px;
 }
 
-
-.req {
+.req, .red {
     color: @flag;
+    font-weight: normal;
 }
 
 #password-strength {
-margin-top: -15px;
-margin-bottom: 15px;
-font-size: 12px;
-font-style: italic;
+    margin-top: -15px;
+    margin-bottom: 15px;
+    font-size: 12px;
+    font-style: italic;
 }
-
-
 
 .action-lnk {
     .caps;
@@ -754,6 +791,58 @@ font-style: italic;
 
 
 
+
+/* tables */
+
+
+.dataTables_filter, 
+.dataTables_info, 
+.dataTables_length {
+    .border-radius(5px);
+    background: @shadeD;
+    padding: 5px 15px;
+    margin: 10px 10px 10px 0;
+}
+
+.dataTables_filter label, 
+.dataTables_filter input, 
+.dataTables_length label,
+.dataTables_info {
+    font-size: 12px;
+}
+
+.list_formats {
+    float: right;
+    margin: -60px 25px 10px;
+    font-size: 12px;
+    img {
+        margin-left: 5px;
+    }
+}
+
+.dataTable {
+    background: @white;
+    border: 1px solid @shadeD;
+    thead th {
+        background: @shadeE;
+        border-bottom-color: @shadeC!important;
+        .caps;
+        font-size: 12px;
+        font-weight: normal!important;
+        padding: 5px 18px 5px 10px!important;
+    }
+    tr.odd {
+        background: white!important;
+    }
+    tr.even {
+        background: #F6F6F6!important;
+    }
+    td.sorting_1 {
+        background-color: lighten(@brand, 30%)!important;
+    }
+}
+
+
 /* icons */
 
 .icon-large {
@@ -775,8 +864,36 @@ font-style: italic;
 }
 
 
-/******* STATES *******/
 
+/* buttons */
+
+.edit-btn, 
+.delete-btn,
+#show-add-btn {
+    .pictogram;
+    &:before {
+        font-size: 30px;
+    }    
+}
+
+.edit-btn:before {
+    content: "✎";
+}
+.delete:before {
+    content: "⊖";
+}
+
+#show-add-btn:before {
+    content: "⊕";
+    font-size: 40px;
+    position: relative;
+    top: 5px;
+    left: -5px;
+}
+
+#list-btn-add {
+    margin: -15px 5px 15px;
+}
 
 
 
