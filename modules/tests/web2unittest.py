@@ -121,8 +121,8 @@ class SeleniumUnitTest(Web2UnitTest):
 
         @param params: A dictionary mapping from XPath queries for search form
                        fields to their respective values.
-        
-        @param row_counts: Expected row counts as a tuple: (start, length, end)
+
+        @param row_counts: Expected row counts as a tuple: (start, end, length)
 
         Keyword arguments:
 
@@ -149,17 +149,17 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser = self.browser
 
-        simple_form = 0
-        advanced_form = 1
+        browser.find_element_by_xpath("//a[text()='Clear']").click()
 
-        # NB If there's any form which has the advanced form as the default,
-        # this will not work.
-        if form_type == advanced_form:
+        if form_type == self.search.advanced_form:
             link = browser.find_element_by_xpath("//a[@class='action-lnk advanced-lnk']")
-        else:
+        elif form_type == self.search.simple_form:
             link = browser.find_element_by_xpath("//a[@class='action-lnk simple-lnk']")
 
-        link.click()
+        if link.is_displayed():
+            link.click()
+
+        time.sleep(1)
 
         for query_type, field_query in params.keys():
             if query_type == "xpath":
@@ -177,29 +177,29 @@ class SeleniumUnitTest(Web2UnitTest):
         # More data types could be added here as and when they're required
 
         for element, value in params.iteritems():
-            
-            if isinstance(value, basestring): # Text input fields
+
+            if isinstance(value, basestring):  # Text input fields
                 element.send_keys(value)
-            elif isinstance(value, bool) and value: # Checkboxes
+            elif isinstance(value, bool) and value:  # Checkboxes
                 element.click()
 
         #params.keys()[-1].submit()
         browser.find_element_by_name(("simple_submit", "advanced_submit")[form_type]).click()
-        
+
         if results_expected == True:
             self.assertFalse(
             browser.find_element_by_id("table-container").text
                     == "No Records Found",
                 "No results found, when results expected.")
-            
+        else:
+            return
+
         # We"re done entering and submitting data; now we need to check if the
         # results produced are valid.
 
-        valid = True
-
         self.assertTrue(row_count == self.dt_row_cnt()[:3],
                         "Row count did not match.")
-        
+
         if "data" in kwargs.keys():
             self.assertTrue(bool(kwargs["data"](self.dt_data())),
                 "Data verification failed.")
@@ -207,7 +207,7 @@ class SeleniumUnitTest(Web2UnitTest):
         if "manual_check" in kwargs.keys():
             self.assertTrue(bool(kwargs["manual_check"](self)),
                 "Manual checks failed.")
-        
+
         if "match_row" in kwargs.keys():
             data = self.dt_data(row_list=(kwargs["match_row"][0]))
             kwargs["match_row"] = kwargs["match_row"][1:]
@@ -219,7 +219,7 @@ class SeleniumUnitTest(Web2UnitTest):
             column_index = kwargs["match_column"][0]
             kwargs["match_column"] = kwargs["match_column"][1:]
             for i, value in enumerate(kwargs["match_column"], 1):
-                self.assertTrue(self.dt_data_item(column=column_index,
+                self.assertTrue(dt_data_item(column=column_index,
                     row=i) == value, "Column match failed.")
 
         return self.dt_data()

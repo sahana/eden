@@ -47,6 +47,7 @@ def loadAllTests():
     addTests(loadTests(CreateVolunteerProgramme))
     addTests(loadTests(CreateVolunteerSkill))
     addTests(loadTests(CreateVolunteerCertificate))
+    addTests(loadTests(VolunteerSearch))
 
     # Create Staff & Volunteer Training
     addTests(loadTests(CreateStaffTraining))
