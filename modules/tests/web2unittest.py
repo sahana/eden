@@ -378,6 +378,67 @@ class SeleniumUnitTest(Web2UnitTest):
         return result
 
     # -------------------------------------------------------------------------
+    class InvalidReportOrGroupException(Exception):
+        pass
+
+    def report(self, report_of, grouped_by, show_totals, *args):
+        browser = self.browser
+
+        # Open the report options fieldset:
+        report_options = browser.find_element_by_css_selector("#report_options button")
+        if report_options.is_displayed():
+            report_options.click()
+
+        # Select the item to make a report of:
+        rows_select = browser.find_element_by_id("report-rows")
+        rows_select.click()
+        found = False
+        for _ in rows_select.find_elements_by_tag_name("option"):
+            if _.text == report_of:
+                _.click()
+                found = True
+                break
+        if not found:
+            raise self.InvalidReportOrGroupException()
+
+        # Select the value to group by:
+        cols_select = browser.find_element_by_id("report-cols")
+        cols_select.click()
+        found = False
+        for _ in cols_select.find_elements_by_tag_name("option"):
+            if _.text == grouped_by:
+                _.click()
+                found = True
+                break
+        if not found:
+            raise self.InvalidReportOrGroupException()
+
+        browser.find_element_by_xpath("//input[@type='submit']").click()
+
+        # Now, check the generated report:
+        for check in args:
+            row = self.dt_find(check[0])
+            if not row:
+                raise self.InvalidReportOrGroupException()
+            else:
+                row = row[0][0]
+            col = 1
+            e = browser.find_element_by_xpath(".//*[@id='list']/thead/tr[2]/th[1]")
+            while True:
+                if e.text.strip() == check[1]:
+                    break
+                else:
+                    col += 1
+                    try:
+                        e = browser.find_element_by_xpath(
+                            ".//*[@id='list']/thead/tr[2]/th[{0}]".format(col))
+                    except NoSuchElementException:
+                        raise self.InvalidReportOrGroupException()
+
+            self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
+                "Report check failed.")
+
+    # -------------------------------------------------------------------------
     def dt_filter(self,
                   search_string = " ",
                   forceClear = True,
