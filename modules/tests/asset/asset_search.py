@@ -27,48 +27,55 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ['AssetSearch']
+
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
+import functools
 
-class Asset Search(SeleniumUnitTest):
-    def test_asset005_asset_search(self):
-        """
-            @case: asset005
-            @description: Search Assets
-            
-            * DOES NOT WORK
-        """
+
+def _kwsearch(instance, column, items, keyword):
+    for item in [instance.dt_data_item(i, column) for i in xrange(1, items + 1)]:
+        if not (keyword.strip().lower() in item.strip().lower()):
+            return False
+    return True
+
+
+class AssetSearch(SeleniumUnitTest):
+    """
+        @case: asset005
+        @description: Search Assets
+    """
+
+    def setUp(self):
+        super(SeleniumUnitTest, self).setUp()
         print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
+        self.login(account="admin", nexturl="asset/asset/search")
 
-        #@ToDo: Move these into we2unittest
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
-        # Login, if not-already done so
-        self.login(account="normal", nexturl="asset/asset/search")
-        
-        # ASSET005
-		# Asset Search by keyword
-		self.search( "asset_search_text", 
-                     "radio")
-				
-		# Search by Category
-		self.search( "asset_search_item_category",
-					 "equipment",
-					 "checked")
-					 
-		# Search by Keyword and Category
-		self.search( "asset_search",
-					[( "text",
-					   "laptop"),
-					 ( "item_category",
-					   "IT",
-					   "checked")]
-					 )
-					 			 
-		
+    def test_asset_search_keyword(self):
+        self.search(self.search.advanced_form,
+            True,
+            {
+                ("name", "asset_search_text"): "Radio",
+            }, (1, 10, 10),
+            manual_check=functools.partial(_kwsearch, keyword="Radio", items=10, column=3)
+        )
+
+    def test_asset_search_category(self):
+        self.search(self.search.advanced_form,
+            True,
+            {
+                ("label", "Default > IT"): True,
+            }, (1, 10, 10),
+            manual_check=functools.partial(_kwsearch, keyword="IT", items=10, column=2)
+        )
+
+    def test_asset_search_category_keyword(self):
+        self.search(self.search.advanced_form,
+            True,
+            {
+                ("name", "asset_search_text"): "Hand",
+                ("label", "Default > Communications"): True,
+            }, (1, 5, 5),
+            manual_check=functools.partial(_kwsearch, keyword="Hand", items=5, column=3)
+        )
