@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ Deployment Settings
 
@@ -583,7 +584,13 @@ class S3Config(Storage):
             Provide the default Sahana Eden Form Style
             Label above the Inputs:
             http://uxmovement.com/design-articles/faster-with-top-aligned-labels
+
+            Things that need to be looked at for custom formstyles:
+            * subheadings (s3forms.py)
+            * S3AddPersonWidget (s3widgets.py)
+            * S3EmbedComponentWidget (s3widgets.py)
         """
+
         row = []
         if hidden:
             _class = "hide"

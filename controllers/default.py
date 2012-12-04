@@ -496,6 +496,18 @@ def user():
     #    response.title = T("Login")
     #    response.view = "auth/login.html"
 
+    if settings.get_template() != "default":
+        # Try a Custom View
+        view = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "user.html")
+        if os.path.exists(view):
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
+
     return dict(form=form,
                 login_form=login_form,
                 register_form=register_form,
