@@ -27,59 +27,34 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-# Does not work
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
-class Asset Report(SeleniumUnitTest):
-    def test_asset006_asset_report(self):
-        """
-            @case: asset006
-            @description: Asset Report
-            
-            * DOES NOT WORK
-        """
-        print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
 
-        #@ToDo: Move these into we2unittest
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
-        # Login, if not-already done so
-        self.login(account="normal", nexturl="asset/asset/report")
-        
-        # ASSET006
-		# Asset Report - Using Filter Options
-		# Report by Category
-		self.search( "asset_search_select_item_id$item_category_id",
-					 "equipment",
-					 "checked")]
-					 )
-					 					 
-		# Asset Report - Using Report Options
-		# Default = Category/State Province/Asset Number/Count
-		# Report by Organization/Facility/Person/Count
-		self.browser.find_element_by_class("toggle-text").click()
-		self.create( "report",
-					[( "rows",
-					   "Facility/Site",
-					   "option"),
-					 ( "cols",
-					   "Item",
-					   "option"),
-					 ( "fact",
-					   "Category",
-					   "option"),
-					 ( "aggregate",
-					   "Count",
-					   "option"),
-					 ( "totals",
-					   "checked")]
-					 )
-					 
-		
+class AssetReport(SeleniumUnitTest):
+    """
+        @case: asset006
+        @description: Asset Report
+    """
+    def setUp(self):
+        super(SeleniumUnitTest, self).setUp()
+        print "\n"
+        self.login(account="admin", nexturl="asset/asset/report")
+
+    def test_asset_report(self):
+        self.report("Item", "Category", False,
+            ("Motorcyle - Yamaha - DT50MX", "Default > Vehicle", 5))
+
+    def test_asset_report_filter(self):
+        self.report("Item", "Category", False,
+            ("Motorcyle - Yamaha - DT50MX", "Default > Vehicle", 5),
+            params={
+                ("label", "Default > Vehicle"): True
+            }, row_count=1)
+
+    def test_asset_report_filter_L1_L2(self):
+        self.report("Item", "Category", False,
+            params={
+                ("label", "Timor-Leste"): True,
+                ("label", "Ainaro"): True
+            }, row_count=8)

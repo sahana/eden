@@ -63,6 +63,8 @@ def loadAllTests():
 
     # Asset Tests
     addTests(loadTests(CreateAsset))
+    addTests(loadTests(AssetSearch))
+    addTests(loadTests(AssetReport))
 
     # Assign Staff to Organisation
     addTests(loadTests(AddStaffToOrganisation))
