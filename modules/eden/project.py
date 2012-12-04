@@ -5127,52 +5127,9 @@ def project_task_form_inject(r, output, project=True):
             # A non-standard formstyle with just a single row
             pass
         try:
-            output["form"][0].insert(0, row[0])
+            output["form"][0].insert(7, row[0])
         except:
             pass
-
-        # Milestones (also only for STAFF)
-        if settings.get_project_milestones():
-            table = s3db.project_task_milestone
-            field = table.milestone_id
-            if r.id:
-                query = (table.task_id == r.id)
-                default = db(query).select(field,
-                                           limitby=(0, 1)).first()
-                if default:
-                    default = default.milestone_id
-            else:
-                default = field.default
-            field_id = "%s_%s" % (table._tablename, field.name)
-            # Options will be added later based on the Project
-            if default:
-                field.requires = IS_IN_SET({default:field.represent(default)})
-            else:
-                field.requires = IS_IN_SET([])
-            #widget = SELECT(_id=field_id, _name=field.name)
-            widget = SQLFORM.widgets.options.widget(field, default)
-            label = field.label
-            label = LABEL(label, label and sep, _for=field_id,
-                          _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-            comment = S3AddResourceLink(T("Add Milestone"),
-                                        c="project",
-                                        f="milestone",
-                                        tooltip=T("If you don't see the milestone in the list, you can add a new one by clicking link 'Add Milestone'."))
-            options = {
-                "FilterField": "project_id",
-                "Field": "milestone_id",
-                "FieldPrefix": "project",
-                "FieldResource": "milestone",
-                "Optional": True,
-            }
-            s3.jquery_ready.append('''S3FilterFieldChange(%s)''' % json.dumps(options))
-            row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-            row = s3_formstyle(row_id, label, widget, comment)
-
-            try:
-                output["form"][0].insert(7, row[0])
-            except:
-                pass
 
     if project:
         vars = current.request.get_vars
