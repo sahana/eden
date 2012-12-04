@@ -151,37 +151,21 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser.find_element_by_xpath("//a[text()='Clear']").click()
 
-        if form_type == self.search.advanced_form:
-            link = browser.find_element_by_xpath("//a[@class='action-lnk advanced-lnk']")
-        elif form_type == self.search.simple_form:
-            link = browser.find_element_by_xpath("//a[@class='action-lnk simple-lnk']")
+        try:
+            if form_type == self.search.advanced_form:
+                link = browser.find_element_by_xpath("//a[@class='action-lnk advanced-lnk']")
+            elif form_type == self.search.simple_form:
+                link = browser.find_element_by_xpath("//a[@class='action-lnk simple-lnk']")
+        except NoSuchElementException:
+            # There might be no link if one of the forms is the only option
+            link = None
 
-        if link.is_displayed():
+        if link and link.is_displayed():
             link.click()
 
         time.sleep(1)
 
-        for query_type, field_query in params.keys():
-            if query_type == "xpath":
-                element = browser.find_element_by_xpath(field_query)
-            elif query_type == "id":
-                element = browser.find_element_by_id(field_query)
-            elif query_type == "name":
-                element = browser.find_element_by_name(field_query)
-            elif query_type == "label":
-                element = browser.find_element_by_xpath(
-                    "//label[contains(text(),'{0}')]".format(field_query))
-            params[element] = params[(query_type, field_query)]
-            del params[(query_type, field_query)]
-
-        # More data types could be added here as and when they're required
-
-        for element, value in params.iteritems():
-
-            if isinstance(value, basestring):  # Text input fields
-                element.send_keys(value)
-            elif isinstance(value, bool) and value:  # Checkboxes
-                element.click()
+        self.do_actions(params)
 
         #params.keys()[-1].submit()
         browser.find_element_by_name(("simple_submit", "advanced_submit")[form_type]).click()
@@ -381,8 +365,13 @@ class SeleniumUnitTest(Web2UnitTest):
     class InvalidReportOrGroupException(Exception):
         pass
 
-    def report(self, report_of, grouped_by, show_totals, *args):
+    def report(self, report_of, grouped_by, show_totals, *args, **kwargs):
         browser = self.browser
+
+        browser.find_element_by_xpath("//a[text()='Reset all filters']").click()
+
+        if 'params' in kwargs:
+            self.do_actions(kwargs['params'])
 
         # Open the report options fieldset:
         report_options = browser.find_element_by_css_selector("#report_options button")
@@ -415,6 +404,8 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser.find_element_by_xpath("//input[@type='submit']").click()
 
+        time.sleep(1)
+
         # Now, check the generated report:
         for check in args:
             row = self.dt_find(check[0])
@@ -438,7 +429,36 @@ class SeleniumUnitTest(Web2UnitTest):
             self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
                 "Report check failed.")
 
+        if 'row_count' in kwargs:
+            self.assertTrue(kwargs['row_count'] == len(browser.find_elements_by_xpath(
+                "//table[@id='list']/tbody/tr")))
+
     # -------------------------------------------------------------------------
+    def do_actions(self, params):
+        browser = self.browser
+
+        for query_type, field_query in params.keys():
+            if query_type == "xpath":
+                element = browser.find_element_by_xpath(field_query)
+            elif query_type == "id":
+                element = browser.find_element_by_id(field_query)
+            elif query_type == "name":
+                element = browser.find_element_by_name(field_query)
+            elif query_type == "label":
+                element = browser.find_element_by_xpath(
+                    "//label[contains(text(),'{0}')]".format(field_query))
+            params[element] = params[(query_type, field_query)]
+            del params[(query_type, field_query)]
+
+        # More data types could be added here as and when they're required
+
+        for element, value in params.iteritems():
+
+            if isinstance(value, basestring):  # Text input fields
+                element.send_keys(value)
+            elif isinstance(value, bool) and value:  # Checkboxes
+                element.click()
+
     def dt_filter(self,
                   search_string = " ",
                   forceClear = True,
@@ -461,6 +481,12 @@ class SeleniumUnitTest(Web2UnitTest):
         return dt_data(row_list, add_header)
 
     # -------------------------------------------------------------------------
+    def dt_data_item(self,
+                 row = 1,
+                 column = 1,
+                 tableID = "list",
+                ):
+        return dt_data_item(row, column, tableID)
     def dt_find(self,
                 search = "",
                 row = None,
