@@ -379,4 +379,12 @@ class contact():
         response.title = "Contact | SandyRelief"
         return dict(form=form)
 
+
+# =============================================================================
+
+class user():
+   def __call__(sefl):
+       return dict()
+       
+       
 # END =========================================================================
