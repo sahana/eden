@@ -4174,13 +4174,20 @@ def hrm_rheader(r, tabs=[],
 
     if resourcename == "person":
         settings = current.deployment_settings
-        vars = current.request.get_vars
+        request = current.request
+        vars = request.get_vars
         hr = vars.get("human_resource.id", None)
         if hr:
             name = hrm_human_resource_represent(hr)
         else:
             name = s3_fullname(record)
-        group = vars.get("group", "staff")
+        group = vars.get("group", None)
+        if group is None:
+            controller = request.controller
+            if controller == "vol":
+                group = "volunteer"
+            else:
+                group = "staff"
         experience_tab = None
         service_record = ""
         tbl = TABLE(TR(TH(name,
@@ -4191,7 +4198,7 @@ def hrm_rheader(r, tabs=[],
                 experience_tab = (T("Hours"), "hours")
                 # Show all Hours spent on both Programmes & Trainings
                 # - last month & last year
-                now = current.request.utcnow
+                now = request.utcnow
                 last_year = now - datetime.timedelta(days=365)
                 db = current.db
                 s3db = current.s3db

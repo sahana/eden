@@ -280,13 +280,15 @@ OpenLayers.Protocol.Script = OpenLayers.Class(OpenLayers.Protocol, {
      */
     handleResponse: function(response, options) {
         if (options.callback) {
+            var request = response.priv;
+            //if (response.data && request.status >= 200 && request.status < 300) {
             if (response.data) {
                 response.features = this.parseFeatures(response.data);
                 response.code = OpenLayers.Protocol.Response.SUCCESS;
             } else {
                 response.code = OpenLayers.Protocol.Response.FAILURE;
             }
-            this.destroyRequest(response.priv);
+            this.destroyRequest(request);
             options.callback.call(options.scope, response);
         }
     },
