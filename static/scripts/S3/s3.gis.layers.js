@@ -712,8 +712,7 @@ function addGeoJSONLayer(layer) {
         'featureselected': onGeojsonFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': showThrobber,
-        'loadend': hideThrobber,
-        'loadcancel': hideThrobber
+        'loadend': hideThrobber
     });
     map.addLayer(geojsonLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -984,8 +983,7 @@ function addGPXLayer(layer) {
         'featureselected': onGpxFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': showThrobber,
-        'loadend': hideThrobber,
-        'loadcancel': hideThrobber
+        'loadend': hideThrobber
     });
     map.addLayer(gpxLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1208,8 +1206,7 @@ function addKMLLayer(layer) {
         'featureselected': onKmlFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': showThrobber,
-        'loadend': hideThrobber,
-        'loadcancel': hideThrobber
+        'loadend': hideThrobber
     });
     map.addLayer(kmlLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1325,13 +1322,12 @@ function addOWMLayers() {
              s3_layer_type: 'openweathermap'
             }
         );
-        layer.setVisibility(owm.city.visibility);
+        layer.setVisibility(owm.station.visibility);
         layer.events.on({
             'featureselected': layer.onSelect,
             'featureunselected': layer.onUnselect,
             'loadstart': showThrobber,
-            'loadend': hideThrobber,
-            'loadcancel': hideThrobber
+            'loadend': hideThrobber
         });
         map.addLayer(layer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1340,7 +1336,7 @@ function addOWMLayers() {
     if (owm.city) {
         layer = new OpenLayers.Layer.Vector.OWMWeather(
             owm.city.name,
-            {dir: owm.station.dir,
+            {dir: owm.city.dir,
              // This is used to Save State
              s3_layer_id: owm.city.id,
              s3_layer_type: 'openweathermap'
@@ -1351,8 +1347,7 @@ function addOWMLayers() {
             'featureselected': layer.onSelect,
             'featureunselected': layer.onUnselect,
             'loadstart': showThrobber,
-            'loadend': hideThrobber,
-            'loadcancel': hideThrobber
+            'loadend': hideThrobber
         });
         map.addLayer(layer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1658,8 +1653,7 @@ function addWFSLayer(layer) {
         'featureselected': onWfsFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': showThrobber,
-        'loadend': hideThrobber,
-        'loadcancel': hideThrobber
+        'loadend': hideThrobber
     });
     map.addLayer(wfsLayer);
     // Ensure Highlight & Popup Controls act on this layer

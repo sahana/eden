@@ -5845,9 +5845,10 @@ S3.gis.lon=%s
             append = _f.append
             for feature in features:
                 geojson = simplify(feature, output="geojson")
-                f = dict(type = "Feature",
-                         geometry = json.loads(geojson))
-                append(f)
+                if geojson:
+                    f = dict(type = "Feature",
+                             geometry = json.loads(geojson))
+                    append(f)
             # Generate JS snippet to pass to static
             _features = '''S3.gis.features=%s\n''' % json.dumps(_f)
         else:
@@ -6124,6 +6125,15 @@ S3.gis.layers_feature_resources[%i]={
                     (ltable.enabled == True)
             layer = db(query).select(etable.instance_type,
                                      limitby=(0, 1)).first()
+            if not layer:
+                # Use Site Default
+                query = (etable.id == ltable.layer_id) & \
+                        (ltable.config_id == ctable.id) & \
+                        (ctable.uuid == "SITE_DEFAULT") & \
+                        (ltable.base == True) & \
+                        (ltable.enabled == True)
+                layer = db(query).select(etable.instance_type,
+                                         limitby=(0, 1)).first()
             if layer:
                 layer_type = layer.instance_type
                 if layer_type == "gis_layer_openstreetmap":
@@ -6143,6 +6153,7 @@ S3.gis.layers_feature_resources[%i]={
                     layer_types = [XYZLayer]
                 elif layer_type == "gis_layer_empty":
                     layer_types = [EmptyLayer]
+
             if not layer_types:
                 layer_types = [EmptyLayer]
 
@@ -7210,7 +7221,7 @@ class OpenWeatherMapLayer(Layer):
         if sublayers:
             if current.response.s3.debug:
                 # Non-debug has this included within OpenLayers.js
-                self.scripts.append("scripts/gis/OWM.OpenLayers.1.3.0.2.js")
+                self.scripts.append("scripts/gis/OWM.OpenLayers.js")
             output = {}
             for sublayer in sublayers:
                 if sublayer.type == "station":
