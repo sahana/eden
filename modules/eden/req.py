@@ -2471,10 +2471,19 @@ class S3CommitItemModel(S3Model):
                                   req_table.req_ref,
                                   limitby=(0, 1)).first()
 
+        # Convert the HR to a Person
+        hrtable = s3db.hrm_human_resource
+        requester_id = record.req_req.requester_id
+        if requester_id:
+            recipient_id = db(hrtable.id == requester_id).select(hrtable.person_id,
+                                                                 limitby=(0, 1)
+                                                                 ).first().person_id
+        else:
+            recipient_id = None
         # Create an inv_send and link to the commit
         vars = Storage(sender_id = record.req_commit.committer_id,
                        site_id = record.req_commit.site_id,
-                       recipient_id = record.req_req.requester_id,
+                       recipient_id = recipient_id,
                        to_site_id = record.req_req.site_id,
                        req_ref = record.req_req.req_ref,
                        status = 0)
@@ -2485,22 +2494,23 @@ class S3CommitItemModel(S3Model):
         query = (cim_table.commit_id == commit_id) & \
                 (cim_table.req_item_id == rim_table.id) & \
                 (cim_table.deleted == False)
-        records = db(query).select(rim_table.item_id,
+        records = db(query).select(rim_table.id,
+                                   rim_table.item_id,
                                    rim_table.item_pack_id,
-                                   cim_table.quantity,
                                    rim_table.currency,
-                                   rim_table.id,
+                                   cim_table.quantity,
                                    )
         # Create inv_track_items for each commit item
         for row in records:
-            id = track_table.insert(track_org_id = record.req_commit.organisation_id,
+            rim = row.req_req_item
+            id = track_table.insert(req_item_id = rim.id,
+                                    track_org_id = record.req_commit.organisation_id,
                                     send_id = send_id,
                                     status = 1,
-                                    item_id = row.req_req_item.item_id,
-                                    item_pack_id = row.req_req_item.item_pack_id,
+                                    item_id = rim.item_id,
+                                    item_pack_id = rim.item_pack_id,
+                                    currency = rim.currency,
                                     quantity = row.req_commit_item.quantity,
-                                    currency = row.req_req_item.currency,
-                                    req_item_id = row.req_req_item.id
                                     )
             track_table(track_table.id == id).update(tracking_no = "TN:%6d" % (10000 + id))
 

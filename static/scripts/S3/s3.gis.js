@@ -40,7 +40,7 @@ S3.gis.options = {
 S3.gis.cluster_distance = 20;    // pixels
 S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 // Counter to know whether there are layers still loading
-S3.gis.layers_loading = 0;
+S3.gis.layers_loading = [];
 
 // Register Plugins
 S3.gis.plugins = [];
