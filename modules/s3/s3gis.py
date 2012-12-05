@@ -6127,6 +6127,7 @@ S3.gis.layers_feature_resources[%i]={
                                      limitby=(0, 1)).first()
             if not layer:
                 # Use Site Default
+                ctable = db.gis_config
                 query = (etable.id == ltable.layer_id) & \
                         (ltable.config_id == ctable.id) & \
                         (ctable.uuid == "SITE_DEFAULT") & \
