@@ -653,66 +653,65 @@ def req_item():
         @ToDo: Filter out fulfilled Items?
     """
 
-    # Filter out Template Items
-    table = s3db.req_req_item
-    rtable = s3db.req_req
-    s3.filter = (rtable.is_template == False) & \
-                (rtable.id == table.req_id)
-
-    # Search method
-    S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
-    req_item_search = (
-        S3SearchOptionsWidget(
-            name="req_search_fulfil_status",
-            label=T("Status"),
-            field="req_id$fulfil_status",
-            options = s3.req_status_opts,
-            cols = 3,
-        ),
-        S3SearchOptionsWidget(
-            name="req_search_priority",
-            label=T("Priority"),
-            field="req_id$priority",
-            options = s3.req_priority_opts,
-            cols = 3,
-        ),
-        #S3SearchOptionsWidget(
-        #  name="req_search_L1",
-        #  field="req_id$site_id$location_id$L1",
-        #  location_level="L1",
-        #  cols = 3,
-        #),
-        #S3SearchOptionsWidget(
-        #  name="req_search_L2",
-        #  field="req_id$site_id$location_id$L2",
-        #  location_level="L2",
-        #  cols = 3,
-        #),
-        S3SearchOptionsWidget(
-            name="req_search_L3",
-            field="req_id$site_id$location_id$L3",
-            location_level="L3",
-            cols = 3,
-        ),
-        S3SearchOptionsWidget(
-            name="req_search_L4",
-            field="req_id$site_id$location_id$L4",
-            location_level="L4",
-            cols = 3,
-        ),
-    )
-    s3db.configure("req_req_item",
-                   search_method = s3base.S3Search(advanced=req_item_search),
-                   )
+    if not s3.filter:
+        # Filter out Template Items
+        ritable = s3db.req_req_item
+        rtable = db.req_req
+        s3.filter = (rtable.is_template == False) & \
+                    (rtable.id == ritable.req_id)
 
     def prep(r):
         if r.interactive:
+            # Search method
+            S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
+            req_item_search = (
+                S3SearchOptionsWidget(
+                    name="req_search_fulfil_status",
+                    label=T("Status"),
+                    field="req_id$fulfil_status",
+                    options = s3.req_status_opts,
+                    cols = 3,
+                ),
+                S3SearchOptionsWidget(
+                    name="req_search_priority",
+                    label=T("Priority"),
+                    field="req_id$priority",
+                    options = s3.req_priority_opts,
+                    cols = 3,
+                ),
+                #S3SearchOptionsWidget(
+                #  name="req_search_L1",
+                #  field="req_id$site_id$location_id$L1",
+                #  location_level="L1",
+                #  cols = 3,
+                #),
+                #S3SearchOptionsWidget(
+                #  name="req_search_L2",
+                #  field="req_id$site_id$location_id$L2",
+                #  location_level="L2",
+                #  cols = 3,
+                #),
+                S3SearchOptionsWidget(
+                    name="req_search_L3",
+                    field="req_id$site_id$location_id$L3",
+                    location_level="L3",
+                    cols = 3,
+                ),
+                S3SearchOptionsWidget(
+                    name="req_search_L4",
+                    field="req_id$site_id$location_id$L4",
+                    location_level="L4",
+                    cols = 3,
+                ),
+            )
+
             list_fields = s3db.get_config("req_req_item", "list_fields")
             list_fields.insert(1, "req_id$site_id")
             list_fields.insert(1, "req_id$site_id$location_id$L4")
             list_fields.insert(1, "req_id$site_id$location_id$L3")
             s3db.configure("req_req_item",
-                           insertable=False,
+                           insertable = False,
+                           search_method = s3base.S3Search(advanced=req_item_search),
                            list_fields = list_fields,
                            )
 
@@ -726,7 +725,7 @@ def req_item():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("req", "req_item")
 
     if settings.get_req_prompt_match():
         req_item_inv_item_btn = dict(url = URL(c="req", f="req_item_inv_item",
@@ -1474,5 +1473,41 @@ def commit_item_json():
 
     response.headers["Content-Type"] = "application/json"
     return json_str
+
+# =============================================================================
+def fema():
+    """
+        Custom Report to list all open requests for items that FEMA can supply
+
+        @ToDo: Filter to just Sites that FEMA support
+    """
+
+    ritable = s3db.req_req_item
+    rtable = db.req_req
+    itable = db.supply_item
+    ictable = db.supply_item_category
+    citable = db.supply_catalog_item
+    query = (ictable.name == "FEMA") & \
+            (citable.item_category_id == ictable.id) & \
+            (citable.item_id == itable.id) & \
+            (itable.deleted != True)
+    fema_items = db(query).select(itable.id)
+    fema_item_ids = [item.id for item in fema_items]
+
+    REQ_STATUS_COMPLETE = 2
+    s3.filter = (rtable.deleted != True) & \
+                (rtable.is_template == False) & \
+                (rtable.commit_status != REQ_STATUS_COMPLETE) & \
+                (rtable.transit_status != REQ_STATUS_COMPLETE) & \
+                (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
+                (ritable.req_id == rtable.id) & \
+                (ritable.quantity > ritable.quantity_commit) & \
+                (ritable.quantity > ritable.quantity_transit) & \
+                (ritable.quantity > ritable.quantity_fulfil) & \
+                (ritable.deleted != True) & \
+                (ritable.item_id.belongs(fema_item_ids))
+
+    output = req_item()
+    return output
 
 # END =========================================================================

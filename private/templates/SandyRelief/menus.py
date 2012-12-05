@@ -240,6 +240,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Search", m="search"),
                         #M("Map", m="map"),
                         M("Report", m="report"),
+                        M("FEMA Items Requested", f="fema", translate=False, restrict=[SUPER]),
                         M("Search All Requested Items", f="req_item", m="search"),
                         M("Search All Requested Skills", f="req_skill", m="search"),
                     ),
