@@ -3267,11 +3267,11 @@ def req_match():
     table = s3db[tablename]
     site_id = current.db(table.id == id).select(table.site_id,
                                                 limitby=(0, 1)
-                                                ).site_id
+                                                )first().site_id
     actions = [
             dict(url = URL(c = "req",
                            f = "req",
-                           args = ["[id]","check"],
+                           args = ["[id]", "check"],
                            vars = {"site_id": site_id}
                            ),
                  _class = "action-btn",
