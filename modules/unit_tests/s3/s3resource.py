@@ -10,7 +10,7 @@ import datetime
 from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
-from s3.s3resource import S3FieldSelector, S3ResourceFilter, S3ResourceField
+from s3.s3resource import *
 
 # =============================================================================
 class ComponentJoinConstructionTests(unittest.TestCase):
@@ -507,135 +507,6 @@ class ResourceFilterQueryTests(unittest.TestCase):
         query = q.query(resource)
         self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE '%|1|%') OR "
                                      "(org_organisation.multi_sector_id LIKE '%|2|%'))")
-
-    # -------------------------------------------------------------------------
-    def tearDown(self):
-
-        current.auth.override = False
-
-# =============================================================================
-class URLQueryParserTests(unittest.TestCase):
-    """ Test Parsing of URL queries """
-
-    # -------------------------------------------------------------------------
-    def setUp(self):
-
-        current.auth.override = True
-
-    # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
-    def testParseURLQuery(self):
-        """ Test standard URL query parsing """
-
-        url_query = {"project.organisation_id$name__like": "*test*",
-                     "task.description__like!": "*test*"}
-
-        resource = current.s3db.resource("project_project", vars=url_query)
-        rfilter = resource.rfilter
-
-        # Check joins
-        joins = rfilter.get_left_joins()
-        self.assertNotEqual(joins, None)
-        self.assertTrue(isinstance(joins, list))
-        self.assertEqual(joins[0], "org_organisation ON "
-                                   "(project_project.organisation_id = org_organisation.id)")
-        self.assertEqual(joins[1], "project_task_project ON "
-                                   "((project_task_project.project_id = project_project.id) AND "
-                                   "(project_task_project.deleted <> 'T'))")
-        self.assertEqual(joins[2], "project_task ON "
-                                   "(project_task_project.task_id = project_task.id)")
-
-        # Check query
-        query = rfilter.get_query()
-        self.assertEqual(str(query), "((((project_project.deleted <> 'T') AND "
-                                     "(project_project.id > 0)) AND "
-                                     "(LOWER(org_organisation.name) LIKE '%test%')) AND "
-                                     "(NOT (LOWER(project_task.description) LIKE '%test%')))")
-
-    # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
-    def testParseURLQueryWithAlternativeValues(self):
-        """ Test URL query parsing with alternative values (OR) """
-
-        url_query = {"project.organisation_id$name__like": "Test*,Other*"}
-
-        resource = current.s3db.resource("project_project", vars=url_query)
-        rfilter = resource.rfilter
-
-        # Check joins
-        joins = rfilter.get_left_joins()
-        self.assertTrue(isinstance(joins, list))
-        self.assertEqual(joins[0], "org_organisation ON "
-                                   "(project_project.organisation_id = org_organisation.id)")
-
-        # Check query
-        query = rfilter.get_query()
-        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
-                                     "(project_project.id > 0)) AND "
-                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
-                                     "(LOWER(org_organisation.name) LIKE 'other%')))")
-
-    # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
-    def testParseURLQueryWithAlternativeSelectors(self):
-        """ Test alternative selectors (OR) in a URL query """
-
-        url_query = {"project.organisation_id$name|task.description__like": "Test*"}
-
-        resource = current.s3db.resource("project_project", vars=url_query)
-        rfilter = resource.rfilter
-
-        # Check joins
-        joins = rfilter.get_left_joins()
-        self.assertTrue(isinstance(joins, list))
-
-        self.assertEqual(joins[0], "org_organisation ON "
-                                   "(project_project.organisation_id = org_organisation.id)")
-        self.assertEqual(joins[1], "project_task_project ON "
-                                   "((project_task_project.project_id = project_project.id) AND "
-                                   "(project_task_project.deleted <> 'T'))")
-        self.assertEqual(joins[2], "project_task ON "
-                                   "(project_task_project.task_id = project_task.id)")
-
-        # Check the query
-        query = rfilter.get_query()
-        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
-                                     "(project_project.id > 0)) AND "
-                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
-                                     "(LOWER(project_task.description) LIKE 'test%')))")
-
-    # -------------------------------------------------------------------------
-    def testParseValue(self):
-        """ Test URL query value parser handling of NONE/None """
-
-        parse_value = S3ResourceFilter._parse_value
-
-        self.assertEqual(parse_value("NONE"), None)
-        self.assertEqual(parse_value('"NONE"'), "NONE")
-        self.assertEqual(parse_value("None"), None)
-        self.assertEqual(parse_value('"None"'), "None")
-        self.assertEqual(parse_value("NONE,1"), [None, "1"])
-        self.assertEqual(parse_value('"NONE",1'), ["NONE", "1"])
-        self.assertEqual(parse_value('"NONE,1"'), "NONE,1")
-
-    # -------------------------------------------------------------------------
-    def testBBOXFilter(self):
-        """ Test URL query with BBOX filter """
-
-        url_query = {"bbox": "119.80485082193,12.860457717185,122.27677462907,15.107136411359"}
-
-        resource = current.s3db.resource("org_office", vars=url_query)
-        rfilter = resource.rfilter
-
-        # Check the query
-        query = rfilter.get_query()
-        self.assertEqual(str(query), "(((org_office.deleted <> 'T') AND "
-                                     "(org_office.id > 0)) AND "
-                                     "((org_office.location_id = gis_location.id) AND "
-                                     "((((gis_location.lon > 119.80485082193) AND "
-                                     "(gis_location.lon < 122.27677462907)) AND "
-                                     "(gis_location.lat > 12.860457717185)) AND "
-                                     "(gis_location.lat < 15.107136411359))))")
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -2258,6 +2129,196 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
                              item["pr_person.first_name"],
                              item["pr_person.last_name"]))
 
+    def tearDown(self):
+
+        current.auth.override = False
+
+# =============================================================================
+class URLQueryParserTests(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+    # -------------------------------------------------------------------------
+    def testParseExpression(self):
+        """ Test URL Expression parsing """
+
+        parse = S3URLQuery.parse_expression
+
+        items = [
+            # Correct syntax
+            ("s", ["s"], "eq", False),
+            ("s!", ["s"], "eq", True),
+            ("s__op", ["s"], "op", False),
+            ("s__op!", ["s"], "op", True),
+            ("s1|s2|s3", ["s1", "s2", "s3"], "eq", False),
+            ("s1|s2|s3!", ["s1", "s2", "s3"], "eq", True),
+            ("s1|s2|s3__op", ["s1", "s2", "s3"], "op", False),
+            ("s1|s2|s3__op!", ["s1", "s2", "s3"], "op", True),
+            # Incorrect syntax
+            ("s__", ["s"], "eq", False),
+            ("s___", ["s"], "eq", False),
+            ("s_____ne", ["s"], "ne", False),
+            ("s__!", ["s"], "eq", True),
+            ("s!__op", ["s!"], "op", False),
+            ("s__!op", ["s"], "!op", False),
+            ("s1||s3", ["s1", "s3"], "eq", False),
+            ("s1|s2|s3__", ["s1", "s2", "s3"], "eq", False),
+            ("s1|s2|s3__!", ["s1", "s2", "s3"], "eq", True),
+            ("s1|s2|s3!__op", ["s1", "s2", "s3!"], "op", False),
+            ("s1|s2|s3__!op", ["s1", "s2", "s3"], "!op", False),
+        ]
+
+        for key, selectors, op, invert in items:
+            s, o, i = parse(key)
+            self.assertEqual((key, s, o, i), (key, selectors, op, invert))
+
+    # -------------------------------------------------------------------------
+    def testParseValue(self):
+        """ Test URL value parsing """
+
+        parse = S3URLQuery.parse_value
+
+        items = [
+            ("123", "123"),
+            ("1,2,3", ["1", "2", "3"]),
+            ('"1,2",3', ["1,2", "3"]),
+            (["1,2", "3"], ["1", "2", "3"]),
+            ("NONE", None),
+            ('"NONE"', "NONE"),
+            ("None", None),
+            ('"None"', "None"),
+            ("NONE,1", [None, "1"]),
+            ('"NONE",1', ["NONE", "1"]),
+            ('"NONE,1"', "NONE,1"),
+        ]
+        for v, r in items:
+            self.assertEqual((v, parse(v)), (v, r))
+
+    # -------------------------------------------------------------------------
+    def testParseURL(self):
+        """ Test URL get_vars parsing """
+
+        parse = S3URLQuery.parse_url
+
+        items = [
+            (None, Storage()),
+            ("", Storage()),
+            ("test", Storage()),
+            ("x/y/z?", Storage()),
+            ("x/z/z?a=b", Storage(a="b")),
+            ("?a=b", Storage(a="b")),
+            ("a=b", Storage(a="b")),
+            ("a=b&a=c", Storage(a=["b", "c"])),
+            ("a=b,c&a=d", Storage(a=["b,c", "d"])),
+        ]
+        for v, r in items:
+            self.assertEqual((v, parse(v)), (v, r))
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testParseURLQuery(self):
+        """ Test standard URL query parsing """
+
+        url_query = {"project.organisation_id$name__like": "*test*",
+                     "task.description__like!": "*test*"}
+
+        resource = current.s3db.resource("project_project", vars=url_query)
+        rfilter = resource.rfilter
+
+        # Check joins
+        joins = rfilter.get_left_joins()
+        self.assertNotEqual(joins, None)
+        self.assertTrue(isinstance(joins, list))
+        self.assertEqual(joins[0], "org_organisation ON "
+                                   "(project_project.organisation_id = org_organisation.id)")
+        self.assertEqual(joins[1], "project_task_project ON "
+                                   "((project_task_project.project_id = project_project.id) AND "
+                                   "(project_task_project.deleted <> 'T'))")
+        self.assertEqual(joins[2], "project_task ON "
+                                   "(project_task_project.task_id = project_task.id)")
+
+        # Check query
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "((((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "(LOWER(org_organisation.name) LIKE '%test%')) AND "
+                                     "(NOT (LOWER(project_task.description) LIKE '%test%')))")
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testParseURLQueryWithAlternativeValues(self):
+        """ Test URL query parsing with alternative values (OR) """
+
+        url_query = {"project.organisation_id$name__like": "Test*,Other*"}
+
+        resource = current.s3db.resource("project_project", vars=url_query)
+        rfilter = resource.rfilter
+
+        # Check joins
+        joins = rfilter.get_left_joins()
+        self.assertTrue(isinstance(joins, list))
+        self.assertEqual(joins[0], "org_organisation ON "
+                                   "(project_project.organisation_id = org_organisation.id)")
+
+        # Check query
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
+                                     "(LOWER(org_organisation.name) LIKE 'other%')))")
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testParseURLQueryWithAlternativeSelectors(self):
+        """ Test alternative selectors (OR) in a URL query """
+
+        url_query = {"project.organisation_id$name|task.description__like": "Test*"}
+
+        resource = current.s3db.resource("project_project", vars=url_query)
+        rfilter = resource.rfilter
+
+        # Check joins
+        joins = rfilter.get_left_joins()
+        self.assertTrue(isinstance(joins, list))
+
+        self.assertEqual(joins[0], "org_organisation ON "
+                                   "(project_project.organisation_id = org_organisation.id)")
+        self.assertEqual(joins[1], "project_task_project ON "
+                                   "((project_task_project.project_id = project_project.id) AND "
+                                   "(project_task_project.deleted <> 'T'))")
+        self.assertEqual(joins[2], "project_task ON "
+                                   "(project_task_project.task_id = project_task.id)")
+
+        # Check the query
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
+                                     "(LOWER(project_task.description) LIKE 'test%')))")
+
+    # -------------------------------------------------------------------------
+    def testBBOXFilter(self):
+        """ Test URL query with BBOX filter """
+
+        url_query = {"bbox": "119.80485082193,12.860457717185,122.27677462907,15.107136411359"}
+
+        resource = current.s3db.resource("org_office", vars=url_query)
+        rfilter = resource.rfilter
+
+        # Check the query
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((org_office.deleted <> 'T') AND "
+                                     "(org_office.id > 0)) AND "
+                                     "((org_office.location_id = gis_location.id) AND "
+                                     "((((gis_location.lon > 119.80485082193) AND "
+                                     "(gis_location.lon < 122.27677462907)) AND "
+                                     "(gis_location.lat > 12.860457717185)) AND "
+                                     "(gis_location.lat < 15.107136411359))))")
+
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.auth.override = False
