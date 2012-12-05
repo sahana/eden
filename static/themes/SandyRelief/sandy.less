@@ -25,9 +25,19 @@
 /* Eric Meyer's Reset Reloaded *//* http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/ */html, body, div, span, applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, font, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,b, u, i, center,dl, dt, dd, ol, ul, li,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td {margin: 0;padding: 0;border: 0;outline: 0;font-size: 100%;vertical-align: baseline;background: transparent;}:focus {/* remember to define focus styles! */outline: 0;}body {line-height: 1;}ol, ul {list-style: none;}table {/* tables still need 'cellspacing="0"' in the markup */border-collapse: separate; border-spacing: 0;} caption, th, td {font-weight: normal; text-align: left;} blockquote:before, blockquote:after, q:before, q:after {content: "";} blockquote, q {quotes: "" "";}a img {border: 0;}article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {display: block;}
 
 /* apply a natural box layout model to all elements */
-* { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
-
-
+* {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+/* except AnyTime */
+.AnyTime-time,
+.AnyTime-hrs,
+.AnyTime-mins {
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
+}
 
 
 /******* FONTS *******/
