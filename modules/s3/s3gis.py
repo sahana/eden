@@ -256,7 +256,7 @@ class GIS(object):
         return GPS_SYMBOLS
 
     # -------------------------------------------------------------------------
-    def download_kml(self, record_id, filename):
+    def download_kml(self, record_id, filename, session_id_name, session_id):
         """
             Download a KML file:
                 - unzip it if-required
@@ -266,6 +266,11 @@ class GIS(object):
 
             Designed to be called asynchronously using:
                 current.s3task.async("download_kml", [record_id, filename])
+
+            @param record_id: id of the record in db.gis_layer_kml
+            @param filename: name to save the file as
+            @param session_id_name: name of the session
+            @param session_id: id of the session
 
             @ToDo: Pass error messages to Result & have JavaScript listen for these
         """
@@ -284,7 +289,7 @@ class GIS(object):
                                 "gis_cache",
                                 filename)
 
-        warning = self.fetch_kml(url, filepath)
+        warning = self.fetch_kml(url, filepath, session_id_name, session_id)
 
         # @ToDo: Handle errors
         #query = (cachetable.name == name)
@@ -330,7 +335,7 @@ class GIS(object):
                 pass
 
     # -------------------------------------------------------------------------
-    def fetch_kml(self, url, filepath):
+    def fetch_kml(self, url, filepath, session_id_name, session_id):
         """
             Fetch a KML file:
                 - unzip it if-required
@@ -358,7 +363,8 @@ class GIS(object):
             # Keep Session for local URLs
             import Cookie
             cookie = Cookie.SimpleCookie()
-            cookie[response.session_id_name] = response.session_id
+            cookie[session_id_name] = session_id
+            # For sync connections
             current.session._unlock(response)
             try:
                 file = fetch(url, cookie=cookie)
@@ -7139,8 +7145,11 @@ class KMLLayer(Layer):
 
                 if download:
                     # Download file (async, if workers alive)
+                    response = current.response
+                    session_id_name = response.session_id_name
+                    session_id = response.session_id
                     current.s3task.async("gis_download_kml",
-                                         args=[self.id, filename])
+                                         args=[self.id, filename, session_id_name, session_id])
                     if cached:
                         db(query).update(modified_on=request.utcnow)
                     else:
