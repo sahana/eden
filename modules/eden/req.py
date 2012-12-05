@@ -3267,7 +3267,7 @@ def req_match():
     table = s3db[tablename]
     site_id = current.db(table.id == id).select(table.site_id,
                                                 limitby=(0, 1)
-                                                )first().site_id
+                                                ).first().site_id
     actions = [
             dict(url = URL(c = "req",
                            f = "req",
