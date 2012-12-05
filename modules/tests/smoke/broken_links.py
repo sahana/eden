@@ -237,7 +237,7 @@ class BrokenLinkTest(Web2UnitTest):
                     # capture the details and add to brokenLinks
                     if record_data:
                         current_results.broken = True
-                        current_results.ticket = url[len(self.homeURL):]
+                        current_results.ticket = url
                     break # no need to check any other links on this page
                 if url.find(self.homeURL) == -1:
                     continue
