@@ -409,6 +409,12 @@ class S3RequestModel(S3Model):
                 location_level="L4",
                 cols = 3,
             ),
+            S3SearchOptionsWidget(
+                name="req_search_site",
+                field="site_id",
+                label = T("Facility"),
+                cols = 3,
+            ),
             ]
         if use_commit:
             widget = S3SearchOptionsWidget(
@@ -426,6 +432,7 @@ class S3RequestModel(S3Model):
                          #"site_id$location_id$L2",
                          "site_id$location_id$L3",
                          "site_id$location_id$L4",
+                         "site_id",
                          ]
         # @ToDo: id gets stripped in _select_field
         fact_fields = report_fields + [(T("Requests"), "id")]
@@ -2734,6 +2741,8 @@ class S3CommitSkillModel(S3Model):
 # =============================================================================
 def req_item_onaccept(form):
     """
+        Update Request Status
+        Update req_item_category link table
     """
 
     req_id = form.vars.get("req_id", None)
@@ -2748,13 +2757,11 @@ def req_item_onaccept(form):
     # Update req_item_category link table
     item_id = form.vars.get("item_id", None)
     db = current.db
-    sitable = db.supply_item
-    item = db(sitable.id == item_id).select(sitable.item_category_id,
-                                            limitby=(0, 1)
-                                            ).first()
-    if item:
-        item_category_id = item.item_category_id
-        rictable = db.req_req_item_category
+    citable = db.supply_catalog_item
+    cats = db(citable.item_id == item_id).select(citable.item_category_id)
+    rictable = db.req_req_item_category
+    for cat in cats:
+        item_category_id = cat.item_category_id
         query = (rictable.deleted == False) & \
                 (rictable.req_id == req_id) & \
                 (rictable.item_category_id == item_category_id)
@@ -2776,12 +2783,10 @@ def req_item_ondelete(row):
     fks = json.loads(item.deleted_fk)
     req_id = fks["req_id"]
     item_id = fks["item_id"]
-    sitable = db.supply_item
-    item = db(sitable.id == item_id).select(sitable.item_category_id,
-                                            limitby=(0, 1)
-                                            ).first()
-    if item:
-        item_category_id = item.item_category_id
+    citable = db.supply_catalog_item
+    cats = db(citable.item_id == item_id).select(citable.item_category_id)
+    for cat in cats:
+        item_category_id = cat.item_category_id
         # Check if we have other req_items in the same category
         query = (ritable.deleted == False) & \
                 (ritable.req_id == req_id) & \
