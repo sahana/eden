@@ -731,7 +731,8 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
                     }
                     if (this.trackAttributes) {
                         for (var j=0, jj=this.trackAttributes.length; j<jj; ++j) {
-                            feature.attributes[name] = obj.attributes[this.trackAttributes[j]][i];
+                            var name = this.trackAttributes[j];
+                            feature.attributes[name] = obj.attributes[name][i];
                         }
                     }
                     feature.attributes.when = obj.whens[i];
@@ -1038,14 +1039,14 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
         var child, grandchildren, grandchild;
         var children = node.childNodes;
 
-        for(var i=0, len=children.length; i<len; ++i) {
+        for (var i=0; i < children.length; ++i) {
             child = children[i];
-            if(child.nodeType == 1) {
+            if (child.nodeType == 1) {
                 grandchildren = child.childNodes;
                 var name = (child.prefix) ?
                         child.nodeName.split(":")[1] :
                         child.nodeName;
-                if(grandchildren.length >= 1) {
+                if (grandchildren.length >= 1) {
                     var grandchild, value;
                     switch (grandchildren.length) {
                         case 1:
@@ -1072,7 +1073,7 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
                         default:
                             // Assume this is HTML - we want all nodes
                             value = "";
-                            for(var j=0, len=grandchildren.length; j<len; ++j) {
+                            for (var j=0; j < grandchildren.length; ++j) {
                                 grandchild = grandchildren[j];
                                 value += OpenLayers.Util.getXmlNodeValue(grandchild); 
                             }

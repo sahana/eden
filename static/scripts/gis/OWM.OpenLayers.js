@@ -322,7 +322,12 @@ OpenLayers.Layer.Vector.OWMWeather = OpenLayers.Class( OpenLayers.Layer.Vector, 
 			context: 
 			{
 				icon:  function(feature) {
-					return feature.layer.options.getIcon(feature.attributes.station);
+					if (feature.layer) {
+                        return feature.layer.options.getIcon(feature.attributes.station);
+                    } else {
+                        // @ToDo: 1 Feature/layer doesn't have the layer set for some reason
+                        return S3.Ap.concat("/static/img/gis/openlayers/blank.gif")
+                    }
 				}
 			}
 			}
@@ -514,7 +519,12 @@ OpenLayers.Layer.Vector.OWMStations = OpenLayers.Class( OpenLayers.Layer.Vector,
 			context: 
 			{
 				icon:  function(feature) {
-					return feature.layer.options.getIcon(feature.attributes.station);
+					if (feature.layer) {
+                        return feature.layer.options.getIcon(feature.attributes.station);
+                    } else {
+                        // @ToDo: 1 Feature/layer doesn't have the layer set for some reason
+                        return S3.Ap.concat("/static/img/gis/openlayers/blank.gif");
+                    }
 				}
 			}
 		}
