@@ -859,8 +859,11 @@ def s3_date(name="date", **attr):
                     years = int(future_month/12)
                     future_year = current_year + years
                     future_month = future_month - (years * 12)
-                    max = now.replace(year=future_year,
-                                      month=future_month)
+                    if future_month:
+                        max = now.replace(year=future_year,
+                                          month=future_month)
+                    else:
+                        max = now.replace(year=future_year)
                 requires = IS_DATE_IN_RANGE(
                         format=current.deployment_settings.get_L10n_date_format(),
                         maximum=max,
@@ -873,8 +876,12 @@ def s3_date(name="date", **attr):
                     current_year = now.year
                     past_years = int(past/12)
                     past_months = past - (past_years * 12)
-                    min = now.replace(year=current_year - past_years,
-                                      month=current_month - past_months)
+                    past_month = current_month - past_months
+                    if past_month:
+                        min = now.replace(year=current_year - past_years,
+                                          month=past_month)
+                    else:
+                        min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
                         format=current.deployment_settings.get_L10n_date_format(),
                         minimum=min,
@@ -882,23 +889,30 @@ def s3_date(name="date", **attr):
                     )
             else:
                 future_month = now.month + future
-                if future_month < 13:
+                if future_month <= 12:
                     max = now.replace(month=future_month)
                 else:
                     current_year = now.year
                     years = int(future_month/12)
                     future_year = now.year + years
                     future_month = future_month - (years * 12)
-                    max = now.replace(year=future_year,
-                                      month=future_month)
+                    if future_month:
+                        max = now.replace(year=future_year,
+                                          month=future_month)
+                    else:
+                        max = now.replace(year=future_year)
                 if past < current_month:
                     min = now.replace(month=current_month - past)
                 else:
                     current_year = now.year
                     past_years = int(past/12)
                     past_months = past - (past_years * 12)
-                    min = now.replace(year=current_year - past_years,
-                                      month=current_month - past_months)
+                    past_month = current_month - past_months
+                    if past_month:
+                        min = now.replace(year=current_year - past_years,
+                                          month=past_month)
+                    else:
+                        min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
                         format=current.deployment_settings.get_L10n_date_format(),
                         maximum=max,
@@ -994,8 +1008,11 @@ def s3_datetime(name="date", **attr):
                     years = int(future_month/12)
                     future_year = current_year + years
                     future_month = future_month - (years * 12)
-                    max = now.replace(year=future_year,
-                                      month=future_month)
+                    if future_month:
+                        max = now.replace(year=future_year,
+                                          month=future_month)
+                    else:
+                        max = now.replace(year=future_year)
                 requires = IS_DATE_IN_RANGE(
                         format=current.deployment_settings.get_L10n_date_format(),
                         maximum=max,
@@ -1010,8 +1027,12 @@ def s3_datetime(name="date", **attr):
                     current_year = now.year
                     past_years = int(past/12)
                     past_months = past - (past_years * 12)
-                    min = now.replace(year=current_year - past_years,
-                                      month=current_month - past_months)
+                    past_month = current_month - past_months
+                    if past_month:
+                        min = now.replace(year=current_year - past_years,
+                                          month=past_month)
+                    else:
+                        min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
                         format=current.deployment_settings.get_L10n_date_format(),
                         minimum=min,
@@ -1022,23 +1043,30 @@ def s3_datetime(name="date", **attr):
                 past = int(round(past/744.0, 0))
                 attr["widget"] = S3DateWidget(past=past, future=future)
                 future_month = now.month + future
-                if future_month < 13:
+                if future_month <= 12:
                     max = now.replace(month=future_month)
                 else:
                     current_year = now.year
                     years = int(future_month/12)
                     future_year = now.year + years
                     future_month = future_month - (years * 12)
-                    max = now.replace(year=future_year,
-                                      month=future_month)
+                    if future_month:
+                        max = now.replace(year=future_year,
+                                          month=future_month)
+                    else:
+                        max = now.replace(year=future_year)
                 if past < current_month:
                     min = now.replace(month=current_month - past)
                 else:
                     current_year = now.year
                     past_years = int(past/12)
                     past_months = past - (past_years * 12)
-                    min = now.replace(year=current_year - past_years,
-                                      month=current_month - past_months)
+                    past_month = current_month - past_months
+                    if past_month:
+                        min = now.replace(year=current_year - past_years,
+                                          month=past_month)
+                    else:
+                        min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
                         format=current.deployment_settings.get_L10n_date_format(),
                         maximum=max,

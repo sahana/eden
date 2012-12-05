@@ -1,0 +1,1236 @@
+
+<!-- saved from url=(0113)https://raw.github.com/energy7/eden/cab161acd5570246bd76d1281f72ba2743a5b88b/static/themes/SandyRelief/sandy.less -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">
+/* make changes in the .less file, NOT the .css */
+/* compile locally with incident57.com/less/ and upload both */
+
+
+/******* TOC *******/
+
+/* Reset */
+/* Fonts */
+/* Mixins */
+/* Base */
+/* Layout */
+/* Modules */
+/* States */
+/* Theming */
+/* Browser Fixes */
+/* Responsive */
+/* Print */
+
+
+
+
+/******* RESET *******/
+
+
+/* Eric Meyer's Reset Reloaded *//* http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/ */html, body, div, span, applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, font, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,b, u, i, center,dl, dt, dd, ol, ul, li,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td {margin: 0;padding: 0;border: 0;outline: 0;font-size: 100%;vertical-align: baseline;background: transparent;}:focus {/* remember to define focus styles! */outline: 0;}body {line-height: 1;}ol, ul {list-style: none;}table {/* tables still need 'cellspacing="0"' in the markup */border-collapse: separate; border-spacing: 0;} caption, th, td {font-weight: normal; text-align: left;} blockquote:before, blockquote:after, q:before, q:after {content: "";} blockquote, q {quotes: "" "";}a img {border: 0;}article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {display: block;}
+
+/* apply a natural box layout model to all elements */
+* { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
+
+
+
+
+/******* FONTS *******/
+
+
+@font-face {
+    font-family: 'LeagueGothicRegular';
+    src: url('fonts/League_Gothic-webfont.eot');
+    src: url('fonts/League_Gothic-webfont.eot?#iefix') format('embedded-opentype'),
+         url('fonts/League_Gothic-webfont.woff') format('woff'),
+         url('fonts/League_Gothic-webfont.ttf') format('truetype'),
+         url('fonts/League_Gothic-webfont.svg#LeagueGothicRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'entypo';
+    src: url('fonts/entypo.eot');
+    src: url('fonts/entypo.eot?#iefix') format('embedded-opentype'),
+         url('fonts/entypo.woff') format('woff'),
+         url('fonts/entypo.ttf') format('truetype'),
+         url('fonts/entypo.svg#entypo') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'entypo-social';
+    src: url('fonts/entypo-social.eot');
+    src: url('fonts/entypo-social.eot?#iefix') format('embedded-opentype'),
+         url('fonts/entypo-social.woff') format('woff'),
+         url('fonts/entypo-social.ttf') format('truetype'),
+         url('fonts/entypo-social.svg#entypo-social') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+
+.sans {font-family: "Open Sans", "Lucida Grande", "Lucida Sans", sans-serif; font-weight: normal; font-style: normal;}
+
+/* don't use .condensed smaller than 22px */
+.condensed {font-family: "LeagueGothicRegular", "Arial Narrow", "Lucida Grande", "Lucida Sans", Arial, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 1px;}
+
+.pictogram {font-family: "entypo";}
+.socialgram {font-family: "entypo-social";}
+
+
+
+
+/******* MIXINS *******/
+
+/* colors */
+
+@brand: #FFCD67;
+@brandlight: #FFFDE9;
+@flag: #DA521F;
+@anchor: #0085BF;
+@black: #000000;
+@body: #222222;
+@shadeA: #555555;
+@shadeB: #AAAAAA;
+@shadeC: #BBBBBB;
+@shadeD: #DDDDDD;
+@shadeE: #EEEEEE;
+@white: #FFFFFF;
+
+
+/* absolute positioning */
+.absolute (@z) {
+	position: absolute; 
+	left: 0; 
+	top: 0;
+	z-index: @z;
+}
+
+/* cross-browser inline-block from http://bit.ly/KuaPpr */
+.inlineBlock {
+	display: -moz-inline-stack; 
+	display: inline-block;
+	zoom: 1;
+	*display: inline;		
+}
+
+/* the magnificent clearfix -- j.mp/bestclearfix */
+.fixer {content: "\0020"; display: block; height: 0; overflow: hidden;}
+.clearfix {
+	zoom: 1; 
+	&amp;:before {.fixer;}
+	&amp;:after {.fixer; clear: both;}
+}
+
+
+/* css3 */
+/* add behavior:url(../js/PIE.htc); to each css3 property for IE support: css3pie.com */
+
+
+.border-radius (@radius: 5px) {
+  -moz-border-radius: @radius;
+  -webkit-border-radius: @radius;
+  border-radius: @radius;
+  behavior:url(../js/PIE.htc); 
+}
+
+.box-shadow (@x: 0, @y: 1px, @blur: 3px, @spread: 0, @color: #BBBBBB) {
+  -moz-box-shadow: @arguments;
+  -webkit-box-shadow: @arguments;
+  box-shadow: @arguments;
+  behavior:url(../js/PIE.htc); 
+}
+
+.clear-shadow {
+	.box-shadow(0, 0, 0, 0, #000);			
+}
+
+.inner-shadow (@x: 0, @y: 1px, @blur: 2px, @spread: 0, @alpha: 0.25) {
+	-webkit-box-shadow: inset @x @y @blur @spread rgba(0, 0, 0, @alpha);
+	-moz-box-shadow:    inset @x @y @blur @spread rgba(0, 0, 0, @alpha);
+	box-shadow:         inset @x @y @blur @spread rgba(0, 0, 0, @alpha);
+  behavior:url(../js/PIE.htc); 
+}
+
+.linear-gradient (@begin: #FFF, @end: #DDDDDD, @switch : 100%) {
+	background:  @begin;
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(@begin), color-stop(@switch, @end));
+	background: -moz-linear-gradient(top, @begin, @end @switch);
+	background: -o-linear-gradient(top, @begin, @end @switch);
+	background: linear-gradient(top, @begin, @end @switch);
+  behavior:url(../js/PIE.htc); 
+}
+
+.text-shadow (@string: 0 1px 3px rgba(0, 0, 0, 0.25)) {
+	text-shadow: @string;
+  behavior:url(../js/PIE.htc); 
+}
+
+.text-glow (@string: 0 1px 0 #FFF) {
+	text-shadow: @string;
+	behavior:url(../js/PIE.htc); 
+}
+
+.transition (@transition: all 200ms) {
+	-webkit-transition: @transition;
+	-moz-transition:    @transition;
+	-ms-transition:     @transition;
+	-o-transition:      @transition;
+	behavior:url(../js/PIE.htc); 
+}
+
+/* ellipsis: only works on single lines */
+.ellipsis { 
+	text-overflow: ellipsis; 
+	-o-text-overflow: ellipsis; 
+	-webkit-text-overflow: ellipsis; 
+	white-space: nowrap; 
+	overflow: hidden; 
+}
+
+/* image replacement */
+.ir {
+	display: block; 
+	text-indent: -999em; 
+	overflow: hidden; 
+	background-repeat: no-repeat; 
+	text-align: left; 
+	direction: ltr; 
+} 
+
+/* horizontal menus */
+.menu {
+	.clearfix;
+	width: 100%;
+	li {
+		.inlineBlock;
+	}	
+}
+
+/* structure */
+
+.left {float: left; }
+.right {float: right; }
+.nodisplay {display: none!important;}
+.leader {margin-bottom: .2em;}
+.follower {margin-top: .2em;}
+.stalker {margin-top: 0;}
+
+
+
+
+/******* BASE *******/
+
+
+body, input, textarea {
+	.sans;
+	color: @body;
+	font-size: 14px;
+	line-height: 1.5em;
+	font-weight: 400; 
+}
+
+body, p, h1, h2, h3, h4, h5, h6, ul, ol, li, caption, pre, table, address, blockquote {
+	.sans;
+	font-size: 14px;
+	line-height: 1.5em; 
+	margin:0; 
+	padding:0; 
+	text-align: left; 
+	color: @body;
+}
+	
+h1, h2, h3, h4, h5, h6, dl, ol, ul, pre, address, blockquote {
+	margin: 1em 0 .5em;
+}
+
+p {
+	margin: .5em 0 .5em;
+}
+
+h1 {font-size: 36px; .condensed;}
+h2 {font-size: 22px; .condensed;}
+h3 {font-size: 15px; font-weight: bold;}
+h4 {font-size: 15px; font-style: italic;}
+h5 {font-size: 13px;}
+h6 {font-size: 12px;}
+p, label, li  {font-size: 15px;}
+
+.small, small {font-size: 12px; line-height: 1.2em;}
+.caps {text-transform: uppercase; letter-spacing: 1px; line-height: 1.2em;}
+
+
+blockquote {
+	font-size: 18px; 
+	font-style: normal; 
+	color: @body; 
+	margin-top: 1.5em;
+	padding: 25px 50px;
+	border-top: 1px solid #BBB;
+	border-bottom: 1px solid #BBB;
+	margin-bottom: 2em;
+}
+
+
+
+cite {
+	font-size: 12px;
+	text-align: right;
+}
+
+abbr, acronym, dfn {
+	border-bottom: 1px dotted #666;
+	cursor: help;
+}
+address {
+	display: block;
+	margin: 0 0 1.5em;
+}
+ins {
+	background: @white;
+	text-decoration: none;
+}
+sup,
+sub {
+	font-size: 10px;
+	height: 0;
+	line-height: 1;
+	position: relative;
+	vertical-align: baseline;
+}
+sup {
+	bottom: 1ex;
+}
+sub {
+	top: .5ex;
+}
+
+pre {
+	background: @white;
+	font: 13px "Courier 10 Pitch", Courier, monospace;
+	line-height: 1.5em;
+	margin-bottom: 1.5em;
+	padding: 0.75em 1.5em;
+}
+
+hr {
+	background-color: #DDD;
+	border: 0;
+	height: 1px;
+	margin: 3em 0 1em;
+}
+
+
+
+/* links */
+
+a, a:active, a:visited {
+	color: @anchor; 
+	text-decoration: none; 
+	cursor: pointer;
+	&amp;:focus, 
+	&amp;:hover {
+		color: @shadeA; 
+	}
+}
+
+a img {border: 0;}
+
+button, 
+.button, 
+.button:visited,
+.button:active
+ {
+	.inlineBlock;
+	.clear-shadow();
+	.border-radius(4px);
+	.sans;
+	.caps;
+	padding: 10px 15px;
+	text-align: center;
+	font-weight: bold;
+	background: @body;
+	color: @white;
+	border: 0;
+	text-decoration: none;
+	text-shadow: none; 
+	cursor: pointer;
+	-webkit-transition-property: background-color, color;
+	-webkit-transition-duration: 100ms;	
+	&amp;:hover {
+		background: @flag;
+		color: @white; 
+	}
+}
+
+
+
+
+/* lists */
+
+
+ul {
+	list-style: square;
+}
+ol {
+	list-style-type: decimal;
+}
+ol ol {
+	list-style: upper-alpha;
+}
+ol ol ol {
+	list-style: lower-roman;
+}
+ol ol ol ol {
+	list-style: lower-alpha;
+}
+ul ul, ol ol, ul ol, ol ul {
+	margin-bottom: 0;
+}
+dl {
+	margin: 0;
+}
+dt {
+	font-weight: 400;
+}
+dd {
+}
+
+
+
+
+/******* STATES *******/
+
+.is-disabled {
+    
+}
+
+
+/******* THEME *******/
+
+.fullpage {
+    background: #EEE;
+}
+
+
+.confirmation, .information, .error, .warning {
+	clear: left;
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	margin-right: 15px;
+	background: @white;
+	padding: 15px 45px;
+	.box-shadow(0, 0, 8px, 0, @shadeA);
+	font-style: italic;
+	font-size: 15px;
+	border: 2px solid @flag;
+	color: @flag;
+}
+
+
+
+
+ol.counter {
+	counter-reset: li;
+	margin: 2em 25px!important;
+	li {
+		position: relative;
+		padding-left: 24px;
+		border-bottom: 1px dotted #DDD;
+		list-style:none;
+		padding-top: .75em;
+		padding-bottom: 1em;
+		margin: 0!important;
+	}
+	li:first-child {
+		border-top: 1px dotted #DDD;
+	}
+	li:before {
+		content:counter(li);
+		counter-increment:li;
+		position:absolute;
+	    top: 12px;
+	    left: 0;
+		font-size: 22px;
+		line-height: 20px;
+		font-weight: bold;
+		color: #BBB;	    
+	}
+}
+
+
+
+
+
+/******* LAYOUT *******/
+
+.colmask {
+    margin-top: 55px;
+}
+
+.container {
+	width: 100%;
+	overflow: hidden;
+	
+}
+
+.main {
+	.clearfix;
+	clear: both;
+	background: @shadeE;
+}
+
+
+.primary {
+	width: 75%;
+	float: right;
+	padding: 30px 0 40px;
+}
+
+
+
+.secondary {
+	width: 25%;
+	padding: 25px;
+	.inner {
+		background: @white;
+		padding: 15px;		
+	}
+	p {
+		font-size: 14px;
+	}
+	.button {
+		margin-bottom: 10px;
+		width: 100%;
+	}
+}
+
+
+.content {
+	width: 100%;
+}
+
+
+/* header and footer */
+
+
+#modulenav {
+	.menu;
+	clear: both;
+	margin: 0;
+	padding: 0 10px;
+	background: @white;
+	li {
+		.condensed;
+		margin: 0 -4px 0 0;
+		font-size: 26px;
+		line-height: 55px;
+		
+	}
+	a, 
+	a:visited {
+		color: @body;
+		display: block;
+		padding: 0 15px;
+	}
+	a.on, 
+	a:focus, 
+	a:hover
+	 {
+		color: @flag;
+	}
+	.nav-name {
+		.sans;
+		float: right;
+		font-size: 13px;
+		text-transform: none;
+		letter-spacing: 0;
+	}
+	.fright {
+    	.sans;
+    	text-transform: lowercase;
+    	letter-spacing: 0;
+    	font-size: 13px;
+	}
+    .S3menulogo {
+        display: none;
+    }
+    .submenu {
+        background: @white;
+        margin: -8px 0 0;
+        li {
+            .sans;
+            .caps;
+            font-size: 12px;
+            line-height: 1.2em;
+            border-bottom: 1px dotted @shadeE;
+        }
+        a {
+            padding: 8px 15px 9px;
+        }
+        hr {
+            display: none;
+        }
+    }
+}
+
+
+
+
+#footer {
+	padding: 0 15px;
+	a {
+		.inlineBlock;
+	    .caps;	
+	    .small;
+		padding: 13px 10px;
+	}
+}
+
+#poweredby {
+    float: right;
+    img {
+        float: right;
+    }
+	a {
+		color: @shadeC;
+		line-height: 28px;
+		padding: 0 5px;
+	}
+	a:hover {
+		color: @anchor;
+	}   
+}
+
+
+#footer div:last-child button {
+    display: none;
+}
+
+
+
+
+/******* MODULES *******/
+
+
+/* left nav */
+
+.aside {
+    margin: 10px;
+    background: @white;
+}
+
+#subnav {
+    padding: 15px;
+    div a {
+        .condensed;
+        font-size: 20px;
+        color: @body;
+        &amp;:hover {
+            color: @anchor;
+        }
+    }
+    .submenu {
+        border-bottom: 1px solid @shadeE;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        li {
+            font-size: 12px;
+            line-height: 1.2em;
+            margin-bottom: .5em;
+        }
+    }
+}
+
+.rightside {
+    margin-left: 240px;
+    margin-top: 10px;
+    h2 {
+        font-size: 36px;
+        line-height: 1em;
+        margin: 20px 0;
+    }
+}
+
+
+/* home pages */
+
+.home {
+	background: url('img/520clinton.jpg') no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;		
+	width: 100%;
+	min-height: 600px;
+	float: none;
+	.clearfix;
+	padding-bottom: 100px;
+}
+
+.home-title {
+	width: 360px;
+	float: left;
+	padding: 0 20px;
+	h1 {
+		color: @white;
+		font-size: 72px;
+		line-height: 1em;
+		margin: 20px 0;
+		.text-shadow();
+	}
+}
+
+
+
+.home-register, 
+.home-content {
+	width: auto;
+	margin-left: 360px;
+	margin-right: 180px;
+}
+
+.home-register {
+    padding: 20px 0 0;
+    width: 480px;
+}
+
+.login-box {
+    width: 100%;
+	background: @white;
+	background: rgba(255,255,255,.8);
+	padding: 30px;  
+	h2, h3 {
+    	.condensed;
+    	font-size: 36px;
+    	line-height: 1em;
+    	margin: 0;
+	}
+	h2 + .form-container {
+		margin-top: 20px;
+	}
+	.w2p_fl {
+		padding-right: 10px;
+	}
+}
+
+.form-container {
+	margin-top: 15px;
+    input, select {
+        margin-bottom: 15px;
+    }
+    input[type=text],
+    input[type=password],
+    textarea {
+        padding: 2px 5px;
+    }
+    input[type="checkbox"], input[type="radio"] {
+        margin-right: 3px;
+        margin-bottom: 3px;
+    }
+    input[type=submit] {
+        .button;
+        padding: 10px 20px;
+        margin-top: 10px;
+    }
+}
+
+
+
+.rightside .form-container {
+	margin-right: 25px;
+}
+
+.rightside .form-container table {
+    width: 100%;
+    td {
+	    padding-top: 10px;
+    }
+    table td {
+	    padding-top: 0;
+	    padding-bottom: 10px;
+    }
+	.w2p_fl,
+	.w2p_fw,
+	.w2p_fc {
+		.inlineBlock;
+		float: none;
+		vertical-align: top;
+	}
+    .w2p_fl {
+        width: 200px;
+        clear: both;
+        padding-right: 10px;
+    }
+	.w2p_fw {
+	}
+	.w2p_fc {
+		max-width: 300px;
+        padding-left: 10px;
+		.small;
+		font-style: italic;
+	}
+    .colorbox {
+		.small;
+    }
+}
+
+
+#popup {
+	.form-container {
+		padding: 10px 20px;
+		background: @shadeE;
+	    width: 100%;
+	}
+    td {
+	    padding-top: 10px;
+    }
+	.w2p_fl,
+	.w2p_fw,
+	.w2p_fc {
+		.inlineBlock;
+		float: none;
+		vertical-align: top;
+	}
+    .w2p_fl {
+        width: 200px;
+        clear: both;
+        padding-right: 10px;
+    }
+	.w2p_fw {
+	}
+	.w2p_fc {
+		max-width: 300px;
+        padding-left: 10px;
+		.small;
+		font-style: italic;
+	}
+}
+
+#cboxTitle {
+	.condensed;
+	font-size: 24px;
+	font-weight: normal!important;
+}
+
+
+.req, 
+.red {
+    color: @flag;
+    font-weight: normal;
+}
+b.red {
+	.small;
+}
+
+.login-box .req {
+	.small;
+    font-style: italic;
+}
+
+
+
+#password-strength {
+	.small;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    font-style: italic;
+}
+
+
+#login_form #register-btn {
+	margin-left: -15px;
+}
+
+#auth_user_remember__row label {
+	.small;
+}
+
+
+.home-content {
+	div {
+		background: @white;
+		background: rgba(255,255,255,.8);
+		padding: 30px;
+		margin-bottom: 20px;
+	}
+	h2 {
+		.condensed;
+		font-size: 36px;
+		margin: 0 0 15px;
+		line-height: 1em;
+	}
+}
+
+.comms {
+	width: 49%;
+	float: left;
+	margin-bottom: 100px;
+	.button {
+		margin-right: 10px;
+		margin-top: 10px;
+		padding: 10px 30px;
+	}
+}
+.dispatch {
+	width: 49%;
+	float: right;
+	.button {
+		margin-right: 10px;
+		margin-top: 10px;
+		padding: 10px 30px;
+	}
+}
+
+.welcome-steps {
+	margin: 0 30px;
+	li {
+		font-size: 18px;
+		margin-bottom: .75em;
+	}
+}
+
+
+
+.simple-form, 
+.advanced-form {
+	border-top: 1px solid @shadeC;
+	border-bottom: 1px solid @shadeC;
+	.w2p_fl {
+		width: auto!important;
+	}
+	input[type="text"] {
+		margin: 0;
+	}
+	#gis_search_map-btn,
+	input[type="submit"] {
+		margin: 0 10px 15px 0;
+		padding: 6px 15px 7px;
+	}
+}
+
+
+
+.s3-checkboxes-widget {
+	width: auto!important;
+	input[type="checkbox"] {
+		margin-top: 2px;
+	}
+	label {
+		font-size: 13px;
+		line-height: 1.2em;
+		margin-right: 20px;
+	} 
+}
+
+
+#table-container {
+	margin: 30px 0 60px;
+}
+
+#component {
+	margin: 30px 0 60px;
+	border-left: 1px dashed @shadeD;
+	padding: 0 30px;
+	h2 {
+		font-size: 22px;
+		margin-top: 1.5em;
+	}
+	#delete-btn {
+		margin-bottom: 30px;
+	}
+}
+
+#rheader {
+	th {
+		.caps;
+		font-size: 12px;
+		padding-right: 10px;
+	}
+	td {
+		padding-right: 45px;
+	}
+}
+
+
+.tabs {
+	margin: 30px 0 0;
+	span a {
+		padding: 5px 10px;
+		white-space: nowrap;
+		font-size: 12px;
+		background: white;
+		margin-right: 1px;
+		&amp;:hover {
+			background: @shadeD;
+		}
+	}
+	.tab_here a {
+		background: @body!important;
+		color: @white!important;
+		cursor: default;
+	}
+}
+
+#last_update {
+	margin-right: 25px;
+	font-style: italic;
+	font-size: 12px;
+}
+
+#markDuplicate {
+	display: inline;
+	.action-lnk {
+		.action-btn;
+		font-weight: normal;
+	}
+}
+
+/* tables */
+
+
+.dataTables_filter, 
+.dataTables_info, 
+.dataTables_length {
+    .border-radius(5px);
+    background: @shadeD;
+    padding: 5px 15px;
+    margin: 10px 10px 10px 0;
+}
+
+.dataTables_filter label, 
+.dataTables_filter input, 
+.dataTables_length label,
+.dataTables_info {
+    font-size: 12px;
+}
+
+.list_formats {
+    position: absolute;
+	top: 10px;
+	right: 25px;
+    font-size: 12px;
+    img {
+        margin-left: 5px;
+    }
+}
+
+.dataTable {
+    background: @white;
+    border: 1px solid @shadeD;
+    thead th {
+        background: @shadeE;
+        border-bottom-color: @shadeC!important;
+        .caps;
+        font-size: 12px;
+        font-weight: normal!important;
+        padding: 5px 18px 5px 10px!important;
+    }
+    tr.odd {
+        background: white!important;
+    }
+    tr.even {
+        background: #F6F6F6!important;
+    }
+    td.sorting_1 {
+        background-color: @brandlight!important;
+    }
+}
+
+
+/* icons */
+
+.icon-large {
+	.inlineBlock;
+	height: 30px;
+	width: 30px;
+}
+
+.icon-comms {
+	.icon-large;
+	background: url(img/comms.png) no-repeat;
+	margin-right: 10px;
+}
+
+.icon-dispatch {
+	.icon-large;
+	background: url(img/dispatch.png) no-repeat;
+	margin-right: 10px;
+}
+
+
+
+/* buttons */
+
+
+.action-lnk {
+    .caps;
+	.small;
+    padding: 10px 15px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.advanced-lnk, 
+.simple-lnk {
+	padding: 0;
+}
+
+.action-btn, 
+.delete-btn {
+    .caps;
+	.small;
+	.inlineBlock;
+	.border-radius(3px);
+	.transition();
+	background: @anchor;
+	color: @white;
+    padding: 4px 10px 5px;
+    margin-right: 5px;
+    white-space: nowrap;
+    &amp;:visited {
+	    color: @white!important;
+    }
+    &amp;:hover, 
+    &amp;:focus {
+	    color: @white!important;
+	    background: @body;
+    }
+}
+
+
+#save-search {
+	background: transparent;
+	color: @anchor;
+	font-size: 12px;
+	.caps;
+	font-weight: bold;
+	&amp;:hover {
+		color: @body;
+	}
+}
+
+#show-add-btn {
+    .pictogram;
+    padding-top: 2px;
+    padding-bottom: 7px;
+}
+#show-add-btn:before {
+    content: "⊕";
+    font-size: 40px;
+    position: relative;
+    top: 5px;
+    left: -5px;
+}
+
+
+.edit-btn:before {
+    content: "✎";
+}
+.delete:before {
+    content: "⊖";
+}
+
+#list-btn-add {
+    margin: -15px 5px 15px;
+}
+
+
+
+
+
+/* jquery styles */
+
+
+.ui-widget-content {
+	background: @white!important;
+	border: 0!important;
+	.box-shadow(0, 0, 5px, 0, #555);
+}
+.ui-widget-header {
+	border-color: @white!important;
+	background: @flag!important;
+}
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+	border-color: @white!important;
+	background: #F6F6F6!important;
+}
+
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
+	border-color: @brand!important;
+	background: @brand!important;
+	color: @body!important;
+}
+
+
+.ui-datepicker-trigger {
+	margin-left: 10px;
+}
+.ui-datepicker-calendar {
+	th {
+		.condensed;
+		font-size: 18px;
+		padding: 4px!important;
+		font-weight: normal!important;
+	}
+}
+
+.ui-datepicker-header {
+	height: 31px;
+}
+
+
+
+/******* BROWSER FIXES *******/
+
+/* FF buttons: remove padding to vertically center text */
+input::-moz-focus-inner { 
+    border: 0;
+    padding: 0;
+}
+
+
+
+/******* RESPONSIVE STYLING *******/
+
+
+@media screen and (max-width: 720px) {
+
+
+	
+	
+}
+
+
+
+/******* PRINT *******/
+
+@media print {
+	body {
+		background: none !important;
+		font-size: 10pt;
+	}
+	footer.entry-meta a[rel=bookmark]:link:after,
+	footer.entry-meta a[rel=bookmark]:visited:after {
+		content:" [" attr(href) "] "; /* Show URLs */
+	}	
+	#page {
+		clear: both !important;
+		display: block !important;
+		float: none !important;
+		max-width: 100%;
+		position: relative !important;
+	}
+}
+
+
+
+/** OVERRIDES **/
+
+.fullpage .col1 {
+    width: 100%;
+    left: 0;
+}
+</pre></body></html>

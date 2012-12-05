@@ -1333,21 +1333,21 @@ class S3RequestItemModel(S3Model):
                                    label = T("Quantity Committed"),
                                    represent = self.req_qnty_commit_represent,
                                    default = 0,
-                                   requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                   requires = IS_FLOAT_IN_RANGE(minimum=0, maximum=999999),
                                    readable = use_commit,
                                    writable = use_commit and quantities_writable),
                              Field("quantity_transit", "double",
                                    label = T("Quantity in Transit"),
                                    represent = self.req_qnty_transit_represent,
                                    default = 0,
-                                   requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                   requires = IS_FLOAT_IN_RANGE(minimum=0, maximum=999999),
                                    readable = show_qty_transit,
                                    writable = show_qty_transit and quantities_writable),
                              Field("quantity_fulfil", "double",
                                    label = T("Quantity Fulfilled"),
                                    represent = self.req_qnty_fulfil_represent,
                                    default = 0,
-                                   requires = IS_FLOAT_IN_RANGE(minimum=0),
+                                   requires = IS_FLOAT_IN_RANGE(minimum=0, maximum=999999),
                                    writable = quantities_writable),
                              s3_comments(),
                              *s3_meta_fields())
@@ -1643,13 +1643,14 @@ class S3RequestSkillModel(S3Model):
                              # @ToDo: Add a minimum competency rating?
                              Field("quantity", "integer", notnull=True,
                                    default = 1,
-                                   requires = IS_INT_IN_RANGE(1, 999),
+                                   requires = IS_INT_IN_RANGE(1, 999999),
                                    label = T("Number of People Required"),
                                    ),
                              self.org_site_id,
                              Field("quantity_commit", "integer",
                                    label = T("Quantity Committed"),
                                    default = 0,
+                                   requires = IS_INT_IN_RANGE(1, 999999),
                                    readable = use_commit,
                                    writable = use_commit and quantities_writable),
                              Field("quantity_transit", "integer",
@@ -1658,10 +1659,12 @@ class S3RequestSkillModel(S3Model):
                                    # req_quantity_represent(quantity_transit,
                                    #                        "transit"),
                                    default = 0,
+                                   requires = IS_INT_IN_RANGE(1, 999999),
                                    writable = quantities_writable),
                              Field("quantity_fulfil", "integer",
                                    label = T("Quantity Fulfilled"),
                                    default = 0,
+                                   requires = IS_INT_IN_RANGE(1, 999999),
                                    writable = quantities_writable),
                              s3_comments(
                                          #label = T("Task Details"),
@@ -1769,20 +1772,31 @@ class S3RequestSummaryModel(S3Model):
         #
         # @ToDo: Convert the simple text boxes into a widget
         # e.g. modified ui.multiselect.js
+        # http://eden.sahanafoundation.org/ticket/1199
         #
         tablename = "req_site_needs"
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site"),
-                                  s3_comments("green",
-                                              label=T("We are actively seeking more"),
+                                  s3_comments("urgently_needed",
+                                              label=T("Urgently Needed"),
                                               comment=None),
-                                  s3_comments("yellow",
-                                              label=T("We are accepting donations"),
+                                  s3_comments("needed",
+                                              label=T("Needed"),
                                               comment=None),
-                                  s3_comments("red",
-                                              label=T("We have too much"),
-                                              comment=None),
+                                  s3_comments("not_needed",
+                                              label=T("Not Needed"),
+                                              comment=T("Please do NOT send")),
                                   *s3_meta_fields())
+
+        # CRUD strings
+        ADD_NEEDS = T("Add Site Needs")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_display=T("Site Needs"),
+            title_update=T("Edit Site Needs"),
+            label_delete_button=T("Delete Site Needs"),
+            msg_record_created=T("Site Needs added"),
+            msg_record_modified=T("Site Needs updated"),
+            msg_record_deleted=T("Site Needs deleted"))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)

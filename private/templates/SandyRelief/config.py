@@ -134,6 +134,8 @@ settings.req.requester_label = "Site Contact"
 settings.req.requester_from_site = True
 # Label for Inventory Requests
 settings.req.type_inv_label = "Supplies"
+# Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
+settings.req.summary = True
 
 settings.org.site_label = "Facility"
 # Enable certain fields just for specific Organisations
@@ -296,23 +298,23 @@ settings.modules = OrderedDict([
             module_type = 10
         )),
     ("org", Storage(
-            name_nice = T("Facilities"),
+            name_nice = T("Locations"),
             #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
             restricted = True,
-            module_type = 1
+            module_type = 4
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
             name_nice = T("Contacts"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 2,
+            module_type = 3,
         )),
     ("vol", Storage(
             name_nice = T("Volunteers"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 4,
+            module_type = 2,
         )),
     ("cms", Storage(
           name_nice = T("Content Management"),
@@ -343,7 +345,7 @@ settings.modules = OrderedDict([
             name_nice = T("Inventory"),
             #description = "Receiving and Sending Items",
             restricted = True,
-            module_type = 6
+            module_type = 10
         )),
     #("proc", Storage(
     #        name_nice = T("Procurement"),
@@ -355,7 +357,7 @@ settings.modules = OrderedDict([
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
             restricted = True,
-            module_type = 7,
+            module_type = 10,
         )),
     # Vehicle depends on Assets
     #("vehicle", Storage(
@@ -368,7 +370,7 @@ settings.modules = OrderedDict([
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
-            module_type = 3,
+            module_type = 1,
         )),
     ("project", Storage(
             name_nice = T("Projects"),
@@ -380,7 +382,7 @@ settings.modules = OrderedDict([
             name_nice = T("Assessments"),
             #description = "Rapid Assessments & Flexible Impact Assessments",
             restricted = True,
-            module_type = 7,
+            module_type = 5,
         )),
     #("survey", Storage(
     #        name_nice = T("Surveys"),

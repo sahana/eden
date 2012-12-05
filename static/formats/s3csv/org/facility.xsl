@@ -20,13 +20,17 @@
          L4......................gis_location.L4
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
-         Comments................org_facility.comments
          Contact.................org_facility.contact
          Phone...................org_facility.phone1
          Phone2..................org_facility.phone2
          Email...................org_facility.email
          Website.................org_facility.website
          Opening Times...........org_facility.opening_times
+         Obsolete................org_facility.obsolete
+         Comments................org_facility.comments
+         Urgently Needed.........req_site_needs.urgently_needed
+         Needed..................req_site_needs.needed
+         Not Needed..............req_site_needs.not_needed
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -109,6 +113,17 @@
                 </reference>
             </xsl:if>
 
+            <!-- Site Needs -->
+            <xsl:if test="col[@field='Urgently Needed']!='' or 
+                          col[@field='Needed']!='' or
+                          col[@field='Not Needed']!=''">
+                <resource name="req_site_needs">
+                    <data field="urgently_needed"><xsl:value-of select="col[@field='Urgently Needed']"/></data>
+                    <data field="needed"><xsl:value-of select="col[@field='Needed']"/></data>
+                    <data field="not_needed"><xsl:value-of select="col[@field='Not Needed']"/></data>
+                </resource>
+            </xsl:if>
+
             <!-- Facility data -->
             <data field="name"><xsl:value-of select="$FacilityName"/></data>
             <data field="opening_times"><xsl:value-of select="col[@field='Opening Times']"/></data>
@@ -116,6 +131,7 @@
             <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
             <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
             <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
+            <data field="obsolete"><xsl:value-of select="col[@field='Obsolete']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
