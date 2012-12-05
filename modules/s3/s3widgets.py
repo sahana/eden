@@ -1634,8 +1634,7 @@ class S3LocationSelectorWidget(FormWidget):
             if default_location.level:
                 # Add this one to the defaults too
                 defaults[default_location.level] = Storage(name=default_location.name,
-                                                           id=config.default_location_id
-                                                           )
+                                                           id=config.default_location_id)
             if "L0" in defaults:
                 default_L0 = defaults["L0"]
                 if default_L0:
@@ -3814,7 +3813,6 @@ def s3_checkboxes_widget(field,
         rows[-1][0][0]["hideerror"] = False
 
     return TABLE(*rows, **attributes)
-
 
 # =============================================================================
 class S3SliderWidget(FormWidget):
