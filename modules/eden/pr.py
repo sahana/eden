@@ -2337,7 +2337,7 @@ class S3SavedSearch(S3Model):
             lf = S3FieldSelector(field_selector).resolve(resource)
 
             # Parse the values back out
-            values = S3ResourceFilter._parse_value(values)
+            values = S3URLQuery.parse_value(values)
 
             if not isinstance(values, list):
                 values = [values]

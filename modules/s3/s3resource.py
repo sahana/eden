@@ -4897,6 +4897,184 @@ class S3ResourceQuery(object):
             return (self.left.name, self.op, self.right, False)
 
 # =============================================================================
+class S3URLQuery(object):
+    """ URL Query Parser """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parse(cls, resource, vars):
+        """
+            Construct a Storage of S3ResourceQuery from a Storage of get_vars
+
+            @param resource: the S3Resource
+            @param vars: the get_vars
+            @return: Storage of S3ResourceQuery like {alias: query}, where
+                     alias is the alias of the component the query concerns
+        """
+
+        query = Storage()
+
+        if resource is None:
+            return query
+        if not vars:
+            return query
+
+        for key, value in vars.iteritems():
+
+            if not key.find(".") > 0:
+                continue
+
+            selectors, op, invert = cls.parse_expression(key)
+            v = cls.parse_value(value)
+
+            q = None
+            for fs in selectors:
+
+                if op == S3ResourceQuery.LIKE:
+                    # Auto-lowercase and replace wildcard
+                    f = S3FieldSelector(fs).lower()
+                    if isinstance(v, basestring):
+                        v = v.replace("*", "%").lower()
+                    elif isinstance(v, list):
+                        v = [x.replace("*", "%").lower() for x in v]
+                else:
+                    f = S3FieldSelector(fs)
+
+                rquery = None
+                try:
+                    rquery = S3ResourceQuery(op, f, v)
+                except SyntaxError:
+                    if current.response.s3.debug:
+                        from s3utils import s3_debug
+                        s3_debug("Invalid URL query operator: %s "
+                                 "(sub-query ignored)" % op)
+                    q = None
+                    break
+
+                # Invert operation
+                if invert:
+                    rquery = ~rquery
+
+                # Add to subquery
+                if q is None:
+                    q = rquery
+                else:
+                    q |= rquery
+
+            if q is None:
+                continue
+
+            # Append to query
+            if len(selectors) > 1:
+                alias = resource.alias
+            else:
+                alias = selectors[0].split(".", 1)[0]
+            if alias not in query:
+                query[alias] = [q]
+            else:
+                query[alias].append(q)
+
+        return query
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_url(url):
+        """
+            Parse a URL query into get_vars
+
+            @param query: the URL query string
+            @return: the get_vars (Storage)
+        """
+
+        if not url:
+            return Storage()
+        elif "?" in url:
+            query = url.split("?", 1)[1]
+        elif "=" in url:
+            query = url
+        else:
+            return Storage()
+
+        import cgi
+        dget = cgi.parse_qsl(query, keep_blank_values=1)
+            
+        get_vars = Storage()
+        for (key, value) in dget:
+            if key in get_vars:
+                if type(get_vars[key]) is list:
+                    get_vars[key].append(value)
+                else:
+                    get_vars[key] = [get_vars[key], value]
+            else:
+                get_vars[key] = value
+        return get_vars
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_expression(key):
+        """
+            Parse a URL expression
+
+            @param key: the key for the URL variable
+            @return: tuple (selectors, operator, invert)
+        """
+
+        if key[-1] == "!":
+            invert = True
+        else:
+            invert = False
+        fs = key.rstrip("!")
+        op = None
+        if "__" in fs:
+            fs, op = fs.split("__", 1)
+            op = op.strip("_")
+        if not op:
+            op = "eq"
+        if "|" in fs:
+            selectors = [s for s in fs.split("|") if s]
+        else:
+            selectors = [fs]
+        return selectors, op, invert
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_value(value):
+        """
+            Parse a URL query value
+
+            @param value: the value
+            @returns: the parsed value
+        """
+
+        NONE = ("NONE", "None")
+        if type(value) is list:
+            value = ",".join(value)
+        vlist = []
+        w = ""
+        quote = False
+        for c in value:
+            if c == '"':
+                w += c
+                quote = not quote
+            elif c == "," and not quote:
+                if w in NONE:
+                    w = None
+                else:
+                    w = w.strip('"')
+                vlist.append(w)
+                w = ""
+            else:
+                w += c
+        if w in NONE:
+            w = None
+        else:
+            w = w.strip('"')
+        vlist.append(w)
+        if len(vlist) == 1:
+            return vlist[0]
+        return vlist
+        
+# =============================================================================
 class S3ResourceFilter(object):
     """ Class representing a resource filter """
 
@@ -5054,7 +5232,7 @@ class S3ResourceFilter(object):
                     self.add_filter(bbox)
 
                 # Filters
-                queries = self.parse_url_query(resource, vars)
+                queries = S3URLQuery.parse(resource, vars)
                 [self.add_filter(q)
                     for alias in queries
                         for q in queries[alias]]
@@ -5244,107 +5422,6 @@ class S3ResourceFilter(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_url_query(resource, vars):
-        """
-            URL query parser
-
-            @param resource: the resource
-            @param vars: the URL query vars (GET vars)
-        """
-
-        query = Storage()
-
-        if vars is None:
-            return query
-
-        queries = [(k, vars[k]) for k in vars if k.find(".") > 0]
-        for k, val in queries:
-
-            # Get operator and field selector
-            op = None
-            if "__" in k:
-                fs, op = k.split("__", 1)
-            else:
-                fs = k
-            if op and op[-1] == "!":
-                op = op.rstrip("!")
-                invert = True
-            else:
-                invert = False
-            if not op:
-                op = "eq"
-                if fs[-1] == "!":
-                    invert = True
-                    fs = fs.rstrip("!")
-
-            # Parse the value
-            v = S3ResourceFilter._parse_value(val)
-
-            if "|" in fs:
-                selectors = fs.split("|")
-            else:
-                selectors = [fs]
-
-            q = None
-            prefix = None
-            for fs in selectors:
-
-                # Check prefix
-                if "." in fs:
-                    a = fs.split(".", 1)[0]
-                    if prefix is None:
-                        prefix = a
-                elif prefix is not None:
-                    fs = "%s.%s" % (prefix, fs)
-                else:
-                    # Invalid selector
-                    q = None
-                    break
-
-                # Build a S3ResourceQuery
-                rquery = None
-                try:
-                    if op == S3ResourceQuery.LIKE:
-                        # Auto-lowercase and replace wildcard
-                        f = S3FieldSelector(fs).lower()
-                        if isinstance(v, basestring):
-                            v = v.replace("*", "%").lower()
-                        elif isinstance(v, list):
-                            v = [x.replace("*", "%").lower() for x in v]
-                    else:
-                        f = S3FieldSelector(fs)
-                    rquery = S3ResourceQuery(op, f, v)
-                except (SyntaxError, KeyError):
-                    q = None
-                    break
-
-                # Invert operation
-                if invert:
-                    rquery = ~rquery
-
-                # Add to subquery
-                if q is None:
-                    q = rquery
-                else:
-                    q |= rquery
-
-            if q is None:
-                continue
-
-            # Append to query
-            if len(selectors) > 1:
-                alias = resource.alias
-            else:
-                alias = selectors[0].split(".", 1)[0]
-            if alias not in query:
-                query[alias] = [q]
-            else:
-                query[alias].append(q)
-
-        return query
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def parse_bbox_query(resource, vars):
         """
             Generate a Query from a URL boundary box query
@@ -5422,44 +5499,6 @@ class S3ResourceFilter(object):
                         # Merge with the previous BBOX
                         bbox_query = bbox_query & bbox
         return bbox_query
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _parse_value(value):
-        """
-            Parses the value(s) of a URL variable, respects
-            quoted values, resolves the NONE keyword
-
-            @param value: the value as either string or list of strings
-            @note: does not support quotes within quoted strings
-        """
-
-        if type(value) is list:
-            value = ",".join(value)
-        vlist = []
-        w = ""
-        quote = False
-        for c in value:
-            if c == '"':
-                w += c
-                quote = not quote
-            elif c == "," and not quote:
-                if w in ("NONE", "None"):
-                    w = None
-                else:
-                    w = w.strip('"')
-                vlist.append(w)
-                w = ""
-            else:
-                w += c
-        if w in ("NONE", "None"):
-            w = None
-        else:
-            w = w.strip('"')
-        vlist.append(w)
-        if len(vlist) == 1:
-            return vlist[0]
-        return vlist
 
     # -------------------------------------------------------------------------
     def __call__(self, rows, start=None, limit=None):
