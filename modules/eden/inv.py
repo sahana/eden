@@ -96,7 +96,7 @@ tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
                    TRACK_STATUS_TRANSIT   : T("In transit"),
                    TRACK_STATUS_UNLOADING : T("Unloading"),
                    TRACK_STATUS_ARRIVED   : T("Arrived"),
-                   TRACK_STATUS_CANCELED  : T("Canceled"),
+                   TRACK_STATUS_CANCELED  : T("Cancelled"),
                    TRACK_STATUS_RETURNING : T("Returning"),
                    }
 
@@ -2250,6 +2250,10 @@ $(document).ready(function(){
                        "quantity",
                        ]
         settings = current.deployment_settings
+        if r.record.req_ref:
+            # This Shipment relates to a request
+            # - show the req_item comments
+            list_fields.append("req_item_id$comments")
         if settings.get_inv_track_pack_values():
             list_fields.append("currency")
             list_fields.append("pack_value")
