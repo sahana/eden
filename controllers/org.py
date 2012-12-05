@@ -109,7 +109,7 @@ def sites_for_org():
     else:
         table = s3db.org_site
         query = (table.organisation_id == org)
-        records = db(query).select(table.id,
+        records = db(query).select(table.site_id,
                                    table.name,
                                    orderby=table.name)
         result = records.json()

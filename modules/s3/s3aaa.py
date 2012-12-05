@@ -1266,6 +1266,7 @@ Thank you
 '''S3FilterFieldChange({
  'FilterField':'organisation_id',
  'Field':'site_id',
+ 'FieldID':'site_id',
  'FieldResource':'site',
  'url':S3.Ap.concat('/org/sites_for_org/')
 })''')
