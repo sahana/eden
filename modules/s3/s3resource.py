@@ -3529,107 +3529,100 @@ class S3Resource(object):
         if sSearch in vars and iColumns in vars:
 
             # Build filter
-            search_text = vars[sSearch]
-            search_like = "%%%s%%" % search_text.lower()
+            text = vars[sSearch] or ""
+            words = [w for w in text.lower().split()]
 
-            try:
-                numcols = int(vars[iColumns])
-            except:
-                numcols = 0
-
-            flist = []
-            for i in xrange(numcols):
+            if words:
                 try:
-                    field = rfields[i].field
-                except (KeyError, IndexError):
-                    continue
-                if field is None:
-                    continue
-                ftype = str(field.type)
+                    numcols = int(vars[iColumns])
+                except ValueError:
+                    numcols = 0
 
-                # For foreign keys, we search through their sortby
-                if ftype[:9] == "reference" and \
-                    hasattr(field, "sortby") and field.sortby:
-                    tn = ftype[10:]
-                    if parent is not None and \
-                       parent.tablename == tn and field.name != fkey:
-                        alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
-                        ktable = db[tn].with_alias(alias)
-                        ktable._id = ktable[ktable._id.name]
-                        tn = alias
-                    else:
-                        ktable = db[tn]
-                    if tn != skip:
-                        q = (field == ktable._id)
-                        join = [j for j in left if j.first._tablename == tn]
-                        if not join:
-                            left.append(ktable.on(q))
-                    if isinstance(field.sortby, (list, tuple)):
-                        flist.extend([ktable[f] for f in field.sortby
-                                                if f in ktable.fields])
-                    else:
-                        if field.sortby in ktable.fields:
-                            flist.append(ktable[field.sortby])
+                flist = []
+                for i in xrange(numcols):
+                    try:
+                        field = rfields[i].field
+                    except (KeyError, IndexError):
+                        continue
+                    if field is None:
+                        continue
+                    ftype = str(field.type)
 
-                # Otherwise, we search through the field itself
-                else:
-                    flist.append(field)
+                    # For foreign keys, we search through their sortby
+                    if ftype[:9] == "reference" and \
+                       hasattr(field, "sortby") and field.sortby:
+                        tn = ftype[10:]
+                        if parent is not None and \
+                           parent.tablename == tn and field.name != fkey:
+                            alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                            ktable = db[tn].with_alias(alias)
+                            ktable._id = ktable[ktable._id.name]
+                            tn = alias
+                        else:
+                            ktable = db[tn]
+                        if tn != skip:
+                            q = (field == ktable._id)
+                            join = [j for j in left if j.first._tablename == tn]
+                            if not join:
+                                left.append(ktable.on(q))
+                        if isinstance(field.sortby, (list, tuple)):
+                            flist.extend([ktable[f] for f in field.sortby
+                                                    if f in ktable.fields])
+                        else:
+                            if field.sortby in ktable.fields:
+                                flist.append(ktable[field.sortby])
+
+                    # Otherwise, we search through the field itself
+                    else:
+                        flist.append(field)
 
             # Build search query
-            for field in flist:
-                query = None
+            opts = Storage()
+            queries = []
+            for w in words:
 
-                ftype = str(field.type)
+                wqueries = []
+                for field in flist:
+                    query = None
+                    ftype = str(field.type)
+                    options = None
+                    fname = str(field)
+                    if fname in opts:
+                        options = opts[fname]
+                    elif ftype[:7] in ("integer",
+                                       "list:in",
+                                       "list:st",
+                                       "referen",
+                                       "list:re"):
 
-                # Check whether this type has options
-                if ftype in ("integer", "list:integer", "list:string") or \
-                   ftype.startswith("list:reference") or \
-                   ftype.startswith("reference"):
-
-                    requires = field.requires
-                    if not isinstance(requires, (list, tuple)):
-                        requires = [requires]
-                    if requires:
-                        r = requires[0]
-                        if isinstance(r, IS_EMPTY_OR):
-                            r = r.other
-                        if hasattr(r, "options"):
-                            try:
-                                options = r.options()
-                            except:
-                                continue
-                        else:
-                            continue
-
-                        vlist = []
-                        for (value, text) in options:
-                            if str(text).lower().find(search_text.lower()) != -1:
-                                vlist.append(value)
+                        options = []
+                        requires = field.requires
+                        if not isinstance(requires, (list, tuple)):
+                            requires = [requires]
+                        if requires:
+                            r = requires[0]
+                            if isinstance(r, IS_EMPTY_OR):
+                                r = r.other
+                            if hasattr(r, "options"):
+                                try:
+                                    options = r.options()
+                                except:
+                                    pass
+                    elif ftype in ("string", "text"):
+                        wqueries.append(field.lower().like("%%%s%%" % w))
+                    if options is not None:
+                        opts[fname] = options
+                        vlist = [v for v, t in options
+                                   if s3_unicode(t).lower().find(w) != -1]
                         if vlist:
-                            query = field.belongs(vlist)
-                    else:
-                        continue
-
-                # ...or is string/text
-                elif str(field.type) in ("string", "text"):
-                    query = field.lower().like(search_like)
-
-                if searchq is None and query:
-                    searchq = query
-                elif query:
-                    searchq = searchq | query
-
-            # Append all joins
-            # (is this really necessary => rfields joins would be added anyway?)
-            #for j in joins.values():
-                #for q in j:
-                    #if searchq is None:
-                        #searchq = q
-                    #elif str(q) not in str(searchq):
-                        #searchq &= q
-
-        else:
-            searchq = None
+                            wqueries.append(field.belongs(vlist))
+                if len(wqueries):
+                    queries.append(reduce(lambda x, y: x | y \
+                                                 if x is not None else y,
+                                          wqueries))
+            if len(queries):
+                searchq = reduce(lambda x, y: x & y \
+                                        if x is not None else y, queries)
 
         # ORDERBY -------------------------------------------------------------
 
