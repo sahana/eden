@@ -660,50 +660,56 @@ def req_item():
         s3.filter = (rtable.is_template == False) & \
                     (rtable.id == ritable.req_id)
 
+    # Search method
+    search_method = s3db.get_config("req_req_item", "search_method")
+    if not search_method:
+        S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
+        req_item_search = (
+            S3SearchOptionsWidget(
+                name="req_search_fulfil_status",
+                label=T("Status"),
+                field="req_id$fulfil_status",
+                options = s3.req_status_opts,
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="req_search_priority",
+                label=T("Priority"),
+                field="req_id$priority",
+                options = s3.req_priority_opts,
+                cols = 3,
+            ),
+            #S3SearchOptionsWidget(
+            #  name="req_search_L1",
+            #  field="req_id$site_id$location_id$L1",
+            #  location_level="L1",
+            #  cols = 3,
+            #),
+            #S3SearchOptionsWidget(
+            #  name="req_search_L2",
+            #  field="req_id$site_id$location_id$L2",
+            #  location_level="L2",
+            #  cols = 3,
+            #),
+            S3SearchOptionsWidget(
+                name="req_search_L3",
+                field="req_id$site_id$location_id$L3",
+                location_level="L3",
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="req_search_L4",
+                field="req_id$site_id$location_id$L4",
+                location_level="L4",
+                cols = 3,
+            ),
+        )
+        s3db.configure("req_req_item",
+                       search_method = s3base.S3Search(advanced=req_item_search),
+                       )
+
     def prep(r):
         if r.interactive:
-            # Search method
-            S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
-            req_item_search = (
-                S3SearchOptionsWidget(
-                    name="req_search_fulfil_status",
-                    label=T("Status"),
-                    field="req_id$fulfil_status",
-                    options = s3.req_status_opts,
-                    cols = 3,
-                ),
-                S3SearchOptionsWidget(
-                    name="req_search_priority",
-                    label=T("Priority"),
-                    field="req_id$priority",
-                    options = s3.req_priority_opts,
-                    cols = 3,
-                ),
-                #S3SearchOptionsWidget(
-                #  name="req_search_L1",
-                #  field="req_id$site_id$location_id$L1",
-                #  location_level="L1",
-                #  cols = 3,
-                #),
-                #S3SearchOptionsWidget(
-                #  name="req_search_L2",
-                #  field="req_id$site_id$location_id$L2",
-                #  location_level="L2",
-                #  cols = 3,
-                #),
-                S3SearchOptionsWidget(
-                    name="req_search_L3",
-                    field="req_id$site_id$location_id$L3",
-                    location_level="L3",
-                    cols = 3,
-                ),
-                S3SearchOptionsWidget(
-                    name="req_search_L4",
-                    field="req_id$site_id$location_id$L4",
-                    location_level="L4",
-                    cols = 3,
-                ),
-            )
 
             list_fields = s3db.get_config("req_req_item", "list_fields")
             list_fields.insert(1, "req_id$site_id")
@@ -711,7 +717,6 @@ def req_item():
             list_fields.insert(1, "req_id$site_id$location_id$L3")
             s3db.configure("req_req_item",
                            insertable = False,
-                           search_method = s3base.S3Search(advanced=req_item_search),
                            list_fields = list_fields,
                            )
 
@@ -1506,6 +1511,19 @@ def fema():
                 (ritable.quantity > ritable.quantity_fulfil) & \
                 (ritable.deleted != True) & \
                 (ritable.item_id.belongs(fema_item_ids))
+
+    # Search method
+    req_item_search = [
+        s3base.S3SearchOptionsWidget(
+            name="req_search_site",
+            field="req_id$site_id",
+            label = T("Facility"),
+            cols = 3,
+        ),
+        ]
+    s3db.configure("req_req_item",
+                   search_method = s3base.S3Search(advanced=req_item_search),
+                   )
 
     output = req_item()
     return output
