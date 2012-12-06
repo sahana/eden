@@ -7543,7 +7543,10 @@ class S3Map(S3Search):
                 session_options = session.s3.search_options
                 if session_options and tablename in session_options:
                     # session
-                    session_options = session_options[tablename]
+                    if "clear_opts" in r.get_vars:
+                        session_options = Storage()
+                    else:
+                        session_options = session_options[tablename] or Storage()
                 else:
                     # unfiltered
                     session_options = Storage()
