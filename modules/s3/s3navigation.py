@@ -254,6 +254,54 @@ class S3NavigationItem(object):
             self.renderer = None
 
     # -------------------------------------------------------------------------
+    def clone(self):
+        """ Clone this item and its components """
+
+        item = self.__class__()
+        item.label = self.label
+        item.tags = self.tags
+        
+        item.r = self.r
+        
+        item.application = self.application
+        item.controller = self.controller
+        item.function = self.function
+        
+        item.match_controller = [c for c in self.match_controller]
+        item.match_function = [f for f in self.match_function]
+
+        item.args = [a for a in self.args]
+        item.vars = Storage(**self.vars)
+
+        item.extension = self.extension
+        item.tablename = self.tablename
+        item.method = self.method
+        item.p = self.p
+
+        item.override_url = self.override_url
+
+        item.attr = Storage(**self.attr)
+        item.opts = Storage(**self.opts)
+
+        item.parent = self.parent
+        item.components = [i.clone() for i in self.components]
+
+        item.enabled = self.enabled
+        item.selected = self.selected
+        item.visible = self.visible
+        item.link = self.link
+        item.mandatory = self.mandatory
+        if self.restrict is not None:
+            item.restrict = [r for r in self.restrict]
+        else:
+            item.restrict = None
+
+        item.check = self.check
+        item.renderer = self.renderer
+
+        return item
+
+    # -------------------------------------------------------------------------
     # Check methods
     #
     def check_active(self, request=None):

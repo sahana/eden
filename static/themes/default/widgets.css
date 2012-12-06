@@ -1042,4 +1042,7 @@ select#sub_defaulttime_defaulttime_person_id_edit_none {
 input#sub_defaulttime_defaulttime_hours_edit_none {
     width: 60px;
 }
-
+.s3_inline_add_resource_link a {
+    margin-left: 2px;
+    padding-left: 2px;
+}
