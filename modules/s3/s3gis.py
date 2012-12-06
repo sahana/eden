@@ -7936,7 +7936,9 @@ class S3ExportPOI(S3Method):
 
 # -----------------------------------------------------------------------------
 class S3ImportPOI(S3Method):
-    """ Import point-of-interest resources for a location """
+    """
+        Import point-of-interest resources for a location
+    """
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -7951,7 +7953,6 @@ class S3ImportPOI(S3Method):
         if r.representation == "html":
 
             T = current.T
-            auth = current.auth
             s3db = current.s3db
             request = current.request
             response = current.response
@@ -7996,7 +7997,7 @@ class S3ImportPOI(S3Method):
                         TR(
                             TD(B("%s: " % T("Password"))),
                             TD(INPUT(_type="text", _name="password",
-                                     _id="password", _value="osm")),
+                                     _id="password", _value="planet")),
                             TD(),
                             ),
                         TR(
@@ -8085,6 +8086,7 @@ class S3ImportPOI(S3Method):
                         # Python < 2.7
                         error = subprocess.call(cmd, shell=True)
                         if error:
+                            s3_debug(cmd)
                             current.session.error = T("OSM file generation failed!")
                             redirect(URL(args=r.id))
                     try:
