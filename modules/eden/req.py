@@ -1371,7 +1371,7 @@ class S3RequestItemModel(S3Model):
             title_display = T("Request Item Details"),
             title_list = T("Items in Request"),
             title_update = T("Edit Item in Request"),
-            title_search = T("Search Items in Request"),
+            title_search = T("Search Requested Items"),
             subtitle_create = T("Add New Item to Request"),
             label_list_button = T("List Items in Request"),
             label_create_button = ADD_REQUEST_ITEM,
