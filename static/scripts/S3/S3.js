@@ -233,7 +233,7 @@ $(document).ready(function() {
         caller = caller.replace(/__row/, '');
         // Avoid Duplicate callers
         var url_out = attr;
-        if (attr.indexOf('&caller=') == -1) {
+        if (attr.indexOf('caller=') == -1) {
             url_out = attr + '&caller=' + caller;
         }
         return url_out;

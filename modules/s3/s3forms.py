@@ -1040,13 +1040,22 @@ class S3SQLFormElement(object):
     # Utility methods
     # -------------------------------------------------------------------------
     @staticmethod
-    def _rename_field(field, name, skip_post_validation=False):
+    def _rename_field(field, name,
+                      comments=True,
+                      popup=None,
+                      skip_post_validation=False):
         """
             Rename a field (actually: create a new Field instance with the
             same attributes as the given Field, but a different field name).
 
             @param field: the original Field instance
             @param name: the new name
+            @param comments: render comments - if set to False, only
+                             navigation items with an inline() renderer
+                             method will be rendered (unless popup is None)
+            @param popup: only if comments=False, additional vars for comment
+                          navigation items (e.g. AddResourceLink), None prevents
+                          rendering of navigation items
             @param skip_post_validation: skip field validation during POST,
                                          useful for client-side processed
                                          dummy fields.
@@ -1064,6 +1073,23 @@ class S3SQLFormElement(object):
             required = field.required
             notnull = field.notnull
 
+        if not comments:
+            if popup:
+                comment = field.comment
+                if hasattr(comment, "clone"):
+                    comment = comment.clone()
+                if hasattr(comment, "renderer") and \
+                   hasattr(comment, "inline") and \
+                   isinstance(popup, dict):
+                    comment.vars.update(popup)
+                    comment.renderer = comment.inline
+                else:
+                    comment = None
+            else:
+                comment = None
+        else:
+            comment = field.comments
+            
         f = Field(str(name),
                   type=field.type,
                   length=field.length,
@@ -1077,7 +1103,7 @@ class S3SQLFormElement(object):
 
                   widget=widget,
                   label=field.label,
-                  comment=field.comment,
+                  comment=comment,
 
                   writable=field.writable,
                   readable=field.readable,
@@ -1948,7 +1974,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
         for f in fields:
             fname = f["name"]
             idxname = "%s_i_%s_%s_%s" % (formname, fname, rowtype, index)
+            if not readonly:
+                parent = table._tablename.split("_", 1)[1]
+                caller = "sub_%s_%s" % (formname, idxname)
+                popup = Storage(parent=parent, caller=caller)
+            else:
+                popup = None
             formfield = self._rename_field(table[fname], idxname,
+                                           comments=False,
+                                           popup=popup,
                                            skip_post_validation=True)
 
             # Get reduced options set
@@ -2238,6 +2272,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         if id == "submit_record__row":
             return TR(_id=id)
+        elif comment:
+            return TR(DIV(widget, comment), _id=id)
         else:
             return TR(widget, _id=id)
 
