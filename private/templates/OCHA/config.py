@@ -221,6 +221,12 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 1
         )),
+    ("stats", Storage(
+            name_nice = "Stats",
+            #description = "Needed for Project Beneficiaries",
+            restricted = True,
+            module_type = None
+        )),
     #("cr", Storage(
     #        name_nice = T("Shelters"),
     #        #description = "Tracks the location, capacity and breakdown of victims in Shelters",
