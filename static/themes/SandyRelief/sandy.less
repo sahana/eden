@@ -26,7 +26,7 @@
 /* jquery */
 
 /* UNIQUE */
-/* home page */
+/* home pages */
 
 /* ADVANCED */
 /* browser fixes */
@@ -465,6 +465,10 @@ button,
 	}
 }
 
+.col1, .col2, .col3 {
+	padding: 0;
+}
+
 .colmask {
     margin-top: 55px;
 }
@@ -517,6 +521,12 @@ button,
 	}
 	#delete-btn {
 		margin-bottom: 30px;
+	}
+	label {
+		.caps;
+		font-size: 12px;
+		margin-top: 1em;
+		display: block;
 	}
 }
 
@@ -592,30 +602,10 @@ button,
     }
 }
 
-
-/* drop down menus */
-
-#subnav {
-    padding: 15px;
-    div a {
-        .condensed;
-        font-size: 20px;
-        color: @body;
-        &:hover {
-            color: @anchor;
-        }
-    }
-    .submenu {
-        border-bottom: 1px solid @shadeE;
-        padding-bottom: 15px;
-        margin-bottom: 15px;
-        li {
-            font-size: 12px;
-            line-height: 1.2em;
-            margin-bottom: .5em;
-        }
-    }
+.fleft + .fright .submenu { /* keep last menu onscreen */
+	right: 0; 
 }
+
 
 
 /* bottom nav */
@@ -646,8 +636,8 @@ button,
 	}   
 }
 
-#footer div:last-child button {
-    display: none;  /* hide extra buttons */
+#footer div:last-child button { /* hide extra buttons */
+    display: none;  
 }
 
 
@@ -870,9 +860,11 @@ b.red {
 		.caps;
 		font-size: 12px;
 		padding-right: 10px;
+		padding-top: 10px;
 	}
 	td {
 		padding-right: 45px;
+		padding-top: 10px;
 	}
 }
 
@@ -1117,6 +1109,12 @@ b.red {
 	width: auto;
 	margin-left: 360px;
 	margin-right: 180px;
+	h2 {
+		.condensed;
+		font-size: 36px;
+		margin: 0 0 15px;
+		line-height: 1em;
+	}
 }
 
 .home-register {
@@ -1161,19 +1159,16 @@ b.red {
 	max-width: 300px;
 }
 
-.home-content {
-	div {
-		background: @white;
-		background: rgba(255,255,255,.8);
-		padding: 30px;
-		margin-bottom: 20px;
-	}
-	h2 {
-		.condensed;
-		font-size: 36px;
-		margin: 0 0 15px;
-		line-height: 1em;
-	}
+
+.welcome-steps, 
+.comms,
+.dispatch,
+.contact-us,
+.help {
+	background: @white;
+	background: rgba(255,255,255,.8);
+	padding: 30px;
+	margin-bottom: 20px;
 }
 
 
@@ -1206,6 +1201,19 @@ b.red {
 	}
 }
 
+.contact-us {
+	h1 {
+		margin: 0 0 15px;		
+		line-height: 1em;
+	}
+	label {
+		margin: 15px 0 3px;
+		display: block;
+	}
+	input[type="submit"] {
+		.button;
+	}
+}
 
 
 
