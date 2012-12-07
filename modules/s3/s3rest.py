@@ -1334,6 +1334,7 @@ class S3Request(object):
             output = r.resource.import_xml(source,
                                            id=id,
                                            format=format,
+                                           files=r.files,
                                            stylesheet=stylesheet,
                                            ignore_errors=ignore_errors,
                                            **args)
