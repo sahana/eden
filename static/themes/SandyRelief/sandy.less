@@ -727,6 +727,9 @@ b.red {
 		margin: 0 10px 15px 0;
 		padding: 6px 15px 7px;
 	}
+	table {
+		width: auto;
+	}
 }
 
 
@@ -766,12 +769,12 @@ b.red {
 }
 
 
-
 .rightside .form-container {
 	margin-right: 25px;
 }
 
-.rightside .form-container table {
+
+.form-container table {
     width: 100%;
     td {
 	    padding-top: 10px;
@@ -785,7 +788,6 @@ b.red {
 	.w2p_fc {
 		.inlineBlock;
 		float: none;
-		vertical-align: top;
 	}
     .w2p_fl {
         width: 200px;
@@ -822,7 +824,6 @@ b.red {
 	.w2p_fc {
 		.inlineBlock;
 		float: none;
-		vertical-align: top;
 	}
     .w2p_fl {
         width: 200px;
@@ -883,11 +884,15 @@ b.red {
 	}
 }
 
-
+.totals_row th, 
+.totals_row td {
+	border-top: 1px solid #BBB;
+}
 
 .dataTables_filter, 
 .dataTables_info, 
-.dataTables_length {
+.dataTables_length,
+.dataTables_paginate {
     .border-radius(5px);
     background: @shadeD;
     padding: 5px 15px;
@@ -901,6 +906,26 @@ b.red {
     font-size: 12px;
 }
 
+.dataTables_paginate {
+	.clearfix;
+	font-size: 12px;
+	height: 31px;
+	line-height: 31px;
+	a {
+		.inlineBlock;
+		background: transparent;
+    	padding: 6px 8px;
+    	margin: 0px;
+    	border: 0;
+    	.border-radius(0);
+	}
+	a:hover,
+	.paginate_active {
+		background: @brand;
+	}
+}
+
+
 .list_formats {
     position: absolute;
 	top: 10px;
@@ -909,6 +934,10 @@ b.red {
     img {
         margin-left: 5px;
     }
+}
+
+#pivot-table{
+	margin-right:30px;
 }
 
 .dataTable {
@@ -931,10 +960,67 @@ b.red {
     td.sorting_1 {
         background-color: @brandlight!important;
     }
+    tfoot th {
+	    border-top: 0;
+    }
+    .action-btn {
+	    margin-top: 5px;
+    }
 }
 
 
 /*** charts ***/
+
+#report_options, 
+#filter_options {
+	background: #F6F6F6;
+	padding: 60px 30px 30px;
+	margin: 0 0 10px;
+	position: relative;
+	legend {
+		position: absolute;
+		top: 20px;
+		.caps;
+	}
+	table {
+		width: auto;
+	}
+}
+
+.chart-contents {
+    background: @white;
+    border: 0;
+    padding: 5px 10px;
+}
+
+#chart-opts {
+	font-size:13px
+}
+
+#chart-header h4 {
+    font-size: 15px;
+    font-weight: bold;
+    border: 0;
+}
+
+.embeddedComponent {
+	width:auto;
+	margin-right:25px;
+	.label-row td {
+		text-transform:uppercase;
+		letter-spacing:1px;
+		line-height:1.2em;
+		font-size:12px;
+	}
+	td {
+		vertical-align:top;
+		padding:5px!important;
+	}
+}
+
+#pie_chart_rows {
+	margin-right:15px;
+}
 
 
 
@@ -1261,4 +1347,3 @@ input::-moz-focus-inner {
 		position: relative !important;
 	}
 }
-
