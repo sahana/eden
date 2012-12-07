@@ -543,7 +543,7 @@ $(function() {
 
         // Enforce submission of the inline-row if changed
         var enforce_inline_submit = function(i, add) {
-            var subform = $(i).parent().parent();
+            var subform = $(i).parent().closest('tr.inline-form');
             var names = subform.attr('id').split('-');
             var rowindex = subform.data('rowindex');
             if (add) {
