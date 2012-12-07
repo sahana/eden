@@ -9,6 +9,10 @@
 
          Project Code.........string..........Project Code (need code or name)
          Project Name.........string..........Project Name
+         Project Comments.....string..........Project comments
+         Status...............string..........Project status
+         Start Date...........YYYY-MM-DD......Start date of the project
+         End Date.............YYYY-MM-DD......End date of the project
          Activities...........comma-sep list..List of Activity Types
          Country..............string..........Country code/name (L0)
          L1...................string..........L1 location name (State/Province)
@@ -35,6 +39,10 @@
 
     <xsl:key name="projects" match="row" use="concat(col[@field='Project Name'],
                                                      col[@field='Project Code'])"/>
+    <xsl:key name="statuses"
+             match="row"
+             use="col[@field='Status']"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
