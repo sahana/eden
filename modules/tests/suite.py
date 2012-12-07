@@ -90,6 +90,9 @@ def loadAllTests():
     # Create Members
     addTests(loadTests(CreateMember))
 
+    # Search Members
+    addTests(loadTests(SearchMember))
+    
     # Test helpers
     addTests(loadTests(ReportTestHelper))
 
