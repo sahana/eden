@@ -1563,7 +1563,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                          readonly=True,
                                          index=i,
                                          _id="read-row-%s" % rowname,
-                                         _class="read-row")
+                                         _class="read-row inline-form")
             if record_id:
                 audit("read", prefix, name,
                       record=record_id, representation="html")
@@ -1579,7 +1579,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                      readonly=False,
                                      index=0,
                                      _id="edit-row-%s" % formname,
-                                     _class="edit-row hide")
+                                     _class="edit-row inline-form hide")
         action_rows.append(edit_row)
 
         # Add-row
@@ -1591,7 +1591,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                         deletable=True,
                                         readonly=False,
                                         _id="add-row-%s" % formname,
-                                        _class="add-row")
+                                        _class="add-row inline-form")
             action_rows.append(add_row)
 
         # Empty edit row
@@ -1601,7 +1601,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                       readonly=False,
                                       index="default",
                                       _id="empty-edit-row-%s" % formname,
-                                      _class="empty-row hide")
+                                      _class="empty-row inline-form hide")
         action_rows.append(empty_row)
 
         # Empty read row
@@ -1611,7 +1611,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                       readonly=True,
                                       index="none",
                                       _id="empty-read-row-%s" % formname,
-                                      _class="empty-row hide")
+                                      _class="empty-row inline-form hide")
         action_rows.append(empty_row)
 
         # Real input: a hidden text field to store the JSON data
