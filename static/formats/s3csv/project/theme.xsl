@@ -36,7 +36,7 @@
             <xsl:for-each select="//row[1]/col[starts-with(@field, 'Sector')]">
 	            <xsl:variable name="ColumnName" select="@field"/>
 	            
-	            <!-- Test if this sector has been marked for this them -->
+	            <!-- Test if this sector has been marked for this theme -->
 	            <xsl:if test="//row[$RowNumber]/col[@field=$ColumnName] != ''">
 	                <resource name="project_theme_sector">
 	                    <reference field="sector_id" resource="org_sector">

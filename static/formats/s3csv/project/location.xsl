@@ -18,7 +18,7 @@
          Lat..................float...........Latitude of the most local location
          Lon..................float...........Longitude of the most local location
          Comments.............string..........Comments
-         ContactPersonXXX.....comma-sep list..Contact Person (can be multiple columns)
+         ContactPersonXX......comma-sep list..Contact Person (can be multiple columns)
                                               as "FirstName,LastName,Email,MobilePhone",
                                               where first name and email as well as the
                                               three commas are mandatory

@@ -1095,8 +1095,10 @@ class S3GroupModel(S3Model):
                                    default=False,
                                    represent = lambda group_head: \
                                     (group_head and [T("yes")] or [""])[0]),
-                             Field("description",
-                                   label = T("Description")),
+                             s3_comments("description",
+                                         label = T("Description"),
+                                         comment = None,
+                                         ),
                              s3_comments(),
                              *s3_meta_fields())
 
