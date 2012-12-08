@@ -313,7 +313,7 @@ Thank you
             passfield = settings.password_field
             utable_fields.insert(3, Field(passfield, "password", length=512,
                                           requires=CRYPT(key=settings.hmac_key,
-                                                         min_length=settings.password_min_length,
+                                                         min_length=8,
                                                          digest_alg="sha512"),
                                           readable=False,
                                           label=messages.label_password))
