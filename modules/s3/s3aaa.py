@@ -37,7 +37,7 @@ __all__ = ["AuthS3",
            "S3PersonRoleManager",
            ]
 
-import datetime
+from datetime import *
 import re
 from uuid import uuid4
 
@@ -747,7 +747,7 @@ Thank you
                             closestdistance = currentdistance
                     else:
                         closestpoint = location       
-            
+
             if closestpoint == 0 and current.deployment_settings.create_unknown_locations: 
                 # There wasnt any near-by location, so create one
                 newpoint = {"lat":userlat, "lon":userlon, "name":"Unknown location"}
