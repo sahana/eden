@@ -176,6 +176,13 @@ _settings.on_failed_authorization = URL(c="default", f="user",
 _settings.reset_password_requires_verification = True
 _settings.verify_email_next = URL(c="default", f="index")
 
+# Set presence record on login
+_settings.set_presence_on_login = False
+# List of ignored location levels for the presence record
+_settings.ignore_levels_for_presence = ["L0"]
+# Create new locations if somebody logs in from an unknow location. Warning: Enabling this may lead to many new locations
+_settings.create_unknown_locations = False
+
 # Auth Messages
 _messages = auth.messages
 
