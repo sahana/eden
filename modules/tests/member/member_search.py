@@ -26,7 +26,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-
+import time
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
@@ -41,6 +41,7 @@ class SearchMember(SeleniumUnitTest):
         self.clickLabel(ids)
 
         self.browser.find_element_by_xpath("//form[@class='advanced-form']/table/tbody/tr[12]/td[2]/input[@type='submit']").click()
+        time.sleep(1)
         
         # click label again to reset to original status
         self.clickLabel(ids)
@@ -49,13 +50,13 @@ class SearchMember(SeleniumUnitTest):
     def clickLabel(self, ids):
         try:
             self.browser.find_element_by_link_text("Advanced Search").click()
+            time.sleep(1)
         except:
             pass
      
         for id in ids: 
             self.browser.find_element_by_xpath("//label[text()='" + id + "']").click()
-            #print id + ", "
-            #self.browser.find_element_by_xpath("//label[contains(text(),'" + id + "')]").click()
+            time.sleep(1)
 
 
     def compareRowCount(self, dbRowCount):
@@ -79,6 +80,8 @@ class SearchMember(SeleniumUnitTest):
         self.browser.find_element_by_id("membership_search_simple").clear()
         self.browser.find_element_by_id("membership_search_simple").send_keys("mar")
         self.browser.find_element_by_css_selector("input[type=\"submit\"]").click()
+        time.sleep(1)
+
         member = current.s3db["member_membership"]
         person = current.s3db["pr_person"]
         dbRowCount = current.db((member.deleted != 'T') & (member.person_id == person.id) & ( (person.first_name.like('%mar%')) | (person.middle_name.like('%mar%')) | (person.last_name.like('%mar%')) )).count()
