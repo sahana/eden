@@ -86,6 +86,12 @@ T = current.T
 #settings.auth.gmail_domains = ["gmail.com"]
 # Uncomment this to allow users to Login using OpenID
 #settings.auth.openid = True
+# Uncomment this to enable presence records on login based on HTML5 geolocations
+#settings.auth.set_presence_on_login = True
+# Uncomment this and specify a list of location levels to be ignored by presence records
+#settings.auth.ignore_levels_for_presence = ["L0"]
+# Uncomment this to enable the creation of new locations if a user logs in from an unknown location. Warning: This may lead to many useless location entrys
+#settings.auth.create_unknown_locations = True
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
