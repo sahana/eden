@@ -283,7 +283,7 @@ function s3_get_client_location(targetfield) {
    // Geolocation
    if (navigator.geolocation) {
     	navigator.geolocation.getCurrentPosition(function(position) {
-			var clientlocation = position.coords.latitude + "|" + position.coords.longitude + "|" + position.coords.accuracy;
+			var clientlocation = position.coords.latitude + '|' + position.coords.longitude + '|' + position.coords.accuracy;
 			targetfield.val(clientlocation);
     	});
     }

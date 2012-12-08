@@ -37,6 +37,10 @@
 
     <xsl:variable name="ActivityTypePrefix" select="'ActivityType: '"/>
 
+    <xsl:key name="orgs"
+             match="row"
+             use="col[@field='Organisation']"/>
+
     <xsl:key name="projects" match="row" use="concat(col[@field='Project Name'],
                                                      col[@field='Project Code'])"/>
     <xsl:key name="statuses"
@@ -46,6 +50,20 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+            <!-- Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('orgs',
+                                                        col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Statuses -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('statuses',
+                                                        col[@field='Status'])[1])]">
+                <xsl:call-template name="Status"/>
+            </xsl:for-each>
+
             <!-- Projects -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('projects',
                                                                    concat(col[@field='Project Name'],
