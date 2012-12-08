@@ -652,6 +652,29 @@ button,
 }
 
 
+#subnav {
+    padding: 15px;
+    div a {
+        .condensed;
+        font-size: 20px;
+        color: @body;
+        &:hover {
+            color: @anchor;
+        }
+    }
+    .submenu {
+        border-bottom: 1px solid @shadeE;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        li {
+            font-size: 12px;
+            line-height: 1.2em;
+            margin-bottom: .5em;
+        }
+    }
+}
+
+
 .rightside {
     margin-left: 240px;
     margin-top: 10px;
@@ -716,9 +739,6 @@ b.red {
 .advanced-form {
 	border-top: 1px solid @shadeC;
 	border-bottom: 1px solid @shadeC;
-	.w2p_fl {
-		width: auto!important;
-	}
 	input[type="text"] {
 		margin: 0;
 	}
@@ -778,17 +798,12 @@ b.red {
     width: 100%;
     td {
 	    padding-top: 10px;
+	    vertical-align: top;
     }
     table td {
 	    padding-top: 0;
 	    padding-bottom: 10px;
     }
-	.w2p_fl,
-	.w2p_fw,
-	.w2p_fc {
-		.inlineBlock;
-		float: none;
-	}
     .w2p_fl {
         width: 200px;
         clear: both;
@@ -1195,6 +1210,7 @@ b.red {
 	width: auto;
 	margin-left: 360px;
 	margin-right: 180px;
+    padding: 20px 0 0;
 	h2 {
 		.condensed;
 		font-size: 36px;
@@ -1204,7 +1220,6 @@ b.red {
 }
 
 .home-register {
-    padding: 20px 0 0;
     width: 480px;
 }
 
@@ -1227,15 +1242,22 @@ b.red {
 	}
 }
 
-#login_form #register-btn {
-	margin-left: -15px;
+#login_form {
+	#register-btn {
+		padding: 0;
+	}
+	.w2p_fl label {
+		width: 100px;
+	}
 }
 
 #auth_user_remember__row label {
 	.small;
 }
+
 #submit_record__row input {
 	margin-top: 20px;
+	margin-right: 30px;
 }
 
 .home .w2p_fl label {
@@ -1246,7 +1268,7 @@ b.red {
 }
 
 
-.welcome-steps, 
+.welcome, 
 .comms,
 .dispatch,
 .contact-us,
@@ -1260,6 +1282,7 @@ b.red {
 
 .welcome-steps {
 	margin: 0 30px;
+	padding: 0;
 	li {
 		font-size: 18px;
 		margin-bottom: .75em;
