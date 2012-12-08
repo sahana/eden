@@ -60,11 +60,10 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3error import S3PermissionError
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
-from s3rest import S3Method
-from s3utils import s3_mark_required
-from s3gis import GIS
-from s3track import S3Tracker
 from s3resource import S3Resource
+from s3rest import S3Method
+from s3track import S3Tracker
+from s3utils import s3_mark_required
 
 DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
@@ -519,6 +518,7 @@ Thank you
         request = current.request
         response = current.response
         session = current.session
+        deployment_settings = current.deployment_settings
         passfield = self.settings.password_field
         try:
             utable[passfield].requires[-1].min_length = 0
@@ -564,15 +564,19 @@ Thank you
                        formstyle,
                        "auth_user_remember__row")
 
-            if current.deployment_settings.set_presence_on_login:
-                addrow(form, XML(""), INPUT(_id="auth_user_clientlocation", _name="auth_user_clientlocation", _style="display:none"), SCRIPT("$(document).ready(function() { s3_get_client_location(jQuery('#auth_user_clientlocation')); });"), "display:none", "auth_user_client_location")
+            if deployment_settings.set_presence_on_login:
+                addrow(form, XML(""), INPUT(_id="auth_user_clientlocation",
+                                            _name="auth_user_clientlocation",
+                                            _style="display:none"),
+                       SCRIPT("$(document).ready(function(){s3_get_client_location(jQuery('#auth_user_clientlocation'));});"),
+                       "display:none", "auth_user_client_location")
 
             captcha = self.settings.login_captcha or \
                 (self.settings.login_captcha!=False and self.settings.captcha)
             if captcha:
                 addrow(form, captcha.label, captcha, captcha.comment,
                        formstyle,'captcha__row')
-            
+
             accepted_form = False
             if form.accepts(request.vars, session,
                             formname="login", dbio=False,
@@ -690,7 +694,9 @@ Thank you
             Log the user in
             - common function called by login() & register()
         """
-        
+
+        db = current.db
+        deployment_settings = current.deployment_settings
         request = current.request
         session = current.session
         settings = self.settings
@@ -724,10 +730,12 @@ Thank you
 
         # Update the timestamp of the User so we know when they last logged-in
         utable = settings.table_user
-        current.db(utable.id == self.user.id).update(timestmp = request.utcnow)
-        
+        db(utable.id == self.user.id).update(timestmp = request.utcnow)
+
         # Set user's position
-        if current.deployment_settings.set_presence_on_login and vars.has_key("auth_user_clientlocation") and vars.get("auth_user_clientlocation"):
+        if deployment_settings.set_presence_on_login and \
+           vars.has_key("auth_user_clientlocation") and \
+           vars.get("auth_user_clientlocation"):
             gis = current.gis
             s3tracker = S3Tracker()
             position = vars.get("auth_user_clientlocation").split("|", 3)
@@ -737,25 +745,37 @@ Thank you
             closestpoint = 0;
             closestdistance = 0;
             locations = gis.get_features_in_radius(userlat, userlon, accuracy)
-            
+
+            ignore_levels_for_presence = deployment_settings.ignore_levels_for_presence
+            greatCircleDistance = gis.greatCircleDistance
             for location in locations:
-                if location.level not in current.deployment_settings.ignore_levels_for_presence: 
+                if location.level not in ignore_levels_for_presence: 
                     if closestpoint != 0:
-                        currentdistance = gis.greatCircleDistance(closestpoint.lat, closestpoint.lon, location.lat, location.lon)
+                        currentdistance = greatCircleDistance(closestpoint.lat,
+                                                              closestpoint.lon,
+                                                              location.lat,
+                                                              location.lon)
                         if currentdistance < closestdistance:
                             closestpoint = location
                             closestdistance = currentdistance
                     else:
                         closestpoint = location
 
-            if closestpoint == 0 and current.deployment_settings.create_unknown_locations: 
+            if closestpoint == 0 and deployment_settings.create_unknown_locations: 
                 # There wasnt any near-by location, so create one
-                newpoint = {"lat":userlat, "lon":userlon, "name":"Unknown location"}
+                newpoint = {"lat": userlat,
+                            "lon": userlon,
+                            "name": "Unknown location"
+                            }
                 closestpoint = S3Resource("gis_location").insert(**newpoint)
-                s3tracker(current.db.pr_person, self.user.id).set_location(closestpoint, timestmp=datetime.datetime.utcnow())             
+                s3tracker(db.pr_person,
+                          self.user.id).set_location(closestpoint,
+                                                     timestmp=request.utcnow())             
             else:
-                s3tracker(current.db.pr_person, self.user.id).set_location(closestpoint.id, timestmp=datetime.datetime.utcnow())
-        
+                s3tracker(db.pr_person,
+                          self.user.id).set_location(closestpoint.id,
+                                                     timestmp=request.utcnow())
+
     # -------------------------------------------------------------------------
     def register(self,
                  next=DEFAULT,

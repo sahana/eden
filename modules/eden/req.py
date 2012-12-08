@@ -3177,7 +3177,6 @@ def req_rheader(r, check_page=False):
                             id = db(query).select(table.id,
                                                   limitby=(0, 1)).first().id
                             transit_status = SPAN(transit_status,
-                                                  "           ",
                                                   A(T("Incoming Shipments"),
                                                     _href = URL(c = instance_type.split("_")[0],
                                                                 f = "incoming",
