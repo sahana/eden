@@ -325,6 +325,7 @@ class S3HRModel(S3Model):
                                         T("Enter some characters to bring up a list of possible matches")))
         comment = S3AddResourceLink(c = "vol" if group == "volunteer" else "hrm",
                                     f = group or "staff",
+                                    vars = dict(child="human_resource_id"),
                                     label=crud_strings["hrm_%s" % group].label_create_button if group else \
                                           crud_strings[tablename].label_create_button,
                                     title=label,
