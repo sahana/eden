@@ -60,7 +60,6 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3error import S3PermissionError
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
-from s3resource import S3Resource
 from s3rest import S3Method
 from s3track import S3Tracker
 from s3utils import s3_mark_required
@@ -733,17 +732,18 @@ Thank you
         db(utable.id == self.user.id).update(timestmp = request.utcnow)
 
         # Set user's position
+        # @ToDo: Per-User settings
         if deployment_settings.set_presence_on_login and \
            vars.has_key("auth_user_clientlocation") and \
            vars.get("auth_user_clientlocation"):
-            gis = current.gis
-            s3tracker = S3Tracker()
             position = vars.get("auth_user_clientlocation").split("|", 3)
             userlat = float(position[0])
             userlon = float(position[1])
             accuracy = float(position[2]) / 1000 # Ensures accuracy is in km
             closestpoint = 0;
             closestdistance = 0;
+            gis = current.gis
+            # @ToDo: Filter to just Sites & Home Addresses?
             locations = gis.get_features_in_radius(userlat, userlon, accuracy)
 
             ignore_levels_for_presence = deployment_settings.ignore_levels_for_presence
@@ -761,13 +761,14 @@ Thank you
                     else:
                         closestpoint = location
 
+            s3tracker = S3Tracker()
             if closestpoint == 0 and deployment_settings.create_unknown_locations: 
                 # There wasnt any near-by location, so create one
                 newpoint = {"lat": userlat,
                             "lon": userlon,
                             "name": "Unknown location"
                             }
-                closestpoint = S3Resource("gis_location").insert(**newpoint)
+                closestpoint = current.s3db.resource("gis_location").insert(**newpoint)
                 s3tracker(db.pr_person,
                           self.user.id).set_location(closestpoint,
                                                      timestmp=request.utcnow())             

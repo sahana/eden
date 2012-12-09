@@ -899,6 +899,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
         js_autocomplete = "".join((
 '''var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+try{
 $('#%(dummy_input)s').autocomplete({
  source:'%(url)s',
  delay:%(delay)d,
@@ -989,7 +990,7 @@ $('#%(dummy_input)s').autocomplete({
   }
  }
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
-}
+}}catch(e){}
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
   $('#%(real_input)s').val('').change()
@@ -1091,6 +1092,7 @@ class S3SiteAutocompleteWidget(FormWidget):
   %s}
 }''' % cases, '''
 var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+try{
 $('#%(dummy_input)s').autocomplete({
  source:'%(url)s',
  delay:%(delay)d,
@@ -1142,7 +1144,7 @@ $('#%(dummy_input)s').autocomplete({
   name+=' ('+s3_site_lookup(item.instance_type)+')'
  }
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
-}
+}}catch(e){}
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
   $('#%(real_input)s').val('').change()
@@ -1346,6 +1348,7 @@ def S3GenericAutocompleteTemplate(post_process,
 var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
 var get_name=%(name_getter)s
 var get_id=%(id_getter)s
+try{
 $('#%(dummy_input)s').autocomplete({
  source:%(source)s,
  delay:%(delay)d,
@@ -1374,7 +1377,7 @@ $('#%(dummy_input)s').autocomplete({
  }
 }).data('autocomplete')._renderItem=function(ul,item){
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+get_name(item)+'</a>').appendTo(ul)
-}''' % locals(),
+}}catch(e){}''' % locals(),
 '''
 $('#%(dummy_input)s').blur(function(){
  $('#%(real_input)s').val($('#%(dummy_input)s').val())

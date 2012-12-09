@@ -166,13 +166,14 @@ function s3_tb_refresh() {
                     var s = self.parent.$('#' + selector_prefix + suffix);
                     s.empty().append(append.join(''));
                 }
-                selector.val(value_high).change();
             } else {
                 // @ToDo: Read existing values for a multi-select
                 // Clean up the caller
                 options.remove();
                 selector.append(append.join('')).val(value_high).change();
             }
+            // Select the value we just added
+            selector.val(value_high).change();
         } else if (checkboxes) {
             // We have been called next to a CheckboxesWidgetS3
             // Read the current value(s)

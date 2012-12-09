@@ -264,6 +264,10 @@ def req_controller():
                 crud_strings = settings.get_req_req_crud_strings(type)
                 if crud_strings:
                     s3.crud_strings["req_req"] = crud_strings
+                elif type == 1:
+                    s3.crud_strings["req_req"].title_create = T("Make Supplies Request")
+                elif type == 3:
+                    s3.crud_strings["req_req"].title_create = T("Make People Request")
 
                 # Filter the query based on type
                 if s3.filter:

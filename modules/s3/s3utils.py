@@ -996,8 +996,8 @@ $('#regform').validate({
   form.submit()
  }
 })
-var MinPasswordChar = ''', str(auth.settings.password_min_length), ''';
-   $('.password:''', password_position, '''').pstrength({ minchar: MinPasswordChar, minchar_label: null } );
+var MinPasswordChar=''', str(auth.settings.password_min_length), ''';
+ $('.password:''', password_position, '''').pstrength({minchar:MinPasswordChar,minchar_label:null});
 ''' ))
     s3.jquery_ready.append(script)
 

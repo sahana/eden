@@ -257,9 +257,9 @@ class S3IRSModel(S3Model):
                                    represent = lambda opt: \
                                        irs_incident_type_opts.get(opt, opt)),
                              self.hrm_human_resource_id(
-                                   #readable=False,
-                                   #writable=False,
-                                   label = T("Reported By (Staff)")
+                                    #readable=False,
+                                    #writable=False,
+                                    label = T("Reported By (Staff)")
                                     ),
                              # Plain text field in case non-staff & don't want to clutter the PR
                              Field("person",
@@ -313,7 +313,7 @@ class S3IRSModel(S3Model):
                                          (T("No"),
                                           T("Yes"))[verified == True]),
                              # @ToDo: Move this to Events?
-                             # Then display here as a Virtual Field
+                             # Then add component to list_fields
                              s3_datetime("dispatch",
                                          label = T("Date/Time of Dispatch"),
                                          future=0,
