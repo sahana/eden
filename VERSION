@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 c4c29e0 (2012-12-09 14:45:34)
 =======
 8aa6d97 (2012-12-09 18:38:15)
@@ -11,3 +12,6 @@ c4c29e0 (2012-12-09 14:45:34)
 =======
 vita-1.0.0-devel-125-g44be3af (2012-12-09 22:12:01)
 >>>>>>> Datatables fixed headers (#1261)
+=======
+vita-1.0.0-devel-126-g87615b2 (2012-12-09 22:12:38)
+>>>>>>> Deactivate fixed headers until horizontal overflow problem solved.
