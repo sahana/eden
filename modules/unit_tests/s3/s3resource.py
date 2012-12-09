@@ -1815,10 +1815,8 @@ class MergeLocationsTests(unittest.TestCase):
     def setUp(self):
         """ Set up location records """
 
-        db = current.db
         auth = current.auth
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         auth.override = True
 
@@ -1826,13 +1824,9 @@ class MergeLocationsTests(unittest.TestCase):
 
         location1 = Storage(name="TestLocation")
         location1_id = ltable.insert(**location1)
-        location1.update(id=location1_id)
-        s3db.update_super(ltable, location1)
 
         location2 = Storage(name="TestLocation")
         location2_id = ltable.insert(**location2)
-        location2.update(id=location2_id)
-        s3db.update_super(ltable, location2)
 
         self.id1 = location1_id
         self.id2 = location2_id
