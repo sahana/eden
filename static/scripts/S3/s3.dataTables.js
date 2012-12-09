@@ -978,6 +978,7 @@ $(document).ready(function() {
                 }
             } // end of fnDrawCallback
         }); // end of call to $(oTable).datatable()
+        new FixedHeader(oDataTable[t]);
     } // end of initDataTable function
 
     // Allow dataTables to be initialised outside of this function.
