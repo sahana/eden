@@ -1298,6 +1298,7 @@ function s3_gis_geocode(active) {
             var lat = myLatLng.lat();
             var lon = myLatLng.lng();
             var newPoint = new OpenLayers.LonLat(lon, lat);
+            newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
 
             var myLatLngBounds = results[0].geometry.viewport;
             if (myLatLngBounds) {
@@ -1311,7 +1312,6 @@ function s3_gis_geocode(active) {
                 s3_gis_zoomMap(left, bottom, right, top);
             } else if (S3.gis.mapWin.rendered) {
                 // Map has been opened, so center directly
-                newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
                 map.setCenter(newPoint);
             } else {
                 // Map hasn't yet been opened, so change the mapPanel ready for when it is
@@ -1319,23 +1319,31 @@ function s3_gis_geocode(active) {
             }
 
             if (active) {
+                // Set the LatLon
                 $('#gis_location_lat').val(lat);
                 $('#gis_location_lon').val(lon);
+                // Set the Postcode & Lx (if not already-set)
+                var address_components = results[0].address_components;
+                $.each(address_components, function(index, value) { 
+                    var component = address_components[index];
+                    $.each(component['types'], function(index, value) {
+                        if ((value == 'postal_code') && (!postcode)) {
+                            $('#gis_location_postcode').val(component['long_name']);
+                        } else if ((value == 'administrative_area_level_1') && (!L1)) {
+                            $('#gis_location_L1_ac').val(component['long_name']);
+                        } else if ((value == 'administrative_area_level_2') && (!L2)) {
+                            $('#gis_location_L2_ac').val(component['long_name']);
+                        } else if ((value == 'administrative_area_level_3') && (!L3)) {
+                            $('#gis_location_L3_ac').val(component['long_name']);
+                        } else if ((value == 'administrative_area_level_4') && (!L4)) {
+                            $('#gis_location_L4_ac').val(component['long_name']);
+                        }
+                    });
+                });
+                // Set the Marker
+                var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(newPoint.lon, newPoint.lat));
+                S3.gis.draftLayer.addFeatures([feature]);
             }
-            // @ToDo: Set the Marker to the center of this viewport?
-            // Better to let the user do this manually?
-            //var marker = new google.maps.Marker({
-            //    map: map,
-            //    position: results[0].geometry.location
-            //});
-
-            // @ToDo: Populate the Lx Hierarchy
-            //var L1 = $('#gis_location_L1_ac').val();
-            //if (!L1) {
-                //results[0].address_components administrative_area_level_1
-            //}
-            // results[0].address_components postal_code
-
         } else {
             // @ToDo: Visible notification?
             s3_debug('Geocode was not successful for the following reason', status);
