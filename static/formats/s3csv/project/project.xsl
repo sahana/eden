@@ -216,7 +216,7 @@
             </reference>
             <!-- As link-table on Tab -->
             <resource name="project_organisation">
-                <!-- Host Organisation -->
+                <!-- Lead Organisation (e.gf. Host National Society) -->
                 <data field="role">1</data>
                 <reference field="organisation_id" resource="org_organisation">
                     <xsl:attribute name="tuid">

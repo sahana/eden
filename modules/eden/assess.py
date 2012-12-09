@@ -318,12 +318,12 @@ class S3AssessBuildingModel(S3Model):
                                         label=T("Work Requested")),
                                   Field("construction_type", "list:integer",
                                         requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_work_requested_opts,
+                                                    IS_IN_SET(assess_construction_type_opts,
                                                               multiple=True)
                                                 ),
                                         represent = lambda ids: \
                                             assess_multi_type_represent(ids,
-                                                                        assess_work_requested_opts),
+                                                                        assess_construction_type_opts),
                                         widget = lambda f, v, **attr: \
                                             CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
                                         label=T("Construction Type (Check all that apply)"),
@@ -444,45 +444,45 @@ class S3AssessBuildingModel(S3Model):
                                               label=T("Work Plan"),
                                               comment=T("Describe access points, advice for team leaders"),
                                               ),
-                                  Field("tools_required", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_tools_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_tools_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                        label=T("Tools and materials required"),
-                                        ),
-                                  s3_comments("tools_other",
-                                              comment=None,
-                                              label=T("Tools Other")),
-                                  Field("mold_equipment", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_mold_removal_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_mold_removal_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                        label=T("Mold removal equipment"),
-                                        ),
-                                  Field("personal_protectivity", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_personal_protection_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_personal_protection_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
-                                        label=T("All Teams Must Have Personal Protectivity Equipment"),
-                                        ),
+                                  #Field("tools_required", "list:integer",
+                                  #      requires=IS_EMPTY_OR(
+                                  #                  IS_IN_SET(assess_tools_opts,
+                                  #                            multiple=True)
+                                  #              ),
+                                  #      represent = lambda ids: \
+                                  #          assess_multi_type_represent(ids,
+                                  #                                      assess_tools_opts),
+                                  #      widget = lambda f, v, **attr: \
+                                  #          CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                                  #      label=T("Tools and materials required"),
+                                  #      ),
+                                  #s3_comments("tools_other",
+                                  #            comment=None,
+                                  #            label=T("Tools Other")),
+                                  #Field("mold_equipment", "list:integer",
+                                  #      requires=IS_EMPTY_OR(
+                                  #                  IS_IN_SET(assess_mold_removal_opts,
+                                  #                            multiple=True)
+                                  #              ),
+                                  #      represent = lambda ids: \
+                                  #          assess_multi_type_represent(ids,
+                                  #                                      assess_mold_removal_opts),
+                                  #      widget = lambda f, v, **attr: \
+                                  #          CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                                  #      label=T("Mold removal equipment"),
+                                  #      ),
+                                  #Field("personal_protectivity", "list:integer",
+                                  #      requires=IS_EMPTY_OR(
+                                  #                  IS_IN_SET(assess_personal_protection_opts,
+                                  #                            multiple=True)
+                                  #              ),
+                                  #      represent = lambda ids: \
+                                  #          assess_multi_type_represent(ids,
+                                  #                                      assess_personal_protection_opts),
+                                  #      widget = lambda f, v, **attr: \
+                                  #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
+                                  #      label=T("All Teams Must Have Personal Protectivity Equipment"),
+                                  #      ),
                                   Field("skills_required", "list:integer",
                                         requires=IS_EMPTY_OR(
                                                     IS_IN_SET(assess_skills_required_opts,
