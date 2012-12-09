@@ -2,6 +2,7 @@
  {{s3.scripts.append("/%s/static/scripts/jquery.dataTables.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/jquery.dataTables.fnSetFilteringDelay.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/jquery.dataTables.sortFunctions.js" % appname)}}
+ {{s3.scripts.append("/%s/static/scripts/FixedHeader.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.min.js" % appname)}}{{pass}}
 <script type="text/javascript">
