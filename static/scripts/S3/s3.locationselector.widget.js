@@ -897,6 +897,8 @@ function s3_gis_add_tab() {
     $('#gis_location_map-btn').html( i18n.gis_place_on_map );
     // Display it
     $('#gis_location_map_button_row').show();
+    // Display the Geocoder button
+    $('#gis_location_geocoder-btn').removeClass('hide').show();
 
     // Set the Classes on the tabs
     $('#gis_loc_add_tab').removeClass('tab_other').addClass('tab_here');
@@ -981,6 +983,8 @@ function s3_gis_edit_tab() {
     $('#gis_location_map-btn').html( i18n.gis_place_on_map );
     // Display it
     $('#gis_location_map_button_row').show();
+    // Display the Geocoder button
+    $('#gis_location_geocoder-btn').removeClass('hide').show();
 
     // Set the Classes on the tabs
     $('#gis_loc_edit_tab').removeClass('tab_other').addClass('tab_here');
@@ -1101,6 +1105,8 @@ function s3_gis_view_tab() {
     $('#gis_location_map-btn').html( i18n.gis_view_on_map );
     // Display it
     $('#gis_location_map_button_row').show();
+    // Hide the Geocoder button
+    $('#gis_location_geocoder-btn').hide();
 
     // Set the Classes on the tabs
     $('#gis_loc_view_tab').removeClass('tab_other').addClass('tab_here');
@@ -1193,12 +1199,13 @@ function s3_gis_loadGoogle() {
 function s3_gis_initGeocoder() {
     try {
         if (google) {
+
+            S3.gis.geocoder = new google.maps.Geocoder();
+
             // Active Geocoder request
             $('#gis_location_geocoder-btn').click(function() {
                 //var url = 'http://maps.googleapis.com/maps/api/geocode/xml?sensor=false&address=';
-                var latlon = s3_gis_geocode();
-                $('#gis_location_lat').val(latlon[0]);
-                $('#gis_location_lon').val(latlon[1]);
+                s3_gis_geocode(true);
             });
 
             // Do Geocoder lookups if changes made to Street Address, Postcode & L3
@@ -1235,7 +1242,7 @@ function s3_gis_initGeocoder() {
         $('#gis_location_geocoder-btn').hide();
     }
 }
-function s3_gis_geocode() {
+function s3_gis_geocode(active) {
     // Read the Street Address
     var address = $('#gis_location_street').val();
     if (address) {
@@ -1273,7 +1280,7 @@ function s3_gis_geocode() {
     var query = { 'address': address }
     // Restrict results to the country if we have it available.
     if (S3.gis.country) {
-        query['region'] = S3.gis.country;
+        query['region'] = S3.gis.country.toLowerCase();
     }
     // @ToDo: Restrict results to the bounds if we have them available.
     //if () {
@@ -1282,8 +1289,7 @@ function s3_gis_geocode() {
     //    query['bounds'] = myLatLngBounds;
     //}
     // Query the Geocoder service
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode(query, function(results, status) {
+    S3.gis.geocoder.geocode(query, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
 
             // Parse the returned Location
@@ -1312,6 +1318,10 @@ function s3_gis_geocode() {
                 S3.gis.mapPanel.center = newPoint;
             }
 
+            if (active) {
+                $('#gis_location_lat').val(lat);
+                $('#gis_location_lon').val(lon);
+            }
             // @ToDo: Set the Marker to the center of this viewport?
             // Better to let the user do this manually?
             //var marker = new google.maps.Marker({
@@ -1325,9 +1335,6 @@ function s3_gis_geocode() {
                 //results[0].address_components administrative_area_level_1
             //}
             // results[0].address_components postal_code
-
-            // Return for active Geocodes
-            return [lat, lon];
 
         } else {
             // @ToDo: Visible notification?

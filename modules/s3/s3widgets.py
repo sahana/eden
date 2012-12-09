@@ -1649,6 +1649,7 @@ class S3LocationSelectorWidget(FormWidget):
                     gis.get_default_country(key_type="code")
         elif len(countries) == 1:
             default_L0.id = countries.keys()[0]
+            country_snippet = '''S3.gis.country="%s"\n''' % _countries[0]
 
         # Should we use a Map-based selector?
         map_selector = settings.get_gis_map_selector()
@@ -2174,10 +2175,14 @@ S3.gis.geocoder=true'''
                                _id="gis_location_map-btn",
                                _class="action-btn")
             if geocoder:
+                if value:
+                    _class = "action-btn hide"
+                else:
+                    _class = "action-btn"
                 geocoder_button = A(T("Geocode"),
                                     _style="cursor:pointer; cursor:hand",
                                     _id="gis_location_geocoder-btn",
-                                    _class="action-btn")
+                                    _class=_class)
             else:
                 geocoder_button = ""
             map_button_row = TR(TD(geocoder_button, map_button),
