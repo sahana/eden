@@ -711,8 +711,12 @@ function addGeoJSONLayer(layer) {
     geojsonLayer.events.on({
         'featureselected': onGeojsonFeatureSelect,
         'featureunselected': onFeatureUnselect,
-        'loadstart': showThrobber,
-        'loadend': hideThrobber
+        'loadstart': function(event) {
+            showThrobber(event.object.s3_layer_id);
+        },
+        'loadend': function(event) {
+            hideThrobber(event.object.s3_layer_id);
+        }
     });
     map.addLayer(geojsonLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -982,8 +986,12 @@ function addGPXLayer(layer) {
     gpxLayer.events.on({
         'featureselected': onGpxFeatureSelect,
         'featureunselected': onFeatureUnselect,
-        'loadstart': showThrobber,
-        'loadend': hideThrobber
+        'loadstart': function(event) {
+            showThrobber(event.object.s3_layer_id);
+        },
+        'loadend': function(event) {
+            hideThrobber(event.object.s3_layer_id);
+        }
     });
     map.addLayer(gpxLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1205,8 +1213,12 @@ function addKMLLayer(layer) {
     kmlLayer.events.on({
         'featureselected': onKmlFeatureSelect,
         'featureunselected': onFeatureUnselect,
-        'loadstart': showThrobber,
-        'loadend': hideThrobber
+        'loadstart': function(event) {
+            showThrobber(event.object.s3_layer_id);
+        },
+        'loadend': function(event) {
+            hideThrobber(event.object.s3_layer_id);
+        }
     });
     map.addLayer(kmlLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1326,8 +1338,12 @@ function addOWMLayers() {
         layer.events.on({
             'featureselected': layer.onSelect,
             'featureunselected': layer.onUnselect,
-            'loadstart': showThrobber,
-            'loadend': hideThrobber
+            'loadstart': function(event) {
+                showThrobber(event.object.s3_layer_id);
+            },
+            'loadend': function(event) {
+                hideThrobber(event.object.s3_layer_id);
+            }
         });
         map.addLayer(layer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1346,8 +1362,12 @@ function addOWMLayers() {
         layer.events.on({
             'featureselected': layer.onSelect,
             'featureunselected': layer.onUnselect,
-            'loadstart': showThrobber,
-            'loadend': hideThrobber
+            'loadstart': function(event) {
+                showThrobber(event.object.s3_layer_id);
+            },
+            'loadend': function(event) {
+                hideThrobber(event.object.s3_layer_id);
+            }
         });
         map.addLayer(layer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1652,8 +1672,12 @@ function addWFSLayer(layer) {
     wfsLayer.events.on({
         'featureselected': onWfsFeatureSelect,
         'featureunselected': onFeatureUnselect,
-        'loadstart': showThrobber,
-        'loadend': hideThrobber
+        'loadstart': function(event) {
+            showThrobber(event.object.s3_layer_id);
+        },
+        'loadend': function(event) {
+            hideThrobber(event.object.s3_layer_id);
+        }
     });
     map.addLayer(wfsLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1854,14 +1878,15 @@ function addXYZLayer(layer) {
 }
 
 // Support Vector Layers
-function showThrobber() {
+function showThrobber(id) {
     $('#layer_throbber').show().removeClass('hide');
-    S3.gis.layers_loading++;
+    S3.gis.layers_loading.pop(id); // we never want 2 pushed
+    S3.gis.layers_loading.push(id);
 }
 
-function hideThrobber() {
-    S3.gis.layers_loading--;
-    if (S3.gis.layers_loading <= 0) {
+function hideThrobber(id) {
+    S3.gis.layers_loading.pop(id);
+    if (S3.gis.layers_loading.length == 0) {
         $('#layer_throbber').hide().addClass('hide');
     }
 }

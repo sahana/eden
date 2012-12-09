@@ -40,7 +40,7 @@ S3.gis.options = {
 S3.gis.cluster_distance = 20;    // pixels
 S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 // Counter to know whether there are layers still loading
-S3.gis.layers_loading = 0;
+S3.gis.layers_loading = [];
 
 // Register Plugins
 S3.gis.plugins = [];
@@ -196,6 +196,34 @@ function addMapUI() {
         // Embedded Map
         addMapPanel();
     }
+
+    // Disable throbber when unchecked
+    S3.gis.layerTree.root.eachChild( function() {
+        // no layers at top-level, so recurse inside
+        this.eachChild( function() {
+            if (this.isLeaf()) {
+                this.on('checkchange', function(event, checked) {
+                    if (!checked) {
+                        // Cancel any associated throbber
+                        hideThrobber(this.layer.s3_layer_id)
+                    }
+                });
+            } else {
+                // currently this will not be hit, but when we have sub-folders it will (to 1 level)
+                this.eachChild( function() {
+                    if (this.isLeaf()) {
+                        this.on('checkchange', function(event, checked) {
+                            if (!checked) {
+                                // Cancel any associated throbber
+                                hideThrobber(this.layer.s3_layer_id)
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+
 }
 
 // Put into a Container to allow going fullscreen from a BorderLayout
@@ -373,7 +401,7 @@ function addLayerTree() {
         nodesArr.push(child);
     }
 
-     var treeRoot = new Ext.tree.AsyncTreeNode({
+    var treeRoot = new Ext.tree.AsyncTreeNode({
         expanded: true,
         children: nodesArr
     });

@@ -102,6 +102,7 @@ function s3_tb_refresh() {
     // Dropdown or Autocomplete
     var selector = self.parent.$('#' + caller);
     s3_debug('selector', selector);
+    var inline = (caller.substring(0, 4) == 'sub_');
     var dummy = self.parent.$('#dummy_' + caller);
     var has_dummy = (dummy.val() != undefined);
     s3_debug('has_dummy', has_dummy);
@@ -128,6 +129,7 @@ function s3_tb_refresh() {
     $.getJSONS3(url, function (data) {
         var value, represent, id;
         var count = 0;
+
         $.each(data['option'], function() {
             value = this['@value'];
             represent = this['$'];
@@ -148,18 +150,29 @@ function s3_tb_refresh() {
                 represent_high = represent;
             }
         });
+
         if (has_dummy) {
             dummy.val(represent_high);
             selector.val(value_high).change();
         }
         if (dropdown) {
             // We have been called next to a drop-down
-            // @ToDo: Read existing values for a multi-select
-            // Clean up the caller
-            options.remove();
-            selector.append(append.join('')).change();
-            // Select the value we just added
-            selector.val(value_high).change();
+            if (inline) {
+                // Update all related selectors with new options list
+                var all_selects = ['_0', '_none', '_default'], suffix;
+                var selector_prefix = caller.split('_').slice(0, -1).join('_');
+                for (var i=0; i < all_selects.length; i++) {
+                    suffix = all_selects[i];
+                    var s = self.parent.$('#' + selector_prefix + suffix);
+                    s.empty().append(append.join(''));
+                }
+                selector.val(value_high).change();
+            } else {
+                // @ToDo: Read existing values for a multi-select
+                // Clean up the caller
+                options.remove();
+                selector.append(append.join('')).val(value_high).change();
+            }
         } else if (checkboxes) {
             // We have been called next to a CheckboxesWidgetS3
             // Read the current value(s)

@@ -26,88 +26,151 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-
+import time
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
-class Human Resources(SeleniumUnitTest):
-    def mem004_member_search(self):
-        """
-            @case: mem004
-            @description: Search Members
-            
-            * DOES NOT WORK
-        """
+class SearchMember(SeleniumUnitTest):
+
+    def start(self):
         print "\n"
-
         # Login, if not-already done so
-        self.login(account="normal", nexturl="member/membership/search")
-        
-		# MEM004-1
-        # Member Simple Search
-		self.search("membership_search_simple", 
-                    [( "simple",
-					   "mar")]
-					 )
-		
-		# MEM004-2 
-		# Member Advanced Search
-		self.browser.find_element_by_class("action-lnk advanced-lnk").click()
-		
-		# Search by membership paid/expired/overdue
-		self.search( "member_search",
-					[( "paid",
-					   "expired",
-					   "checked"),
-					 ( "paid",
-					   "paid",
-					   "unchecked"),
-					 ( "overdue",
-					   "checked")]
-					 )
-					 
-		# Search by State/Province
-		self.search( "member_search",
-					[( "paid",
-					   "expired",
-					   "unchecked"),
-					 ( "paid",
-					   "overdue",
-					   "unchecked"),
-					 ( self.browser.find_element_by_id("location_search_select_L1_label_A").click()),
-					 ( "L1",
-					   "Aileu",
-					   "checked"),
-					 ( "L1",
-					   "Baucau",
-					   "checked")]
-					 )
+        self.login(account="admin", nexturl="member/membership/search?clear_opts=1")
 
-		# Search by County/District
-		self.search( "member_search",
-					[( "L1",
-					   "Aileu",
-					   "unchecked"),
-					 ( "L1",
-					   "Baucau",
-					   "unchecked"),
-					 ( self.browser.find_element_by_id("location_search_select_L2_label_A").click()),
-					 ( "L2",
-					   "Aileu Vila",
-					   "checked")]
-					 )
-				 
-		# Search by City/Town/Village
-		self.search( "member_search",
-					[( "L2",
-					   "Aileu Vila",
-					   "unchecked"),
-					 ( self.browser.find_element_by_id("location_search_select_L3_label_T").click()),
-					 ( "L3",
-					   "Tequino Mata",
-					   "checked")]
-					 )
-					 
-					 
-		
-					 
+    def advancedSearchTest(self, ids):
+        self.clickLabel(ids)
+
+        self.browser.find_element_by_xpath("//form[@class='advanced-form']/table/tbody/tr[12]/td[2]/input[@type='submit']").click()
+        time.sleep(1)
+        
+        # click label again to reset to original status
+        self.clickLabel(ids)
+
+
+    def clickLabel(self, ids):
+        try:
+            self.browser.find_element_by_link_text("Advanced Search").click()
+            time.sleep(1)
+        except:
+            pass
+     
+        for id in ids: 
+            self.browser.find_element_by_xpath("//label[text()='" + id + "']").click()
+            time.sleep(1)
+
+
+    def compareRowCount(self, dbRowCount):
+        """
+            Get html table row count and compare against the db row count
+        """
+        htmlRowCount = len(self.browser.find_elements_by_xpath("//*[@id='list']/tbody/tr"));
+        successMsg = "DB row count (" + str(dbRowCount) + ") matches the HTML table row count (" + str(htmlRowCount) + ")." 
+        failMsg = "DB row count (" + str(dbRowCount) + ") does not match the HTML table row count (" + str(htmlRowCount) + ")." 
+        self.assertTrue(dbRowCount == htmlRowCount, failMsg)
+        self.reporter(successMsg)
+
+
+    def test_mem004_01_member_search_simple(self):
+        #return 
+        """
+            @case: mem004-01
+            @description: Search Members - Simple Search
+        """
+        self.start()
+        self.browser.find_element_by_id("membership_search_simple").clear()
+        self.browser.find_element_by_id("membership_search_simple").send_keys("mar")
+        self.browser.find_element_by_css_selector("input[type=\"submit\"]").click()
+        time.sleep(1)
+
+        member = current.s3db["member_membership"]
+        person = current.s3db["pr_person"]
+        dbRowCount = current.db((member.deleted != 'T') & (member.person_id == person.id) & ( (person.first_name.like('%mar%')) | (person.middle_name.like('%mar%')) | (person.last_name.like('%mar%')) )).count()
+        self.compareRowCount(dbRowCount)
+        
+        
+    def test_mem004_02_member_search_advance_by_Paid(self):
+        #return 
+        """
+            @case: mem004-03
+            @description: Search Members - Advanced Search by paid/expired/overdue
+        """
+        self.start()
+        self.advancedSearchTest(["expired","paid"])
+        member = current.s3db["member_membership"]
+        rows = current.db((member.deleted != 'T')).select()
+        dbRowCount = 0
+        for row in rows:
+            if row.paid == "expired" or row.paid == "paid" :
+                dbRowCount = dbRowCount + 1
+        self.compareRowCount(dbRowCount)
+
+
+    def test_mem004_03_member_search_advance_by_Organisation(self):
+        #return 
+        """
+            @case: mem004-03
+            @description: Search Members - Advanced Search by Organisation
+        """
+        self.start()
+        self.advancedSearchTest(["Timor-Leste Red Cross Society"])
+        member = current.s3db["member_membership"]
+        org = current.s3db["org_organisation"]
+        dbRowCount = current.db((member.deleted != True) & (member.organisation_id == org.id) & (org.name == 'Timor-Leste Red Cross Society')).count()
+        self.compareRowCount(dbRowCount)
+
+      
+    def test_mem004_04_member_search_advance_by_Country(self):
+        #return 
+        """
+            @case: mem004-04
+            @description: Search Members - Advanced Search by Country
+        """
+        self.start()
+        self.advancedSearchTest(["Timor-Leste"])
+        member = current.s3db["member_membership"]
+        loc = current.s3db["gis_location"]
+        dbRowCount = current.db((member.deleted != 'T') & (member.location_id == loc.id) & (loc.L0 == 'Timor-Leste')).count()
+        self.compareRowCount(dbRowCount)
+        
+        
+    def test_mem004_05_member_search_advance_by_State_Province(self):
+        #return 
+        """
+            @case: mem004-05
+            @description: Search Members - Advanced Search by State / Province
+        """
+        self.start()
+        self.advancedSearchTest(["Baucau","Ermera"])
+        member = current.s3db["member_membership"]
+        loc = current.s3db["gis_location"]
+        dbRowCount = current.db((member.deleted != 'T') & (member.location_id == loc.id) & ( (loc.L1 == 'Baucau') | (loc.L1 == 'Ermera') )).count()
+        self.compareRowCount(dbRowCount)
+
+
+    def test_mem004_06_member_search_advance_by_County_District(self):
+        #return 
+        """
+            @case: mem004-06
+            @description: Search Members - Advanced Search by County / District
+        """
+        self.start()
+        self.advancedSearchTest(["Laga"])
+        member = current.s3db["member_membership"]
+        loc = current.s3db["gis_location"]
+        dbRowCount = current.db((member.deleted != 'T') & (member.location_id == loc.id) & (loc.L2 == 'Laga')).count()
+        self.compareRowCount(dbRowCount)
+
+
+    def test_mem004_07_member_search_advance_by_City_Town_Village(self):
+        #return 
+        """
+            @case: mem004-07
+            @description: Search Members - Advanced Search by City / Town / Village
+        """
+        self.start()
+        self.advancedSearchTest(["Lour","Tequino Mata"])
+        member = current.s3db["member_membership"]
+        loc = current.s3db["gis_location"]
+        dbRowCount = current.db((member.deleted != 'T') & (member.location_id == loc.id) & ( (loc.L3 == 'Lour') | (loc.L3 == 'Tequino Mata') )).count()
+        self.compareRowCount(dbRowCount)
+        

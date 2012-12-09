@@ -233,7 +233,7 @@ $(document).ready(function() {
         caller = caller.replace(/__row/, '');
         // Avoid Duplicate callers
         var url_out = attr;
-        if (attr.indexOf('&caller=') == -1) {
+        if (attr.indexOf('caller=') == -1) {
             url_out = attr + '&caller=' + caller;
         }
         return url_out;
@@ -876,19 +876,21 @@ function S3FilterFieldChange(setting) {
                         //selFieldRows.hide();
                         selField.attr('disabled', 'disabled');
                     }
-                    /* Show "Add" Button & modify link */
-                    var selFieldAdd = $('#' + FieldResource + '_add');
-                    var href = selFieldAdd.attr('href');
-                    if (href.indexOf(FilterField) == -1) {
-                        // Add to URL
-                        href = href + '&' + FilterField + '=' + selFilterField.val();
-                    } else {
-                        // Update URL
-                        var re = new RegExp(FilterField + '=.*', 'g');
-                        href = href.replace(re, FilterField + '=' + selFilterField.val());
-                    }
-                    selFieldAdd.attr('href', href)
-                               .show();
+                    try {
+                        /* Show "Add" Button & modify link */
+                        var selFieldAdd = $('#' + FieldResource + '_add');
+                        var href = selFieldAdd.attr('href');
+                        if (href.indexOf(FilterField) == -1) {
+                            // Add to URL
+                            href = href + '&' + FilterField + '=' + selFilterField.val();
+                        } else {
+                            // Update URL
+                            var re = new RegExp(FilterField + '=.*', 'g');
+                            href = href.replace(re, FilterField + '=' + selFilterField.val());
+                        }
+                        selFieldAdd.attr('href', href)
+                                   .show();
+                    } catch(err) {}
 
                     /* Remove Throbber */
                     $('#' + FieldResource + '_ajax_throbber').remove();

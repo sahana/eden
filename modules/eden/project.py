@@ -695,7 +695,7 @@ $(document).ready(function(){
         add_component("project_organisation", project_project="project_id")
 
         # Sites
-        add_component("project_site", project_project="project_id")
+        #add_component("project_site", project_project="project_id")
 
         # Activities
         add_component("project_activity", project_project="project_id")

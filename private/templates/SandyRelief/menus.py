@@ -223,18 +223,25 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def req(self):
         """ REQ / Request Management """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        db = current.db
+        SUPER = lambda i: \
+            db(db.auth_group.uuid=="super").select(db.auth_group.id,
+                                                   limitby=(0, 1),
+                                                   cache=s3db.cache
+                                                   ).first().id
 
         return M(c="req")(
                     M("Requests", f="req")(
-                        M("Request Supplies", m="create", vars={"type":1}),
-                        M("Request People", m="create", vars={"type":3}),
+                        M("Request Supplies", m="create", vars={"type": 1}),
+                        M("Request People", m="create", vars={"type": 3}),
                         M("Search Requests", m="search"),
                         #M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         #M("Search", m="search"),
                         #M("Map", m="map"),
                         M("Report", m="report"),
+                        M("FEMA Items Required", f="fema", m="search",
+                          restrict=[SUPER]),
                         M("Search All Requested Items", f="req_item", m="search"),
                         M("Search All Requested Skills", f="req_skill", m="search"),
                     ),
@@ -251,7 +258,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Search Shipped Items", f="track_item", m="search"),
                     ),
                     M("Items", c="supply", f="item",
-                      restrict=[ADMIN])(
+                      restrict=[SUPER])(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
@@ -259,7 +266,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
+                      restrict=[SUPER])(
                         M("New", m="create"),
                         M("List All"),
                     ),

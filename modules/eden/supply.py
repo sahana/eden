@@ -505,7 +505,7 @@ S3FilterFieldChange({
                                               #label = T("Group"),
                                               # Filters item_category_id based on catalog_id
                                               script = item_category_id_script,
-                                            ),
+                                              ),
                              supply_item_id(script = None), # No Item Pack Filter
                              s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              *s3_meta_fields())

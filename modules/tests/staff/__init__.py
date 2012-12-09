@@ -7,3 +7,4 @@ from add_staff_to_organisation import *
 from add_staff_to_office import *
 from add_staff_to_warehouse import *
 from create_staff import *
+from staff_search import *

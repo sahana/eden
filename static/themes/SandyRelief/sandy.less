@@ -1,39 +1,63 @@
-
-<!-- saved from url=(0113)https://raw.github.com/energy7/eden/cab161acd5570246bd76d1281f72ba2743a5b88b/static/themes/SandyRelief/sandy.less -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">
 /* make changes in the .less file, NOT the .css */
 /* compile locally with incident57.com/less/ and upload both */
 
 
-/******* TOC *******/
+/******* TABLE OF CONTENTS *******/
 
-/* Reset */
-/* Fonts */
-/* Mixins */
-/* Base */
-/* Layout */
-/* Modules */
-/* States */
-/* Theming */
-/* Browser Fixes */
-/* Responsive */
-/* Print */
+/* STARTER */
+/* reset */
+/* fonts */
+/* mixins */
+
+/* BASE */
+/* typography */
+/* links */
+/* layout */
+/* states */
+
+/* COMMON */
+/* navigation */
+/* forms */
+/* popups */
+/* tables */
+/* charts */
+/* icons */
+/* buttons */
+/* jquery */
+
+/* UNIQUE */
+/* home pages */
+
+/* ADVANCED */
+/* browser fixes */
+/* responsive */
+/* print */
 
 
 
 
-/******* RESET *******/
+/******* STARTER *******/
 
 
 /* Eric Meyer's Reset Reloaded *//* http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/ */html, body, div, span, applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, font, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,b, u, i, center,dl, dt, dd, ol, ul, li,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td {margin: 0;padding: 0;border: 0;outline: 0;font-size: 100%;vertical-align: baseline;background: transparent;}:focus {/* remember to define focus styles! */outline: 0;}body {line-height: 1;}ol, ul {list-style: none;}table {/* tables still need 'cellspacing="0"' in the markup */border-collapse: separate; border-spacing: 0;} caption, th, td {font-weight: normal; text-align: left;} blockquote:before, blockquote:after, q:before, q:after {content: "";} blockquote, q {quotes: "" "";}a img {border: 0;}article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {display: block;}
 
 /* apply a natural box layout model to all elements */
-* { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
+* {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+/* except AnyTime */
+.AnyTime-time,
+.AnyTime-hrs,
+.AnyTime-mins {
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
+}
 
 
-
-
-/******* FONTS *******/
+/* fonts */
 
 
 @font-face {
@@ -82,14 +106,14 @@
 
 
 
-/******* MIXINS *******/
+/* mixins */
 
-/* colors */
 
 @brand: #FFCD67;
 @brandlight: #FFFDE9;
 @flag: #DA521F;
 @anchor: #0085BF;
+@confirm: #22B573;
 @black: #000000;
 @body: #222222;
 @shadeA: #555555;
@@ -120,8 +144,8 @@
 .fixer {content: "\0020"; display: block; height: 0; overflow: hidden;}
 .clearfix {
 	zoom: 1; 
-	&amp;:before {.fixer;}
-	&amp;:after {.fixer; clear: both;}
+	&:before {.fixer;}
+	&:after {.fixer; clear: both;}
 }
 
 
@@ -250,6 +274,7 @@ p {
 	margin: .5em 0 .5em;
 }
 
+
 h1 {font-size: 36px; .condensed;}
 h2 {font-size: 22px; .condensed;}
 h3 {font-size: 15px; font-weight: bold;}
@@ -258,8 +283,24 @@ h5 {font-size: 13px;}
 h6 {font-size: 12px;}
 p, label, li  {font-size: 15px;}
 
-.small, small {font-size: 12px; line-height: 1.2em;}
+small, .small {font-size: 12px; line-height: 1.2em;}
 .caps {text-transform: uppercase; letter-spacing: 1px; line-height: 1.2em;}
+
+
+ul {list-style: square;}
+ol {list-style-type: decimal;}
+ol ol {list-style: upper-alpha;}
+ol ol ol {list-style: lower-roman;}
+ol ol ol ol {list-style: lower-alpha;}
+
+ul ul, 
+ol ol, 
+ul ol, 
+ol ul {margin-bottom: 0;}
+
+dl {margin: 0;}
+dt {font-weight: 400;}
+dd {}
 
 
 blockquote {
@@ -324,14 +365,16 @@ hr {
 
 
 
+
+
 /* links */
 
 a, a:active, a:visited {
 	color: @anchor; 
 	text-decoration: none; 
 	cursor: pointer;
-	&amp;:focus, 
-	&amp;:hover {
+	&:focus, 
+	&:hover {
 		color: @shadeA; 
 	}
 }
@@ -359,7 +402,7 @@ button,
 	cursor: pointer;
 	-webkit-transition-property: background-color, color;
 	-webkit-transition-duration: 100ms;	
-	&amp;:hover {
+	&:hover {
 		background: @flag;
 		color: @white; 
 	}
@@ -368,52 +411,15 @@ button,
 
 
 
-/* lists */
-
-
-ul {
-	list-style: square;
-}
-ol {
-	list-style-type: decimal;
-}
-ol ol {
-	list-style: upper-alpha;
-}
-ol ol ol {
-	list-style: lower-roman;
-}
-ol ol ol ol {
-	list-style: lower-alpha;
-}
-ul ul, ol ol, ul ol, ol ul {
-	margin-bottom: 0;
-}
-dl {
-	margin: 0;
-}
-dt {
-	font-weight: 400;
-}
-dd {
-}
-
-
-
-
-/******* STATES *******/
+/* states */
 
 .is-disabled {
-    
+    color: @shadeC;
 }
 
-
-/******* THEME *******/
-
-.fullpage {
-    background: #EEE;
+.is-on-tab {
+	color: @flag;
 }
-
 
 .confirmation, .information, .error, .warning {
 	clear: left;
@@ -426,46 +432,42 @@ dd {
 	.box-shadow(0, 0, 8px, 0, @shadeA);
 	font-style: italic;
 	font-size: 15px;
-	border: 2px solid @flag;
+	border-width: 2px;
+}
+
+.confirmation {
+	color: @confirm;
+	border-color: @confirm;
+}
+
+.information {
+	color: @body;
+	border-color: @brand;
+}
+
+.error, 
+.warning {
 	color: @flag;
+	border-color: @flag;
 }
 
 
 
 
-ol.counter {
-	counter-reset: li;
-	margin: 2em 25px!important;
-	li {
-		position: relative;
-		padding-left: 24px;
-		border-bottom: 1px dotted #DDD;
-		list-style:none;
-		padding-top: .75em;
-		padding-bottom: 1em;
-		margin: 0!important;
-	}
-	li:first-child {
-		border-top: 1px dotted #DDD;
-	}
-	li:before {
-		content:counter(li);
-		counter-increment:li;
-		position:absolute;
-	    top: 12px;
+/* layout */
+
+
+.fullpage {
+    background: #EEE;
+    .col1 {
+	    width: 100%;
 	    left: 0;
-		font-size: 22px;
-		line-height: 20px;
-		font-weight: bold;
-		color: #BBB;	    
 	}
 }
 
-
-
-
-
-/******* LAYOUT *******/
+.col1, .col2, .col3 {
+	padding: 0;
+}
 
 .colmask {
     margin-top: 55px;
@@ -483,14 +485,11 @@ ol.counter {
 	background: @shadeE;
 }
 
-
 .primary {
 	width: 75%;
 	float: right;
 	padding: 30px 0 40px;
 }
-
-
 
 .secondary {
 	width: 25%;
@@ -508,14 +507,39 @@ ol.counter {
 	}
 }
 
-
 .content {
 	width: 100%;
 }
 
+#component {
+	margin: 30px 0 60px;
+	border-left: 1px dashed @shadeD;
+	padding: 0 30px;
+	h2 {
+		font-size: 22px;
+		margin-top: 1.5em;
+	}
+	#delete-btn {
+		margin-bottom: 30px;
+	}
+	label {
+		.caps;
+		font-size: 12px;
+		margin-top: 1em;
+		display: block;
+	}
+}
 
-/* header and footer */
 
+
+
+/******* COMMON *******/
+
+
+/*** navigation ***/
+
+
+/* top nav */
 
 #modulenav {
 	.menu;
@@ -567,6 +591,7 @@ ol.counter {
             font-size: 12px;
             line-height: 1.2em;
             border-bottom: 1px dotted @shadeE;
+            margin: 0;
         }
         a {
             padding: 8px 15px 9px;
@@ -577,7 +602,13 @@ ol.counter {
     }
 }
 
+.fleft + .fright .submenu { /* keep last menu onscreen */
+	right: 0; 
+}
 
+
+
+/* bottom nav */
 
 
 #footer {
@@ -605,15 +636,12 @@ ol.counter {
 	}   
 }
 
-
-#footer div:last-child button {
-    display: none;
+#footer div:last-child button { /* hide extra buttons */
+    display: none;  
 }
 
 
 
-
-/******* MODULES *******/
 
 
 /* left nav */
@@ -623,13 +651,14 @@ ol.counter {
     background: @white;
 }
 
+
 #subnav {
     padding: 15px;
     div a {
         .condensed;
         font-size: 20px;
         color: @body;
-        &amp;:hover {
+        &:hover {
             color: @anchor;
         }
     }
@@ -645,6 +674,7 @@ ol.counter {
     }
 }
 
+
 .rightside {
     margin-left: 240px;
     margin-top: 10px;
@@ -656,66 +686,86 @@ ol.counter {
 }
 
 
-/* home pages */
 
-.home {
-	background: url('img/520clinton.jpg') no-repeat center center fixed; 
-	-webkit-background-size: cover;
-	-moz-background-size: cover;
-	-o-background-size: cover;
-	background-size: cover;		
-	width: 100%;
-	min-height: 600px;
-	float: none;
-	.clearfix;
-	padding-bottom: 100px;
-}
+/* tabs */
 
-.home-title {
-	width: 360px;
-	float: left;
-	padding: 0 20px;
-	h1 {
-		color: @white;
-		font-size: 72px;
-		line-height: 1em;
-		margin: 20px 0;
-		.text-shadow();
+.tabs {
+	margin: 30px 0 0;
+	span a {
+		padding: 5px 10px;
+		white-space: nowrap;
+		font-size: 12px;
+		background: white;
+		margin-right: 1px;
+		&:hover {
+			background: @shadeD;
+		}
+	}
+	.tab_here a {
+		background: @body!important;
+		color: @white!important;
+		cursor: default;
 	}
 }
 
 
 
-.home-register, 
-.home-content {
-	width: auto;
-	margin-left: 360px;
-	margin-right: 180px;
+/*** forms ***/
+
+.req, 
+.red {
+    color: @flag;
+    font-weight: normal;
 }
 
-.home-register {
-    padding: 20px 0 0;
-    width: 480px;
+b.red {
+	.small;
 }
 
-.login-box {
-    width: 100%;
-	background: @white;
-	background: rgba(255,255,255,.8);
-	padding: 30px;  
-	h2, h3 {
-    	.condensed;
-    	font-size: 36px;
-    	line-height: 1em;
-    	margin: 0;
+.login-box .req {
+	.small;
+    font-style: italic;
+}
+
+#password-strength {
+	.small;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    font-style: italic;
+}
+
+
+.simple-form, 
+.advanced-form {
+	border-top: 1px solid @shadeC;
+	border-bottom: 1px solid @shadeC;
+	input[type="text"] {
+		margin: 0;
 	}
-	h2 + .form-container {
-		margin-top: 20px;
+	#gis_search_map-btn,
+	input[type="submit"] {
+		margin: 0 10px 15px 0;
+		padding: 6px 15px 7px;
 	}
-	.w2p_fl {
-		padding-right: 10px;
+	table {
+		width: auto;
 	}
 }
+
+
+
+.s3-checkboxes-widget {
+	width: auto!important;
+	input[type="checkbox"] {
+		margin-top: 2px;
+	}
+	label {
+		font-size: 13px;
+		line-height: 1.2em;
+		margin-right: 20px;
+	} 
+}
+
 
 .form-container {
 	margin-top: 15px;
@@ -739,27 +789,21 @@ ol.counter {
 }
 
 
-
 .rightside .form-container {
 	margin-right: 25px;
 }
 
-.rightside .form-container table {
+
+.form-container table {
     width: 100%;
     td {
 	    padding-top: 10px;
+	    vertical-align: top;
     }
     table td {
 	    padding-top: 0;
 	    padding-bottom: 10px;
     }
-	.w2p_fl,
-	.w2p_fw,
-	.w2p_fc {
-		.inlineBlock;
-		float: none;
-		vertical-align: top;
-	}
     .w2p_fl {
         width: 200px;
         clear: both;
@@ -779,6 +823,8 @@ ol.counter {
 }
 
 
+/*** popups ***/
+
 #popup {
 	.form-container {
 		padding: 10px 20px;
@@ -793,7 +839,6 @@ ol.counter {
 	.w2p_fc {
 		.inlineBlock;
 		float: none;
-		vertical-align: top;
 	}
     .w2p_fl {
         width: 200px;
@@ -817,131 +862,13 @@ ol.counter {
 }
 
 
-.req, 
-.red {
-    color: @flag;
-    font-weight: normal;
-}
-b.red {
-	.small;
-}
-
-.login-box .req {
-	.small;
-    font-style: italic;
-}
 
 
-
-#password-strength {
-	.small;
-    margin-top: -10px;
-    margin-bottom: 15px;
-    font-style: italic;
-}
-
-
-#login_form #register-btn {
-	margin-left: -15px;
-}
-
-#auth_user_remember__row label {
-	.small;
-}
-
-
-.home-content {
-	div {
-		background: @white;
-		background: rgba(255,255,255,.8);
-		padding: 30px;
-		margin-bottom: 20px;
-	}
-	h2 {
-		.condensed;
-		font-size: 36px;
-		margin: 0 0 15px;
-		line-height: 1em;
-	}
-}
-
-.comms {
-	width: 49%;
-	float: left;
-	margin-bottom: 100px;
-	.button {
-		margin-right: 10px;
-		margin-top: 10px;
-		padding: 10px 30px;
-	}
-}
-.dispatch {
-	width: 49%;
-	float: right;
-	.button {
-		margin-right: 10px;
-		margin-top: 10px;
-		padding: 10px 30px;
-	}
-}
-
-.welcome-steps {
-	margin: 0 30px;
-	li {
-		font-size: 18px;
-		margin-bottom: .75em;
-	}
-}
-
-
-
-.simple-form, 
-.advanced-form {
-	border-top: 1px solid @shadeC;
-	border-bottom: 1px solid @shadeC;
-	.w2p_fl {
-		width: auto!important;
-	}
-	input[type="text"] {
-		margin: 0;
-	}
-	#gis_search_map-btn,
-	input[type="submit"] {
-		margin: 0 10px 15px 0;
-		padding: 6px 15px 7px;
-	}
-}
-
-
-
-.s3-checkboxes-widget {
-	width: auto!important;
-	input[type="checkbox"] {
-		margin-top: 2px;
-	}
-	label {
-		font-size: 13px;
-		line-height: 1.2em;
-		margin-right: 20px;
-	} 
-}
+/*** tables ***/
 
 
 #table-container {
 	margin: 30px 0 60px;
-}
-
-#component {
-	margin: 30px 0 60px;
-	border-left: 1px dashed @shadeD;
-	padding: 0 30px;
-	h2 {
-		font-size: 22px;
-		margin-top: 1.5em;
-	}
-	#delete-btn {
-		margin-bottom: 30px;
-	}
 }
 
 #rheader {
@@ -949,31 +876,14 @@ b.red {
 		.caps;
 		font-size: 12px;
 		padding-right: 10px;
+		padding-top: 10px;
 	}
 	td {
 		padding-right: 45px;
+		padding-top: 10px;
 	}
 }
 
-
-.tabs {
-	margin: 30px 0 0;
-	span a {
-		padding: 5px 10px;
-		white-space: nowrap;
-		font-size: 12px;
-		background: white;
-		margin-right: 1px;
-		&amp;:hover {
-			background: @shadeD;
-		}
-	}
-	.tab_here a {
-		background: @body!important;
-		color: @white!important;
-		cursor: default;
-	}
-}
 
 #last_update {
 	margin-right: 25px;
@@ -989,12 +899,15 @@ b.red {
 	}
 }
 
-/* tables */
-
+.totals_row th, 
+.totals_row td {
+	border-top: 1px solid #BBB;
+}
 
 .dataTables_filter, 
 .dataTables_info, 
-.dataTables_length {
+.dataTables_length,
+.dataTables_paginate {
     .border-radius(5px);
     background: @shadeD;
     padding: 5px 15px;
@@ -1008,6 +921,26 @@ b.red {
     font-size: 12px;
 }
 
+.dataTables_paginate {
+	.clearfix;
+	font-size: 12px;
+	height: 31px;
+	line-height: 31px;
+	a {
+		.inlineBlock;
+		background: transparent;
+    	padding: 6px 8px;
+    	margin: 0px;
+    	border: 0;
+    	.border-radius(0);
+	}
+	a:hover,
+	.paginate_active {
+		background: @brand;
+	}
+}
+
+
 .list_formats {
     position: absolute;
 	top: 10px;
@@ -1016,6 +949,10 @@ b.red {
     img {
         margin-left: 5px;
     }
+}
+
+#pivot-table{
+	margin-right:30px;
 }
 
 .dataTable {
@@ -1038,10 +975,71 @@ b.red {
     td.sorting_1 {
         background-color: @brandlight!important;
     }
+    tfoot th {
+	    border-top: 0;
+    }
+    .action-btn {
+	    margin-top: 5px;
+    }
 }
 
 
-/* icons */
+/*** charts ***/
+
+#report_options, 
+#filter_options {
+	background: #F6F6F6;
+	padding: 60px 30px 30px;
+	margin: 0 0 10px;
+	position: relative;
+	legend {
+		position: absolute;
+		top: 20px;
+		.caps;
+	}
+	table {
+		width: auto;
+	}
+}
+
+.chart-contents {
+    background: @white;
+    border: 0;
+    padding: 5px 10px;
+}
+
+#chart-opts {
+	font-size:13px
+}
+
+#chart-header h4 {
+    font-size: 15px;
+    font-weight: bold;
+    border: 0;
+}
+
+.embeddedComponent {
+	width:auto;
+	margin-right:25px;
+	.label-row td {
+		text-transform:uppercase;
+		letter-spacing:1px;
+		line-height:1.2em;
+		font-size:12px;
+	}
+	td {
+		vertical-align:top;
+		padding:5px!important;
+	}
+}
+
+#pie_chart_rows {
+	margin-right:15px;
+}
+
+
+
+/*** icons ***/
 
 .icon-large {
 	.inlineBlock;
@@ -1063,7 +1061,7 @@ b.red {
 
 
 
-/* buttons */
+/*** buttons ***/
 
 
 .action-lnk {
@@ -1090,11 +1088,11 @@ b.red {
     padding: 4px 10px 5px;
     margin-right: 5px;
     white-space: nowrap;
-    &amp;:visited {
+    &:visited {
 	    color: @white!important;
     }
-    &amp;:hover, 
-    &amp;:focus {
+    &:hover, 
+    &:focus {
 	    color: @white!important;
 	    background: @body;
     }
@@ -1107,7 +1105,7 @@ b.red {
 	font-size: 12px;
 	.caps;
 	font-weight: bold;
-	&amp;:hover {
+	&:hover {
 		color: @body;
 	}
 }
@@ -1116,21 +1114,13 @@ b.red {
     .pictogram;
     padding-top: 2px;
     padding-bottom: 7px;
-}
-#show-add-btn:before {
-    content: "⊕";
-    font-size: 40px;
-    position: relative;
-    top: 5px;
-    left: -5px;
-}
-
-
-.edit-btn:before {
-    content: "✎";
-}
-.delete:before {
-    content: "⊖";
+	&:before {
+	    content: "⊕";
+	    font-size: 40px;
+	    position: relative;
+	    top: 5px;
+	    left: -5px;
+	}
 }
 
 #list-btn-add {
@@ -1141,7 +1131,7 @@ b.red {
 
 
 
-/* jquery styles */
+/*** jquery ***/
 
 
 .ui-widget-content {
@@ -1183,7 +1173,164 @@ b.red {
 
 
 
-/******* BROWSER FIXES *******/
+
+
+/******* UNIQUE *******/
+
+/*** home pages ***/
+
+.home {
+	background: url('img/520clinton.jpg') no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;		
+	width: 100%;
+	min-height: 600px;
+	float: none;
+	.clearfix;
+	padding-bottom: 100px;
+}
+
+.home-title {
+	width: 360px;
+	float: left;
+	padding: 0 20px;
+	h1 {
+		color: @white;
+		font-size: 72px;
+		line-height: 1em;
+		margin: 20px 0;
+		.text-shadow();
+	}
+}
+
+.home-register, 
+.home-content {
+	width: auto;
+	margin-left: 360px;
+	margin-right: 180px;
+    padding: 20px 0 0;
+	h2 {
+		.condensed;
+		font-size: 36px;
+		margin: 0 0 15px;
+		line-height: 1em;
+	}
+}
+
+.home-register {
+    width: 480px;
+}
+
+.login-box {
+    width: 100%;
+	background: @white;
+	background: rgba(255,255,255,.8);
+	padding: 30px;  
+	h2, h3 {
+    	.condensed;
+    	font-size: 36px;
+    	line-height: 1em;
+    	margin: 0;
+	}
+	h2 + .form-container {
+		margin-top: 20px;
+	}
+	.w2p_fl {
+		padding-right: 10px;
+	}
+}
+
+#login_form {
+	#register-btn {
+		padding: 0;
+	}
+	.w2p_fl label {
+		width: 100px;
+	}
+}
+
+#auth_user_remember__row label {
+	.small;
+}
+
+#submit_record__row input {
+	margin-top: 20px;
+	margin-right: 30px;
+}
+
+.home .w2p_fl label {
+	white-space: nowrap;
+}
+.home .w2p_fw select {
+	max-width: 300px;
+}
+
+
+.welcome, 
+.comms,
+.dispatch,
+.contact-us,
+.help {
+	background: @white;
+	background: rgba(255,255,255,.8);
+	padding: 30px;
+	margin-bottom: 20px;
+}
+
+
+.welcome-steps {
+	margin: 0 30px;
+	padding: 0;
+	li {
+		font-size: 18px;
+		margin-bottom: .75em;
+	}
+}
+
+.comms {
+	width: 49%;
+	float: left;
+	margin-bottom: 100px;
+	.button {
+		margin-right: 10px;
+		margin-top: 10px;
+		padding: 10px 30px;
+	}
+}
+
+.dispatch {
+	width: 49%;
+	float: right;
+	.button {
+		margin-right: 10px;
+		margin-top: 10px;
+		padding: 10px 30px;
+	}
+}
+
+.contact-us {
+	h1 {
+		margin: 0 0 15px;		
+		line-height: 1em;
+	}
+	label {
+		margin: 15px 0 3px;
+		display: block;
+	}
+	input[type="submit"] {
+		.button;
+	}
+}
+
+
+
+
+
+/******* ADVANCED *******/
+
+/*** browser fixes ***/
 
 /* FF buttons: remove padding to vertically center text */
 input::-moz-focus-inner { 
@@ -1193,19 +1340,18 @@ input::-moz-focus-inner {
 
 
 
-/******* RESPONSIVE STYLING *******/
 
+
+/*** responsive ***/
 
 @media screen and (max-width: 720px) {
-
-
-	
 	
 }
 
 
 
-/******* PRINT *******/
+
+/*** print ***/
 
 @media print {
 	body {
@@ -1224,13 +1370,3 @@ input::-moz-focus-inner {
 		position: relative !important;
 	}
 }
-
-
-
-/** OVERRIDES **/
-
-.fullpage .col1 {
-    width: 100%;
-    left: 0;
-}
-</pre></body></html>

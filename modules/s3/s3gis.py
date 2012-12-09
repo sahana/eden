@@ -256,7 +256,7 @@ class GIS(object):
         return GPS_SYMBOLS
 
     # -------------------------------------------------------------------------
-    def download_kml(self, record_id, filename):
+    def download_kml(self, record_id, filename, session_id_name, session_id):
         """
             Download a KML file:
                 - unzip it if-required
@@ -266,6 +266,11 @@ class GIS(object):
 
             Designed to be called asynchronously using:
                 current.s3task.async("download_kml", [record_id, filename])
+
+            @param record_id: id of the record in db.gis_layer_kml
+            @param filename: name to save the file as
+            @param session_id_name: name of the session
+            @param session_id: id of the session
 
             @ToDo: Pass error messages to Result & have JavaScript listen for these
         """
@@ -284,7 +289,7 @@ class GIS(object):
                                 "gis_cache",
                                 filename)
 
-        warning = self.fetch_kml(url, filepath)
+        warning = self.fetch_kml(url, filepath, session_id_name, session_id)
 
         # @ToDo: Handle errors
         #query = (cachetable.name == name)
@@ -330,7 +335,7 @@ class GIS(object):
                 pass
 
     # -------------------------------------------------------------------------
-    def fetch_kml(self, url, filepath):
+    def fetch_kml(self, url, filepath, session_id_name, session_id):
         """
             Fetch a KML file:
                 - unzip it if-required
@@ -358,7 +363,8 @@ class GIS(object):
             # Keep Session for local URLs
             import Cookie
             cookie = Cookie.SimpleCookie()
-            cookie[response.session_id_name] = response.session_id
+            cookie[session_id_name] = session_id
+            # For sync connections
             current.session._unlock(response)
             try:
                 file = fetch(url, cookie=cookie)
@@ -6127,6 +6133,7 @@ S3.gis.layers_feature_resources[%i]={
                                      limitby=(0, 1)).first()
             if not layer:
                 # Use Site Default
+                ctable = db.gis_config
                 query = (etable.id == ltable.layer_id) & \
                         (ltable.config_id == ctable.id) & \
                         (ctable.uuid == "SITE_DEFAULT") & \
@@ -7138,8 +7145,11 @@ class KMLLayer(Layer):
 
                 if download:
                     # Download file (async, if workers alive)
+                    response = current.response
+                    session_id_name = response.session_id_name
+                    session_id = response.session_id
                     current.s3task.async("gis_download_kml",
-                                         args=[self.id, filename])
+                                         args=[self.id, filename, session_id_name, session_id])
                     if cached:
                         db(query).update(modified_on=request.utcnow)
                     else:
@@ -7533,7 +7543,10 @@ class S3Map(S3Search):
                 session_options = session.s3.search_options
                 if session_options and tablename in session_options:
                     # session
-                    session_options = session_options[tablename]
+                    if "clear_opts" in r.get_vars:
+                        session_options = Storage()
+                    else:
+                        session_options = session_options[tablename] or Storage()
                 else:
                     # unfiltered
                     session_options = Storage()
@@ -7926,7 +7939,9 @@ class S3ExportPOI(S3Method):
 
 # -----------------------------------------------------------------------------
 class S3ImportPOI(S3Method):
-    """ Import point-of-interest resources for a location """
+    """
+        Import point-of-interest resources for a location
+    """
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -7941,7 +7956,6 @@ class S3ImportPOI(S3Method):
         if r.representation == "html":
 
             T = current.T
-            auth = current.auth
             s3db = current.s3db
             request = current.request
             response = current.response
@@ -7986,7 +8000,7 @@ class S3ImportPOI(S3Method):
                         TR(
                             TD(B("%s: " % T("Password"))),
                             TD(INPUT(_type="text", _name="password",
-                                     _id="password", _value="osm")),
+                                     _id="password", _value="planet")),
                             TD(),
                             ),
                         TR(
@@ -8075,6 +8089,7 @@ class S3ImportPOI(S3Method):
                         # Python < 2.7
                         error = subprocess.call(cmd, shell=True)
                         if error:
+                            s3_debug(cmd)
                             current.session.error = T("OSM file generation failed!")
                             redirect(URL(args=r.id))
                     try:

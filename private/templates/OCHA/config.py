@@ -122,13 +122,13 @@ settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 # Uncomment this to customise
-#settings.project.organisation_roles = {
-#    1: T("Host National Society"),
-#    2: T("Partner National Society"),
-#    3: T("Donor"),
-#    #4: T("Customer"), # T("Beneficiary")?
-#    5: T("Partner")
-#}
+settings.project.organisation_roles = {
+    1: T("Lead Reporter"),
+    2: T("Implementing Partner"),
+    3: T("Donor"),
+    #4: T("Customer"), # T("Beneficiary")?
+    5: T("Partner")
+}
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
@@ -220,6 +220,12 @@ settings.modules = OrderedDict([
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
             module_type = 1
+        )),
+    ("stats", Storage(
+            name_nice = "Stats",
+            #description = "Needed for Project Beneficiaries",
+            restricted = True,
+            module_type = None
         )),
     #("cr", Storage(
     #        name_nice = T("Shelters"),
