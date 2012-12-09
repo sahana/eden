@@ -763,19 +763,19 @@ Thank you
 
             s3tracker = S3Tracker()
             if closestpoint == 0 and deployment_settings.create_unknown_locations: 
-                # There wasnt any near-by location, so create one
+                # There wasn't any near-by location, so create one
                 newpoint = {"lat": userlat,
                             "lon": userlon,
-                            "name": "Unknown location"
+                            "name": "Waypoint"
                             }
-                closestpoint = current.s3db.resource("gis_location").insert(**newpoint)
+                closestpoint = current.s3db.gis_location.insert(**newpoint)
                 s3tracker(db.pr_person,
                           self.user.id).set_location(closestpoint,
-                                                     timestmp=request.utcnow())             
+                                                     timestmp=request.utcnow)             
             else:
                 s3tracker(db.pr_person,
                           self.user.id).set_location(closestpoint.id,
-                                                     timestmp=request.utcnow())
+                                                     timestmp=request.utcnow)
 
     # -------------------------------------------------------------------------
     def register(self,
