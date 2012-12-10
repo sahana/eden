@@ -386,6 +386,12 @@ class S3HRModel(S3Model):
                         cols = 3,
                       ),
                       S3SearchOptionsWidget(
+                        name="human_resource_search_L0",
+                        field="location_id$L0",
+                        location_level="L0",
+                        cols = 3,
+                      ),
+                      S3SearchOptionsWidget(
                         name="human_resource_search_L1",
                         field="location_id$L1",
                         location_level="L1",
