@@ -1306,7 +1306,7 @@ class S3Importer(S3CRUD):
 
         # Build the datatable
         rfields = resource.resolve_selectors(list_fields)[0]
-        dt = S3DataTable(rfields, data)
+        dt = S3DataTable(rfields, data, orderby=orderby)
         datatable_id = "s3import_1"
         if representation == "aadata":
             # Ajax callback
