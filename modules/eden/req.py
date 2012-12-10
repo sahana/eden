@@ -1790,7 +1790,6 @@ class S3RequestSummaryModel(S3Model):
                                               comment=None,
                                               widget=S3PriorityListWidget(),
                                               ),
-
                                   *s3_meta_fields())
 
         # CRUD strings
