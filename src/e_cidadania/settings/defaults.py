@@ -74,6 +74,11 @@ STATICFILES_DIRS = (
     (cwd + '/static_files/'),
 )
 
+FILE_UPLOAD_HANDLERS = (
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+)
+
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '8nwcwmtau*bnu0u=shmdkda^-tpn55ch%qeqc8xn#-77r8c*0a'
 

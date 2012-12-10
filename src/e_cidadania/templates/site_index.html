@@ -77,7 +77,7 @@
             <div class="row">
                 <div class="span3 well">
                     <h6 style="margin-top:-10px;">First time here? Register!</h6>
-                    <form action="{% url 'signup' %}?next={% url 'signup_complete' %}" method="POST">{% csrf_token %}
+                    <form action="{% url 'signup' %}?next={% url 'signup' %}" method="POST">{% csrf_token %}
                         <input type="text" id="id_username" name="username" placeholder="Username">
                         <input type="text" id="id_email" name="email" placeholder="E-Mail">
                         <input type="password" id="id_password1" name="password1" placeholder="Password">

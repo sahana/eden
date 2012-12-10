@@ -40,6 +40,7 @@ ALLOWED_CONTENT_TYPES = [
     'application/vnd.oasis.opendocument.presentation',
     'application/vnd.oasis.opendocument.spreadsheet',
     'application/vnd.openofficeorg.extension',
+    'text/plain',
 ]
 
 

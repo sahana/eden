@@ -22,7 +22,7 @@
 
     <div class="row">
         <div class="span6">
-            <p><strong>{% trans "Description:" %}</strong> {{ debate.description }}</p>
+            <p><strong>{% trans "Description:" %}</strong> {{ debate.description|safe }}</p>
             <p><strong>{% trans "Theme:" %}</strong> {{ debate.theme}}</p>
         </div>
         <div class="span6">
