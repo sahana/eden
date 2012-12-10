@@ -1088,7 +1088,7 @@ class S3SQLFormElement(object):
             else:
                 comment = None
         else:
-            comment = field.comments
+            comment = field.comment
             
         f = Field(str(name),
                   type=field.type,
