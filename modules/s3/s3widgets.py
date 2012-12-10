@@ -47,6 +47,7 @@ __all__ = ["S3HiddenWidget",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
            "S3MultiSelectWidget",
+           "S3PriorityListWidget",
            "S3ACLWidget",
            "CheckboxesWidgetS3",
            "S3AddPersonWidget",
@@ -2566,6 +2567,39 @@ $('#%s').multiselect({
 
         return TAG[""](
                         MultipleOptionsWidget.widget(field, value, **attributes),
+                        requires = field.requires
+                      )
+
+# =============================================================================
+class S3PriorityListWidget(StringWidget):
+
+    """
+        Standard String widget
+    """
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            _type = "text",
+            value = (value != None and str(value)) or "",
+            )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        T = current.T
+        s3 = current.response.s3
+
+        selector = str(field).replace(".", "_")
+
+        s3.jquery_ready.append('''
+$('#%s').removeClass('list')
+$('#%s').addClass('prioritylist')
+$('#%s').prioritylist()
+''' % (selector,
+       selector,
+       selector))
+
+        return TAG[""](
+                        INPUT(**attr),
                         requires = field.requires
                       )
 

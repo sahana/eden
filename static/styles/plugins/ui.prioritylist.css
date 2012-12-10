@@ -1,0 +1,55 @@
+    #needs-sortable label {
+    margin: 1.5em 0 .5em 0;
+    font-size: 12pt;
+    font-weight: bold;
+    display: block;
+    }
+
+    .pl-container div {
+    float:left;
+    width: 33%;
+    }
+
+    .pl-container ul {
+    list-style-type: none;
+    margin: 3px;
+    padding: 0px;
+    min-height: 8em;
+    max-height: 8em;
+    overflow-y: auto;
+    min-width: 200px;
+    }
+
+    .pl-container ul li {
+    margin: 2px;
+    height: 2em;
+    line-height: 2em;
+    background-color: #eee;
+    }
+
+    .pl-container ul#need {
+    border: 2px solid red;
+    }
+
+    .pl-container ul#no_need {
+    border: 2px solid green;
+    }
+
+    .pl-container ul#accepting {
+    border: 2px solid yellow;
+    }
+    
+    .pl-container div#need-wrap {
+    width: 100%;
+    }
+    
+    .pl-container input#new-need {
+    display: block;
+    width: 300px;
+    }
+    
+    div.tweet-box {
+    margin: 1.5em 0 .5em 0;
+    }
+
+    form.additem { margin: 0; padding: 0; }

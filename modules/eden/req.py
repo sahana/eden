@@ -1784,15 +1784,13 @@ class S3RequestSummaryModel(S3Model):
         tablename = "req_site_needs"
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site"),
-                                  s3_comments("urgently_needed",
-                                              label=T("Urgently Needed"),
-                                              comment=None),
-                                  s3_comments("needed",
-                                              label=T("Needed"),
-                                              comment=None),
-                                  s3_comments("not_needed",
-                                              label=T("Not Needed"),
-                                              comment=T("Please do NOT send")),
+
+                                  s3_comments("needs",
+                                              label=T("Needs"),
+                                              comment=None,
+                                              widget=S3PriorityListWidget(),
+                                              ),
+
                                   *s3_meta_fields())
 
         # CRUD strings
