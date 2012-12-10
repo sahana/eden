@@ -2603,6 +2603,39 @@ $('#%s').removeClass('list').addClass('prioritylist').prioritylist()''' % \
                        )
 
 # =============================================================================
+class S3PriorityListWidget(StringWidget):
+
+    """
+        Widget to broadcast facility needs
+    """
+    
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            _type = "text",
+            value = (value != None and str(value)) or "",
+            )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        T = current.T
+        s3 = current.response.s3
+
+        selector = str(field).replace(".", "_")
+
+        s3.jquery_ready.append('''
+$('#%s').removeClass('list')
+$('#%s').addClass('prioritylist')
+$('#%s').prioritylist()
+''' % (selector,
+       selector,
+       selector))
+
+        return TAG[""](
+                        INPUT(**attr),
+                        requires = field.requires
+                      )
+
+# =============================================================================
 class S3ACLWidget(CheckboxesWidget):
     """
         Widget class for ACLs
