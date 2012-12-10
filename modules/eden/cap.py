@@ -654,6 +654,8 @@ class S3CAPModel(S3Model):
             if row.msg_type:
                 sent = row.sent or row.created_on
                 return "%s - %s - %s" % (row.msg_type, sent, row.sender)
+            else:
+                return "? - %s - %s" % (sent, row.sender)
         except:
             return current.messages["NONE"]
 
