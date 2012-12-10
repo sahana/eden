@@ -1340,7 +1340,16 @@ class S3ContactModel(S3Model):
     def contact_onvalidation(form):
         """ Contact form validation """
 
-        if form.vars.contact_method == "EMAIL":
+        contact_method = form.vars.contact_method
+        if not contact_method and "id" in form.vars:
+            ctable = current.s3db.pr_contact
+            record = current.db(ctable._id == form.vars.id).select(
+                                ctable.contact_method,
+                                limitby=(0, 1)).first()
+            if record:
+                contact_method = record.contact_method
+
+        if contact_method == "EMAIL":
             email, error = IS_EMAIL()(form.vars.value)
             if error:
                 form.errors.value = current.T("Enter a valid email")
