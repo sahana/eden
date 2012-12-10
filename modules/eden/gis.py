@@ -188,8 +188,10 @@ class S3LocationModel(S3Model):
                                    readable=False, writable=False),
                              # Street Address (other address fields come from hierarchy)
                              Field("addr_street", "text",
+                                   represent = lambda v: v or "",
                                    label = T("Street Address")),
                              Field("addr_postcode", length=128,
+                                   represent = lambda v: v or "",
                                    label = T("Postcode")),
                              s3_comments(),
                              *meta_spatial_fields)
