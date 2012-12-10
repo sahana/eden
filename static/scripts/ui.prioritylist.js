@@ -115,17 +115,19 @@
 		self.changedNeeds[to].push(item);
 		self.updatedNeeds[to].push(item);
 		
-		/*
+		// Update the JSON data in the hidden form
+		self.element.val(JSON.stringify(self.updatedNeeds));
+		
+		// Post the updated data
+		var postData = self.element.closest("form").serialize();
+		
 		$.ajax({
 	        type: 'POST',
-	        url: '',
-	        data: { 'req_site_needs_needs': JSON.stringify(self.updatedNeeds) }
-	    }).done(function(data) {
-			alert(data);
-	    }).fail(function() {
-	        alert('error');
+	        url: document.location.href,
+	        data: postData,
+	    }).error(function() {
+	        alert('Error saving data!');
 	    });
-	    */
 		
 	},	
 	
