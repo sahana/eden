@@ -111,11 +111,13 @@ def staff():
                    #"site_contact",
                    (T("Email"), "email"),
                    (settings.get_ui_label_mobile_phone(), "phone"),
-                   (T("Trainings"), "course"),
-                   (T("Certificates"), "certificate"),
-                   (T("Contract End Date"), "end_date"),
-                   "status",
                    ]
+    if settings.get_hrm_use_trainings():
+        list_fields.append("person_id$training.course_id")
+    if settings.get_hrm_use_certificates():
+        list_fields.append("person_id$certification.certificate_id")
+    list_fields.append((T("Contract End Date"), "end_date"))
+    list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
     if "expiring" in request.get_vars:
         s3.filter = s3.filter & \
@@ -247,9 +249,6 @@ def person():
     # Configure person table
     tablename = "pr_person"
     table = s3db[tablename]
-    if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
-       (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
-        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
     configure(tablename,
               deletable=False)
 
@@ -499,9 +498,6 @@ def profile():
     # Configure person table
     tablename = "pr_person"
     table = s3db[tablename]
-    if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
-       (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
-        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
     s3db.configure(tablename,
                    deletable=False)
 

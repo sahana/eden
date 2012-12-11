@@ -607,8 +607,7 @@ class S3Msg(object):
                         return False
 
                 elif contact_method == "TWITTER":
-                    return self.send_text_via_twitter(recipient.value,
-                                                      message)
+                    return self.send_tweet(message, recipient.value)
             return False
 
         table = s3db.msg_outbox
@@ -1120,10 +1119,11 @@ class S3Msg(object):
         return None
 
     # -------------------------------------------------------------------------
-    def send_text_via_twitter(self, recipient, text=""):
+    def send_tweet(self, text="", recipient=None):
         """
-            Function to send text to recipient via direct message (if recipient follows us).
-            Falls back to @mention (leaves less characters for the message).
+            Function to tweet.
+            If a recipient is specified then we send via direct message if the recipient follows us.
+            - falls back to @mention (leaves less characters for the message).
             Breaks long text to chunks if needed.
 
             @ToDo: Option to Send via Tropo
@@ -1145,30 +1145,39 @@ class S3Msg(object):
             # Abort
             return False
 
-        recipient = self.sanitise_twitter_account(recipient)
-        try:
-            can_dm = twitter_api.exists_friendship(recipient, twitter_account)
-        except tweepy.TweepError: # recipient not found
-            return False
-        if can_dm:
+        if recipient:
+            recipient = self.sanitise_twitter_account(recipient)
+            try:
+                can_dm = twitter_api.exists_friendship(recipient, twitter_account)
+            except tweepy.TweepError: # recipient not found
+                return False
+            if can_dm:
+                chunks = self.break_to_chunks(text, TWITTER_MAX_CHARS)
+                for c in chunks:
+                    try:
+                        # Note: send_direct_message() requires explicit kwargs (at least in tweepy 1.5)
+                        # See http://groups.google.com/group/tweepy/msg/790fcab8bc6affb5
+                        twitter_api.send_direct_message(screen_name=recipient,
+                                                        text=c)
+                    except tweepy.TweepError:
+                        s3_debug("Unable to Tweet DM")
+            else:
+                prefix = "@%s " % recipient
+                chunks = self.break_to_chunks(text,
+                                              TWITTER_MAX_CHARS - len(prefix))
+                for c in chunks:
+                    try:
+                        twitter_api.update_status(prefix + c)
+                    except tweepy.TweepError:
+                        s3_debug("Unable to Tweet @mention")
+        else:
             chunks = self.break_to_chunks(text, TWITTER_MAX_CHARS)
             for c in chunks:
                 try:
-                    # Note: send_direct_message() requires explicit kwargs (at least in tweepy 1.5)
-                    # See http://groups.google.com/group/tweepy/msg/790fcab8bc6affb5
-                    twitter_api.send_direct_message(screen_name=recipient,
-                                                    text=c)
+                    twitter_api.update_status(c)
                 except tweepy.TweepError:
-                    s3_debug("Unable to Tweet DM")
-        else:
-            prefix = "@%s " % recipient
-            chunks = self.break_to_chunks(text,
-                                          TWITTER_MAX_CHARS - len(prefix))
-            for c in chunks:
-                try:
-                    twitter_api.update_status(prefix + c)
-                except tweepy.TweepError:
-                    s3_debug("Unable to Tweet @mention")
+                    s3_debug("Unable to Tweet")
+
         return True
 
     #-------------------------------------------------------------------------

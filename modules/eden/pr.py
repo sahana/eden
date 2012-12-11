@@ -765,7 +765,6 @@ class S3PersonModel(S3Model):
         add_component("hrm_certification", pr_person="person_id")
         add_component("hrm_competency", pr_person="person_id")
         add_component("hrm_credential", pr_person="person_id")
-        # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
 
         # Experience
