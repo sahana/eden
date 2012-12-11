@@ -515,6 +515,12 @@ class S3HRModel(S3Model):
                                     cols = 2
                                   ),
                                 S3SearchOptionsWidget(
+                                    name="human_resource_search_L0",
+                                    field="location_id$L0",
+                                    location_level="L0",
+                                    cols = 3,
+                                ),
+                                S3SearchOptionsWidget(
                                     name="human_resource_search_L1",
                                     field="location_id$L1",
                                     location_level="L1",
@@ -3310,9 +3316,9 @@ def hrm_human_resource_onaccept(form):
             record_id = atable.insert(type = 1,
                                       pe_id = pe_id,
                                       location_id = record.location_id)
-        # request_vars = None for prepop
-        if form.request_vars and "programme_id" in form.request_vars:
-            programme_id = form.request_vars.programme_id
+        request_vars = current.request.vars
+        if request_vars and "programme_id" in request_vars:
+            programme_id = request_vars.programme_id
             # Have we already got a record for this programme?
             table = s3db.hrm_programme_hours
             query = (table.deleted == False) & \
@@ -3959,26 +3965,26 @@ class HRMProgrammeVirtualFields:
     extra_fields = ["person_id"]
 
     # -------------------------------------------------------------------------
-    def programme(self):
-        """ Which Programme a Volunteer is associated with """
-        try:
-            person_id = self.hrm_human_resource.person_id
-        except AttributeError:
-            # not available
-            person_id = None
-        if person_id:
-            s3db = current.s3db
-            ptable = s3db.hrm_programme
-            htable = s3db.hrm_programme_hours
-            query = (htable.deleted == False) & \
-                    (htable.person_id == person_id) & \
-                    (htable.programme_id == ptable.id)
-            programme = current.db(query).select(ptable.name,
-                                                 orderby=htable.date).last()
-            if programme:
-                return programme.name
+    #def programme(self):
+    #    """ Which Programme a Volunteer is associated with """
+    #    try:
+    #        person_id = self.hrm_human_resource.person_id
+    #    except AttributeError:
+    #        # not available
+    #        person_id = None
+    #    if person_id:
+    #        s3db = current.s3db
+    #        ptable = s3db.hrm_programme
+    #        htable = s3db.hrm_programme_hours
+    #        query = (htable.deleted == False) & \
+    #                (htable.person_id == person_id) & \
+    #                (htable.programme_id == ptable.id)
+    #        programme = current.db(query).select(ptable.name,
+    #                                             orderby=htable.date).last()
+    #        if programme:
+    #            return programme.name
 
-        return current.messages["NONE"]
+    #    return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def active(self):
@@ -4210,6 +4216,11 @@ def hrm_rheader(r, tabs=[],
                 db = current.db
                 s3db = current.s3db
                 ptable = s3db.hrm_programme_hours
+                row = db().select().first()
+                if row:
+                    programme = row.name
+                else:
+                    programme = ""
                 query = (ptable.date > last_year.date()) & \
                         (ptable.deleted == False) & \
                         (ptable.person_id == r.id)
@@ -4251,7 +4262,7 @@ def hrm_rheader(r, tabs=[],
                 else:
                     active_cells = []
                 row1 = TR(TH("%s:" % T("Programme")),
-                          record.programme,
+                          programme,
                           *active_cells
                           )
                 row2 = TR(TH("%s:" % T("Programme Hours (Month)")),

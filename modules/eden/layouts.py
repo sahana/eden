@@ -278,7 +278,8 @@ class S3AddResourceLink(S3NavigationItem):
                  vars=None,
                  info=None,
                  title=None,
-                 tooltip=None):
+                 tooltip=None,
+                 ):
         """
             Constructor
 
@@ -355,7 +356,7 @@ class S3AddResourceLink(S3NavigationItem):
                        _target="top",
                        _title=item.opts.info)
 
-        return DIV(popup_link, _class='s3_inline_add_resource_link')
+        return DIV(popup_link, _class="s3_inline_add_resource_link")
 
 # =============================================================================
 def homepage(module=None, *match, **attr):

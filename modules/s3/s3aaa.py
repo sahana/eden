@@ -567,8 +567,8 @@ Thank you
                 addrow(form, XML(""), INPUT(_id="auth_user_clientlocation",
                                             _name="auth_user_clientlocation",
                                             _style="display:none"),
-                       SCRIPT("$(document).ready(function(){s3_get_client_location(jQuery('#auth_user_clientlocation'));});"),
                        "display:none", "auth_user_client_location")
+                current.response.s3.jquery_ready.append('''s3_get_client_location($('#auth_user_clientlocation'))''')
 
             captcha = self.settings.login_captcha or \
                 (self.settings.login_captcha!=False and self.settings.captcha)

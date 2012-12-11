@@ -546,24 +546,21 @@ class S3InventoryModel(S3Model):
                                                            sort=True),
                                       represent = self.inv_item_represent,
                                       label = INV_ITEM,
-                                      comment = DIV( _class="tooltip",
-                                                     _title="%s|%s" % (INV_ITEM,
-                                                                       T("Select Stock from this Warehouse"))),
+                                      comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (INV_ITEM,
+                                                                      T("Select Stock from this Warehouse"))),
                                       ondelete = "CASCADE",
-                                      script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'inv_item_id',
-  'Field':'item_pack_id',
-  'FieldResource':'item_pack',
-  'FieldPrefix':'supply',
-  'url':S3.Ap.concat('/inv/inv_item_packs/'),
-  'msgNoRecords':i18n.no_packs,
-  'fncPrep':fncPrepItem,
-  'fncRepresent':fncRepresentItem
- })
-})'''),
-                                )
+                                      script = '''
+S3FilterFieldChange({
+ 'FilterField':'inv_item_id',
+ 'Field':'item_pack_id',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'url':S3.Ap.concat('/inv/inv_item_packs/'),
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})''')
 
         if track_pack_values:
             rows = ["item_id", (T("Category"), "item_category"), "currency"]
@@ -1534,19 +1531,17 @@ class S3TrackingModel(S3Model):
                                              ),
                              inv_item_id(name="send_inv_item_id",
                                          ondelete = "RESTRICT",
-                                         script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'send_inv_item_id',
-  'Field':'item_pack_id',
-  'FieldResource':'item_pack',
-  'FieldPrefix':'supply',
-  'url':S3.Ap.concat('/inv/inv_item_packs/'),
-  'msgNoRecords':i18n.no_packs,
-  'fncPrep':fncPrepItem,
-  'fncRepresent':fncRepresentItem
- })
-})''')),
+                                         script = '''
+S3FilterFieldChange({
+ 'FilterField':'send_inv_item_id',
+ 'Field':'item_pack_id',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'url':S3.Ap.concat('/inv/inv_item_packs/'),
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})'''),
                              item_id(ondelete = "RESTRICT"),
                              item_pack_id(ondelete = "SET NULL"),
                              Field("quantity", "double", notnull=True,

@@ -158,16 +158,14 @@ class S3AssetModel(S3Model):
                                                  script = None, # No Item Pack Filter
                                                  ),
                              organisation_id(required = True,
-                                             script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldResource':'site',
-  'FieldPrefix':'org',
-  'FieldID':'site_id'
- })
-})'''),),
+                                             script = '''
+S3FilterFieldChange({
+ 'FilterField':'organisation_id',
+ 'Field':'site_id',
+ 'FieldResource':'site',
+ 'FieldPrefix':'org',
+ 'FieldID':'site_id'
+})'''),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
@@ -447,21 +445,18 @@ $(document).ready(function(){
                                         empty = False,
                                         represent = self.org_site_represent,
                                         #widget = S3SiteAutocompleteWidget(),
-                                        comment = SCRIPT(
-'''$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldPrefix':'org',
-  'FieldResource':'site',
-  'FieldID':'site_id',
-  'fncRepresent': function(record, PrepResult) {
-                      var InstanceTypeNice = %(instance_type_nice)s;
-                      return record.name + " (" + InstanceTypeNice[record.instance_type] + ")";
-                  }
- })
-})''' % dict(instance_type_nice = auth.org_site_types)),
-                                              ),
+                                        comment = '''
+S3FilterFieldChange({
+ 'FilterField':'organisation_id',
+ 'Field':'site_id',
+ 'FieldPrefix':'org',
+ 'FieldResource':'site',
+ 'FieldID':'site_id',
+ 'fncRepresent': function(record,PrepResult){
+  var InstanceTypeNice=%(instance_type_nice)s
+  return record.name+" ("+InstanceTypeNice[record.instance_type]+")"
+}})''' % dict(instance_type_nice = auth.org_site_types),
+                                        ),
                              self.org_room_id(),
                              #location_id(),
                              Field("cancel", "boolean",

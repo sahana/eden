@@ -1519,7 +1519,7 @@ class S3FacilityModel(S3Model):
             msg_list_empty=T("No Facilities currently registered"))
 
         # Search method
-        def get_facility_opts():
+        def facility_type_opts():
             table = self.org_facility_type
             rows = db(table.deleted == False).select(table.name)
             opts = {}
@@ -1544,7 +1544,7 @@ class S3FacilityModel(S3Model):
                 name="facility_search_type",
                 label=T("Type"),
                 field="facility_type_id",
-                options = get_facility_opts,
+                options = facility_type_opts,
                 cols=2,
             ),
             S3SearchOptionsWidget(
@@ -2821,6 +2821,7 @@ def org_organisation_controller():
                 record = r.record
                 otable.organisation_type_id.default = record.organisation_type_id
                 otable.multi_sector_id.default = record.multi_sector_id
+                otable.region.default = record.region
                 otable.country.default = record.country
                 # Represent orgs without the parent prefix as we have that context already
                 s3db.org_organisation_branch.branch_id.represent = lambda val: \

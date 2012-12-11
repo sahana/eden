@@ -126,10 +126,10 @@ def volunteer():
         # Add VF to List Fields
         if enable_active_field:
             list_fields.insert(4, (T("Active?"), "active"))
-        list_fields.insert(6, (T("Programme"), "programme"))
+        list_fields.insert(6, "person_id$hours.programme_id")
         # Add VF to Report Options
         report_fields = report_options.rows
-        report_fields.append((T("Programme"), "programme"))
+        report_fields.append("person_id$hours.programme_id")
         if enable_active_field:
             report_fields.append((T("Active?"), "active"))
         report_options.rows = report_fields
@@ -174,23 +174,22 @@ def volunteer():
                 _dict[opt.id] = opt.name
             return _dict
 
-        # Don't make a VF a Search Option as not scalable
-        #widget = s3base.S3SearchOptionsWidget(
-        #                    name="human_resource_search_programme",
-        #                    label=T("Programme"),
-        #                    field="programme",
-        #                    cols = 2,
-        #                    options = hrm_programme_opts
-        #                  ),
-        #search_widget = ("human_resource_search_programme", widget[0])
-        #human_resource_search.advanced.insert(3, search_widget)
+        widget = s3base.S3SearchOptionsWidget(
+                            name="human_resource_search_programme",
+                            label=T("Programme"),
+                            field="person_id$hours.programme_id",
+                            cols = 2,
+                            options = hrm_programme_opts
+                          ),
+        search_widget = ("human_resource_search_programme", widget[0])
+        human_resource_search.advanced.insert(3, search_widget)
     else:
         list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
     s3db.configure(tablename,
-                    list_fields = list_fields,
-                    report_options = report_options,
-                    search_method = human_resource_search)
+                   list_fields = list_fields,
+                   report_options = report_options,
+                   search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:
@@ -479,6 +478,7 @@ def person():
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
 
                 elif r.component_name == "hours":
+                    # Exclude records which are just to link to Programme
                     filter = (r.component.table.hours != None)
                     r.resource.add_component_filter("hours", filter)
                 elif r.component_name == "physical_description":

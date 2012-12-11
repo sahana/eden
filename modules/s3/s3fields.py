@@ -67,6 +67,7 @@ from gluon import *
 from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 
+from s3navigation import S3ScriptItem
 from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
 from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
@@ -197,9 +198,10 @@ class S3ReusableField(object):
         if "script" in ia:
             if ia.script:
                 if ia.comment:
-                    ia.comment = TAG[""](ia.comment, ia.script)
+                    ia.comment = TAG[""](ia.comment,
+                                         S3ScriptItem(script=ia.script))
                 else:
-                    ia.comment = ia.script
+                    ia.comment = S3ScriptItem(script=ia.script)
             del ia["script"]
 
         if ia.sortby is not None:

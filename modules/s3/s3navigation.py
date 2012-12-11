@@ -26,18 +26,16 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    @todo: - re-write tabs and popup links as S3NavigationItems
-           - refine check_selected (e.g. must be False if link=False)
+    @todo: - refine check_selected (e.g. must be False if link=False)
            - implement collapse-flag (render only components in a TAG[""])
            - implement convenience methods for breadcrumbs (+renderer))
            - add site-map generator and renderer (easy)
            - rewrite action buttons/links as S3NavigationItems
-           - Documentation!
-                => http://eden.sahanafoundation.org/wiki/S3Navigation
-           - ...and all the todo's in the code
+           - ...and any todo's in the code
 """
 
 __all__ = ["S3NavigationItem",
+           "S3ScriptItem",
            "S3ResourceHeader",
            "s3_rheader_tabs",
            "s3_rheader_resource"]
@@ -81,7 +79,8 @@ class S3NavigationItem(object):
         a menu-alike behavior of the item - which may though not fit for all
         navigation elements.
 
-        For more details, see the S3Navigation wiki page.
+        For more details, see the S3Navigation wiki page:
+        http://eden.sahanafoundation.org/wiki/S3Navigation
     """
 
     # -------------------------------------------------------------------------
@@ -878,7 +877,7 @@ class S3NavigationItem(object):
         """
             Invokes the renderer and serializes the output for the web2py
             template parser, returns a string to be written to the response
-            body, uses the xml() method of the renderer output, if present
+            body, uses the xml() method of the renderer output, if present.
         """
 
         output = self.render()
@@ -1432,6 +1431,41 @@ class S3ComponentTab:
                k in get_vars and get_vars[k] != v:
                 return False
         return True
+
+# =============================================================================
+class S3ScriptItem(S3NavigationItem):
+    """
+        Simple Navigation Item just for injecting scripts into HTML forms
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self,
+                 script=None,
+                 **attributes):
+        """
+            @param script: script to inject into jquery_ready when rendered
+        """
+
+        self.script = script
+        return super(S3ScriptItem, self).__init__(attributes)
+
+    # -------------------------------------------------------------------------
+    def xml(self):
+        """
+            Injects associated script into jquery_ready.
+        """
+
+        current.response.s3.jquery_ready.append(self.script)
+        return ""
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inline(item):
+        """
+            Present to ensure that script injected even in inline forms
+        """
+
+        return ""
 
 # =============================================================================
 def s3_search_tabs(r, tabs=[], vars={}):
