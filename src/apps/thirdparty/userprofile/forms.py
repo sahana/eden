@@ -98,11 +98,6 @@ class RegistrationForm(forms.Form):
         if not email:
             raise forms.ValidationError(_("E-mail address cannot be blank"))
         try:
-            if not email_re.search(email):
-                print "voy a validar regex"
-                raise exceptions.ValidationError(_('Enter a valid e-mail \
-                    address.'))
-            else:
                 User.objects.get(email=email)
                 raise forms.ValidationError(_("That e-mail is already used."))
         except User.DoesNotExist:
