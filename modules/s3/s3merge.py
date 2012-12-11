@@ -203,7 +203,7 @@ class S3Merge(S3Method):
                      _id="markDuplicateURL",
                      _class="hide"),
                    A(T("De-duplicate"),
-                     _href=r.url(method="deduplicate", id=0, vars={}),
+                     _href=r.url(method="deduplicate", target=0, vars={}),
                      _class=deduplicate),
                    _id="markDuplicate")
 
@@ -242,9 +242,7 @@ class S3Merge(S3Method):
         resource.add_filter(query)
 
         # List fields
-        list_fields = self._config("list_fields", None)
-        if not list_fields:
-            list_fields = [f.name for f in resource.readable_fields()]
+        list_fields = resource.list_fields()
 
         # Start/Limit
         vars = r.get_vars
@@ -325,7 +323,7 @@ class S3Merge(S3Method):
 
             output["items"] = items
             response.s3.actions = [{"label": str(current.T("View")),
-                                    "url": r.url(id="[id]", method="read"),
+                                    "url": r.url(target="[id]", method="read"),
                                     "_class": "action-btn"}]
 
             if len(record_ids) < 2:

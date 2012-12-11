@@ -2159,10 +2159,10 @@ class S3SavedSearch(S3Model):
                                                                       T("Your name for this search. Notifications will use this name."))),
                                         ),
                                   self.super_link("pe_id", "pr_pentity",
-                                                  #label=T("Person Entity"),
+                                                  label=T("Person Entity"),
                                                   readable=True,
                                                   writable=True,
-                                                  #represent=pr_pentity_represent,
+                                                  represent=pr_pentity_represent,
                                                   ),
                                   Field("controller",
                                         #label=T("Controller"),
@@ -3267,6 +3267,8 @@ def pr_pentity_represent(id, row=None, show_label=True,
                          default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
+    db = current.db
+
     if row:
         id = row.pe_id
         s3db = current.s3db
@@ -3274,7 +3276,6 @@ def pr_pentity_represent(id, row=None, show_label=True,
     elif not id:
         return current.messages["NONE"]
     else:
-        db = current.db
         s3db = current.s3db
         pe_table = s3db.pr_pentity
         row = db(pe_table.pe_id == id).select(pe_table.instance_type,

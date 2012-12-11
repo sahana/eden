@@ -1584,19 +1584,40 @@ class S3Request(object):
                        **headers)
 
     # -------------------------------------------------------------------------
-    def url(self, id=None, method=None, representation=None, vars=None):
+    def url(self,
+            id=None,
+            component=None,
+            component_id=None,
+            target=None,
+            method=None,
+            representation=None,
+            vars=None):
         """
-            Returns the URL of this request
+            Returns the URL of this request, use parameters to override
+            current requests attributes:
 
-            @param id: the record ID
+                - None to keep current attribute (default)
+                - 0 or "" to set attribute to NONE
+                - value to use explicit value
+
+            @param id: the master record ID
+            @param component: the component name
+            @param component_id: the component ID
+            @param target: the target record ID (choose automatically)
             @param method: the URL method
             @param representation: the representation for the URL
             @param vars: the URL query variables
+
+            Particular behavior:
+                - changing the master record ID resets the component ID
+                - removing the target record ID sets the method to None
+                - removing the method sets the target record ID to None
+                - [] as id will be replaced by the "[id]" wildcard
         """
 
         if vars is None:
             vars = self.get_vars
-        elif isinstance(vars, str):
+        elif vars and isinstance(vars, str):
             # We've come from a dataTable_vars which has the vars as
             # a JSON string, but with the wrong quotation marks
             vars = json.loads(vars.replace("'", "\""))
@@ -1607,47 +1628,76 @@ class S3Request(object):
         args = []
         read = False
 
-        component_id = self.component_id
-        if id is None:
-            id = self.id
-        else:
-            read = True
+        cname = self.component_name
 
-        if not representation:
-            representation = self.representation
+        # target
+        if target is not None:
+            if cname and (component is None or component == cname):
+                component_id = target
+            else:
+                id = target
+
+        # method
+        default_method = False
         if method is None:
+            default_method = True
             method = self.method
         elif method == "":
+            # Switch to list? (= method="" and no explicit target ID)
+            if component_id is None:
+                if self.component_id is not None:
+                    component_id = 0
+                elif not self.component:
+                    if id is None:
+                        if self.id is not None:
+                            id = 0
             method = None
-            if not read:
-                if self.component:
-                    component_id = None
-                else:
-                    id = None
-        else:
-            if id is None:
-                id = self.id
-            elif id == 0:
-                id = None
-            else:
-                id = str(id)
-                if len(id) == 0:
-                    id = "[id]"
 
-        if self.component:
-            if id:
-                args.append(id)
-            args.append(self.component_name)
-            if component_id:
-                args.append(component_id)
-            if method:
-                args.append(method)
-        else:
-            if id:
-                args.append(id)
-            if method:
-                args.append(method)
+        # id
+        if id is None:
+            id = self.id
+        elif id in (0, ""):
+            id = None
+        elif id in ([], "[id]", "*"):
+            id = "[id]"
+            component_id = 0
+        elif str(id) != str(self.id):
+            component_id = 0
 
+        # component
+        if component is None:
+            component = cname
+        elif component == "":
+            component = None
+        if cname and cname != component or not component:
+            component_id = 0
+        
+        # component_id
+        if component_id is None:
+            component_id = self.component_id
+        elif component_id == 0:
+            component_id = None
+            if self.component_id and default_method:
+                method = None
+
+        if id is None and self.id and \
+           (not component or not component_id) and default_method:
+            method = None
+
+        if id:
+            args.append(id)
+        if component:
+            args.append(component)
+        if component_id:
+            args.append(component_id)
+        if method:
+            args.append(method)
+
+        # representation
+        if representation is None:
+            representation = self.representation
+        elif representation == "":
+            representation = self.DEFAULT_REPRESENTATION
         f = self.function
         if not representation == self.DEFAULT_REPRESENTATION:
             if len(args) > 0:
