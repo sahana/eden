@@ -27,7 +27,7 @@
                 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
                 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
 
-                <h5>Latest participative processes</h5>
+                <h5>{% trans "Latest participative processes" %}</h5>
                 <ul class="unstyled">
                     {% for space in spaces %}
                         <li><a href="{{ space.get_absolute_url }}" rel="popover"
@@ -64,25 +64,25 @@
                     <form action="{% url 'login' %}?next={% url 'profile_overview' %}" method="POST">{% csrf_token %}
                         <input id="id_username" name="username" type="text" placeholder="Username">
                         <div class="input-append">
-                            <input id="id_password" name="password" class="span2" type="password" id="inputPassword" placeholder="Password"><button class="btn btn-success" type="submit">Sign in</button>
+                            <input id="id_password" name="password" class="span2" type="password" id="inputPassword" placeholder="Password"><button class="btn btn-success" type="submit">{% trans "Sign in" %}</button>
                         </div>
                     </form>
                     <div style="font-size:0.8em;">
-                        <a href="#">Forgot your password?</a> | 
-                        <a href="{% url 'invite' %}">Invite someone!</a>
+                        <a href="#">{% trans "Forgot your password?" %}</a> | 
+                        <a href="{% url 'invite' %}">{% trans "Invite someone!" %}</a>
                     </div>
                 </div>
             </div>
 
             <div class="row">
                 <div class="span3 well">
-                    <h6 style="margin-top:-10px;">First time here? Register!</h6>
-                    <form action="{% url 'signup' %}?next={% url 'signup' %}" method="POST">{% csrf_token %}
+                    <h6 style="margin-top:-10px;">{% trans "First time here? Register!" %}</h6>
+                    <form action="{% url 'signup' %}" method="POST">{% csrf_token %}
                         <input type="text" id="id_username" name="username" placeholder="Username">
                         <input type="text" id="id_email" name="email" placeholder="E-Mail">
                         <input type="password" id="id_password1" name="password1" placeholder="Password">
                         <div class="input-append">
-                            <input class="span2" type="password" id="id_password2" name="password2" placeholder="Repeat password"><button class="btn btn-primary" type="submit">Register</button>
+                            <input class="span2" type="password" id="id_password2" name="password2" placeholder="Repeat password"><button class="btn btn-primary" type="submit">{% trans "Register" %}</button>
                         </div>
                     </form>
                 </div>
