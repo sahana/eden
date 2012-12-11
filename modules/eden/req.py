@@ -1788,7 +1788,8 @@ class S3RequestSummaryModel(S3Model):
                                   s3_comments("needs",
                                               label=T("Needs"),
                                               comment=None,
-                                              widget=S3PriorityListWidget(),
+                                              widget=S3PriorityListWidget(
+                                                     ),
                                               ),
                                   *s3_meta_fields())
 

@@ -4,20 +4,21 @@
 
     $.widget( "ui.prioritylist", {
 	options: { 
-	    
 	},
 	
 	_create: function() {
 		self = this;
 	    var needsField = this.element;
-	    var form = $(needsField).closest('form');
-	    form.children().hide(':input');
+	    this.form = $(needsField).closest('form');
+	    self.element.hide();
+	    $('label[for="'+self.element.attr('id')+'"]').hide();
 	    
 	    // Wrap the prioritylist in a <div>
-	    var container = $('<div class="pl-container"></div>').appendTo(form);
+	    var container = $('<div class="pl-container"></div>').insertAfter(this.element);
 	    
 	    // Add form elements for adding needs
 	    var addNeedWrap = $('<div id="need-wrap"></div>').appendTo(container);
+	    var newNeedLabel = $('<label id="new-need-label" for="new-need">Add need to list</lable>').appendTo(addNeedWrap);
 	    var newNeedBox = $('<input id="new-need" />').appendTo(addNeedWrap);
 	    var needButton = $('<input id="add-need" type="button" value="Need"/>').insertAfter(newNeedBox);
 	    var acceptingButton = $('<input id="add-accepting" type="button" value="Accepting"/>').insertAfter(needButton);
@@ -48,16 +49,9 @@
 			var category = this.needs[key];
 
 			for (var i = 0; i < category.length; i++) {
-			    list.append('<li>' + category[i] + '</li>');
+			    list.append('<li><span>' + category[i] + '</span><a href="#" class="delete-need">x</a></li>');
 			}
-	    }
-	    
-	    // Add form elements for sending tweets
-	    var tweetWrap = $('<div class="tweet-box"></div>').appendTo(container);
-	    var tweetCheck = $('<input type="checkbox" id="tweet-changes" /> tweet changes to:').appendTo(tweetWrap);
-	    var tweetLabel = $('<label id="tweet-label">tweet changes to:</label>').appendTo(tweetWrap);
-	    var tweetBox = $('<textarea id="tweet-box" disabled></textarea>').appendTo(tweetWrap);
-	    var tweetButton = $('<input type="button" id="tweet-button" value="Send" disabled/>').insertAfter(tweetBox);	    	    
+	    }	   	    	    
 
         $( ".connectedSortable" ).sortable({
 			connectWith: ".connectedSortable",
@@ -71,12 +65,31 @@
         });
         
         noNeedButton.click(function() {
-			self.addNeed( 'no-need' );
+			self.addNeed( 'no_need' );
         });
         
         acceptingButton.click(function() {
 			self.addNeed( 'accepting' );
         });
+        
+        $( ".delete-need" ).live("click", function() {
+        	self.deleteNeed( $(this).parent() );
+        });
+
+		/*        
+	    // Add form elements for sending tweets
+	    var tweetWrap = $('<div class="tweet-box"></div>').appendTo(container);
+	    var tweetCheck = $('<input type="checkbox" id="tweet-changes" /> tweet changes to:').appendTo(tweetWrap);
+	    var tweetLabel = $('<label id="tweet-label">tweet changes to:</label>').appendTo(tweetWrap);
+	    
+	    var handles = $('<select id="twitter-handles"></select>').appendTo(tweetWrap);
+	    alert(self.options.twitter_handles);
+	    for(i = 0; i < self.options.twitter_handles.length; i++) {
+	    	handles.append($('<option>' + self.options.twitter_handles[i] + '</option>'));
+	    }
+	    
+	    var tweetBox = $('<textarea id="tweet-box" disabled></textarea>').appendTo(tweetWrap);
+	    var tweetButton = $('<input type="button" id="tweet-button" value="Send" disabled/>').insertAfter(tweetBox);        
         
         $('#tweet-changes').change(function() {
         	if ( $(this).attr("checked") == "checked" ) {
@@ -87,6 +100,7 @@
 				$('#tweet-button').attr("disabled","disabled");
 			}
 		});
+		*/
 		
 	    this.refresh();
 	},
@@ -99,37 +113,45 @@
 	addNeed: function( to ) {	
 		var newNeed =  $('#new-need')
 		var text = newNeed.val();
-		var item = $('<li>' + text + '</li>')
+		var item = $('<li><span>' + text + '</span><a href="#" class="delete-need">x</a></li>')
 		$('#' + to).append( item );
-		self.moveNeed( text, null, to );
-		self.updateTweet(to);
+		self.moveNeed( item, null, to );
+		//self.updateTweet(to);
 		newNeed.val('');
 	},		
 	
 	// Update the JSON object of existing needs
 	moveNeed: function( item, from, to ) {
+		var itemText = item.children('span').text();
+	
 		if(from) {	
-			self.changedNeeds[from].remove(item);
-			self.updatedNeeds[from].remove(item);
+			self.changedNeeds[from].remove(itemText);
+			self.updatedNeeds[from].remove(itemText);
 		}
-		self.changedNeeds[to].push(item);
-		self.updatedNeeds[to].push(item);
+		self.changedNeeds[to].push(itemText);
+		self.updatedNeeds[to].push(itemText);
 		
-		// Update the JSON data in the hidden form
-		self.element.val(JSON.stringify(self.updatedNeeds));
-		
-		// Post the updated data
-		var postData = self.element.closest("form").serialize();
-		
-		$.ajax({
-	        type: 'POST',
-	        url: document.location.href,
-	        data: postData,
-	    }).error(function() {
-	        alert('Error saving data!');
-	    });
-		
+		self.updateForm();
 	},	
+	
+	// Remove an item
+	deleteNeed: function( item ) {	
+		var itemText = item.children('span').text();
+		var from = item.parent('ul').attr("id");
+
+		if(self.changedNeeds[from].indexOf(itemText) > -1) {
+			self.changedNeeds[from].remove(itemText);
+		}
+		
+		self.updatedNeeds[from].remove(itemText);
+		item.remove();
+		self.updateForm();
+	},		
+	
+	updateForm: function() {
+		// Update the JSON data in the hidden form element
+		self.element.val(JSON.stringify(self.updatedNeeds));
+	},
 	
 	updateTweet: function( to ) {
 		var newItemString = "";
@@ -163,8 +185,8 @@
 	    var to = $( event.target ).attr("id");
 		var from = $( ui.sender ).attr("id");
 
-		self.moveNeed( $( ui.item ).text() , from, to );
-	    self.updateTweet(to);
+		self.moveNeed( $( ui.item ), from, to );
+	    //self.updateTweet(to);
 	},
 
 	_remove: function( event, ui ) {

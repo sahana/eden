@@ -2574,8 +2574,17 @@ $('#%s').multiselect({
 class S3PriorityListWidget(StringWidget):
 
     """
-        Standard String widget
+        Widget to broadcast facility needs
     """
+    
+    def __init__(self,
+                 facility_id=None):
+
+        self.twitter_handles = facility_id
+
+        #self.post_process = current.s3db.get_config(link,
+        #                                            "post_process",
+        #                                            None)   
 
     def __call__(self, field, value, **attributes):
 
@@ -2593,7 +2602,7 @@ class S3PriorityListWidget(StringWidget):
         s3.jquery_ready.append('''
 $('#%s').removeClass('list')
 $('#%s').addClass('prioritylist')
-$('#%s').prioritylist()
+$('#%s').prioritylist({})
 ''' % (selector,
        selector,
        selector))

@@ -5,6 +5,12 @@
     display: block;
     }
 
+    div.pl-container {
+    clear: both;
+    zoom: 1;
+    overflow: hidden;
+    }
+
     .pl-container div {
     float:left;
     width: 33%;
@@ -14,8 +20,8 @@
     list-style-type: none;
     margin: 3px;
     padding: 0px;
-    min-height: 8em;
-    max-height: 8em;
+    min-height: 15em;
+    max-height: 15em;
     overflow-y: auto;
     min-width: 200px;
     }
@@ -25,6 +31,14 @@
     height: 2em;
     line-height: 2em;
     background-color: #eee;
+    }
+    
+    li a.delete-need {
+    	display: block;
+    	float: right;
+    	padding: 0 5px;
+    	font-weight: bold;
+    	text-decoration: none;
     }
 
     .pl-container ul#need {
