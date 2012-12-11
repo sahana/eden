@@ -4022,26 +4022,26 @@ class HRMProgrammePersonVirtualFields:
     extra_fields = []
 
     # -------------------------------------------------------------------------
-    def programme(self):
-        """ Which Programme a Volunteer is associated with """
-        try:
-            person_id = self.pr_person.id
-        except AttributeError:
-            # not available
-            person_id = None
-        if person_id:
-            s3db = current.s3db
-            ptable = s3db.hrm_programme
-            htable = s3db.hrm_programme_hours
-            query = (htable.deleted == False) & \
-                    (htable.person_id == person_id) & \
-                    (htable.programme_id == ptable.id)
-            programme = current.db(query).select(ptable.name,
-                                                 orderby=htable.date).last()
-            if programme:
-                return programme.name
+    #def programme(self):
+    #    """ Which Programme a Volunteer is associated with """
+    #    try:
+    #        person_id = self.pr_person.id
+    #    except AttributeError:
+    #        # not available
+    #        person_id = None
+    #    if person_id:
+    #        s3db = current.s3db
+    #        ptable = s3db.hrm_programme
+    #        htable = s3db.hrm_programme_hours
+    #        query = (htable.deleted == False) & \
+    #                (htable.person_id == person_id) & \
+    #                (htable.programme_id == ptable.id)
+    #        programme = current.db(query).select(ptable.name,
+    #                                             orderby=htable.date).last()
+    #        if programme:
+    #            return programme.name
 
-        return current.messages["NONE"]
+    #    return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     def active(self):
@@ -4215,18 +4215,24 @@ def hrm_rheader(r, tabs=[],
                 last_year = now - datetime.timedelta(days=365)
                 db = current.db
                 s3db = current.s3db
-                ptable = s3db.hrm_programme_hours
-                row = db().select().first()
+                ptable = s3db.hrm_programme
+                phtable = db.hrm_programme_hours
+                bquery = (phtable.deleted == False) & \
+                         (phtable.person_id == r.id)
+                query = bquery & \
+                        (phtable.programme_id == ptable.id)
+                row = db(query).select(ptable.name,
+                                       phtable.date,
+                                       orderby=phtable.date).last()
                 if row:
-                    programme = row.name
+                    programme = row.hrm_programme.name
                 else:
                     programme = ""
-                query = (ptable.date > last_year.date()) & \
-                        (ptable.deleted == False) & \
-                        (ptable.person_id == r.id)
-                rows = db(query).select(ptable.date,
-                                        ptable.hours,
-                                        ptable.training)
+                query = bquery & \
+                        (phtable.date > last_year.date())
+                rows = db(query).select(phtable.date,
+                                        phtable.hours,
+                                        phtable.training)
                 programme_hours_year = 0
                 programme_hours_month = 0
                 training_hours_year = 0
