@@ -65,7 +65,7 @@ The installation process for e-cidadania is quite simple.
 Requirements
 ````````````
 - Apache, nginx, or any other web server with CGI suppport
-- FastCGI, CGI, Passenger or other CGI.
+- FastCGI, uWSGI, Passenger or other CGI.
 
 **Dependencies**
 
