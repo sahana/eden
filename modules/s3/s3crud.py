@@ -846,19 +846,8 @@ class S3CRUD(S3Method):
             linkto = self._linkto(r)
 
         # List fields
-        if not list_fields:
-            fields = resource.readable_fields()
-            list_fields = [f.name for f in fields]
-        else:
-            fields = [table[f] for f in list_fields if f in table.fields]
-        if not fields:
-            fields = []
-
-        if not fields or \
-           fields[0].name != table.fields[0]:
-            fields.insert(0, table[table.fields[0]])
-        if list_fields[0] != table.fields[0]:
-            list_fields.insert(0, table.fields[0])
+        list_fields = resource.list_fields()
+        fields = [table[f] for f in list_fields if f in table]
 
         # Truncate long texts
         if r.interactive or r.representation == "aadata":

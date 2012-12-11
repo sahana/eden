@@ -3718,6 +3718,27 @@ class S3Resource(object):
                 append(join)
         return s
 
+    # -------------------------------------------------------------------------
+    def list_fields(self, key="list_fields"):
+        """
+            Get the list_fields for this resource
+
+            @param key: alternative key for the table configuration
+        """
+
+        list_fields = self.get_config(key, None)
+        if not list_fields:
+            list_fields = [f.name for f in self.readable_fields()]
+        pkey = self._id.name
+        fields = []
+        append = fields.append
+        for f in list_fields:
+            if f not in fields and f != pkey:
+                append(f)
+        list_fields = fields
+        list_fields.insert(0, self._id.name)
+        return list_fields
+
 # =============================================================================
 class S3FieldSelector(object):
     """ Helper class to construct a resource query """
