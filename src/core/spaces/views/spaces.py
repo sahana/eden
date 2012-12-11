@@ -151,7 +151,6 @@ class ViewSpaceIndex(DetailView):
         top_posts = Post.objects.filter(space=place.id).in_bulk(post_ids)
 
         o_list = Comment.objects.annotate(ocount=Count('object_pk'))
-        print o_list
 
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
