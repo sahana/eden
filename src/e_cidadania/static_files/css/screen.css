@@ -61,6 +61,10 @@ hr { /* This hr replaces the bootstrap one */
     text-decoration: none;
 }
 
+.popover {
+    color: #222;
+}
+
 #logo {
     float: left;
     /* The logo image must be 75px height */
