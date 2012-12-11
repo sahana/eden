@@ -707,7 +707,10 @@ function S3FilterFieldChange(setting) {
         return
     }
 
-	var Field = setting.Field;
+    // Flag to know whether this is the first change
+	var first = true;
+
+    var Field = setting.Field;
     var selField = $('[name = "' + Field + '"]');
     //var selFieldRows = $('[id *= "' + Field + '__row"]');
 
@@ -828,7 +831,7 @@ function S3FilterFieldChange(setting) {
             //selFieldRows.show();
         //}
 
-        /* Show Throbber */
+        // Show Throbber
         selWidget.hide();
         if ($('#' + FieldResource + '_ajax_throbber').length == 0 ) {
             selWidget.after('<div id="' + FieldResource + '_ajax_throbber" class="ajax_throbber"/>')
@@ -844,7 +847,7 @@ function S3FilterFieldChange(setting) {
                 dataType: 'json',
                 context: setting,
                 success: function(data) {
-                    /* Create Select Element */
+                    // Create Select Element
                     var options = '';
                     var FilterField = this.FilterField;
                     var FieldResource = this.FieldResource;
@@ -875,7 +878,7 @@ function S3FilterFieldChange(setting) {
                             first_value = setting.FieldVal;
                         }
                     }
-                    /* Set field value */
+                    // Set field value
                     if (options != '') {
                         selField.html(options)
                                 .val(first_value)
@@ -887,7 +890,7 @@ function S3FilterFieldChange(setting) {
                         selField.attr('disabled', 'disabled');
                     }
                     try {
-                        /* Show "Add" Button & modify link */
+                        // Show "Add" Button & modify link
                         var selFieldAdd = $('#' + FieldResource + '_add');
                         var href = selFieldAdd.attr('href');
                         if (href.indexOf(FilterField) == -1) {
@@ -902,8 +905,13 @@ function S3FilterFieldChange(setting) {
                                    .show();
                     } catch(err) {}
 
-                    /* Remove Throbber */
+                    // Remove Throbber
                     $('#' + FieldResource + '_ajax_throbber').remove();
+                    if (first) {
+                        // Don't include this change in the deliberate changes
+                        S3ClearNavigateAwayConfirm();
+                        first = false;
+                    }
                 }
             });
         } else {
@@ -912,10 +920,10 @@ function S3FilterFieldChange(setting) {
                 dataType: 'html',
                 context: setting,
                 success: function(data) {
-                    /* Replace widget with data */
+                    // Replace widget with data
                     var selField = $('[name = "' + this.Field + '"]');
 
-                    /* Set field widget */
+                    // Set field widget
                     if (data != '') {
                         selWidget.html(data)
                                  .change()
@@ -926,8 +934,13 @@ function S3FilterFieldChange(setting) {
                         selWidget.attr('disabled', 'disabled');
                     }
 
-                    /* Remove Throbber */
+                    // Remove Throbber
                     $('#' + FieldResource + '_ajax_throbber').remove();
+                    if (first) {
+                        // Don't include this change in the deliberate changes
+                        S3ClearNavigateAwayConfirm();
+                        first = false;
+                    }
                 }
             });
         }
@@ -935,9 +948,6 @@ function S3FilterFieldChange(setting) {
 
     // If the field value is empty - disable - but keep initial value
     selFilterField.change();
-    // Don't include this change in the deliberate changes
-    S3ClearNavigateAwayConfirm();
-    S3EnableNavigateAwayConfirm();
 };
 
 function S3OptionsFilter(settings) {
@@ -981,6 +991,9 @@ function S3OptionsFilter(settings) {
         // Trigger field not present
         return;
     }
+
+    // Flag to show whether this is the first run
+    var first = true;
 
     triggerField.change(function() {
         var triggerField = $(this);
@@ -1221,6 +1234,11 @@ function S3OptionsFilter(settings) {
 
                     // Remove the throbber
                     $('#' + lookupResource + '_ajax_throbber').remove();
+                    if (first) {
+                        // Don't include this change in the deliberate changes
+                        S3ClearNavigateAwayConfirm();
+                        first = false;
+                    }
                 }
             });
         } else {
@@ -1243,6 +1261,11 @@ function S3OptionsFilter(settings) {
                     }
                     // Remove Throbber
                     $('#' + this.lookupResource + '_ajax_throbber').remove();
+                    if (first) {
+                        // Don't include this change in the deliberate changes
+                        S3ClearNavigateAwayConfirm();
+                        first = false;
+                    }
                 }
             });
         }
@@ -1250,10 +1273,6 @@ function S3OptionsFilter(settings) {
 
     // If the field value is empty - disable - but keep initial value
     triggerField.change();
-
-    // Don't include this change in the deliberate changes
-    S3ClearNavigateAwayConfirm();
-    S3EnableNavigateAwayConfirm();
 };
 
 // ============================================================================

@@ -1395,8 +1395,7 @@ class S3RequestItemModel(S3Model):
                                                     _title="%s|%s" % (T("Request Item"),
                                                                       T("Select Items from the Request"))),
                                       ondelete = "CASCADE",
-                                      script = SCRIPT('''
-$(document).ready(function(){
+                                      script = '''
 S3FilterFieldChange({
  'FilterField':'req_item_id',
  'Field':'item_pack_id',
@@ -1406,8 +1405,7 @@ S3FilterFieldChange({
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
-})})'''),
-                                        )
+})''')
 
         if settings.get_req_prompt_match():
             # Shows the inventory items which match a requested item

@@ -96,7 +96,7 @@ $('.contact').each(function () {
         var form = $('<form>');
         formHolder.append(form);
 
-        var input = $('<input size=62>');
+        var input = $('<input id="pr_contact_value" size=62>');
         input.val(current);
         form.append(input);
 
@@ -109,17 +109,37 @@ $('.contact').each(function () {
 
         form.submit(function (e) {
             e.preventDefault();
+            $('#pr_contact_value_error').remove();
             contact.removeClass('edit').addClass('saving');
-            form.append($('<img src="' + S3.Ap.concat('/static/img/jquery-ui/ui-anim_basic_16x16.gif') + '">').addClass('fright'));
+            form.append($('<img class="pr_contact_throbber" src="' + S3.Ap.concat('/static/img/jquery-ui/ui-anim_basic_16x16.gif') + '">').addClass('fright'));
             form.find('input[type=submit]').addClass('hide');
             $.post(S3.Ap.concat('/pr/contact/' + id[0] + '.s3json'),
-                   '{"$_pr_contact":' + JSON.stringify({'value': input.val()}) + '}',
-                   function () {
-                      contact.removeClass('saving');
-                      // @ToDo: Use returned value instead of submitted one
-                      var value = input.val();
-                      formHolder.replaceWith($('<span>').html(value));
-                   }, 'json');
+                '{"$_pr_contact":' + JSON.stringify({'value': input.val()}) + '}',
+                function (data) {
+                    if (data.status == 'failed') {
+                        try {
+                            error_message = data.tree.$_pr_contact[0].value['@error']
+                        } catch (e) {
+                            error_message = data.message;
+                        }
+                        $('#pr_contact_value').after(
+                            $('<div id="pr_contact_value_error" class="error">' + error_message + '</div>')
+                                .css({display: 'none'})
+                                .slideDown('slow')
+                                .click(function() { $(this).fadeOut('slow'); return false; })
+                        );
+                        contact.removeClass('saving').addClass('edit');
+                        form.find('input[type=submit]').removeClass('hide');
+                        $('.pr_contact_throbber').remove();
+                    } else {
+                        contact.removeClass('saving');
+                        // @ToDo: Use returned value instead of submitted one
+                        var value = input.val();
+                        formHolder.replaceWith($('<span>').html(value));
+                    }
+                },
+                'json'
+            );
         });
     });
 });

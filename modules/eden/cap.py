@@ -649,13 +649,11 @@ class S3CAPModel(S3Model):
                                             table.sender,
                                             limitby=(0, 1)).first()
 
-        try:
-            # @ToDo: Should get headline from "info"?
+        if row:
+            sent = row.sent or row.created_on
             if row.msg_type:
-                sent = row.sent or row.created_on
                 return "%s - %s - %s" % (row.msg_type, sent, row.sender)
-        except:
-            return current.messages["NONE"]
+        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -691,7 +689,7 @@ class S3CAPModel(S3Model):
         try:
             if isinstance(string, list):
                 return ", ".join([fmt(i) for i in string])
-            elif isinstance(string, str):
+            elif isinstance(string, basestring):
                 return ", ".join([fmt(i) for i in string[1:-1].split("|")])
         except IndexError:
             return current.messages.UNKNOWN_OPT

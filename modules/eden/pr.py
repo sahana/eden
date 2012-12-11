@@ -765,7 +765,6 @@ class S3PersonModel(S3Model):
         add_component("hrm_certification", pr_person="person_id")
         add_component("hrm_competency", pr_person="person_id")
         add_component("hrm_credential", pr_person="person_id")
-        # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
 
         # Experience
@@ -1340,7 +1339,16 @@ class S3ContactModel(S3Model):
     def contact_onvalidation(form):
         """ Contact form validation """
 
-        if form.vars.contact_method == "EMAIL":
+        contact_method = form.vars.contact_method
+        if not contact_method and "id" in form.vars:
+            ctable = current.s3db.pr_contact
+            record = current.db(ctable._id == form.vars.id).select(
+                                ctable.contact_method,
+                                limitby=(0, 1)).first()
+            if record:
+                contact_method = record.contact_method
+
+        if contact_method == "EMAIL":
             email, error = IS_EMAIL()(form.vars.value)
             if error:
                 form.errors.value = current.T("Enter a valid email")
@@ -2150,10 +2158,10 @@ class S3SavedSearch(S3Model):
                                                                       T("Your name for this search. Notifications will use this name."))),
                                         ),
                                   self.super_link("pe_id", "pr_pentity",
-                                                  #label=T("Person Entity"),
+                                                  label=T("Person Entity"),
                                                   readable=True,
                                                   writable=True,
-                                                  #represent=pr_pentity_represent,
+                                                  represent=pr_pentity_represent,
                                                   ),
                                   Field("controller",
                                         #label=T("Controller"),
@@ -3258,6 +3266,8 @@ def pr_pentity_represent(id, row=None, show_label=True,
                          default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
+    db = current.db
+
     if row:
         id = row.pe_id
         s3db = current.s3db
@@ -3265,7 +3275,6 @@ def pr_pentity_represent(id, row=None, show_label=True,
     elif not id:
         return current.messages["NONE"]
     else:
-        db = current.db
         s3db = current.s3db
         pe_table = s3db.pr_pentity
         row = db(pe_table.pe_id == id).select(pe_table.instance_type,

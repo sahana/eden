@@ -179,6 +179,7 @@ function s3_gis_autocompletes() {
 }
 
 function s3_gis_autocomplete(level) {
+    // Convert Input to an Autocomplete
     if (undefined != $('#gis_location_L' + level + '_ac').val()) {
         $('#gis_location_L' + level + '_ac').autocomplete({
             source: s3_gis_ac_set_source(level),
@@ -218,6 +219,13 @@ function s3_gis_autocomplete(level) {
                 .appendTo(ul);
         };
     }
+    // OnChange invalidate all lower Lx
+    $('#gis_location_L' + level + '_ac').change(function() {
+        for (var i = level + 1; i <= 5; i++) {
+            // Clear the Value
+            $('#gis_location_L' + i + ', #gis_location_L' + i + '_ac').val('');
+        }
+    });
 }
 
 function s3_gis_autocomplete_search() {
@@ -650,23 +658,25 @@ function s3_gis_l0_select() {
                 // Store the code (for the Geocoder)
                 S3.gis.country = data.code;
                 // Read which hierarchy levels we have & their labels
-                for (level = 1; level < 6; level++) {
+                for (level = 1; level <= 5; level++) {
                     var _level = 'L' + level;
                     if (data[_level]) {
                         // Replace the label
                         $('#gis_location_' + _level + '_label__row label').text(data[_level] + ':');
                         s3_gis_show_level(level);
                         // Replace the Help Tip
-                        var tooltip = $('#gis_location_' + _level + '__row div.tooltip');
-                        var old_title = tooltip.attr('title');
-                        var parts = old_title.split('|');
-                        var newtitle = data[_level] + '|' + parts[1]+ '|' + parts[2];
-                        tooltip.attr('title', newtitle);
+                        //var tooltip = $('#gis_location_' + _level + '__row div.tooltip');
+                        //var old_title = tooltip.attr('title');
+                        //var parts = old_title.split('|');
+                        //var newtitle = data[_level] + '|' + parts[1]+ '|' + parts[2];
+                        //tooltip.attr('title', newtitle);
                         // Re-apply Cluetip so that it sees the new value
-                        tooltip.cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
+                        //tooltip.cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
                     } else {
                         s3_gis_hide_level(level);
                     }
+                    // Clear the value
+                    $('#gis_location_' + _level + ', #gis_location_' + _level + '_ac').val('');
                 }
                 if ( !S3.gis.no_map ) {
                     // Zoom the Map?

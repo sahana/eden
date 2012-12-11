@@ -158,16 +158,14 @@ class S3AssetModel(S3Model):
                                                  script = None, # No Item Pack Filter
                                                  ),
                              organisation_id(required = True,
-                                             script = SCRIPT('''
-$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldResource':'site',
-  'FieldPrefix':'org',
-  'FieldID':'site_id'
- })
-})'''),),
+                                             script = '''
+S3FilterFieldChange({
+ 'FilterField':'organisation_id',
+ 'Field':'site_id',
+ 'FieldResource':'site',
+ 'FieldPrefix':'org',
+ 'FieldID':'site_id'
+})'''),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
@@ -340,7 +338,7 @@ $(document).ready(function(){
                                "number",
                                "type",
                                #"purchase_date",
-                               (T("Assigned To"),"assigned_to_person"),
+                               (T("Assigned To"), "assigned_to_person"),
                                "organisation_id",
                                "site_id",
                                (current.messages.COUNTRY, "location_id$L0"),
@@ -447,21 +445,18 @@ $(document).ready(function(){
                                         empty = False,
                                         represent = self.org_site_represent,
                                         #widget = S3SiteAutocompleteWidget(),
-                                        comment = SCRIPT(
-'''$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldPrefix':'org',
-  'FieldResource':'site',
-  'FieldID':'site_id',
-  'fncRepresent': function(record, PrepResult) {
-                      var InstanceTypeNice = %(instance_type_nice)s;
-                      return record.name + " (" + InstanceTypeNice[record.instance_type] + ")";
-                  }
- })
-})''' % dict(instance_type_nice = auth.org_site_types)),
-                                              ),
+                                        comment = '''
+S3FilterFieldChange({
+ 'FilterField':'organisation_id',
+ 'Field':'site_id',
+ 'FieldPrefix':'org',
+ 'FieldResource':'site',
+ 'FieldID':'site_id',
+ 'fncRepresent': function(record,PrepResult){
+  var InstanceTypeNice=%(instance_type_nice)s
+  return record.name+" ("+InstanceTypeNice[record.instance_type]+")"
+}})''' % dict(instance_type_nice = auth.org_site_types),
+                                        ),
                              self.org_room_id(),
                              #location_id(),
                              Field("cancel", "boolean",
@@ -988,27 +983,28 @@ def asset_rheader(r):
 class AssetVirtualFields:
     """ Virtual fields as dimension classes for reports """
     extra_fields = ["id",
-                    "location_id"]
+                    #"location_id"
+                    ]
 
-    def site(self):
-        # The site of the asset
-        try:
-            location_id = self.asset_asset.location_id
-        except AttributeError:
-            # not available
-            location_id = None
-        if location_id:
-            s3db = current.s3db
-            stable = s3db.org_site
-            query = (stable.location_id == location_id)
-            site = current.db(query).select(stable.name,
-                                            stable.site_id,
-                                            stable.instance_type,
-                                            limitby=(0, 1)).first()
-            if site:
-                return s3db.org_site_represent(site, show_link=False)
-        return current.messages["NONE"]
-    
+    #def site(self):
+    #    # The site of the asset
+    #    try:
+    #        location_id = self.asset_asset.location_id
+    #    except AttributeError:
+    #        # not available
+    #        location_id = None
+    #    if location_id:
+    #        s3db = current.s3db
+    #        stable = s3db.org_site
+    #        query = (stable.location_id == location_id)
+    #        site = current.db(query).select(stable.name,
+    #                                        stable.site_id,
+    #                                        stable.instance_type,
+    #                                        limitby=(0, 1)).first()
+    #        if site:
+    #            return s3db.org_site_represent(site, show_link=False)
+    #    return current.messages["NONE"]
+
     def assigned_to_person(self):
         current_log = asset_get_current_log(self.asset_asset.id)
         ltable = current.s3db.asset_log

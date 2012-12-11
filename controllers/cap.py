@@ -161,7 +161,7 @@ def alert():
             r.next = URL(c="cap", f="alert",
                          args=[lastid, "info"])
 
-        if "form" in output:
+        if r.method != "search" and "form" in output:
             if not r.component:
                 fields = s3db.cap_info_labels()
                 jsobj = []

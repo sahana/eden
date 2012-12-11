@@ -86,12 +86,13 @@ class S3SupplyModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -137,7 +138,8 @@ class S3SupplyModel(S3Model):
                                               label=ADD_BRAND,
                                               title=T("Brand"),
                                               tooltip=T("The list of Brands are maintained by the Administrators.")),
-                    ondelete = "RESTRICT")
+                    ondelete = "RESTRICT"
+                    )
 
         # =====================================================================
         # Catalog (of Items)
@@ -261,7 +263,8 @@ class S3SupplyModel(S3Model):
                                                   f="item_category",
                                                   label=ADD_ITEM_CATEGORY,
                                                   title=T("Item Category"),
-                                                  tooltip=ADD_ITEM_CATEGORY)
+                                                  tooltip=ADD_ITEM_CATEGORY
+                                                  )
 
         table.parent_item_category_id.requires = item_category_requires
 
@@ -271,16 +274,15 @@ class S3SupplyModel(S3Model):
                                            represent=self.item_category_represent,
                                            label = T("Category"),
                                            comment = item_category_comment,
-                                           ondelete = "RESTRICT")
-        item_category_id_script = SCRIPT(
-'''$(document).ready(function(){
+                                           ondelete = "RESTRICT"
+                                           )
+        item_category_script = '''
 S3FilterFieldChange({
  'FilterField':'catalog_id',
  'Field':'item_category_id',
  'FieldPrefix':'supply',
  'FieldResource':'item_category',
-})})''')
-
+})'''
 
         # Categories as component of Categories
         add_component("supply_item_category",
@@ -308,7 +310,9 @@ S3FilterFieldChange({
         table = define_table(tablename,
                              catalog_id(),
                              # Needed to auto-create a catalog_item
-                             item_category_id(script = item_category_id_script),
+                             item_category_id(
+                                script = item_category_script
+                                ),
                              Field("name", length=128, notnull=True,
                                    label = T("Name"),
                                    ),
@@ -501,11 +505,9 @@ S3FilterFieldChange({
         tablename = "supply_catalog_item"
         table = define_table(tablename,
                              catalog_id(),
-                             item_category_id("item_category_id",
-                                              #label = T("Group"),
-                                              # Filters item_category_id based on catalog_id
-                                              script = item_category_id_script,
-                                              ),
+                             item_category_id(
+                                script = item_category_script
+                                ),
                              supply_item_id(script = None), # No Item Pack Filter
                              s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              *s3_meta_fields())
@@ -663,7 +665,7 @@ S3FilterFieldChange({
                     #                          label=ADD_ITEM_PACK,
                     #                          title=T("Item Packs"),
                     #                          tooltip=T("The way in which an item is normally distributed")),
-                    script = SCRIPT('''
+                    script = '''
 S3OptionsFilter({
  'triggerName':'item_id',
  'targetName':'item_pack_id',
@@ -672,7 +674,7 @@ S3OptionsFilter({
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
-})'''),
+})''',
                     ondelete = "RESTRICT")
 
         #def record_pack_quantity(r):
@@ -1337,14 +1339,15 @@ class SupplyItemPackVirtualFields(dict, object):
         self.tablename = tablename
 
     def pack_quantity(self):
+        tablename = self.tablename
         try:
-            if self.tablename == "inv_inv_item":
+            if tablename == "inv_inv_item":
                 item_pack = self.inv_inv_item.item_pack_id
-            elif self.tablename == "req_req_item":
+            elif tablename == "req_req_item":
                 item_pack = self.req_req_item.item_pack_id
-            elif self.tablename == "req_commit_item":
+            elif tablename == "req_commit_item":
                 item_pack = self.req_commit_item.item_pack_id
-            elif self.tablename == "inv_track_item":
+            elif tablename == "inv_track_item":
                 item_pack = self.inv_track_item.item_pack_id
             else:
                 item_pack = None

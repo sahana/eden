@@ -300,6 +300,10 @@ class S3LocationModel(S3Model):
         #add_component(table, joinby=dict(gis_location="parent"),
         #              multiple=False)
 
+        # Sites as component of Locations
+        add_component("org_site",
+                      gis_location="location_id")
+
         # ---------------------------------------------------------------------
         # Error
         # - needed for COT support
