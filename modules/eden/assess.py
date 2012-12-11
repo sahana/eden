@@ -208,7 +208,7 @@ class S3AssessBuildingModel(S3Model):
 
         tablename = "assess_building"
         table = self.define_table(tablename,
-                                  Field("database_id",
+                                  Field("database_id", "integer",
                                         label=T("Database ID")),
                                   Field("status", "integer",
                                         requires=IS_EMPTY_OR(

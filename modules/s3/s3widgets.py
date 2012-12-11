@@ -1506,7 +1506,7 @@ class S3LocationSelectorWidget(FormWidget):
                     Lx as dropdowns. Default label is 'Select previous to populate this dropdown' (Fixme!)
                 Mode not Strict (default):
                     L2-L5 as Autocompletes which create missing locations automatically
-                    @ToDo: L1 as Dropdown? (Have a gis_config setting to inform whether this is populated for a given L0)
+                    @ToDo: Lx as Dropdown (where the 'Edit Lx' is set)
                 Map:
                     @ToDo: Inline or Popup? (Deployment Option?)
                     Set Map Viewport to default on best currently selected Hierarchy
