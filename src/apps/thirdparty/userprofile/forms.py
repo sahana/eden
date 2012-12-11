@@ -95,10 +95,8 @@ class RegistrationForm(forms.Form):
         Verify that the email exists
         """
         email = self.cleaned_data['email']
-        print "he obtenido el email\n"
         if not email:
             raise forms.ValidationError(_("E-mail address cannot be blank"))
-            print "no estaba en blanco"
         try:
             if not email_re.search(email):
                 print "voy a validar regex"
