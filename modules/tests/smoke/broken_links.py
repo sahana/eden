@@ -73,6 +73,7 @@ class BrokenLinkTest(Web2UnitTest):
         # Typically this will be some variables passed in via the URL 
         self.strip_url = ("?_next=",
                           )
+        self.reportOnly = False
         self.maxDepth = 16 # sanity check
         self.setThreshold(10)
         self.setUser("test@example.com/eden")
@@ -86,6 +87,9 @@ class BrokenLinkTest(Web2UnitTest):
         self.urlParentList = {}
         # dictionary of ReportData objects indexed on the url
         self.results = {}
+
+    def setReportOnly(self, action):
+        self.reportOnly = action
 
     def setDepth(self, depth):
         self.maxDepth = depth
@@ -147,26 +151,27 @@ class BrokenLinkTest(Web2UnitTest):
         url = self.homeURL + "/default/index"
         to_visit = [url]
         start = time()
-        for depth in range(self.maxDepth):
-            if len(to_visit) == 0:
-                break
-            self.linkDepth.append(len(to_visit))
-            self.totalLinks += len(to_visit)
-            visit_start = time()
-            url_visited = "%d urls" % len(to_visit)
-            to_visit = self.visit(to_visit, depth)
-            msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
-            self.reporter(msg)
-            if self.config.verbose >= 2:
-                if self.config.verbose >= 3:
-                    print >> self.stdout
-                if self.stdout.isatty(): # terminal should support colour
-                    msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
-                print >> self.stdout, msg
-        if len(to_visit) > 0:
-            self.linkDepth.append(len(to_visit))
-        finish = time()
-        self.reporter("Finished took %.3f seconds" % (finish - start))
+        if not self.reportOnly:
+            for depth in range(self.maxDepth):
+                if len(to_visit) == 0:
+                    break
+                self.linkDepth.append(len(to_visit))
+                self.totalLinks += len(to_visit)
+                visit_start = time()
+                url_visited = "%d urls" % len(to_visit)
+                to_visit = self.visit(to_visit, depth)
+                msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
+                self.reporter(msg)
+                if self.config.verbose >= 2:
+                    if self.config.verbose >= 3:
+                        print >> self.stdout
+                    if self.stdout.isatty(): # terminal should support colour
+                        msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
+                    print >> self.stdout, msg
+            if len(to_visit) > 0:
+                self.linkDepth.append(len(to_visit))
+            finish = time()
+            self.reporter("Finished took %.3f seconds" % (finish - start))
         self.report()
 
     def visit(self, url_list, depth):
@@ -266,7 +271,8 @@ class BrokenLinkTest(Web2UnitTest):
         self.brokenReport()
         self.timeReport()
         if self.config.record_timings:
-            self.record_timings()
+            if not self.reportOnly:
+                self.record_timings()
             self.scatterplot()
         self.depthReport()
 
@@ -414,22 +420,25 @@ class BrokenLinkTest(Web2UnitTest):
         # get the number of days each entry is after the first date
         # and calculate the average, if the average is NAN then ignore both
         date_summary = []
-        gv_summary = []
+        gv_mean = []
+        gv_std = []
         gv_date = []
         cnt = 0
         start = datetime.datetime.strptime(summary["date"][0],"%Y-%m-%d")
         for list in good_values:
             if len(list) > mean_threshold:
                 mean = numpy.mean(list)
+                std = numpy.std(list)
                 if not numpy.isnan(mean):
                     this_date = datetime.datetime.strptime(summary["date"][cnt],"%Y-%m-%d")
                     date_summary.append((this_date - start).days)
-                    gv_summary.append(mean)
+                    gv_mean.append(mean)
+                    gv_std.append(std)
                     gv_date.append(summary["date"][cnt])
             cnt += 1
         # calculate the regression line
-        if len(gv_summary) > 2:
-            (m,b) = numpy.polyfit(date_summary, gv_summary, 1)
+        if len(gv_mean) > 2:
+            (m,b) = numpy.polyfit(date_summary, gv_mean, 1)
         else:
             m = b = 0
 
@@ -439,13 +448,13 @@ class BrokenLinkTest(Web2UnitTest):
             row = 0
             for date in gv_date:
                 sheet.write(row,0,str(date))
-                sheet.write(row,1,gv_summary[row])
+                sheet.write(row,1,gv_mean[row])
                 row += 1
             sheet.write(row,0,"Trend")
             sheet.write(row,1,m)
             # Save the details to the summary file
             book.save(summary_file_name)
-        return (date_summary, gv_summary, m, b)
+        return (date_summary, gv_mean, gv_std, m, b)
 
     def report_model_url(self):
         print "Report breakdown by module"
@@ -521,7 +530,7 @@ class BrokenLinkTest(Web2UnitTest):
             self.FigureCanvas = FigureCanvas
             from matplotlib.figure import Figure
             self.Figure = Figure
-            from numpy import arange
+            import numpy
         except ImportError:
             return
         try:
@@ -537,14 +546,17 @@ class BrokenLinkTest(Web2UnitTest):
         import numpy
         # Only include the mean in the regression values if there are at least 10 URL timings
         summary = self.read_timings_sheet(workbook)
-        (date_summary, gv_summary, m, b) = self.report_timings_summary(summary, mean_threshold=10)
-        if len(gv_summary) <= 2:
+        (date_summary, gv_mean, gv_std, m, b) = self.report_timings_summary(summary, mean_threshold=10)
+        if len(gv_mean) <= 2:
             return
         fig = Figure(figsize=(5, 2.5))
         canvas = self.FigureCanvas(fig)
         ax = fig.add_subplot(111)
         linear = numpy.poly1d([m,b])
-        ax.plot(date_summary, gv_summary, 'bo', date_summary, linear(date_summary), '--r')
+        denom = numpy.max(gv_std)/50
+        size = gv_std/denom
+        ax.scatter(date_summary, gv_mean, marker="d", s=size)
+        ax.plot(date_summary, linear(date_summary), '--r')
 
         chart = StringIO()
         canvas.print_figure(chart)
@@ -555,7 +567,7 @@ class BrokenLinkTest(Web2UnitTest):
         self.reporter("Scatterplot of average link times per successful run")
         self.reporter(image)
         self.reporter("The trend line has a current slope of %s" % m)
-        self.reporter("The accumulated trend is %s seconds" % b)
+        self.reporter("The y-intercept is %s seconds" % b)
 
     def depthReport(self):
         """
