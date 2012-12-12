@@ -60,7 +60,7 @@ class ViewProposal(DetailView):
         if place.public:
             return proposal
         elif self.request.user.is_authenticated and \
-            has_space_permission(self.request.user, space_url,
+            has_space_permission(self.request.user, place,
                 allow=['admins', 'mods', 'users']):
             return proposal
         else:
