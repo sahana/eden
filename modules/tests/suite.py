@@ -63,7 +63,7 @@ def loadAllTests():
     addTests(loadTests(CreateProject))
 
     # Asset Tests
-    addTests(loadTests(CreateAsset))
+#    addTests(loadTests(CreateAsset))
     addTests(loadTests(AssetSearch))
     addTests(loadTests(AssetReport))
 
@@ -90,10 +90,8 @@ def loadAllTests():
 
     # Create Members
     addTests(loadTests(CreateMember))
-
-    # Search Members
     addTests(loadTests(SearchMember))
-    
+
     # Test helpers
     addTests(loadTests(ReportTestHelper))
 
@@ -191,11 +189,18 @@ parser.add_argument("--force-debug",
                     const=True,
                     help = desc)
 desc = """Set a threshold in seconds.
-If takes longer than this to get the link then it will be reported.
+If in the smoke tests it takes longer than this to get the link then it will be reported.
 """
 parser.add_argument("--threshold",
                     type = int,
                     default = 10,
+                    help = desc)
+desc = """Smoke test report only.
+Don't actually run the smoke tests but rebuild the smoke test report.
+"""
+parser.add_argument("--smoke-report",
+                    action='store_const',
+                    const=True,
                     help = desc)
 argsObj = parser.parse_args()
 args = argsObj.__dict__
@@ -228,6 +233,7 @@ if args["suite"] == "smoke" or args["suite"] == "complete":
     config.record_timings = args["record_timings"]
     if config.record_timings:
         path = args["html_path"]
+        config.path = path
         config.record_timings_filename = os.path.join(path, "Sahana-Eden-record-timings.xls")
         config.record_summary_filename = os.path.join(path, "Sahana-Eden-record-summary.xls")
 
@@ -255,6 +261,7 @@ elif args["suite"] == "smoke":
     try:
         from tests.smoke import *
         broken_links = BrokenLinkTest()
+        broken_links.setReportOnly( args["smoke_report"])
         broken_links.setDepth(args["link_depth"])
         broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])
@@ -293,6 +300,7 @@ elif args["suite"] == "complete":
     try:
         from tests.smoke import *
         broken_links = BrokenLinkTest()
+        broken_links.setReportOnly( args["smoke_report"])
         broken_links.setDepth(args["link_depth"])
         broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])
