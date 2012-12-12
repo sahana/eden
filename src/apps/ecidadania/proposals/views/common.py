@@ -45,6 +45,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from apps.ecidadania.proposals import url_names as urln_prop
 from core.spaces import url_names as urln_space
 from core.spaces.models import Space
+from core.permissions import has_space_permission, has_all_permissions
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField, ConfirmVote
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
@@ -57,6 +58,10 @@ class ViewProposal(DetailView):
     Detail view of a proposal. Inherits from django :class:`DetailView` generic
     view.
 
+    **Permissions:** Everyone can read if the space is public. If it is private
+    only logged in users that belong to any of the space groups can read. In
+    other case just return an empty object and a not_allowed template.
+
     :rtype: object
     :context: proposal
     """
@@ -65,7 +70,18 @@ class ViewProposal(DetailView):
 
     def get_object(self):
         prop_id = self.kwargs['prop_id']
-        return get_object_or_404(Proposal, pk = prop_id)
+        space_url = self.kwargs['space_url']
+        proposal = get_object_or_404(Proposal, pk = prop_id)
+        place = get_object_or_404(Space, url = space_url)
+        if place.public:
+            return proposal
+        elif self.request.user.is_authenticated() and
+            has_space_permission(self.request.user, space_url,
+                allow=['admins', 'mods', 'users']):
+            return proposal
+        else:
+            self.template_name = 'not_allowed.html'
+            return Proposal.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super(ViewProposal, self).get_context_data(**kwargs)
@@ -90,11 +106,23 @@ class ViewProposal(DetailView):
 def support_proposal(request, space_url):
 
     """
-    Increment support votes for the proposal in 1.
+    Increment support votes for the proposal in 1. We porform some permission
+    checks, for example, the user has to be inside any of the user groups of
+    the space.
     """
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
-    prop.support_votes.add(request.user)
-    return HttpResponse(" Support vote emmited.")
+    space = get_object_or_404(Space, url=space_url)
+    if has_space_permission(request.user, space, allow=['admins', 'mods', 'users']):
+        try:
+            prop.support_votes.add(request.user)
+            return HttpResponse(" Support vote emmited.")
+        else:
+            return HttpResponse("Error P01: Couldn't emit the vote. Couldn't \
+                add the user to the count. Contact support and tell them the \
+                error code.")
+    else:
+        return HttpResponse("Error P02: Couldn't emit the vote. You're not \
+            allowed.")
 
 # @require_POST
 # def vote_proposal(request, space_url):
