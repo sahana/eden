@@ -180,16 +180,19 @@ class S3Migration(object):
             oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
                                                      oldtable[fieldname])
             oldvals = oldrows.as_dict()
-            for row in rows:
+            for row in newrows:
                 id = row.id
                 val = oldvals[id][fieldname]
                 if not val:
                     continue
-                if isinstance(val, (int, long)):
-                    vars = {fieldname : val}
-                    db(newtable.id == id)update(**vars)
-                else:
+                try:
+                    vars = {fieldname : int(val)}
+                except:
                     s3_debug("S3Migrate: Unable to convert %s to an integer - skipping" % val)
+                else:
+                    db(newtable.id == id).update(**vars)
+
+        db.commit()
 
     # -------------------------------------------------------------------------
     def backup(self):
