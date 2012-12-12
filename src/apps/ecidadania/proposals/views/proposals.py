@@ -44,6 +44,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from apps.ecidadania.proposals import url_names as urln_prop
 from core.spaces import url_names as urln_space
 from core.spaces.models import Space
+from core.permissions import has_space_permission, has_all_permissions
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField, ConfirmVote
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
@@ -53,7 +54,8 @@ from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
 class AddProposal(FormView):
 
     """
-    Create a new single (not tied to a set) proposal.
+    Create a new single (not tied to a set) proposal. The permission checks are
+    done in the form_valid method.
     
     :parameters: space_url
     :rtype: HTML Form
@@ -67,11 +69,16 @@ class AddProposal(FormView):
         return reverse(urln_space.SPACE_INDEX, kwargs={'space_url':space})
         
     def form_valid(self, form):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        form_uncommited = form.save(commit=False)
-        form_uncommited.space = self.space
-        form_uncommited.author = self.request.user
-        form_uncommited.save()
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        if has_space_permission(self.request.user, space, allow=['admins',
+            'mods','users']):
+            form_uncommited = form.save(commit=False)
+            form_uncommited.space = space
+            form_uncommited.author = self.request.user
+            form_uncommited.save()
+        else:
+            return render_to_response('not_allowed.html',
+                context_instance=RequestContext(request))
         return super(AddProposal, self).form_valid(form)
     
     def get_context_data(self, **kwargs):
@@ -81,9 +88,11 @@ class AddProposal(FormView):
         context['get_place'] = self.space
         #context['form_field'] = [f_name.field_name for f_name in self.field]
         return context
-        
+    
+    @method_decorator(permission_required('proposals.add_proposal'))
     def dispatch(self, *args, **kwargs):
         return super(AddProposal, self).dispatch(*args, **kwargs)
+
 
 class EditProposal(UpdateView):
 
