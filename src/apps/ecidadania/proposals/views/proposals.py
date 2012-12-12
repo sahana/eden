@@ -20,14 +20,10 @@
 """
 Proposal module views.
 """
-import hashlib
-import datetime
 
-from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView, DeleteView
 from django.views.generic import FormView
 from django.views.generic.create_update import update_object
 from django.views.decorators.http import require_POST
@@ -115,7 +111,16 @@ class EditProposal(UpdateView):
         
     def get_object(self):
         prop_id = self.kwargs['prop_id']
-        return get_object_or_404(Proposal, pk = prop_id)
+        space_url = self.kwargs['space_url']
+        proposal = get_object_or_404(Proposal, pk = prop_id)
+        space = get_object_or_404(Space, url = space_url)
+
+        if has_space_permission(self.request.user, space, allow=['admins',
+            'mods']) or proposal.author.id == self.request.user.id:
+            return get_object_or_404(Proposal, pk = prop_id)
+        else:
+            return render_to_response('not_allowed.html',
+                context_instance=RequestContext(request))
         
     def get_context_data(self, **kwargs):
         context = super(EditProposal, self).get_context_data(**kwargs)
