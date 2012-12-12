@@ -39,10 +39,12 @@ from gluon.compileapp import build_environment
 from gluon.restricted import restricted
 from gluon.storage import Storage
 
+from s3.s3utils import s3_debug
+
 class S3Migration(object):
     """
         Database Migration Toolkit
-        - will be useful to migrate both a production database on a server
+        - used to help migrate both a production database on a server
           and also an offline client
 
         Normally run from a script in web2py context, but without models loaded:
@@ -52,9 +54,12 @@ class S3Migration(object):
         Where script looks like:
         m = local_import("s3migration")
         migrate = m.S3Migration()
-        migrate.prep()
-        migrate.migrate()
-        migrate.post()
+        migrate.prep(foreigns=[],
+                     uniques=[],
+                     strints=[],
+                     )
+        #migrate.migrate()
+        migrate.post(strints=[])
 
         FYI: If you need to access a filename in eden/databases/ then here is how:
         import hashlib
@@ -107,13 +112,14 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, foreigns=[], uniques=[]):
+    def prep(self, foreigns=[], uniques=[], strints=[]):
         """
             Preparation before migration
 
             @param foreigns : List of tuples (tablename, fieldname) to have the foreign keys removed
                               - if tablename == "all" then all tables are checked
-            @param uniques  : List of tuples (tablename, fieldname) to have the unique indices removed
+            @param uniques  : List of tuples (tablename, fieldname) to have the unique indices removed,
+            @param strints  : List of tuples (tablename, fieldname) to convert from string to integer
         """
 
         # Backup current database
@@ -127,18 +133,11 @@ class S3Migration(object):
         for tablename, fieldname in uniques:
             self.remove_unique(tablename, fieldname)
 
+        # Remove fields which need to be altered in next code
+        for tablename, fieldname in strints:
+            self.drop(tablename, fieldname)
+
         self.db.commit()
-
-    # -------------------------------------------------------------------------
-    def post(self):
-        """
-            Cleanup after migration
-            @ToDo
-        """
-
-        # Do prepops of new tables
-        # Copy data
-        pass
 
     # -------------------------------------------------------------------------
     def migrate(self):
@@ -154,6 +153,43 @@ class S3Migration(object):
         # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
         # Set migrate=False in models/000_config.py
         pass
+
+    # -------------------------------------------------------------------------
+    def post(self, strints=[]):
+        """
+            Cleanup after migration
+
+            @param strints : List of tuples (tablename, fieldname) to convert from string to integer
+        """
+
+        db = self.db
+
+        # @ToDo: Do prepops of new tables
+
+        # Restore data from backup
+        folder = "%s/databases/backup" % current.request.folder
+        db_bak = DAL("sqlite://backup.db",
+                     folder=folder,
+                     auto_import=True,
+                     migrate=False)
+
+        for tablename, fieldname in strints:
+            newtable = db[tablename]
+            newrows = db(newtable.id > 0).select(newtable.id)
+            oldtable = db_bak[tablename]
+            oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
+                                                     oldtable[fieldname])
+            oldvals = oldrows.as_dict()
+            for row in rows:
+                id = row.id
+                val = oldvals[id][fieldname]
+                if not val:
+                    continue
+                if isinstance(val, (int, long)):
+                    vars = {fieldname : val}
+                    db(newtable.id == id)update(**vars)
+                else:
+                    s3_debug("S3Migrate: Unable to convert %s to an integer - skipping" % val)
 
     # -------------------------------------------------------------------------
     def backup(self):
@@ -202,6 +238,52 @@ class S3Migration(object):
         self.db_bak = db_bak
 
     # -------------------------------------------------------------------------
+    def drop(self, tablename, fieldname):
+        """
+            Drop a field from a table
+            e.g. for when changing type
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+
+        # Modify the database
+        if db_engine == "sqlite":
+            # Not Supported: http://www.sqlite.org/lang_altertable.html
+            # But also not required (for strints anyway)
+            sql = ""
+
+        elif db_engine == "mysql":
+            # http://dev.mysql.com/doc/refman/5.1/en/alter-table.html
+            sql = "ALTER TABLE %(tablename)s DROP COLUMN %(fieldname)s;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        elif db_engine == "postgres":
+            # http://www.postgresql.org/docs/8.4/static/sql-altertable.html
+            sql = "ALTER TABLE %(tablename)s DROP COLUMN %(fieldname)s;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        try:
+            db.executesql(sql)
+        except:
+            import sys
+            e = sys.exc_info()[1]
+            print >> sys.stderr, e
+
+        # Modify the .table file
+        table = db[tablename]
+        fields = []
+        for fn in table.fields:
+            if fn == fieldname:
+                continue
+            fields.append(table[fn])
+        db.__delattr__(tablename)
+        db.tables.remove(tablename)
+        db.define_table(tablename, *fields,
+                        # Rebuild the .table file from this definition
+                        fake_migrate=True)
+
+    # -------------------------------------------------------------------------
     def remove_foreign(self, tablename, fieldname):
         """
             Remove a Foreign Key constraint from a table
@@ -222,7 +304,7 @@ class S3Migration(object):
 
             # Modify the database
             if db_engine == "sqlite":
-                # @ToDo:
+                # @ToDo: http://www.sqlite.org/lang_altertable.html
                 raise NotImplementedError
 
             elif db_engine == "mysql":
@@ -235,7 +317,7 @@ class S3Migration(object):
                     dict(tablename=tablename, fk=fk)
 
             elif db_engine == "postgres":
-                # @ToDo:
+                # @ToDo: http://www.postgresql.org/docs/8.4/static/sql-altertable.html
                 raise NotImplementedError
 
             try:
@@ -257,7 +339,7 @@ class S3Migration(object):
 
         # Modify the database
         if db_engine == "sqlite":
-            # @ToDo:
+            # @ToDo: http://www.sqlite.org/lang_altertable.html
             raise NotImplementedError
 
         elif db_engine == "mysql":
@@ -266,6 +348,7 @@ class S3Migration(object):
                 dict(tablename=tablename, fieldname=fieldname)
 
         elif db_engine == "postgres":
+            # http://www.postgresql.org/docs/8.4/static/sql-altertable.html
             sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
                 dict(tablename=tablename, fieldname=fieldname)
 
