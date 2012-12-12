@@ -144,7 +144,17 @@ class DeleteProposal(DeleteView):
     :context: get_place
     """
     def get_object(self):
-        return get_object_or_404(Proposal, pk = self.kwargs['prop_id'])
+        prop_id = self.kwargs['prop_id']
+        space_url = self.kwargs['space_url']
+        proposal = get_object_or_404(Proposal, pk = prop_id)
+        space = get_object_or_404(Space, url = space_url)
+
+        if has_space_permission(self.request.user, space, allow=['admins',
+            'mods']) or proposal.author.id == self.request.user.id:
+            return proposal
+        else:
+            return render_to_response('not_allowed.html',
+                context_instance=RequestContext(request))
 
     def get_success_url(self):
         space = self.kwargs['space_url']
@@ -154,6 +164,10 @@ class DeleteProposal(DeleteView):
         context = super(DeleteProposal, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
+
+    @method_decorator(permission_required('proposal.delete_proposal'))
+    def dispatch(self, *args, **kwargs):
+        return super(DeleteProposal, self).dispatch(*args, **kwargs)
 
 
 class ListProposals(ListView):
@@ -171,7 +185,13 @@ class ListProposals(ListView):
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_url'])
         objects = Proposal.objects.annotate(Count('support_votes')).filter(space=place.id).order_by('pub_date')
-        return objects
+
+        if place.public or has_space_permission(self.request.user, place,
+            allow=['admins', 'mods', 'users']):
+            return objects
+        else:
+            return render_to_response('not_allowed.html',
+                context_instance=RequestContext(request))
 
     def get_context_data(self, **kwargs):
         context = super(ListProposals, self).get_context_data(**kwargs)
@@ -194,7 +214,7 @@ def merge_proposal(request, space_url, set_id):
     field = ProposalField.objects.filter(proposalset=set_id)
     form_field = [f_name.field_name for f_name in field]
 
-    if request.method == 'POST':
+    if request.method == 'POST' and has_space_permission(request.user, get_place, allow=['admins', 'mods', 'users']):
         merged_form = ProposalForm(request.POST)
         if merged_form.is_valid():
             form_data = merged_form.save(commit=False)
