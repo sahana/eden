@@ -272,10 +272,12 @@ if (!$('#%(selector)s').val()){
   format:'%(format)s'
  }).focus()
 }})
-clear_button=$('<input type="button" value="clear"/>').click(function(e){
+clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(e){
  $('#%(selector)s').val('')
 })
-$('#%(selector)s').after(clear_button)''' % \
+if ($("#%(selector)s_clear").length == 0) {
+ $('#%(selector)s').after(clear_button)
+}''' % \
         dict(rounded=rounded,
              selector=selector,
              firstDOW=firstDOW,
