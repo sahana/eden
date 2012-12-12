@@ -1,2 +1,3 @@
 "UUID",Name,Region,Default,Zoom,Lat,Lon,Projection,Symbology,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
 "SITE_DEFAULT",Default,,"United States",9,40.71024,-73.8498,900913,US,20,90,-180,-50,
+"QUEENS","Queens",,"Queens",11,40.6665,-73.7406,900913,US,11,90,-180,-50,

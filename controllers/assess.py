@@ -20,6 +20,13 @@ def index():
 def building():
     """ RESTful CRUD controller """
 
+    # @ToDo: deployment_setting
+    ctable = s3db.gis_config
+    config = db(ctable.name == "Queens").select(ctable.id,
+                                                limitby=(0, 1)).first()
+    if config:
+        gis.set_config(config.id)
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
