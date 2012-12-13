@@ -137,6 +137,8 @@ def site_org_json():
 def facility_marker_fn(record):
     """
         Function to decide which Marker to use for Facilities Map
+        @ToDo: Legend
+        @ToDo: Move to Templates
         @ToDo: Use Symbology
     """
 

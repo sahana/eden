@@ -173,7 +173,9 @@ class S3AssessBuildingModel(S3Model):
     def model(self):
 
         T = current.T
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # Building Assessment
@@ -187,6 +189,17 @@ class S3AssessBuildingModel(S3Model):
             2 : T("Ready to Start"),
             3 : T("In-Progress"),
             4 : T("Finished"),
+            }
+        assess_status2_opts = {
+            1 : T("N/A"),
+            2 : T("To be done"),
+            3 : T("In-Progress"),
+            4 : T("Finished"),
+            }
+        assess_priority_opts = {
+            1 : T("High"),
+            2 : T("Medium"),
+            3 : T("Low"),
             }
         building_status_opts = {
             1 : T("Green"),
@@ -220,18 +233,53 @@ class S3AssessBuildingModel(S3Model):
                                         widget = lambda f, v, **attr: \
                                             SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
                                         label=T("Status")),
+                                  Field("status_gutting", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(assess_status2_opts)
+                                                ),
+                                        represent = lambda opt:
+                                            assess_status2_opts.get(opt,
+                                                                   UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
+                                        label=T("Gutting Status")),
+                                  Field("status_mold", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(assess_status2_opts)
+                                                ),
+                                        represent = lambda opt:
+                                            assess_status2_opts.get(opt,
+                                                                   UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
+                                        label=T("Mold Status")),
+                                  Field("priority", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(assess_priority_opts)
+                                                ),
+                                        represent = lambda opt:
+                                            assess_priority_opts.get(opt,
+                                                                   UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
+                                        label=T("Priority")),
                                   s3_date(label=T("Intake Date")),
                                   Field("assessor1",
+                                        represent = lambda v: v or NONE,
                                         label=T("Assessor 1")),
                                   Field("assessor2",
+                                        represent = lambda v: v or NONE,
                                         label=T("Assessor 2")),
                                   Field("name",
+                                        represent = lambda v: v or NONE,
                                         label=T("Name")),
                                   Field("phone",
                                         requires=IS_NULL_OR(s3_phone_requires),
+                                        represent = lambda v: v or NONE,
                                         label=T("Phone Number")),
                                   self.gis_location_id(),
                                   Field("homeowner_availability",
+                                        represent = lambda v: v or NONE,
                                         label=T("Homeowner Availability")),
                                   Field("type_of_property", "list:integer",
                                         requires=IS_EMPTY_OR(
@@ -245,11 +293,13 @@ class S3AssessBuildingModel(S3Model):
                                             CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
                                         label=T("Type of Property")),
                                   Field("inhabitants", "integer",
+                                        represent = lambda v: v or NONE,
                                         label=T("# of Inhabitants")),
                                   Field("year_built", "integer",
                                         requires = IS_EMPTY_OR(
                                                     IS_INT_IN_RANGE(1800, 2012)
                                                     ),
+                                        represent = lambda v: v or NONE,
                                         label=T("Year Built")),
                                   Field("current_residence", "integer",
                                         requires=IS_EMPTY_OR(
@@ -272,6 +322,7 @@ class S3AssessBuildingModel(S3Model):
                                             SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
                                         label=T("Ownership")),
                                   Field("intention",
+                                        represent = lambda v: v or NONE,
                                         label=T("Intention to Stay Home")),
                                   Field("vulnerability", "list:integer",
                                         requires=IS_EMPTY_OR(
@@ -362,6 +413,7 @@ class S3AssessBuildingModel(S3Model):
                                         requires=IS_EMPTY_OR(
                                                     IS_INT_IN_RANGE(1, 99)
                                                     ),
+                                        represent = lambda v: v or NONE,
                                         label=T("Depth (feet)"),
                                         ),
                                   Field("drywall", "integer",
@@ -424,6 +476,16 @@ class S3AssessBuildingModel(S3Model):
                                         widget = lambda f, v, **attr: \
                                             SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
                                         label=T("Remove Major Appliances")),
+                                  Field("asbestos", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(yes_no_opts)
+                                                ),
+                                        represent = lambda opt: \
+                                            yes_no_opts.get(opt,
+                                                            UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                        label=T("Asbestos")),
                                   Field("damage_source", "integer",
                                         requires=IS_EMPTY_OR(
                                                     IS_IN_SET(assess_damage_opts)
@@ -435,6 +497,7 @@ class S3AssessBuildingModel(S3Model):
                                             SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
                                         label=T("Damage Source")),
                                   Field("damage_source_other",
+                                        represent = lambda v: v or NONE,
                                         label=T("Other")),
                                   s3_comments("damage_details",
                                               label=T("Additional Description of Damage"),
@@ -511,9 +574,11 @@ class S3AssessBuildingModel(S3Model):
                                               comment=None,
                                               label=T("Other")),
                                   Field("estimated_volunteers",
+                                        represent = lambda v: v or NONE,
                                         label=T("Estimated Volunteers"),
                                         ),
                                   Field("estimated_days",
+                                        represent = lambda v: v or NONE,
                                         label=T("Estimated Days"),
                                         ),
                                   Field("additional_needs", "list:integer",
@@ -588,11 +653,34 @@ class S3AssessBuildingModel(S3Model):
                         label=T("Status"),
                         field="status",
                         options = assess_status_opts,
+                        cols = 4
+                      ),
+                      S3SearchOptionsWidget(
+                        name="building_search_status_gutting",
+                        label=T("Gutting Status"),
+                        field="status_gutting",
+                        options = assess_status2_opts,
+                        cols = 4
+                      ),
+                      S3SearchOptionsWidget(
+                        name="building_search_status_mold",
+                        label=T("Mold Status"),
+                        field="status_mold",
+                        options = assess_status2_opts,
+                        cols = 4
+                      ),
+                      S3SearchOptionsWidget(
+                        name="building_search_priority",
+                        label=T("Priority"),
+                        field="priority",
+                        options = assess_priority_opts,
                         cols = 3
-                      ))
+                      ),
+                      )
             )
 
         self.configure(tablename,
+                       onvalidation = self.assess_building_onvalidation,
                        search_method = building_search,
                        subheadings = {
                         T("Damages"): "electricity",
@@ -603,6 +691,25 @@ class S3AssessBuildingModel(S3Model):
         # Pass variables back to global scope (s3.*)
         #
         return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assess_building_onvalidation(form):
+        """
+            Update the overall status from the Gutting/Mold status
+        """
+
+        vars = form.vars
+        status = vars.status and int(vars.status) or None
+        if status < 3:
+            status_gutting = vars.status_gutting and int(vars.status_gutting) or None
+            status_mold = vars.status_mold and int(vars.status_mold) or None
+            if status_gutting in (3, 4) or \
+               status_mold in (3, 4):
+
+                vars.status = 3
+
+        return
 
 # =============================================================================
 class S3AssessCanvassModel(S3Model):

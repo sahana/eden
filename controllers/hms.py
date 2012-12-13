@@ -90,6 +90,8 @@ def ltc():
 def marker_fn(record):
     """
         Function to decide which Marker to use for Hospital Map
+        @ToDo: Legend
+        @ToDo: Move to Templates
         @ToDo: Use Symbology
     """
 
