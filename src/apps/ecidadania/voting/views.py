@@ -310,5 +310,3 @@ class DeleteVoting(DeleteView):
         context = super(DeleteVoting, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
-
-
