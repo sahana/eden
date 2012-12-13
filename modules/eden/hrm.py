@@ -2810,7 +2810,7 @@ class S3HRSkillModel(S3Model):
                     # Propagate to Active Status
                     form = Storage()
                     form.vars = Storage()
-                    vars.id = id
+                    form.vars.id = id
                     hrm_programme_hours_onaccept(form)
 
         # Update Certifications
