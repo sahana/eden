@@ -29,32 +29,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ReusableField",
-           "s3_uid",
-           "s3_meta_deletion_status",
-           "s3_meta_deletion_fk",
-           "s3_meta_deletion_rb",
-           "s3_deletion_status",
-           "s3_timestamp",
-           "s3_authorstamp",
-           "s3_ownerstamp",
-           "s3_meta_fields",
-           "s3_all_meta_field_names",   # Used by GIS
-           "s3_role_required",          # Used by GIS
-           "s3_roles_permitted",        # Used by CMS (in future)
-           "s3_lx_fields",
-           "s3_lx_onvalidation",
-           "s3_lx_update",
-           "s3_address_fields",
-           "s3_address_hide",
-           "s3_address_onvalidation",
-           "s3_address_update",
-           "s3_comments",
-           "s3_currency",
-           "s3_date",
-           "s3_datetime",
-           ]
-
 import datetime
 from uuid import uuid4
 
@@ -68,7 +42,7 @@ from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 
 from s3navigation import S3ScriptItem
-from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent
+from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent, s3_unicode
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
 from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
 
@@ -208,6 +182,266 @@ class S3ReusableField(object):
             return FieldS3(name, self.__type, **ia)
         else:
             return Field(name, self.__type, **ia)
+
+# =============================================================================
+class S3Represent(object):
+    """
+        Scalable universal field representation for option fields and
+        foreign keys. Can be subclassed and tailored to the particular
+        model where necessary.
+    """
+
+    def __init__(self,
+                 lookup=None,
+                 key=None,
+                 fields=None,
+                 labels=None,
+                 options=None,
+                 translate=False,
+                 multiple=False,
+                 default=None,
+                 none=None):
+        """
+            Constructor
+
+            @param lookup: the name of the lookup table
+            @param key: the field name of the primary key of the lookup table
+            @param fields: the fields to extract from the lookup table
+            @param labels: string template or callable to represent
+                           rows from the lookup table
+            @param options: dictionary of options to lookup the representation
+                            of a value
+            @param multiple: list:type, values are expected to always be lists
+            @param translate: translate lookup results
+            @param default: default representation for unknown options
+            @param none: default representation for empty fields
+        """
+
+        self.tablename = lookup
+        self.table = None
+        self.key = key
+        self.fields = fields
+        self.labels = labels
+        self.options = options
+        self.list_type = multiple
+        self.translate = translate
+        self.default = default
+        self.none = none
+        self.setup = False
+        self.theset = None
+        self.queries = 0
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Lookup all rows referenced by values.
+            (in foreign key representations)
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: the fields to retrieve
+        """
+
+        fields.append(key)
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent the referenced row.
+            (in foreign key representations)
+
+            @param row: the row
+        """
+
+        labels = self.labels
+        if self.slabels:
+            v = labels % row
+        elif self.clabels:
+            v = labels(row)
+        else:
+            values = [row[f] for f in self.fields]
+            if values:
+                try:
+                    v = " ".join([v for v in values if v])
+                except:
+                    v = " ".join([v for v in values if v])
+            else:
+                v = self.none
+        if self.translate:
+            return current.T(v)
+        else:
+            return v
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value, row=None):
+        """
+            Represent a single value (standard entry point).
+
+            @param value: the value
+            @param row: the referenced row (if value is a foreign key)
+        """
+
+        if self.list_type:
+            return self.multiple(value, rows=row, list_type=False)
+        if value:
+            rows = [row] if row is not None else None
+            items = self._lookup([value], rows=rows)
+            return items.get(value, self.default)
+        return self.none
+
+    # -------------------------------------------------------------------------
+    def multiple(self, values, rows=None, list_type=True):
+        """
+            Represent multiple values as a comma-separated list.
+
+            @param values: list of values
+            @param rows: the referenced rows (if values are foreign keys)
+        """
+
+        if self.list_type and list_type:
+            from itertools import chain
+            try:
+                values = list(set(chain.from_iterable(values)))
+            except TypeError:
+                raise ValueError("List of lists expected, got %s" % values)
+        else:
+            values = [values] if type(values) is not list else values
+        if values:
+            items = self._lookup(values, rows=rows)
+            labels = [s3_unicode(items[v])
+                      if v in items else self.default for v in values]
+            if labels:
+                return ", ".join(labels)
+        return self.none
+
+    # -------------------------------------------------------------------------
+    def bulk(self, values, rows=None):
+        """
+            Represent multiple values as dict {value: representation}
+
+            @param values: list of values
+            @param rows: the referenced rows (if values are foreign keys)
+        """
+
+        if self.list_type:
+            from itertools import chain
+            try:
+                values = list(set(chain.from_iterable(values)))
+            except TypeError:
+                raise ValueError("List of lists expected, got %s" % values)
+        else:
+            values = [values] if type(values) is not list else values
+        if values:
+            labels = self._lookup(values, rows=rows)
+            for v in values:
+                if v not in labels:
+                    labels[v] = self.default
+        else:
+            labels = {}
+        labels[None] = self.none
+        return labels
+
+    # -------------------------------------------------------------------------
+    def _setup(self):
+        """ Lazy initialization of defaults """
+
+        if self.setup:
+            return
+
+        self.queries = 0
+
+        # Default representations
+        messages = current.messages
+        if self.default is None:
+            self.default = messages.UNKNOWN_OPT
+        if self.none is None:
+            self.none = messages.NONE
+
+        # Lookup table options
+        if self.options is not None:
+            self.theset = self.options
+        else:
+            self.theset = {}
+            
+        if self.table is None:
+            tablename = self.tablename
+            if tablename:
+                table = current.s3db.table(tablename)
+                if table is not None:
+                    if self.key is None:
+                        self.key = table._id.name
+                    if not self.fields:
+                        if "name" in table:
+                            self.fields = ["name"]
+                        else:
+                            self.fields = [self.key]
+                    self.table = table
+
+        labels = self.labels
+        self.slabels = isinstance(labels, basestring)
+        self.clabels = callable(labels)
+
+        self.setup = True
+        return
+
+    # -------------------------------------------------------------------------
+    def _lookup(self, values, rows=None):
+        """
+            Lazy lookup values.
+
+            @param values: list of values to lookup
+            @param rows: rows referenced by values (if values are foreign
+                         keys), optional
+        """
+
+        self._setup()
+        theset = self.theset
+
+        items = {}
+        lookup = {}
+        for v in values:
+            if v in theset:
+                items[v] = theset[v]
+            else:
+                lookup[v] = True
+        if self.table is None or not lookup:
+            return items
+
+        pkey = self.key
+        table = self.table
+        try:
+            key = object.__getattribute__(table, pkey)
+        except AttributeError:
+            return items
+
+        if rows:
+            represent_row = self.represent_row
+            for row in rows:
+                k = row[key]
+                if k not in theset:
+                    theset[k] = represent_row(row)
+                if lookup.pop(k, None):
+                    items[k] = theset[k]
+            if not lookup:
+                return items
+
+        lookup = lookup.keys()
+        fields = [object.__getattribute__(table, f)
+                  for f in self.fields if hasattr(table, f)]
+        rows = self.lookup_rows(key, lookup, fields=fields)
+
+        represent_row = self.represent_row
+        for row in rows:
+            k = row[key]
+            items[k] = theset[k] = represent_row(row)
+        return items
 
 # =============================================================================
 # Record identity meta-fields

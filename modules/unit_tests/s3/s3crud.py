@@ -6,6 +6,8 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3crud.py
 #
 import unittest
+from gluon import current
+from gluon.storage import Storage
 try:
     from cStringIO import StringIO
 except:

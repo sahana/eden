@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3cfg.py
 #
 import unittest
+from gluon import current
 from gluon.dal import Query
 
 # =============================================================================
@@ -16,9 +17,10 @@ class S3ConfigTests(unittest.TestCase):
         """ Test organisation-dependent accessibility of fields """
 
         auth = current.auth
+        s3db = current.s3db
         settings = current.deployment_settings
 
-        table = s3db.pr_person_details
+        table = current.s3db.pr_person_details
         s = settings.org.get("dependent_fields", None)
 
         settings.org.dependent_fields = \
