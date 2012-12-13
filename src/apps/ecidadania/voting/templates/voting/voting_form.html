@@ -2,10 +2,6 @@
 {% load i18n %}
 {% load wysiwyg %}
 
-{% comment %}
-This is a form to create a new poll. It uses poll_board.js file to add new choices dynamically.
-{% endcomment %}
-
 {% block title %}
       {% if form.title.value %}
           {% trans "Edit voting process" %} {{ form.title.value }}

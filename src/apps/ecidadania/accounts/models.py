@@ -57,8 +57,7 @@ class UserProfile(BaseProfile):
     surname = models.CharField(_('Surname'), max_length=200, blank=True)
     gender = models.CharField(_('Gender'), max_length=1, choices=GENDER,
                               blank=True)    
-    birthdate = models.DateField(_('Birth date'),
-        default=datetime.date.today(), blank=True)    
+    birthdate = models.DateField(_('Birth date'), blank=True)    
     country = models.ForeignKey(Country, null=True)
     region = ChainedForeignKey(
         Region,
@@ -110,7 +109,7 @@ class UserProfile(BaseProfile):
         Get the current user age.
         """
 
-        if self.birthdate is not None:
+        if self.birthdate:
             diff = datetime.date.today() - self.birthdate
             years = diff.days/365
             return years
