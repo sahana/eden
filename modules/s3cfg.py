@@ -1314,6 +1314,11 @@ class S3Config(Storage):
         return self.req.get("multiple_req_items", True)
     def get_req_show_quantity_transit(self):
         return self.req.get("show_quantity_transit", True)
+    def get_req_inline_forms(self):
+        """
+            Whether Requests module should use inline forms for Items
+        """
+        return self.req.get("inline_forms", True)
     def get_req_prompt_match(self):
         """
             Whether a Requester is prompted to match each line item in an Item request

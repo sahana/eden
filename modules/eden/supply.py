@@ -317,6 +317,7 @@ S3FilterFieldChange({
                                    label = T("Name"),
                                    ),
                              Field("code", length=16,
+                                   represent = lambda v: v or NONE,
                                    label = T("Code"),
                                    ),
                              Field("um", length=128, notnull=True,
@@ -332,6 +333,7 @@ S3FilterFieldChange({
                                    label=T("Kit?")
                                    ),
                              Field("model", length=128,
+                                   represent = lambda v: v or NONE,
                                    label = T("Model/Type"),
                                    ),
                              Field("year", "integer",

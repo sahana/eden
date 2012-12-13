@@ -370,6 +370,8 @@ settings.L10n.decimal_separator = "."
 #   }
 
 # Requests Management
+# Uncomment to disable Inline Forms in Requests module
+#settings.req.inline_forms = False
 # Label for Inventory Requests
 #settings.req.type_inv_label = "Donations"
 # Label for People Requests

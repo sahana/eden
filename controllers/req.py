@@ -248,15 +248,14 @@ def req_controller():
         #    s3db.configure("req_req", list_fields=list_fields)
 
         type = (r.record and r.record.type) or \
-               (request.vars and request.vars.type)
+               (request.vars and int(request.vars.type))
 
         if r.interactive:
             table.requester_id.represent = requester_represent
 
             # Set Fields and Labels depending on type
             if type:
-                type = int(type)
-                table.type.default = int(type)
+                table.type.default = type
 
                 # This prevents the type from being edited AFTER it is set
                 table.type.readable = table.type.writable = False
@@ -342,26 +341,30 @@ def req_controller():
                     # - list_fields over-rides, so still visible within list itself
                     s3.req_create_form_mods()
 
-                    # Inline Forms
-                    s3.req_inline_form(type, method)
+                    if type and settings.get_req_inline_forms():
+                        # Inline Forms
+                        s3.req_inline_form(type, method)
 
                     # Get the default Facility for this user
-                    # @ToDo: Use site_id in User Profile (like current organisation_id)
-                    if settings.has_module("hrm"):
-                        hrtable = s3db.hrm_human_resource
-                        query = (hrtable.person_id == s3_logged_in_person())
-                        site = db(query).select(hrtable.site_id,
-                                                limitby=(0, 1)).first()
-                        if site:
-                            r.table.site_id.default = site.site_id
+                    #if settings.has_module("hrm"):
+                    #    hrtable = s3db.hrm_human_resource
+                    #    query = (hrtable.person_id == s3_logged_in_person())
+                    #    site = db(query).select(hrtable.site_id,
+                    #                            limitby=(0, 1)).first()
+                    #    if site:
+                    #        r.table.site_id.default = site.site_id
+                    # Use site_id in User Profile
+                    if auth.is_logged_in():
+                        r.table.site_id.default = auth.user.site_id
 
                 elif method == "map":
                     # Tell the client to request per-feature markers
                     s3db.configure("req_req", marker_fn=marker_fn)
 
                 elif method == "update":
-                    # Inline Forms
-                    s3.req_inline_form(type, method)
+                    if settings.get_req_inline_forms():
+                        # Inline Forms
+                        s3.req_inline_form(type, method)
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
         elif r.representation == "plain":

@@ -654,7 +654,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
     def req_inline_form(type, method):
         """
             Function to be called from REST prep functions
-             - to add req_skill & req_skill components as inline forms
+             - to add req_item & req_skill components as inline forms
         """
 
         s3db = current.s3db
@@ -1199,44 +1199,6 @@ S3OptionsFilter({
         # Configure the next page to go to based on the request type
         tablename = "req_req"
 
-        #if table.type.default:
-        #    type = table.type.default
-        #elif "type" in form.vars:
-        #    type = int(form.vars.type)
-        #else:
-        #    type = 1
-        #if type == 1 and settings.has_module("inv"):
-        #    s3db.configure(tablename,
-        #                   create_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_item"]),
-        #                   update_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_item"]))
-        #elif type == 2 and settings.has_module("asset"):
-        #    s3db.configure(tablename,
-        #                   create_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_asset"]),
-        #                   update_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_asset"]))
-        #elif type == 3 and settings.has_module("hrm"):
-        #    s3db.configure(tablename,
-        #                   create_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_skill"]),
-        #                   update_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_skill"]))
-        #elif type == 4 and settings.has_module("cr"):
-        #    s3db.configure(tablename,
-        #                   create_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_shelter"]),
-        #                   update_next = URL(c="req",
-        #                                     f=f,
-        #                                     args=["[id]", "req_shelter"]))
         if is_template:
             s3db.configure(tablename,
                            create_next = URL(c="req",
@@ -1245,6 +1207,46 @@ S3OptionsFilter({
                            update_next = URL(c="req",
                                              f=f,
                                              args=["[id]", "job"]))
+
+        elif not settings.get_req_inline_forms():
+            if table.type.default:
+                type = table.type.default
+            elif "type" in form.vars:
+                type = int(form.vars.type)
+            else:
+                type = 1
+            if type == 1 and settings.has_module("inv"):
+                s3db.configure(tablename,
+                               create_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_item"]),
+                               update_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_item"]))
+            elif type == 2 and settings.has_module("asset"):
+                s3db.configure(tablename,
+                               create_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_asset"]),
+                               update_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_asset"]))
+            elif type == 3 and settings.has_module("hrm"):
+                s3db.configure(tablename,
+                               create_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_skill"]),
+                               update_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_skill"]))
+            elif type == 4 and settings.has_module("cr"):
+                s3db.configure(tablename,
+                               create_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_shelter"]),
+                               update_next = URL(c="req",
+                                                 f=f,
+                                                 args=["[id]", "req_shelter"]))
 
     # -------------------------------------------------------------------------
     @staticmethod

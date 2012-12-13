@@ -362,7 +362,7 @@ class S3Represent(object):
         if self.default is None:
             self.default = messages.UNKNOWN_OPT
         if self.none is None:
-            self.none = messages.NONE
+            self.none = messages["NONE"]
 
         # Lookup table options
         if self.options is not None:

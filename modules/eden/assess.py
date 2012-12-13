@@ -174,7 +174,7 @@ class S3AssessBuildingModel(S3Model):
 
         T = current.T
         messages = current.messages
-        NONE = messages.NONE
+        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------

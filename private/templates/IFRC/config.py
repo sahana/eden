@@ -83,6 +83,7 @@ def ifrc_realm_entity(table, row):
                             hrm_human_resource = SID,
                             inv_recv = SID,
                             inv_recv_item = "req_id",
+                            inv_send = SID,
                             inv_track_item = "track_org_id",
                             inv_adj_item = "adj_id",
                             req_req_item = "req_id"
@@ -287,6 +288,8 @@ settings.inv.send_show_time_in = True
 
 # -----------------------------------------------------------------------------
 # Request Management
+# Uncomment to disable Inline Forms in Requests module
+settings.req.inline_forms = False
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 #settings.inv.collapse_tabs = True
