@@ -3039,8 +3039,8 @@ class S3HRProgrammeModel(S3Model):
             msg_list_empty = T("Currently no hours recorded for this volunteer"))
 
         self.configure(tablename,
-                       onaccept=self.hrm_programme_hours_onaccept,
-                       ondelete=self.hrm_programme_hours_onaccept,
+                       onaccept=hrm_programme_hours_onaccept,
+                       ondelete=hrm_programme_hours_onaccept,
                        orderby=~table.date,
                        list_fields=["id",
                                     "training",
@@ -3057,59 +3057,58 @@ class S3HRProgrammeModel(S3Model):
                     #hrm_active_virtual_field = HRMActiveVirtualField,
                 )
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_programme_hours_onaccept(form):
-        """
-            Update the Active Status for the volunteer
-            - called both onaccept & ondelete
-        """
+# =============================================================================
+def hrm_programme_hours_onaccept(form):
+    """
+        Update the Active Status for the volunteer
+        - called both onaccept & ondelete
+    """
 
-        # Deletion and update have a different format
-        try:
-            id = form.vars.id
-            delete = False
-        except:
-            id = form.id
-            delete = True
+    # Deletion and update have a different format
+    try:
+        id = form.vars.id
+        delete = False
+    except:
+        id = form.id
+        delete = True
 
-        # Get the full record
-        db = current.db
-        table = db.hrm_programme_hours
-        record = db(table.id == id).select(table.person_id,
-                                           table.deleted_fk,
-                                           limitby=(0, 1)).first()
+    # Get the full record
+    db = current.db
+    table = db.hrm_programme_hours
+    record = db(table.id == id).select(table.person_id,
+                                       table.deleted_fk,
+                                       limitby=(0, 1)).first()
 
-        if delete:
-            deleted_fks = json.loads(record.deleted_fk)
-            person_id = deleted_fks["person_id"]
-        else:
-            person_id = record.person_id
+    if delete:
+        deleted_fks = json.loads(record.deleted_fk)
+        person_id = deleted_fks["person_id"]
+    else:
+        person_id = record.person_id
 
-        # Recalculate the Active Status for this Volunteer
-        s3db = current.s3db
-        active = s3db.vol_active(person_id)
+    # Recalculate the Active Status for this Volunteer
+    s3db = current.s3db
+    active = s3db.vol_active(person_id)
 
-        # Read the current value
-        htable = db.hrm_human_resource
-        dtable = s3db.vol_details
-        query = (htable.person_id == person_id) & \
-                (dtable.human_resource_id == htable.id)
-        row = db(query).select(dtable.id,
-                               dtable.active,
-                               limitby=(0, 1)
-                               ).first()
+    # Read the current value
+    htable = db.hrm_human_resource
+    dtable = s3db.vol_details
+    query = (htable.person_id == person_id) & \
+            (dtable.human_resource_id == htable.id)
+    row = db(query).select(dtable.id,
+                           dtable.active,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        if row.active != active:
+            # Update
+            db(dtable.id == row.id).update(active=active)
+    else:
+        # Create record
+        row = db(htable.person_id == person_id).select(htable.id,
+                                                       limitby=(0, 1)).first()
         if row:
-            if row.active != active:
-                # Update
-                db(dtable.id == row.id).update(active=active)
-        else:
-            # Create record
-            row = db(htable.person_id == person_id).select(htable.id,
-                                                           limitby=(0, 1)).first()
-            if row:
-                dtable.insert(human_resource_id=row.id,
-                              active=active)
+            dtable.insert(human_resource_id=row.id,
+                          active=active)
 
 # =============================================================================
 def hrm_vars():
