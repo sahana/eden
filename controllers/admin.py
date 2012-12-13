@@ -99,7 +99,7 @@ def user():
         auth.s3_approve_user(user)
 
         session.confirmation = T("User Account has been Approved")
-        redirect(URL(args=[]))
+        redirect(URL(args=[r.id, "roles"]))
 
     def link_user(r, **args):
         if not r.id:
@@ -218,8 +218,8 @@ def user():
     def postp(r, output):
         # Only show the disable button if the user is not currently disabled
         table = r.table
-        query = (table.registration_key != "disabled") & \
-                (table.registration_key != "pending")
+        query = (table.registration_key == None) | \
+                (table.registration_key == "")
         rows = db(query).select(table.id)
         restrict = [str(row.id) for row in rows]
         s3.actions = [
@@ -230,7 +230,8 @@ def user():
                              _class="action-btn",
                              _title = str(T("Link (or refresh link) between User, Person & HR Record")),
                              url=URL(c="admin", f="user",
-                                     args=["[id]", "link"])),
+                                     args=["[id]", "link"]),
+                             restrict = restrict),
                         dict(label=str(T("Roles")), _class="action-btn",
                              url=URL(c="admin", f="user",
                                      args=["[id]", "roles"])),
@@ -240,7 +241,9 @@ def user():
                              restrict = restrict)
                       ]
         # Only show the approve button if the user is currently pending
-        query = (table.registration_key == "pending")
+        query = (table.registration_key != "disabled") & \
+                (table.registration_key != None) & \
+                (table.registration_key != "")
         rows = db(query).select(table.id)
         restrict = [str(row.id) for row in rows]
         s3.actions.append(

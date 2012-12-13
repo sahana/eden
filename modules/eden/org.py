@@ -1605,6 +1605,7 @@ class S3FacilityModel(S3Model):
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
                   deduplicate=self.org_facility_duplicate,
+                  onaccept = self.org_facility_onaccept,
                   search_method=S3Search(advanced=org_facility_search),
                   report_options = Storage(
                     search=org_facility_search,
@@ -1619,6 +1620,24 @@ class S3FacilityModel(S3Model):
                                      fact="name",
                                      aggregate="count")
                     ),
+                  realm_components = ["contact_emergency",
+                                      "physical_description",
+                                      "config",
+                                      "image",
+                                      "req",
+                                      "send",
+                                      "human_resource_site",
+                                      "note",
+                                      "contact",
+                                      "role",
+                                      "asset",
+                                      "commit",
+                                      "inv_item",
+                                      "document",
+                                      "recv",
+                                      "address",
+                                      ],
+                  update_realm = True,
                   )
 
         # ---------------------------------------------------------------------
@@ -1627,6 +1646,16 @@ class S3FacilityModel(S3Model):
         return Storage(
                     org_facility_geojson = self.org_facility_geojson
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_onaccept(form):
+        """
+            Update Affiliation, record ownership and component ownership
+        """
+
+        s3db = current.s3db
+        s3db.pr_update_affiliations(s3db.org_facility, form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod

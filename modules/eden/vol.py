@@ -29,6 +29,7 @@
 """
 
 __all__ = ["S3VolClusterDataModel",
+           "vol_active",
            ]
 
 from gluon import *
@@ -39,7 +40,8 @@ from eden.layouts import S3AddResourceLink
 # =============================================================================
 class S3VolClusterDataModel(S3Model):
 
-    names = ["vol_cluster_type",
+    names = ["vol_details",
+             "vol_cluster_type",
              "vol_cluster",
              "vol_cluster_position",
              "vol_volunteer_cluster"
@@ -51,6 +53,19 @@ class S3VolClusterDataModel(S3Model):
         T = current.T
 
         crud_strings = current.response.s3.crud_strings
+        hrm_human_resource_id = self.hrm_human_resource_id
+
+        # ---------------------------------------------------------------------
+        # Volunteer Details
+        # - extra details for volunteers
+        #
+        tablename = "vol_details"
+        table = self.define_table(tablename,
+                                  hrm_human_resource_id(ondelete = "CASCADE"),
+                                  Field("active", "boolean",
+                                        represent = self.vol_active,
+                                        label = T("Active")),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Volunteer Cluster
@@ -182,20 +197,18 @@ class S3VolClusterDataModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Volunteer Cluster Link Table
-        cluster_type_filter = SCRIPT(
-'''$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'sub_volunteer_cluster_vol_cluster_type_id',
-  'Field':'sub_volunteer_cluster_vol_cluster_id',
-  'FieldKey':'vol_cluster_type_id',
-  'FieldPrefix':'vol',
-  'FieldResource':'cluster',
- })
-})''')
+        cluster_type_filter = '''
+S3FilterFieldChange({
+ 'FilterField':'sub_volunteer_cluster_vol_cluster_type_id',
+ 'Field':'sub_volunteer_cluster_vol_cluster_id',
+ 'FieldKey':'vol_cluster_type_id',
+ 'FieldPrefix':'vol',
+ 'FieldResource':'cluster',
+})'''
 
         tablename = "vol_volunteer_cluster"
         table = self.define_table(tablename,
-                                  self.hrm_human_resource_id(),
+                                  hrm_human_resource_id(ondelete = "CASCADE"),
                                   vol_cluster_type_id(script = cluster_type_filter), # This field is ONLY here to provide a filter
                                   vol_cluster_id(readable=False,
                                                  writable=False),
@@ -223,4 +236,86 @@ class S3VolClusterDataModel(S3Model):
                                              readable=False,
                                              writable=False),
             )
+
+    # =====================================================================
+    @staticmethod
+    def vol_active(opt):
+        """
+            Represent the Active status of a Volunteer
+        """
+
+        args = current.request.args
+        if "search" in args:
+            # We can't use an HTML represent, but can use a LazyT
+            # if we match in the search options
+            return current.T("Yes") if opt else current.T("No")
+        elif "report" in args:
+            # We can't use a represent
+            return opt
+
+        # List view, so HTML represent is fine
+        if opt:
+            output = DIV(current.T("Yes"),
+                         _style="color:green;")
+        else:
+            output = DIV(current.T("No"),
+                         _style="color:red;")
+        return output
+
+# =============================================================================
+def vol_active(person_id):
+    """
+        Whether a Volunteer counts as 'Active' based on the number of hours
+        they've done (both Trainings & Programmes) per month, averaged over
+        the last year.
+        If nothing recorded for the last 3 months, don't penalise as assume
+        that data entry hasn't yet been done.
+
+        @ToDo: Move to Template
+        @ToDo: This should be based on the HRM record, not Person record
+               - could be active with Org1 but not with Org2
+        @ToDo: allow to be calculated differently per-Org
+    """
+
+    now = current.request.utcnow
+
+    # Time spent on Programme work
+    htable = current.s3db.hrm_programme_hours
+    query = (htable.deleted == False) & \
+            (htable.person_id == person_id) & \
+            (htable.date != None)
+    programmes = current.db(query).select(htable.hours,
+                                          htable.date,
+                                          orderby=htable.date)
+    if programmes:
+        # Ignore up to 3 months of records
+        three_months_prior = (now - datetime.timedelta(days=92))
+        end = max(programmes.last().date, three_months_prior.date())
+        last_year = end - datetime.timedelta(days=365)
+        # Is this the Volunteer's first year?
+        if programmes.first().date > last_year:
+            # Only start counting from their first month
+            start = programmes.first().date
+        else:
+            # Start from a year before the latest record
+            start = last_year
+
+        # Total hours between start and end
+        programme_hours = 0
+        for programme in programmes:
+            if programme.date >= start and programme.date <= end and programme.hours:
+                programme_hours += programme.hours
+
+        # Average hours per month
+        months = max(1, (end - start).days / 30.5)
+        average = programme_hours / months
+
+        # Active?
+        if average >= 8:
+            return True
+        else:
+            return False
+    else:
+        return False
+
 # END =========================================================================

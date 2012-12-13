@@ -121,40 +121,40 @@ def volunteer():
     # Remove Facility
     human_resource_search.advanced.pop(8)
     if settings.get_hrm_vol_experience() == "programme":
-        enable_active_field = settings.set_org_dependent_field("vol_volunteer", "active",
+        enable_active_field = settings.set_org_dependent_field("vol_details", "active",
                                                                enable_field = False)
-        # Add Active Virtual Fields
-        table.virtualfields.append(s3db.hrm_active_virtual_field())
-        # Add VF to List Fields
+        # Add to List Fields
         if enable_active_field:
-            list_fields.insert(4, (T("Active?"), "active"))
+            list_fields.insert(4, (T("Active?"), "details.active"))
         list_fields.insert(7, "person_id$hours.programme_id")
-        # Add VF to Report Options
+        # Add to Report Options
         report_fields = report_options.rows
         report_fields.append("person_id$hours.programme_id")
         if enable_active_field:
-            report_fields.append((T("Active?"), "active"))
+            report_fields.append((T("Active?"), "details.active"))
         report_options.rows = report_fields
         report_options.cols = report_fields
         report_options.fact = report_fields
         # Remove deprecated Active/Obsolete
         human_resource_search.advanced.pop(1)
         table.status.readable = table.status.writable = False
-        # Add VF to the Search Filters
-        # Don't make a VF a Search Option as not scalable
-        #if enable_active_field:
-        #    widget = s3base.S3SearchOptionsWidget(
-        #                        name="human_resource_search_active",
-        #                        label=T("Active?"),
-        #                        field="active",
-        #                        cols = 2,
-        #                        options = {
-        #                                T("Yes"): T("Yes"),
-        #                                T("No"): T("No")
-        #                            }
-        #                      ),
-        #    search_widget = ("human_resource_search_active", widget[0])
-        #    human_resource_search.advanced.insert(1, search_widget)
+        # Add to the Search Filters
+        if enable_active_field:
+            YES = T("Yes")
+            NO = T("No")
+            widget = s3base.S3SearchOptionsWidget(
+                                name="human_resource_search_active",
+                                label=T("Active?"),
+                                field="details.active",
+                                cols = 2,
+                                # T on both sides here to match the output of the represent
+                                options = {
+                                        YES: YES,
+                                        NO: NO
+                                    }
+                              ),
+            search_widget = ("human_resource_search_active", widget[0])
+            human_resource_search.advanced.insert(1, search_widget)
 
         def hrm_programme_opts():
             """
