@@ -1,7 +1,7 @@
 e-cidadania
 ===========
 
-Current version: 0.1.6 alpha
+Current version: 0.1.7 beta
 
 e-cidadania is a project to develop an open source application for citizen
 participation, which can be used for debates, proposals, trusted voting,
