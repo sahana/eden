@@ -189,6 +189,14 @@ class S3Represent(object):
         Scalable universal field representation for option fields and
         foreign keys. Can be subclassed and tailored to the particular
         model where necessary.
+
+        @group Configuration (in the model): __init__
+        @group API (to apply the method): __call__,
+                                          multiple,
+                                          bulk
+        @group Prototypes (to adapt in subclasses): lookup_rows,
+                                                    represent_row,
+                                                    link
     """
 
     def __init__(self,
@@ -198,6 +206,7 @@ class S3Represent(object):
                  labels=None,
                  options=None,
                  translate=False,
+                 linkto=None,
                  multiple=False,
                  default=None,
                  none=None):
@@ -205,16 +214,20 @@ class S3Represent(object):
             Constructor
 
             @param lookup: the name of the lookup table
-            @param key: the field name of the primary key of the lookup table
-            @param fields: the fields to extract from the lookup table
-            @param labels: string template or callable to represent
-                           rows from the lookup table
+            @param key: the field name of the primary key of the lookup table,
+                        a field name
+            @param fields: the fields to extract from the lookup table, a list
+                           of field names
+            @param labels: string template or callable to represent rows from
+                           the lookup table, callables must return a string
             @param options: dictionary of options to lookup the representation
-                            of a value
-            @param multiple: list:type, values are expected to always be lists
-            @param translate: translate lookup results
+                            of a value, overrides lookup and key
+            @param multiple: web2py list-type (all values will be lists)
+            @param translate: translate all representations (using T)
+            @param linkto: a URL (as string) to link representations to,
+                           with "[id]" as placeholder for the key
             @param default: default representation for unknown options
-            @param none: default representation for empty fields
+            @param none: representation for empty fields (None or empty list)
         """
 
         self.tablename = lookup
@@ -225,6 +238,7 @@ class S3Represent(object):
         self.options = options
         self.list_type = multiple
         self.translate = translate
+        self.linkto = linkto
         self.default = default
         self.none = none
         self.setup = False
@@ -280,29 +294,60 @@ class S3Represent(object):
             return v
 
     # -------------------------------------------------------------------------
-    def __call__(self, value, row=None):
+    def link(self, k, v):
+        """
+            Represent a (key, value) as hypertext link.
+
+                - Typically, k is a foreign key value, and v the
+                  representation of the referenced record, and the link
+                  shall open a read view of the referenced record.
+
+                - In the base class, the linkto-parameter expects a URL (as
+                  string) with "[id]" as placeholder for the key.
+
+            @param k: the key
+            @param v: the representation of the key
+        """
+
+        if self.linkto:
+            k = s3_unicode(k)
+            return A(v, _href=self.linkto.replace("[id]", k) \
+                                         .replace("%5Bid%5D", k))
+        else:
+            return v
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value, row=None, show_link=False):
         """
             Represent a single value (standard entry point).
 
             @param value: the value
             @param row: the referenced row (if value is a foreign key)
+            @param show_link: render the representation as link
         """
 
         if self.list_type:
-            return self.multiple(value, rows=row, list_type=False)
+            return self.multiple(value, rows=row,
+                                 list_type=False, show_link=show_link)
         if value:
             rows = [row] if row is not None else None
             items = self._lookup([value], rows=rows)
-            return items.get(value, self.default)
+            if value in items:
+                r = self.link(value, items[value]) \
+                    if show_link else items[value]
+            else:
+                r = self.default
+            return r
         return self.none
 
     # -------------------------------------------------------------------------
-    def multiple(self, values, rows=None, list_type=True):
+    def multiple(self, values, rows=None, list_type=True, show_link=False):
         """
             Represent multiple values as a comma-separated list.
 
             @param values: list of values
             @param rows: the referenced rows (if values are foreign keys)
+            @param show_link: render each representation as link
         """
 
         if self.list_type and list_type:
@@ -314,20 +359,33 @@ class S3Represent(object):
         else:
             values = [values] if type(values) is not list else values
         if values:
+            default = self.default
             items = self._lookup(values, rows=rows)
-            labels = [s3_unicode(items[v])
-                      if v in items else self.default for v in values]
-            if labels:
-                return ", ".join(labels)
+            if show_link:
+                link = self.link
+                labels = [[link(v, s3_unicode(items[v])), ", "]
+                          if v in items else [default, ", "]
+                          for v in values]
+                if labels:
+                    from itertools import chain
+                    return TAG[""](list(chain.from_iterable(labels))[:-1])
+                else:
+                    return ""
+            else:
+                labels = [s3_unicode(items[v])
+                          if v in items else default for v in values]
+                if labels:
+                    return ", ".join(labels)
         return self.none
 
     # -------------------------------------------------------------------------
-    def bulk(self, values, rows=None):
+    def bulk(self, values, rows=None, show_link=False):
         """
             Represent multiple values as dict {value: representation}
 
             @param values: list of values
             @param rows: the referenced rows (if values are foreign keys)
+            @param show_link: render each representation as link
         """
 
         if self.list_type:
@@ -340,6 +398,9 @@ class S3Represent(object):
             values = [values] if type(values) is not list else values
         if values:
             labels = self._lookup(values, rows=rows)
+            if show_link:
+                link = self.link
+                labels = dict([(v, link(v, r)) for v, r in labels.items()])
             for v in values:
                 if v not in labels:
                     labels[v] = self.default

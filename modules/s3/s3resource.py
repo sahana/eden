@@ -25,6 +25,16 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @group Resource API: S3Resource,
+                         S3ResourceField,
+                         S3FieldSelector
+    @group Filter API: S3URLQuery,
+                       S3ResourceQuery,
+                       S3ResourceFilter
+    @group Helper Classes: S3RecordMerger,
+                           S3TypeConverter,
+                           S3Pivottable
 """
 
 import re
