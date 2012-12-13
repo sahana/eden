@@ -37,8 +37,9 @@ from gluon.dal import Table
 #from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3validators import IS_ONE_OF
+from s3navigation import S3ScriptItem
 from s3resource import S3Resource
+from s3validators import IS_ONE_OF
 
 DEFAULT = lambda: None
 
@@ -810,6 +811,7 @@ class S3Model(object):
                    instance_types=None,
                    updateable=False,
                    groupby=None,
+                   script=None,
                    widget=None,
                    empty=True,
                    default=DEFAULT,
@@ -854,6 +856,14 @@ class S3Model(object):
                                  not_filter_opts=not_filter_opts,)
             if empty:
                 requires = IS_EMPTY_OR(requires)
+
+        # Add the script into the comment
+        if script:
+            if comment:
+                comment = TAG[""](comment,
+                                  S3ScriptItem(script=script))
+            else:
+                comment = S3ScriptItem(script=script)
 
         return Field(key, supertable,
                      default = default,
