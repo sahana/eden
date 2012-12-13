@@ -24,28 +24,33 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from apps.ecidadania.voting.views import *
+from apps.ecidadania.voting.url_names import *
 
 
 urlpatterns = patterns('apps.ecidadania.voting.views',
+    url(_(r'^list/$'), ListPolls.as_view(), name=LIST_POLL),
 
-        url(_(r'^list/$'), ListPolls.as_view(), name='list-polls'),
-
-        url(_(r'^addpoll/$'), AddPoll, name='add-poll'),
+    url(_(r'^addpoll/$'), AddPoll, name=ADD_POLL),
         
-        url(_(r'^(?P<poll_id>\d+)/delete/$'), DeletePoll.as_view(), name='delete-poll'),
+    url(_(r'^(?P<poll_id>\d+)/delete/$'), DeletePoll.as_view(),
+        name=DELETE_POLL),
         
-        url(_(r'^(?P<poll_id>\d+)/edit/$'), EditPoll, name='edit-poll'),
+    url(_(r'^(?P<poll_id>\d+)/edit/$'), EditPoll, name=EDIT_POLL),
         
-        url(_(r'^(?P<pk>\d+)/$'), DetailView.as_view(model = Poll, template_name ='voting/poll_detail.html'), name='view-poll'),
-        url(_(r'^(?P<poll_id>\d+)/vote/$'), 'vote'),
+    url(_(r'^(?P<pk>\d+)/$'), DetailView.as_view(model = Poll,
+        template_name ='voting/poll_detail.html'), name=VIEW_POLL),
 
-        url(_(r'^addvoting/$'), AddVoting.as_view(), name='add-voting'),
+    url(_(r'^(?P<poll_id>\d+)/vote/$'), 'vote', name=VOTE_POLL),
 
-        url(_(r'^(?P<voting_id>\d+)/deletevoting/$'), DeleteVoting.as_view(), name='delete-voting'),
+    url(_(r'^addvoting/$'), AddVoting.as_view(), name=ADD_VOTING),
 
-        url(_(r'^(?P<voting_id>\d+)/editvoting/$'), EditVoting.as_view(), name='edit-voting'),
+    url(_(r'^(?P<voting_id>\d+)/deletevoting/$'), DeleteVoting.as_view(),
+        name=DELETE_VOTING),
 
-        url(r'^(?P<voting_id>\d+)', ViewVoting.as_view(), name='view-voting'),
+    url(_(r'^(?P<voting_id>\d+)/editvoting/$'), EditVoting.as_view(),
+        name=EDIT_VOTING),
+
+    url(r'^(?P<voting_id>\d+)', ViewVoting.as_view(), name=VIEW_VOTING),
 )
 
 

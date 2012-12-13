@@ -21,24 +21,24 @@
 Module to store voting related url names.
 """
 
-ADD_POLL
+ADD_POLL = 'add-poll'
 
-EDIT_POLL
+EDIT_POLL = 'edit-poll'
 
-DELETE_POLL
+DELETE_POLL = 'delete-poll'
 
-VIEW_POLL
+VIEW_POLL = 'view-poll'
 
-LIST_POLL
+LIST_POLL = 'list-polls'
 
-VOTE_POLL
+VOTE_POLL = 'vote'
 
-ADD_VOTING
+ADD_VOTING = 'add-voting'
 
-EDIT_VOTING
+EDIT_VOTING = 'edit-voting'
 
-DELETE_VOTING
+DELETE_VOTING = 'delete-voting'
 
-VOTE_VOTING
+VOTE_VOTING = ''
 
-VIEW_VOTING
+VIEW_VOTING = 'view-voting'
