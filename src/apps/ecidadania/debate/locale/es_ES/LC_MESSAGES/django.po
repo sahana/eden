@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-22 11:43+0100\n"
+"POT-Creation-Date: 2012-12-13 10:18+0100\n"
 "PO-Revision-Date: 2012-05-24 08:16+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
@@ -139,12 +139,13 @@ msgstr "Otros datos del debate"
 
 #: templates/debate/debate_add.html:215
 #: templates/debate/debate_add_simple.html:121
+#: templates/debate/debate_view.html:140
 msgid "Cancel"
 msgstr "Cancelar"
 
 #: templates/debate/debate_add.html:216
 #: templates/debate/debate_add_simple.html:120
-#: templates/debate/debate_view.html:142
+#: templates/debate/debate_view.html:141
 msgid "Save"
 msgstr "Guardar"
 
@@ -239,17 +240,28 @@ msgstr ""
 msgid "Edit note"
 msgstr "Editar nota"
 
-#: templates/debate/debate_view.html:118
-msgid "Note title"
-msgstr "Título de la nota"
-
-#: templates/debate/debate_view.html:122
+#: templates/debate/debate_view.html:120
 msgid "100 characters"
 msgstr "100 caracteres"
 
-#: templates/debate/debate_view.html:153
+#: templates/debate/debate_view.html:152
 msgid "Author:"
 msgstr ""
+
+#: templates/debate/debate_view.html:158
+msgid "Comment"
+msgstr ""
+
+#: templates/debate/debate_view.html:162
+msgid "Submit"
+msgstr ""
+
+#: templates/debate/debate_view.html:163
+msgid "Preview"
+msgstr ""
+
+#~ msgid "Note title"
+#~ msgstr "Título de la nota"
 
 #~ msgid "Scope"
 #~ msgstr "Ámbito"

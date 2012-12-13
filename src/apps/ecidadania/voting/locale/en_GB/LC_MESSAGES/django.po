@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-22 11:43+0100\n"
+"POT-Creation-Date: 2012-12-13 10:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -136,7 +136,7 @@ msgstr ""
 #: templates/voting/poll_edit.html:187 templates/voting/poll_form.html:185
 #: templates/voting/poll_list.html:64
 #: templates/voting/voting_confirm_delete.html:40
-#: templates/voting/voting_form.html:221
+#: templates/voting/voting_form.html:217
 msgid "Go back"
 msgstr ""
 
@@ -149,7 +149,7 @@ msgstr ""
 msgid "View poll"
 msgstr ""
 
-#: templates/voting/poll_detail.html:37 templates/voting/voting_detail.html:36
+#: templates/voting/poll_detail.html:37 templates/voting/voting_detail.html:40
 msgid "Created by:"
 msgstr ""
 
@@ -167,12 +167,12 @@ msgid "Edit poll"
 msgstr ""
 
 #: templates/voting/poll_edit.html:145 templates/voting/poll_form.html:143
-#: templates/voting/voting_form.html:179
+#: templates/voting/voting_form.html:175
 msgid "Staff members options"
 msgstr ""
 
 #: templates/voting/poll_edit.html:188 templates/voting/poll_form.html:186
-#: templates/voting/voting_form.html:222
+#: templates/voting/voting_form.html:218
 msgid "Publish"
 msgstr ""
 
@@ -226,49 +226,45 @@ msgid ""
 "undone."
 msgstr ""
 
-#: templates/voting/voting_detail.html:35
-#: templates/voting/voting_detail.html:54
-#: templates/voting/voting_detail.html:71
+#: templates/voting/voting_detail.html:39
+#: templates/voting/voting_detail.html:59
+#: templates/voting/voting_detail.html:70
 msgid "Description:"
 msgstr ""
 
-#: templates/voting/voting_detail.html:37
+#: templates/voting/voting_detail.html:41
 msgid "Start date:"
 msgstr ""
 
-#: templates/voting/voting_detail.html:38
+#: templates/voting/voting_detail.html:42
 msgid "End date:"
 msgstr ""
 
-#: templates/voting/voting_detail.html:40
+#: templates/voting/voting_detail.html:44
 msgid "Vote on the following:"
 msgstr ""
 
-#: templates/voting/voting_detail.html:41
-msgid "Proposalsets:"
-msgstr ""
-
-#: templates/voting/voting_detail.html:46
-msgid "Linked to debate:"
+#: templates/voting/voting_detail.html:45
+msgid "Proposal sets"
 msgstr ""
 
 #: templates/voting/voting_detail.html:49
-msgid "Proposals in this proposalset:"
+msgid "This proposal set is linked to:"
 msgstr ""
 
-#: templates/voting/voting_detail.html:55
-#: templates/voting/voting_detail.html:72
+#: templates/voting/voting_detail.html:60
+#: templates/voting/voting_detail.html:71
 msgid "Current votes status:"
 msgstr ""
 
-#: templates/voting/voting_detail.html:67
+#: templates/voting/voting_detail.html:66
 msgid "Unlinked proposals:"
 msgstr ""
 
-#: templates/voting/voting_form.html:11 templates/voting/voting_form.html:50
+#: templates/voting/voting_form.html:7 templates/voting/voting_form.html:46
 msgid "Edit voting process"
 msgstr ""
 
-#: templates/voting/voting_form.html:13 templates/voting/voting_form.html:52
+#: templates/voting/voting_form.html:9 templates/voting/voting_form.html:48
 msgid "Create new voting process"
 msgstr ""

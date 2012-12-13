@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-22 11:43+0100\n"
+"POT-Creation-Date: 2012-12-13 10:18+0100\n"
 "PO-Revision-Date: 2012-02-29 08:57+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
@@ -19,111 +19,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: dashboard.py:68
-msgid "Users"
-msgstr "Usuarios"
-
-#: dashboard.py:78
-msgid "Applications"
-msgstr "Aplicaciones"
-
-#: dashboard.py:87
-msgid "Latest News"
-msgstr "Últimas noticias"
-
-#: dashboard.py:95
-msgid "Media Management"
-msgstr "Gestión de medios"
-
-#: dashboard.py:99
-msgid "FileBrowser"
-msgstr "Gestor de archivos"
-
-#: dashboard.py:108
-msgid "e-cidadania Support"
-msgstr "Soporte e-cidadania"
-
-#: dashboard.py:112
-msgid "Documentation"
-msgstr "Documentación"
-
-#: dashboard.py:117
-msgid "Wiki"
-msgstr "Wiki"
-
-#: dashboard.py:122
-msgid "Translations"
-msgstr "Traducciones"
-
-#: dashboard.py:130
-msgid "Thirdparty Support"
-msgstr "Soporte de terceras partes"
-
-#: dashboard.py:134
-msgid "Django Documentation"
-msgstr "Documentación de Django"
-
-#: dashboard.py:139
-msgid "Grappelli Documentation"
-msgstr "Documentación de Grappelli"
-
-#: dashboard.py:144
-msgid "python-dateutil Documentation"
-msgstr "Documentación python-dateutil"
-
-#: dashboard.py:153
-msgid "e-cidadania source code"
-msgstr "Código fuente e-cidadania"
-
-#: dashboard.py:157
-msgid "GitHub"
-msgstr "GitHub"
-
-#: dashboard.py:162
-msgid "Gitorious"
-msgstr "Gitorious"
-
-#: dashboard.py:167
-msgid "Repo.or.vz (Mirror)"
-msgstr "Repo.or.cz (espejo)"
-
-#: dashboard.py:176
-msgid "Recent Actions"
-msgstr "Acciones recientes"
-
-#: urls.py:62
+#: urls.py:60
 msgid "^accounts/"
 msgstr ""
 
-#: urls.py:65
+#: urls.py:63
 msgid "^spaces/"
 msgstr ""
 
-#: urls.py:68
+#: urls.py:66
 msgid "^invite/"
 msgstr ""
 
-#: urls.py:71
+#: urls.py:69
 msgid "^news/$"
 msgstr ""
 
-#: urls.py:73
+#: urls.py:71
 msgid "^news/add/$"
 msgstr ""
 
-#: urls.py:75
+#: urls.py:73
 msgid "^news/(?P<post_id>\\w+)/delete/$"
 msgstr ""
 
-#: urls.py:78
+#: urls.py:76
 msgid "^news/(?P<post_id>\\w+)/edit/$"
 msgstr ""
 
-#: urls.py:81
+#: urls.py:79
 msgid "^news/(?P<post_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:90 urls.py:106
+#: urls.py:88 urls.py:104
 #, fuzzy
 msgid "^comments/"
 msgstr "Comentarios"
@@ -271,6 +199,10 @@ msgstr ""
 msgid "e-cidadania"
 msgstr "e-cidadania"
 
+#: templates/site_index.html:30
+msgid "Latest participative processes"
+msgstr ""
+
 #: templates/site_index.html:37
 msgid "Public"
 msgstr "Público"
@@ -288,6 +220,27 @@ msgstr "No hay espacios."
 #, fuzzy
 msgid "View all the processes"
 msgstr "Ver todos los espacios"
+
+#: templates/site_index.html:67
+#, fuzzy
+msgid "Sign in"
+msgstr "Registrarse"
+
+#: templates/site_index.html:71
+msgid "Forgot your password?"
+msgstr ""
+
+#: templates/site_index.html:72
+msgid "Invite someone!"
+msgstr ""
+
+#: templates/site_index.html:79
+msgid "First time here? Register!"
+msgstr ""
+
+#: templates/site_index.html:85
+msgid "Register"
+msgstr "Registrarse"
 
 #: templates/space_intent.html:4
 msgid "Participate"
@@ -458,6 +411,60 @@ msgid ""
 "support@ecidadania.org."
 msgstr ""
 
+#~ msgid "Users"
+#~ msgstr "Usuarios"
+
+#~ msgid "Applications"
+#~ msgstr "Aplicaciones"
+
+#~ msgid "Latest News"
+#~ msgstr "Últimas noticias"
+
+#~ msgid "Media Management"
+#~ msgstr "Gestión de medios"
+
+#~ msgid "FileBrowser"
+#~ msgstr "Gestor de archivos"
+
+#~ msgid "e-cidadania Support"
+#~ msgstr "Soporte e-cidadania"
+
+#~ msgid "Documentation"
+#~ msgstr "Documentación"
+
+#~ msgid "Wiki"
+#~ msgstr "Wiki"
+
+#~ msgid "Translations"
+#~ msgstr "Traducciones"
+
+#~ msgid "Thirdparty Support"
+#~ msgstr "Soporte de terceras partes"
+
+#~ msgid "Django Documentation"
+#~ msgstr "Documentación de Django"
+
+#~ msgid "Grappelli Documentation"
+#~ msgstr "Documentación de Grappelli"
+
+#~ msgid "python-dateutil Documentation"
+#~ msgstr "Documentación python-dateutil"
+
+#~ msgid "e-cidadania source code"
+#~ msgstr "Código fuente e-cidadania"
+
+#~ msgid "GitHub"
+#~ msgstr "GitHub"
+
+#~ msgid "Gitorious"
+#~ msgstr "Gitorious"
+
+#~ msgid "Repo.or.vz (Mirror)"
+#~ msgstr "Repo.or.cz (espejo)"
+
+#~ msgid "Recent Actions"
+#~ msgstr "Acciones recientes"
+
 #~ msgid "Pages"
 #~ msgstr "Páginas"
 
@@ -493,9 +500,6 @@ msgstr ""
 
 #~ msgid "Share"
 #~ msgstr "Compartir"
-
-#~ msgid "Register"
-#~ msgstr "Registrarse"
 
 #~ msgid "True democracy"
 #~ msgstr "Democracia real"

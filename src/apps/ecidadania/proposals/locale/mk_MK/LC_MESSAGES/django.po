@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-22 11:43+0100\n"
+"POT-Creation-Date: 2012-12-13 10:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,11 +53,11 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: models.py:50 models.py:169
+#: models.py:50 models.py:165
 msgid "Latitude"
 msgstr ""
 
-#: models.py:51 models.py:172
+#: models.py:51 models.py:167
 msgid "Longitude"
 msgstr ""
 
@@ -77,38 +77,23 @@ msgstr ""
 msgid "object ID"
 msgstr ""
 
-#: models.py:102
+#: models.py:103
 msgid "Name"
 msgstr ""
 
-#: models.py:103 models.py:154
+#: models.py:104 models.py:154
 msgid "Max: 200 characters"
 msgstr ""
 
-#: models.py:104
-msgid "Ponderation"
-msgstr ""
-
-#: models.py:105
-msgid ""
-"Ponderation types:<br><strong>Users:         </strong>Users give support "
-"votes to the proposal, and that votes         are added to the final voting."
-"<br><strong>Fixed:</strong>Fixed         ponderations are stablished by the "
-"process managers. It's a         porcentual puntuation. That means that "
-"percetange is calculated         after the voting and added to the final "
-"voting.<br><strong>None:         </strong> No ponderation is applied to the "
-"final voting."
-msgstr ""
-
-#: models.py:116
+#: models.py:117
 msgid "Select the debate associated with this proposal set"
 msgstr ""
 
-#: models.py:122
+#: models.py:123
 msgid "Proposal set"
 msgstr ""
 
-#: models.py:123
+#: models.py:124
 msgid "Proposal sets"
 msgstr ""
 
@@ -120,161 +105,124 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
-#: models.py:157
-msgid ""
-"Proposal set in which the                                     proposal "
-"resides"
+#: models.py:156
+msgid "Proposal set in which the         proposal resides"
 msgstr ""
 
-#: models.py:159
+#: models.py:158
 msgid "Description"
 msgstr ""
 
+#: models.py:161
+msgid "Change the user that will         figure as the author"
+msgstr ""
+
 #: models.py:163
-msgid ""
-"Change the user that will                             "
-"figure                                as the author"
+msgid "Insert here relevant words related with         the proposal"
 msgstr ""
 
-#: models.py:167
-msgid ""
-"Insert here relevant words related with the                                 "
-"proposal"
-msgstr ""
-
-#: models.py:171 models.py:174
+#: models.py:166 models.py:168
 msgid "Specify it in decimal"
 msgstr ""
 
-#: models.py:182
-msgid "select proposals from the list"
+#: models.py:176
+msgid "Select proposals from the list"
 msgstr ""
 
-#: models.py:185
+#: models.py:179
 msgid "Votes from"
 msgstr ""
 
-#: models.py:203
+#: models.py:197
 msgid "Proposal"
 msgstr ""
 
-#: models.py:204
+#: models.py:198
 msgid "Proposals"
 msgstr ""
 
-#: models.py:225
+#: models.py:221
 msgid "Customizing         proposal form for a proposal set"
 msgstr ""
 
-#: models.py:227
+#: models.py:223
 msgid "Additional field that needed to added to the proposal         form"
 msgstr ""
 
-#: models.py:234
+#: models.py:230
 msgid "ProposalField"
 msgstr ""
 
-#: models.py:235
+#: models.py:231
 msgid "ProposalFields"
 msgstr ""
 
-#: urls.py:33
-msgid "^merged/(?P<p_set>\\w+)/"
-msgstr ""
-
-#: urls.py:35
-msgid "^add_support_vote/"
-msgstr ""
-
-#: urls.py:37
-msgid "^merge_proposals/"
-msgstr ""
-
 #: urls.py:40
-msgid "^field_add/"
+msgid "^set/$"
 msgstr ""
 
 #: urls.py:42
-msgid "^field_remove/"
+msgid "^set/(?P<set_id>\\w+)/$"
 msgstr ""
 
 #: urls.py:45
-msgid "^select_set/"
+msgid "^set/(?P<set_id>\\w+)/add/$"
 msgstr ""
 
-#: urls.py:47
-msgid "^(?P<space_url>\\w+)/vote/approve/(?P<token>\\w+)/$"
+#: urls.py:48
+msgid "^add/$"
 msgstr ""
 
-#: urls.py:53
-msgid "^psets/(?P<set_id>\\w+)/edit/"
+#: urls.py:50
+msgid "^add/set/$"
 msgstr ""
 
-#: urls.py:56
-msgid "^psets/(?P<set_id>\\w+)/delete/"
+#: urls.py:52
+msgid "^add/field/"
 msgstr ""
 
-#: urls.py:59
-msgid "^psets/(?P<set_id>\\w+)/"
+#: urls.py:55
+msgid "^edit/(?P<prop_id>\\w+)/"
 msgstr ""
 
-#: urls.py:62
-msgid "^psets/"
+#: urls.py:58
+msgid "^edit/set/(?P<p_set>\\w+)/"
+msgstr ""
+
+#: urls.py:61
+msgid "^delete/field/$"
 msgstr ""
 
 #: urls.py:64
-msgid "^addset/"
+msgid "^delete/(?P<prop_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:69
-msgid "^$"
+#: urls.py:67
+msgid "^delete/set/(?P<p_set>\\w+)/$"
 msgstr ""
 
-#: urls.py:71
-msgid "^add/(?P<p_set>\\w+)/"
+#: urls.py:70
+msgid "^support/"
 msgstr ""
 
-#: urls.py:73
-msgid "^(?P<prop_id>\\w+)/$"
+#: urls.py:72
+msgid "^merge/(?P<set_id>\\w+)/"
 msgstr ""
 
 #: urls.py:75
-msgid "^(?P<prop_id>\\w+)/edit/$"
+msgid "^merge_proposals/"
 msgstr ""
 
 #: urls.py:78
-msgid "^(?P<prop_id>\\w+)/delete/$"
+msgid "^select_set/"
 msgstr ""
 
-#: views.py:199
-msgid "New vote validation request"
+#: urls.py:80
+msgid "^(?P<prop_id>\\w+)/$"
 msgstr ""
 
-#: views.py:200
-msgid ""
-"Hello {0}, \n"
-"                  You are getting this email because you wanted to support "
-"proposal {1}.\n"
-"                 Please click on the link below to vefiry your vote.\n"
-" {2} \n"
-"                  Thank you for your vote."
-msgstr ""
-
-#: views.py:215
-msgid "The requested vote validation does not exist!"
-msgstr ""
-
-#: views.py:221
-#, python-format
-msgid "The vote has been authorised for proposal             in space \"%s\"."
-msgstr ""
-
-#: views.py:223
-msgid "Authorization successful"
-msgstr ""
-
-#: views.py:226
-msgid "The requested intent does not exist!"
+#: urls.py:82
+msgid "^$"
 msgstr ""
 
 #: templates/proposals/mergedproposal_in_set.html:10
@@ -287,14 +235,15 @@ msgstr ""
 #: templates/proposals/mergedproposal_in_set.html:58
 #: templates/proposals/proposal_add_fields.html:92
 #: templates/proposals/proposal_confirm_delete.html:26
-#: templates/proposals/proposal_form.html:139
+#: templates/proposals/proposal_form.html:136
+#: templates/proposals/proposal_form_in_set.html:140
 #: templates/proposals/proposal_list.html:50
 #: templates/proposals/proposal_merged.html:156
 #: templates/proposals/proposalfield_remove_fields.html:78
 #: templates/proposals/proposalform_remove_field.html:82
 #: templates/proposals/proposalset_confirm_delete.html:26
 #: templates/proposals/proposalset_detail.html:50
-#: templates/proposals/proposalset_form.html:90
+#: templates/proposals/proposalset_form.html:88
 #: templates/proposals/proposalset_list.html:51
 #: templates/proposals/proposalset_select_form.html:61
 msgid "Go back"
@@ -302,7 +251,7 @@ msgstr ""
 
 #: templates/proposals/mergedproposal_in_set.html:59
 #: templates/proposals/proposal_add_fields.html:93
-#: templates/proposals/proposalset_form.html:91
+#: templates/proposals/proposalset_form.html:89
 #: templates/proposals/proposalset_select_form.html:62
 msgid "Create"
 msgstr ""
@@ -367,6 +316,8 @@ msgstr ""
 
 #: templates/proposals/proposal_form.html:14
 #: templates/proposals/proposal_form.html:37
+#: templates/proposals/proposal_form_in_set.html:14
+#: templates/proposals/proposal_form_in_set.html:37
 #: templates/proposals/proposal_merged.html:14
 #: templates/proposals/proposal_merged.html:37
 msgid "Edit proposal"
@@ -374,10 +325,13 @@ msgstr ""
 
 #: templates/proposals/proposal_form.html:16
 #: templates/proposals/proposal_form.html:39
+#: templates/proposals/proposal_form_in_set.html:16
+#: templates/proposals/proposal_form_in_set.html:39
 msgid "Add new proposal"
 msgstr ""
 
-#: templates/proposals/proposal_form.html:140
+#: templates/proposals/proposal_form.html:137
+#: templates/proposals/proposal_form_in_set.html:141
 #: templates/proposals/proposal_merged.html:157
 msgid "Publish"
 msgstr ""
@@ -490,4 +444,12 @@ msgstr ""
 
 #: templates/proposals/proposalset_list.html:47
 msgid "There is no proposal set created"
+msgstr ""
+
+#: templates/proposals/proposalset_select_form.html:59
+msgid "If you want to create independent proposals"
+msgstr ""
+
+#: templates/proposals/proposalset_select_form.html:59
+msgid "Click here"
 msgstr ""

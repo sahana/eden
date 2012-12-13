@@ -151,6 +151,7 @@ class DeletePoll(DeleteView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
+
 class ListPolls(ListView):
     """
     Return a list of polls for the current space.
@@ -191,6 +192,7 @@ def vote(request, poll_id, space_url):
         selected_choice.votes += 1
         selected_choice.save()
         return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
+
 
 class AddVoting(FormView):
 

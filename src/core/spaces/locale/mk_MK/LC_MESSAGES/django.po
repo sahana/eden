@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-22 11:43+0100\n"
+"POT-Creation-Date: 2012-12-13 10:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,201 +38,201 @@ msgstr ""
 msgid "Filetype not supported."
 msgstr ""
 
-#: models.py:56 models.py:117
+#: models.py:57 models.py:118
 msgid "Name"
 msgstr ""
 
-#: models.py:57
+#: models.py:58
 msgid "Max: 250 characters"
 msgstr ""
 
-#: models.py:58
+#: models.py:59
 msgid "URL"
 msgstr ""
 
-#: models.py:61
+#: models.py:62
 msgid ""
 "Valid characters are lowercase, digits and                      underscore. "
 "This will be the accesible URL"
 msgstr ""
 
-#: models.py:63 models.py:200
+#: models.py:64 models.py:201
 msgid "Description"
 msgstr ""
 
-#: models.py:64
+#: models.py:65
 msgid "Write here your description."
 msgstr ""
 
-#: models.py:65
+#: models.py:66
 msgid "Date of creation"
 msgstr ""
 
-#: models.py:67
+#: models.py:68
 msgid "Space creator"
 msgstr ""
 
-#: models.py:67
+#: models.py:68
 msgid "Select a user that         will be marked as creator of the space"
 msgstr ""
 
-#: models.py:70 models.py:72
+#: models.py:71 models.py:73
 msgid "Valid extensions are jpg, jpeg, png and gif"
 msgstr ""
 
-#: models.py:73
+#: models.py:74
 msgid "Public space"
 msgstr ""
 
-#: models.py:73
+#: models.py:74
 msgid ""
 "This will         make the space visible to everyone, but registration will "
 "be         necessary to participate."
 msgstr ""
 
-#: models.py:77
+#: models.py:78
 msgid "Administrators"
 msgstr ""
 
-#: models.py:77
+#: models.py:78
 msgid ""
 "Please select the         users that will be administrators of this space"
 msgstr ""
 
-#: models.py:81
+#: models.py:82
 msgid "Moderators"
 msgstr ""
 
-#: models.py:81
+#: models.py:82
 msgid "Please select the users         that will be moderators of this space."
 msgstr ""
 
-#: models.py:83 models.py:191
+#: models.py:84 models.py:192
 msgid "Users"
 msgstr ""
 
-#: models.py:83
+#: models.py:84
 msgid "Please select the users that         can participate on this space"
 msgstr ""
 
-#: models.py:87
+#: models.py:88
 msgid "Debate"
 msgstr ""
 
-#: models.py:88 templates/spaces/space_index.html:41
+#: models.py:89 templates/spaces/space_index.html:41
 #: templates/spaces/space_index.html:141
 msgid "Proposals"
 msgstr ""
 
-#: models.py:89 templates/spaces/space_index.html:35
+#: models.py:90 templates/spaces/space_index.html:35
 #: templates/spaces/space_index.html:113
 msgid "News"
 msgstr ""
 
-#: models.py:90
+#: models.py:91
 msgid "Calendar"
 msgstr ""
 
-#: models.py:91 models.py:172 templates/spaces/space_index.html:44
+#: models.py:92 models.py:173 templates/spaces/space_index.html:44
 msgid "Documents"
 msgstr ""
 
-#: models.py:92 templates/spaces/space_index.html:50
+#: models.py:93 templates/spaces/space_index.html:50
 #: templates/spaces/space_index.html:223
 msgid "Voting"
 msgstr ""
 
-#: models.py:96
+#: models.py:97
 msgid "Space"
 msgstr ""
 
-#: models.py:97
+#: models.py:98
 msgid "Spaces"
 msgstr ""
 
-#: models.py:118
+#: models.py:119
 msgid "Website"
 msgstr ""
 
-#: models.py:120
+#: models.py:121
 msgid "Logo"
 msgstr ""
 
-#: models.py:126
+#: models.py:127
 msgid "Entity"
 msgstr ""
 
-#: models.py:127
+#: models.py:128
 msgid "Entities"
 msgstr ""
 
-#: models.py:141
+#: models.py:142
 msgid "Document title"
 msgstr ""
 
-#: models.py:142
+#: models.py:143
 msgid "Max: 100 characters"
 msgstr ""
 
-#: models.py:144
+#: models.py:145
 msgid "Change the space to whom belongs this document"
 msgstr ""
 
-#: models.py:145
+#: models.py:146
 msgid "File"
 msgstr ""
 
-#: models.py:149
+#: models.py:150
 msgid ""
 "Permitted file types: DOC, DOCX, PPT, ODT, ODF, ODP,             PDF, RST, "
 "TXT."
 msgstr ""
 
-#: models.py:152
+#: models.py:153
 msgid "Author"
 msgstr ""
 
-#: models.py:153
+#: models.py:154
 msgid "Change the user that will figure as the         author"
 msgstr ""
 
-#: models.py:171
+#: models.py:172
 msgid "Document"
 msgstr ""
 
-#: models.py:188
+#: models.py:189
 msgid "Event name"
 msgstr ""
 
-#: models.py:192
+#: models.py:193
 msgid "List of the users that will assist or assisted to the         event."
 msgstr ""
 
-#: models.py:195
+#: models.py:196
 msgid "Created by"
 msgstr ""
 
-#: models.py:197
+#: models.py:198
 msgid "Select the user that will be designated as author."
 msgstr ""
 
-#: models.py:198
+#: models.py:199
 msgid "Event date"
 msgstr ""
 
-#: models.py:199
+#: models.py:200
 msgid "Select the date where the event is celebrated."
 msgstr ""
 
-#: models.py:201
+#: models.py:202
 msgid "Location"
 msgstr ""
 
-#: models.py:211
+#: models.py:212
 msgid "Event"
 msgstr ""
 
-#: models.py:212 templates/spaces/space_index.html:47
+#: models.py:213 templates/spaces/space_index.html:47
 #: templates/spaces/space_index.html:155
 msgid "Events"
 msgstr ""

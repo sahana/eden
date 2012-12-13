@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-22 11:43+0100\n"
+"POT-Creation-Date: 2012-12-13 10:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,111 +17,39 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: dashboard.py:68
-msgid "Users"
-msgstr ""
-
-#: dashboard.py:78
-msgid "Applications"
-msgstr ""
-
-#: dashboard.py:87
-msgid "Latest News"
-msgstr ""
-
-#: dashboard.py:95
-msgid "Media Management"
-msgstr ""
-
-#: dashboard.py:99
-msgid "FileBrowser"
-msgstr ""
-
-#: dashboard.py:108
-msgid "e-cidadania Support"
-msgstr ""
-
-#: dashboard.py:112
-msgid "Documentation"
-msgstr ""
-
-#: dashboard.py:117
-msgid "Wiki"
-msgstr ""
-
-#: dashboard.py:122
-msgid "Translations"
-msgstr ""
-
-#: dashboard.py:130
-msgid "Thirdparty Support"
-msgstr ""
-
-#: dashboard.py:134
-msgid "Django Documentation"
-msgstr ""
-
-#: dashboard.py:139
-msgid "Grappelli Documentation"
-msgstr ""
-
-#: dashboard.py:144
-msgid "python-dateutil Documentation"
-msgstr ""
-
-#: dashboard.py:153
-msgid "e-cidadania source code"
-msgstr ""
-
-#: dashboard.py:157
-msgid "GitHub"
-msgstr ""
-
-#: dashboard.py:162
-msgid "Gitorious"
-msgstr ""
-
-#: dashboard.py:167
-msgid "Repo.or.vz (Mirror)"
-msgstr ""
-
-#: dashboard.py:176
-msgid "Recent Actions"
-msgstr ""
-
-#: urls.py:62
+#: urls.py:60
 msgid "^accounts/"
 msgstr ""
 
-#: urls.py:65
+#: urls.py:63
 msgid "^spaces/"
 msgstr ""
 
-#: urls.py:68
+#: urls.py:66
 msgid "^invite/"
 msgstr ""
 
-#: urls.py:71
+#: urls.py:69
 msgid "^news/$"
 msgstr ""
 
-#: urls.py:73
+#: urls.py:71
 msgid "^news/add/$"
 msgstr ""
 
-#: urls.py:75
+#: urls.py:73
 msgid "^news/(?P<post_id>\\w+)/delete/$"
 msgstr ""
 
-#: urls.py:78
+#: urls.py:76
 msgid "^news/(?P<post_id>\\w+)/edit/$"
 msgstr ""
 
-#: urls.py:81
+#: urls.py:79
 msgid "^news/(?P<post_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:90 urls.py:106
+#: urls.py:88 urls.py:104
 msgid "^comments/"
 msgstr ""
 
@@ -262,6 +190,10 @@ msgstr ""
 msgid "e-cidadania"
 msgstr ""
 
+#: templates/site_index.html:30
+msgid "Latest participative processes"
+msgstr ""
+
 #: templates/site_index.html:37
 msgid "Public"
 msgstr ""
@@ -276,6 +208,26 @@ msgstr ""
 
 #: templates/site_index.html:54
 msgid "View all the processes"
+msgstr ""
+
+#: templates/site_index.html:67
+msgid "Sign in"
+msgstr ""
+
+#: templates/site_index.html:71
+msgid "Forgot your password?"
+msgstr ""
+
+#: templates/site_index.html:72
+msgid "Invite someone!"
+msgstr ""
+
+#: templates/site_index.html:79
+msgid "First time here? Register!"
+msgstr ""
+
+#: templates/site_index.html:85
+msgid "Register"
 msgstr ""
 
 #: templates/space_intent.html:4
