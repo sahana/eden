@@ -847,7 +847,13 @@ class S3CRUD(S3Method):
 
         # List fields
         list_fields = resource.list_fields()
-        fields = [table[f] for f in list_fields if f in table]
+        fields = []
+        append = fields.append
+        ogetattr = object.__getattribute__
+        for f in list_fields:
+            _f = f[1] if type(f) is tuple else f
+            if hasattr(table, _f):
+                append(ogetattr(table, _f))
 
         # Truncate long texts
         if r.interactive or r.representation == "aadata":
