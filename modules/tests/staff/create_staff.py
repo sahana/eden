@@ -44,7 +44,7 @@ class CreateStaff(SeleniumUnitTest):
         self.create("hrm_human_resource", 
                     [( "organisation_id",
                        "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       "option"),
+                       "autocomplete"),
                      ( "first_name",
                        "Robert",
                        "pr_person"),

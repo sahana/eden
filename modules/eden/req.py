@@ -1645,7 +1645,10 @@ class S3RequestSkillModel(S3Model):
                              #      label = T("Task Details")),
                              self.hrm_multi_skill_id(
                                     label = T("Required Skills"),
-                                    comment = T("Leave blank to request an unskilled person")
+                                    comment = T("Leave blank to request an unskilled person"),
+                                    represent = lambda id: \
+                                                    id and s3_represent_multi_id(self.hrm_skill)(id) or \
+                                                    T("No Skills Required"),
                                     ),
                              # @ToDo: Add a minimum competency rating?
                              Field("quantity", "integer", notnull=True,

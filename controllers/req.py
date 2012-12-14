@@ -248,7 +248,7 @@ def req_controller():
         #    s3db.configure("req_req", list_fields=list_fields)
 
         type = (r.record and r.record.type) or \
-               (request.vars and int(request.vars.type))
+               (request.vars.type and int(request.vars.type))
 
         if r.interactive:
             table.requester_id.represent = requester_represent
