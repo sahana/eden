@@ -1767,6 +1767,7 @@ class S3FacilityModel(S3Model):
         facs = db(query).select(stable.id,
                                 stable.name,
                                 stable.facility_type_id,
+                                stable.comments,
                                 stable.opening_times,
                                 stable.phone1,
                                 stable.phone2,
@@ -1776,6 +1777,8 @@ class S3FacilityModel(S3Model):
                                 ntable.needed,
                                 ntable.not_needed,
                                 gtable.addr_street,
+                                gtable.L1,
+                                gtable.L4,
                                 gtable.lat,
                                 gtable.lon,
                                 left=left,
@@ -1800,27 +1803,40 @@ class S3FacilityModel(S3Model):
                     "name": o.name,
                     }
             if o.facility_type_id:
-                properties.update(type=represent(o.facility_type_id))
+                properties["type"] = represent(o.facility_type_id)
             if o.opening_times:
-                properties.update(open=o.opening_times)
+                properties["open"] = o.opening_times
+            if o.comments:
+                properties["comments"] = o.comments
             if g.addr_street:
-                properties.update(addr=g.addr_street)
+                properties["addr"] = g.addr_street
+            if g.L1:
+                # Encode smaller if-possible
+                L1 = g.L1
+                if L1 == "New York":
+                    properties["L1"] = "NY"
+                elif L1 == "New Jersey":
+                    properties["L1"] = "NJ"
+                else:
+                    properties["L1"] = L1
+            if g.L4:
+                properties["L4"] = g.L4
             if o.phone1:
-                properties.update(ph1=o.phone1)
+                properties["ph1"] = o.phone1
             if o.phone2:
-                properties.update(ph2=o.phone2)
+                properties["ph2"] = o.phone2
             if o.email:
-                properties.update(email=o.email)
+                properties["email"] = o.email
             if o.website:
-                properties.update(web=o.website)
+                properties["web"] = o.website
             n = f.req_site_needs
             if n:
                 if n.urgently_needed:
-                    properties.update(urgent=n.urgently_needed)
+                    properties["urgent"] = n.urgently_needed
                 if n.needed:
-                    properties.update(need=n.needed)
+                    properties["need"] = n.needed
                 if n.not_needed:
-                    properties.update(no=n.not_needed)
+                    properties["no"] = n.not_needed
             f = dict(
                 type = "Feature",
                 properties = properties,
