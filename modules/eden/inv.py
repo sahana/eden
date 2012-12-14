@@ -1998,7 +1998,7 @@ S3FilterFieldChange({
                                                                               tracktable.send_inv_item_id,
                                                                               tracktable.item_pack_id,
                                                                               tracktable.status,
-                                                                              limitby=(0, 1))
+                                                                              limitby=(0, 1)).first()
                     set_track_attr(track_record.status)
                     # If the track record is linked to a request item then
                     # the stock item has already been selected so make it read only
