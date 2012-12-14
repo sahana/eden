@@ -119,7 +119,7 @@ parser.add_argument("-A",
                     help = "web2py default argument feed")
 parser.add_argument("-V", "--verbose",
                     type = int,
-                    default = 1,
+                    default = 2,
                     help = "The level of verbose reporting")
 parser.add_argument("--nohtml",
                     action='store_const',
@@ -142,7 +142,7 @@ The suite options can be described as follows:
 smoke: This will run the broken link test
 quick: This will run all the tests marked as essential
 complete: This will run all tests except those marked as long
-full: This will run all test
+full: This will run all tests
 """
 parser.add_argument("--suite",
                     help = suite_desc,
@@ -246,12 +246,14 @@ if args["method"]:
                                                     globals()[args["class"]]
                                                     )
 elif args["class"]:
+    # Run a single Selenium test
     browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
     suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["class"]])
 
 elif args["suite"] == "smoke":
+    # Run Smoke tests
     try:
         from tests.smoke import *
         broken_links = BrokenLinkTest()
@@ -266,26 +268,12 @@ elif args["suite"] == "smoke":
         pass
 
 elif args["suite"] == "roles":
-
+    # Run Roles tests
     from tests.roles.test_roles import *
-    #suite = unittest.TestSuite()
     suite = test_roles()
 
-    #test_role = TestRole()
-    #test_role.set(org = "Org-A",
-    #              user = "asset_reader@Org-A.com",
-    #              row_num = 0,
-    #              method = "create",
-    #              table = "org_organisation",
-    #              c = None,
-    #              f = None,
-    #              record_id = 42,
-    #              uuid = "uuid",
-    #              permission = True)
-    #suite.addTest(test_role)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
-
 elif args["suite"] == "complete":
+    # Run all Selenium Tests & Smoke Tests
     browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
@@ -303,7 +291,7 @@ elif args["suite"] == "complete":
         pass
 
 else:
-    # Run all Tests
+    # Run all Selenium Tests
     browser = config.browser = active_driver()
     browser.implicitly_wait(config.timeout)
     browser_open = True
@@ -321,7 +309,7 @@ else:
             filename = "Sahana-Eden-%s.html" % current.request.now
         # Windows compatibility
         filename = filename.replace(":", "-")
-        fullname = os.path.join(path,filename)
+        fullname = os.path.join(path, filename)
         fp = open(fullname, "wb")
 
         config.html = True

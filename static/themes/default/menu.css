@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+/* This section isn't translated so should always appear LTR (except potentially within individual languages) */
+#languages {
+    direction: ltr;
+}
+
 /* Main Navigation (S3MainMenu or modules menu) */
 #menu_modules {
     position: absolute;

@@ -36,15 +36,21 @@ class CreateStaff(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-
         print "\n"
 
         self.login(account="admin", nexturl="hrm/staff/create")
 
         self.create("hrm_human_resource", 
                     [( "organisation_id",
+                       "International Federation of Red Cross and Red Crescent Societies",
+                       "autocomplete",
+                       0,
                        "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       "autocomplete"),
+                       ),
+                     ( "site_id",
+                       "AP Zone (Office)",
+                       "option",
+                       3),
                      ( "first_name",
                        "Robert",
                        "pr_person"),
@@ -60,13 +66,8 @@ class CreateStaff(SeleniumUnitTest):
                      ( "job_title_id",
                        "Warehouse Manager",
                        "option"),
-                     ( "site_id",
-                       "AP Zone (Office)",
-                       "option",
-                       3),
                      ]
                      )
-        
 
 #===============================================================================
 #    def test_hrm001_create_staff_registry(self):

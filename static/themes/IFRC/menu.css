@@ -6,6 +6,7 @@
 #language_selector select {
     font-size: 0.9em;
     margin: 0;
+    direction: ltr;
 }
 
 /* Main Navigation (S3MainMenu or modules menu) */

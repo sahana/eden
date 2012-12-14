@@ -44,6 +44,14 @@ def login(reporter, account="normal", nexturl=None):
         raise NotImplementedError
 
     # If the user is already logged in no need to do anything so return
+    # We'd like to be able to access current.auth, however these are different threads
+    #user = current.auth.user
+    #if user and user.email == email:
+    #    # If the URL is different then move to the new URL
+    #    if not browser.current_url.endswith(nexturl):
+    #        url = "%s/%s" % (config.url, nexturl)
+    #        browser.get(url)
+    #    return
     # auth_menu_email is used by the default template
     # username fright is used by the IFRC template 
     if browser.page_source != None and \

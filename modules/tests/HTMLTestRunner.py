@@ -534,6 +534,9 @@ class _TestResult(TestResult):
 
 
     def startTest(self, test):
+        if self.verbosity > 1:
+            sys.stderr.write(str(test))
+            sys.stderr.write('\n')
         TestResult.startTest(self, test)
         # just one buffer for both stdout and stderr
         self.outputBuffer = StringIO.StringIO()
@@ -572,7 +575,7 @@ class _TestResult(TestResult):
         self.result.append((0, test, output, ''))
         if self.verbosity > 1:
             sys.stderr.write('ok ')
-            sys.stderr.write(str(test))
+            #sys.stderr.write(str(test))
             sys.stderr.write('\n')
         else:
             sys.stderr.write('.')

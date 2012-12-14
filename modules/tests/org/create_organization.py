@@ -74,7 +74,11 @@ class CreateOrganisation(SeleniumUnitTest):
             record = db(query).select(table.id,
                                       limitby=(0, 1)).first()
             if record:
-                print "org_create_organisation skipped as %s already exists in the db\n" % value
+                debug = "org_create_organisation skipped as %s already exists in the db\n" % value
+                # For the HTML file
+                print debug
+                # For the Console
+                self.s3_debug(debug)
                 return False
 
             # Login, if not-already done so
@@ -83,3 +87,4 @@ class CreateOrganisation(SeleniumUnitTest):
             # Create a record using the data
             result = self.create(tablename, _data)
 
+# END =========================================================================

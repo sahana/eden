@@ -7067,7 +7067,6 @@ class JSLayer(Layer):
         else:
             return None
 
-
 # -----------------------------------------------------------------------------
 class KMLLayer(Layer):
     """
@@ -7111,7 +7110,6 @@ class KMLLayer(Layer):
         KMLLayer.cachetable = current.s3db.gis_cache2
         KMLLayer.cacheable = cacheable
         KMLLayer.cachepath = cachepath
-
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):

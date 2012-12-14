@@ -365,7 +365,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
             record = record["pr_person"]
         if record.first_name:
             fname = record.first_name.strip()
-        if record.middle_name:
+        if "middle_name" in record and record.middle_name:
             mname = record.middle_name.strip()
         if record.last_name:
             lname = record.last_name.strip()

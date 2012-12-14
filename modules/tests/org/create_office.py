@@ -35,6 +35,8 @@ class CreateOffice(SeleniumUnitTest):
             @case: org002
             @param items: Office(s) to create from the data
 
+            @ToDo: currently optimised for a single record
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -74,9 +76,6 @@ class CreateOffice(SeleniumUnitTest):
     ],
 ]
 
-        # Login, if not-already done so
-        self.login(account=account, nexturl=url)
-
         db = current.db
         s3db = current.s3db
         table = s3db[tablename]
@@ -90,8 +89,15 @@ class CreateOffice(SeleniumUnitTest):
                                       limitby=(0, 1)).first()
 
             if record:
-                print "org_create_office skipped as %s already exists in the db\n" % value
+                debug = "org_create_office skipped as %s already exists in the db\n" % value
+                # For the HTML file
+                print debug
+                # For the Console
+                self.s3_debug(debug)
                 return False
+
+            # Login, if not-already done so
+            self.login(account=account, nexturl=url)
 
             # Create a record using the data
             # @ToDo: Determine if the correct organisation is being saved

@@ -29,12 +29,14 @@ import datetime
 import sys
 import time
 import unittest
+from unittest.case import SkipTest, _ExpectedFailure, _UnexpectedSuccess
 
 from dateutil.relativedelta import relativedelta
 from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 
+from s3.s3utils import s3_unicode
 from s3.s3widgets import *
 
 from tests.core import *
@@ -55,6 +57,30 @@ class Web2UnitTest(unittest.TestCase):
         self.user = "admin"
         self.stdout = sys.stdout
         self.stderr = sys.stderr
+
+    # -------------------------------------------------------------------------
+    def s3_debug(self, message, value=None):
+        """
+           Provide an easy, safe, systematic way of handling Debug output
+           (stdout/stderr are normally redirected within tests)
+        """
+
+        # Restore stderr
+        stderr_redirector = sys.stderr
+        sys.stderr = self._resultForDoCleanups.stderr0
+
+        output = s3_unicode(message)
+        if value:
+            output = "%s: %s" % (output, s3_unicode(value))
+
+        try:
+            print >> sys.stderr, output
+        except:
+            # Unicode string
+            print >> sys.stderr, "Debug crashed"
+
+        # Redirect stderr back again
+        sys.stderr = stderr_redirector
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -109,7 +135,7 @@ class SeleniumUnitTest(Web2UnitTest):
             rows = dbcallback(table, data, rows)
         return rows
 
-# -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def search(self, form_type, results_expected, params, row_count, **kwargs):
         '''
         Generic method to test the validity of search results.
@@ -235,9 +261,10 @@ class SeleniumUnitTest(Web2UnitTest):
         id_data = []
         table = current.s3db[tablename]
 
-        date_format = str(current.deployment_settings.get_L10n_date_format())
-        datetime_format = str(current.deployment_settings.get_L10n_datetime_format())
-        # if the logged in confirm is shown then try and clear it.
+        settings = current.deployment_settings
+        date_format = str(settings.get_L10n_date_format())
+        datetime_format = str(settings.get_L10n_datetime_format())
+        # If a confirmation is shown then clear it so that it doesn't give a false positive later
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
             elem.click()
@@ -266,30 +293,35 @@ class SeleniumUnitTest(Web2UnitTest):
                             break
                     # Test that we have an id that can be used in the database
                     if el_value and el_value != "-":
-                        self.assertTrue(raw_value,"%s option cannot be found in %s" % (el_value, el_id))
+                        self.assertTrue(raw_value, "%s option cannot be found in %s" % (el_value, el_id))
                 elif el_type == "checkbox":
                     for value in el_value:
                         self.browser.find_element_by_xpath("//label[contains(text(),'%s')]" % value).click()
                         # @ToDo: Add value to id_data to check for create function
                 elif el_type == "autocomplete":
+                    if len(details) >= 5:
+                        needle = details[4]
+                    else:
+                        needle = el_value
                     raw_value = self.w_autocomplete(el_value,
                                                     el_id,
-                                                   )
+                                                    needle,
+                                                    )
                 elif el_type == "inv_widget":
                     raw_value = self.w_inv_item_select(el_value,
                                                        tablename,
                                                        details[0],
-                                                      )
+                                                       )
                 elif el_type == "supply_widget":
                     raw_value = self.w_supply_select(el_value,
                                                      tablename,
                                                      details[0],
-                                                    )
+                                                     )
                 elif el_type == "facility_widget":
                     raw_value = self.w_facility_select(el_value,
                                                        tablename,
                                                        details[0],
-                                                      )
+                                                       )
                 elif el_type == "gis_location":
                     self.w_gis_location(el_value,
                                         details[0],
@@ -365,6 +397,7 @@ class SeleniumUnitTest(Web2UnitTest):
     class InvalidReportOrGroupException(Exception):
         pass
 
+    # -------------------------------------------------------------------------
     def report(self, report_of, grouped_by, show_totals, *args, **kwargs):
         browser = self.browser
 
@@ -459,6 +492,7 @@ class SeleniumUnitTest(Web2UnitTest):
             elif isinstance(value, bool) and value:  # Checkboxes
                 element.click()
 
+    # -------------------------------------------------------------------------
     def dt_filter(self,
                   search_string = " ",
                   forceClear = True,
@@ -482,11 +516,13 @@ class SeleniumUnitTest(Web2UnitTest):
 
     # -------------------------------------------------------------------------
     def dt_data_item(self,
-                 row = 1,
-                 column = 1,
-                 tableID = "list",
-                ):
+                     row = 1,
+                     column = 1,
+                     tableID = "list",
+                     ):
         return dt_data_item(row, column, tableID)
+
+    # -------------------------------------------------------------------------
     def dt_find(self,
                 search = "",
                 row = None,
@@ -525,7 +561,60 @@ class SeleniumUnitTest(Web2UnitTest):
                        quiet = True,
                        ):
 
-        return w_autocomplete(search, autocomplete, needle, quiet)
+        config = current.test_config
+        browser = config.browser
+
+        autocomplete_id = "dummy_%s" % autocomplete
+        throbber_id = "dummy_%s_throbber" % autocomplete
+        if needle == None:
+            needle = search
+
+        elem = browser.find_element_by_id(autocomplete_id)
+        elem.clear()
+        elem.send_keys(search)
+        # Give time for the throbber to appear
+        time.sleep(1)
+        # Now wait for throbber to close
+        giveup = 0.0
+        sleeptime = 0.2
+        while browser.find_element_by_id(throbber_id).is_displayed():
+            time.sleep(sleeptime)
+            giveup += sleeptime
+            if giveup > 60:
+                return False
+        # Throbber has closed and data was found, return
+        for i in range(10):
+            # For each autocomplete on the form the menu will have an id starting from 0
+            automenu = 0
+            try:
+                menu = browser.find_element_by_id("ui-menu-%s" % automenu)
+            except:
+                menu = None
+            while menu:
+                # Try and get the value directly
+                menu_items = menu.text.splitlines()
+                autoitem = 0
+                for linkText in menu_items:
+                    if needle in linkText:
+                        # Found the text, now need to click on it to get the db id
+                        menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
+                        menuitem.click()
+                        time.sleep(15)
+                        # The id is copied into the value attribute so use that
+                        db_id = browser.find_element_by_id(autocomplete)
+                        value = db_id.get_attribute("value")
+                        if value:
+                            return int(value)
+                        else:
+                            return False
+                    autoitem += 1
+                automenu += 1
+                try:
+                    menu = browser.find_element_by_id("ui-menu-%s" % automenu)
+                except:
+                    menu = None
+                # end of looping through each autocomplete menu
+            time.sleep(sleeptime)
 
     # -------------------------------------------------------------------------
     def w_inv_item_select(self,
@@ -535,7 +624,21 @@ class SeleniumUnitTest(Web2UnitTest):
                           quiet = True,
                           ):
 
-        return w_inv_item_select(item_repr, tablename, field, quiet)
+        config = current.test_config
+        browser = config.browser
+
+        el_id = "%s_%s" % (tablename, field)
+        el = browser.find_element_by_id(el_id)
+        raw_value = None
+        for option in el.find_elements_by_tag_name("option"):
+            if option.text == item_repr:
+                option.click()
+                raw_value = int(option.get_attribute("value"))
+                break
+        # Now wait for the pack_item to be populated
+        el_id = "%s_%s" % (tablename, "item_pack_id")
+        _autocomple_finish(el_id, browser)
+        return raw_value
 
     # -------------------------------------------------------------------------
     def w_gis_location(self,
@@ -544,7 +647,29 @@ class SeleniumUnitTest(Web2UnitTest):
                        quiet = True,
                        ):
 
-        return w_gis_location(item_repr, field, quiet)
+        config = current.test_config
+        browser = config.browser
+
+        if field == "L0":
+            el_id = "gis_location_%s" % field
+            el = browser.find_element_by_id(el_id)
+            for option in el.find_elements_by_tag_name("option"):
+                if option.text == item_repr:
+                    option.click()
+                    raw_value = int(option.get_attribute("value"))
+                    break
+        elif field[0] == "L":
+            # @todo make this a proper autocomplete widget (select or add)
+            el_id = "gis_location_%s_ac" % field
+            el = browser.find_element_by_id(el_id)
+            el.send_keys(item_repr)
+            raw_value = None # can't get the id at the moment (see the todo)
+        else:
+            el_id = "gis_location_%s" % field
+            el = browser.find_element_by_id(el_id)
+            el.send_keys(item_repr)
+            raw_value = item_repr
+        return raw_value
 
     # -------------------------------------------------------------------------
     def w_supply_select(self,
@@ -554,7 +679,13 @@ class SeleniumUnitTest(Web2UnitTest):
                         quiet = True,
                         ):
 
-        return w_supply_select(item_repr, tablename, field, quiet)
+        el_id = "%s_%s" % (tablename, field)
+        raw_value = w_autocomplete(item_repr, el_id)
+        # Now wait for the pack_item to be populated
+        browser = current.test_config.browser
+        el_id = "%s_%s" % (tablename, "item_pack_id")
+        _autocomple_finish(el_id, browser)
+        return raw_value
 
     # -------------------------------------------------------------------------
     def w_facility_select(self,
@@ -564,6 +695,32 @@ class SeleniumUnitTest(Web2UnitTest):
                           quiet = True,
                           ):
 
-        return w_facility_select(org_repr, tablename, field, quiet)
+        el_id = "%s_%s" % (tablename, field)
+        raw_value = w_autocomplete(item_repr, el_id)
+        # Now wait for the pack_item to be populated
+        browser = current.test_config.browser
+        el_id = "%s_%s" % (tablename, "site_id")
+        _autocomple_finish(el_id, browser)
+        return raw_value
+
+# =============================================================================
+def _autocomple_finish(el_id, browser):
+    """
+        Helper function
+    """
+
+    giveup = 0.0
+    sleeptime = 0.2
+    el = browser.find_element_by_id(el_id)
+    while giveup < 60:
+        try:
+            if el.find_elements_by_tag_name("option")[0].text != "":
+                return
+        except: # StaleElementReferenceException
+            print "StaleElementReferenceException %s" % giveup
+            el = browser.find_element_by_id(el_id)
+        # The pack drop down hasn't been populated yet so sleep
+        time.sleep(sleeptime)
+        giveup += sleeptime
 
 # END =========================================================================
