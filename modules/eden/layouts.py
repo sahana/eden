@@ -108,7 +108,12 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                                 return None
                         else:
                             label = item.label
-                        link = A(label, _href=item.url(), _id=item.attr._id)
+                        if item.ltr:
+                            _class = "ltr"
+                        else:
+                            _class = ""
+                        link = A(label, _href=item.url(), _id=item.attr._id,
+                                 _class=_class)
                         return LI(link)
             else:
                 # Main menu

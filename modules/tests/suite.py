@@ -200,7 +200,7 @@ parser.add_argument("--threshold",
 argsObj = parser.parse_args()
 args = argsObj.__dict__
 active_driver = {'firefox': webdriver.Firefox,
-          'chrome': webdriver.Chrome}[args['browser'].lower()]
+                 'chrome': webdriver.Chrome}[args['browser'].lower()]
 
 # Read Settings
 settings = current.deployment_settings

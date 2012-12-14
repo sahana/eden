@@ -107,6 +107,7 @@ class S3NavigationItem(object):
                  restrict=None,
                  link=True,
                  mandatory=False,
+                 ltr=False,
                  **attributes):
         """
             Constructor
@@ -138,6 +139,7 @@ class S3NavigationItem(object):
             @param restrict: restrict to roles (role UID or list of role UIDs)
             @param link: item has its own URL
             @param mandatory: item is always active
+            @param ltr: item is always rendered LTR
 
             @param attributes: attributes to use in layout
         """
@@ -231,6 +233,7 @@ class S3NavigationItem(object):
         self.visible = None             # Item is visible
         self.link = link                # Item shall be linked
         self.mandatory = mandatory      # Item is always active
+        self.ltr = ltr                  # Item is always rendered LTR
 
         # Role restriction
         self.restrict = restrict

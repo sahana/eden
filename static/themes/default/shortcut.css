@@ -88,3 +88,8 @@
 * html .cf {
     height: 1%;
 }
+
+/* A section which isn't translated so should always appear LTR (e.g. Languages menu) */
+.ltr {
+    direction: ltr;
+}
