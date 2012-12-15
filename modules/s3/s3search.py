@@ -992,7 +992,7 @@ class S3Search(S3CRUD):
             if widget is not None:
                 name = widget.attr._name
                 if name in names:
-                    raise SyntaxError("Duplicate widget: %s") % name
+                    raise SyntaxError("Duplicate widget: %s" % name)
                 # Widgets should be able to have default names
                 # elif not name:
                 #     raise SyntaxError("Widget with no name")
