@@ -342,47 +342,51 @@ class S3RequestModel(S3Model):
             msg_record_modified = T("Request Updated"),
             msg_record_deleted = T("Request Canceled"),
             msg_list_empty = T("No Requests"))
-
-        # Search method
-        req_req_search = [
-            S3SearchOptionsWidget(
-                name="req_search_transit_status",
-                label=T("Transit Status"),
-                field="transit_status",
+        
+       # Search method
+        req_basic_search = [
+             S3SearchOptionsWidget(
+                name = "req_search_transit_status",
+                label = T("Transit Status"),
+                field = "transit_status",
                 options = req_status_opts,
                 cols = 3,
             ),
             S3SearchOptionsWidget(
-                name="req_search_fulfil_status",
-                label=T("Fulfill Status"),
-                field="fulfil_status",
+                name = "req_search_fulfil_status",
+                label = T("Fulfill Status"),
+                field = "fulfil_status",
                 options = req_status_opts,
                 cols = 3,
-            ),
+            )
+       ]
+        if use_commit:
+            widget = S3SearchOptionsWidget(
+                        name = "req_search_commit_status",
+                        label = T("Commit Status"),
+                        field = "commit_status",
+                        options = req_status_opts,
+                        cols = 3,
+                    )
+            req_basic_search.insert(0, widget)
+        req_advanced_search = req_basic_search + [
             S3SearchOptionsWidget(
-                name="req_search_priority",
-                label=T("Priority"),
-                field="priority",
-                options = req_priority_opts,
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name="req_search_type",
-                label=T("Type"),
-                field="type",
+                name = "req_search_type",
+                label = T("Type"),
+                field = "type",
                 options = req_type_opts,
                 cols = 3,
             ),
             S3SearchOptionsWidget(
-                name="req_search_item_category",
-                label=T("Item Category"),
-                field="item_category.name",
+                name = "req_search_item_category",
+                label = T("Item Category"),
+                field = "item_category.name",
                 cols = 3,
             ),
             S3SearchOptionsWidget(
-                name="req_search_created_by",
-                label=T("Logged By"),
-                field="created_by",
+                name = "req_search_created_by",
+                label = T("Logged By"),
+                field = "created_by",
                 cols = 3,
             ),
             #S3SearchOptionsWidget(
@@ -398,33 +402,23 @@ class S3RequestModel(S3Model):
             #  cols = 3,
             #),
             S3SearchOptionsWidget(
-                name="req_search_L3",
-                field="site_id$location_id$L3",
-                location_level="L3",
+                name = "req_search_L3",
+                field = "site_id$location_id$L3",
+                location_level = "L3",
                 cols = 3,
             ),
             S3SearchOptionsWidget(
-                name="req_search_L4",
-                field="site_id$location_id$L4",
-                location_level="L4",
+                name = "req_search_L4",
+                field = "site_id$location_id$L4",
+                location_level = "L4",
                 cols = 3,
             ),
             S3SearchOptionsWidget(
-                name="req_search_site",
-                field="site_id",
+                name = "req_search_site",
+                field = "site_id",
                 label = T("Facility"),
                 cols = 3,
-            ),
-            ]
-        if use_commit:
-            widget = S3SearchOptionsWidget(
-                        name="req_search_commit_status",
-                        label=T("Commit Status"),
-                        field="commit_status",
-                        options = req_status_opts,
-                        cols = 3,
-                    )
-            req_req_search.insert(0, widget)
+            )]
 
         report_fields = ["priority",
                          "site_id$organisation_id",
@@ -475,9 +469,9 @@ class S3RequestModel(S3Model):
                        deduplicate = self.req_req_duplicate,
                        listadd = False,
                        orderby = ~table.date,
-                       search_method = S3Search(advanced=req_req_search),
+                       search_method = S3Search(simple = req_basic_search, advanced = req_advanced_search),
                        report_options = Storage(
-                        search=req_req_search,
+                        search=req_advanced_search,
                         rows=report_fields,
                         cols=report_fields,
                         fact=fact_fields,
