@@ -1938,7 +1938,7 @@ class S3RoomModel(S3Model):
                                          tooltip=T("Select a Room from the list or click 'Add Room'")),
                            # Filters Room based on site
                            SCRIPT(
-'''S3FilterFieldChange({
+'''S3OptionsFilter({
  'FilterField':'site_id',
  'Field':'room_id',
  'FieldPrefix':'org',

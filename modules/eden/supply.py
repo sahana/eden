@@ -277,7 +277,7 @@ class S3SupplyModel(S3Model):
                                            ondelete = "RESTRICT"
                                            )
         item_category_script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'catalog_id',
  'Field':'item_category_id',
  'FieldPrefix':'supply',
@@ -650,7 +650,7 @@ S3FilterFieldChange({
         item_pack_id = S3ReusableField("item_pack_id", table,
                     sortby="name",
                     # Do not display any packs initially
-                    # will be populated by S3FilterFieldChange
+                    # will be populated by S3OptionsFilter
                     requires = IS_ONE_OF_EMPTY_SELECT(db,
                                          "supply_item_pack.id",
                                          self.item_pack_represent,

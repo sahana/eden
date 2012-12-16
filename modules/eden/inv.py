@@ -558,7 +558,7 @@ class S3InventoryModel(S3Model):
                                                                       T("Select Stock from this Warehouse"))),
                                       ondelete = "CASCADE",
                                       script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'inv_item_id',
  'Field':'item_pack_id',
  'FieldResource':'item_pack',
@@ -1543,7 +1543,7 @@ class S3TrackingModel(S3Model):
                              inv_item_id(name="send_inv_item_id",
                                          ondelete = "RESTRICT",
                                          script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'send_inv_item_id',
  'Field':'item_pack_id',
  'FieldResource':'item_pack',

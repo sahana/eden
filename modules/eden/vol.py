@@ -198,7 +198,7 @@ class S3VolClusterDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Volunteer Cluster Link Table
         cluster_type_filter = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'sub_volunteer_cluster_vol_cluster_type_id',
  'Field':'sub_volunteer_cluster_vol_cluster_id',
  'FieldKey':'vol_cluster_type_id',

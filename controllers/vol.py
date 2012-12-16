@@ -801,7 +801,7 @@ def training_event():
 # =============================================================================
 def skill_competencies():
     """
-        Called by S3FilterFieldChange to provide the competency options for a
+        Called by S3OptionsFilter to provide the competency options for a
             particular Skill Type
     """
 

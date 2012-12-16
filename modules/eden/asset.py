@@ -159,7 +159,7 @@ class S3AssetModel(S3Model):
                                                  ),
                              organisation_id(required = True,
                                              script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'organisation_id',
  'Field':'site_id',
  'FieldResource':'site',
@@ -443,7 +443,7 @@ S3FilterFieldChange({
                                         represent = self.org_site_represent,
                                         #widget = S3SiteAutocompleteWidget(),
                                         script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'organisation_id',
  'Field':'site_id',
  'FieldPrefix':'org',
