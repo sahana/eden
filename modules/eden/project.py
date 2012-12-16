@@ -393,7 +393,7 @@ class S3ProjectModel(S3Model):
                                             writable = mode_3w and \
                                                        not theme_percentages,
                                             script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'multi_sector_id',
  'Field':'multi_theme_id',
  'Widget':'multi_theme_id_widget',
@@ -5067,7 +5067,7 @@ def project_task_form_inject(r, output, project=True):
         "FieldResource": "activity",
         "Optional": True,
     }
-    s3.jquery_ready.append('''S3FilterFieldChange(%s)''' % json.dumps(options))
+    s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
     row = s3_formstyle(row_id, label, widget, comment)
     try:
@@ -5114,7 +5114,7 @@ def project_task_form_inject(r, output, project=True):
             "FieldResource": "milestone",
             "Optional": True,
         }
-        s3.jquery_ready.append('''S3FilterFieldChange(%s)''' % json.dumps(options))
+        s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
         row = s3_formstyle(row_id, label, widget, comment)
         try:

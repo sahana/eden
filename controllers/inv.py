@@ -573,7 +573,7 @@ def inv_item_quantity():
 # -----------------------------------------------------------------------------
 def inv_item_packs():
     """
-        Called by S3FilterFieldChange to provide the pack options for a
+        Called by S3OptionsFilter to provide the pack options for a
             particular Item
     """
 

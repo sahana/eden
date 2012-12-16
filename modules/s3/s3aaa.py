@@ -1320,7 +1320,7 @@ Thank you
                                       _title="%s|%s" % (T("Facility"),
                                                         T("Select the default site.")))
                 current.response.s3.jquery_ready.append(
-'''S3FilterFieldChange({
+'''S3OptionsFilter({
  'FilterField':'organisation_id',
  'Field':'site_id',
  'FieldID':'site_id',

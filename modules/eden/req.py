@@ -1398,7 +1398,7 @@ class S3RequestItemModel(S3Model):
                                                                       T("Select Items from the Request"))),
                                       ondelete = "CASCADE",
                                       script = '''
-S3FilterFieldChange({
+S3OptionsFilter({
  'FilterField':'req_item_id',
  'Field':'item_pack_id',
  'FieldResource':'item_pack',
