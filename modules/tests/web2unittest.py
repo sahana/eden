@@ -415,9 +415,9 @@ class SeleniumUnitTest(Web2UnitTest):
         rows_select = browser.find_element_by_id("report-rows")
         rows_select.click()
         found = False
-        for _ in rows_select.find_elements_by_tag_name("option"):
-            if _.text == report_of:
-                _.click()
+        for option in rows_select.find_elements_by_tag_name("option"):
+            if option.text == report_of:
+                option.click()
                 found = True
                 break
         if not found:
@@ -427,13 +427,26 @@ class SeleniumUnitTest(Web2UnitTest):
         cols_select = browser.find_element_by_id("report-cols")
         cols_select.click()
         found = False
-        for _ in cols_select.find_elements_by_tag_name("option"):
-            if _.text == grouped_by:
-                _.click()
+        for option in cols_select.find_elements_by_tag_name("option"):
+            if option.text == grouped_by:
+                option.click()
                 found = True
                 break
         if not found:
             raise self.InvalidReportOrGroupException()
+
+        # Select the value to base the report on
+        if "report_fact" in kwargs:
+            cols_select = browser.find_element_by_id("report-fact")
+            cols_select.click()
+            found = False
+            for option in cols_select.find_elements_by_tag_name("option"):
+                if option.text == kwargs['report_fact']:
+                    option.click()
+                    found = True
+                    break
+            if not found:
+                raise self.InvalidReportOrGroupException()
 
         browser.find_element_by_xpath("//input[@type='submit']").click()
 
@@ -459,7 +472,18 @@ class SeleniumUnitTest(Web2UnitTest):
                     except NoSuchElementException:
                         raise self.InvalidReportOrGroupException()
 
-            self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
+            import collections
+            if isinstance(check[2], collections.Iterable):
+                td = browser.find_element_by_xpath(
+                    ".//*[@id='list']/tbody/tr[{0}]/td[{1}]".format(row,
+                        col))
+                shown_items = [item.text for item in td.find_elements_by_tag_name("li")]
+
+                for item in check[2]:
+                    self.assertTrue(item in shown_items,
+                        u"Report check failed.")
+            else:
+                self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
                 "Report check failed.")
 
         if 'row_count' in kwargs:
