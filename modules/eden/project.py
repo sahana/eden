@@ -393,14 +393,14 @@ class S3ProjectModel(S3Model):
                                             writable = mode_3w and \
                                                        not theme_percentages,
                                             script = '''
-S3FilterFieldChange({
- 'FilterField':'multi_sector_id',
- 'Field':'multi_theme_id',
- 'Widget':'multi_theme_id_widget',
- 'FieldResource':'theme',
- 'url':S3.Ap.concat('/project/project_multi_theme_id_widget?sector_ids='),
- 'GetWidgetHTML':true,
- 'FilterOnLoad':false
+S3OptionsFilter({
+ 'triggerName':'multi_sector_id',
+ 'targetName':'multi_theme_id',
+ 'targetWidget':'multi_theme_id_widget',
+ 'lookupResource':'theme',
+ 'lookupURL':S3.Ap.concat('/project/project_multi_theme_id_widget?sector_ids='),
+ 'getWidgetHTML':true,
+ 'showEmptyField':false
 })'''),
                              Field("hfa", "list:integer",
                                    label = T("HFA Priorities"),
@@ -4290,6 +4290,7 @@ def task_notify(form):
     if form.record is None or (int(pe_id) != form.record.pe_id):
         # Assignee has changed
         settings = current.deployment_settings
+
         if settings.has_module("msg"):
             # Notify assignee
             subject = "%s: Task assigned to you" % settings.get_system_name_short()
@@ -5061,13 +5062,13 @@ def project_task_form_inject(r, output, project=True):
                                 f="activity",
                                 tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
     options = {
-        "FilterField": "project_id",
-        "Field": "activity_id",
-        "FieldPrefix": "project",
-        "FieldResource": "activity",
-        "Optional": True,
+        "triggerName": "project_id",
+        "targetName": "activity_id",
+        "lookupPrefix": "project",
+        "lookupResource": "activity",
+        "optional": True,
     }
-    s3.jquery_ready.append('''S3FilterFieldChange(%s)''' % json.dumps(options))
+    s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
     row = s3_formstyle(row_id, label, widget, comment)
     try:
@@ -5108,13 +5109,13 @@ def project_task_form_inject(r, output, project=True):
                                     f="milestone",
                                     tooltip=T("If you don't see the milestone in the list, you can add a new one by clicking link 'Add Milestone'."))
         options = {
-            "FilterField": "project_id",
-            "Field": "milestone_id",
-            "FieldPrefix": "project",
-            "FieldResource": "milestone",
-            "Optional": True,
+            "triggerName": "project_id",
+            "targetName": "milestone_id",
+            "lookupPrefix": "project",
+            "lookupResource": "milestone",
+            "optional": True,
         }
-        s3.jquery_ready.append('''S3FilterFieldChange(%s)''' % json.dumps(options))
+        s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
         row = s3_formstyle(row_id, label, widget, comment)
         try:

@@ -159,12 +159,12 @@ class S3AssetModel(S3Model):
                                                  ),
                              organisation_id(required = True,
                                              script = '''
-S3FilterFieldChange({
- 'FilterField':'organisation_id',
- 'Field':'site_id',
- 'FieldResource':'site',
- 'FieldPrefix':'org',
- 'FieldID':'site_id'
+S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupResource':'site',
+ 'lookupPrefix':'org',
+ 'lookupField':'site_id'
 })'''),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
@@ -443,12 +443,12 @@ S3FilterFieldChange({
                                         represent = self.org_site_represent,
                                         #widget = S3SiteAutocompleteWidget(),
                                         script = '''
-S3FilterFieldChange({
- 'FilterField':'organisation_id',
- 'Field':'site_id',
- 'FieldPrefix':'org',
- 'FieldResource':'site',
- 'FieldID':'site_id',
+S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupPrefix':'org',
+ 'lookupResource':'site',
+ 'lookupField':'site_id',
  'fncRepresent': function(record,PrepResult){
   var InstanceTypeNice=%(instance_type_nice)s
   return record.name+" ("+InstanceTypeNice[record.instance_type]+")"
