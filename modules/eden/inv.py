@@ -558,12 +558,12 @@ class S3InventoryModel(S3Model):
                                                                       T("Select Stock from this Warehouse"))),
                                       ondelete = "CASCADE",
                                       script = '''
-S3FilterFieldChange({
- 'FilterField':'inv_item_id',
- 'Field':'item_pack_id',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
- 'url':S3.Ap.concat('/inv/inv_item_packs/'),
+S3OptionsFilter({
+ 'triggerName':'inv_item_id',
+ 'targetName':'item_pack_id',
+ 'lookupResource':'item_pack',
+ 'lookupPrefix':'supply',
+ 'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
@@ -1543,12 +1543,12 @@ class S3TrackingModel(S3Model):
                              inv_item_id(name="send_inv_item_id",
                                          ondelete = "RESTRICT",
                                          script = '''
-S3FilterFieldChange({
- 'FilterField':'send_inv_item_id',
- 'Field':'item_pack_id',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
- 'url':S3.Ap.concat('/inv/inv_item_packs/'),
+S3OptionsFilter({
+ 'triggerName':'send_inv_item_id',
+ 'targetName':'item_pack_id',
+ 'lookupResource':'item_pack',
+ 'lookupPrefix':'supply',
+ 'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem

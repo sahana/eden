@@ -216,6 +216,7 @@ Thank you
         else:
             shelter = T("Shelter")
         self.org_site_types = Storage(
+
                                       transport_airport = T("Airport"),
                                       cr_shelter = shelter,
                                       org_facility = T("Facility"),
@@ -1320,12 +1321,12 @@ Thank you
                                       _title="%s|%s" % (T("Facility"),
                                                         T("Select the default site.")))
                 current.response.s3.jquery_ready.append(
-'''S3FilterFieldChange({
- 'FilterField':'organisation_id',
- 'Field':'site_id',
- 'FieldID':'site_id',
- 'FieldResource':'site',
- 'url':S3.Ap.concat('/org/sites_for_org/')
+'''S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupField':'site_id',
+ 'lookupResource':'site',
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org/')
 })''')
                 if not deployment_settings.get_auth_registration_site_required():
                     site_id.requires = IS_NULL_OR(site_id.requires)

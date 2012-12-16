@@ -1392,12 +1392,12 @@ class S3RequestItemModel(S3Model):
                                                                       T("Select Items from the Request"))),
                                       ondelete = "CASCADE",
                                       script = '''
-S3FilterFieldChange({
- 'FilterField':'req_item_id',
- 'Field':'item_pack_id',
- 'FieldResource':'item_pack',
- 'FieldPrefix':'supply',
- 'url':S3.Ap.concat('/req/req_item_packs/'),
+S3OptionsFilter({
+ 'triggerName':'req_item_id',
+ 'targetName':'item_pack_id',
+ 'lookupResource':'item_pack',
+ 'lookupPrefix':'supply',
+ 'lookupURL':S3.Ap.concat('/req/req_item_packs/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':fncPrepItem,
  'fncRepresent':fncRepresentItem
