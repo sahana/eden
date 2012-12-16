@@ -30,135 +30,50 @@
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
-class Staff Report(SeleniumUnitTest):
-    def test_hrm008_staff_report(self):
-        """
-            @case: hrm008
-            @description: Staff Report
-            
-            * DOES NOT WORK
-        """
+
+class StaffReport(SeleniumUnitTest):
+    """
+    @case: hrm008
+    @description: Staff Report
+    """
+    def setUp(self):
+        super(StaffReport, self).setUp()
         print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
+        self.login(account="admin", nexturl="hrm/staff/report")
 
-        #@ToDo: Move these into we2unittest
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
-        # Login, if not-already done so
-        self.login(account="normal", nexturl="hrm/staff/report")
-        
-        # HRM008
-		# Staff Report - Using Filter Options
-		# Report by Organization
-		self.search( "human_resource_search_select",
-					[( "organisation_id",
-					   "Timor-Leste Red Cross Society (CVTL)",
-					   "checked")]
-					 )
-					 					 
-		# Report by State/Province
-		self.create( "human_resource_search_select",
-					[( "organisation_id",
-					   "Timor-Leste Red Cross Society (CVTL)",
-					   "unchecked"),
-					 ( "location_id$L1",
-					   "Ainaro",
-					   "checked"),
-					 ( "location_id$L1",
-					   "Manatuto",
-					   "checked")]
-					 )
+    def test_staff_report_simple(self):
+        self.report("Organization", "County / District", True,
+            ("Timor-Leste Red Cross Society (CVTL)", "Ainaro", 1),
+            ("Timor-Leste Red Cross Society (CVTL)", "Kuala Lumpur", 0),
+            report_fact="Organization (Count)")
 
-		# Report by County/District
-		self.create( "human_resource_search_select",
-					[( "location_id$L1",
-					   "Ainaro",
-					   "unchecked"),
-					 ( "location_id$L1",
-					   "Manatuto",
-					   "unchecked"),
-					 ( "location_id$L2",
-					   "Ainaro",
-					   "checked"),
-					 ( "location_id$L2",
-					   "Same",
-					   "checked")]
-					 )
+    def test_staff_report_filter(self):
+        self.report("Organization", "County / District", False,
+            params={
+                ("label", "Timor-Leste Red Cross Society (CVTL)"): True
+            },
+            report_fact="Organization (Count)", row_count=1)
 
-		# Report by Facility
-		self.create( "human_resource_search_select",
-					[( "location_id$L2",
-					   "Ainaro",
-					   "unchecked"),
-					 ( "location_id$L2",
-					   "Same",
-					   "unchecked"),
-					 ( "site_id",
-					   "Viqueque Branch Office",
-					   "checked"),
-					 ( "site_id",
-					   "Ainaro Branch Office",
-					   "checked")]
-					 )
-	 			   
-		# Report by County/District & Facility
-		self.create( "human_resource_search_select",
-					[( "site_id",
-					   "Viqueque Branch Office",
-					   "unchecked"),
-					 ( "site_id",
-					   "Ainaro Branch Office",
-					   "unchecked"),
-					 ( "location_id$L2",
-					   "Ainaro",
-					   "checked"),
-					 ( "site_id",
-					   "Manatuto Branch Office",
-					   "checked")]
-					 )
-	 	
-		# Staff Report - Using Report Options
-		# Report by Organization/Facility/Person/Count
-		self.browser.find_element_by_class("toggle-text").click()
-		self.create( "report",
-					[( "rows",
-					   "Organization",
-					   "option"),
-					 ( "cols",
-					   "Facility",
-					   "option"),
-					 ( "fact",
-					   "Person",
-					   "option"),
-					 ( "aggregate",
-					   "Count",
-					   "option"),
-					 ( "totals",
-					   "checked")]
-					 )
-					 	
-		# Report by Training/Organization/Facility/Count
-		self.browser.find_element_by_class("toggle-text").click()
-		self.create( "report",
-					[( "rows",
-					   "Training",
-					   "option"),
-					 ( "cols",
-					   "Organization",
-					   "option"),
-					 ( "fact",
-					   "Facility",
-					   "option"),
-					 ( "aggregate",
-					   "Count",
-					   "option"),
-					 ( "totals",
-					   "checked")]
-					 )			 
-		
-		
+    def test_staff_report_filter_L1_L2(self):
+        self.report("County / District", "Organization", False,
+            params={
+                ("label", "Timor-Leste"): True,
+                ("label", "Ainaro"): True,
+            },
+            report_fact="Organization (Count)", row_count=1)
+
+    def test_staff_report_person(self):
+        self.report("Organization", "State / Province", False,
+            ("Timor-Leste Red Cross Society (CVTL)", "Dili",
+                ("Duarte Botelheiro",
+                "Adriana Macedo",
+                "Quito Cromos",
+                "Guilherme Soares",
+                "Xanana Chilro",
+                u"José Saboga",
+                "Elly Marques",
+                "Nilton Moniz",
+                "Herculano Ximenes",
+                "Goku Gohan")
+            ),
+            report_fact="Person (List)")
