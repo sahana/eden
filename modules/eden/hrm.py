@@ -2303,12 +2303,12 @@ class S3HRSkillModel(S3Model):
         if current.deployment_settings.get_hrm_skill_types():
             s3.js_global.append("i18n.no_ratings = '%s';" % T("No Ratings for Skill Type"))
             s3.jquery_ready.append(
-'''S3FilterFieldChange({
- 'FilterField':'skill_id',
- 'Field':'competency_id',
- 'FieldResource':'competency',
- 'FieldPrefix':'hrm',
- 'url':S3.Ap.concat('/hrm/skill_competencies/'),
+'''S3OptionsFilter({
+ 'triggerName':'skill_id',
+ 'targetName':'competency_id',
+ 'lookupResource':'competency',
+ 'lookupPrefix':'hrm',
+ 'lookupURL':S3.Ap.concat('/hrm/skill_competencies/'),
  'msgNoRecords':i18n.no_ratings
 })''')
         return comment
@@ -3825,6 +3825,7 @@ def hrm_service_record(r, **attr):
                             )
 
         # Combined Hours
+
         _hours = {}
         hour_list = TABLE(TR(TD(T("Programme")), TD(T("Course")), TD(T("Date")), TD(T("Hours"))))
         for key in sorted(hours.iterkeys()):
