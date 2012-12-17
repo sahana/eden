@@ -469,8 +469,7 @@ class S3InventoryModel(S3Model):
                                         label = T("Quantity"),
                                         represent=lambda v: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                        requires = [IS_FLOAT_IN_RANGE(0, None),
-                                                    IS_NOT_EMPTY()],
+                                        requires = IS_FLOAT_IN_RANGE(0, None),
                                         writable = False),
                                   Field("bin", "string", length=16,
                                         represent = lambda v: v or NONE,
