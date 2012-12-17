@@ -72,7 +72,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3fields import S3Represent, S3RepresentLazy
+from s3fields import S3Represent
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable, S3MarkupStripper
 from s3validators import IS_ONE_OF
 
@@ -4329,6 +4329,69 @@ class S3ResourceField(object):
                 return s3_unicode(value)
         else:
             return value
+
+# =============================================================================
+class S3RepresentLazy(object):
+    """
+        Lazy Representation of a field value, utilizes the bulk-feature
+        of S3Represent-style representation methods
+    """
+
+    def __init__(self, value, renderer):
+        """
+            Constructor
+
+            @param value: the value
+            @param renderer: the renderer (S3Represent instance)
+        """
+
+        self.value = value
+        self.renderer = renderer
+
+        self.multiple = False
+        renderer.lazy.append(value)
+
+    def __repr__(self):
+        """ Represent as string """
+
+        value = self.value
+        renderer = self.renderer
+        if renderer.lazy:
+            labels = renderer.bulk(renderer.lazy)
+            renderer.lazy = []
+        else:
+            labels = renderer.theset
+        if renderer.list_type:
+            if self.multiple:
+                return renderer.multiple(value, show_link=False)
+            else:
+                return renderer.render_list(value, labels, show_link=False)
+        else:
+            if self.multiple:
+                return renderer.multiple(value, show_link=False)
+            else:
+                return renderer(value, show_link=False)
+                
+    def render(self):
+        """ Render as HTML """
+
+        value = self.value
+        renderer = self.renderer
+        if renderer.lazy:
+            labels = renderer.bulk(renderer.lazy)
+            renderer.lazy = []
+        else:
+            labels = renderer.theset
+        if renderer.list_type:
+            if self.multiple:
+                return renderer.multiple(value)
+            else:
+                return renderer.render_list(value, labels)
+        else:
+            if self.multiple:
+                return renderer.multiple(value)
+            else:
+                return renderer(value)
 
 # =============================================================================
 class S3ResourceQuery(object):
