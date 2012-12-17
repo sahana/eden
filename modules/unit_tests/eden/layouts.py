@@ -66,6 +66,7 @@ class LayoutTests(unittest.TestCase):
         output = comment.xml()
         self.assertTrue(type(output) is str)
         self.assertNotEqual(output, "")
+        auth.s3_impersonate(None)
 
 # =============================================================================
 def run_suite(*test_classes):

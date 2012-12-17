@@ -244,6 +244,8 @@ class S3Represent(object):
         self.setup = False
         self.theset = None
         self.queries = 0
+        self.lazy = []
+        self.lazy_show_link = False
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
@@ -317,7 +319,7 @@ class S3Represent(object):
             return v
 
     # -------------------------------------------------------------------------
-    def __call__(self, value, row=None, show_link=False):
+    def __call__(self, value, row=None, show_link=True):
         """
             Represent a single value (standard entry point).
 
@@ -326,6 +328,7 @@ class S3Represent(object):
             @param show_link: render the representation as link
         """
 
+        show_link = show_link and self.linkto is not None
         if self.list_type:
             return self.multiple(value, rows=row,
                                  list_type=False, show_link=show_link)
@@ -341,7 +344,7 @@ class S3Represent(object):
         return self.none
 
     # -------------------------------------------------------------------------
-    def multiple(self, values, rows=None, list_type=True, show_link=False):
+    def multiple(self, values, rows=None, list_type=True, show_link=True):
         """
             Represent multiple values as a comma-separated list.
 
@@ -350,10 +353,16 @@ class S3Represent(object):
             @param show_link: render each representation as link
         """
 
+        show_link = show_link and self.linkto is not None
         if self.list_type and list_type:
             from itertools import chain
             try:
+                hasnone = None in values
+                if hasnone:
+                    values = [i for i in values if i != None]
                 values = list(set(chain.from_iterable(values)))
+                if hasnone:
+                    values.append(None)
             except TypeError:
                 raise ValueError("List of lists expected, got %s" % values)
         else:
@@ -379,19 +388,32 @@ class S3Represent(object):
         return self.none
 
     # -------------------------------------------------------------------------
-    def bulk(self, values, rows=None, show_link=False):
+    def bulk(self, values, rows=None, show_link=True):
         """
             Represent multiple values as dict {value: representation}
 
             @param values: list of values
             @param rows: the referenced rows (if values are foreign keys)
             @param show_link: render each representation as link
+
+            @return: a dict {value: representation}
+
+            @note: for list-types, the dict keys will be the individual
+                   values within all lists - and not the lists (simply
+                   because lists can not be dict keys). Thus, the caller
+                   would still have to construct the final string/HTML.
         """
 
+        show_link = show_link and self.linkto is not None
         if self.list_type:
             from itertools import chain
             try:
+                hasnone = None in values
+                if hasnone:
+                    values = [i for i in values if i != None]
                 values = list(set(chain.from_iterable(values)))
+                if hasnone:
+                    values.append(None)
             except TypeError:
                 raise ValueError("List of lists expected, got %s" % values)
         else:
@@ -408,6 +430,33 @@ class S3Represent(object):
             labels = {}
         labels[None] = self.none
         return labels
+
+    # -------------------------------------------------------------------------
+    def render_list(self, value, labels, show_link=True):
+        """
+            Helper method to render list-type representations from
+            bulk()-results.
+
+            @param value: the list
+            @param labels: the labels as returned from bulk()
+            @param show_link: render references as links, should
+                              be the same as used with bulk()
+        """
+
+        show_link = show_link and self.linkto is not None
+        if show_link:
+            labels = [(labels[v], ", ")
+                      if v in labels else (self.default, ", ")
+                      for v in value]
+            if labels:
+                from itertools import chain
+                return TAG[""](list(chain.from_iterable(labels))[:-1])
+            else:
+                return ""
+        else:
+            return ", ".join([s3_unicode(labels[v])
+                              if v in labels else self.default
+                              for v in value])
 
     # -------------------------------------------------------------------------
     def _setup(self):
@@ -468,7 +517,9 @@ class S3Represent(object):
         items = {}
         lookup = {}
         for v in values:
-            if v in theset:
+            if v is None:
+                items[v] = self.none
+            elif v in theset:
                 items[v] = theset[v]
             else:
                 lookup[v] = True
