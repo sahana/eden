@@ -42,9 +42,10 @@ class VolunteerSearch(SeleniumUnitTest):
         # Volunteer Simple Search
         self.search(self.search.simple_form,
             True,
-            {
-                ("name", "human_resource_search_simple_simple"): "Maia",
-            }, (1, 1, 1),
+            ({
+                "name": "human_resource_search_simple_simple",
+                "value": "Maia"
+            },), 1,
             match_row=(1, "Yakobus Maia")
         )
 
@@ -53,10 +54,16 @@ class VolunteerSearch(SeleniumUnitTest):
         # Volunteer Advanced Search
         self.search(self.search.advanced_form,
             True,
+            ({
+                "name": "human_resource_search_L1",
+                "label": "Baucau",
+                "value": True
+            },
             {
-                ("label", "Baucau"): True,
-                ("label", "Timor-Leste Red Cross Society (CVTL)"): True
-            }, (1, 2, 2),
+                "name": "human_resource_search_org",
+                "label": "Timor-Leste Red Cross Society (CVTL)",
+                "value": True
+            }), 2,
             match_column=(2, "Yakobus Maia", "Isabel Zacarias")
         )
 
@@ -64,10 +71,16 @@ class VolunteerSearch(SeleniumUnitTest):
         # Search by L1
         self.search(self.search.advanced_form,
             True,
+            ({
+                "name": "human_resource_search_L1",
+                "label": "Manatuto",
+                "value": True
+            },
             {
-                ("label", "Manatuto"): True,
-                ("label", "Viqueque"): True
-            }, (1, 4, 4),
+                "name": "human_resource_search_L1",
+                "label": "Viqueque",
+                "value": True
+            }), 4,
             match_column=(2, "Orlando Fahik Batak", "Mariana Sereno",
                 "Adriana Ramos", "Justiano Macedo")
         )
@@ -76,9 +89,11 @@ class VolunteerSearch(SeleniumUnitTest):
         # Search by L2
         self.search(self.search.advanced_form,
             True,
-            {
-                ("label", "Aileu Vila"): True
-            }, (1, 2, 2),
+            ({
+                "name": "human_resource_search_L2",
+                "label": "Aileu Vila",
+                "value": True
+            },), 2,
             match_column=(2, "Marcelino Otilia", "Soraia Moises")
         )
 
@@ -86,17 +101,25 @@ class VolunteerSearch(SeleniumUnitTest):
         # Search by Training
         self.search(self.search.advanced_form,
             False,
-            {
-                ("label", "Basics of First Aid"): True,
-            }, None,
+            ({
+                "name": "human_resource_search_training",
+                "label": "Basics of First Aid",
+                "value": True
+            },), None,
         )
 
     def test_volunteer_search_L2_training(self):
         # Search by L2 and Training
         self.search(self.search.advanced_form,
             False,
+            ({
+                "name": "human_resource_search_training",
+                "label": "Basics of First Aid",
+                "value": True
+            },
             {
-                ("label", "Basics of First Aid"): True,
-                ("label", "Aileu Vila"): True
-            }, None,
+                "name": "human_resource_search_L2",
+                "label": "Aileu Vila",
+                "value": True
+            }), None,
         )

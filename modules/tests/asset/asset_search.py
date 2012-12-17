@@ -55,27 +55,35 @@ class AssetSearch(SeleniumUnitTest):
     def test_asset_search_keyword(self):
         self.search(self.search.advanced_form,
             True,
-            {
-                ("name", "asset_search_text"): "Radio",
-            }, (1, 10, 10),
+            ({
+                "name": "asset_search_text",
+                "value": "Radio"
+            },), 10,
             manual_check=functools.partial(_kwsearch, keyword="Radio", items=10, column=3)
         )
 
     def test_asset_search_category(self):
         self.search(self.search.advanced_form,
             True,
-            {
-                ("label", "Default > IT"): True,
-            }, (1, 10, 10),
+            ({
+                "name": "asset_search_item_category",
+                "label": "Default > IT",
+                "value": True
+            },), 10,
             manual_check=functools.partial(_kwsearch, keyword="IT", items=10, column=2)
         )
 
     def test_asset_search_category_keyword(self):
         self.search(self.search.advanced_form,
             True,
+            ({
+                "name": "asset_search_text",
+                "value": "Hand"
+            },
             {
-                ("name", "asset_search_text"): "Hand",
-                ("label", "Default > Communications"): True,
-            }, (1, 5, 5),
+                "name": "asset_search_item_category",
+                "label": "Default > Communications",
+                "value": True
+            }), 5,
             manual_check=functools.partial(_kwsearch, keyword="Hand", items=5, column=3)
         )
