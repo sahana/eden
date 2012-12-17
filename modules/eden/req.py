@@ -1077,6 +1077,8 @@ S3OptionsFilter({
 
         output["subtitle"] = T("Request Items")
 
+        use_commit = current.deployment_settings.get_req_use_commit()
+
         # Get req_items & inv_items from this site
         table = s3db.req_req_item
         query = (table.req_id == r.id ) & \
@@ -1097,17 +1099,17 @@ S3OptionsFilter({
         inv_items_dict = inv_items.as_dict(key = "item_id")
 
         if len(req_items):
-            items = TABLE(THEAD(TR(#TH(""),
-                                   TH(table.item_id.label),
-                                   TH(table.quantity.label),
-                                   TH(table.item_pack_id.label),
-                                   TH(table.quantity_commit.label),
-                                   TH(table.quantity_transit.label),
-                                   TH(table.quantity_fulfil.label),
-                                   TH(T("Quantity in %s's Warehouse") % site_name),
-                                   TH(T("Match?"))
-                                  )
-                                ),
+            row = TR(TH(table.item_id.label),
+                     TH(table.quantity.label),
+                     TH(table.item_pack_id.label),
+                     TH(table.quantity_transit.label),
+                     TH(table.quantity_fulfil.label),
+                     TH(T("Quantity in %s's Warehouse") % site_name),
+                     TH(T("Match?"))
+                     )
+            if use_commit:
+                row.insert(TH(3, table.quantity_commit.label))
+            items = TABLE(THEAD(row),
                           _id = "list",
                           _class = "dataTable display")
 
@@ -1132,21 +1134,36 @@ S3OptionsFilter({
                 else:
                     status = SPAN(T("NO"), _class = "req_status_none"),
 
-                items.append(TR(#A(req_item.id),
-                                supply_item_represent(req_item.item_id),
-                                req_item.quantity,
-                                item_pack_represent(req_item.item_pack_id),
-                                # This requires an action btn to get the req_id
-                                req_item.quantity_commit,
-                                req_item.quantity_transit,
-                                req_item.quantity_fulfil,
-                                #req_quantity_represent(req_item.quantity_commit, "commit"),
-                                #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
-                                #req_quantity_represent(req_item.quantity_transit, "transit"),
-                                inv_quantity,
-                                status,
+                if use_commit:
+                    items.append(TR(#A(req_item.id),
+                                    supply_item_represent(req_item.item_id),
+                                    req_item.quantity,
+                                    item_pack_represent(req_item.item_pack_id),
+                                    # This requires an action btn to get the req_id
+                                    req_item.quantity_commit,
+                                    req_item.quantity_transit,
+                                    req_item.quantity_fulfil,
+                                    #req_quantity_represent(req_item.quantity_commit, "commit"),
+                                    #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
+                                    #req_quantity_represent(req_item.quantity_transit, "transit"),
+                                    inv_quantity,
+                                    status,
+                                    )
                                 )
-                            )
+                else:
+                    items.append(TR(#A(req_item.id),
+                                    supply_item_represent(req_item.item_id),
+                                    req_item.quantity,
+                                    item_pack_represent(req_item.item_pack_id),
+                                    # This requires an action btn to get the req_id
+                                    req_item.quantity_transit,
+                                    req_item.quantity_fulfil,
+                                    #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
+                                    #req_quantity_represent(req_item.quantity_transit, "transit"),
+                                    inv_quantity,
+                                    status,
+                                    )
+                                )
                 output["items"] = items
                 #s3.actions = [req_item_inv_item_btn]
                 s3.no_sspag = True # pag won't work

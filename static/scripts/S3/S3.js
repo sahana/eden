@@ -781,36 +781,37 @@ function S3OptionsFilter(settings) {
         var lookupResource = settings.lookupResource;
         if (settings.lookupURL) {
             var url = settings.lookupURL;
+            if (lookupValue) {
+                url = url.concat(lookupValue);
+            }
         } else {
             var lookupPrefix = settings.lookupPrefix;
             var url = S3.Ap.concat('/', lookupPrefix, '/', lookupResource, '.json');
-        }
-        var q;
-        // Append lookup key to the URL
-        if (lookupValue) {
-            var lookupKey;
-            if (typeof settings.lookupKey == 'undefined') {
-                // Same field name in both tables
-                lookupKey = settings.triggerName;
-            } else {
-                lookupKey = settings.lookupKey;
-
-
+            // Append lookup key to the URL
+            var q;
+            if (lookupValue) {
+                var lookupKey;
+                if (typeof settings.lookupKey == 'undefined') {
+                    // Same field name in both tables
+                    lookupKey = settings.triggerName;
+                } else {
+                    lookupKey = settings.lookupKey;
+                }
+                q = lookupResource + '.' + lookupKey + '=' + lookupValue;
+                if (url.indexOf('?') != -1) {
+                    url = url.concat('&' + q);
+                } else {
+                    url = url.concat('?' + q);
+                }
             }
-            q = lookupResource + '.' + lookupKey + '=' + lookupValue;
-            if (url.indexOf('?') != -1) {
-                url = url.concat('&' + q);
-            } else {
-                url = url.concat('?' + q);
-            }
-        }
-        // Append the current value to the URL (what for?)
-        if (currentValue) {
-            q = 'value=' + currentValue;
-            if (url.indexOf('?') != -1) {
-                url = url.concat('&' + q);
-            } else {
-                url = url.concat('?' + q);
+            // Append the current value to the URL (what for?)
+            if (currentValue) {
+                q = 'value=' + currentValue;
+                if (url.indexOf('?') != -1) {
+                    url = url.concat('&' + q);
+                } else {
+                    url = url.concat('?' + q);
+                }
             }
         }
 

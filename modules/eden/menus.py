@@ -1119,11 +1119,12 @@ class S3OptionsMenu(object):
                         M("Import", m="import", p="create"),
                     ),
                     M("Facilities", c="inv", f="facility")(
-                        M("New", m="create"),
+                        M("New", m="create", t="org_facility"),
                         M("List All"),
                         #M("Search", m="search"),
                     ),
-                    M("Facility Types", c="inv", f="facility_type")(
+                    M("Facility Types", c="inv", f="facility_type",
+                      restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
                         #M("Search", m="search"),

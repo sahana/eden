@@ -793,9 +793,9 @@ class S3NavigationItem(object):
         f = self.get("function")
         if f is None:
             f = "index"
-        p = self.p
         f, args = self.__format(f, args, extension)
-        return aURL(p=p, a=a, c=c, f=f, args=args, vars=vars)
+        return aURL(c=c, f=f, p=self.p, a=a, t=self.tablename,
+                    args=args, vars=vars)
 
     # -------------------------------------------------------------------------
     @staticmethod

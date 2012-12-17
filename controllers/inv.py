@@ -556,19 +556,26 @@ def inv_item_quantity():
     """
     """
 
+    try:
+        item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
     table = s3db.inv_inv_item
     ptable = db.supply_item_pack
-    query = (table.id == request.args[0]) & \
+    query = (table.id == item_id) & \
             (table.item_pack_id == ptable.id)
     record = db(query).select(table.quantity,
                               ptable.quantity,
                               limitby=(0, 1)).first()
 
-    output = {"iquantity" : record.inv_inv_item.quantity,
-              "pquantity" : record.supply_item_pack.quantity,
-              }
+    d = {"iquantity" : record.inv_inv_item.quantity,
+         "pquantity" : record.supply_item_pack.quantity,
+         }
+    output = json.dumps(d)
+
     response.headers["Content-Type"] = "application/json"
-    return json.dumps(output)
+    return output
 
 # -----------------------------------------------------------------------------
 def inv_item_packs():
@@ -577,16 +584,22 @@ def inv_item_packs():
             particular Item
     """
 
+    try:
+        item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
     table = s3db.inv_inv_item
     ptable = db.supply_item_pack
-    query = (table.id == request.args[0]) & \
+    query = (table.id == item_id) & \
             (table.item_id == ptable.item_id)
     records = db(query).select(ptable.id,
                                ptable.name,
                                ptable.quantity)
+    output = records.json()
 
     response.headers["Content-Type"] = "application/json"
-    return records.json()
+    return output
 
 # =============================================================================
 def send():
@@ -1184,7 +1197,8 @@ def recv_cancel():
                                   record_id=recv_id):
         session.error = T("You do not have permission to cancel this received shipment.")
 
-    recv_record = rtable[recv_id]
+    recv_record = db(rtable.id == recv_id).select(rtable.status,
+                                                  limitby=(0, 1)).first()
 
     if recv_record.status != s3db.inv_ship_status["RECEIVED"]:
         session.error = T("This shipment has not been received - it has NOT been canceled because can still be edited.")
@@ -1218,10 +1232,17 @@ def recv_cancel():
         # then remove these items from the quantity in fulfil
         if track_item.req_item_id:
             req_id = track_item.req_item_id
-            req_item = ritable[req_id]
+            req_item = db(ritable.id == req_id).select(ritable.quantity_fulfil,
+                                                       ritable.item_pack_id,
+                                                       limitby=(0, 1)).first()
             req_quantity = req_item.quantity_fulfil
-            req_pack_quantity = siptable[req_item.item_pack_id].quantity
-            track_pack_quantity = siptable[track_item.item_pack_id].quantity
+            # @ToDo: Optimise by reading these 2 in a single DB query
+            req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+                                                                                limitby=(0, 1)
+                                                                                ).first().quantity
+            track_pack_quantity = db(siptable.id == track_item.item_pack_id).select(siptable.quantity,
+                                                                                    limitby=(0, 1)
+                                                                                    ).first().quantity
             quantity_fulfil = s3db.supply_item_add(req_quantity,
                                                    req_pack_quantity,
                                                    - track_item.recv_quantity,
@@ -1230,19 +1251,19 @@ def recv_cancel():
             db(ritable.id == req_id).update(quantity_fulfil = quantity_fulfil)
             s3db.req_update_status(req_id)
     # Now set the recv record to cancelled and the send record to sent
-    rtable[recv_id] = dict(date = request.utcnow,
-                           status = s3db.inv_ship_status["CANCEL"],
-                           owned_by_user = None,
-                           owned_by_group = ADMIN)
+    db(rtable.id == recv_id).update(date = request.utcnow,
+                                    status = s3db.inv_ship_status["CANCEL"],
+                                    owned_by_user = None,
+                                    owned_by_group = ADMIN)
     if send_id != None:
         # The sent record is now set back to SENT so the source warehouse can
         # now cancel this record to get the stock back into their warehouse.
         # IMPORTANT reports need to locate this record otherwise it can be
         # a mechanism to circumvent the auditing of stock
-        stable[send_id] = dict(date = request.utcnow,
-                               status = s3db.inv_ship_status["SENT"],
-                               owned_by_user = None,
-                               owned_by_group = ADMIN)
+        db(stable.id == send_id).update(date = request.utcnow,
+                                        status = s3db.inv_ship_status["SENT"],
+                                        owned_by_user = None,
+                                        owned_by_group = ADMIN)
     redirect(URL(c = "inv",
                  f = "recv",
                  args = [recv_id]))
@@ -1476,7 +1497,9 @@ def adj_close():
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
     auth.permitted_facilities(table=atable, error_msg=error_msg)
 
-    adj_rec = atable[adj_id]
+    adj_rec = db(atable.id == adj_id).select(atable.status,
+                                             atable.site_id,
+                                             limitby=(0, 1)).first()
     if adj_rec.status != 0:
         session.error = T("This adjustment has already been closed.")
 
@@ -1485,14 +1508,15 @@ def adj_close():
                      f = "adj",
                      args = [adj_id]))
 
+    site_id = adj_rec.site_id
     # Go through all the adj_items
     query = (aitable.adj_id == adj_id) & \
             (aitable.deleted == False)
     adj_items = db(query).select()
     for adj_item in adj_items:
-        if adj_item.inv_item_id == None:
+        if adj_item.inv_item_id is None:
             # Create a new stock item
-            inv_item_id = inv_item_table.insert(site_id = adj_rec.site_id,
+            inv_item_id = inv_item_table.insert(site_id = site_id,
                                                 item_id = adj_item.item_id,
                                                 item_pack_id = adj_item.item_pack_id,
                                                 currency = adj_item.currency,
@@ -1518,7 +1542,7 @@ def adj_close():
     db(atable.id == adj_id).update(status=1)
     # Go to the Inventory of the Site which has adjusted these items
     (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
-                                                   adj_rec.site_id)
+                                                   site_id)
     url = URL(c = prefix,
               f = resourcename,
               args = [id, "inv_item"])
@@ -1530,13 +1554,18 @@ def recv_item_json():
     """
     """
 
+    try:
+        item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
     stable = s3db.org_site
     rtable = s3db.inv_recv
     ittable = s3db.inv_track_item
 
     rtable.date.represent = lambda dt: dt[:10]
 
-    query = (ittable.req_item_id == request.args[0]) & \
+    query = (ittable.req_item_id == item_id) & \
             (rtable.id == ittable.recv_id) & \
             (rtable.site_id == stable.id) & \
             (rtable.status == s3db.inv_ship_status["RECEIVED"]) & \
@@ -1546,18 +1575,23 @@ def recv_item_json():
                                stable.name,
                                ittable.quantity)
 
-    json_str = "[%s,%s" % ( json.dumps(dict(id = str(T("Received")),
-                                            quantity = "#"
-                                            )) ,
-                            records.json()[1:])
+    output = "[%s,%s" % (json.dumps(dict(id = str(T("Received")),
+                                         quantity = "#"
+                                         )),
+                         records.json()[1:])
 
     response.headers["Content-Type"] = "application/json"
-    return json_str
+    return output
 
 # -----------------------------------------------------------------------------
 def send_item_json():
     """
     """
+
+    try:
+        item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
 
     stable = s3db.org_site
     istable = s3db.inv_send
@@ -1565,7 +1599,7 @@ def send_item_json():
 
     istable.date.represent = lambda dt: dt[:10]
 
-    query = (ittable.req_item_id == request.args[0]) & \
+    query = (ittable.req_item_id == item_id) & \
             (istable.id == ittable.send_id) & \
             (istable.site_id == stable.id) & \
             ((istable.status == s3db.inv_ship_status["SENT"]) | \
@@ -1576,13 +1610,13 @@ def send_item_json():
                                stable.name,
                                ittable.quantity)
 
-    json_str = "[%s,%s" % ( json.dumps(dict(id = str(T("Sent")),
-                                            quantity = "#"
-                                            )) ,
-                            records.json()[1:])
+    output = "[%s,%s" % (json.dumps(dict(id = str(T("Sent")),
+                                         quantity = "#"
+                                         )),
+                         records.json()[1:])
 
     response.headers["Content-Type"] = "application/json"
-    return json_str
+    return output
 
 # -----------------------------------------------------------------------------
 def kit():
