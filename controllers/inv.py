@@ -1569,7 +1569,7 @@ def recv_item_json():
             (rtable.id == ittable.recv_id) & \
             (rtable.site_id == stable.id) & \
             (rtable.status == s3db.inv_ship_status["RECEIVED"]) & \
-            (ittable.deleted == False )
+            (ittable.deleted == False) 
     records = db(query).select(rtable.id,
                                rtable.date,
                                stable.name,

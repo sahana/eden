@@ -132,7 +132,7 @@ class S3RequestModel(S3Model):
         req_types_deployed = settings.get_req_req_type()
         req_type_opts = {}
         if settings.has_module("inv") and "Stock" in req_types_deployed:
-            # Number hardcoded in controller
+            # Number hardcoded in controller & JS
             req_type_opts[1] = settings.get_req_type_inv_label()
         #if settings.has_module("asset") and "Asset" in req_types_deployed:
         #    req_type_opts[2] = T("Assets")
@@ -1093,10 +1093,19 @@ S3OptionsFilter({
         itable = s3db.inv_inv_item
         query = (itable.site_id == site_id ) & \
                 (itable.deleted == False )
+        inv_items_dict = {}
         inv_items = db(query).select(itable.item_id,
                                      itable.quantity,
-                                     itable.item_pack_id)
-        inv_items_dict = inv_items.as_dict(key = "item_id")
+                                     itable.item_pack_id,
+                                     # VF
+                                     #itable.pack_quantity,
+                                     )
+        for item in inv_items:
+            item_id = item.item_id
+            if item_id in inv_items_dict:
+                inv_items_dict[item_id] += item.quantity * item.pack_quantity
+            else:
+                inv_items_dict[item_id] = item.quantity * item.pack_quantity
 
         if len(req_items):
             row = TR(TH(table.item_id.label),
@@ -1117,16 +1126,13 @@ S3OptionsFilter({
             item_pack_represent = table.item_pack_id.represent
             for req_item in req_items:
                 # Convert inv item quantity to req item quantity
-                try:
-                    inv_item = Storage(inv_items_dict[req_item.item_id])
-                    inv_quantity = inv_item.quantity * \
-                                   inv_item.pack_quantity / \
-                                   req_item.pack_quantity
-
-                except:
+                item_id = req_item.item_id
+                if item_id in inv_items_dict:
+                    inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity
+                else:
                     inv_quantity = NONE
 
-                if inv_quantity and inv_quantity != NONE:
+                if inv_quantity != NONE:
                     if inv_quantity < req_item.quantity:
                         status = SPAN(T("Partial"), _class = "req_status_partial")
                     else:
@@ -1554,8 +1560,8 @@ S3OptionsFilter({
             return TAG[""](quantity,
                            A(DIV(_class = "quantity %s ajax_more collapsed" % type
                                  ),
-                            _href = "#",
-                            )
+                             _href = "#",
+                             )
                            )
         else:
             return quantity
@@ -2479,7 +2485,7 @@ class S3CommitItemModel(S3Model):
         com_table = db.req_commit
         cim_table = db.req_commit_item
         send_table = s3db.inv_send
-        track_table = s3db.inv_track_item
+        tracktable = s3db.inv_track_item
 
         query = (com_table.id == commit_id) & \
                 (com_table.req_id == req_table.id) & \
@@ -2519,21 +2525,29 @@ class S3CommitItemModel(S3Model):
                                    rim_table.item_id,
                                    rim_table.item_pack_id,
                                    rim_table.currency,
+                                   rim_table.quantity,
+                                   rim_table.quantity_transit,
+                                   rim_table.quantity_fulfil,
                                    cim_table.quantity,
                                    )
         # Create inv_track_items for each commit item
+        insert = tracktable.insert
         for row in records:
             rim = row.req_req_item
-            id = track_table.insert(req_item_id = rim.id,
-                                    track_org_id = record.req_commit.organisation_id,
-                                    send_id = send_id,
-                                    status = 1,
-                                    item_id = rim.item_id,
-                                    item_pack_id = rim.item_pack_id,
-                                    currency = rim.currency,
-                                    quantity = row.req_commit_item.quantity,
-                                    )
-            track_table(track_table.id == id).update(tracking_no = "TN:%6d" % (10000 + id))
+            # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition) 
+            #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+            #quantity_needed = rim.quantity - quantity_shipped
+            id = insert(req_item_id = rim.id,
+                        track_org_id = record.req_commit.organisation_id,
+                        send_id = send_id,
+                        status = 1,
+                        item_id = rim.item_id,
+                        item_pack_id = rim.item_pack_id,
+                        currency = rim.currency,
+                        #req_quantity = quantity_needed,
+                        quantity = row.req_commit_item.quantity,
+                        )
+            tracktable(tracktable.id == id).update(tracking_no = "TN:%6d" % (10000 + id))
 
         # Create the Waybill
         form = Storage()

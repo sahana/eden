@@ -142,18 +142,22 @@
                 <xsl:when test="$Type='Stock'">
                     <data field="type">1</data>
                 </xsl:when>
+                <xsl:when test="$Type='Items'">
+                    <data field="type">1</data>
+                </xsl:when>
                 <xsl:when test="$Type='Asset'">
                     <data field="type">2</data>
                 </xsl:when>
                 <xsl:when test="$Type='People'">
                     <data field="type">3</data>
                 </xsl:when>
+                <!--
                 <xsl:when test="$Type='Summary'">
                     <data field="type">8</data>
                 </xsl:when>
                 <xsl:when test="$Type='Other'">
                     <data field="type">9</data>
-                </xsl:when>
+                </xsl:when>-->
                 <xsl:otherwise>
                     <!-- other -->
                     <data field="type">9</data>

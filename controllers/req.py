@@ -1268,17 +1268,18 @@ def commit_item():
 # =============================================================================
 def commit_req():
     """
-        function to commit items according to a request.
-        copy data from a req into a commitment
+        Function to commit items for a Request
+        - i.e. copy data from a req into a commitment
         arg: req_id
         vars: site_id
     """
 
     req_id = request.args[0]
+    site_id = request.vars.get("site_id")
+
     table = s3db.req_req
     r_req = db(table.id == req_id).select(table.type,
                                           limitby=(0, 1)).first()
-    site_id = request.vars.get("site_id")
 
     # User must have permissions over facility which is sending
     (prefix, resourcename, id) = s3db.get_instance(s3db.org_site, site_id)
@@ -1350,11 +1351,14 @@ def commit_req():
 # =============================================================================
 def send_req():
     """
-        function to send items according to a request.
-        copy data from a req into a send
+        Function to send items for a Request.
+        - i.e. copy data from a req into a send
         arg: req_id
         vars: site_id
     """
+
+    req_id = request.args[0]
+    site_id = request.vars.get("site_id", None)
 
     ritable = s3db.req_req_item
     iitable = s3db.inv_inv_item
@@ -1362,13 +1366,11 @@ def send_req():
     tracktable = s3db.inv_track_item
     siptable = s3db.supply_item_pack
 
-    req_id = request.args[0]
     table = s3db.req_req
     r_req = db(table.id == req_id).select(table.req_ref,
                                           table.requester_id,
                                           table.site_id,
                                           limitby=(0, 1)).first()
-    site_id = request.vars.get("site_id")
 
     # User must have permissions over facility which is sending
     (prefix, resourcename, id) = s3db.get_instance(db.org_site, site_id)
@@ -1396,66 +1398,139 @@ def send_req():
                                )
 
     # Get the items for this request that have not been fulfilled (in transit)
+    sip_id_field = siptable.id
+    sip_quantity_field = siptable.quantity
     query = (ritable.req_id == req_id) & \
             (ritable.quantity_transit < ritable.quantity) & \
-            (ritable.deleted == False)
+            (ritable.deleted == False) & \
+            (ritable.item_pack_id == sip_id_field)
     req_items = db(query).select(ritable.id,
                                  ritable.quantity,
                                  ritable.quantity_transit,
+                                 ritable.quantity_fulfil,
                                  ritable.item_id,
-                                 ritable.item_pack_id,
-                                )
+                                 sip_quantity_field
+                                 )
 
-    # loop through each request item and find matched in the site inventory
-    for req_i in req_items:
-        query = (iitable.item_id == req_i.item_id) & \
-                (iitable.quantity > 0) & \
-                (iitable.site_id == site_id) & \
-                (iitable.deleted == False)
-        inv_items = db(query).select(iitable.id,
-                                     iitable.item_id,
-                                     iitable.quantity,
-                                     iitable.item_pack_id,
-                                     iitable.pack_value,
-                                     iitable.currency,
-                                     iitable.expiry_date,
-                                     iitable.bin,
-                                     iitable.owner_org_id,
-                                     iitable.supply_org_id,
-                                    )
-        # if their is a single match then set up a tracktable record
-        # get the request pack_quantity
-        req_p_qnty = siptable[req_i.item_pack_id].quantity
-        req_qnty = req_i.quantity
-        req_qnty_in_t = req_i.quantity_transit
-        req_qnty_wanted = (req_qnty - req_qnty_in_t) * req_p_qnty
-        # insert the track item records
-        # if their is more than one item match then set the quantity to 0
-        # and add the quantity requested in the comments
-        for inv_i in inv_items:
-            # get inv_item.pack_quantity
-            if len(inv_items) == 1:
+    # Loop through each request item and find matched in the site inventory
+    IN_PROCESS = s3db.inv_tracking_status["IN_PROCESS"]
+    insert = tracktable.insert
+    inv_remove = s3db.inv_remove
+    ii_item_id_field = iitable.item_id
+    ii_quantity_field = iitable.quantity
+    ii_expiry_field = iitable.expiry_date
+    ii_purchase_field = iitable.purchase_date
+    iifields = [iitable.id,
+                ii_item_id_field,
+                ii_quantity_field,
+                iitable.item_pack_id,
+                iitable.pack_value,
+                iitable.currency,
+                ii_expiry_field,
+                ii_purchase_field,
+                iitable.bin,
+                iitable.owner_org_id,
+                iitable.supply_org_id,
+                sip_quantity_field,
+                ]
+    bquery = (ii_quantity_field > 0) & \
+             (iitable.site_id == site_id) & \
+             (iitable.deleted == False) & \
+             (iitable.item_pack_id == sip_id_field)
+    orderby = ii_expiry_field | ii_purchase_field
+    for ritem in req_items:
+        rim = ritem.req_req_item
+        rim_id = rim.id
+        query = bquery & \
+                (ii_item_id_field == rim.item_id)
+        inv_items = db(query).select(*iifields,
+                                     orderby=orderby)
+        one_match = len(inv_items) == 1
+        # Get the Quantity Needed
+        quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+        quantity_needed = (rim.quantity - quantity_shipped) * ritem.supply_item_pack.quantity
+        # Insert the track item records
+        # If there is more than one item match then we select the stock with the oldest expiry date first
+        # then the oldest purchase date first
+        # then a complete batch, if-possible
+        iids = []
+        append = iids.append
+        for item in inv_items:
+            if not quantity_needed:
+                break
+            iitem = item.inv_inv_item
+            if one_match:
                 # Remove this total from the warehouse stock
-                send_item_quantity = s3db.inv_remove(inv_i, req_qnty_wanted)
+                send_item_quantity = inv_remove(iitem, quantity_needed)
+                quantity_needed -= send_item_quantity
+                append(iitem.id)
             else:
-                send_item_quantity = 0
-            comment = "%d items needed to match total request" % req_qnty_wanted
-            tracktable.insert(send_id = send_id,
-                              send_inv_item_id = inv_i.id,
-                              item_id = inv_i.item_id,
-                              req_item_id = req_i.id,
-                              item_pack_id = inv_i.item_pack_id,
-                              quantity = send_item_quantity,
-                              status = s3db.inv_tracking_status["IN_PROCESS"],
-                              pack_value = inv_i.pack_value,
-                              currency = inv_i.currency,
-                              bin = inv_i.bin,
-                              expiry_date = inv_i.expiry_date,
-                              owner_org_id = inv_i.owner_org_id,
-                              supply_org_id = inv_i.supply_org_id,
-                              comments = comment,
-                             )
-    # Redirect to commit
+                quantity_available = iitem.quantity * item.supply_item_pack.quantity
+                if iitem.expiry_date:
+                    # We take first from the oldest expiry date
+                    send_item_quantity = min(quantity_needed, quantity_available)
+                    # Remove this total from the warehouse stock
+                    send_item_quantity = inv_remove(iitem, send_item_quantity)
+                    quantity_needed -= send_item_quantity
+                    append(iitem.id)
+                elif iitem.purchase_date:
+                    # We take first from the oldest purchase date for non-expiring stock
+                    send_item_quantity = min(quantity_needed, quantity_available)
+                    # Remove this total from the warehouse stock
+                    send_item_quantity = inv_remove(iitem, send_item_quantity)
+                    quantity_needed -= send_item_quantity
+                    append(iitem.id)
+                elif quantity_needed <= quantity_available:
+                    # Assign a complete batch together if possible
+                    # Remove this total from the warehouse stock
+                    send_item_quantity = inv_remove(iitem, quantity_needed)
+                    quantity_needed = 0
+                    append(iitem.id)
+                else:
+                    # Try again on the second loop, if-necessary
+                    continue
+
+            insert(send_id = send_id,
+                   send_inv_item_id = iitem.id,
+                   item_id = iitem.item_id,
+                   req_item_id = rim_id,
+                   item_pack_id = iitem.item_pack_id,
+                   quantity = send_item_quantity,
+                   status = IN_PROCESS,
+                   pack_value = iitem.pack_value,
+                   currency = iitem.currency,
+                   bin = iitem.bin,
+                   expiry_date = iitem.expiry_date,
+                   owner_org_id = iitem.owner_org_id,
+                   supply_org_id = iitem.supply_org_id,
+                   #comments = comment,
+                   )
+        # 2nd pass
+        for item in inv_items:
+            if not quantity_needed:
+                break
+            iitem = item.inv_inv_item
+            if iitem.id in iids:
+                continue
+            # We have no way to know which stock we should take 1st so show all with quantity 0 & let the user decide
+            send_item_quantity = 0
+            insert(send_id = send_id,
+                   send_inv_item_id = iitem.id,
+                   item_id = iitem.item_id,
+                   req_item_id = rim_id,
+                   item_pack_id = iitem.item_pack_id,
+                   quantity = send_item_quantity,
+                   status = IN_PROCESS,
+                   pack_value = iitem.pack_value,
+                   currency = iitem.currency,
+                   bin = iitem.bin,
+                   expiry_date = iitem.expiry_date,
+                   owner_org_id = iitem.owner_org_id,
+                   supply_org_id = iitem.supply_org_id,
+                   #comments = comment,
+                   )
+
+    # Redirect to view the list of items in the Send
     redirect(URL(c = "inv",
                  f = "send",
                  args = [send_id, "track_item"]))

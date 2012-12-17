@@ -485,6 +485,8 @@ class S3InventoryModel(S3Model):
                                         represent = lambda opt: \
                                             inv_item_status_opts.get(opt, UNKNOWN_OPT),
                                         default = 0,),
+                                  s3_date("purchase_date",
+                                          label = T("Purchase Date")),
                                   s3_date("expiry_date",
                                           label = T("Expiry Date")),
                                   Field("pack_value", "double",
@@ -522,7 +524,9 @@ class S3InventoryModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        # pack_quantity Virtual Field
         table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        # total_value Virtual Field
         table.virtualfields.append(InvItemVirtualFields())
 
         # CRUD strings
@@ -759,7 +763,9 @@ S3OptionsFilter({
         db = current.db
         inv_item_table = db.inv_inv_item
         siptable = db.supply_item_pack
-        inv_p_qnty = siptable[inv_rec.item_pack_id].quantity
+        inv_p_qnty = db(siptable.id == inv_rec.item_pack_id).select(siptable.quantity,
+                                                                    limitby=(0, 1)
+                                                                    ).first().quantity
         inv_qnty = inv_rec.quantity * inv_p_qnty
         cur_qnty = current_track_total * inv_p_qnty
         req_qnty = required_total * required_pack_value
@@ -778,7 +784,10 @@ S3OptionsFilter({
 
         if update:
             # Update the levels in stock
-            db(inv_item_table.id == inv_rec.id).update(quantity = new_qnty)
+            if new_qnty:
+                db(inv_item_table.id == inv_rec.id).update(quantity = new_qnty)
+            else:
+                db(inv_item_table.id == inv_rec.id).update(deleted = True)
 
         return send_item_quantity
 
@@ -802,7 +811,9 @@ S3OptionsFilter({
 
                 # Ensure that the current item CAN be selected
                 if r.method == "update":
-                    item_ids.remove(table[r.args[2]].item_id)
+                    item = db(table.id == r.args[2]).select(table.item_id,
+                                                            limitby=(0, 1)).first()
+                    item_ids.remove(item.item_id)
                 table.item_id.requires.set_filter(not_filterby = "id",
                                                   not_filter_opts = item_ids)
 
@@ -1112,8 +1123,7 @@ class S3TrackingModel(S3Model):
             msg_list_empty = T("No Sent Shipments"))
 
         if not settings.get_req_use_req_number():
-            table.req_ref.readable = False
-            table.req_ref.writable = False
+            table.req_ref.readable = table.req_ref.writable = False
 
         # Reusable Field
         send_id = S3ReusableField("send_id", table, sortby="date",
@@ -1332,33 +1342,32 @@ class S3TrackingModel(S3Model):
                         name="recv_search_text_simple",
                         label=T("Search"),
                         comment=recv_search_comment,
-                        field=[
-                                "sender_id$first_name",
-                                "sender_id$middle_name",
-                                "sender_id$last_name",
-                                "comments",
-                                "from_site_id$name",
-                                "recipient_id$first_name",
-                                "recipient_id$middle_name",
-                                "recipient_id$last_name",
-                                "site_id$name",
-                                "recv_ref",
-                                "send_ref",
-                                "purchase_ref",
-                              ]
+                        field=["sender_id$first_name",
+                               "sender_id$middle_name",
+                               "sender_id$last_name",
+                               "comments",
+                               "from_site_id$name",
+                               "recipient_id$first_name",
+                               "recipient_id$middle_name",
+                               "recipient_id$last_name",
+                               "site_id$name",
+                               "recv_ref",
+                               "send_ref",
+                               "purchase_ref",
+                               ]
                       )),
             advanced=(S3SearchSimpleWidget(
                         name="recv_search_text_advanced",
                         label=T("Search"),
                         comment=recv_search_comment,
-                        field=[ "from_person",
-                                "comments",
-                                "from_site_id$name",
-                                "recipient_id$first_name",
-                                "recipient_id$middle_name",
-                                "recipient_id$last_name",
-                                "site_id$name"
-                                ]
+                        field=["from_person",
+                               "comments",
+                               "from_site_id$name",
+                               "recipient_id$first_name",
+                               "recipient_id$middle_name",
+                               "recipient_id$last_name",
+                               "site_id$name"
+                               ]
                       ),
                       S3SearchMinMaxWidget(
                         name="recv_search_date",
@@ -1555,6 +1564,12 @@ S3OptionsFilter({
 })'''),
                              item_id(ondelete = "RESTRICT"),
                              item_pack_id(ondelete = "SET NULL"),
+                             # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition) 
+                             #Field("req_quantity", "double",
+                             #      # This isn't the Quantity requested, but rather the quantity still needed
+                             #      label = T("Quantity Needed"),
+                             #      readable = False,
+                             #      writable = False),
                              Field("quantity", "double", notnull=True,
                                    label = T("Quantity Sent"),
                                    requires = IS_NOT_EMPTY()),
@@ -1634,6 +1649,7 @@ S3OptionsFilter({
 
         # pack_quantity virtual field
         table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        # total_value virtual field
         table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
@@ -1778,16 +1794,16 @@ S3OptionsFilter({
         if type:
             # Add all inv_items with status matching the send shipment type
             # eg. Items for Dump, Sale, Reject, Surplus
+            inv_track_item_onaccept = current.s3db.inv_track_item_onaccept
             site_id = vars.site_id
             itable = db.inv_inv_item
             tracktable = db.inv_track_item
             query = (itable.site_id == site_id) & \
                     (itable.status == int(type))
             rows = db(query).select()
-
             for row in rows:
                 if row.quantity != 0:
-                    #Insert inv_item to inv_track_item
+                    # Insert inv_item to inv_track_item
                     inv_track_id = tracktable.insert(send_id = id,
                                                      send_inv_item_id = row.id,
                                                      item_id = row.item_id,
@@ -1809,7 +1825,7 @@ S3OptionsFilter({
                     vars.item_pack_id = row.item_pack_id
                     vars.send_inv_item_id = row.id
                     # Call inv_track_item_onaccept to remove inv_item from stock
-                    current.s3db.inv_track_item_onaccept(Storage(vars=vars))
+                    inv_track_item_onaccept(Storage(vars=vars))
 
         stable = db.inv_send
         # If the send_ref is None then set it up
@@ -1885,6 +1901,7 @@ S3OptionsFilter({
                 tracktable.send_inv_item_id.writable = True
                 tracktable.item_pack_id.writable = True
                 tracktable.quantity.writable = True
+                #tracktable.req_quantity.readable = True
                 tracktable.comments.writable = True
                 # hide some fields
                 tracktable.currency.readable = False
@@ -1924,6 +1941,7 @@ S3OptionsFilter({
                                    )
 
             if r.component:
+                record = r.record
                 values = current.deployment_settings.get_inv_track_pack_values()
                 if status in (SHIP_STATUS_RECEIVED, SHIP_STATUS_CANCEL):
                     list_fields = ["id",
@@ -1971,6 +1989,9 @@ S3OptionsFilter({
                     if values:
                         list_fields.insert(6, "pack_value")
                         list_fields.insert(6, "currency")
+                    if record.req_ref and r.interactive:
+                        tracktable.virtualfields.append(InvQuantityNeededVirtualField())
+                        list_fields.insert(4, (T("Quantity Needed"), "quantity_needed"))
                 s3db.configure("inv_track_item",
                                list_fields=list_fields,
                                )
@@ -1982,7 +2003,7 @@ S3OptionsFilter({
                         return False
                     if method == "delete":
                         return s3.inv_track_item_deleting(r.component_id)
-                if r.record.get("site_id"):
+                if record.get("site_id"):
                     # Restrict to items from this facility only
                     tracktable.send_inv_item_id.requires = IS_ONE_OF(db,
                                                                      "inv_inv_item.id",
@@ -1990,7 +2011,7 @@ S3OptionsFilter({
                                                                      orderby="inv_inv_item.id",
                                                                      sort=True,
                                                                      filterby = "site_id",
-                                                                     filter_opts = [r.record.site_id]
+                                                                     filter_opts = [record.site_id]
                                                                      )
                 # Hide the values that will be copied from the inv_inv_item record
                 if r.component_id:
@@ -2016,7 +2037,7 @@ S3OptionsFilter({
                     set_track_attr(TRACK_STATUS_PREPARING)
                 if r.interactive:
                     crud_strings = s3.crud_strings.inv_send
-                    if r.record.status == SHIP_STATUS_IN_PROCESS:
+                    if record.status == SHIP_STATUS_IN_PROCESS:
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Process Shipment to Send")
                     elif "site_id" in request.vars and status == SHIP_STATUS_SENT:
@@ -2027,12 +2048,12 @@ S3OptionsFilter({
                     # Set the items to being received
                     db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
                     db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
-                    req_ref = r.record.req_ref
+                    req_ref = record.req_ref
                     if req_ref:
                         # Update the Request Status
                         rtable = s3db.req_req
                         req_id = db(rtable.req_ref == req_ref).select(rtable.id,
-                                                                               limitby=(0, 1)).first()
+                                                                      limitby=(0, 1)).first()
                         # Get the full list of items in the request
                         ritable = s3db.req_req_item
                         query = (ritable.req_id == req_id) & \
@@ -4055,11 +4076,10 @@ class InvItemVirtualFields:
             v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
             # Need real numbers to use for Report calculations
             #return IS_FLOAT_AMOUNT.represent(v, precision=2)
+            return v
         except (AttributeError,TypeError):
             # not available
             return current.messages["NONE"]
-        else:
-            return v
 
     # -------------------------------------------------------------------------
     #def item_code(self):
@@ -4103,5 +4123,46 @@ class InvTrackItemVirtualFields:
     #    except AttributeError:
     #        # not available
     #        return current.messages["NONE"]
+
+# =============================================================================
+class InvQuantityNeededVirtualField():
+    """
+        Calculate the Quantity still Needed for a Track Item
+        - used in Inv Send when an Item has come from a Request
+
+        NB This is a virtual field rather than a real field populated onaccept to make it more realtime and less of a race condition
+        There isn't a scalability issue here as it's only used for interactive UI of a single send record at a time, which doesn't generally have more than 10 rows
+    """
+
+    extra_fields = ["req_item_id",
+                    ]
+
+    # -------------------------------------------------------------------------
+    def quantity_needed(self):
+        try:
+            req_item_id = self.inv_track_item.req_item_id
+        except:
+            # not available
+            return current.messages["NONE"]
+
+        if not req_item_id:
+            return current.messages["NONE"]
+
+        s3db = current.s3db
+        ritable = s3db.req_req_item
+        siptable = s3db.supply_item_pack
+        query = (ritable.id == req_item_id) & \
+                (ritable.item_pack_id == siptable.id)
+        r = db(query).select(ritable.quantity,
+                             ritable.quantity_transit,
+                             ritable.quantity_fulfil,
+                             siptable.quantity,
+                             ).first()
+        rim = r.req_req_item
+        quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+        quantity_needed = (rim.quantity - quantity_shipped) * \
+                            r.supply_item_pack.quantity
+
+        return quantity_needed
 
 # END =========================================================================

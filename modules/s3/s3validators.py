@@ -1763,9 +1763,9 @@ class IS_UTC_DATETIME(Validator):
                  maximum=None):
 
         if format is None:
-            self.format = current.deployment_settings.get_L10n_datetime_format()
+            self.format = format = str(current.deployment_settings.get_L10n_datetime_format())
         else:
-            self.format = format
+            self.format = format = str(format)
 
         self.utc_offset = utc_offset
 
@@ -1777,16 +1777,24 @@ class IS_UTC_DATETIME(Validator):
 
         if error_message is None:
             if minimum is None and maximum is None:
-                error_message = "enter date and time"
+                error_message = current.T("enter date and time")
             elif minimum is None:
-                error_message = "enter date and time on or before %(max)s"
+                error_message = current.T("enter date and time on or before %(max)s")
             elif maximum is None:
-                error_message = "enter date and time on or after %(min)s"
+                error_message = current.T("enter date and time on or after %(min)s")
             else:
-                error_message = "enter date and time in range %(min)s %(max)s"
+                error_message = current.T("enter date and time in range %(min)s %(max)s")
 
-        self.error_message = error_message % dict(min = min_local,
-                                                  max = max_local)
+        if min_local:
+            min = min_local.strftime(format)
+        else:
+            min = ""
+        if max_local:
+            max = max_local.strftime(format)
+        else:
+            max = ""
+        self.error_message = error_message % dict(min = min,
+                                                  max = max)
 
     # -------------------------------------------------------------------------
     def delta(self, utc_offset=None):
@@ -1827,12 +1835,12 @@ class IS_UTC_DATETIME(Validator):
         # Convert into datetime object
         try:
             (y, m, d, hh, mm, ss, t0, t1, t2) = \
-                time.strptime(dtstr, str(self.format))
+                time.strptime(dtstr, self.format)
             dt = datetime(y, m, d, hh, mm, ss)
         except:
             try:
                 (y, m, d, hh, mm, ss, t0, t1, t2) = \
-                    time.strptime(dtstr+":00", str(self.format))
+                    time.strptime(dtstr + ":00", self.format)
                 dt = datetime(y, m, d, hh, mm, ss)
             except:
                 return(value, self.error_message)
@@ -1855,10 +1863,10 @@ class IS_UTC_DATETIME(Validator):
             return "-"
         elif offset:
             dt = value + timedelta(seconds=offset)
-            return dt.strftime(str(format))
+            return dt.strftime(format)
         else:
             dt = value
-            return dt.strftime(str(format)) + "+0000"
+            return dt.strftime(format) + "+0000"
 
 # =============================================================================
 class IS_ACL(IS_IN_SET):
