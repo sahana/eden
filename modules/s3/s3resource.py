@@ -72,6 +72,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3fields import S3Represent
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable, S3MarkupStripper
 from s3validators import IS_ONE_OF
 
@@ -2985,7 +2986,7 @@ class S3Resource(object):
         return None
 
     # -------------------------------------------------------------------------
-    def extract(self, rows, fields, represent=False):
+    def extract(self, rows, fields, represent=False, show_links=True):
         """
             Extract the fields corresponding to fields from the given
             rows and return them as a list of Storages, with ambiguous
@@ -3028,46 +3029,69 @@ class S3Resource(object):
             else:
                 raise SyntaxError("Invalid field: %s" % str(f))
 
-        ids = []
-        duplicates = []
         records = []
-        for row in rows:
-            _id = row[pkey]
-            if _id in ids:
-                idx = ids.index(_id)
-                data = records[idx]
-                for rfield in rfields:
-                    if rfield.tname != self.tablename and rfield.distinct:
-                        key = rfield.colname
-                        try:
-                            value = rfield.extract(row, represent=represent)
-                        except KeyError:
-                            if represent:
-                                value = ""
-                            else:
-                                value = None
-                        if represent:
-                            data[key] = ", ".join([s3_unicode(data[key]),
-                                                   s3_unicode(value)])
-                        else:
-                            if _id in duplicates:
-                                data[key].append(value)
-                            else:
-                                data[key] = [data[key], value]
-                duplicates.append(_id)
-            else:
-                data = Storage()
-                for rfield in rfields:
-                    try:
-                        value = rfield.extract(row, represent=represent)
-                    except KeyError:
-                        if represent:
-                            value = ""
-                        else:
-                            value = None
-                    data[rfield.colname] = value
-                ids.append(_id)
-                records.append(data)
+        record_ids = []
+        for rfield in rfields:
+
+            renderer = rfield.represent
+            lazy = renderer is not None and hasattr(renderer, "bulk")
+
+            if show_links is False and hasattr(renderer, "linkto"):
+                linkto = renderer.linkto
+                renderer.linkto = None
+
+            key = rfield.colname
+            joined = rfield.tname != self.tablename
+
+            duplicates = []
+            for row in rows:
+
+                record_id = row[pkey]
+
+                if record_id in record_ids:
+                    record = records[record_ids.index(record_id)]
+                else:
+                    record = Storage()
+                    records.append(record)
+                    record_ids.append(record_id)
+                try:
+                    value = rfield.extract(row,
+                                           represent=represent,
+                                           lazy=lazy)
+                except KeyError:
+                    value = "" if represent else None
+                if lazy:
+                    lazy_value = value.value
+
+                if key not in record:
+                    record[key] = value
+                    continue
+                else:
+                    this = record[key]
+                if record_id in duplicates:
+                    if lazy:
+                        this.value.append(lazy_value)
+                    else:
+                        this.append(value)
+                elif joined:
+                    if lazy:
+                        this.value = [this.value, lazy_value]
+                        this.multiple = True
+                    else:
+                        record[key] = [this, value]
+                    duplicates.append(record_id)
+
+            if represent:
+                this = record[key]
+                if lazy:
+                    for record in records:
+                        record[key] = this.render()
+                elif joined and type(this) is list:
+                    record[key] = ", ".join(this)
+
+            if show_links is False and hasattr(renderer, "linkto"):
+                renderer.linkto = linkto
+
         return records
 
     # -------------------------------------------------------------------------
@@ -4215,19 +4239,20 @@ class S3ResourceField(object):
             return field
 
     # -------------------------------------------------------------------------
-    def extract(self, row, represent=False):
+    def extract(self, row, represent=False, lazy=False):
         """
             Extract the value for this field from a row
 
             @param row: the Row
+            @param represent: render a text representation for the value
+            @param lazy: return a lazy representation handle if available
         """
 
         field = self.field
         tname = self.tname
         fname = self.fname
         colname = self.colname
-
-        error = "Field not found in row: %s" % colname
+        error = "Field not found in Row: %s" % colname
 
         if type(row) is Row:
             try:
@@ -4239,7 +4264,7 @@ class S3ResourceField(object):
                 try:
                     value = row[colname]
                 except (KeyError, AttributeError):
-                    raise KeyError("Field not found: %s" % colname)
+                    raise KeyError(error)
         elif fname in row:
             value = row[fname]
         elif colname in row:
@@ -4261,12 +4286,79 @@ class S3ResourceField(object):
                 value = None
 
         if represent:
-            if self.represent is not None:
-                return self.represent(value)
+            renderer = self.represent
+            if callable(renderer):
+                if lazy and hasattr(renderer, "bulk"):
+                    return S3RepresentLazy(value, renderer)
+                else:
+                    return renderer(value)
             else:
                 return s3_unicode(value)
         else:
             return value
+
+# =============================================================================
+class S3RepresentLazy(object):
+    """
+        Lazy Representation of a field value, utilizes the bulk-feature
+        of S3Represent-style representation methods
+    """
+
+    def __init__(self, value, renderer):
+        """
+            Constructor
+
+            @param value: the value
+            @param renderer: the renderer (S3Represent instance)
+        """
+
+        self.value = value
+        self.renderer = renderer
+
+        self.multiple = False
+        renderer.lazy.append(value)
+
+    def __repr__(self):
+        """ Represent as string """
+
+        value = self.value
+        renderer = self.renderer
+        if renderer.lazy:
+            labels = renderer.bulk(renderer.lazy)
+            renderer.lazy = []
+        else:
+            labels = renderer.theset
+        if renderer.list_type:
+            if self.multiple:
+                return renderer.multiple(value, show_link=False)
+            else:
+                return renderer.render_list(value, labels, show_link=False)
+        else:
+            if self.multiple:
+                return renderer.multiple(value, show_link=False)
+            else:
+                return renderer(value, show_link=False)
+                
+    def render(self):
+        """ Render as HTML """
+
+        value = self.value
+        renderer = self.renderer
+        if renderer.lazy:
+            labels = renderer.bulk(renderer.lazy)
+            renderer.lazy = []
+        else:
+            labels = renderer.theset
+        if renderer.list_type:
+            if self.multiple:
+                return renderer.multiple(value)
+            else:
+                return renderer.render_list(value, labels)
+        else:
+            if self.multiple:
+                return renderer.multiple(value)
+            else:
+                return renderer(value)
 
 # =============================================================================
 class S3ResourceQuery(object):
@@ -6568,7 +6660,6 @@ class S3RecordMerger(object):
         try:
             current.db(table._id==row[table._id]).update(**data)
         except Exception, e:
-            print e
             self.raise_error("Could not update %s.%s" %
                             (table._tablename, id))
         else:
