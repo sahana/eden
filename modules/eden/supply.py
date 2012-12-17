@@ -78,7 +78,6 @@ class S3SupplyModel(S3Model):
              "supply_item_represent",
              "supply_item_category_represent",
              "supply_item_add",
-             "supply_item_duplicate_fields",
              "supply_item_pack_virtualfields",
             ]
 
@@ -296,9 +295,10 @@ S3OptionsFilter({
             if not (form.vars.code or form.vars.name):
                 form.errors.code = form.errors.name = T("An Item Category must have a Code OR a Name.")
 
-        self.configure(tablename,
-                       onvalidation = supply_item_category_onvalidate,
-                       )
+        configure(tablename,
+                  onvalidation = supply_item_category_onvalidate,
+                  deduplicate = self.supply_item_category_duplicate,
+                  )
 
         # =====================================================================
         # Item
@@ -367,8 +367,7 @@ S3OptionsFilter({
                                    ),
                              # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              s3_comments(),
-                             *s3_meta_fields()
-                            )
+                             *s3_meta_fields())
 
         # Categories in Progress
         #table.item_category_id_0.label = T("Category")
@@ -462,6 +461,7 @@ S3OptionsFilter({
         item_search = S3Search(advanced=report_options.get("search"))
 
         configure(tablename,
+                  deduplicate = self.supply_item_duplicate,
                   onaccept = self.supply_item_onaccept,
                   orderby = table.name,
                   search_method = item_search,
@@ -589,20 +589,9 @@ S3OptionsFilter({
         )
 
         configure(tablename,
-                  search_method = catalog_item_search,)
-
-        # ---------------------------------------------------------------------
-        # Calculate once, instead of for each record
-        item_duplicate_fields = {}
-        for tablename in ["supply_item", "supply_catalog_item"]:
-            table = self[tablename]
-            item_duplicate_fields[tablename] = [field.name for field in table
-                                                if field.writable and
-                                                field.name != "id"]
-
-        configure("supply_item", deduplicate=self.item_duplicate)
-        configure("supply_catalog_item", deduplicate=self.item_duplicate)
-        configure("supply_item_category", deduplicate=self.item_duplicate)
+                  deduplicate = self.supply_catalog_item_duplicate,
+                  search_method = catalog_item_search,
+                  )
 
         # =====================================================================
         # Item Pack
@@ -679,17 +668,8 @@ S3OptionsFilter({
 })''',
                     ondelete = "RESTRICT")
 
-        #def record_pack_quantity(r):
-        #    item_pack_id = r.get("item_pack_id", None)
-        #    if item_pack_id:
-        #        return s3_get_db_field_value(tablename = "supply_item_pack",
-        #                                     fieldname = "quantity",
-        #                                     look_up_value = item_pack_id)
-        #    else:
-        #        return None
-
         configure(tablename,
-                  deduplicate=self.item_pack_duplicate)
+                  deduplicate = self.supply_item_pack_duplicate)
 
         # Inventory items as component of Packs
         add_component("inv_inv_item", supply_item_pack="item_pack_id")
@@ -881,7 +861,6 @@ S3OptionsFilter({
                 supply_item_represent = self.supply_item_represent,
                 supply_item_category_represent = self.item_category_represent,
                 supply_item_pack_virtualfields = SupplyItemPackVirtualFields,
-                supply_item_duplicate_fields = item_duplicate_fields,
                 supply_item_add = self.supply_item_add,
                 supply_item_pack_represent = self.item_pack_represent,
                 )
@@ -910,14 +889,14 @@ S3OptionsFilter({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def supply_item_add (quantity_1, pack_quantity_1,
-                         quantity_2, pack_quantity_2):
+    def supply_item_add(quantity_1, pack_quantity_1,
+                        quantity_2, pack_quantity_2):
         """
             Adds item quantities together, accounting for different pack
             quantities.
             Returned quantity according to pack_quantity_1
 
-            Used by controllers/inv.py
+            Used by controllers/inv.py & modules/eden/inv.py
         """
 
         if pack_quantity_1 == pack_quantity_2:
@@ -1108,44 +1087,138 @@ S3OptionsFilter({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def item_duplicate(job):
+    def supply_item_duplicate(item):
         """
             Callback function used to look for duplicates during
             the import process
+
+            @param item: the S3ImportItem to check
         """
 
-        tablename = job.tablename
+        if item.tablename == "supply_item":
+            db = current.db
+            data = item.data
+            table = item.table
+            query = (table.deleted != True)
+            code = data.get("code", None)
+            if code:
+                # Same Code => definitely duplicate
+                query = query & (table.code.lower() == code.lower())
+                row = db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+                if row:
+                    item.id = row.id
+                    item.method = item.METHOD.UPDATE
+                    return
 
-        if tablename == "supply_item":
-            job.data.update(item_um_from_name(job.data.name,
-                                              job.data.um)
-                            )
+            name = data.get("name", None)
+            um = data.get("um", None)
+            if not um:
+                # Try to extract UM from Name
+                name, um = item_um_from_name(name)
+            if name:
+                query = query & (table.name.lower() == name.lower())
+            if um:
+                query = query & (table.um.lower() == um.lower())
+            catalog_id = data.get("catalog_id", None)
+            if catalog_id:
+                query = query & (table.catalog_id == catalog_id)
 
-        if tablename in ["supply_item", "supply_catalog_item"]:
-            resource_duplicate(tablename, job,
-                               current.s3db.supply_item_duplicate_fields[tablename])
-
-        elif tablename == "supply_item_category":
-            resource_duplicate("supply_item_category", job,
-                               fields = ["catalog_id",
-                                         "parent_item_category_id",
-                                         "code",
-                                         "name"])
+            row = db(query).select(table.id,
+                                   limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def item_pack_duplicate(job):
+    def supply_item_category_duplicate(item):
         """
             Callback function used to look for duplicates during
             the import process
+
+            @param item: the S3ImportItem to check
         """
 
-        # An Item Pack is a duplicate if both the Name & Item are identical
-        resource_duplicate(job.tablename, job,
-                           fields = ["name",
-                                     "item_id",
-                                     "quantity",
-                                    ])
+        if item.tablename == "supply_item_category":
+            data = item.data
+            table = item.table
+            query = (table.deleted != True)
+            name = data.get("name", None)
+            if name:
+                query = query & (table.name.lower() == name.lower())
+            code = data.get("code", None)
+            if code:
+                query = query & (table.code.lower() == code.lower())
+            catalog_id = data.get("catalog_id", None)
+            if catalog_id:
+                query = query & (table.catalog_id == catalog_id)
+            parent_category_id = data.get("parent_category_id", None)
+            if parent_category_id:
+                query = query & (table.parent_category_id == parent_category_id)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def supply_catalog_item_duplicate(item):
+        """
+            Callback function used to look for duplicates during
+            the import process
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "supply_catalog_item":
+            data = item.data
+            table = item.table
+            query = (table.deleted != True)
+            item_id = data.get("item_id", None)
+            if item_id:
+                query = query & (table.item_id == item_id)
+            catalog_id = data.get("catalog_id", None)
+            if catalog_id:
+                query = query & (table.catalog_id == catalog_id)
+            item_category_id = data.get("item_category_id", None)
+            if item_category_id:
+                query = query & (table.item_category_id == item_category_id)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def supply_item_pack_duplicate(item):
+        """
+            Callback function used to look for duplicates during
+            the import process
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "supply_item_pack":
+            data = item.data
+            table = item.table
+            query = (table.deleted != True)
+            name = data.get("name", None)
+            if name:
+                query = query & (table.name.lower() == name.lower())
+            item_id = data.get("item_id", None)
+            if item_id:
+                query = query & (table.item_id == item_id)
+            quantity = data.get("quantity", None)
+            if quantity:
+                query = query & (table.quantity == quantity)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1205,94 +1278,23 @@ S3OptionsFilter({
             current.s3db.configure("supply_item",
                                    create_next=url,
                                    update_next=url,
-                                  )
+                                   )
 
 # =============================================================================
-def item_um_from_name(name, um):
+def item_um_from_name(name):
     """
         Retrieve the Unit of Measure from a name
     """
-    if not um:
-        for um_pattern in um_patterns:
-            m = re.search(um_pattern,name)
-            if m:
-                um = m.group(1).strip()
-                # Rename um from name
-                name = re.sub(um_pattern, "", name)
-                # Remove trailing , & wh sp
-                name = re.sub("(,)$", "", name).strip()
-                return dict(name = name,
-                            um = um)
-    return {}
 
-# =============================================================================
-def resource_duplicate(tablename, job, fields=None):
-    """
-      This callback will be called when importing supply items it will look
-      to see if the record being imported is a duplicate.
-
-      @param tablename: The name of the table being imported into
-
-      @param job: An S3ImportJob object which includes all the details
-                  of the record being imported
-
-      @param fields: The fields which to check for duplicates with.
-                     If not passed, can be calculated - but inefficient
-
-      If the record is a duplicate then it will set the job method to update
-
-      Rules for finding a duplicate:
-       - Look for a record with the same name, ignoring case
-       - the same UM
-       - and the same comments, if there are any
-    """
-
-    if job.tablename == tablename:
-        table = job.table
-        data = job.data
-        query = None
-        db = current.db
-        if not fields:
-            fields = [field.name for field in db[tablename]
-                      if field.writable and field.name != "id"]
-        for field in fields:
-            value = field in data and data[field] or None
-            # Hack to get prepop working for Sahana Camp LA
-            if value:
-                try:
-                    field_query = (table[field].lower() == value.lower())
-                except:
-                    field_query = (table[field] == value)
-
-                # Hack for identifying Item duplicates basd on code
-                if tablename == "supply_item" and field == "code":
-                    _duplicate = db(field_query).select(table.id,
-                                          limitby=(0, 1)).first()
-                    if _duplicate:
-                        job.id = _duplicate.id
-                        job.method = job.METHOD.UPDATE
-                        return
-
-            # if not value:
-                # # Workaround
-                # if tablename == "supply_item_category" and field == "name":
-                    # continue
-                # field_query = (table[field] == None)
-            # else:
-                # try:
-                    # field_query = (table[field].lower() == value.lower())
-                # except:
-                    # field_query = (table[field] == value)
-                if not query:
-                    query = field_query
-                else:
-                    query = query & field_query
-        if query:
-            _duplicate = db(query).select(table.id,
-                                          limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+    for um_pattern in um_patterns:
+        m = re.search(um_pattern, name)
+        if m:
+            um = m.group(1).strip()
+            # Rename name from um
+            name = re.sub(um_pattern, "", name)
+            # Remove trailing , & wh sp
+            name = re.sub("(,)$", "", name).strip()
+            return (name, um)
 
 # =============================================================================
 def supply_item_rheader(r):

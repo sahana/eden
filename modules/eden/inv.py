@@ -54,21 +54,20 @@ SHIP_STATUS_CANCEL     = 3
 SHIP_STATUS_RETURNING  = 4
 
 # To pass to global scope
-inv_ship_status = {
-                    "IN_PROCESS" : SHIP_STATUS_IN_PROCESS,
-                    "RECEIVED"   : SHIP_STATUS_RECEIVED,
-                    "SENT"       : SHIP_STATUS_SENT,
-                    "CANCEL"     : SHIP_STATUS_CANCEL,
-                    "RETURNING"  : SHIP_STATUS_RETURNING,
-                }
+inv_ship_status = {"IN_PROCESS" : SHIP_STATUS_IN_PROCESS,
+                   "RECEIVED"   : SHIP_STATUS_RECEIVED,
+                   "SENT"       : SHIP_STATUS_SENT,
+                   "CANCEL"     : SHIP_STATUS_CANCEL,
+                   "RETURNING"  : SHIP_STATUS_RETURNING,
+                   }
 
 T = current.T
-shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
-                    SHIP_STATUS_RECEIVED:   T("Received"),
-                    SHIP_STATUS_SENT:       T("Sent"),
-                    SHIP_STATUS_CANCEL:     T("Canceled"),
-                    SHIP_STATUS_RETURNING:  T("Returning"),
-                  }
+shipment_status = {SHIP_STATUS_IN_PROCESS: T("In Process"),
+                   SHIP_STATUS_RECEIVED:   T("Received"),
+                   SHIP_STATUS_SENT:       T("Sent"),
+                   SHIP_STATUS_CANCEL:     T("Canceled"),
+                   SHIP_STATUS_RETURNING:  T("Returning"),
+                   }
 
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
@@ -81,15 +80,14 @@ TRACK_STATUS_ARRIVED    = 4
 TRACK_STATUS_CANCELED   = 5
 TRACK_STATUS_RETURNING  = 6
 
-inv_tracking_status = {
-                        "UNKNOWN"    : TRACK_STATUS_UNKNOWN,
-                        "IN_PROCESS" : TRACK_STATUS_PREPARING,
-                        "SENT"       : TRACK_STATUS_TRANSIT,
-                        "UNLOADING"  : TRACK_STATUS_UNLOADING,
-                        "RECEIVED"   : TRACK_STATUS_ARRIVED,
-                        "CANCEL"     : TRACK_STATUS_CANCELED,
-                        "RETURNING"  : TRACK_STATUS_RETURNING,
-                      }
+inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
+                       "IN_PROCESS" : TRACK_STATUS_PREPARING,
+                       "SENT"       : TRACK_STATUS_TRANSIT,
+                       "UNLOADING"  : TRACK_STATUS_UNLOADING,
+                       "RECEIVED"   : TRACK_STATUS_ARRIVED,
+                       "CANCEL"     : TRACK_STATUS_CANCELED,
+                       "RETURNING"  : TRACK_STATUS_RETURNING,
+                       }
 
 tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
                    TRACK_STATUS_PREPARING : T("In Process"),
@@ -432,10 +430,10 @@ class S3InventoryModel(S3Model):
         WAREHOUSE = settings.get_inv_facility_label()
         track_pack_values = settings.get_inv_track_pack_values()
 
-        inv_source_type = { 0: None,
-                            1: T("Donated"),
-                            2: T("Procured"),
-                          }
+        inv_source_type = {0: None,
+                           1: T("Donated"),
+                           2: T("Procured"),
+                           }
         # =====================================================================
         # Inventory Item
         #
@@ -470,7 +468,8 @@ class S3InventoryModel(S3Model):
                                         label = T("Quantity"),
                                         represent=lambda v: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                        requires = IS_FLOAT_IN_RANGE(0, None),
+                                        requires = [IS_FLOAT_IN_RANGE(0, None),
+                                                    IS_NOT_EMPTY()],
                                         writable = False),
                                   Field("bin", "string", length=16,
                                         represent = lambda v: v or NONE,
@@ -498,9 +497,6 @@ class S3InventoryModel(S3Model):
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
                                   s3_currency(readable=track_pack_values,
                                               writable=track_pack_values),
-                                  #Field("pack_quantity",
-                                  #      "double",
-                                  #      compute = record_pack_quantity), # defined in 06_supply
                                   Field("item_source_no", "string", length=16,
                                         represent=lambda v: v or NONE,
                                         label = itn_label,
@@ -515,7 +511,9 @@ class S3InventoryModel(S3Model):
                                                   ondelete = "SET NULL"),
                                   Field("source_type", "integer",
                                         label = T("Type"),
-                                        requires = IS_NULL_OR(IS_IN_SET(inv_source_type)),
+                                        requires = IS_NULL_OR(
+                                                    IS_IN_SET(inv_source_type)
+                                                    ),
                                         represent = lambda opt: \
                                             inv_source_type.get(opt, UNKNOWN_OPT),
                                         default = 0,
