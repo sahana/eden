@@ -1,23 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Oscar Carballal <oscar.carballal@cidadania.coop>, 2012.
 # Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-17 13:02+0100\n"
-"PO-Revision-Date: 2012-12-17 11:30+0000\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2012-12-17 13:03+0100\n"
+"PO-Revision-Date: 2012-12-17 12:09+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.com/projects/p/"
-"ecidadania/language/es_ES/)\n"
-"Language: es_ES\n"
+"Language-Team: Spanish (Spain) (http://www.transifex.com/projects/p/ecidadania/language/es_ES/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: es_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: templates/404.html:9
@@ -40,9 +39,7 @@ msgstr "¡Se supone que esto no debería pasar! ¿Qué has hecho?"
 msgid ""
 "We will send the spaguetti squad to repair this. Meanwhile you can go back "
 "to the index."
-msgstr ""
-"Enviaremos al escuadrón espaguetti para reparar esto. Mientras tanto puedes "
-"volver a la página principal."
+msgstr "Enviaremos al escuadrón espaguetti para reparar esto. Mientras tanto puedes volver a la página principal."
 
 #: templates/invite.html:9 templates/invite_done.html:4
 msgid "Invite your friends to e-cidadania"
@@ -65,25 +62,19 @@ msgid ""
 "If you want to invite more than one person, you will have to write their "
 "adresses separated by commas. Example: this@that.com, foo@bar.net, "
 "black@white.org"
-msgstr ""
-"Si quieres invitar a más de una persona, tienes que escribir sus direcciones "
-"separadas por comas. Ejemplo: this@that.com, foo@bar.net, black@white.org"
+msgstr "Si quieres invitar a más de una persona, tienes que escribir sus direcciones separadas por comas. Ejemplo: this@that.com, foo@bar.net, black@white.org"
 
 #: templates/invite.html:24
 msgid ""
 "Hi!, I would like you to join e-cidadania, the participative democracy "
 "platform for citizens."
-msgstr ""
-"Hola, me gustaría que te unieses a e-cidadania, la plataforma de "
-"participación para la ciudadanía."
+msgstr "Hola, me gustaría que te unieses a e-cidadania, la plataforma de participación para la ciudadanía."
 
 #: templates/invite.html:25
 msgid ""
 "You can write here whatever text you want for your invitation, or leave it "
 "by default."
-msgstr ""
-"Puedes escribir aquí el texto que que quieras para tu invitación, o déjalo "
-"blanco."
+msgstr "Puedes escribir aquí el texto que que quieras para tu invitación, o déjalo blanco."
 
 #: templates/invite.html:26
 msgid "Submit"
@@ -91,11 +82,9 @@ msgstr "Enviar"
 
 #: templates/invite.html:31
 msgid ""
-"To send invitations via e-mail you have to be <a href='/accounts/"
-"login/'>logged in</a>."
-msgstr ""
-"Para enviar invitaciones por correo electrónico tienes que estar <a href='/"
-"accounts/login/'>logueado</a>."
+"To send invitations via e-mail you have to be <a "
+"href='/accounts/login/'>logged in</a>."
+msgstr "Para enviar invitaciones por correo electrónico tienes que estar <a href='/accounts/login/'>logueado</a>."
 
 #: templates/invite_done.html:11
 msgid "The email(s) have been sent"
@@ -159,11 +148,9 @@ msgstr "Quiero participar"
 
 #: templates/not_allowed.html:15 templates/space_intent.html:12
 msgid ""
-"You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your "
-"profile</a>"
-msgstr ""
-"Puedes volver <a href='/'>a la página principal</a> o <a href='/"
-"accounts/'>de vuelta a tu perfil</a>"
+"You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your"
+" profile</a>"
+msgstr "Puedes volver <a href='/'>a la página principal</a> o <a href='/accounts/'>de vuelta a tu perfil</a>"
 
 #: templates/site_index.html:5
 msgid "e-cidadania"
@@ -216,9 +203,7 @@ msgstr "Participar"
 #: templates/space_intent.html:11
 msgid ""
 "If the administrator approves your request, you will be notified by email"
-msgstr ""
-"Si el administrador aprueba tu petición, se te notificará por correo "
-"electrónico."
+msgstr "Si el administrador aprueba tu petición, se te notificará por correo electrónico."
 
 #: templates/comments/approve.html:4
 msgid "Approve a comment"
@@ -240,9 +225,7 @@ msgstr "Gracias por aprobar"
 #: templates/comments/flagged.html:7
 msgid ""
 "Thanks for taking the time to improve the quality of discussion on our site"
-msgstr ""
-"Gracias por tomarte tu tiempo para mejorar la calidad de las discusiones de "
-"esta web"
+msgstr "Gracias por tomarte tu tiempo para mejorar la calidad de las discusiones de esta web"
 
 #: templates/comments/delete.html:4
 msgid "Remove a comment"
@@ -352,35 +335,17 @@ msgstr "Alguien te ha enviado una invitación para e-cidadania!"
 #, python-format
 msgid ""
 "\n"
-"                                        <a href=\"http://ecidadania.org\">e-"
-"cidadania</a> is an e-democracy platform for citizen participation. More "
-"clearly, it's for direct democracy in every one if its shapes,\n"
-"                                        from 99%% movement, 15M to official "
-"participative budgets. The message that was sent to you follows:\n"
+"                                        <a href=\"http://ecidadania.org\">e-cidadania</a> is an e-democracy platform for citizen participation. More clearly, it's for direct democracy in every one if its shapes,\n"
+"                                        from 99%% movement, 15M to official participative budgets. The message that was sent to you follows:\n"
 "                                        "
-msgstr ""
-"\n"
-"<a href=\"http://ecidadania.org\">e-cidadania</a> es una plataforma de e-"
-"democracia para la participación ciudadana. Siendo más claros, sirve para la "
-"democracia directa en cada una de sus facetas, por ejemplo el movimiento "
-"99%%, 15M hasta procesos oficiales de presupuestos participativos. El "
-"mensaje que te han enviado a continuación:"
+msgstr "\n<a href=\"http://ecidadania.org\">e-cidadania</a> es una plataforma de e-democracia para la participación ciudadana. Siendo más claros, sirve para la democracia directa en cada una de sus facetas, por ejemplo el movimiento 99%%, 15M hasta procesos oficiales de presupuestos participativos. El mensaje que te han enviado a continuación:"
 
 #: templates/invite/invite_plain.txt:4
 #, python-format
 msgid ""
 "\n"
-"You have been invited to join e-cidadania, an e-democracy platform for "
-"citizen participation. More clearly, it's for direct democracy in every one "
-"of its shapes, from 99%% movement, 15M to official participative budgets. "
-"The message that was sent to you follows:\n"
-msgstr ""
-"\n"
-"Alguien te ha invitado a entrar en e-cidadania, la plataforma de e-"
-"democracia para la participación ciudadana. Siendo más claros, sirve para la "
-"democracia directa en cada una de sus facetas, por ejemplo el movimiento "
-"99%%, 15M hasta procesos oficiales de presupuestos participativos. El "
-"mensaje que te han enviado a continuación:\n"
+"You have been invited to join e-cidadania, an e-democracy platform for citizen participation. More clearly, it's for direct democracy in every one of its shapes, from 99%% movement, 15M to official participative budgets. The message that was sent to you follows:\n"
+msgstr "\nAlguien te ha invitado a entrar en e-cidadania, la plataforma de e-democracia para la participación ciudadana. Siendo más claros, sirve para la democracia directa en cada una de sus facetas, por ejemplo el movimiento 99%%, 15M hasta procesos oficiales de presupuestos participativos. El mensaje que te han enviado a continuación:\n"
 
 #: templates/invite/invite_plain.txt:9
 msgid "Join e-cidadania today in http://ecidadania.org"
@@ -390,33 +355,4 @@ msgstr "Únete a e-cidadania hoy en http://ecidadania.org"
 msgid ""
 "If you have any questions dont hesitate and send us a mail to "
 "support@ecidadania.org."
-msgstr ""
-"Si tienes alguna pregunta no dudes en enviarnos un correo a info@ecidadania."
-"org"
-
-#~ msgid "^accounts/"
-#~ msgstr "^cuentas/"
-
-#~ msgid "^spaces/"
-#~ msgstr "^espacios/"
-
-#~ msgid "^invite/"
-#~ msgstr "^invitar/"
-
-#~ msgid "^news/$"
-#~ msgstr "^noticias/$"
-
-#~ msgid "^news/add/$"
-#~ msgstr "^noticias/anadir/$"
-
-#~ msgid "^news/(?P<post_id>\\w+)/delete/$"
-#~ msgstr "^noticias/(?P<post_id>\\w+)/eliminar/$"
-
-#~ msgid "^news/(?P<post_id>\\w+)/edit/$"
-#~ msgstr "^noticias/(?P<post_id>\\w+)/editar/$"
-
-#~ msgid "^news/(?P<post_id>\\w+)/$"
-#~ msgstr "^noticias/(?P<post_id>\\w+)/$"
-
-#~ msgid "^comments/"
-#~ msgstr "^comentarios/"
+msgstr "Si tienes alguna pregunta no dudes en enviarnos un correo a info@ecidadania.org"

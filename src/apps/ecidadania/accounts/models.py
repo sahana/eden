@@ -57,7 +57,7 @@ class UserProfile(BaseProfile):
     surname = models.CharField(_('Surname'), max_length=200, blank=True)
     gender = models.CharField(_('Gender'), max_length=1, choices=GENDER,
                               blank=True)    
-    birthdate = models.DateField(_('Birth date'), blank=True)    
+    birthdate = models.DateField(_('Birth date'), blank=True, null=True)    
     country = models.ForeignKey(Country, null=True)
     region = ChainedForeignKey(
         Region,

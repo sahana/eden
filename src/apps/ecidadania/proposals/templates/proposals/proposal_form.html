@@ -25,6 +25,10 @@ automatically if found in the data models.
     <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
 {% endblock %}
 
+{% block extrajs %}
+    <script type="text/javascript" src="{{ STATIC_URL }}/ http://openlayers.org/api/OpenLayers.js"></script>
+{% endblock %}
+
 {% block space %}
     <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
 {% endblock %}
@@ -132,6 +136,19 @@ automatically if found in the data models.
                     {% endif %}
                 </div>
             </div>
+
+            <div style="width:500px; height:300px;" id="map"></div>
+
+            <script>
+                var map = new OpenLayers.Map('map');
+                var wms = new OpenLayers.Layer.WMS(
+                    "OpenLayers WMS",
+                    "http://vmap0.tiles.osgeo.org/wms/vmap0",
+                    {'layers':'basic'} );
+                    map.addLayer(wms);
+                    map.zoomToMaxExtent();
+            </script>
+
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
             <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />
