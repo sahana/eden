@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -75,18 +75,6 @@ msgstr ""
 
 #: models.py:48
 msgid "Views"
-msgstr ""
-
-#: urls.py:30
-msgid "^add/$"
-msgstr ""
-
-#: urls.py:32
-msgid "^(?P<post_id>\\d+)/delete/$"
-msgstr ""
-
-#: urls.py:35
-msgid "^(?P<post_id>\\d+)/edit/$"
 msgstr ""
 
 #: templates/news/news_list.html:4

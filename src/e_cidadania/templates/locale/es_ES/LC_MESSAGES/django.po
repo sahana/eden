@@ -3,58 +3,22 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Oscar Carballal <oscar.carballal@cidadania.coop>, 2012.
 # Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
-"PO-Revision-Date: 2012-02-29 08:57+0000\n"
-"Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
+"PO-Revision-Date: 2012-12-17 11:30+0000\n"
+"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
+"Language-Team: Spanish (Spain) (http://www.transifex.com/projects/p/"
 "ecidadania/language/es_ES/)\n"
 "Language: es_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-
-#: urls.py:60
-msgid "^accounts/"
-msgstr ""
-
-#: urls.py:63
-msgid "^spaces/"
-msgstr ""
-
-#: urls.py:66
-msgid "^invite/"
-msgstr ""
-
-#: urls.py:69
-msgid "^news/$"
-msgstr ""
-
-#: urls.py:71
-msgid "^news/add/$"
-msgstr ""
-
-#: urls.py:73
-msgid "^news/(?P<post_id>\\w+)/delete/$"
-msgstr ""
-
-#: urls.py:76
-msgid "^news/(?P<post_id>\\w+)/edit/$"
-msgstr ""
-
-#: urls.py:79
-msgid "^news/(?P<post_id>\\w+)/$"
-msgstr ""
-
-#: urls.py:88 urls.py:104
-#, fuzzy
-msgid "^comments/"
-msgstr "Comentarios"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: templates/404.html:9
 msgid "Nooo...!"
@@ -82,19 +46,19 @@ msgstr ""
 
 #: templates/invite.html:9 templates/invite_done.html:4
 msgid "Invite your friends to e-cidadania"
-msgstr ""
+msgstr "Invita a tus amigos a e-cidadania"
 
 #: templates/invite.html:15 templates/invite_done.html:10
 msgid "Invite your friends"
-msgstr ""
+msgstr "Invita a tus amigos"
 
 #: templates/invite.html:21
 msgid "Invite via E-mail"
-msgstr ""
+msgstr "Invitar por correo electrónico"
 
 #: templates/invite.html:22
 msgid "Write the e-mail adresses here"
-msgstr ""
+msgstr "Escribe la dirección de correo aquí"
 
 #: templates/invite.html:23
 msgid ""
@@ -102,36 +66,44 @@ msgid ""
 "adresses separated by commas. Example: this@that.com, foo@bar.net, "
 "black@white.org"
 msgstr ""
+"Si quieres invitar a más de una persona, tienes que escribir sus direcciones "
+"separadas por comas. Ejemplo: this@that.com, foo@bar.net, black@white.org"
 
 #: templates/invite.html:24
 msgid ""
 "Hi!, I would like you to join e-cidadania, the participative democracy "
 "platform for citizens."
 msgstr ""
+"Hola, me gustaría que te unieses a e-cidadania, la plataforma de "
+"participación para la ciudadanía."
 
 #: templates/invite.html:25
 msgid ""
 "You can write here whatever text you want for your invitation, or leave it "
 "by default."
 msgstr ""
+"Puedes escribir aquí el texto que que quieras para tu invitación, o déjalo "
+"blanco."
 
 #: templates/invite.html:26
 msgid "Submit"
-msgstr ""
+msgstr "Enviar"
 
 #: templates/invite.html:31
 msgid ""
 "To send invitations via e-mail you have to be <a href='/accounts/"
 "login/'>logged in</a>."
 msgstr ""
+"Para enviar invitaciones por correo electrónico tienes que estar <a href='/"
+"accounts/login/'>logueado</a>."
 
 #: templates/invite_done.html:11
 msgid "The email(s) have been sent"
-msgstr ""
+msgstr "El correo o correos han sido enviados"
 
 #: templates/invite_done.html:12
 msgid "Go to index"
-msgstr ""
+msgstr "Volver al índice"
 
 #: templates/menu.html:3
 msgid "Home"
@@ -150,9 +122,8 @@ msgid "Language"
 msgstr "Idioma"
 
 #: templates/menu.html:33
-#, fuzzy
 msgid "My profile"
-msgstr "Editar perfil"
+msgstr "Mi perfil"
 
 #: templates/menu.html:45
 msgid "Administration"
@@ -160,12 +131,11 @@ msgstr "Administración"
 
 #: templates/menu.html:46
 msgid "Add news"
-msgstr ""
+msgstr "Añadir noticias"
 
 #: templates/menu.html:50
-#, fuzzy
 msgid "Create new space"
-msgstr "No hay espacios."
+msgstr "Crear nuevo espacio"
 
 #: templates/menu.html:52
 msgid "Edit profile"
@@ -185,7 +155,7 @@ msgstr "No estás autorizado para acceder aquí."
 
 #: templates/not_allowed.html:13
 msgid "I want to participate"
-msgstr ""
+msgstr "Quiero participar"
 
 #: templates/not_allowed.html:15 templates/space_intent.html:12
 msgid ""
@@ -201,7 +171,7 @@ msgstr "e-cidadania"
 
 #: templates/site_index.html:30
 msgid "Latest participative processes"
-msgstr ""
+msgstr "Procesos participativos recientes"
 
 #: templates/site_index.html:37
 msgid "Public"
@@ -212,31 +182,28 @@ msgid "Private"
 msgstr "Privado"
 
 #: templates/site_index.html:43
-#, fuzzy
 msgid "There are no processes."
-msgstr "No hay espacios."
+msgstr "No existen procesos."
 
 #: templates/site_index.html:54
-#, fuzzy
 msgid "View all the processes"
-msgstr "Ver todos los espacios"
+msgstr "Ver todos los procesos"
 
 #: templates/site_index.html:67
-#, fuzzy
 msgid "Sign in"
-msgstr "Registrarse"
+msgstr "Entrar"
 
 #: templates/site_index.html:71
 msgid "Forgot your password?"
-msgstr ""
+msgstr "¿Has olvidado la contraseña?"
 
 #: templates/site_index.html:72
 msgid "Invite someone!"
-msgstr ""
+msgstr "¡Invita a alguien!"
 
 #: templates/site_index.html:79
 msgid "First time here? Register!"
-msgstr ""
+msgstr "¿Primera vez aqui? ¡Regístrate!"
 
 #: templates/site_index.html:85
 msgid "Register"
@@ -244,12 +211,14 @@ msgstr "Registrarse"
 
 #: templates/space_intent.html:4
 msgid "Participate"
-msgstr ""
+msgstr "Participar"
 
 #: templates/space_intent.html:11
 msgid ""
 "If the administrator approves your request, you will be notified by email"
 msgstr ""
+"Si el administrador aprueba tu petición, se te notificará por correo "
+"electrónico."
 
 #: templates/comments/approve.html:4
 msgid "Approve a comment"
@@ -365,7 +334,7 @@ msgstr "o hacer cambios"
 
 #: templates/invite/invite.html:132
 msgid "Like"
-msgstr ""
+msgstr "Me gusta"
 
 #: templates/invite/invite.html:138
 msgid "Tweet"
@@ -373,11 +342,11 @@ msgstr "Tuitear"
 
 #: templates/invite/invite.html:163
 msgid "Connect with me on e-cidadania!"
-msgstr ""
+msgstr "Conecta conmigo en e-cidadania!"
 
 #: templates/invite/invite.html:187 templates/invite/invite_plain.txt:3
 msgid "Someone sent you an invitation to join e-cidadania!"
-msgstr ""
+msgstr "Alguien te ha enviado una invitación para e-cidadania!"
 
 #: templates/invite/invite.html:190
 #, python-format
@@ -390,6 +359,12 @@ msgid ""
 "participative budgets. The message that was sent to you follows:\n"
 "                                        "
 msgstr ""
+"\n"
+"<a href=\"http://ecidadania.org\">e-cidadania</a> es una plataforma de e-"
+"democracia para la participación ciudadana. Siendo más claros, sirve para la "
+"democracia directa en cada una de sus facetas, por ejemplo el movimiento "
+"99%%, 15M hasta procesos oficiales de presupuestos participativos. El "
+"mensaje que te han enviado a continuación:"
 
 #: templates/invite/invite_plain.txt:4
 #, python-format
@@ -400,134 +375,48 @@ msgid ""
 "of its shapes, from 99%% movement, 15M to official participative budgets. "
 "The message that was sent to you follows:\n"
 msgstr ""
+"\n"
+"Alguien te ha invitado a entrar en e-cidadania, la plataforma de e-"
+"democracia para la participación ciudadana. Siendo más claros, sirve para la "
+"democracia directa en cada una de sus facetas, por ejemplo el movimiento "
+"99%%, 15M hasta procesos oficiales de presupuestos participativos. El "
+"mensaje que te han enviado a continuación:\n"
 
 #: templates/invite/invite_plain.txt:9
 msgid "Join e-cidadania today in http://ecidadania.org"
-msgstr ""
+msgstr "Únete a e-cidadania hoy en http://ecidadania.org"
 
 #: templates/invite/invite_plain.txt:11
 msgid ""
 "If you have any questions dont hesitate and send us a mail to "
 "support@ecidadania.org."
 msgstr ""
+"Si tienes alguna pregunta no dudes en enviarnos un correo a info@ecidadania."
+"org"
 
-#~ msgid "Users"
-#~ msgstr "Usuarios"
+#~ msgid "^accounts/"
+#~ msgstr "^cuentas/"
 
-#~ msgid "Applications"
-#~ msgstr "Aplicaciones"
+#~ msgid "^spaces/"
+#~ msgstr "^espacios/"
 
-#~ msgid "Latest News"
-#~ msgstr "Últimas noticias"
+#~ msgid "^invite/"
+#~ msgstr "^invitar/"
 
-#~ msgid "Media Management"
-#~ msgstr "Gestión de medios"
+#~ msgid "^news/$"
+#~ msgstr "^noticias/$"
 
-#~ msgid "FileBrowser"
-#~ msgstr "Gestor de archivos"
+#~ msgid "^news/add/$"
+#~ msgstr "^noticias/anadir/$"
 
-#~ msgid "e-cidadania Support"
-#~ msgstr "Soporte e-cidadania"
+#~ msgid "^news/(?P<post_id>\\w+)/delete/$"
+#~ msgstr "^noticias/(?P<post_id>\\w+)/eliminar/$"
 
-#~ msgid "Documentation"
-#~ msgstr "Documentación"
+#~ msgid "^news/(?P<post_id>\\w+)/edit/$"
+#~ msgstr "^noticias/(?P<post_id>\\w+)/editar/$"
 
-#~ msgid "Wiki"
-#~ msgstr "Wiki"
+#~ msgid "^news/(?P<post_id>\\w+)/$"
+#~ msgstr "^noticias/(?P<post_id>\\w+)/$"
 
-#~ msgid "Translations"
-#~ msgstr "Traducciones"
-
-#~ msgid "Thirdparty Support"
-#~ msgstr "Soporte de terceras partes"
-
-#~ msgid "Django Documentation"
-#~ msgstr "Documentación de Django"
-
-#~ msgid "Grappelli Documentation"
-#~ msgstr "Documentación de Grappelli"
-
-#~ msgid "python-dateutil Documentation"
-#~ msgstr "Documentación python-dateutil"
-
-#~ msgid "e-cidadania source code"
-#~ msgstr "Código fuente e-cidadania"
-
-#~ msgid "GitHub"
-#~ msgstr "GitHub"
-
-#~ msgid "Gitorious"
-#~ msgstr "Gitorious"
-
-#~ msgid "Repo.or.vz (Mirror)"
-#~ msgstr "Repo.or.cz (espejo)"
-
-#~ msgid "Recent Actions"
-#~ msgstr "Acciones recientes"
-
-#~ msgid "Pages"
-#~ msgstr "Páginas"
-
-#~ msgid "Help"
-#~ msgstr "Ayuda"
-
-#~ msgid "Mailing lists"
-#~ msgstr "Listas de correo"
-
-#~ msgid "Issues"
-#~ msgstr "Incidencias"
-
-#~ msgid "E-mail"
-#~ msgstr "Correo electrónico"
-
-#~ msgid "created by"
-#~ msgstr "creado por"
-
-#~ msgid "or"
-#~ msgstr "o"
-
-#~ msgid "Recent processes"
-#~ msgstr "Procesos recientes"
-
-#~ msgid "Recent news"
-#~ msgstr "Noticias recientes"
-
-#~ msgid "No public news."
-#~ msgstr "No hay noticias públicas."
-
-#~ msgid "Profile"
-#~ msgstr "Perfil"
-
-#~ msgid "Share"
-#~ msgstr "Compartir"
-
-#~ msgid "True democracy"
-#~ msgstr "Democracia real"
-
-#~ msgid "The most complete tool ever"
-#~ msgstr "La herramienta más completa"
-
-#, fuzzy
-#~ msgid ""
-#~ "Hi! It seems that it's your first time here.             Maybe you want "
-#~ "to <a href=\"/accounts/register\">register</a>             or <a href=\"/"
-#~ "accounts/login\">login</a> if you have an account."
-#~ msgstr ""
-#~ "¡Hola! Parece que es tu primera vez aquí. Tan vez quieras <a href=\"/"
-#~ "accounts/register\">registrarte</a>                                  o <a "
-#~ "href=\"/accounts/login\">entrar</a> si ya tienes una cuenta."
-
-#~ msgid "e-cidadania news"
-#~ msgstr "Noticias de e-cidadania"
-
-#~ msgid "Updates on the main e-cidadania site."
-#~ msgstr "Actualizaciones en la página principal de e-cidadania"
-
-#~ msgid "Post added successfully."
-#~ msgstr "Entrada añadida satisfactoriamente."
-
-#~ msgid "Post deleted successfully."
-#~ msgstr "Entrada eliminada correctamente."
-
-#~ msgid "Post edited successfully."
-#~ msgstr "Entrada editada correctamente."
+#~ msgid "^comments/"
+#~ msgstr "^comentarios/"

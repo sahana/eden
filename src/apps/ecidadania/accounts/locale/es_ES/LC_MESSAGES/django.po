@@ -1,52 +1,49 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-# Translators:
-# Oscar Carballal <oscar@cidadania.coop>, 2012.
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: e-cidadania\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
-"PO-Revision-Date: 2012-05-24 08:16+0000\n"
-"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
-"ecidadania/language/es_ES/)\n"
-"Language: es_ES\n"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: models.py:35
 msgid "Male"
-msgstr "Hombre"
+msgstr ""
 
 #: models.py:36
 msgid "Female"
-msgstr "Mujer"
+msgstr ""
 
 #: models.py:44
-#, fuzzy
 msgid "Interest"
-msgstr "Intereses"
+msgstr ""
 
 #: models.py:56
 msgid "Name"
-msgstr "Nombre"
+msgstr ""
 
 #: models.py:57
 msgid "Surname"
-msgstr "Apellido"
+msgstr ""
 
 #: models.py:58
 msgid "Gender"
-msgstr "Género"
+msgstr ""
 
 #: models.py:60
 msgid "Birth date"
-msgstr "Fecha de nacimiento"
+msgstr ""
 
 #: models.py:76
 msgid "District"
@@ -54,36 +51,36 @@ msgstr ""
 
 #: models.py:79
 msgid "Address"
-msgstr "Dirección"
+msgstr ""
 
 #: models.py:80
 msgid "Number"
-msgstr "Número"
+msgstr ""
 
 #: models.py:82
 msgid "Floor"
-msgstr "Piso"
+msgstr ""
 
 #: models.py:83
 msgid "Letter"
-msgstr "Letra"
+msgstr ""
 
 #: models.py:86
 msgid "Phone 1"
-msgstr "Teléfono 1"
+msgstr ""
 
 #: models.py:91 models.py:97
 msgid "9 digits maximum"
-msgstr "9 dígitos máximo"
+msgstr ""
 
 #: models.py:92
 msgid "Phone 2"
-msgstr "Teléfono 2"
+msgstr ""
 
 #: models.py:99
 msgid "Identification document"
-msgstr "DNI"
+msgstr ""
 
 #: models.py:102
 msgid "Website"
-msgstr "Página web"
+msgstr ""

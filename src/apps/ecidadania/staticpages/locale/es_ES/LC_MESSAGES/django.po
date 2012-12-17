@@ -1,26 +1,25 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-# Translators:
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: e-cidadania\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
-"PO-Revision-Date: 2012-05-24 08:17+0000\n"
-"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
-"ecidadania/language/es_ES/)\n"
-"Language: es_ES\n"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: admin.py:38
 msgid "Description"
-msgstr "Descripción"
+msgstr ""
 
 #: admin.py:41
 msgid "Options"
@@ -48,7 +47,7 @@ msgstr ""
 
 #: models.py:36
 msgid "Last update"
-msgstr "Última actualización"
+msgstr ""
 
 #: models.py:37
 msgid "Order"
@@ -58,21 +57,9 @@ msgstr ""
 msgid "Static Pages"
 msgstr ""
 
-#: urls.py:29
-msgid "^edit/"
-msgstr ""
-
-#: urls.py:31
-msgid "^delete/"
-msgstr ""
-
-#: urls.py:33
-msgid "^add/"
-msgstr ""
-
 #: templates/staticpages/staticpages_index.html:13
 msgid "Go back"
-msgstr "Volver"
+msgstr ""
 
 #: templates/staticpages/staticpages_index.html:16
 msgid "last updated"

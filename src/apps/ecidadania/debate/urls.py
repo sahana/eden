@@ -33,15 +33,15 @@ urlpatterns = patterns('apps.ecidadania.debate.views',
 
     url(r'^(?P<debate_id>\d+)/', ViewDebate.as_view(), name=DEBATE_VIEW),
 
-    url(_(r'^add/'), 'add_new_debate', name=DEBATE_ADD),
+    url(r'^add/', 'add_new_debate', name=DEBATE_ADD),
 
-    url(_(r'^update_position/'), 'update_position', name=NOTE_UPDATE_POSITION),
+    url(r'^update_position/', 'update_position', name=NOTE_UPDATE_POSITION),
 
-    url(_(r'^update_note/'), 'update_note', name=NOTE_UPDATE),
+    url(r'^update_note/', 'update_note', name=NOTE_UPDATE),
 
-    url(_(r'^create_note/'), 'create_note', name=NOTE_ADD),
+    url(r'^create_note/', 'create_note', name=NOTE_ADD),
 
-    url(_(r'^delete_note/'), 'delete_note', name=NOTE_DELETE),
+    url(r'^delete_note/', 'delete_note', name=NOTE_DELETE),
 
     # Editing debates is not allowed at this time
     #(r'^(?P<debate_id>\d+)', 'edit_debate'),

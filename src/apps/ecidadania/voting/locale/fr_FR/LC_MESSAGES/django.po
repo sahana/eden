@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,27 +94,27 @@ msgstr ""
 msgid "^(?P<poll_id>\\d+)/delete/$"
 msgstr ""
 
-#: urls.py:37
+#: urls.py:38
 msgid "^(?P<poll_id>\\d+)/edit/$"
 msgstr ""
 
-#: urls.py:39
+#: urls.py:40
 msgid "^(?P<pk>\\d+)/$"
 msgstr ""
 
-#: urls.py:40
+#: urls.py:43
 msgid "^(?P<poll_id>\\d+)/vote/$"
 msgstr ""
 
-#: urls.py:42
+#: urls.py:45
 msgid "^addvoting/$"
 msgstr ""
 
-#: urls.py:44
+#: urls.py:47
 msgid "^(?P<voting_id>\\d+)/deletevoting/$"
 msgstr ""
 
-#: urls.py:46
+#: urls.py:50
 msgid "^(?P<voting_id>\\d+)/editvoting/$"
 msgstr ""
 

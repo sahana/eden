@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,74 +155,6 @@ msgstr ""
 
 #: models.py:231
 msgid "ProposalFields"
-msgstr ""
-
-#: urls.py:40
-msgid "^set/$"
-msgstr ""
-
-#: urls.py:42
-msgid "^set/(?P<set_id>\\w+)/$"
-msgstr ""
-
-#: urls.py:45
-msgid "^set/(?P<set_id>\\w+)/add/$"
-msgstr ""
-
-#: urls.py:48
-msgid "^add/$"
-msgstr ""
-
-#: urls.py:50
-msgid "^add/set/$"
-msgstr ""
-
-#: urls.py:52
-msgid "^add/field/"
-msgstr ""
-
-#: urls.py:55
-msgid "^edit/(?P<prop_id>\\w+)/"
-msgstr ""
-
-#: urls.py:58
-msgid "^edit/set/(?P<p_set>\\w+)/"
-msgstr ""
-
-#: urls.py:61
-msgid "^delete/field/$"
-msgstr ""
-
-#: urls.py:64
-msgid "^delete/(?P<prop_id>\\w+)/$"
-msgstr ""
-
-#: urls.py:67
-msgid "^delete/set/(?P<p_set>\\w+)/$"
-msgstr ""
-
-#: urls.py:70
-msgid "^support/"
-msgstr ""
-
-#: urls.py:72
-msgid "^merge/(?P<set_id>\\w+)/"
-msgstr ""
-
-#: urls.py:75
-msgid "^merge_proposals/"
-msgstr ""
-
-#: urls.py:78
-msgid "^select_set/"
-msgstr ""
-
-#: urls.py:80
-msgid "^(?P<prop_id>\\w+)/$"
-msgstr ""
-
-#: urls.py:82
-msgid "^$"
 msgstr ""
 
 #: templates/proposals/mergedproposal_in_set.html:10

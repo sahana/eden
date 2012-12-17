@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
+"POT-Creation-Date: 2012-12-17 13:03+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,42 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-
-#: urls.py:60
-msgid "^accounts/"
-msgstr ""
-
-#: urls.py:63
-msgid "^spaces/"
-msgstr ""
-
-#: urls.py:66
-msgid "^invite/"
-msgstr ""
-
-#: urls.py:69
-msgid "^news/$"
-msgstr ""
-
-#: urls.py:71
-msgid "^news/add/$"
-msgstr ""
-
-#: urls.py:73
-msgid "^news/(?P<post_id>\\w+)/delete/$"
-msgstr ""
-
-#: urls.py:76
-msgid "^news/(?P<post_id>\\w+)/edit/$"
-msgstr ""
-
-#: urls.py:79
-msgid "^news/(?P<post_id>\\w+)/$"
-msgstr ""
-
-#: urls.py:88 urls.py:104
-msgid "^comments/"
-msgstr ""
 
 #: templates/404.html:9
 msgid "Nooo...!"

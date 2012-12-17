@@ -48,6 +48,10 @@ LANGUAGES = (
     ('mk_MK', 'Makedonski')
 )
 
+LOCALE_PATHS = (
+    cwd + '/templates/locale',
+)
+
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True

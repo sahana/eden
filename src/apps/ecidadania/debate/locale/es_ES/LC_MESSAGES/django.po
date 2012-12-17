@@ -1,31 +1,29 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-# Translators:
-# Oscar Carballal <oscar@cidadania.coop>, 2012.
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: e-cidadania\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-13 10:18+0100\n"
-"PO-Revision-Date: 2012-05-24 08:16+0000\n"
-"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
-"ecidadania/language/es_ES/)\n"
-"Language: es_ES\n"
+"POT-Creation-Date: 2012-12-17 13:02+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: models.py:42 models.py:111
 msgid "Title"
-msgstr "Título"
+msgstr ""
 
 #: models.py:43
 msgid "Description"
-msgstr "Descripción"
+msgstr ""
 
 #: models.py:44
 msgid "Theme"
@@ -33,66 +31,44 @@ msgstr ""
 
 #: models.py:47 models.py:114
 msgid "Date created"
-msgstr "Fecha de creación"
+msgstr ""
 
 #: models.py:48
 msgid "Last update"
-msgstr "Última actualización"
+msgstr ""
 
 #: models.py:50
 msgid "Start date"
-msgstr "Fecha de comienzo"
+msgstr ""
 
 #: models.py:51
 msgid "End date"
-msgstr "Fecha de finalización"
+msgstr ""
 
 #: models.py:80 models.py:93
 msgid "Criteria"
-msgstr "Criterio"
+msgstr ""
 
 #: models.py:112
 msgid "Message"
-msgstr "Mensaje"
+msgstr ""
 
 #: models.py:117
 msgid "Last modification time"
-msgstr "Última modificación"
-
-#: urls.py:36
-msgid "^add/"
-msgstr ""
-
-#: urls.py:38
-msgid "^update_position/"
-msgstr ""
-
-#: urls.py:40
-msgid "^update_note/"
-msgstr ""
-
-#: urls.py:42
-msgid "^create_note/"
-msgstr ""
-
-#: urls.py:44
-msgid "^delete_note/"
 msgstr ""
 
 #: templates/debate/debate_add.html:14 templates/debate/debate_add.html:41
-#, fuzzy
 msgid "Edit debate"
-msgstr "Ver debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:16 templates/debate/debate_add.html:43
 #: templates/debate/debate_add_simple.html:4
 msgid "Create new debate"
-msgstr "Crear nuevo debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:47
-#, fuzzy
 msgid "How to create a debate"
-msgstr "Crear un nuevo debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:50
 msgid ""
@@ -110,23 +86,23 @@ msgstr ""
 
 #: templates/debate/debate_add.html:64
 msgid "Remove column"
-msgstr "Eliminar columna"
+msgstr ""
 
 #: templates/debate/debate_add.html:65
 msgid "Add column"
-msgstr "Añadir columna"
+msgstr ""
 
 #: templates/debate/debate_add.html:67
 msgid "Remove row"
-msgstr "Eliminar fila"
+msgstr ""
 
 #: templates/debate/debate_add.html:68
 msgid "Add row"
-msgstr "Añadir fila"
+msgstr ""
 
 #: templates/debate/debate_add.html:105 templates/debate/debate_view.html:106
 msgid "Add new note"
-msgstr "Añadir nueva nota"
+msgstr ""
 
 #: templates/debate/debate_add.html:106
 msgid "Change color"
@@ -135,23 +111,23 @@ msgstr ""
 #: templates/debate/debate_add.html:110
 #: templates/debate/debate_add_simple.html:60
 msgid "Other debate data"
-msgstr "Otros datos del debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:215
 #: templates/debate/debate_add_simple.html:121
 #: templates/debate/debate_view.html:140
 msgid "Cancel"
-msgstr "Cancelar"
+msgstr ""
 
 #: templates/debate/debate_add.html:216
 #: templates/debate/debate_add_simple.html:120
 #: templates/debate/debate_view.html:141
 msgid "Save"
-msgstr "Guardar"
+msgstr ""
 
 #: templates/debate/debate_list.html:7
 msgid "Debates in "
-msgstr "Debates en "
+msgstr ""
 
 #: templates/debate/debate_list.html:13
 msgid "Debates in"
@@ -159,23 +135,23 @@ msgstr ""
 
 #: templates/debate/debate_list.html:21
 msgid "There are no debates."
-msgstr "No hay debates."
+msgstr ""
 
 #: templates/debate/debate_list.html:25
 msgid "Go back"
-msgstr "Volver"
+msgstr ""
 
 #: templates/debate/debate_list.html:31
 msgid "previous"
-msgstr "anterior"
+msgstr ""
 
 #: templates/debate/debate_list.html:34
 msgid "of"
-msgstr "de"
+msgstr ""
 
 #: templates/debate/debate_list.html:37
 msgid "next"
-msgstr "siguiente"
+msgstr ""
 
 #: templates/debate/debate_outdated.html:4
 #: templates/debate/debate_outdated.html:16
@@ -198,11 +174,11 @@ msgstr ""
 
 #: templates/debate/debate_view.html:6
 msgid "View debate"
-msgstr "Ver debate"
+msgstr ""
 
 #: templates/debate/debate_view.html:25
 msgid "Description:"
-msgstr "Descripción"
+msgstr ""
 
 #: templates/debate/debate_view.html:26
 msgid "Theme:"
@@ -230,7 +206,7 @@ msgstr ""
 
 #: templates/debate/debate_view.html:85
 msgid "Edit"
-msgstr "Editar"
+msgstr ""
 
 #: templates/debate/debate_view.html:91
 msgid "comments"
@@ -238,11 +214,11 @@ msgstr ""
 
 #: templates/debate/debate_view.html:112
 msgid "Edit note"
-msgstr "Editar nota"
+msgstr ""
 
 #: templates/debate/debate_view.html:120
 msgid "100 characters"
-msgstr "100 caracteres"
+msgstr ""
 
 #: templates/debate/debate_view.html:152
 msgid "Author:"
@@ -259,12 +235,3 @@ msgstr ""
 #: templates/debate/debate_view.html:163
 msgid "Preview"
 msgstr ""
-
-#~ msgid "Note title"
-#~ msgstr "Título de la nota"
-
-#~ msgid "Scope"
-#~ msgstr "Ámbito"
-
-#~ msgid "Scope:"
-#~ msgstr "Ámbito:"

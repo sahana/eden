@@ -27,12 +27,12 @@ from apps.ecidadania.news.url_names import *
 
 urlpatterns = patterns('apps.ecidadania.news.views',
     
-    url(_(r'^add/$'), AddPost.as_view(), name=POST_ADD),
+    url(r'^add/$', AddPost.as_view(), name=POST_ADD),
     
-    url(_(r'^(?P<post_id>\d+)/delete/$'), DeletePost.as_view(),
+    url(r'^(?P<post_id>\d+)/delete/$', DeletePost.as_view(),
         name=POST_DELETE),
     
-    url(_(r'^(?P<post_id>\d+)/edit/$'), EditPost.as_view(), name=POST_EDIT),
+    url(r'^(?P<post_id>\d+)/edit/$', EditPost.as_view(), name=POST_EDIT),
     
     url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name=POST_VIEW),
 

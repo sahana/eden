@@ -3,995 +3,993 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Oscar Carballal <oscar.carballal@cidadania.coop>, 2012.
-# Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
 "POT-Creation-Date: 2011-12-20 10:49+0100\n"
-"PO-Revision-Date: 2012-12-13 16:28+0000\n"
-"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.com/projects/p/ecidadania/language/es_ES/)\n"
+"PO-Revision-Date: 2011-12-20 20:29+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/ecidadania/language/mk_MK/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es_ES\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: mk_MK\n"
+"Plural-Forms: nplurals=2; plural=(n % 10 == 1 && n % 100 != 11) ? 0 : 1;\n"
 
 #: countries.py:10
 msgid "Andorra"
-msgstr "Andorra"
+msgstr ""
 
 #: countries.py:11
 msgid "United Arab Emirates"
-msgstr "Emiratos Árabes Unidos"
+msgstr ""
 
 #: countries.py:12
 msgid "Afghanistan"
-msgstr "Afganistán"
+msgstr ""
 
 #: countries.py:13
 msgid "Antigua & Barbuda"
-msgstr "Antigua y Barbuda"
+msgstr ""
 
 #: countries.py:14
 msgid "Anguilla"
-msgstr "Anguilla"
+msgstr ""
 
 #: countries.py:15
 msgid "Albania"
-msgstr "Albania"
+msgstr ""
 
 #: countries.py:16
 msgid "Armenia"
-msgstr "Armenia"
+msgstr ""
 
 #: countries.py:17
 msgid "Netherlands Antilles"
-msgstr "Antillas Noruegas"
+msgstr ""
 
 #: countries.py:18
 msgid "Angola"
-msgstr "Angola"
+msgstr ""
 
 #: countries.py:19
 msgid "Antarctica"
-msgstr "Antártida"
+msgstr ""
 
 #: countries.py:20
 msgid "Argentina"
-msgstr "Argentina"
+msgstr ""
 
 #: countries.py:21
 msgid "American Samoa"
-msgstr "Samoa Americana"
+msgstr ""
 
 #: countries.py:22
 msgid "Austria"
-msgstr "Austria"
+msgstr ""
 
 #: countries.py:23
 msgid "Australia"
-msgstr "Autralia"
+msgstr ""
 
 #: countries.py:24
 msgid "Aruba"
-msgstr "Aruba"
+msgstr ""
 
 #: countries.py:25
 msgid "Azerbaijan"
-msgstr "Azerbaiyán"
+msgstr ""
 
 #: countries.py:26
 msgid "Bosnia and Herzegovina"
-msgstr "Bosnia y Herzegovina"
+msgstr ""
 
 #: countries.py:27
 msgid "Barbados"
-msgstr "Barbados"
+msgstr ""
 
 #: countries.py:28
 msgid "Bangladesh"
-msgstr "Bangladesh"
+msgstr ""
 
 #: countries.py:29
 msgid "Belgium"
-msgstr "Bélgica"
+msgstr ""
 
 #: countries.py:30
 msgid "Burkina Faso"
-msgstr "Burkina Faso"
+msgstr ""
 
 #: countries.py:31
 msgid "Bulgaria"
-msgstr "Bulgaria"
+msgstr ""
 
 #: countries.py:32
 msgid "Bahrain"
-msgstr "Bahrain"
+msgstr ""
 
 #: countries.py:33
 msgid "Burundi"
-msgstr "Burundi"
+msgstr ""
 
 #: countries.py:34
 msgid "Benin"
-msgstr "Benin"
+msgstr ""
 
 #: countries.py:35
 msgid "Bermuda"
-msgstr "Bermuda"
+msgstr ""
 
 #: countries.py:36
 msgid "Brunei Darussalam"
-msgstr "Brunei Darussalam"
+msgstr ""
 
 #: countries.py:37
 msgid "Bolivia"
-msgstr "Bolivia"
+msgstr ""
 
 #: countries.py:38
 msgid "Brazil"
-msgstr "Brasil"
+msgstr ""
 
 #: countries.py:39
 msgid "Bahama"
-msgstr "Bahama"
+msgstr ""
 
 #: countries.py:40
 msgid "Bhutan"
-msgstr "Bhutan"
+msgstr ""
 
 #: countries.py:41
 msgid "Bouvet Island"
-msgstr "Isla Bouvet"
+msgstr ""
 
 #: countries.py:42
 msgid "Botswana"
-msgstr "Botswana"
+msgstr ""
 
 #: countries.py:43
 msgid "Belarus"
-msgstr "Bielorusia"
+msgstr ""
 
 #: countries.py:44
 msgid "Belize"
-msgstr "Belize"
+msgstr ""
 
 #: countries.py:45
 msgid "Canada"
-msgstr "Canada"
+msgstr ""
 
 #: countries.py:46
 msgid "Cocos (Keeling) Islands"
-msgstr "Islas Cocos (Keeling)"
+msgstr ""
 
 #: countries.py:47
 msgid "Central African Republic"
-msgstr "República Centroafricana"
+msgstr ""
 
 #: countries.py:48
 msgid "Congo"
-msgstr "Congo"
+msgstr ""
 
 #: countries.py:49
 msgid "Switzerland"
-msgstr "Suíza"
+msgstr ""
 
 #: countries.py:50
 msgid "Ivory Coast"
-msgstr "Costa Ivory"
+msgstr ""
 
 #: countries.py:51
 msgid "Cook Islands"
-msgstr "Islas Cook"
+msgstr ""
 
 #: countries.py:52
 msgid "Chile"
-msgstr "Chile"
+msgstr ""
 
 #: countries.py:53
 msgid "Cameroon"
-msgstr "Camerún"
+msgstr ""
 
 #: countries.py:54
 msgid "China"
-msgstr "China"
+msgstr ""
 
 #: countries.py:55
 msgid "Colombia"
-msgstr "Colombia"
+msgstr ""
 
 #: countries.py:56
 msgid "Costa Rica"
-msgstr "Costa Rica"
+msgstr ""
 
 #: countries.py:57
 msgid "Cuba"
-msgstr "Cuba"
+msgstr ""
 
 #: countries.py:58
 msgid "Cape Verde"
-msgstr "Cabo Verde"
+msgstr ""
 
 #: countries.py:59
 msgid "Christmas Island"
-msgstr "Isla de Navidad"
+msgstr ""
 
 #: countries.py:60
 msgid "Cyprus"
-msgstr "Cyprus"
+msgstr ""
 
 #: countries.py:61
 msgid "Czech Republic"
-msgstr "República Checa"
+msgstr ""
 
 #: countries.py:62
 msgid "Germany"
-msgstr "Alemania"
+msgstr ""
 
 #: countries.py:63
 msgid "Djibouti"
-msgstr "Djibouti"
+msgstr ""
 
 #: countries.py:64
 msgid "Denmark"
-msgstr "Dinamarca"
+msgstr ""
 
 #: countries.py:65
 msgid "Dominica"
-msgstr "Dominica"
+msgstr ""
 
 #: countries.py:66
 msgid "Dominican Republic"
-msgstr "República Dominicana"
+msgstr ""
 
 #: countries.py:67
 msgid "Algeria"
-msgstr "Algeria"
+msgstr ""
 
 #: countries.py:68
 msgid "Ecuador"
-msgstr "Ecuador"
+msgstr ""
 
 #: countries.py:69
 msgid "Estonia"
-msgstr "Estonia"
+msgstr ""
 
 #: countries.py:70
 msgid "Egypt"
-msgstr "Egipto"
+msgstr ""
 
 #: countries.py:71
 msgid "Western Sahara"
-msgstr "Shahara Occidental"
+msgstr ""
 
 #: countries.py:72
 msgid "Eritrea"
-msgstr "Eritrea"
+msgstr ""
 
 #: countries.py:73
 msgid "Spain"
-msgstr "España"
+msgstr ""
 
 #: countries.py:74
 msgid "Ethiopia"
-msgstr "Etiopía"
+msgstr ""
 
 #: countries.py:75
 msgid "Finland"
-msgstr "Finlandia"
+msgstr ""
 
 #: countries.py:76
 msgid "Fiji"
-msgstr "Islas Fiji"
+msgstr ""
 
 #: countries.py:77
 msgid "Falkland Islands (Malvinas)"
-msgstr "Islas Falkland (Malvinas)"
+msgstr ""
 
 #: countries.py:78
 msgid "Micronesia"
-msgstr "Micronesia"
+msgstr ""
 
 #: countries.py:79
 msgid "Faroe Islands"
-msgstr "Islas Faroe"
+msgstr ""
 
 #: countries.py:80
 msgid "France"
-msgstr "Francia"
+msgstr ""
 
 #: countries.py:81
 msgid "France, Metropolitan"
-msgstr "Metrópolis, Francia"
+msgstr ""
 
 #: countries.py:82
 msgid "Gabon"
-msgstr "Gabon"
+msgstr ""
 
 #: countries.py:83
 msgid "United Kingdom (Great Britain)"
-msgstr "Reino Unido (Gran Bretaña)"
+msgstr ""
 
 #: countries.py:84
 msgid "Grenada"
-msgstr "Granada"
+msgstr ""
 
 #: countries.py:85
 msgid "Georgia"
-msgstr "Georgia"
+msgstr ""
 
 #: countries.py:86
 msgid "French Guiana"
-msgstr "Guinea Francesa"
+msgstr ""
 
 #: countries.py:87
 msgid "Ghana"
-msgstr "Ghana"
+msgstr ""
 
 #: countries.py:88
 msgid "Gibraltar"
-msgstr "Gibraltar"
+msgstr ""
 
 #: countries.py:89
 msgid "Greenland"
-msgstr "Groenlandia"
+msgstr ""
 
 #: countries.py:90
 msgid "Gambia"
-msgstr "Gambia"
+msgstr ""
 
 #: countries.py:91
 msgid "Guinea"
-msgstr "Guinea"
+msgstr ""
 
 #: countries.py:92
 msgid "Guadeloupe"
-msgstr "Guadalupe"
+msgstr ""
 
 #: countries.py:93
 msgid "Equatorial Guinea"
-msgstr "Guinea Ecuatorial"
+msgstr ""
 
 #: countries.py:94
 msgid "Greece"
-msgstr "Grecia"
+msgstr ""
 
 #: countries.py:95
 msgid "South Georgia and the South Sandwich Islands"
-msgstr "Georgia del Sur e Islas Sandwich del Sur"
+msgstr ""
 
 #: countries.py:96
 msgid "Guatemala"
-msgstr "Guatemala"
+msgstr ""
 
 #: countries.py:97
 msgid "Guam"
-msgstr "Guam"
+msgstr ""
 
 #: countries.py:98
 msgid "Guinea-Bissau"
-msgstr "Guinea-Bissau"
+msgstr ""
 
 #: countries.py:99
 msgid "Guyana"
-msgstr "Guyana"
+msgstr ""
 
 #: countries.py:100
 msgid "Hong Kong"
-msgstr "Hong Kong"
+msgstr ""
 
 #: countries.py:101
 msgid "Heard & McDonald Islands"
-msgstr "Islas McDonald & Heard"
+msgstr ""
 
 #: countries.py:102
 msgid "Honduras"
-msgstr "Honduras"
+msgstr ""
 
 #: countries.py:103
 msgid "Croatia"
-msgstr "Croacia"
+msgstr ""
 
 #: countries.py:104
 msgid "Haiti"
-msgstr "Haití"
+msgstr ""
 
 #: countries.py:105
 msgid "Hungary"
-msgstr "Hungría"
+msgstr ""
 
 #: countries.py:106
 msgid "Indonesia"
-msgstr "Indonesia"
+msgstr ""
 
 #: countries.py:107
 msgid "Ireland"
-msgstr "Irlanda"
+msgstr ""
 
 #: countries.py:108
 msgid "Israel"
-msgstr "Israel"
+msgstr ""
 
 #: countries.py:109
 msgid "India"
-msgstr "India"
+msgstr ""
 
 #: countries.py:110
 msgid "British Indian Ocean Territory"
-msgstr "Territorio Oceánico de las Indias Británicas"
+msgstr ""
 
 #: countries.py:111
 msgid "Iraq"
-msgstr "Irak"
+msgstr ""
 
 #: countries.py:112
 msgid "Islamic Republic of Iran"
-msgstr "República Islámica de Irán"
+msgstr ""
 
 #: countries.py:113
 msgid "Iceland"
-msgstr "Islandia"
+msgstr ""
 
 #: countries.py:114
 msgid "Italy"
-msgstr "Italia"
+msgstr ""
 
 #: countries.py:115
 msgid "Jamaica"
-msgstr "Jamaica"
+msgstr ""
 
 #: countries.py:116
 msgid "Jordan"
-msgstr "Jordán"
+msgstr ""
 
 #: countries.py:117
 msgid "Japan"
-msgstr "Japón"
+msgstr ""
 
 #: countries.py:118
 msgid "Kenya"
-msgstr "Kenia"
+msgstr ""
 
 #: countries.py:119
 msgid "Kyrgyzstan"
-msgstr "Kyrgyzstan"
+msgstr ""
 
 #: countries.py:120
 msgid "Cambodia"
-msgstr "Camboya"
+msgstr ""
 
 #: countries.py:121
 msgid "Kiribati"
-msgstr "Kiribati"
+msgstr ""
 
 #: countries.py:122
 msgid "Comoros"
-msgstr "Comoras"
+msgstr ""
 
 #: countries.py:123
 msgid "St. Kitts and Nevis"
-msgstr "San Kitts y Nevis"
+msgstr ""
 
 #: countries.py:124
 msgid "Korea, Democratic People's Republic of"
-msgstr "República Democrática Popular de Corea"
+msgstr ""
 
 #: countries.py:125
 msgid "Korea, Republic of"
-msgstr "República de Corea"
+msgstr ""
 
 #: countries.py:126
 msgid "Kuwait"
-msgstr "Kuwait"
+msgstr ""
 
 #: countries.py:127
 msgid "Cayman Islands"
-msgstr "Islas Caimán"
+msgstr ""
 
 #: countries.py:128
 msgid "Kazakhstan"
-msgstr "Kazajistán"
+msgstr ""
 
 #: countries.py:129
 msgid "Lao People's Democratic Republic"
-msgstr "República Democrática Popular de Lao"
+msgstr ""
 
 #: countries.py:130
 msgid "Lebanon"
-msgstr "Líbano"
+msgstr ""
 
 #: countries.py:131
 msgid "Saint Lucia"
-msgstr "Santa Lucía"
+msgstr ""
 
 #: countries.py:132
 msgid "Liechtenstein"
-msgstr "Liechtenstein"
+msgstr ""
 
 #: countries.py:133
 msgid "Sri Lanka"
-msgstr "Sri Lanka"
+msgstr ""
 
 #: countries.py:134
 msgid "Liberia"
-msgstr "Liberia"
+msgstr ""
 
 #: countries.py:135
 msgid "Lesotho"
-msgstr "Lesoto"
+msgstr ""
 
 #: countries.py:136
 msgid "Lithuania"
-msgstr "Lituania"
+msgstr ""
 
 #: countries.py:137
 msgid "Luxembourg"
-msgstr "Luxemburgo"
+msgstr ""
 
 #: countries.py:138
 msgid "Latvia"
-msgstr "Latvia"
+msgstr ""
 
 #: countries.py:139
 msgid "Libyan Arab Jamahiriya"
-msgstr "Libyan Arab Jamahiriya"
+msgstr ""
 
 #: countries.py:140
 msgid "Morocco"
-msgstr "Marruecos"
+msgstr ""
 
 #: countries.py:141
 msgid "Monaco"
-msgstr "Mónaco"
+msgstr ""
 
 #: countries.py:142
 msgid "Moldova, Republic of"
-msgstr "Moldavia, República de"
+msgstr ""
 
 #: countries.py:143
 msgid "Madagascar"
-msgstr "Madagascar"
+msgstr ""
 
 #: countries.py:144
 msgid "Marshall Islands"
-msgstr "Islas Marshall"
+msgstr ""
 
 #: countries.py:145
 msgid "Mali"
-msgstr "Mali"
+msgstr ""
 
 #: countries.py:146
 msgid "Mongolia"
-msgstr "Mongolia"
+msgstr ""
 
 #: countries.py:147
 msgid "Myanmar"
-msgstr "Myanmar"
+msgstr ""
 
 #: countries.py:148
 msgid "Macau"
-msgstr "Macau"
+msgstr ""
 
 #: countries.py:149
 msgid "Northern Mariana Islands"
-msgstr "Islas Marianas del Norte"
+msgstr ""
 
 #: countries.py:150
 msgid "Martinique"
-msgstr "Martinique"
+msgstr ""
 
 #: countries.py:151
 msgid "Mauritania"
-msgstr "Mauritania"
+msgstr ""
 
 #: countries.py:152
 msgid "Monserrat"
-msgstr "Monserrat"
+msgstr ""
 
 #: countries.py:153
 msgid "Malta"
-msgstr "Malta"
+msgstr ""
 
 #: countries.py:154
 msgid "Mauritius"
-msgstr "Mauritius"
+msgstr ""
 
 #: countries.py:155
 msgid "Maldives"
-msgstr "Maldivas"
+msgstr ""
 
 #: countries.py:156
 msgid "Malawi"
-msgstr "Malawi"
+msgstr ""
 
 #: countries.py:157
 msgid "Mexico"
-msgstr "Méjico"
+msgstr ""
 
 #: countries.py:158
 msgid "Malaysia"
-msgstr "Malasia"
+msgstr ""
 
 #: countries.py:159
 msgid "Mozambique"
-msgstr "Mozambique"
+msgstr ""
 
 #: countries.py:160
 msgid "Namibia"
-msgstr "Namibia"
+msgstr ""
 
 #: countries.py:161
 msgid "New Caledonia"
-msgstr "Nueva Caledonia"
+msgstr ""
 
 #: countries.py:162
 msgid "Niger"
-msgstr "Níger"
+msgstr ""
 
 #: countries.py:163
 msgid "Norfolk Island"
-msgstr "Isla Norfolk"
+msgstr ""
 
 #: countries.py:164
 msgid "Nigeria"
-msgstr "Nigeria"
+msgstr ""
 
 #: countries.py:165
 msgid "Nicaragua"
-msgstr "Nicaragua"
+msgstr ""
 
 #: countries.py:166
 msgid "Netherlands"
-msgstr "Países Bajos"
+msgstr ""
 
 #: countries.py:167
 msgid "Norway"
-msgstr "Noruega"
+msgstr ""
 
 #: countries.py:168
 msgid "Nepal"
-msgstr "Nepal"
+msgstr ""
 
 #: countries.py:169
 msgid "Nauru"
-msgstr "Nauru"
+msgstr ""
 
 #: countries.py:170
 msgid "Niue"
-msgstr "Niue"
+msgstr ""
 
 #: countries.py:171
 msgid "New Zealand"
-msgstr "Nueva Zelanda"
+msgstr ""
 
 #: countries.py:172
 msgid "Oman"
-msgstr "Oman"
+msgstr ""
 
 #: countries.py:173
 msgid "Panama"
-msgstr "Panamá"
+msgstr ""
 
 #: countries.py:174
 msgid "Peru"
-msgstr "Perú"
+msgstr ""
 
 #: countries.py:175
 msgid "French Polynesia"
-msgstr "Polinesia Francesa"
+msgstr ""
 
 #: countries.py:176
 msgid "Papua New Guinea"
-msgstr "Papúa Nueva Guinea"
+msgstr ""
 
 #: countries.py:177
 msgid "Philippines"
-msgstr "Filipinas"
+msgstr ""
 
 #: countries.py:178
 msgid "Pakistan"
-msgstr "Pakistán"
+msgstr ""
 
 #: countries.py:179
 msgid "Poland"
-msgstr "Polonia"
+msgstr ""
 
 #: countries.py:180
 msgid "St. Pierre & Miquelon"
-msgstr "St. Pierre & Miquelon"
+msgstr ""
 
 #: countries.py:181
 msgid "Pitcairn"
-msgstr "Pitcairn"
+msgstr ""
 
 #: countries.py:182
 msgid "Puerto Rico"
-msgstr "Puerto rico"
+msgstr ""
 
 #: countries.py:183
 msgid "Portugal"
-msgstr "Portugal"
+msgstr ""
 
 #: countries.py:184
 msgid "Palau"
-msgstr "Palau"
+msgstr ""
 
 #: countries.py:185
 msgid "Paraguay"
-msgstr "Paraguay"
+msgstr ""
 
 #: countries.py:186
 msgid "Qatar"
-msgstr "Qatar"
+msgstr ""
 
 #: countries.py:187
 msgid "Reunion"
-msgstr "Reunion"
+msgstr ""
 
 #: countries.py:188
 msgid "Romania"
-msgstr "Rumanía"
+msgstr ""
 
 #: countries.py:189
 msgid "Russian Federation"
-msgstr "Federación Rusa"
+msgstr ""
 
 #: countries.py:190
 msgid "Rwanda"
-msgstr "Ruanda"
+msgstr ""
 
 #: countries.py:191
 msgid "Saudi Arabia"
-msgstr "Arabia Saudí"
+msgstr ""
 
 #: countries.py:192
 msgid "Solomon Islands"
-msgstr "Islas Salomón"
+msgstr ""
 
 #: countries.py:193
 msgid "Seychelles"
-msgstr "Seychelles"
+msgstr ""
 
 #: countries.py:194
 msgid "Sudan"
-msgstr "Sudán"
+msgstr ""
 
 #: countries.py:195
 msgid "Sweden"
-msgstr "Suecia"
+msgstr ""
 
 #: countries.py:196
 msgid "Singapore"
-msgstr "Singapur"
+msgstr ""
 
 #: countries.py:197
 msgid "St. Helena"
-msgstr "San Helena"
+msgstr ""
 
 #: countries.py:198
 msgid "Slovenia"
-msgstr "Eslovenia"
+msgstr ""
 
 #: countries.py:199
 msgid "Svalbard & Jan Mayen Islands"
-msgstr "Svalbard & Jan Mayen Islands"
+msgstr ""
 
 #: countries.py:200
 msgid "Slovakia"
-msgstr "Eslovaquia"
+msgstr ""
 
 #: countries.py:201
 msgid "Sierra Leone"
-msgstr "Sierra Leona"
+msgstr ""
 
 #: countries.py:202
 msgid "San Marino"
-msgstr "San Marino"
+msgstr ""
 
 #: countries.py:203
 msgid "Senegal"
-msgstr "Senegal"
+msgstr ""
 
 #: countries.py:204
 msgid "Somalia"
-msgstr "Somalia"
+msgstr ""
 
 #: countries.py:205
 msgid "Suriname"
-msgstr "Suriname"
+msgstr ""
 
 #: countries.py:206
 msgid "Sao Tome & Principe"
-msgstr "Santo Tomé & Príncipe"
+msgstr ""
 
 #: countries.py:207
 msgid "El Salvador"
-msgstr "El Salvador"
+msgstr ""
 
 #: countries.py:208
 msgid "Syrian Arab Republic"
-msgstr "República Árabe de Siria"
+msgstr ""
 
 #: countries.py:209
 msgid "Swaziland"
-msgstr "Swaziland"
+msgstr ""
 
 #: countries.py:210
 msgid "Turks & Caicos Islands"
-msgstr "Turks & Caicos Islands"
+msgstr ""
 
 #: countries.py:211
 msgid "Chad"
-msgstr "Chad"
+msgstr ""
 
 #: countries.py:212
 msgid "French Southern Territories"
-msgstr "French Southern Territories"
+msgstr ""
 
 #: countries.py:213
 msgid "Togo"
-msgstr "Togo"
+msgstr ""
 
 #: countries.py:214
 msgid "Thailand"
-msgstr "Tailandia"
+msgstr ""
 
 #: countries.py:215
 msgid "Tajikistan"
-msgstr "Tajikistan"
+msgstr ""
 
 #: countries.py:216
 msgid "Tokelau"
-msgstr "Tokelau"
+msgstr ""
 
 #: countries.py:217
 msgid "Turkmenistan"
-msgstr "Turkmenistan"
+msgstr ""
 
 #: countries.py:218
 msgid "Tunisia"
-msgstr "Túnez"
+msgstr ""
 
 #: countries.py:219
 msgid "Tonga"
-msgstr "Tonga"
+msgstr ""
 
 #: countries.py:220
 msgid "East Timor"
-msgstr "East Timor"
+msgstr ""
 
 #: countries.py:221
 msgid "Turkey"
-msgstr "Turquía"
+msgstr ""
 
 #: countries.py:222
 msgid "Trinidad & Tobago"
-msgstr "Trinidad & Tobago"
+msgstr ""
 
 #: countries.py:223
 msgid "Tuvalu"
-msgstr "Tuvalu"
+msgstr ""
 
 #: countries.py:224
 msgid "Taiwan, Province of China"
-msgstr "Taiwan, Provincia de China"
+msgstr ""
 
 #: countries.py:225
 msgid "Tanzania, United Republic of"
-msgstr "Tanzania, República Unida de"
+msgstr ""
 
 #: countries.py:226
 msgid "Ukraine"
-msgstr "Ucrania"
+msgstr ""
 
 #: countries.py:227
 msgid "Uganda"
-msgstr "Uganda"
+msgstr ""
 
 #: countries.py:228
 msgid "United States Minor Outlying Islands"
-msgstr "United States Minor Outlying Islands"
+msgstr ""
 
 #: countries.py:229
 msgid "United States of America"
-msgstr "Estados Unidos de América"
+msgstr ""
 
 #: countries.py:230
 msgid "Uruguay"
-msgstr "Uruguay"
+msgstr ""
 
 #: countries.py:231
 msgid "Uzbekistan"
-msgstr "Uzbekistan"
+msgstr ""
 
 #: countries.py:232
 msgid "Vatican City State (Holy See)"
-msgstr "Vatican City State (Holy See)"
+msgstr ""
 
 #: countries.py:233
 msgid "St. Vincent & the Grenadines"
-msgstr "St. Vincent & the Grenadines"
+msgstr ""
 
 #: countries.py:234
 msgid "Venezuela"
-msgstr "Venezuela"
+msgstr ""
 
 #: countries.py:235
 msgid "British Virgin Islands"
-msgstr "British Virgin Islands"
+msgstr ""
 
 #: countries.py:236
 msgid "United States Virgin Islands"
-msgstr "United States Virgin Islands"
+msgstr ""
 
 #: countries.py:237
 msgid "Viet Nam"
-msgstr "Vietnam"
+msgstr ""
 
 #: countries.py:238
 msgid "Vanuatu"
-msgstr "Vanuatu"
+msgstr ""
 
 #: countries.py:239
 msgid "Wallis & Futuna Islands"
-msgstr "Wallis & Futuna Islands"
+msgstr ""
 
 #: countries.py:240
 msgid "Samoa"
-msgstr "Samoa"
+msgstr ""
 
 #: countries.py:241
 msgid "Yemen"
-msgstr "Yemen"
+msgstr ""
 
 #: countries.py:242
 msgid "Mayotte"
-msgstr "Mayotte"
+msgstr ""
 
 #: countries.py:243
 msgid "Yugoslavia"
-msgstr "Yugoslavia"
+msgstr ""
 
 #: countries.py:244
 msgid "South Africa"
-msgstr "Sudáfrica"
+msgstr ""
 
 #: countries.py:245
 msgid "Zambia"
-msgstr "Zambia"
+msgstr ""
 
 #: countries.py:246
 msgid "Zaire"
-msgstr "Zaire"
+msgstr ""
 
 #: countries.py:247
 msgid "Zimbabwe"
-msgstr "Zimbawe"
+msgstr ""
 
 #: countries.py:248
 msgid "Unknown or unspecified country"
-msgstr "Desconocido o país sin especificar"
+msgstr ""
 
 #: countries.py:253
 msgid ""
 "This value must be in COUNTRIES setting in localflavor.generic package."
-msgstr "Este valor debe estar en la configuración COUNTRIES dentro de localflavor.generic"
+msgstr ""
 
 #: forms.py:58
 #, python-format
 msgid "The file type is invalid: %s"
-msgstr "El tipo de archivo es inválido: %s"
+msgstr ""
 
 #: forms.py:63
 msgid "You must enter one of the options"
-msgstr "Debes introducir una de las opciones"
+msgstr ""
 
 #: forms.py:77
 msgid "You must select a portion of the image with a minimum of 96x96 pixels."
-msgstr "Debes seleccionar una porción de la imagen con un mínimo de 96x96 píxeles."
+msgstr ""
 
 #: forms.py:83 templates/userprofile/account/login.html:16
 #: templates/userprofile/account/registration.html:22
@@ -999,69 +997,69 @@ msgstr "Debes seleccionar una porción de la imagen con un mínimo de 96x96 píx
 #: templates/userprofile/profile/public.html:35
 #: templates/userprofile/profile/usercard.html:11
 msgid "Username"
-msgstr "Nombre de usuario"
+msgstr ""
 
 #: forms.py:84 templates/userprofile/account/password_reset.html:21
 msgid "E-mail address"
-msgstr "Dirección de correo-e"
+msgstr ""
 
 #: forms.py:85 templates/userprofile/account/login.html:26
 #: templates/userprofile/account/registration.html:54
 msgid "Password"
-msgstr "Contraseña"
+msgstr ""
 
 #: forms.py:86 templates/userprofile/account/registration.html:70
 msgid "Password (again)"
-msgstr "Contraseña (otra vez)"
+msgstr ""
 
 #: forms.py:94
 msgid ""
 "That username has invalid characters. The valid values are letters, numbers "
 "and underscore."
-msgstr "Ese nombre de usuario tiene caracteres no válidos. Los caracteres válidos son letras, números y guión bajo."
+msgstr ""
 
 #: forms.py:99
 msgid "The username is already registered."
-msgstr "Ese nombre de usuario ya está registrado."
+msgstr ""
 
 #: forms.py:108
 msgid "The passwords inserted are different."
-msgstr "Las contraseñas introducidas son diferentes."
+msgstr ""
 
 #: forms.py:120 forms.py:139
 msgid "That e-mail is already used."
-msgstr "Esa dirección de correo ya está en uso."
+msgstr ""
 
 #: forms.py:124
 msgid "That e-mail is already being confirmed."
-msgstr "Este correo electrónico ya ha sido confirmado."
+msgstr ""
 
 #: models.py:39
 #, python-format
 msgid "%s's profile"
-msgstr "Perfil de %s"
+msgstr ""
 
 #: models.py:58
 #, python-format
 msgid "%s's Avatar"
-msgstr "Avatar de %s"
+msgstr ""
 
 #: models.py:142
 #, python-format
 msgid "Email validation process for %(user)s"
-msgstr "Proceso de validación por correo de %(user)s"
+msgstr ""
 
 #: templates/userprofile/menu.html:5
 msgid "Overview"
-msgstr "Resumen"
+msgstr ""
 
 #: templates/userprofile/menu.html:6
 msgid "Personal information"
-msgstr "Información personal"
+msgstr ""
 
 #: templates/userprofile/menu.html:7
 msgid "Avatar"
-msgstr "Avatar"
+msgstr ""
 
 #: templates/userprofile/menu.html:8
 #: templates/userprofile/profile/location.html:18
@@ -1069,349 +1067,349 @@ msgstr "Avatar"
 #: templates/userprofile/profile/overview_old.html:37
 #: templates/userprofile/profile/public.html:40
 msgid "Location"
-msgstr "Localización"
+msgstr ""
 
 #: templates/userprofile/menu.html:9
 #: templates/userprofile/profile/delete.html:8
 msgid "Remove profile"
-msgstr "Eliminar perfil"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:4
 #: templates/userprofile/account/email_validation.html:27
 msgid "E-mail change"
-msgstr "Cambiar correo electrónico"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:4
 #: templates/userprofile/account/email_validation.html:20
 #: templates/userprofile/account/email_validation.html:27
 #: templates/userprofile/account/email_validation_processed.html:20
 msgid "Add e-mail"
-msgstr "Añadir correo electrónico"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:21
 #: templates/userprofile/account/email_validation_processed.html:21
 msgid ""
 "Insert the new e-mail address. An e-mail will be send to it for testing and "
 "confirmation"
-msgstr "Introducir la nueva dirección de correo. Se enviará un correo de prueba y confirmación"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:28
 msgid "New e-mail address"
-msgstr "Nueva dirección de correo"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:37
 msgid "Send confirmation"
-msgstr "Enviar confirmación"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:4
 msgid "E-mail validation successful"
-msgstr "Validación del correo-e satisfactoria"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:4
 msgid "E-mail change unsuccessful"
-msgstr "Cambio de correo no satisfactorio"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:14
 msgid "E-mail address validated successfully"
-msgstr "Dirección de correo validada satisfactoriamente"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:16
 msgid ""
 "The key you received via e-mail is no longer valid. Please try the e-mail "
 "validation process again"
-msgstr "La clave que has recibido por correo electrónico ya no es válida. Por favor, intenta realizar el proceso de validación de nuevo"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:23
 #: templates/userprofile/account/email_validation_reset_response.html:22
 msgid "E-mail validation process"
-msgstr "Proceso de validación de correo-e"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
 msgid "You can manage the e-mail validation process from the"
-msgstr "Puedes gestionar el proceso de validación de correo electrónico desde la"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
 msgid "overview page"
-msgstr "página de resumen"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_processed.html:4
 #: templates/userprofile/account/email_validation_processed.html:13
 msgid "E-mail change processed"
-msgstr "Cambio de contraseña procesado"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_processed.html:14
 msgid ""
 "An e-mail has been sent to the new e-mail address to verify and activate it."
 " Please access to your e-mail and complete this process following the "
 "instructions specified in the e-mail body"
-msgstr "Se ha enviado un correo electrónico a la nueva dirección para verificarla y poder activarla. Por favor accede a tu correo electrónico y completa el proceso siguiendo las instrucciones especificadas en el cuerpo del correo."
+msgstr ""
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
 msgid "Validation e-mail sent"
-msgstr "Correo de validación enviado"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
 msgid "Your user account was already active"
-msgstr "Tu cuenta de usuario ya estaba activada"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_reset_response.html:14
 msgid "We've e-mailed you the e-mail validation link"
-msgstr "Te hemos enviado un correo con el enlace de validación"
+msgstr ""
 
 #: templates/userprofile/account/email_validation_reset_response.html:16
 msgid "Your e-mail was already validated"
-msgstr "Tu correo electrónico ya estaba activado"
+msgstr ""
 
 #: templates/userprofile/account/login.html:4
 #: templates/userprofile/account/login.html:13
 msgid "User login"
-msgstr "Entrada de usuario"
+msgstr ""
 
 #: templates/userprofile/account/login.html:39
 msgid "Login"
-msgstr "Entrar"
+msgstr ""
 
 #: templates/userprofile/account/login.html:43
 msgid "Helpful links"
-msgstr "Enlaces útiles"
+msgstr ""
 
 #: templates/userprofile/account/login.html:44
 msgid "Recover your password"
-msgstr "Recuperar tu contraseña"
+msgstr ""
 
 #: templates/userprofile/account/login.html:45
 msgid "Sign up!"
-msgstr "Registrarse!"
+msgstr ""
 
 #: templates/userprofile/account/login.html:46
 msgid "Invite your friends"
-msgstr "Invita a tus amigos"
+msgstr ""
 
 #: templates/userprofile/account/login.html:47
 msgid "Via e-mail"
-msgstr "Via correo electrónico"
+msgstr ""
 
 #: templates/userprofile/account/login.html:48
 msgid "Via Twitter"
-msgstr "Via Twitter"
+msgstr ""
 
 #: templates/userprofile/account/login.html:49
 msgid "Via Facebook"
-msgstr "Via Facebook"
+msgstr ""
 
 #: templates/userprofile/account/login.html:50
 msgid "Via Google Plus"
-msgstr "Via Google Plus"
+msgstr ""
 
 #: templates/userprofile/account/logout.html:4
 #: templates/userprofile/account/logout.html:9
 msgid "Logged out"
-msgstr "Desconectado"
+msgstr ""
 
 #: templates/userprofile/account/logout.html:10
 msgid "You've been logged out"
-msgstr "Han sido desconectado"
+msgstr ""
 
 #: templates/userprofile/account/logout.html:10
 msgid "Log in again"
-msgstr "Entrar de nuevo"
+msgstr ""
 
 #: templates/userprofile/account/logout.html:13
 #: templates/userprofile/profile/personal.html:25
 msgid "Go back"
-msgstr "Volver"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:4
 #: templates/userprofile/account/password_change.html:23
 #: templates/userprofile/account/password_reset_confirm.html:4
 msgid "Password change for"
-msgstr "Cambio de contraseña para"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:24
 msgid "Old password"
-msgstr "Contraseña antigua"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:30
 #: templates/userprofile/account/password_reset_confirm.html:26
 msgid "New password"
-msgstr "Nueva contraseña"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:36
 #: templates/userprofile/account/password_reset_confirm.html:32
 msgid "Confirm password"
-msgstr "Confirmar contraseña"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:46
 #: templates/userprofile/account/password_reset_confirm.html:42
 msgid "Change"
-msgstr "Cambiar"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:52
 #: templates/userprofile/account/password_change_done.html:19
 msgid "Password change"
-msgstr "Cambiar contraseña"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
 msgid ""
 "Password change utility page. Please enter your new password twice so we can"
 " verify you typed it in correctly"
-msgstr "Página para el cambio de contraseña. Por favor introduce tu nueva contraseña para que podamos verificar que las has escrito correctamente"
+msgstr ""
 
 #: templates/userprofile/account/password_change_done.html:4
 #: templates/userprofile/account/password_reset_complete.html:4
 msgid "Password change successful"
-msgstr "Cambio de contraseña correcto"
+msgstr ""
 
 #: templates/userprofile/account/password_change_done.html:13
 msgid "The password has been changed successfully"
-msgstr "La contraseña ha sido cambiada con éxito"
+msgstr ""
 
 #: templates/userprofile/account/password_expired.html:4
 msgid "Password key expired"
-msgstr "La clave de la contraseña ha expirado"
+msgstr ""
 
 #: templates/userprofile/account/password_expired.html:9
 msgid ""
 "The password key you're trying to use is expired. Please, request a new one"
-msgstr "La clave de contraseña que has intentado usar ha expirado. Por favor, solicita una nueva"
+msgstr ""
 
 #: templates/userprofile/account/password_reset.html:4
 #: templates/userprofile/account/password_reset.html:20
 #: templates/userprofile/account/password_reset_complete.html:19
 #: templates/userprofile/account/password_reset_confirm.html:55
 msgid "Password reset"
-msgstr "Resetear contraseña"
+msgstr ""
 
 #: templates/userprofile/account/password_reset.html:31
 msgid "Reset my password"
-msgstr "Resetear mi contraseña"
+msgstr ""
 
 #: templates/userprofile/account/password_reset.html:37
 #: templates/userprofile/account/password_reset_done.html:16
 msgid "Password reset form"
-msgstr "Formulario para resetear la contraseña"
+msgstr ""
 
 #: templates/userprofile/account/password_reset.html:38
 #: templates/userprofile/account/password_reset_done.html:17
 msgid ""
 "Forgotten your password? Enter your e-mail address, and we'll reset your "
 "password and e-mail the new one to you"
-msgstr "¿Has olvidado tu contraseña? Introduce tu dirección de correo electrónico y resetearemos tu contraseña para enviarte una nueva."
+msgstr ""
 
 #: templates/userprofile/account/password_reset_complete.html:13
 msgid "Your password has been set.  You may go ahead and log in now."
-msgstr "Tu contraseña ha sido configurada. Puedes seguir y entrar ahora."
+msgstr ""
 
 #: templates/userprofile/account/password_reset_complete.html:20
 #: templates/userprofile/account/password_reset_confirm.html:56
 msgid ""
 "Password reset utility page. Please enter your new password twice so we can "
 "verify you typed it in correctly"
-msgstr "Página de reseteo de la contraseña. Por favor, introduce tu nueva contraseña dos veces para que podemaos comprobar que las has escrito bien."
+msgstr ""
 
 #: templates/userprofile/account/password_reset_confirm.html:47
 msgid "Password reset unsuccessful"
-msgstr "El reseteo de la contraseña ha fallado"
+msgstr ""
 
 #: templates/userprofile/account/password_reset_confirm.html:48
 msgid ""
 "The password reset link was invalid, possibly because it has already been "
 "used.  Please request a new password reset."
-msgstr "El enlace para resetear la contraseña es inválido, posiblemente porque ya ha sido utilizado. Por favor, solicita un nuevo reseteo de la contraseña."
+msgstr ""
 
 #: templates/userprofile/account/password_reset_done.html:4
 #: templates/userprofile/account/password_reset_done.html:9
 msgid "Password reset successful"
-msgstr "Reseteo de la clave satisfactorio"
+msgstr ""
 
 #: templates/userprofile/account/password_reset_done.html:10
 msgid ""
 "We've e-mailed you the instructions to obtain a new password. You should be "
 "receiving it shortly"
-msgstr "Te hemos enviado instrucciones al correo electrónico para obtener una nueva contraseña. Deberías recibirlo en breve."
+msgstr ""
 
 #: templates/userprofile/account/registration.html:4
 #: templates/userprofile/account/registration.html:13
 msgid "User registration"
-msgstr "Registro de usuario"
+msgstr ""
 
 #: templates/userprofile/account/registration.html:38
 msgid "E-mail (optional)"
-msgstr "Correo electrónico (opcional)"
+msgstr ""
 
 #: templates/userprofile/account/registration.html:85
 msgid "Register"
-msgstr "Registrarse"
+msgstr ""
 
 #: templates/userprofile/account/registration.html:94
 msgid "Register a new account"
-msgstr "Esa dirección de correo ya está en uso."
+msgstr ""
 
 #: templates/userprofile/account/registration.html:95
 msgid ""
 "Joining this community is quick and easy. You only need to fill the form to "
 "get access to all the private content"
-msgstr "Unirte a esta comunidad es fácil y rápido. Sólo necesitas rellenar el formulario para tener acceso al contenido privado."
+msgstr ""
 
 #: templates/userprofile/account/registration_done.html:4
 msgid "Registration complete"
-msgstr "Registro completo"
+msgstr ""
 
 #: templates/userprofile/account/registration_done.html:11
 msgid ""
 "You have successfully registered a new account. In a few minutes you will "
 "receive a validation email on your mailbox to validate your registration. "
 "You can go now to the"
-msgstr "Has registrado satisfactoriamente una nueva cuenta. En unos minutos recibirás un correo electrónico de validación en tu bandeja de entrada para validar tu registro. Ahora puedes ir a la"
+msgstr ""
 
 #: templates/userprofile/account/registration_done.html:11
 msgid "login page"
-msgstr "página de entrada"
+msgstr ""
 
 #: templates/userprofile/account/registration_done.html:11
 msgid "to authenticate and start using this site."
-msgstr "para autenticarte y comenzar a usar ese sitio."
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:4
 #: templates/userprofile/avatar/choose.html:41
 msgid "Choose the location of your avatar"
-msgstr "Elige la localización de tu avatar"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:36
 msgid "Delete"
-msgstr "Eliminar"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:44
 msgid "Select an image from disk"
-msgstr "Seleccionar una imagen de disco"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:46
 #: templates/userprofile/avatar/choose.html:52
 #: templates/userprofile/avatar/crop.html:47
 msgid "Done"
-msgstr "Hecho"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:50
 msgid ""
 "Select an image from a remote URL. Put the URL on the input below and we'll "
 "retrieve the image for you"
-msgstr "Selecciona la imagen de una URL remota. Pon la URL debajo y cogeremos la imagen por ti"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:57
 #: templates/userprofile/avatar/search.html:4
 #: templates/userprofile/avatar/search.html:28
 msgid "Search for an image on Picasa Web"
-msgstr "Buscar una imagen en Picasa"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:67
 #: templates/userprofile/avatar/crop.html:53
 #: templates/userprofile/avatar/done.html:19
 #: templates/userprofile/avatar/search.html:50
 msgid "Avatar selection page"
-msgstr "Página de selección del avatar"
+msgstr ""
 
 #: templates/userprofile/avatar/choose.html:68
 #: templates/userprofile/avatar/crop.html:54
@@ -1420,275 +1418,275 @@ msgstr "Página de selección del avatar"
 msgid ""
 "You have several options to select the image you want as avatar on your "
 "profile"
-msgstr "Tienes numerosas opciones para seleccionar la imagen que quieras en tu perfil"
+msgstr ""
 
 #: templates/userprofile/avatar/crop.html:4
 #: templates/userprofile/avatar/crop.html:31
 msgid "Crop &amp; resize the area you want"
-msgstr "Recorta &amp; redimensiona el área que quieras"
+msgstr ""
 
 #: templates/userprofile/avatar/done.html:4
 msgid "Avatar selection finished"
-msgstr "Selección del avatar finalizada"
+msgstr ""
 
 #: templates/userprofile/avatar/done.html:13
 msgid "Your new avatar has been saved successfully"
-msgstr "Tu nuevo avatar se ha guardado satisfactoriamente"
+msgstr ""
 
 #: templates/userprofile/avatar/search.html:29
 msgid "Search on Picasa Web"
-msgstr "Buscar en Picasa Web"
+msgstr ""
 
 #: templates/userprofile/avatar/search.html:32
 msgid "Search"
-msgstr "Buscar"
+msgstr ""
 
 #: templates/userprofile/profile/delete.html:4
 msgid "Delete personal information"
-msgstr "Eliminar información personal"
+msgstr ""
 
 #: templates/userprofile/profile/delete.html:10
 msgid ""
 "It erases all your private data except your username. You can refill the "
 "information later if you want to."
-msgstr "Elimina toda tu información privada salvo tu nombre de usuario. Puedes volver a rellenar la información más tarde si quieres."
+msgstr ""
 
 #: templates/userprofile/profile/delete.html:15
 msgid "Delete your personal information"
-msgstr "Eliminar tu información personal"
+msgstr ""
 
 #: templates/userprofile/profile/delete.html:16
 msgid "Are you sure?"
-msgstr "¿Estás seguro?"
+msgstr ""
 
 #: templates/userprofile/profile/delete.html:17
 msgid "Yes"
-msgstr "Si"
+msgstr ""
 
 #: templates/userprofile/profile/delete_done.html:4
 msgid "Profile removed"
-msgstr "Perfil eliminado"
+msgstr ""
 
 #: templates/userprofile/profile/delete_done.html:8
 msgid "Personal data removed"
-msgstr "Datos personales eliminados"
+msgstr ""
 
 #: templates/userprofile/profile/delete_done.html:9
 msgid "Your profile information has been removed successfully."
-msgstr "La información de tu perfil ha sido eliminada correctamente."
+msgstr ""
 
 #: templates/userprofile/profile/delete_done.html:11
 msgid "Back to home page"
-msgstr "Volver a la página de inicio"
+msgstr ""
 
 #: templates/userprofile/profile/delete_done.html:12
 msgid "Back to your profile"
-msgstr "Volver a tu perfil"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:4
 #: templates/userprofile/profile/location_done.html:4
 #: templates/userprofile/profile/personal_done.html:4
 #, python-format
 msgid "%(user)s's Dashboard"
-msgstr "Dashboard de %(user)s"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:12
 msgid "Define your location"
-msgstr "Define tu localización"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:14
 #: templates/userprofile/profile/overview.html:68
 #: templates/userprofile/profile/overview_old.html:28
 #: templates/userprofile/profile/public.html:37
 msgid "Country"
-msgstr "Ciudad"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:20
 msgid "Position"
-msgstr "Posición"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:26
 #: templates/userprofile/profile/personal.html:26
 msgid "Save"
-msgstr "Guardar"
+msgstr ""
 
 #: templates/userprofile/profile/location_done.html:8
 msgid "Your profile information has been updated successfully"
-msgstr "La información de tu perfil ha sido actualizada correctamente"
+msgstr ""
 
 #: templates/userprofile/profile/location_done.html:9
 msgid "Go back to your profile"
-msgstr "Volver a tu perfil"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:5
 #: templates/userprofile/profile/overview_old.html:5
 msgid "Overview of your profile"
-msgstr "Resumen de tu perfil"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:32
 #, python-format
 msgid "%(username)s profile"
-msgstr "perfil de %(username)s"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:35
 msgid "Edit personal data"
-msgstr "Editar datos personales"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:36
 msgid "Edit location"
-msgstr "Editar localización"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:37
 msgid "Public profile"
-msgstr "Perfil público"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:47
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Change avatar"
-msgstr "Cambiar avatar"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:47
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Add avatar"
-msgstr "Añadir avatar"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:52
 msgid "Real name"
-msgstr "Nombre real"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:53
 msgid "Age"
-msgstr "Edad"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:53
 msgid "years"
-msgstr "años"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:54
 msgid "Member since"
-msgstr "Miembro desde"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:55
 msgid "E-mail"
-msgstr "Correo electrónico"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:58
 #: templates/userprofile/profile/overview_old.html:21
 msgid "Not set yet"
-msgstr "No configurado"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:62
 #: templates/userprofile/profile/overview_old.html:23
 msgid " (Not validated)"
-msgstr "(sin validar)"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:72
 #: templates/userprofile/profile/overview.html:84
 #: templates/userprofile/profile/overview_old.html:32
 #: templates/userprofile/profile/overview_old.html:41
 msgid "Not set"
-msgstr "No configurado"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:76
 msgid "City"
-msgstr "Ciudad"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:98
 msgid "Your spaces"
-msgstr "Tus espacios"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:103
 msgid "You are not signed to any space"
-msgstr "No estás registrado en ningún espacio"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:108
 msgid "Your proposals"
-msgstr "Tus propuestas"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:112
 msgid "support votes"
-msgstr "apoyos"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:126
 msgid "You haven't made any proposals"
-msgstr "No has hecho ninguna propuesta"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:18
 msgid "Username:"
-msgstr "Nombre de usuario:"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:19
 msgid "E-mail:"
-msgstr "Correo electrónico:"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:80
 msgid "Management:"
-msgstr "Gestión:"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:81
 msgid "Change password"
-msgstr "Cambiar contraseña"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:83
 msgid "Change your e-mail address"
-msgstr "Cambiar dirección de correo"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:83
 msgid "Add your e-mail address"
-msgstr "Añadir dirección de correo"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:84
 msgid "Resend validation e-mail"
-msgstr "Volver a enviar correo de validación"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:88
 msgid "Add location"
-msgstr "Añadir localización"
+msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:90
 msgid "Change location"
-msgstr "Cambiar localización"
+msgstr ""
 
 #: templates/userprofile/profile/personal.html:4
 #: templates/userprofile/profile/personal.html:7
 msgid "Edit your personal information"
-msgstr "Editar tu información personal"
+msgstr ""
 
 #: templates/userprofile/profile/personal.html:27
 msgid "Delete profile"
-msgstr "Eliminar perfil"
+msgstr ""
 
 #: templates/userprofile/profile/personal_done.html:9
 msgid "Your profile information has been updated successfully."
-msgstr "La información de tu perfil se ha actualizado satisfactoriamente."
+msgstr ""
 
 #: templates/userprofile/profile/personal_done.html:11
 msgid "You can go"
-msgstr "Puedes ir"
+msgstr ""
 
 #: templates/userprofile/profile/personal_done.html:11
 msgid "back to home"
-msgstr "a la página principal"
+msgstr ""
 
 #: templates/userprofile/profile/personal_done.html:11
 msgid "or"
-msgstr "o"
+msgstr ""
 
 #: templates/userprofile/profile/personal_done.html:11
 msgid "back to your profile"
-msgstr "de vuelta a tu perfil"
+msgstr ""
 
 #: templates/userprofile/profile/public.html:30
 #, python-format
 msgid "Public profile of %(user)s"
-msgstr "Perfil público de %(user)s"
+msgstr ""
 
 #: templates/userprofile/profile/usercard.html:12
 msgid "Public profile information"
-msgstr "Información del perfil público"
+msgstr ""
 
 #: templatetags/avatars.py:68
 msgid ""
 "You have to provide only the size as             an integer (both sides will"
 " be equal) and optionally, the             username."
-msgstr "Tienes que escribir el tamaño como un numero entero (los dos lados serán iguales) y opcionalmente, el nombre de usuario."
+msgstr ""
