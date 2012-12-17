@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
@@ -38,7 +38,7 @@ from django.core.urlresolvers import NoReverseMatch, reverse
 from django.template.response import TemplateResponse
 
 from core.spaces.models import Space
-from core.permissions import has_all_permissions, has_space_permission
+from core.permissions import has_all_permissions, has_space_permission, has_operation_permission
 from apps.ecidadania.voting.models import *
 from apps.ecidadania.voting.forms import *
 from apps.ecidadania.proposals.models import *
@@ -63,9 +63,7 @@ def AddPoll(request, space_url):
     except ObjectDoesNotExist:
         current_poll_id = 1
 
-    if has_space_permission(request.user, place, allow=['admins', 'mods']) \
-    or has_all_permissions(request.user) \
-    or request.user.has_perm('voting.poll_add'):
+    if (has_operation_permission(request.user, place, 'voting.add_poll', allow=['admins', 'mods'])):
         if request.method == 'POST':
             if poll_form.is_valid() and choice_form.is_valid():
                 poll_form_uncommited = poll_form.save(commit=False)
@@ -98,36 +96,35 @@ def EditPoll(request, space_url, poll_id):
     :context: form, get_place, choiceform, pollid
     """
     place = get_object_or_404(Space, url=space_url)
-
-    if has_space_permission(request.user, place, allow=['admins', 'mods']) \
-    or has_all_permissions(request.user):
+    if has_operation_permission(request.user, place, 'voting.change_poll', allow=['admins', 'mods']):
      
         ChoiceFormSet = inlineformset_factory(Poll, Choice)
         instance = Poll.objects.get(pk=poll_id)
         poll_form = PollForm(request.POST or None, instance=instance)
         choice_form = ChoiceFormSet(request.POST or None, instance=instance,  prefix="choiceform")
 
-        if request.user.has_perm('poll_edit') or request.user.is_staff:
-            if request.method == 'POST':
-                if poll_form.is_valid() and choice_form.is_valid():
-                    poll_form_uncommited = poll_form.save(commit=False)
-                    poll_form_uncommited.space = place
-                    poll_form_uncommited.author = request.user
+        if request.method == 'POST':
+            if poll_form.is_valid() and choice_form.is_valid():
+                poll_form_uncommited = poll_form.save(commit=False)
+                poll_form_uncommited.space = place
+                poll_form_uncommited.author = request.user
 
-                    saved_poll = poll_form_uncommited.save()
+                saved_poll = poll_form_uncommited.save()
 
-                    for form in choice_form.forms:
-                        choice = form.save(commit=False)
-                        choice.poll = instance
-                        choice.save()
-                    return redirect('/spaces/' + space_url)
+                for form in choice_form.forms:
+                    choice = form.save(commit=False)
+                    choice.poll = instance
+                    choice.save()
+                return redirect('/spaces/' + space_url)
 
-            return render_to_response('voting/poll_edit.html',
-                                     {'form': poll_form,
-                                      'choiceform': choice_form,
-                                      'get_place': place,
-                                      'pollid': poll_id,},
-                                     context_instance=RequestContext(request))
+        return render_to_response('voting/poll_edit.html',
+                                 {'form': poll_form,
+                                  'choiceform': choice_form,
+                                  'get_place': place,
+                                  'pollid': poll_id,},
+                                 context_instance=RequestContext(request))
+    else:
+        return render_to_response('not_allowed.html', context_instance=RequestContext(request))
 
 
 class DeletePoll(DeleteView):
@@ -135,21 +132,25 @@ class DeletePoll(DeleteView):
     """
     Delete an existent poll. Poll deletion is only reserved to spaces
     administrators or site admins.
-    """
+    """    
     context_object_name = "get_place"
-
+    
     def get_success_url(self):
         space = self.kwargs['space_url']
         return '/spaces/%s' % (space)
 
     def get_object(self):
-        return get_object_or_404(Poll, pk=self.kwargs['poll_id'])
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        if has_operation_permission(self.request.user, space, 'voting.delete_poll', allow=['admins']):
+            return get_object_or_404(Poll, pk=self.kwargs['poll_id'])
+        else:
+            self.template_name = 'not_allowed.html'
 
     def get_context_data(self, **kwargs):
-
         context = super(DeletePoll, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
+
 
 class ListPolls(ListView):
     """
