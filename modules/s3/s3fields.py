@@ -193,10 +193,13 @@ class S3Represent(object):
         @group Configuration (in the model): __init__
         @group API (to apply the method): __call__,
                                           multiple,
-                                          bulk
+                                          bulk,
+                                          render_list
         @group Prototypes (to adapt in subclasses): lookup_rows,
                                                     represent_row,
                                                     link
+        @group Internal Methods: _setup,
+                                 _lookup
     """
 
     def __init__(self,
@@ -514,6 +517,8 @@ class S3Represent(object):
         self._setup()
         theset = self.theset
 
+        ogetattr = object.__getattribute__
+
         items = {}
         lookup = {}
         for v in values:
@@ -529,27 +534,35 @@ class S3Represent(object):
         pkey = self.key
         table = self.table
         try:
-            key = object.__getattribute__(table, pkey)
+            key = ogetattr(table, pkey)
         except AttributeError:
             return items
 
+        pop = lookup.pop
+        represent_row = self.represent_row
         if rows:
-            represent_row = self.represent_row
             for row in rows:
                 k = row[key]
                 if k not in theset:
                     theset[k] = represent_row(row)
-                if lookup.pop(k, None):
+                if pop(k, None):
                     items[k] = theset[k]
             if not lookup:
                 return items
 
         lookup = lookup.keys()
-        fields = [object.__getattribute__(table, f)
-                  for f in self.fields if hasattr(table, f)]
+        try:
+            # Need for speed: assume all fields are in table
+            fields = [ogetattr(table, f) for f in self.fields]
+        except AttributeError:
+            # Ok - they are not: provide debug output and filter fields
+            if current.response.s3.debug:
+                from s3utils import s3_debug
+                s3_debug(sys.exc_info()[1])
+            fields = [ogetattr(table, f)
+                      for f in self.fields if hasattr(table, f)]
         rows = self.lookup_rows(key, lookup, fields=fields)
 
-        represent_row = self.represent_row
         for row in rows:
             k = row[key]
             items[k] = theset[k] = represent_row(row)
