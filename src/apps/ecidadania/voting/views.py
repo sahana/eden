@@ -213,22 +213,22 @@ class AddVoting(FormView):
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        form_uncommited = form.save(commit=False)
-        form_uncommited.author = self.request.user
-        form_uncommited.space = self.space
-        form_uncommited.save()
-        form.save_m2m()
-        return super(AddVoting, self).form_valid(form)
+        if has_operation_permission(self.request.user, self.space, 'voting.add_voting', allow=['admins', 'mods']):
+            form_uncommited = form.save(commit=False)
+            form_uncommited.author = self.request.user
+            form_uncommited.space = self.space
+            form_uncommited.save()
+            form.save_m2m()
+            return super(AddVoting, self).form_valid(form)
+        else:
+            template_name = 'not_allowed.html'
+
 
     def get_context_data(self, **kwargs):
         context = super(AddVoting, self).get_context_data(**kwargs)
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = self.space
         return context
-
-    @method_decorator(permission_required('voting.add_voting'))
-    def dispatch(self, *args, **kwargs):
-        return super(AddVoting, self).dispatch(*args, **kwargs)
 
 class ViewVoting(DetailView):
 
@@ -270,21 +270,20 @@ class EditVoting(UpdateView):
     template_name = 'voting/voting_form.html'
 
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         return '/spaces/' + self.space.url
 
     def get_object(self):
-        cur_voting = get_object_or_404(Voting, pk=self.kwargs['voting_id'])
-        return cur_voting
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        if has_operation_permission(self.request.user, self.space, 'voting.change_voting', allow=['admins', 'mods']):
+            return get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+        else:
+            self.template_name = 'not_allowed.html'
 
     def get_context_data(self, **kwargs):
         context = super(EditVoting, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = self.space
         return context
 
-    @method_decorator(permission_required('voting.edit_voting'))
-    def dispatch(self, *args, **kwargs):
-        return super(EditVoting, self).dispatch(*args, **kwargs)
 
 class DeleteVoting(DeleteView):
 
@@ -299,7 +298,11 @@ class DeleteVoting(DeleteView):
         return '/spaces/%s' % (space)
 
     def get_object(self):
-        return get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        if has_operation_permission(self.request.user, self.space, 'voting.delete_voting', allow=['admins', 'mods']):
+            return get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+        else:
+            self.template_name = 'not_allowed.html'
 
     def get_context_data(self, **kwargs):
 
@@ -307,7 +310,6 @@ class DeleteVoting(DeleteView):
         Get extra context data for the ViewVoting view.
         """
         context = super(DeleteVoting, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = self.space
         return context
-
 
