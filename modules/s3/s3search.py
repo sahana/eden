@@ -954,6 +954,8 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
 class S3Search(S3CRUD):
     """
         RESTful Search Method for S3Resources
+        
+        See also: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Search
     """
 
     def __init__(self, simple=None, advanced=None, any=False, **args):
