@@ -5,7 +5,7 @@
 {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.new.js" % appname)}}
 {{if globals().get("tables", False):}}
   <div id="table-container">
-	<h1>{{=T("Regional Organisations")}}</h1>
+	<h1>{{=T("Regional Organizations")}}</h1>
 	{{table = tables[0]}}
 	{{include "_datatable.html"}}
 	<h1 style = "padding-top:20px">{{=T("Committees, Forums, Mechanism, Meetings and Networks")}}</h1>

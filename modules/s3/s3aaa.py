@@ -7626,7 +7626,7 @@ class S3OrgRoleManager(S3EntityRoleManager):
                                           k not in self.realm_users])
 
             options = [("", ""),
-                       (T("Users in my Organisations"), realm_users),
+                       (T("Users in my Organizations"), realm_users),
                        (T("Other Users"), nonrealm_users)]
 
             object_field = Field("foreign_object",

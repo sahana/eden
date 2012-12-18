@@ -1796,21 +1796,14 @@ class S3RequestSummaryModel(S3Model):
         # -----------------------------------------------------------------
         # Summary of Needs for a site
         #
-        # @ToDo: Convert the simple text boxes into a widget
-        # e.g. modified ui.multiselect.js
-        # http://eden.sahanafoundation.org/ticket/1199
-        #
         tablename = "req_site_needs"
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site"),
-
                                   s3_comments("needs",
                                               label=T("Needs"),
                                               comment=None,
-                                              widget=S3PriorityListWidget(
-                                                     ),
+                                              widget=S3PriorityListWidget(),
                                               ),
-
                                   *s3_meta_fields())
 
         # CRUD strings

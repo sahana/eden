@@ -1851,9 +1851,7 @@ class S3FacilityModel(S3Model):
                                 stable.phone2,
                                 stable.email,
                                 stable.website,
-                                ntable.urgently_needed,
-                                ntable.needed,
-                                ntable.not_needed,
+                                ntable.needs,
                                 gtable.addr_street,
                                 gtable.L1,
                                 gtable.L4,
@@ -1909,12 +1907,14 @@ class S3FacilityModel(S3Model):
                 properties["web"] = o.website
             n = f.req_site_needs
             if n:
-                if n.urgently_needed:
-                    properties["urgent"] = n.urgently_needed
-                if n.needed:
-                    properties["need"] = n.needed
-                if n.not_needed:
-                    properties["no"] = n.not_needed
+                if n.needs:
+                    needs = json.loads(n.needs)
+                    if "urgent" in needs:
+                        properties["urgent"] = needs["urgent"]
+                    if "need" in needs:
+                        properties["need"] = needs["need"]
+                    if "no" in needs:
+                        properties["no"] = needs["no"]
             f = dict(
                 type = "Feature",
                 properties = properties,
