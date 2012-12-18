@@ -104,8 +104,8 @@
             var itemText = item.children('span').text();
 
             if (from) {
-                self.changedNeeds[from].remove(itemText);
-                self.updatedNeeds[from].remove(itemText);
+                self._removeItem(self.changedNeeds[from], itemText);
+                self._removeItem(self.updatedNeeds[from], itemText);
             }
 
             self.changedNeeds[to].push(itemText);
@@ -119,11 +119,8 @@
             var itemText = item.children('span').text();
             var from = item.parent('ul').attr('id');
 
-            if (self.changedNeeds[from].indexOf(itemText) > -1) {
-                self.changedNeeds[from].remove(itemText);
-            }
-
-            self.updatedNeeds[from].remove(itemText);
+	    self._removeItem(self.changedNeeds[from], itemText);
+            self._removeItem(self.updatedNeeds[from], itemText);
             item.remove();
             self.updateForm();
         },		
@@ -149,6 +146,21 @@
             this._super( '_setOption', key, value );
         },
 
+	// Remove an item from an array
+	_removeItem: function( anArray, item ) {
+	    var i = 0;
+            var L = anArray.length;
+
+            while (i < L) {
+		if(anArray[i] === item) {
+		    anArray.splice(i);
+		    return 1;
+		}
+		++i;
+            }
+            return -1;
+	},
+
         // Use the destroy method to clean up any modifications your widget has made to the DOM
         destroy: function() {
             // In jQuery UI 1.8, you must invoke the destroy method from the base widget
@@ -157,27 +169,3 @@
         }
     });
 }( jQuery ) );
-
-// @ToDo: Don't modify Array.prototype in global scope
-if(!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function(what, i) {
-        i = i || 0;
-        var L = this.length;
-        while (i < L) {
-            if(this[i] === what) return i;
-            ++i;
-        }
-        return -1;
-    };
-}
-
-Array.prototype.remove = function() {
-    var what, a = arguments, L = a.length, ax;
-    while (L && this.length) {
-        what = a[--L];
-        while ((ax = this.indexOf(what)) !== -1) {
-            this.splice(ax, 1);
-        }
-    }
-    return this;
-};
