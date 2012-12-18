@@ -830,14 +830,20 @@ class S3HRJobModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
 
         organisation_id = self.org_organisation_id
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        root_org = current.auth.root_org()
-        if root_org:
+        root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)
@@ -857,10 +863,9 @@ class S3HRJobModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set
                              # realm_entity to filter appropriately
-                             organisation_id(
-                                             default = root_org,
-                                             readable = False,
-                                             writable = False,
+                             organisation_id(default = root_org,
+                                             readable = is_admin,
+                                             writable = is_admin,
                                              ),
                              s3_comments(label=T("Description"),
                                          comment=None),
@@ -911,10 +916,9 @@ class S3HRJobModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set
                              # realm_entity to filter appropriately
-                             organisation_id(
-                                             default = root_org,
-                                             readable = False,
-                                             writable = False,
+                             organisation_id(default = root_org,
+                                             readable = is_admin,
+                                             writable = is_admin,
                                              ),
                              s3_comments(label=T("Description"),
                                          comment=None),
@@ -995,10 +999,9 @@ class S3HRJobModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set
                              # realm_entity to filter appropriately
-                             organisation_id(
-                                             default = root_org,
-                                             readable = False,
-                                             writable = False,
+                             organisation_id(default = root_org,
+                                             readable = is_admin,
+                                             writable = is_admin,
                                              ),
                              s3_comments(label=T("Description"),
                                          comment=None),
@@ -1306,6 +1309,7 @@ class S3HRSkillModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
 
         s3_string_represent = lambda str: str if str else NONE
         s3_date_represent = S3DateTime.date_represent
@@ -1316,7 +1320,6 @@ class S3HRSkillModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        s3_has_role = auth.s3_has_role
         super_link = self.super_link
 
         root_org = auth.root_org()
@@ -1705,10 +1708,9 @@ class S3HRSkillModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set
                              # realm_entity to filter appropriately
-                             organisation_id(
-                                             default = root_org,
-                                             readable = False,
-                                             writable = False,
+                             organisation_id(default = root_org,
+                                             readable = is_admin,
+                                             writable = is_admin,
                                              ),
                              *s3_meta_fields())
 
@@ -1729,7 +1731,7 @@ class S3HRSkillModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        if s3_has_role(ADMIN):
+        if is_admin:
             label_create = crud_strings[tablename].label_create_button
             course_help = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
                                             f="course",
@@ -1739,7 +1741,9 @@ class S3HRSkillModel(S3Model):
                               _title="%s|%s" % (T("Course"),
                               T("Enter some characters to bring up a list of possible matches")))
 
-        if root_org:
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)
@@ -1755,9 +1759,8 @@ class S3HRSkillModel(S3Model):
                                     comment = course_help,
                                     ondelete = "RESTRICT",
                                     # Comment this to use a Dropdown & not an Autocomplete
-                                    #widget = S3AutocompleteWidget("hrm",
-                                    #                              "course")
-                                )
+                                    #widget = S3AutocompleteWidget("hrm", "course")
+                                    )
 
         configure("hrm_course",
                   create_next=URL(f="course", args=["[id]", "course_certificate"]),
@@ -1825,7 +1828,7 @@ class S3HRSkillModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no training events registered"))
 
-        if s3_has_role(ADMIN):
+        if is_admin:
             label_create = crud_strings[tablename].label_create_button
             course_help = S3AddResourceLink(f="training_event",
                                             label=label_create)
@@ -2930,11 +2933,15 @@ class S3HRProgrammeModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
-        root_org = current.auth.root_org()
+        root_org = auth.root_org()
 
         # =========================================================================
         # Progammes
@@ -2947,11 +2954,10 @@ class S3HRProgrammeModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set
                              # realm_entity to filter appropriately
-                             self.org_organisation_id(
-                                             default = root_org,
-                                             readable = False,
-                                             writable = False,
-                                             ),
+                             self.org_organisation_id(default = root_org,
+                                                      readable = is_admin,
+                                                      writable = is_admin,
+                                                      ),
                              s3_comments(label=T("Description"),
                                          comment=None),
                              *s3_meta_fields())
@@ -2972,7 +2978,9 @@ class S3HRProgrammeModel(S3Model):
             msg_list_empty = T("Currently no programmes registered"))
 
         label_create = crud_strings[tablename].label_create_button
-        if root_org:
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)

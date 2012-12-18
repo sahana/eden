@@ -543,7 +543,7 @@ class S3Resource(object):
         lfields, joins, ljoins, d = self.resolve_selectors(fields)
 
         distinct = distinct | d
-        attributes = {"distinct":distinct}
+        attributes = {"distinct": distinct}
 
         # Left joins
         left_joins = left
@@ -4032,7 +4032,6 @@ class S3ResourceField(object):
         """ Resolve a field selector against a resource """
 
         s3db = current.s3db
-        manager = current.manager
 
         distinct = False
 
@@ -4189,7 +4188,7 @@ class S3ResourceField(object):
 
                 # Construct the joins
                 lq = (table[pkey] == ltable[lkey])
-                DELETED = manager.DELETED
+                DELETED = current.manager.DELETED
                 if DELETED in ltable.fields:
                     lq &= ltable[DELETED] != True
                 rq = (ltable[rkey] == ktable[fkey])
