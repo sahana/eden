@@ -52,6 +52,7 @@ from gluon.storage import Storage
 
 from s3codec import S3Codec
 from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper
+from s3fields import S3Represent, S3RepresentLazy
 
 try:
     from lxml import etree
@@ -599,8 +600,16 @@ class S3XML(S3Codec):
                         continue
 
             value = s3_unicode(dbfield.formatter(val))
-            if dbfield.represent:
-                text = represent(table, f, val)
+
+            # Get the representation
+            lazy = None
+            renderer = dbfield.represent
+            if renderer is not None:
+                if hasattr(renderer, "bulk"):
+                    text = None
+                    lazy = S3RepresentLazy(val, renderer)
+                else:
+                    text = represent(table, f, val)
             else:
                 text = xml_encode(value)
 
@@ -610,13 +619,14 @@ class S3XML(S3Codec):
                      "id":ids if type(ids) is list else [ids],
                      "uid":uids,
                      "text":text,
+                     "lazy":lazy,
                      "value":value}
             reference_map.append(Storage(entry))
 
         return reference_map
 
     # -------------------------------------------------------------------------
-    def add_references(self, element, rmap, show_ids=False):
+    def add_references(self, element, rmap, show_ids=False, lazy=None):
         """
             Adds <reference> elements to a <resource>
 
@@ -643,19 +653,31 @@ class S3XML(S3Codec):
             attr = reference.attrib
             attr[FIELD] = r.field
             attr[RESOURCE] = r.table
+
             if show_ids:
                 if r.multiple:
                     ids = str(as_json(r.id))
                 else:
                     ids = str(r.id[0])
                 attr[ID] = ids
+
             if r.uid:
+                
                 if r.multiple:
                     uids = str(as_json(r.uid))
                 else:
                     uids = str(r.uid[0])
                 attr[UID] = uids.decode("utf-8")
-                reference.text = r.text
+
+                # Render representation
+                if r.lazy is not None:
+                    if lazy is not None:
+                        lazy.append((r.lazy, reference, None, None))
+                    else:
+                        r.lazy.render_node(reference, None, None)
+                else:
+                    reference.text = r.text
+
             else:
                 attr[VALUE] = r.value
             r.element = reference
@@ -769,6 +791,8 @@ class S3XML(S3Codec):
                         id = int(master_id)
                         tablename = master.get(ATTRIBUTE.name, None)
                         master = True
+                    else:
+                        master = False
             if latlons and tablename in latlons:
                 LatLon = latlons[tablename].get(id, None)
                 if LatLon:
@@ -910,8 +934,8 @@ class S3XML(S3Codec):
                  record,
                  alias=None,
                  fields=[],
-                 postprocess=None,
-                 url=None):
+                 url=None,
+                 lazy=None):
         """
             Creates a <resource> element from a record
 
@@ -920,9 +944,8 @@ class S3XML(S3Codec):
             @param record: the record
             @param alias: the resource alias (for disambiguation of components)
             @param fields: list of field names to include
-            @param postprocess: post-process hook (function to process
-                                <resource> elements after compilation)
             @param url: URL of the record
+            @param lazy: lazy representation map
         """
 
         SubElement = etree.SubElement
@@ -948,11 +971,14 @@ class S3XML(S3Codec):
         download_url = current.response.s3.download_url or ""
         auth_group = current.auth.settings.table_group_name
 
+        # Create the element
         if parent is not None:
             elem = SubElement(parent, RESOURCE)
         else:
             elem = etree.Element(RESOURCE)
+
         attrib = elem.attrib
+
         attrib[NAME] = tablename
         if alias:
             attrib[ALIAS] = alias
@@ -997,36 +1023,58 @@ class S3XML(S3Codec):
 
         _repr = self.represent
         to_json = json.dumps
+
         for f in fields:
+
             if f == DELETED:
                 continue
+
             v = record.get(f, None)
+
             if f == MCI:
                 if v is None:
                     v = 0
                 attrib[MCI] = str(int(v) + 1)
                 continue
+
             if v is None or not hasattr(table, f):
                 continue
+
             dbfield = ogetattr(table, f)
             fieldtype = str(dbfield.type)
             formatter = dbfield.formatter
             represent = dbfield.represent
-            is_attr = f in FIELDS_TO_ATTRIBUTES
             value = None
+
             if fieldtype == "datetime":
                 value = encode_iso_datetime(v).decode("utf-8")
             elif fieldtype in ("date", "time"):
                 value = str(formatter(v)).decode("utf-8")
-            if represent is not None and fieldtype != "id":
-                text = _repr(table, f, v)
-            elif value is not None:
-                text = xml_encode(value)
+
+            # Get the representation
+            is_lazy = False
+            if fieldtype not in ("upload", "password", "blob"):
+                if represent is not None and fieldtype != "id":
+                    if lazy is not None and hasattr(represent, "bulk"):
+                        is_lazy = True
+                        text = S3RepresentLazy(v, represent)
+                    else:
+                        text = _repr(table, f, v)
+
+                elif value is not None:
+                    text = xml_encode(value)
+                else:
+                    text = xml_encode(s3_unicode(formatter(v)))
             else:
-                text = xml_encode(s3_unicode(formatter(v)))
-            if is_attr:
+                text = None
+
+            if f in FIELDS_TO_ATTRIBUTES:
                 if text is not None:
-                    attrib[f] = s3_unicode(text)
+                    if is_lazy:
+                        lazy.append((text, None, attrib, f))
+                    else:
+                        attrib[f] = s3_unicode(text)
+
             elif fieldtype == "upload":
                 fileurl = "%s/%s" % (download_url, v)
                 filename = v
@@ -1036,14 +1084,18 @@ class S3XML(S3Codec):
                     attr[FIELD] = f
                     attr[URL] = fileurl
                     attr[ATTRIBUTE.filename] = filename
+
             elif fieldtype == "password":
                 data = SubElement(elem, DATA)
                 data.attrib[FIELD] = f
                 data.text = v
+
             elif fieldtype == "blob":
-                # Not implemented
+                # Not implemented - skip
                 continue
+
             else:
+                # Create a <data> element
                 data = SubElement(elem, DATA)
                 attr = data.attrib
                 attr[FIELD] = f
@@ -1051,21 +1103,13 @@ class S3XML(S3Codec):
                     if value is None:
                         value = to_json(v).decode("utf-8")
                     attr[VALUE] = value
-                data.text = text
+                if is_lazy:
+                    lazy.append((text, data, None, None))
+                else:
+                    data.text = text
+
         if url and not deleted:
             attrib[URL] = url
-
-        # @todo: currently unused => remove?
-        #postp = None
-        #if postprocess is not None:
-            #if isinstance(postprocess, dict):
-                #postp = postprocess.get(str(table), None)
-            #else:
-                #postp = postprocess
-        #if postp and callable(postp):
-            #result = postp(table, record, elem)
-            #if isinstance(result, etree._Element):
-                #elem = result
 
         return elem
 

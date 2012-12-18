@@ -72,7 +72,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3fields import S3Represent
+from s3fields import S3Represent, S3RepresentLazy
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable, S3MarkupStripper
 from s3validators import IS_ONE_OF
 
@@ -1955,16 +1955,25 @@ class S3Resource(object):
         # Build the tree
         if DEBUG:
             _start = datetime.datetime.now()
+
         root = etree.Element(xml.TAG.root)
+        
         export_map = Storage()
+        lazy = []
         reference_map = []
+        
         prefix = self.prefix
         name = self.name
         if base_url:
             url = "%s/%s/%s" % (base_url, prefix, name)
         else:
             url = "/%s/%s" % (prefix, name)
+
+        current.auth_user_represent = S3Represent(lookup="auth_user",
+                                                  fields=["email"])
+
         export_resource = self.__export_resource
+
         for record in self._rows:
             element = export_resource(record,
                                       rfields=rfields,
@@ -1973,6 +1982,7 @@ class S3Resource(object):
                                       base_url=url,
                                       reference_map=reference_map,
                                       export_map=export_map,
+                                      lazy=lazy,
                                       components=mcomponents,
                                       skip=skip,
                                       msince=msince,
@@ -2040,6 +2050,7 @@ class S3Resource(object):
                                               reference_map=reference_map,
                                               export_map=export_map,
                                               components=rcomponents,
+                                              lazy=lazy,
                                               skip=skip,
                                               master=False,
                                               marker=marker,
@@ -2054,6 +2065,11 @@ class S3Resource(object):
             duration = '{:.2f}'.format(duration.total_seconds())
             _debug("export_resource of referenced resources and their components completed in %s seconds" % \
                    duration)
+
+        # Render all pending lazy representations
+        if lazy:
+            for renderer, element, attr, f in lazy:
+                renderer.render_node(element, attr, f)
 
         # Complete the tree
         tree = xml.tree(None,
@@ -2079,6 +2095,7 @@ class S3Resource(object):
                           base_url=None,
                           reference_map=None,
                           export_map=None,
+                          lazy=None,
                           components=None,
                           skip=[],
                           msince=None,
@@ -2124,6 +2141,7 @@ class S3Resource(object):
                                dfields=dfields,
                                parent=parent,
                                export_map=export_map,
+                               lazy=lazy,
                                url=record_url,
                                msince=msince,
                                master=master,
@@ -2183,6 +2201,7 @@ class S3Resource(object):
                                              dfields=cdfields,
                                              parent=element,
                                              export_map=export_map,
+                                             lazy=lazy,
                                              url=crecord_url,
                                              msince=msince,
                                              master=False)
@@ -2215,6 +2234,7 @@ class S3Resource(object):
                        dfields=[],
                        parent=None,
                        export_map=None,
+                       lazy=None,
                        url=None,
                        msince=None,
                        master=True,
@@ -2242,7 +2262,16 @@ class S3Resource(object):
         tablename = self.tablename
         table = self.table
 
-        postprocess = s3db.get_config(tablename, "onexport", None)
+        # Replace user ID representation by lazy method
+        user_ids = ("created_by", "modified_by", "owned_by_user")
+        auth_user_represent = Storage()
+        for fn in user_ids:
+            if hasattr(table, fn):
+                f = ogetattr(table, fn)
+                auth_user_represent[fn] = f.represent
+                f.represent = current.auth_user_represent
+
+        #postprocess = s3db.get_config(tablename, "onexport", None)
 
         default = (None, None)
 
@@ -2286,15 +2315,20 @@ class S3Resource(object):
         element = xml.resource(parent, table, record,
                                fields=dfields,
                                alias=alias,
-                               postprocess=postprocess,
+                               lazy=lazy,
                                url=url)
+
         # Add the references
         xml.add_references(element, rmap,
-                           show_ids=manager.show_ids)
+                           show_ids=manager.show_ids, lazy=lazy)
 
         # GIS-encode the element
         xml.gis_encode(self, record, element, rmap,
                        marker=marker, locations=locations, master=master)
+
+        # Restore user-ID representations
+        for fn in auth_user_represent:
+            ogetattr(table, fn).represent = auth_user_represent[fn]
 
         return (element, rmap)
 
@@ -4295,69 +4329,6 @@ class S3ResourceField(object):
                 return s3_unicode(value)
         else:
             return value
-
-# =============================================================================
-class S3RepresentLazy(object):
-    """
-        Lazy Representation of a field value, utilizes the bulk-feature
-        of S3Represent-style representation methods
-    """
-
-    def __init__(self, value, renderer):
-        """
-            Constructor
-
-            @param value: the value
-            @param renderer: the renderer (S3Represent instance)
-        """
-
-        self.value = value
-        self.renderer = renderer
-
-        self.multiple = False
-        renderer.lazy.append(value)
-
-    def __repr__(self):
-        """ Represent as string """
-
-        value = self.value
-        renderer = self.renderer
-        if renderer.lazy:
-            labels = renderer.bulk(renderer.lazy)
-            renderer.lazy = []
-        else:
-            labels = renderer.theset
-        if renderer.list_type:
-            if self.multiple:
-                return renderer.multiple(value, show_link=False)
-            else:
-                return renderer.render_list(value, labels, show_link=False)
-        else:
-            if self.multiple:
-                return renderer.multiple(value, show_link=False)
-            else:
-                return renderer(value, show_link=False)
-                
-    def render(self):
-        """ Render as HTML """
-
-        value = self.value
-        renderer = self.renderer
-        if renderer.lazy:
-            labels = renderer.bulk(renderer.lazy)
-            renderer.lazy = []
-        else:
-            labels = renderer.theset
-        if renderer.list_type:
-            if self.multiple:
-                return renderer.multiple(value)
-            else:
-                return renderer.render_list(value, labels)
-        else:
-            if self.multiple:
-                return renderer.multiple(value)
-            else:
-                return renderer(value)
 
 # =============================================================================
 class S3ResourceQuery(object):

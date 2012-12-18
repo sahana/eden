@@ -569,6 +569,98 @@ class S3Represent(object):
         return items
 
 # =============================================================================
+class S3RepresentLazy(object):
+    """
+        Lazy Representation of a field value, utilizes the bulk-feature
+        of S3Represent-style representation methods
+    """
+
+    def __init__(self, value, renderer):
+        """
+            Constructor
+
+            @param value: the value
+            @param renderer: the renderer (S3Represent instance)
+        """
+
+        self.value = value
+        self.renderer = renderer
+
+        self.multiple = False
+        renderer.lazy.append(value)
+
+    def __repr__(self):
+        """ Represent as string """
+
+        value = self.value
+        renderer = self.renderer
+        if renderer.lazy:
+            labels = renderer.bulk(renderer.lazy)
+            renderer.lazy = []
+        else:
+            labels = renderer.theset
+        if renderer.list_type:
+            if self.multiple:
+                return renderer.multiple(value, show_link=False)
+            else:
+                return renderer.render_list(value, labels, show_link=False)
+        else:
+            if self.multiple:
+                return renderer.multiple(value, show_link=False)
+            else:
+                return renderer(value, show_link=False)
+
+    def render(self):
+        """ Render as HTML """
+
+        value = self.value
+        renderer = self.renderer
+        if renderer.lazy:
+            labels = renderer.bulk(renderer.lazy)
+            renderer.lazy = []
+        else:
+            labels = renderer.theset
+        if renderer.list_type:
+            if self.multiple:
+                return renderer.multiple(value)
+            else:
+                return renderer.render_list(value, labels)
+        else:
+            if self.multiple:
+                return renderer.multiple(value)
+            else:
+                return renderer(value)
+
+    def render_node(self, element, attributes, name):
+        """
+            Render as text or attribute of an XML element
+
+            @param element: the element
+            @param attributes: the attributes dict of the element
+            @param name: the attribute name
+        """
+
+        # Render value
+        text = repr(self)
+
+        # Strip markup + XML-escape
+        if text and "<" in text:
+            try:
+                stripper = S3MarkupStripper()
+                stripper.feed(text)
+                text = stripper.stripped()
+            except:
+                pass
+        text = current.xml.xml_encode(text)
+
+        # Add to node
+        if element is not None:
+            element.text = text
+        else:
+            attributes[name] = text
+        return
+
+# =============================================================================
 # Record identity meta-fields
 
 # Use URNs according to http://tools.ietf.org/html/rfc4122
