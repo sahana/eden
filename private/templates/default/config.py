@@ -263,6 +263,8 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_code_len = 3
 # Set the label for Sites
 #settings.org.site_label = "Facility"
+# Uncomment to show the date when a Site (Facilities-only for now) was last contacted
+#settings.org.site_last_contacted = True
 # Uncomment to use an Autocomplete for Site lookup fields
 #settings.org.site_autocomplete = True
 # Uncomment to have Site Autocompletes search within Address fields

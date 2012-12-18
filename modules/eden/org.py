@@ -32,6 +32,7 @@ __all__ = ["S3OrganisationModel",
            "S3OrganisationSummaryModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
+           "S3SiteDetailsModel",
            "S3FacilityModel",
            "org_facility_rheader",
            "S3RoomModel",
@@ -1262,6 +1263,10 @@ class S3SiteModel(S3Model):
                       org_site=dict(joinby="site_id",
                                     multiple=False))
 
+        # Details
+        add_component("org_site_details",
+                      org_site=dict(joinby="site_id",
+                                    multiple=False))
         self.configure(tablename,
                        onaccept=self.org_site_onaccept,
                        list_fields=["id",
@@ -1285,6 +1290,7 @@ class S3SiteModel(S3Model):
         """
             Create the code from the name
         """
+
         name = form.vars.name
         if not name:
             return
@@ -1317,6 +1323,7 @@ class S3SiteModel(S3Model):
     def getCodeList(code, wildcard_posn=[]):
         """
         """
+
         temp_code = ""
         # Inject the wildcard charater in the right positions
         for posn in range(len(code)):
@@ -1330,7 +1337,7 @@ class S3SiteModel(S3Model):
         query = site_table.code.like(temp_code)
         rows = db(query).select(site_table.id,
                                         site_table.code)
-        # Extract the rows on the database to provide a list of used codes
+        # Extract the rows in the database to provide a list of used codes
         codeList = []
         for record in rows:
             codeList.append(record.code)
@@ -1341,6 +1348,7 @@ class S3SiteModel(S3Model):
     def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
         """
         """
+
         # Select the replacement letters with numbers first and then
         # followed by the letters in least commonly used order
         replacement_char = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
@@ -1358,7 +1366,7 @@ class S3SiteModel(S3Model):
                     temp_code += code[posn]
             if temp_code not in code_list:
                 return temp_code
-            # set up the next rep_posn
+            # Set up the next rep_posn
             p = 0
             while (p < len(wildcard_posn)):
                 if rep_posn[p] == 35: # the maximum number of replacement characters
@@ -1367,9 +1375,62 @@ class S3SiteModel(S3Model):
                 else:
                     rep_posn[p] = rep_posn[p] + 1
                     break
-            # if no new permutation of replacement characters has been found
+            # If no new permutation of replacement characters has been found
             if p == len(wildcard_posn):
                 return None
+
+# =============================================================================
+class S3SiteDetailsModel(S3Model):
+    """ Extra optional details for Sites """
+
+    names = ["org_site_details",
+             ]
+
+    def model(self):
+
+        T = current.T
+        settings = current.deployment_settings
+
+        last_contacted = settings.get_org_site_last_contacted()
+
+        # ---------------------------------------------------------------------
+        # Details
+        tablename = "org_site_details"
+        table = self.define_table(tablename,
+                                  # Component not instance
+                                  self.super_link("site_id", "org_site"),
+                                  s3_date("last_contacted",
+                                          readable = last_contacted,
+                                          writable = last_contacted,
+                                          label = T("Last Contacted")),
+                                  *s3_meta_fields())
+
+        # CRUD Strings
+        site_label = settings.get_org_site_label()
+        ADD_DETAILS = T("Add %(site_label)s Details") % site_label
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_DETAILS,
+            title_display = T("%(site_label)s Details") % site_label,
+            title_list = T("%(site_label)s Details") % site_label,
+            title_update = T("Edit %(site_label)s Details") % site_label,
+            title_search = T("Search %(site_label)s Details") % site_label,
+            subtitle_create = T("Add New %(site_label)s Details") % site_label,
+            label_list_button = T("List %(site_label)s Details") % site_label,
+            label_create_button = ADD_DETAILS,
+            msg_record_created = T("%(site_label)s Details added") % site_label,
+            msg_record_modified = T("%(site_label)s Details updated") % site_label,
+            msg_record_deleted = T("%(site_label)s Details deleted") % site_label,
+            msg_list_empty = T("There are no details for this %(site_label)s yet. Add %(site_label)s Details.") % site_label
+            )
+
+        # Resource configuration
+        #self.configure(tablename,
+        #               )
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to s3db.*
+        #
+        return Storage()
 
 # =============================================================================
 class S3FacilityModel(S3Model):
@@ -1602,8 +1663,25 @@ class S3FacilityModel(S3Model):
             # @ToDo: Report should show Closed Requests?
             #report_fields.append((T("High Priority Open Requests"), "reqs"))
 
+        # Custom Form
+        crud_form = s3forms.S3SQLCustomForm("name",
+                                            "code",
+                                            "facility_type_id",
+                                            "organisation_id",
+                                            "location_id",
+                                            "opening_times",
+                                            "contact",
+                                            "phone1",
+                                            "phone2",
+                                            "email",
+                                            "website",
+                                            "site_details.last_contacted",
+                                            "comments",
+                                            )
+
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  crud_form = crud_form,
                   deduplicate=self.org_facility_duplicate,
                   onaccept = self.org_facility_onaccept,
                   search_method=S3Search(advanced=org_facility_search),

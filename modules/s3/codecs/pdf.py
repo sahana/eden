@@ -30,7 +30,14 @@
 
 __all__ = ["S3RL_PDF"]
 
-# Import the necessary libraries
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
+
+from copy import deepcopy
+import os
+
 from gluon import *
 from gluon import current
 from gluon.storage import Storage
@@ -38,13 +45,6 @@ from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
 from ..s3codec import S3Codec
-
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
-
-from copy import deepcopy
 
 # Import the specialist libraries
 try:
@@ -90,12 +90,11 @@ PDF_WIDTH = 0
 PDF_HEIGHT = 1
 
 # =============================================================================
-
 class S3RL_PDF(S3Codec):
     """
         Simple Report Labs PDF format codec
     """
-    # -------------------------------------------------------------------------
+
     def __init__(self):
         """
             Constructor
@@ -138,6 +137,7 @@ class S3RL_PDF(S3Codec):
                                           B - Both
                 * pdf_paper_alignment: Portrait (default) or Landscape
         """
+
         if not PILImported:
             current.session.warning = self.ERROR.PIL_ERROR
         if not reportLabImported:
@@ -238,13 +238,14 @@ class S3RL_PDF(S3Codec):
         doc.output.seek(0)
         return doc.output.read()
 
+    # -------------------------------------------------------------------------
     def get_html_flowable(self, rules, printable_width):
         """
             Function to convert the rules passed in to a flowable.
-
-            the rules (for example) could be a rHeader callback
+            The rules (for example) could be an rHeader callback
         """
-        # let's assume that it's a callable
+
+        # Let's assume that it's a callable
         try:
             # switch the representation to html so the callback doesn't barf
             repr = self.r.representation
@@ -259,10 +260,14 @@ class S3RL_PDF(S3Codec):
         result = parser.parse(html)
         return result
 
+    # -------------------------------------------------------------------------
     def get_resource_flowable(self, resource, doc):
-        # get a list of fields, if the list_fields attribute is provided
-        # then use that to extract the fields that are required, otherwise
-        # use the list of readable fields.
+        """
+            Get a list of fields, if the list_fields attribute is provided
+            then use that to extract the fields that are required, otherwise
+            use the list of readable fields.
+        """
+
         from s3.s3utils import S3DataTable
         if not self.list_fields:
             self.list_fields = []
@@ -294,7 +299,7 @@ class S3RL_PDF(S3Codec):
                                ).build()
         return pdf_table
 
-# -------------------------------------------------------------------------
+# =============================================================================
 class EdenDocTemplate(BaseDocTemplate):
     """
         The standard document template for eden reports
@@ -305,6 +310,7 @@ class EdenDocTemplate(BaseDocTemplate):
         4) Landscape Page
 
     """
+
     def __init__(self,
                  title = "Sahana Eden",
                  margin = (0.5*inch,  # top
@@ -317,6 +323,7 @@ class EdenDocTemplate(BaseDocTemplate):
         """
             Set up the standard page templates
         """
+
         self.output = StringIO()
         self.defaultPage = paper_alignment
         if paper_size:
@@ -347,6 +354,7 @@ class EdenDocTemplate(BaseDocTemplate):
 
         self._calc()
 
+    # -------------------------------------------------------------------------
     def get_flowable_size(self, flowable):
         """
             Function to return the size a flowable will require
@@ -366,6 +374,7 @@ class EdenDocTemplate(BaseDocTemplate):
                 h += size[PDF_HEIGHT]
         return (w, h)
 
+    # -------------------------------------------------------------------------
     def _calc(self):
         if self.defaultPage == "Landscape":
             self.pagesize = landscape(self.paper_size)
@@ -382,6 +391,7 @@ class EdenDocTemplate(BaseDocTemplate):
                                 self.topMargin - \
                                 self.bottomMargin
 
+    # -------------------------------------------------------------------------
     def calc_body_size(self,
                        header_flowable,
                        footer_flowable,
@@ -407,6 +417,7 @@ class EdenDocTemplate(BaseDocTemplate):
                            self.header_height - \
                            self.footer_height
 
+    # -------------------------------------------------------------------------
     def build(self,
               header_flowable,
               body_flowable,
@@ -416,7 +427,6 @@ class EdenDocTemplate(BaseDocTemplate):
             Build the document using the flowables.
 
             Set up the page templates that the document can use
-
         """
         self.header_flowable = header_flowable
         self.body_flowable = body_flowable
@@ -439,26 +449,26 @@ class EdenDocTemplate(BaseDocTemplate):
                           )
 
         self.body_frame = body_frame
-        self.normalPage = PageTemplate (id = 'Normal',
-                                        frames = [body_frame,],
-                                        onPage = self.add_page_decorators,
-                                        pagesize = self.pagesize
+        self.normalPage = PageTemplate(id = "Normal",
+                                       frames = [body_frame,],
+                                       onPage = self.add_page_decorators,
+                                       pagesize = self.pagesize
                                        )
         # @todo set these page templates up
-#        self.evenPage = PageTemplate (id='even',
-#                                      frames=frame_list,
-#                                      onPage=self.onEvenPage,
-#                                      pagesize=self.pagesize
-#                                     )
-#        self.oddPage = PageTemplate (id='odd',
-#                                     frames=frame_list,
-#                                     onPage=self.onOddPage,
-#                                     pagesize=self.pagesize
-#                                    )
-        self.landscapePage = PageTemplate (id='Landscape',
-                                           frames = [body_frame,],
-                                           onPage=self.add_page_decorators,
-                                           pagesize=landscape(self.pagesize)
+        #self.evenPage = PageTemplate(id="even",
+        #                             frames=frame_list,
+        #                             onPage=self.onEvenPage,
+        #                             pagesize=self.pagesize
+        #                             )
+        #self.oddPage = PageTemplate(id="odd",
+        #                            frames=frame_list,
+        #                            onPage=self.onOddPage,
+        #                            pagesize=self.pagesize
+        #                            )
+        self.landscapePage = PageTemplate(id="Landscape",
+                                          frames = [body_frame,],
+                                          onPage=self.add_page_decorators,
+                                          pagesize=landscape(self.pagesize)
                                           )
         if self.defaultPage == "Landscape":
             self.addPageTemplates(self.landscapePage)
@@ -467,7 +477,11 @@ class EdenDocTemplate(BaseDocTemplate):
 
         BaseDocTemplate.build(self, self.body_flowable, canvasmaker=canvasmaker)
 
+    # -------------------------------------------------------------------------
     def add_page_decorators(self, canvas, doc):
+        """
+        """
+
         if self.header_flowable:
             top = self.bottomMargin + self.printable_height
             for flow in self.header_flowable:
@@ -489,21 +503,22 @@ class EdenDocTemplate(BaseDocTemplate):
                            )
                 top = bottom
 
+    # -------------------------------------------------------------------------
     def addParagraph(self, text, style=None, append=True):
         """
-        Method to create a paragraph that may be inserted into the document
+            Method to create a paragraph that may be inserted into the document
 
-        @param text: The text for the paragraph
-        @param append: If True then the paragraph will be stored in the
-        document flow ready for generating the pdf.
+            @param text: The text for the paragraph
+            @param append: If True then the paragraph will be stored in the
+            document flow ready for generating the pdf.
 
-        @return The paragraph
+            @return The paragraph
 
-        This method can return the paragraph rather than inserting into the
-        document. This is useful if the paragraph needs to be first
-        inserted in another flowable, before being added to the document.
-        An example of when this is useful is when large amounts of text
-        (such as a comment) are added to a cell of a table.
+            This method can return the paragraph rather than inserting into the
+            document. This is useful if the paragraph needs to be first
+            inserted in another flowable, before being added to the document.
+            An example of when this is useful is when large amounts of text
+            (such as a comment) are added to a cell of a table.
         """
 
         if text != "":
@@ -516,21 +531,24 @@ class EdenDocTemplate(BaseDocTemplate):
             return para
         return ""
 
+    # -------------------------------------------------------------------------
     def cellStyle(self, style, cell):
         """
             Add special styles to the text in a cell
         """
+
         if style == "*GREY":
             return [("TEXTCOLOR",cell, cell, colors.lightgrey)]
         elif style == "*RED":
             return [("TEXTCOLOR",cell, cell, colors.red)]
         return []
 
-
+    # -------------------------------------------------------------------------
     def addCellStyling(self, table, style):
         """
             Add special styles to the text in a table
         """
+
         row = 0
         for line in table:
             col = 0
@@ -545,10 +563,8 @@ class EdenDocTemplate(BaseDocTemplate):
                 col += 1
             row += 1
         return (table, style)
-# end of class EdenDocTemplate
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3PDFTable(object):
     """
         Class to build a table that can then be placed in a pdf document
@@ -621,9 +637,9 @@ class S3PDFTable(object):
         # @todo: use custom template
         # @todo: set pagesize for pdf component not whole document
         self.tempDoc = EdenDocTemplate()
-#        self.tempDoc.setPageTemplates(self.pdf.pageHeader,
-#                                      self.pdf.pageFooter)
-#        self.tempDoc.pagesize = portrait(self.paper_size)
+        #self.tempDoc.setPageTemplates(self.pdf.pageHeader,
+        #                              self.pdf.pageFooter)
+        #self.tempDoc.pagesize = portrait(self.paper_size)
         # Set up style constants
         self.headerColour = Color(0.73, 0.76, 1)
         self.oddColour = Color(0.92, 0.92, 1)
@@ -640,6 +656,7 @@ class S3PDFTable(object):
                      just one table object, but if the table needs to be split
                      across columns then one object per page will be created.
         """
+
         if self.pdf_groupby:
             data = self.group_data()
             self.data = [self.labels] + data
@@ -664,7 +681,11 @@ class S3PDFTable(object):
             self.pages = self.splitTable(tempTable)
         return self.presentation()
 
+    # -------------------------------------------------------------------------
     def group_data(self):
+        """
+        """
+
         groups = self.pdf_groupby.split(",")
         newData = []
         data = self.raw_data
@@ -707,8 +728,8 @@ class S3PDFTable(object):
                                     self.subheadingList[x] = posn + 1
                                     oldlevel = self.subheadingLevel[posn]
                                     del self.subheadingLevel[posn]
-                                    self.subheadingLevel[posn+1] = oldlevel
-                        line = row[0:i]+row[i+1:]
+                                    self.subheadingLevel[posn + 1] = oldlevel
+                        line = row[0:i] + row[i + 1:]
                         newData.append(line)
                         r += 1
                     except:
@@ -727,6 +748,7 @@ class S3PDFTable(object):
             This is only used internally but could be used to generate a copy
             of a previously generated table
         """
+
         # Build the tables
         content = []
         currentPage = 0
@@ -788,6 +810,7 @@ class S3PDFTable(object):
             Internally used method to calculate the amount of space available
             on the width of a page.
         """
+
         currentLeftMargin = self.pdf.leftMargin
         currentRightMargin = self.pdf.rightMargin
         availableMarginSpace = currentLeftMargin \
@@ -801,6 +824,7 @@ class S3PDFTable(object):
             Internally used method to adjust the document margins so that the
             table will fit into the available space
         """
+
         availableMarginSpace = self.getAvailableMarginSpace()
         currentOverlap = tableWidth - self.tempDoc.printable_width
         endCol = len(self.labels) - 1
@@ -818,6 +842,7 @@ class S3PDFTable(object):
             Internally used method to adjust the font size used so that the
             table will fit into the available space on the page.
         """
+
         # Check font
         adjustedWidth = tableWidth * newFontSize / self.fontsize
         if (adjustedWidth - self.tempDoc.printable_width) < self.getAvailableMarginSpace():
@@ -834,6 +859,7 @@ class S3PDFTable(object):
             Internally used method to tweak the formatting so that the table
             will fit into the available space on the page.
         """
+
         if self.tweakMargin(tableWidth):
             return True
         originalFont = self.fontsize
@@ -856,6 +882,7 @@ class S3PDFTable(object):
             the table fit in the page. False means that the table will need to
             be split across the columns.
         """
+
         tableWidth = 0
         for colWidth in table._colWidths:
             tableWidth += colWidth
@@ -897,6 +924,7 @@ class S3PDFTable(object):
             Internally used method to split the table across columns so that it
             will fit into the available space on the page.
         """
+
         colWidths = tempTable._colWidths
         rowHeights = tempTable._rowHeights
         total = 0
@@ -986,6 +1014,7 @@ class S3PDFTable(object):
             @todo: replace endCol with -1
                    (should work but need to test with a split table)
         """
+
         style = [("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
                  ("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -1021,11 +1050,10 @@ class S3PDFTable(object):
                         style.append(("BACKGROUND", (0, i), (endCol, i),
                                       self.oddColour))
                         rowColourCnt += 1
-        style.append(("BOX", (0, 0), (-1,-1), 1, Color(0, 0, 0)))
+        style.append(("BOX", (0, 0), (-1, -1), 1, Color(0, 0, 0)))
         return style
 
-#end of class S3PDFTable
-# -------------------------------------------------------------------------
+# =============================================================================
 class S3html2pdf():
 
     def __init__(self,
@@ -1056,11 +1084,19 @@ class S3html2pdf():
         self.style_lookup = {"pdf_title": self.titlestyle
                             }
 
+    # -------------------------------------------------------------------------
     def parse(self, html):
+        """
+        """
+
         result = self.select_tag(html)
         return result
 
+    # -------------------------------------------------------------------------
     def select_tag(self, html, title=False):
+        """
+        """
+
         if self.exclude_tag(html):
             return None
         if isinstance(html, TABLE):
@@ -1082,7 +1118,11 @@ class S3html2pdf():
             return para
         return None
 
+    # -------------------------------------------------------------------------
     def exclude_tag(self, html):
+        """
+        """
+
         try:
             if html.attributes["_class"] in self.exclude_class_list:
                 return True
@@ -1092,9 +1132,11 @@ class S3html2pdf():
             pass
         return False
 
-    def parse_div (self,
-                   html
-                  ):
+    # -------------------------------------------------------------------------
+    def parse_div(self, html):
+        """
+        """
+
         content = []
         for component in html.components:
             result = self.select_tag(component)
@@ -1104,9 +1146,11 @@ class S3html2pdf():
             return None
         return content
 
-    def parse_a (self,
-                 html
-                ):
+    # -------------------------------------------------------------------------
+    def parse_a(self, html):
+        """
+        """
+
         content = []
         for component in html.components:
             result = self.select_tag(component)
@@ -1116,10 +1160,11 @@ class S3html2pdf():
             return None
         return content
 
-    def parse_img (self,
-                   html
-                  ):
-        import os
+    # -------------------------------------------------------------------------
+    def parse_img(self, html):
+        """
+        """
+
         I = None
         from reportlab.platypus import Image
         if "_src" in html.attributes:
@@ -1152,8 +1197,11 @@ class S3html2pdf():
         I.drawWidth = width
         return [I]
 
+    # -------------------------------------------------------------------------
+    def parse_p(self, html):
+        """
+        """
 
-    def parse_p (self, html):
         content = []
         for component in html.components:
             result = self.select_tag(component)
@@ -1163,11 +1211,15 @@ class S3html2pdf():
             return None
         return content
 
-    def parse_table (self, html):
+    # -------------------------------------------------------------------------
+    def parse_table(self, html):
+        """
+        """
+
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
                  ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
-                 ('GRID',(0,0),(-1,-1),0.5,colors.grey),
+                 ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
                 ]
         content = []
         rowCnt = 0
@@ -1175,7 +1227,7 @@ class S3html2pdf():
         for component in html.components:
             if self.exclude_tag(component):
                 continue
-            if isinstance(component,TR):
+            if isinstance(component, TR):
                 result = self.parse_tr(component, style, rowCnt)
                 rowCnt += 1
             if result != None:
@@ -1186,15 +1238,19 @@ class S3html2pdf():
                       style=style,
                       hAlign="LEFT",
                       vAlign="Top",
-                     )
+                      )
         cw = table._colWidths
         return [table]
 
+    # -------------------------------------------------------------------------
     def parse_tr (self, html, style, rowCnt):
+        """
+        """
+
         row = []
         colCnt = 0
         for component in html.components:
-            if isinstance(component,(TH,TD)):
+            if isinstance(component, (TH, TD)):
                 if self.exclude_tag(component):
                     continue
                 colspan = 1
@@ -1204,7 +1260,7 @@ class S3html2pdf():
                     row.append("")
                 else:
                     for detail in component.components:
-                        result = self.select_tag(detail, title=isinstance(component,TH))
+                        result = self.select_tag(detail, title=isinstance(component, TH))
                         if result != None:
                             row.append(result)
                             if isinstance(component,TH):
@@ -1213,7 +1269,7 @@ class S3html2pdf():
                             if colspan > 1:
                                 for i in xrange(1,colspan):
                                     row.append("")
-                                style.append(("SPAN", (colCnt, rowCnt), (colCnt+colspan-1, rowCnt)))
+                                style.append(("SPAN", (colCnt, rowCnt), (colCnt + colspan - 1, rowCnt)))
                                 colCnt += colspan
                             else:
                                 colCnt += 1
@@ -1221,4 +1277,4 @@ class S3html2pdf():
             return None
         return row
 
-# end of class S3html2pdf
+# END =========================================================================

@@ -1130,6 +1130,12 @@ class S3Config(Storage):
         """
         return self.org.get("site_address_autocomplete", False)
 
+    def get_org_site_last_contacted(self):
+        """
+            Whether to display the last_contacted field for a Site
+        """
+        return self.org.get("site_last_contacted", False)
+
     def get_org_summary(self):
         """
             Whether to use Summary fields for Organisation/Office:

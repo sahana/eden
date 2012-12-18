@@ -42,10 +42,10 @@
 
 __all__ = ["S3PDF"]
 
-import re
 import os
 import sys
 import math
+import re
 import subprocess
 import unicodedata
 from copy import deepcopy
@@ -127,13 +127,13 @@ if DEBUG:
 else:
     _debug = lambda m: None
 
-# maximum number of options a field can have
-MAX_FORM_OPTIONS_LIMIT = 20
+# Maximum number of options a field can have
+MAX_FORM_OPTIONS_LIMIT = 12
 
-# will be loaded with values during S3PDF apply_method
+# Will be loaded with values during S3PDF apply_method
 ERROR = Storage()
 
-# *****************************************************************************
+# =============================================================================
 def checkDependencies(r):
     T = current.T
     ERROR = Storage(
@@ -149,7 +149,11 @@ def checkDependencies(r):
         #current.session.error = self.ERROR.REPORTLAB_ERROR
         #redirect(URL(extension=""))
 
+
+# =============================================================================
 if reportLabImported:
+
+    # =========================================================================
     class ChangePageTitle(Flowable):
         def __init__(self, doc, newTitle):
             Flowable.__init__(self)
@@ -159,6 +163,7 @@ if reportLabImported:
         def draw(self):
             self.doc.title = self.title
 
+    # =========================================================================
     class Overlay(Flowable):
         def __init__(self, callback, data):
             Flowable.__init__(self)
@@ -168,7 +173,7 @@ if reportLabImported:
         def draw(self):
             self.function(self.canv, self.data)
 
-
+    # =========================================================================
     class EdenDocTemplate(BaseDocTemplate):
         """
             The standard document template for eden reports
@@ -177,19 +182,20 @@ if reportLabImported:
             2) Even Page
             3) Odd Page
             4) Landscape Page
-
         """
 
+        # ---------------------------------------------------------------------
         def setPageTemplates(self,
                              first,
                              firstEnd,
                              even = None,
                              odd = None,
                              landscape = None,
-                            ):
+                             ):
             """
                 Determine which page template to use
             """
+
             self.onfirst = first
             self.onfirstEnd = firstEnd
             if even:
@@ -206,11 +212,12 @@ if reportLabImported:
                 self.onlandscape = first
             self.needLandscape = False
 
-
+        # ---------------------------------------------------------------------
         def handle_pageBegin(self):
             """
                 Determine which page template to use
             """
+
             self._handle_pageBegin()
             if self.needLandscape:
                 self._handle_nextPageTemplate("landscape")
@@ -219,6 +226,7 @@ if reportLabImported:
             else:
                 self._handle_nextPageTemplate("even")
 
+        # ---------------------------------------------------------------------
         def build(self, flowables, canvasmaker=canvas.Canvas):
             """
                 Build the document using the flowables.
@@ -226,6 +234,7 @@ if reportLabImported:
                 Set up the page templates that the document can use
 
             """
+
             self._calc()    # in case we changed margins sizes etc
             showBoundary = 0 # for debugging set to 1
             frameT = Frame(self.leftMargin,
@@ -256,6 +265,7 @@ if reportLabImported:
                                    ])
             BaseDocTemplate.build(self, flowables, canvasmaker=canvasmaker)
 
+# =============================================================================
 class S3PDF(S3Method):
     """
         Class to help generate PDF documents.
@@ -282,9 +292,9 @@ class S3PDF(S3Method):
             # Add specific pages here
 
             return pdf.buildDoc()
-
     """
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
             Apply CRUD methods
@@ -301,16 +311,15 @@ class S3PDF(S3Method):
             @returns: output object to send to the view
         """
 
-        import uuid
-
+        # ---------------------------------------------------------------------
         def getParam(key):
             """
-            nested function to get the parameters passed into apply_method
+                nested function to get the parameters passed into apply_method
 
-            @todo find out if this has been done better elsewhere! :(
+                @todo find out if this has been done better elsewhere! :(
 
-            This will first try and get the argument from the attr parameter,
-            if it's not here then try self._config()
+                This will first try and get the argument from the attr parameter,
+                if it's not here then try self._config()
             """
             value = attr.get(key)
             if value != None: return value
@@ -359,7 +368,6 @@ class S3PDF(S3Method):
         self.headerBanner = None
 
         method = self.method
-        statustablename = "ocr_form_status"
 
         callback = getParam("callback")
         if callback != None:
@@ -509,32 +517,34 @@ class S3PDF(S3Method):
                 return doc
 
             elif method == "create":
-                # Create an OCR PDF form
-                if not current.deployment_settings.has_module("ocr"):
+                if current.deployment_settings.has_module("ocr"):
+                    # Create an OCR PDF form
+                    import uuid
+                    formUUID = uuid.uuid1()
+                    self.newOCRForm(formUUID)
+
+                    # Put values
+                    self.OCRPDFManager()
+
+                    # Build the document
+                    doc = self.buildDoc()
+                    numPages = self.doc.numPages
+                    layoutXML = self.__getOCRLayout()
+                    self.__update_dbmeta(formUUID, layoutXML, numPages)
+
+                    # Set content type and disposition headers
+                    if response:
+                        response.headers["Content-Type"] = contenttype(".pdf")
+                        response.headers["Content-disposition"] = \
+                            "%s; filename=\"%s\"" % (content_disposition,
+                                                     self.filename)
+
+                    # Return the stream
+                    return doc
+
+                else:
+                    # @ToDo: Produce a simple form
                     r.error(501, self.ERROR.OCR_DISABLED)
-
-                current.s3db.table("ocr_meta")
-                formUUID = uuid.uuid1()
-                self.newOCRForm(formUUID)
-
-                # Put values
-                self.OCRPDFManager()
-
-                # Build the document
-                doc = self.buildDoc()
-                numPages = self.doc.numPages
-                layoutXML = self.__getOCRLayout()
-                self.__update_dbmeta(formUUID, layoutXML, numPages)
-
-                # Set content type and disposition headers
-                if response:
-                    response.headers["Content-Type"] = contenttype(".pdf")
-                    response.headers["Content-disposition"] = \
-                        "%s; filename=\"%s\"" % (content_disposition,
-                                                 self.filename)
-
-                # Return the stream
-                return doc
 
             elif method == "import":
                 # Render a review UI
@@ -561,9 +571,13 @@ class S3PDF(S3Method):
 
                     # Check if operation is valid on the given job_uuid
                     current.s3db.table("ocr_meta")
-                    statustable = db[statustablename]
+                    statustable = db.ocr_form_status
                     query = (statustable.job_uuid == jobuuid)
-                    row = db(query).select().first()
+                    row = db(query).select(statustable.review_status,
+                                           statustable.job_has_errors,
+                                           statustable.image_set_uuid,
+                                           statustable.form_uuid,
+                                           limitby=(0, 1)).first()
                     if not row:
                         # No such job
                         r.error(501, self.ERROR.INVALID_JOBID)
@@ -585,7 +599,8 @@ class S3PDF(S3Method):
                     # Retrieve s3ocrxml
                     formuuid = row.form_uuid
                     metatable = db.ocr_meta
-                    row = db(metatable.form_uuid == formuuid).select().first()
+                    row = db(metatable.form_uuid == formuuid).select(metatable.s3ocrxml_file,
+                                                                     limitby=(0, 1)).first()
                     if not row:
                         r.error(501, self.ERROR.INVALID_FORMID)
 
@@ -616,7 +631,8 @@ class S3PDF(S3Method):
                         # Retrive s3ocr data xml
                         table = db.ocr_data_xml
                         query = (table.image_set_uuid == self.setuuid)
-                        row = db(query).select().first()
+                        row = db(query).select(table.data_file,
+                                               limitby=(0, 1)).first()
 
                         if not row:
                             r.error(501, current.manager.ERROR.BAD_RECORD)
@@ -664,13 +680,15 @@ class S3PDF(S3Method):
                                 (table.resource_table == resource_table) & \
                                 (table.field_name == field_name) & \
                                 (table.value == value)
-                        row = db(query).select().first()
+                        row = db(query).select(table.image_file,
+                                               limitby=(0, 1)).first()
                     else:
                         query = (table.image_set_uuid == setuuid) & \
                                 (table.resource_table == resource_table) & \
                                 (table.field_name == field_name) & \
                                 (table.sequence == sequence)
-                        row = db(query).select().first()
+                        row = db(query).select(table.image_file,
+                                               limitby=(0, 1)).first()
                     if not row:
                         r.error(501, current.manager.ERROR.BAD_RECORD)
 
@@ -699,10 +717,10 @@ class S3PDF(S3Method):
                         r.error(501, current.manager.ERROR.BAD_REQUEST)
 
                     # Check if operation is valid on the given set_uuid
-                    current.s3db.table("ocr_meta")
-                    statustable = db[statustablename]
+                    statustable = s3db.ocr_form_status
                     query = (statustable.image_set_uuid == setuuid)
-                    row = db(query).select().first()
+                    row = db(query).select(statustable.job_uuid,
+                                           limitby=(0, 1)).first()
                     if row:
                         # This set of images has already been imported
                         jobuuid = row.job_uuid
@@ -725,7 +743,10 @@ class S3PDF(S3Method):
                                      vars={"jobuuid":jobuuid}))
 
                     table = db.ocr_data_xml
-                    row = db(table.image_set_uuid == setuuid).select().first()
+                    row = db(table.image_set_uuid == setuuid).select(table.data_file,
+                                                                     table.form_uuid,
+                                                                     limitby=(0, 1)
+                                                                     ).first()
                     if not row:
                         r.error(501, current.manager.ERROR.BAD_RECORD)
 
@@ -739,7 +760,9 @@ class S3PDF(S3Method):
                     data_file.close()
 
                     metatable = db.ocr_meta
-                    row = db(metatable.form_uuid == formuuid).select().first()
+                    row = db(metatable.form_uuid == formuuid).select(metatable.s3ocrxml_file,
+                                                                     limitby=(0, 1)
+                                                                     ).first()
                     if not row:
                         r.error(501, self.ERROR.INVALID_FORMID)
 
@@ -754,94 +777,94 @@ class S3PDF(S3Method):
 
                     s3ocrdict = self.__s3ocrxml2dict(s3ocrxml)
                     crosslimit_options = {}
-                    for eachresource in s3ocrdict["$resource_seq"]:
-                        resource = s3ocrdict[eachresource]
-                        for eachfield in resource["$field_seq"]:
-                            field = resource[eachfield]
+                    for resourcename in s3ocrdict["$resource_seq"]:
+                        resource = s3ocrdict[resourcename]
+                        for fieldname in resource["$field_seq"]:
+                            field = resource[fieldname]
                             if field.has_options:
-                                if field.options and\
-                                        field.options.count > MAX_FORM_OPTIONS_LIMIT:
-                                    if not crosslimit_options.has_key(eachresource):
-                                        crosslimit_options[eachresource] = [eachfield]
+                                if field.options and \
+                                   field.options.count > MAX_FORM_OPTIONS_LIMIT:
+                                    if not crosslimit_options.has_key(resourcename):
+                                        crosslimit_options[resourcename] = [fieldname]
                                     else:
-                                        crosslimit_options[eachresource].append(eachfield)
+                                        crosslimit_options[resourcename].append(fieldname)
 
                     if len(crosslimit_options) != 0:
                         s3xml_root = etree.fromstring(datafile_content)
                         resource_element = s3xml_root.getchildren()[0]
                         resourcename = resource_element.attrib.get("name")
-                        for eachfield in resource_element:
-                            if eachfield.tag == "data":
+                        for field in resource_element:
+                            if field.tag == "data":
                                 if crosslimit_options.has_key(resourcename):
-                                    fieldname = eachfield.attrib.get("field")
+                                    fieldname = field.attrib.get("field")
                                     if fieldname in crosslimit_options[resourcename]:
                                         match_status = {}
-                                        value = eachfield.text.encode("utf-8").lower()
-                                        for eachoption in s3ocrdict[resourcename][fieldname].options.list:
+                                        value = field.text.encode("utf-8").lower()
+                                        for option in s3ocrdict[resourcename][fieldname].options.list:
                                             try:
-                                                fieldtext = eachoption.label.lower()
+                                                fieldtext = option.label.lower()
                                             except:
                                                 fieldtext = ""
-                                            match_status[eachoption.value] =\
+                                            match_status[option.value] =\
                                                 self.dameraulevenshtein(cast2ascii(fieldtext),
                                                                         cast2ascii(value))
-                                            #print value, fieldtext, match_status[eachoption.value]
+                                            #print value, fieldtext, match_status[option.value]
 
                                         closematch_value = 1000000000
                                         closematch = []
 
-                                        for eachmatch in match_status.keys():
-                                            if match_status[eachmatch] < closematch_value:
-                                                closematch = [eachmatch]
-                                                closematch_value = match_status[eachmatch]
-                                            elif match_status[eachmatch] == closematch_value:
-                                                closematch.append(eachmatch)
+                                        for match in match_status.keys():
+                                            if match_status[match] < closematch_value:
+                                                closematch = [match]
+                                                closematch_value = match_status[match]
+                                            elif match_status[match] == closematch_value:
+                                                closematch.append(match)
 
                                         if len(closematch) > 0:
                                             value = closematch[0]
                                         else:
                                             value = ""
 
-                                        eachfield.text = value
-                                        eachfield.attrib["value"] = value
+                                        field.text = value
+                                        field.attrib["value"] = value
 
 
-                            elif eachfield.tag == "resource":
-                                resourcename = eachfield.attrib.get("name")
-                                for eachsubfield in eachfield:
-                                    if eachsubfield.tag == "data":
-                                        fieldname = eachsubfield.attrib.get("field")
+                            elif field.tag == "resource":
+                                resourcename = field.attrib.get("name")
+                                for subfield in field:
+                                    if subfield.tag == "data":
+                                        fieldname = subfield.attrib.get("field")
                                         if resourcename in crosslimit_options.keys() and\
                                                 fieldname in crosslimit_options[resourcename]:
                                             match_status = {}
-                                            value = eachsubfield.text.encode("utf-8").lower()
-                                            for eachoption in s3ocrdict[resourcename][fieldname].options.list:
+                                            value = subfield.text.encode("utf-8").lower()
+                                            for option in s3ocrdict[resourcename][fieldname].options.list:
                                                 try:
-                                                    fieldtext = eachoption.label.lower()
+                                                    fieldtext = option.label.lower()
                                                 except:
                                                     fieldtext = ""
-                                                match_status[eachoption.value] =\
+                                                match_status[option.value] =\
                                                     self.dameraulevenshtein(cast2ascii(fieldtext),
                                                                             cast2ascii(value))
-                                                #print value, fieldtext, match_status[eachoption.value]
+                                                #print value, fieldtext, match_status[option.value]
 
                                             closematch_value = 1000000000
                                             closematch = []
 
-                                            for eachmatch in match_status.keys():
-                                                if match_status[eachmatch] < closematch_value:
-                                                    closematch = [eachmatch]
-                                                    closematch_value = match_status[eachmatch]
-                                                elif match_status[eachmatch] == closematch_value:
-                                                    closematch.append(eachmatch)
+                                            for match in match_status.keys():
+                                                if match_status[match] < closematch_value:
+                                                    closematch = [match]
+                                                    closematch_value = match_status[match]
+                                                elif match_status[match] == closematch_value:
+                                                    closematch.append(match)
 
                                             if len(closematch) > 0:
                                                 value = closematch[0]
                                             else:
                                                 value = ""
 
-                                            eachsubfield.text = value
-                                            eachsubfield.attrib["value"] = value
+                                            subfield.text = value
+                                            subfield.attrib["value"] = value
 
                         datafile_content = etree.tostring(s3xml_root)
 
@@ -867,10 +890,10 @@ class S3PDF(S3Method):
                         r.error(501, self.ERROR.UNRECOVERABLE_ERROR)
 
                     # Store metadata for review
-                    db[statustablename].insert(image_set_uuid=setuuid,
-                                               form_uuid=formuuid,
-                                               job_uuid=jobuuid,
-                                               job_has_errors=jobhaserrors)
+                    db.ocr_form_status.insert(image_set_uuid=setuuid,
+                                              form_uuid=formuuid,
+                                              job_uuid=jobuuid,
+                                              job_has_errors=jobhaserrors)
 
                     if r.component:
                         request_args = request.get("args", ["", ""])
@@ -900,7 +923,7 @@ class S3PDF(S3Method):
                         r.error(501, self.ERROR.NO_UTC_OFFSET)
 
                     # Load OCR tables
-                    current.s3db.table("ocr_meta")
+                    current.s3db.ocr_meta
 
                     # Create an html image upload form for user
                     formuuid = r.vars.get("formuuid", None)
@@ -917,16 +940,16 @@ class S3PDF(S3Method):
                         try:
                             numpages = self.__getNumPages(formuuid)
                         except:
-                            r.error(501, self.resource.ERROR.BAD_RECORD)
+                            r.error(501, current.manager.ERROR.BAD_RECORD)
 
                         if not numpages:
                             r.error(501, self.ERROR.EMPTY_OCR_FORM)
 
                         return response.render("_ocr_page_upload.html",
-                                                dict(numpages=numpages,
-                                                     posturl=createurl,
-                                                     formuuid=formuuid,
-                                                     uploadformat=uploadformat))
+                                               dict(numpages=numpages,
+                                                    posturl=createurl,
+                                                    formuuid=formuuid,
+                                                    uploadformat=uploadformat))
 
                     numpages = self.__getNumPages(formuuid)
                     if not numpages:
@@ -953,15 +976,17 @@ class S3PDF(S3Method):
                 uploadformat = r.vars.uploadformat
 
                 # Set id for given form
+                import uuid
                 setuuid = uuid.uuid1()
 
-                current.s3db.table("ocr_meta")
+                # Load model
+                current.s3db.ocr_meta
 
                 # Check for upload format
                 if uploadformat == "image":
                     # store each page into db/disk
                     payloadtable = db.ocr_payload
-                    for eachpage in xrange(1, numpages+1):
+                    for eachpage in xrange(1, numpages + 1):
                         varname = "page%s" % eachpage
                         fileholder = r.vars[varname]
                         pagenumber = eachpage
@@ -986,7 +1011,7 @@ class S3PDF(S3Method):
                     fileholder = r.vars["pdffile"]
                     # server side file validation
                     filename = fileholder.filename
-                    extension = lambda m: m[m.rfind(".")+1:]
+                    extension = lambda m: m[m.rfind(".") + 1:]
 
                     if extension(filename) != "pdf":
                         r.error(501, self.ERROR.NOT_PDF_FILE)
@@ -1008,16 +1033,15 @@ class S3PDF(S3Method):
                     f.write(fileholder.file.read())
                     f.close()
 
-                    success =\
-                        subprocess.call(["convert",
-                                         os.path.join(ocr_temp_dir,
-                                                      inputfilename),
-                                         os.path.join(ocr_temp_dir,
-                                                      outputfilename)])
+                    success = subprocess.call(["convert",
+                                               os.path.join(ocr_temp_dir,
+                                                            inputfilename),
+                                               os.path.join(ocr_temp_dir,
+                                                            outputfilename)])
                     if success != 0:
                         self.r.error(501, self.ERROR.IMAGE_MAGICK_ERROR)
 
-                    # store each page into db/disk
+                    # Store each page into db/disk
                     payloadtable = db.ocr_payload
 
                     if numpages == 1:
@@ -1122,10 +1146,10 @@ class S3PDF(S3Method):
                     jobuuid = r.vars.pop("jobuuid")
 
                     # Check if operation is valid on the given job_uuid
-                    current.s3db.table("ocr_meta")
-                    statustable = db["ocr_form_status"]
+                    statustable = current.s3db.ocr_form_status
                     query = (statustable.job_uuid == jobuuid)
-                    row = db(query).select().first()
+                    row = db(query).select(statustable.review_status,
+                                           limitby=(0, 1)).first()
                     if not row:
                         r.error(501, self.ERROR.INVALID_JOBID)
 
@@ -1141,9 +1165,9 @@ class S3PDF(S3Method):
                     try:
                         ignore_fields = r.vars.pop("ignore-fields-list")
                     except:
-                        ignore_fields = ""
+                        ignore_fields = None
 
-                    if (ignore_fields == "") or (not ignore_fields):
+                    if not ignore_fields:
                         ignore_fields = []
                     else:
                         try:
@@ -1152,35 +1176,35 @@ class S3PDF(S3Method):
                             ignore_fields = [ignore_fields]
 
                     datadict = Storage()
-                    for eachfield in r.vars.keys():
-                        resourcetable, fieldname = eachfield.split("-")
+                    for field in r.vars.keys():
+                        resourcetable, fieldname = field.split("-")
                         if not datadict.has_key(resourcetable):
                             datadict[resourcetable] = Storage()
 
-                        datadict[resourcetable][fieldname] = r.vars[eachfield]
+                        datadict[resourcetable][fieldname] = r.vars[field]
 
-                    for eachfield in ignore_fields:
-                        resourcetable, fieldname = eachfield.split("-")
+                    for field in ignore_fields:
+                        resourcetable, fieldname = field.split("-")
                         datadict[resourcetable].pop(fieldname)
                         if len(datadict[resourcetable]) == 0:
                             datadict.pop(resourcetable)
 
                     s3xml_etree_dict = Storage()
-                    for eachresource in datadict.keys():
+                    for resource in datadict.keys():
                         s3xml_root = etree.Element("s3xml")
                         resource_element = etree.SubElement(s3xml_root, "resource")
-                        resource_element.attrib["name"] = eachresource
+                        resource_element.attrib["name"] = resource
 
-                        for eachfield in datadict[eachresource].keys():
-                            fieldvalue = datadict[eachresource][eachfield]
+                        for field in datadict[resource].keys():
+                            fieldvalue = datadict[resource][field]
                             fieldvalue = str(fieldvalue) if fieldvalue else ""
-                            fieldtype = db[eachresource][eachfield].type
+                            fieldtype = db[resource][field].type
                             if fieldtype.startswith("reference "):
                                 reference_resource_name = fieldtype[len("reference "):]
                                 # reference element
                                 reference_element =\
                                     etree.SubElement(resource_element, "reference")
-                                reference_element.attrib["field"] = eachfield
+                                reference_element.attrib["field"] = field
                                 reference_element.attrib["resource"] = reference_resource_name
                                 # resource element
                                 ref_res_element =\
@@ -1196,7 +1220,7 @@ class S3PDF(S3Method):
                                     ref_res_data_element.text = ""
                             else:
                                 field_element = etree.SubElement(resource_element, "data")
-                                field_element.attrib["field"] = eachfield
+                                field_element.attrib["field"] = field
                                 try:
                                     field_element.attrib["value"] = cast2ascii(fieldvalue)
                                 except(ValueError):
@@ -1206,7 +1230,7 @@ class S3PDF(S3Method):
                                 except(ValueError):
                                     field_element.text = ""
 
-                        s3xml_etree_dict[eachresource] = s3xml_root
+                        s3xml_etree_dict[resource] = s3xml_root
                         #print etree.tostring(s3xml_root, pretty_print=True)
 
                     errordict = {}
@@ -1214,10 +1238,10 @@ class S3PDF(S3Method):
                     _record = current.xml.record
                     validate = current.manager.validate
                     s3record_dict = Storage()
-                    for eachtable in s3xml_etree_dict.keys():
-                        record = _record(db[eachtable],
-                                         s3xml_etree_dict[eachtable].getchildren()[0])
-                        s3record_dict[eachtable] = record
+                    for tablename in s3xml_etree_dict.keys():
+                        record = _record(db[tablename],
+                                         s3xml_etree_dict[tablename].getchildren()[0])
+                        s3record_dict[tablename] = record
 
                     import_job = r.resource.import_tree(None, None, job_id=jobuuid,
                                                         ignore_errors=False,
@@ -1225,13 +1249,13 @@ class S3PDF(S3Method):
 
                     response.headers["Content-Type"] = contenttype(".json")
 
-                    for eachtable in s3record_dict.keys():
-                        record = s3record_dict[eachtable]
+                    for tablename in s3record_dict.keys():
+                        record = s3record_dict[tablename]
                         possible_items = []
                         our_item = None
                         for eachitem in import_job.items.keys():
                             item = import_job.items[eachitem]
-                            if item.table == eachtable:
+                            if item.table == tablename:
                                 if item.data and (len(item.data) > 0):
                                     our_item = item
                                 else:
@@ -1243,18 +1267,17 @@ class S3PDF(S3Method):
                         elif len(possible_items) > 0:
                             possible_items[0].update(record)
                         else:
-                            import_job.add_item(s3xml_etree_dict[eachtable].getchildren()[0])
+                            import_job.add_item(s3xml_etree_dict[tablename].getchildren()[0])
 
-                        for eachresource in datadict.keys():
-                            for eachfield in datadict[eachresource].keys():
-                                if not db[eachresource][eachfield].type.startswith("reference "):
-                                    value, error =\
-                                        validate(db[eachresource],
-                                                 None, eachfield,
-                                                 datadict[eachresource][eachfield])
+                        for resourcename in datadict.keys():
+                            table = db[resourcename]
+                            for field in datadict[resourcename].keys():
+                                if not table[field].type.startswith("reference "):
+                                    value, error = validate(table,
+                                                            None, field,
+                                                            datadict[resourcename][field])
                                     if error:
-                                        errordict["%s-%s" %\
-                                                      (eachresource, eachfield)] = str(error)
+                                        errordict["%s-%s" % (resourcename, field)] = str(error)
 
                     if not import_job.error_tree:
                         store_success = import_job.store()
@@ -1265,16 +1288,16 @@ class S3PDF(S3Method):
                                 success = False
                             else:
                                 # Revalidate data
-                                for eachresource in datadict.keys():
-                                    for eachfield in datadict[eachresource].keys():
-                                        if not db[eachresource][eachfield].type.startswith("reference "):
+                                for resourcename in datadict.keys():
+                                    table = db[resourcename]
+                                    for field in datadict[resourcename].keys():
+                                        if not table[field].type.startswith("reference "):
                                             value, error =\
-                                                validate(db[eachresource],
-                                                         None, eachfield,
-                                                         datadict[eachresource][eachfield])
+                                                validate(table,
+                                                         None, field,
+                                                         datadict[resourcename][field])
                                             if error:
-                                                errordict["%s-%s" %\
-                                                              (eachresource, eachfield)] = str(error)
+                                                errordict["%s-%s" % (resourcename, field)] = str(error)
 
                                 if len(errordict) > 0:
                                     success = False
@@ -1305,13 +1328,13 @@ class S3PDF(S3Method):
                         db(query).update(review_status=1)
 
                         # Remove cropped images from the database
-                        cropstable = db["ocr_field_crops"]
+                        cropstable = db.ocr_field_crops
                         query = (cropstable.image_set_uuid == image_set_uuid)
 
                         # Delete uploaded files
-                        rows = db(query).select()
-                        for eachrow in rows:
-                            filename = eachrow.image_file
+                        rows = db(query).select(cropstable.image_file)
+                        for row in rows:
+                            filename = row.image_file
                             filepath = os.path.join(self.r.folder,
                                                     "uploads",
                                                     "ocr_payload",
@@ -1329,8 +1352,8 @@ class S3PDF(S3Method):
 
         else:
             r.error(501, current.manager.ERROR.BAD_REQUEST)
-    # End of apply_method()
 
+    # -------------------------------------------------------------------------
     def __parse_job_error_tree(self, tree):
         """
             create a dictionary of fields with errors
@@ -1341,17 +1364,18 @@ class S3PDF(S3Method):
 
         errordict = {}
 
-        for eachresource in tree:
-            resourcename = eachresource.attrib.get("name")
-            for eachfield in eachresource:
-                fieldname = eachfield.attrib.get("field")
-                error = eachfield.attrib.get("error")
+        for resource in tree:
+            resourcename = resource.attrib.get("name")
+            for field in resource:
+                fieldname = field.attrib.get("field")
+                error = field.attrib.get("error")
                 if error:
                     #print resourcename, fieldname
                     errordict["%s-%s" % (resourcename, fieldname)] = error
 
         return errordict
 
+    # -------------------------------------------------------------------------
     def dameraulevenshtein(self, seq1, seq2):
         """
             Calculate the Damerau-Levenshtein distance between sequences.
@@ -1376,6 +1400,7 @@ class S3PDF(S3Method):
             >>> dameraulevenshtein('abcd', ['b', 'a', 'c', 'd', 'e'])
             2
         """
+
         # codesnippet:D0DE4716-B6E6-4161-9219-2903BF8F547F
         # Conceptually, this is based on a len(seq1) + 1 * len(seq2) + 1 matrix.
         # However, only the current and two previous rows are needed at once,
@@ -1394,10 +1419,11 @@ class S3PDF(S3Method):
                 thisrow[y] = min(delcost, addcost, subcost)
                 # This block deals with transpositions
                 if (x > 0 and y > 0 and seq1[x] == seq2[y - 1]
-                    and seq1[x-1] == seq2[y] and seq1[x] != seq2[y]):
+                    and seq1[x - 1] == seq2[y] and seq1[x] != seq2[y]):
                     thisrow[y] = min(thisrow[y], twoago[y - 2] + 1)
         return thisrow[len(seq2) - 1]
 
+    # -------------------------------------------------------------------------
     def __temp_ocrdataxml_parser(self, s3ocrdataxml):
         """
             convert data generated from ocr parser to a dictionary
@@ -1437,20 +1463,20 @@ class S3PDF(S3Method):
             for res in serialised_component_etrees:
                 s3ocr_root.append(res)
 
-        for eachresource in s3ocr_root:
-            resourcename = eachresource.attrib.get("name")
+        for resource in s3ocr_root:
+            resourcename = resource.attrib.get("name")
             s3ocrdatadict[resourcename] = Storage()
-            for eachfield in eachresource:
-                if eachfield.tag == "reference":
-                    fieldname = eachfield.attrib.get("field")
-                    ref_res_field = eachfield.getchildren()[0]
+            for field in resource:
+                if field.tag == "reference":
+                    fieldname = field.attrib.get("field")
+                    ref_res_field = field.getchildren()[0]
                     datafield = ref_res_field.getchildren()[0]
                     value = datafield.text
 
                 else:
-                    fieldname = eachfield.attrib.get("field")
-                    value = eachfield.attrib.get("value")
-                    text = eachfield.text
+                    fieldname = field.attrib.get("field")
+                    value = field.attrib.get("value")
+                    text = field.text
                     if not value:
                         value = text
 
@@ -1458,6 +1484,7 @@ class S3PDF(S3Method):
         #print s3ocrdatadict
         return s3ocrdatadict
 
+    # -------------------------------------------------------------------------
     def __importjob2data(self, importjob):
         """
             convert data from import job into a dictionary
@@ -1480,12 +1507,13 @@ class S3PDF(S3Method):
 
         return s3ocrdata
 
+    # -------------------------------------------------------------------------
     def __create_review_form(self, s3ocrdict, s3ocrdata):
         """
             create a html review form using the available data
 
             @param s3ocrdict: output of self.__s3ocrxml2dict()
-            @param s3ocrdict: output of self.__importjob2data()
+            @param s3ocrdata: output of self.__importjob2data()
 
             @return: html review form
         """
@@ -1507,39 +1535,40 @@ class S3PDF(S3Method):
             # Not a component
             urlprefix = request.function
 
-        for eachresource in s3ocrdict["$resource_seq"]:
-            # resource title
-            resource = s3ocrdict[eachresource]
-            ptablecontent.append(TR(TD(DIV(eachresource, _class="resource_name"),
+        for resourcename in s3ocrdict["$resource_seq"]:
+            # Resource title
+            resource = s3ocrdict[resourcename]
+            ptablecontent.append(TR(TD(DIV(resourcename, _class="resource_name"),
                                        _colspan="4"),
                                     _class="titletr")
                                  )
 
             ctablecontent = []
-            for eachfield in resource["$field_seq"]:
-                field = resource[eachfield]
+            for fieldname in resource["$field_seq"]:
+                field = resource[fieldname]
                 comment = field.comment if field.comment else ""
 
                 try:
-                    if s3ocrdata[eachresource][eachfield]:
-                        condition = (isinstance(s3ocrdata[eachresource][eachfield], str) or\
-                                         isinstance(s3ocrdata[eachresource][eachfield], int))
+                    ocrdata = s3ocrdata[resourcename][fieldname]
+                    if ocrdata:
+                        condition = (isinstance(ocrdata, str) or \
+                                     isinstance(ocrdata, int))
                         if condition:
-                            value = str(s3ocrdata[eachresource][eachfield])
-                        elif isinstance(s3ocrdata[eachresource][eachfield], date):
-                            value = date.strftime(s3ocrdata[eachresource][eachfield], "%Y-%m-%d")
-                        elif isinstance(s3ocrdata[eachresource][eachfield], datetime):
-                            value = datetime.strftime(s3ocrdata[eachresource][eachfield], "%Y-%m-%d %H:%M:%S")
+                            value = str(ocrdata)
+                        elif isinstance(ocrdata, date):
+                            value = date.strftime(ocrdata, "%Y-%m-%d")
+                        elif isinstance(ocrdata, datetime):
+                            value = datetime.strftime(ocrdata, "%Y-%m-%d %H:%M:%S")
                         else:
                             value = unicodedata.normalize("NFKD",
-                                                  s3ocrdata[eachresource][eachfield]).encode("ascii",
-                                                                                             "ignore")
+                                                          ocrdata).encode("ascii",
+                                                                          "ignore")
                     else:
                         value = ""
                 except(KeyError):
                     value=""
 
-                name = "%s-%s" % (eachresource, eachfield)
+                name = "%s-%s" % (resourcename, fieldname)
 
                 if field.has_options:
                     if field.type == "multiselect":
@@ -1550,46 +1579,43 @@ class S3PDF(S3Method):
                                 value = value.split("|")[1:-1]
                             except:
                                 value = [str(value)]
-                            chk = lambda m,n: "on" if str(m) in n else None
-                            for eachoption in field.options.list:
-                                options.append(TR(TD(IMG(_src=URL(request.application,
-                                                                  r.prefix,
-                                                                  "%s/upload.pdf" % urlprefix,
-                                                                  args="image",
-                                                                  vars={"setuuid": setuuid,
-                                                                        "resource_table": eachresource,
-                                                                        "field_name": eachfield,
-                                                                        "value": eachoption.value
-                                                                        }
-                                                                  ),
-                                                         _style="border: solid #333 1px;"),
-                                                     _style="text-align:center;"),
-                                                  TD(INPUT(_id="%s-%s" %\
-                                                               (name, optct),
-                                                           _value=eachoption.value,
-                                                           _type="checkbox",
-                                                           _class="field-%s" %\
-                                                               fieldnum,
-                                                           _name=name,
-                                                           value=chk(eachoption.value,
-                                                                     value))),
-                                                  TD(LABEL(eachoption.label,
-                                                           _for="%s-%s" %\
-                                                               (name, optct)))))
-                                optct+=1
-                            input_area = TABLE(options,
+                            chk = lambda m, n: "on" if str(m) in n else None
+                            for option in field.options.list:
+                                options.append(TD(IMG(_src=URL(request.application,
+                                                               r.prefix,
+                                                               "%s/upload.pdf" % urlprefix,
+                                                               args="image",
+                                                               vars={"setuuid": setuuid,
+                                                                     "resource_table": resourcename,
+                                                                     "field_name": fieldname,
+                                                                     "value": option.value
+                                                                     }
+                                                               ),
+                                                      _style="border: solid #333 1px;"),
+                                                  _style="text-align:center;"),
+                                               TD(INPUT(_id="%s-%s" % (name, optct),
+                                                        _value=option.value,
+                                                        _type="checkbox",
+                                                        _class="field-%s" % fieldnum,
+                                                        _name=name,
+                                                        value=chk(option.value,
+                                                                  value))),
+                                               TD(LABEL(option.label,
+                                                        _for="%s-%s" % (name, optct))))
+                                optct += 1
+                            input_area = TABLE(TR(options),
                                                _class="field-%s" % fieldnum)
 
                         else:
-                            for eachline in xrange(1, 3):
+                            for line in xrange(1, 3):
                                 ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                         r.prefix,
                                                                         "%s/upload.pdf" % urlprefix,
                                                                         args="image",
                                                                         vars={"setuuid": setuuid,
-                                                                              "resource_table": eachresource,
-                                                                              "field_name": eachfield,
-                                                                              "sequence": eachline
+                                                                              "resource_table": resourcename,
+                                                                              "field_name": fieldname,
+                                                                              "sequence": line
                                                                               }
                                                                         ),
                                                                _style="border: solid #333 1px;"),
@@ -1599,105 +1625,96 @@ class S3PDF(S3Method):
                             options = []
                             optct = 1
 
-                            chk = lambda m,n: "on" if str(m) in n else None
-                            for eachoption in field.options.list:
-                                options.append(TR(TD(INPUT(_id="%s-%s" %\
-                                                               (name, optct),
-                                                           _value=eachoption.value,
+                            chk = lambda m, n: "on" if str(m) in n else None
+                            for option in field.options.list:
+                                options.append(TR(TD(INPUT(_id="%s-%s" % (name, optct),
+                                                           _value=option.value,
                                                            _type="checkbox",
-                                                           _class="field-%s" %\
-                                                               fieldnum,
+                                                           _class="field-%s" % fieldnum,
                                                            _name=name,
-                                                           value=chk(eachoption.value,
+                                                           value=chk(option.value,
                                                                      value)
                                                            )),
-                                                  TD(LABEL(eachoption.label,
-                                                           _for="%s-%s" %\
-                                                               (name, optct)))))
-                                optct+=1
+                                                  TD(LABEL(option.label,
+                                                           _for="%s-%s" % (name, optct)))))
+                                optct += 1
                             input_area = TABLE(options,
                                                _class="field-%s" % fieldnum)
 
                     elif field.type == "boolean":
                         options = []
                         optct = 1
-                        chk = lambda m,n: m if str(m) == str(n) else None
-                        for eachoption in [Storage({"value": "yes",
-                                                    "label": T("Yes")}),
-                                           Storage({"value": "no",
-                                                    "label": T("No")})]:
-                            options.append(TR(TD(IMG(_src=URL(request.application,
-                                                              r.prefix,
-                                                              "%s/upload.pdf" % urlprefix,
-                                                              args="image",
-                                                              vars={"setuuid": setuuid,
-                                                                    "resource_table": eachresource,
-                                                                    "field_name": eachfield,
-                                                                    "value": eachoption.value
-                                                                    }
-                                                            ),
-                                                     _style="border: solid #333 1px;"),
-                                                 _style="text-align:center;"),
-                                              TD(INPUT(_id="%s-%s" %\
-                                                           (name, optct),
-                                                       _value=eachoption.value,
-                                                       _type="radio",
-                                                       _class="field-%s" %\
-                                                           fieldnum,
-                                                       _name=name,
-                                                       value=chk(eachoption.value,
-                                                                 value))),
-                                                 TD(LABEL(eachoption.label,
-                                                       _for="%s-%s" %\
-                                                           (name, optct)))))
-                            optct+=1
-                        input_area = TABLE(options,
-                                                  _class="field-%s" % fieldnum)
+                        chk = lambda m, n: m if str(m) == str(n) else None
+                        for option in [Storage({"value": "yes",
+                                                "label": T("Yes")}),
+                                       Storage({"value": "no",
+                                                "label": T("No")})]:
+                            options.append(TD(IMG(_src=URL(request.application,
+                                                           r.prefix,
+                                                           "%s/upload.pdf" % urlprefix,
+                                                           args="image",
+                                                           vars={"setuuid": setuuid,
+                                                                 "resource_table": resourcename,
+                                                                 "field_name": fieldname,
+                                                                 "value": option.value
+                                                                 }
+                                                           ),
+                                                  _style="border: solid #333 1px;"),
+                                              _style="text-align:center;"),
+                                           TD(INPUT(_id="%s-%s" % (name, optct),
+                                                    _value=option.value,
+                                                    _type="radio",
+                                                    _class="field-%s" % fieldnum,
+                                                    _name=name,
+                                                    value=chk(option.value,
+                                                              value))),
+                                              TD(LABEL(option.label,
+                                                 _for="%s-%s" % (name, optct))))
+                            optct += 1
+                        input_area = TABLE(TR(options),
+                                           _class="field-%s" % fieldnum)
 
                     else:
                         if field.options.count <= MAX_FORM_OPTIONS_LIMIT:
                             options = []
                             optct = 1
-                            chk = lambda m,n: m if str(m) == str(n) else None
-                            for eachoption in field.options.list:
-                                options.append(TR(TD(IMG(_src=URL(request.application,
-                                                                  r.prefix,
-                                                                  "%s/upload.pdf" % urlprefix,
-                                                                  args="image",
-                                                                  vars={"setuuid": setuuid,
-                                                                        "resource_table": eachresource,
-                                                                        "field_name": eachfield,
-                                                                        "value": eachoption.value
-                                                                        }
-                                                                  ),
-                                                         _style="border: solid #333 1px;"),
-                                                     _style="text-align:center;"),
-                                                  TD(INPUT(_id="%s-%s" %\
-                                                               (name, optct),
-                                                           _value=eachoption.value,
-                                                           _type="radio",
-                                                           _class="field-%s" %\
-                                                               fieldnum,
-                                                           _name=name,
-                                                           value=chk(eachoption.value,
-                                                                     value))),
-                                                  TD(LABEL(eachoption.label,
-                                                           _for="%s-%s" %\
-                                                               (name, optct)))))
-                                optct+=1
-                            input_area = TABLE(options,
+                            chk = lambda m, n: m if str(m) == str(n) else None
+                            for option in field.options.list:
+                                options.append(TD(IMG(_src=URL(request.application,
+                                                               r.prefix,
+                                                               "%s/upload.pdf" % urlprefix,
+                                                               args="image",
+                                                               vars={"setuuid": setuuid,
+                                                                     "resource_table": resourcename,
+                                                                     "field_name": fieldname,
+                                                                     "value": option.value
+                                                                     }
+                                                               ),
+                                                      _style="border: solid #333 1px;"),
+                                                  _style="text-align:center;"),
+                                               TD(INPUT(_id="%s-%s" % (name, optct),
+                                                        _value=option.value,
+                                                        _type="radio",
+                                                        _class="field-%s" % fieldnum,
+                                                        _name=name,
+                                                        value=chk(option.value,
+                                                                  value))),
+                                               TD(LABEL(option.label,
+                                                        _for="%s-%s" % (name, optct))))
+                                optct += 1
+                            input_area = TABLE(TR(options),
                                                _class="field-%s" % fieldnum)
 
                         else:
-                            for eachline in xrange(1, 3):
+                            for line in xrange(1, 3):
                                 ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                         r.prefix,
                                                                         "%s/upload.pdf" % urlprefix,
                                                                         args="image",
                                                                         vars={"setuuid": setuuid,
-                                                                              "resource_table": eachresource,
-                                                                              "field_name": eachfield,
-                                                                              "sequence": eachline
+                                                                              "resource_table": resourcename,
+                                                                              "field_name": fieldname,
+                                                                              "sequence": line
                                                                               }
                                                                         ),
                                                                _style="border: solid #333 1px;"),
@@ -1706,36 +1723,33 @@ class S3PDF(S3Method):
 
                             options = []
                             optct = 1
-                            chk = lambda m,n: m if str(m) == str(n) else None
-                            for eachoption in field.options.list:
-                                options.append(TR(TD(INPUT(_id="%s-%s" %\
-                                                               (name, optct),
-                                                           _value=eachoption.value,
+                            chk = lambda m, n: m if str(m) == str(n) else None
+                            for option in field.options.list:
+                                options.append(TR(TD(INPUT(_id="%s-%s" % (name, optct),
+                                                           _value=option.value,
                                                            _type="radio",
-                                                           _class="field-%s" %\
-                                                               fieldnum,
+                                                           _class="field-%s" % fieldnum,
                                                            _name=name,
-                                                           value=chk(eachoption.value,
+                                                           value=chk(option.value,
                                                                      value)
                                                            )),
-                                                  TD(LABEL(eachoption.label,
-                                                           _for="%s-%s" %\
-                                                               (name, optct)))))
-                                optct+=1
+                                                  TD(LABEL(option.label,
+                                                           _for="%s-%s" % (name, optct)))))
+                                optct += 1
                             input_area = TABLE(options,
                                                _class="field-%s" % fieldnum)
 
                 else:
                     if field.type in ["string", "integer", "double"]:
-                        for eachline in xrange(1, field.lines+1):
+                        for line in xrange(1, field.lines + 1):
                             ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                     r.prefix,
                                                                     "%s/upload.pdf" % urlprefix,
                                                                     args="image",
                                                                     vars={"setuuid": setuuid,
-                                                                          "resource_table": eachresource,
-                                                                          "field_name": eachfield,
-                                                                          "sequence": eachline
+                                                                          "resource_table": resourcename,
+                                                                          "field_name": fieldname,
+                                                                          "sequence": line
                                                                           }
                                                                     ),
                                                            _style="border: solid #333 1px;"),
@@ -1750,15 +1764,15 @@ class S3PDF(S3Method):
                                   "MO":2,
                                   "YYYY":3}
                         imglist = []
-                        for eachsec in ["YYYY", "MO", "DD"]:
+                        for sec in ["YYYY", "MO", "DD"]:
                             imglist.append(IMG(_src=URL(request.application,
                                                         r.prefix,
                                                         "%s/upload.pdf" % urlprefix,
                                                         args="image",
                                                         vars={"setuuid": setuuid,
-                                                              "resource_table": eachresource,
-                                                              "field_name": eachfield,
-                                                              "sequence": subsec[eachsec]}
+                                                              "resource_table": resourcename,
+                                                              "field_name": field,
+                                                              "sequence": subsec[sec]}
                                                         ),
                                                _style="border: solid #333 1px;"))
                         ctablecontent.append(TR(TD(imglist,
@@ -1790,8 +1804,8 @@ class S3PDF(S3Method):
                                                         "%s/upload.pdf" % urlprefix,
                                                         args="image",
                                                         vars={"setuuid": setuuid,
-                                                              "resource_table": eachresource,
-                                                              "field_name": eachfield,
+                                                              "resource_table": resourcename,
+                                                              "field_name": fieldname,
                                                               "sequence": subsec[eachsec],
                                                               }
                                                         ),
@@ -1814,15 +1828,15 @@ class S3PDF(S3Method):
                                            _value=value, _name=name)
 
                     elif field.type == "textbox":
-                        for eachline in xrange(1, field.lines+1):
+                        for line in xrange(1, field.lines + 1):
                             ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                     r.prefix,
                                                                     "%s/upload.pdf" % urlprefix,
                                                                     args="image",
                                                                     vars={"setuuid": setuuid,
-                                                                          "resource_table": eachresource,
-                                                                          "field_name": eachfield,
-                                                                          "sequence": eachline
+                                                                          "resource_table": resourcename,
+                                                                          "field_name": fieldname,
+                                                                          "sequence": line
                                                                           }
                                                                     ),
                                                            _style="border: solid #333 1px;"),
@@ -1854,7 +1868,7 @@ class S3PDF(S3Method):
 
                 ctablecontent.append(TR(TD(_colspan="4",
                                            _style="border: solid #999 3px;")))
-                fieldnum+=1
+                fieldnum += 1
 
             ptablecontent.extend(ctablecontent)
 
@@ -1870,6 +1884,7 @@ class S3PDF(S3Method):
 
         return output
 
+    # -------------------------------------------------------------------------
     def __s3ocrxml2dict(self, s3ocrxml):
         """
             convert s3ocrxml to dictionary so that it can be used in templates
@@ -1879,41 +1894,46 @@ class S3PDF(S3Method):
             @return: equivalent dictionary for s3ocrxml file
         """
 
+        db = current.db
         s3ocr_etree = etree.fromstring(s3ocrxml)
         s3ocrdict = Storage()
         resource_seq = []
 
-        for eachresource in s3ocr_etree:
-            resourcename = eachresource.attrib.get("name")
+        for resource in s3ocr_etree:
+            resourcename = resource.attrib.get("name")
+            table = db[resourcename]
             s3ocrdict[resourcename] = Storage()
             resource_seq.append(resourcename)
             field_seq = []
+            for field in resource:
+                get = field.attrib.get
+                fieldname = get("name")
 
-            for eachfield in eachresource:
-                fieldname = eachfield.attrib.get("name")
-
-                if eachfield.attrib.get("readable") == "True"\
-                        and eachfield.attrib.get("writable") == "True":
+                if get("readable") == "True" and \
+                   get("writable") == "True":
 
                     field_seq.append(fieldname)
 
-                    fieldlabel = eachfield.attrib.get("label")
-                    fieldtype = eachfield.attrib.get("type")
+                    fieldlabel = get("label")
+                    fieldtype = get("type")
+                    numlines = get("lines", "1")
 
-                    numlines = eachfield.attrib.get("lines", "1")
+                    if get("reference") == "1":
+                        fieldreference = True
+                    else:
+                        fieldreference = False
+                    fieldresource = get("resource")
+                    if get("has_options") == "True":
+                        fieldhasoptions = True
+                    else:
+                        fieldhasoptions = False
 
-                    fieldreference =\
-                        True if eachfield.attrib.get("reference") == "1" else False
-                    fieldresource = eachfield.attrib.get("resource")
-                    fieldhasoptions =\
-                        True if eachfield.attrib.get("has_options") == "True" else False
-
-                    # get html comment
-                    fieldcomment = current.db[resourcename][fieldname].comment
+                    # Get html comment
+                    fieldcomment = table[fieldname].comment
 
                     if fieldhasoptions:
                         try:
-                            s3ocrselect = eachfield.getchildren()[0]
+                            s3ocrselect = field.getchildren()[0]
                             options_found = True
                         except(IndexError):
                             fieldoptions = None
@@ -1924,42 +1944,43 @@ class S3PDF(S3Method):
                             numoptions = len(s3ocrselect.getchildren())
                             optionlist = []
 
-                            for eachoption in s3ocrselect:
-                                optionlabel = eachoption.text
-                                optionvalue = eachoption.attrib.get("value")
+                            for option in s3ocrselect:
+                                optionlabel = option.text
+                                optionvalue = option.attrib.get("value")
                                 optionlist.append(Storage({"label": optionlabel,
-                                                       "value": optionvalue}))
+                                                           "value": optionvalue}))
 
-                            fieldoptions = Storage({"count":numoptions,
-                                                    "list":optionlist})
+                            fieldoptions = Storage({"count": numoptions,
+                                                    "list": optionlist})
 
                         else:
                             fieldoptions = None
                     else:
                         fieldoptions = None
 
-                    s3ocrdict[resourcename][fieldname] =\
-                        Storage({"label": fieldlabel,
-                                 "type": fieldtype,
-                                 "comment": fieldcomment,
-                                 "reference": fieldreference,
-                                 "resource": fieldresource,
-                                 "has_options": fieldhasoptions,
-                                 "options": fieldoptions,
-                                 "lines": int(numlines)})
+                    s3ocrdict[resourcename][fieldname] = Storage({"label": fieldlabel,
+                                                                  "type": fieldtype,
+                                                                  "comment": fieldcomment,
+                                                                  "reference": fieldreference,
+                                                                  "resource": fieldresource,
+                                                                  "has_options": fieldhasoptions,
+                                                                  "options": fieldoptions,
+                                                                  "lines": int(numlines)
+                                                                  })
             s3ocrdict[resourcename]["$field_seq"] = field_seq
 
         s3ocrdict["$resource_seq"] = resource_seq
 
         return s3ocrdict
 
+    # -------------------------------------------------------------------------
     def newDocument(self,
                     title,
                     header,
                     footer,
                     filename = None,
                     heading=None,
-                   ):
+                    ):
         """
             This will create a new empty PDF document.
             Data then needs to be added to this document.
@@ -1986,13 +2007,14 @@ class S3PDF(S3Method):
         self.title = heading
         self.prevtitle = heading
         self.setPortrait()
-        self.leftMargin = inch
-        self.rightMargin = inch
-        self.topMargin = 0.5*inch + inch
-        self.bottomMargin = 0.5*inch + .5*inch
+        self.leftMargin = 0.4 * inch
+        self.rightMargin = 0.4 * inch
+        self.topMargin = 0.4 * inch
+        self.bottomMargin = 0.4 * inch
         self.MINIMUM_MARGIN_SIZE = 0.3 * inch
         self.setMargins()
 
+    # -------------------------------------------------------------------------
     def newOCRForm(self,
                    formUUID,
                    pdfname="ocrform.pdf",
@@ -2006,9 +2028,9 @@ class S3PDF(S3Method):
         self.output = StringIO()
         self.layoutEtree = etree.Element("s3ocrlayout")
         try:
-            pdfTitle = current.response.s3.crud_strings[self.tablename].title_list.decode("utf-8")
+            pdfTitle = current.response.s3.crud_strings[self.tablename].title_create.decode("utf-8")
         except:
-                pdfTitle = self.resource.tablename
+            pdfTitle = self.resource.tablename
 
         formResourceName =  self.resource.tablename
         formRevision = self.__book_revision(formUUID, formResourceName)
@@ -2019,6 +2041,7 @@ class S3PDF(S3Method):
                                      formRevision=formRevision,
                                      formResourceName=formResourceName)
 
+    # -------------------------------------------------------------------------
     def __getResourceForms(self):
         """
             Get all form UUIDs/Revs available for a given resource
@@ -2030,21 +2053,20 @@ class S3PDF(S3Method):
         """
 
         db = current.db
-        tablename = "ocr_meta"
-        table = db[tablename]
-
+        table = db.ocr_meta
+        query = (table.resource_name == self.resource.tablename)
+        rows = db(query).select(table.form_uuid,
+                                table.revision,
+                                orderby=~table.revision)
         availForms = []
-
-        formResourceName = self.resource.tablename
-        query = (table.resource_name == formResourceName)
-        rows = db(query).select(orderby=~table.revision)
-        for eachrow in rows:
-            availForms.append({
-                    "uuid" : eachrow.form_uuid,
-                    "revision": eachrow.revision,
+        append = availForms.append
+        for row in rows:
+            append({"uuid" : row.form_uuid,
+                    "revision": row.revision,
                     })
         return availForms
 
+    # -------------------------------------------------------------------------
     def __getNumPages(self, formuuid):
         """
             Gets Number of pages for given form UUID
@@ -2057,16 +2079,13 @@ class S3PDF(S3Method):
         """
 
         db = current.db
-        tablename = "ocr_meta"
-        table = db[tablename]
-
-        formResourceName = self.resource.tablename
-        formUUID = formuuid
-
-        rows = db(table.form_uuid == formUUID).select(table.pages)
-        row = rows[0]
+        table = db.ocr_meta
+        row = db(table.form_uuid == formuuid).select(table.pages,
+                                                     limitby=(0, 1)
+                                                     ).first()
         return int(row.pages)
 
+    # -------------------------------------------------------------------------
     def __s3OCREtree(self):
         """
             Optimise & Modifiy s3xml etree to and produce s3ocr etree
@@ -2074,11 +2093,11 @@ class S3PDF(S3Method):
             @return: s3ocr etree
         """
 
-        s3xml_etree = self.resource.struct(options=True,
-                                   references=True,
-                                   stylesheet=None,
-                                   as_json=False,
-                                   as_tree=True)
+        s3xml_etree = self.resource.export_struct(options=True,
+                                                  references=True,
+                                                  stylesheet=None,
+                                                  as_json=False,
+                                                  as_tree=True)
         #print etree.tostring(s3xml_etree, pretty_print=True)
         # xml tags
         ITEXT = "label"
@@ -2096,7 +2115,7 @@ class S3PDF(S3Method):
         resource_element = s3xml_root.getchildren()[0]
         s3ocr_root = etree.Element("s3ocr")
 
-        # store components which have to be excluded
+        # Store components which have to be excluded
         settings = current.deployment_settings
         self.exclude_component_list =\
                     settings.get_pdf_excluded_fields("%s_%s" % \
@@ -2125,7 +2144,7 @@ class S3PDF(S3Method):
             for res in serialised_component_etrees:
                 s3ocr_root.append(res)
 
-        # database fieldtype to ocr fieldtype mapping
+        # Database fieldtype to ocr fieldtype mapping
         self.generic_ocr_field_type = {
             "string": "string",
             "text": "textbox",
@@ -2140,130 +2159,124 @@ class S3PDF(S3Method):
             "list:text": "multiselect",
             }
 
-        # remove fields which are not required
-        # loading user defined configuartions
+        # Remove fields which are not required
+        # Load user-defined configurations
         FIELD_TYPE_LINES = { # mapping types with number of lines
-            "string": 2,
-            "textbox": 4,
+            "string": 1,
+            "textbox": 2,
             "integer": 1,
             "double": 1,
             "date": 1,
             "datetime": 1,
             }
         FIELD_TYPE_BOXES = { # mapping type with numboxes
-            "integer": 9,
+            "integer": 8,
             "double": 16,
             }
-        for eachresource in s3ocr_root.iterchildren():
-            resourcetablename = eachresource.attrib.get("name")
+        for resource in s3ocr_root.iterchildren():
+            rget = resource.attrib.get
+            resourcetablename = rget("name")
 
-            # exclude components
+            # Exclude components
             if not self.r.component:
-                if eachresource.attrib.get("name") in self.exclude_component_list:
-                    # excluded components are removed
-                    s3ocr_root.remove(eachresource)
+                if rget("name") in self.exclude_component_list:
+                    s3ocr_root.remove(resource)
                     continue
 
-            for eachfield in eachresource.iterchildren():
-                fieldname = eachfield.attrib.get("name")
-                # fields which have to be displayed
-                fieldtype = eachfield.attrib.get(TYPE)
+            for field in resource.iterchildren():
+                get = field.attrib.get
+                set = field.set
+                fieldname = get("name")
+                # Fields which have to be displayed
+                fieldtype = get(TYPE)
 
                 if fieldtype.startswith("reference "):
-                    eachfield.set(RESOURCE,
-                                  fieldtype.split("reference ")[1])
-                    eachfield.set(REFERENCE, "1")
+                    set(RESOURCE, fieldtype.split("reference ")[1])
+                    set(REFERENCE, "1")
                 else:
-                    eachfield.set(REFERENCE, "0")
+                    set(REFERENCE, "0")
 
-                # loading ocr specific fieldtypes
-                ocrfieldtype = self.generic_ocr_field_type.get(fieldtype,
-                                                               None)
+                # Load OCR-specific fieldtypes
+                ocrfieldtype = self.generic_ocr_field_type.get(fieldtype, None)
                 if ocrfieldtype != None:
-                    eachfield.set(TYPE, ocrfieldtype)
-                    # refresh fieldtypes after update
-                    fieldtype = eachfield.attrib.get(TYPE)
+                    set(TYPE, ocrfieldtype)
+                    # Refresh fieldtypes after update
+                    fieldtype = get(TYPE)
 
-                # set num boxes and lines
-                fieldhasoptions = eachfield.attrib.get(HASOPTIONS)
+                # Set num boxes and lines
+                fieldhasoptions = get(HASOPTIONS)
                 if fieldhasoptions == "False":
-                    eachfield.set(LINES,
-                                  str(FIELD_TYPE_LINES.get(fieldtype,
-                                                           1)))
+                    set(LINES, str(FIELD_TYPE_LINES.get(fieldtype, 1)))
                     if fieldtype in FIELD_TYPE_BOXES.keys():
-                        eachfield.set(BOXES,
-                                      str(FIELD_TYPE_BOXES.get(fieldtype)))
+                        set(BOXES, str(FIELD_TYPE_BOXES.get(fieldtype)))
 
-                # if field is readable but not writable set default value
-                if eachfield.attrib.get("readable", "False") == "True" and \
-                        eachfield.attrib.get("writable", "False") == "False":
+                # If field is readable but not writable set default value
+                if get("readable", "False") == "True" and \
+                   get("writable", "False") == "False":
                     try:
-                        fieldresourcename = \
-                            eachresource.attrib.get("name").split("%s_" %\
-                                                                      self.prefix)[1]
+                        fieldresourcename = rget("name").split("%s_" % self.prefix)[1]
                     except:
-                        fieldresourcename = \
-                            eachresource.attrib.get("name").split("_")[1]
+                        fieldresourcename = rget("name").split("_")[1]
 
                     fieldresource = \
                         self.resource.components.get(fieldresourcename, None)
                     if not fieldresource:
                         fieldresource = self.resource
-                    fieldname = eachfield.attrib.get("name")
+                    fieldname = get("name")
                     try:
                         fielddefault = self.r.resource.table[fieldname].default
                     except(KeyError):
                         fielddefault = "None"
-                    eachfield.set("default",
-                                  str(fielddefault))
+                    set("default",
+                        str(fielddefault))
 
-                # for unknown field types
+                # For unknown field types
                 if fieldtype not in self.generic_ocr_field_type.values():
-                    eachfield.set(TYPE, "string")
-                    eachfield.set(HASOPTIONS, "False")
-                    eachfield.set(LINES, "2")
-                    # refresh fieldtypes after update
-                    fieldtype = eachfield.attrib.get(TYPE)
+                    set(TYPE, "string")
+                    set(HASOPTIONS, "False")
+                    set(LINES, "2")
+                    # Refresh fieldtypes after update
+                    fieldtype = get(TYPE)
 
-                # in ocr boolean fields should be shown as options
+                # In OCR, boolean fields should be shown as options
                 if fieldtype == "boolean":
-                    eachfield.set(HASOPTIONS, "True")
+                    set(HASOPTIONS, "True")
 
-                # fields removed which need not be displayed
-                if eachfield.attrib.get("readable", "False") == "False" and \
-                        eachfield.attrib.get("writable", "False") == "False":
-                    eachresource.remove(eachfield)
+                # Fields removed which need not be displayed
+                if get("readable", "False") == "False" and \
+                   get("writable", "False") == "False":
+                    resource.remove(field)
                     continue
 
-                if eachfield.attrib.get(HASOPTIONS, "False") == "True" and \
-                        eachfield.attrib.get(TYPE) != "boolean":
-                    s3ocrselect = eachfield.getchildren()[0]
-                    for eachoption in s3ocrselect.iterchildren():
-                        if eachoption.text == "" or eachoption.text == None:
-                            s3ocrselect.remove(eachoption)
+                if get(HASOPTIONS, "False") == "True" and \
+                   get(TYPE) != "boolean":
+                    s3ocrselect = field.getchildren()[0]
+                    for option in s3ocrselect.iterchildren():
+                        if option.text == "" or option.text == None:
+                            s3ocrselect.remove(option)
                             continue
+
         #print etree.tostring(s3ocr_root, pretty_print=True)
         return s3ocr_root
 
+    # -------------------------------------------------------------------------
     def OCRPDFManager(self):
         """
             Produces OCR Compatible PDF forms
         """
 
         T = current.T
-        manager = current.manager
         s3ocr_root = self.__s3OCREtree() # get element s3xml
         self.s3ocrxml = etree.tostring(s3ocr_root, pretty_print=DEBUG)
         self.content = []
-
         s3ocr_layout_etree = self.layoutEtree
-        # Define font size
-        titlefontsize = 18
-        sectionfontsize = 15
-        regularfontsize = 13
-        hintfontsize = 10
 
-        # etree labels
+        # @ToDo: Define font sizes centrally rather than in flowables
+        #titlefontsize = 16
+        #sectionfontsize = 14
+        #regularfontsize = 12
+        #hintfontsize = 10
+
         ITEXT = "label"
         HINT = "comment"
         TYPE = "type"
@@ -2273,11 +2286,19 @@ class S3PDF(S3Method):
         REFERENCE = "reference"
         RESOURCE = "resource"
 
-        # l10n
+        dtformat = current.deployment_settings.get_L10n_datetime_format()
+        if str(dtformat)[:2] == "%m":
+            # US-style
+            date_hint = T("fill in order: month(2) day(2) year(4)")
+            datetime_hint = T("fill in order: hour(2) min(2) month(2) day(2) year(4)")
+        else:
+            # ISO-style
+            date_hint = T("fill in order: day(2) month(2) year(4)")
+            datetime_hint = T("fill in order: hour(2) min(2) day(2) month(2) year(4)")
         l10n = {
             "datetime_hint": {
-                "date": T("fill in order: day(2) month(2) year(4)"),
-                "datetime": T("fill in order: hour(2) min(2) day(2) month(2) year(4)"),
+                "date": date_hint,
+                "datetime": datetime_hint,
                 },
             "boolean": {
                 "yes": T("Yes"),
@@ -2285,138 +2306,155 @@ class S3PDF(S3Method):
                 },
             "select": {
                 "multiselect": T("Select one or more option(s) that apply"),
-                "singleselect": T("Select any one option that apply"),
+                "singleselect": T("Select the option that applies"),
                 },
             }
 
         # Print the etree
-        for eachresource in s3ocr_root:
+        append = self.content.append
+        SubElement = etree.SubElement
+        for resource in s3ocr_root:
+            name = resource.attrib.get("name")
             # Create resource element of ocr layout xml
-            s3ocr_layout_resource_etree =\
-                etree.SubElement(s3ocr_layout_etree,
-                                 "resource", name=eachresource.attrib.get("name"))
+            s3ocr_layout_resource_etree = SubElement(s3ocr_layout_etree,
+                                                     "resource",
+                                                     name=name)
 
             styleSheet = getStyleSheet()
-            self.content.append(DrawHrLine(0.5))
-            self.content.append(Paragraph(html_unescape_and_strip(eachresource.attrib.get(ITEXT,
-                                                                  eachresource.attrib.get("name"))),
-                                          styleSheet["Section"]))
-            self.content.append(DrawHrLine(0.5))
+            # @ToDo: Check if this is needed by OCR (removed for now as ugly)
+            #append(DrawHrLine(0.5))
+            #append(Paragraph(html_unescape_and_strip(resource.attrib.get(ITEXT,
+            #                                                                 name)),
+            #                 styleSheet["Section"]))
+            #append(DrawHrLine(0.5))
 
-            for eachfield in eachresource.iterchildren():
+            for field in resource.iterchildren():
+                get = field.attrib.get
                 # Create field element of ocr layout xml
-                s3ocr_layout_field_etree =\
-                    etree.SubElement(s3ocr_layout_resource_etree,
-                                     "field",
-                                     name=eachfield.attrib.get("name"),
-                                     type=eachfield.attrib.get("type"))
+                s3ocr_layout_field_etree = SubElement(s3ocr_layout_resource_etree,
+                                                      "field",
+                                                      name=get("name"),
+                                                      type=get("type"))
 
-                if eachfield.attrib.get(REFERENCE) == "1":
-                    s3ocr_layout_field_etree.set(REFERENCE,
-                                                 "1")
-                    s3ocr_layout_field_etree.set(RESOURCE,
-                                                 eachfield.attrib.get(RESOURCE))
+                if get(REFERENCE) == "1":
+                    s3ocr_layout_field_etree.set(REFERENCE, "1")
+                    s3ocr_layout_field_etree.set(RESOURCE, get(RESOURCE))
 
-                fieldlabel = eachfield.attrib.get(ITEXT)
+                fieldlabel = get(ITEXT)
                 spacing = " " * 5
-                fieldhint = self.__trim(eachfield.attrib.get(HINT))
+                fieldhint = self.__trim(get(HINT))
 
-                if fieldhint != "" and fieldhint != None:
-                    self.content.append(Paragraph(html_unescape_and_strip("%s%s( %s )" % \
+                if fieldhint:
+                    append(Paragraph(html_unescape_and_strip("%s%s( %s )" % \
                                                       (fieldlabel,
                                                        spacing,
                                                        fieldhint)),
-                                                  styleSheet["Question"]))
+                                     styleSheet["Question"]))
 
                 else:
-                    self.content.append(Paragraph(html_unescape_and_strip(fieldlabel),
-                                                  styleSheet["Question"]))
+                    append(Paragraph(html_unescape_and_strip(fieldlabel),
+                                     styleSheet["Question"]))
 
-                if eachfield.attrib.get("readable", "False") == "True" and \
-                        eachfield.attrib.get("writable", "False") == "False":
-                    self.content.append(Paragraph(html_unescape_and_strip(eachfield.attrib.get("default",
-                                                                       "No default Value")),
-                                                      styleSheet["DefaultAnswer"]))
+                if get("readable", "False") == "True" and \
+                   get("writable", "False") == "False":
+                    append(Paragraph(html_unescape_and_strip(get("default",
+                                                                 "No default Value")),
+                                     styleSheet["DefaultAnswer"]))
 
                     # Remove the layout component of empty fields
                     s3ocr_layout_resource_etree.remove(s3ocr_layout_field_etree)
 
-                elif eachfield.attrib.get(HASOPTIONS) == "True":
-                    fieldtype = eachfield.attrib.get(TYPE)
-                    # if the field has to be shown with options
+                elif get(HASOPTIONS) == "True":
+                    fieldtype = get(TYPE)
+                    # The field has to be shown with options
                     if fieldtype == "boolean":
                         bool_text = l10n.get("boolean")
-                        self.content.append(DrawOptionBox(bool_text.get("yes").\
-                                                       decode("utf-8"),
-                                                          s3ocr_layout_field_etree,
-                                                          "yes"))
-
-                        self.content.append(DrawOptionBox(bool_text.get("no").\
-                                                          decode("utf-8"),
-                                                          s3ocr_layout_field_etree,
-                                                          "no"))
+                        append(DrawOptionBoxes(s3ocr_layout_field_etree,
+                                               [bool_text.get("yes").decode("utf-8"),
+                                                bool_text.get("no").decode("utf-8")],
+                                               ["yes", "no"]))
 
                     else:
                         if fieldtype == "multiselect":
                             option_hint = l10n.get("select").get("multiselect")
                         else:
-                            option_hint = l10n.get("select").get("singleselect")
+                            #option_hint = l10n.get("select").get("singleselect")
+                            option_hint = None
 
-                        s3ocrselect = eachfield.getchildren()[0]
+                        s3ocrselect = field.getchildren()[0]
                         numoptions = len(s3ocrselect.getchildren())
 
                         if numoptions <= MAX_FORM_OPTIONS_LIMIT:
                             s3ocr_layout_field_etree.attrib["limitcrossed"] = "1"
-                            self.content.append(DrawHintBox(option_hint.\
-                                                            decode("utf-8")))
+                            if option_hint:
+                                append(DrawHintBox(option_hint.decode("utf-8")))
 
-                            for eachoption in s3ocrselect.iterchildren():
-                                self.content.append(DrawOptionBox(eachoption.text,
-                                                                  s3ocr_layout_field_etree,
-                                                                  eachoption.attrib.get("value")))
+                            options = s3ocrselect.iterchildren()
+                            # Only show 4 options per row
+                            opts = []
+                            oppend = opts.append
+                            range = int(math.ceil(numoptions / 4.0))
+                            for row in xrange(range):
+                                labels = []
+                                lappend = labels.append
+                                values = []
+                                vappend = values.append
+                                i = 1
+                                for option in options:
+                                    label = option.text
+                                    if label in opts:
+                                        continue
+                                    oppend(label)
+                                    lappend(label)
+                                    vappend(option.attrib.get("value"))
+                                    if i == 4:
+                                        break
+                                    i += 1
+                                append(DrawOptionBoxes(s3ocr_layout_field_etree,
+                                                       labels,
+                                                       values))
                         else:
-                            self.content.append(DrawHintBox(T("Enter a value carefully without spelling mistakes, this field will be crosschecked.").decode("utf-8")))
-                            for eachtextbox in xrange(2):
-                                self.content.append(StringInputBoxes(numBoxes=None,
-                                                                     etreeElem=s3ocr_layout_field_etree))
+                            append(DrawHintBox(T("Enter a value carefully without spelling mistakes, this field needs to match existing data.").decode("utf-8")))
+                            for line in xrange(2):
+                                append(StringInputBoxes(numBoxes=None,
+                                                        etreeElem=s3ocr_layout_field_etree))
                 else:
                     # It is a text field
-                    fieldtype = eachfield.attrib.get(TYPE)
+                    fieldtype = get(TYPE)
                     BOXES_TYPES = ["string", "textbox", "integer",
                                    "double", "date", "datetime",]
                     if fieldtype in BOXES_TYPES:
                         if fieldtype in ["string", "textbox"]:
                             #form.linespace(3)
-                            num_lines = int(eachfield.attrib.get("lines",
-                                                                     1))
-                            for eachline in xrange(num_lines):
-                                self.content.append(StringInputBoxes(numBoxes=None,
-                                                                     etreeElem=s3ocr_layout_field_etree))
+                            num_lines = int(get("lines", 1))
+                            for line in xrange(num_lines):
+                                append(StringInputBoxes(numBoxes=None,
+                                                        etreeElem=s3ocr_layout_field_etree))
 
                         elif fieldtype in ["integer", "double"]:
-                            num_boxes = int(eachfield.attrib.get("boxes",
-                                                                 9))
-                            self.content.append(StringInputBoxes(numBoxes=num_boxes,
-                                                                 etreeElem=s3ocr_layout_field_etree))
+                            num_boxes = int(get("boxes", 9))
+                            append(StringInputBoxes(numBoxes=num_boxes,
+                                                    etreeElem=s3ocr_layout_field_etree))
 
                         elif fieldtype in ["date", "datetime"]:
                             # Print hint
-                            hinttext = \
-                                l10n.get("datetime_hint").get(fieldtype).decode("utf-8")
-                            self.content.append(DrawHintBox(hinttext))
+                            #hinttext = \
+                            #    l10n.get("datetime_hint").get(fieldtype).decode("utf-8")
+                            #append(DrawHintBox(hinttext))
 
                             if fieldtype == "datetime":
-                                self.content.append(DateTimeBoxes(s3ocr_layout_field_etree))
+                                append(DateTimeBoxes(s3ocr_layout_field_etree))
                             elif fieldtype == "date":
-                                self.content.append(DateBoxes(s3ocr_layout_field_etree))
+                                append(DateBoxes(s3ocr_layout_field_etree))
 
                     else:
                         self.r.error(501, current.manager.PARSE_ERROR)
-                        print sys.stderr("%s :invalid field type: %s" %\
-                                             (eachfield.attrib.get("name"),
+                        print sys.stderr("%s :invalid field type: %s" % \
+                                             (get("name"),
                                               fieldtype))
         return
 
+    # -------------------------------------------------------------------------
     def __getOCRLayout(self):
         """
             return layout file
@@ -2428,7 +2466,9 @@ class S3PDF(S3Method):
         #print etree.tostring(self.layoutEtree, pretty_print=prettyprint)
         return etree.tostring(self.layoutEtree, pretty_print=prettyprint)
 
-    def __trim(self, text):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def __trim(text):
         """
             Helper to trim off any enclosing paranthesis
 
@@ -2443,6 +2483,7 @@ class S3PDF(S3Method):
             text = text[1:-1]
         return text
 
+    # -------------------------------------------------------------------------
     def __update_dbmeta(self, formUUID, layoutXML, numPages):
         """
             Store the PDF layout information into the database/disk.
@@ -2459,19 +2500,20 @@ class S3PDF(S3Method):
         s3ocrxml_file_name = "%s_ocrxml" % formUUID
 
         db = current.db
-        tablename = "ocr_meta"
-
-        rows = db(db[tablename]["form_uuid"] == formUUID).select()
+        table = db.ocr_meta
+        rows = db(table.form_uuid == formUUID).select()
         row = rows[0]
-        row.update_record(layout_file=db[tablename]["layout_file"].store(\
+        row.update_record(layout_file=table.layout_file.store(\
                 layout_file_stream,
                 layout_file_name),
-                          s3ocrxml_file=db[tablename]["s3ocrxml_file"].store(\
+                          s3ocrxml_file=table.s3ocrxml_file.store(\
                 s3ocrxml_file_stream,
                 s3ocrxml_file_name),
                           pages=numPages)
 
-    def __book_revision(self, formUUID, formResourceName):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def __book_revision(formUUID, formResourceName):
         """
             Books a revision number for current operation in ocr_meta
 
@@ -2480,26 +2522,28 @@ class S3PDF(S3Method):
         """
 
         db = current.db
-        tablename = "ocr_meta"
+        table = current.s3db.ocr_meta
 
-        #determining revision
-        #selector = db[tablename]["revision"].max()
-        #rows = db(db[tablename]["resource_name"]==formResourceName).select(selector)
+        # Determine revision
+        #selector = table["revision"].max()
+        #rows = db(table.resource_name == formResourceName).select(selector)
         #row = rows.first()
         #revision = 0 if (row[selector] == None) else (row[selector] + 1)
 
-        #to make the table migratable
-        #taking the timestamp in hex
+        # Make the table migratable
+        # Take the timestamp in hex
         import uuid
         revision = uuid.uuid5(formUUID, formResourceName).hex.upper()[:6]
 
-        db[tablename].insert(form_uuid=formUUID,
-                             resource_name=formResourceName,
-                             revision=revision)
+        table.insert(form_uuid=formUUID,
+                     resource_name=formResourceName,
+                     revision=revision)
 
         return revision
 
-    def defaultTitle(self, resource):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaultTitle(resource):
         """
             Method to extract a generic title from the resource using the
             crud strings
@@ -2515,7 +2559,7 @@ class S3PDF(S3Method):
             # No CRUD Strings for this resource
             return current.T(resource.name.replace("_", " ")).decode("utf-8")
 
-
+    # -------------------------------------------------------------------------
     def setMargins(self, left=None, right=None, top=None, bottom=None):
         """
             Method to set the margins of the document
@@ -2553,30 +2597,27 @@ class S3PDF(S3Method):
         else:
             self.doc.bottomMargin = self.bottomMargin
 
-    def getPageWidth(self):
-        return self.doc.width
-
-    def getPageHeight(self):
-        return self.doc.height
-
+    # -------------------------------------------------------------------------
     def setPortrait(self):
         """
             Method to set the orientation of the document to be portrait
 
             @todo: make this for a page rather than the document
-            @todo: change the hardcoded page size
         """
+
         self.doc.pagesize = portrait(self.paper_size)
 
+    # -------------------------------------------------------------------------
     def setLandscape(self):
         """
             Method to set the orientation of the document to be landscape
 
             @todo: make this for a page rather than the document
-            @todo: change the hardcoded page size
         """
+
         self.doc.pagesize = landscape(self.paper_size)
 
+    # -------------------------------------------------------------------------
     def addTable(self,
                  resource = None,
                  raw_data = None,
@@ -2609,18 +2650,19 @@ class S3PDF(S3Method):
                            list_fields=list_fields,
                            groupby=report_groupby,
                            hide_comments=report_hide_comments
-                          )
+                           )
         result = table.build()
         if result != None:
             self.content += result
 
-
+    # -------------------------------------------------------------------------
     def extractrHeader(self,
                        rHeader
-                      ):
+                       ):
         """
             Method to convert the HTML generated for a rHeader into PDF
         """
+
         # let's assume that it's a callable rHeader
         try:
             # switch the representation to html so the rHeader doesn't barf
@@ -2631,13 +2673,13 @@ class S3PDF(S3Method):
         except:
             # okay so maybe it wasn't ... it could be an HTML object
             html = rHeader
-        parser = S3html2pdf(pageWidth = self.getPageWidth(),
+        parser = S3html2pdf(pageWidth = self.doc.width,
                             exclude_class_list=["tabs"])
         result = parser.parse(html)
         if result != None:
             self.content += result
 
-
+    # -------------------------------------------------------------------------
     def addrHeader(self,
                    resource = None,
                    raw_data = None,
@@ -2645,47 +2687,53 @@ class S3PDF(S3Method):
                    report_hide_comments=False
                   ):
         """
-        Method to create a rHeader table that is inserted into the document
+            Method to create a rHeader table that is inserted into the document
 
-        @param resource: A S3Resource object
-        @param list_Fields: A list of field names
-        @param report_hide_comments: Any comment field will be hidden
+            @param resource: A S3Resource object
+            @param list_Fields: A list of field names
+            @param report_hide_comments: Any comment field will be hidden
 
-        This uses the class S3PDFTable to build and properly format the table.
-        The table is then built and stored in the document flow ready for
-        generating the pdf.
+            This uses the class S3PDFTable to build and properly format the table.
+            The table is then built and stored in the document flow ready for
+            generating the pdf.
         """
+
         rHeader = S3PDFRHeader(self,
                                resource,
                                raw_data,
                                list_fields,
                                report_hide_comments
-                              )
+                               )
         result = rHeader.build()
         if result != None:
             self.content += result
 
+    # -------------------------------------------------------------------------
     def addPlainTable(self, text, style=None, append=True):
+        """
+        """
+
         table = Table(text, style=style)
         if append:
             self.content.append(table)
         return table
 
+    # -------------------------------------------------------------------------
     def addParagraph(self, text, style=None, append=True):
         """
-        Method to create a paragraph that may be inserted into the document
+            Method to create a paragraph that may be inserted into the document
 
-        @param text: The text for the paragraph
-        @param append: If True then the paragraph will be stored in the
-        document flow ready for generating the pdf.
+            @param text: The text for the paragraph
+            @param append: If True then the paragraph will be stored in the
+            document flow ready for generating the pdf.
 
-        @return The paragraph
+            @return The paragraph
 
-        This method can return the paragraph rather than inserting into the
-        document. This is useful if the paragraph needs to be first
-        inserted in another flowable, before being added to the document.
-        An example of when this is useful is when large amounts of text
-        (such as a comment) are added to a cell of a table.
+            This method can return the paragraph rather than inserting into the
+            document. This is useful if the paragraph needs to be first
+            inserted in another flowable, before being added to the document.
+            An example of when this is useful is when large amounts of text
+            (such as a comment) are added to a cell of a table.
         """
 
         if text != "":
@@ -2698,79 +2746,95 @@ class S3PDF(S3Method):
             return para
         return ""
 
+    # -------------------------------------------------------------------------
     def addSpacer(self, height, append=True):
         """
             Add a spacer to the story
         """
-        spacer = Spacer(1,height)
+
+        spacer = Spacer(1, height)
         if append:
             self.content.append(spacer)
         return spacer
 
+    # -------------------------------------------------------------------------
     def addOverlay(self, callback, data):
         """
-            Add a overlay to the page
+            Add an overlay to the page
         """
+
         self.content.append(Overlay(callback, data))
 
+    # -------------------------------------------------------------------------
     def addBoxes(self, cnt, append=True):
         """
-            Add a square text boxes for text entry to the story
+            Add square text boxes for text entry to the story
         """
-        boxes = StringInputBoxes(cnt,etree.Element("dummy"))
+
+        boxes = StringInputBoxes(cnt, etree.Element("dummy"))
         if append:
             self.content.append(boxes)
         return boxes
 
+    # -------------------------------------------------------------------------
     def throwPageBreak(self):
         """
             Method to force a page break in the report
         """
+
         self.content.append(PageBreak())
 
+    # -------------------------------------------------------------------------
     def changePageTitle(self, newTitle):
         """
             Method to force a page break in the report
         """
+
         self.content.append(ChangePageTitle(self, newTitle))
 
-
+    # -------------------------------------------------------------------------
     def getStyledTable(self, table, colWidths=None, rowHeights = None, style=[]):
         """
             Method to create a simple table
         """
-        (list,style) = self.addCellStyling(table, style)
+
+        (list, style) = self.addCellStyling(table, style)
         return Table(list,
                      colWidths=colWidths,
                      rowHeights=rowHeights,
                      style=style,
-                    )
+                     )
 
+    # -------------------------------------------------------------------------
     def getTableMeasurements(self, tempTable):
         """
             Method to calculate the dimensions of the table
         """
+
         tempDoc = EdenDocTemplate(StringIO())
         tempDoc.setPageTemplates(lambda x, y: None, lambda x, y: None)
         tempDoc.pagesize = portrait(self.paper_size)
         tempDoc.build([tempTable], canvasmaker=canvas.Canvas)
         return (tempTable._colWidths, tempTable._rowHeights)
 
+    # -------------------------------------------------------------------------
     def cellStyle(self, style, cell):
         """
             Add special styles to the text in a cell
         """
+
         if style == "*GREY":
-            return [("TEXTCOLOR",cell, cell, colors.lightgrey)]
+            return [("TEXTCOLOR", cell, cell, colors.lightgrey)]
         elif style == "*RED":
-            return [("TEXTCOLOR",cell, cell, colors.red)]
+            return [("TEXTCOLOR", cell, cell, colors.red)]
         return []
 
-
+    # -------------------------------------------------------------------------
     def addCellStyling(self, table, style):
         """
             Add special styles to the text in a table
         """
+
         row = 0
         for line in table:
             col = 0
@@ -2786,17 +2850,22 @@ class S3PDF(S3Method):
             row += 1
         return (table, style)
 
+    # -------------------------------------------------------------------------
     def setHeaderBanner (self, image):
         """
-            This method will add a banner to a page, used by pageHeader
+            Method to add a banner to a page
+            used by pageHeader
         """
+
         self.headerBanner = os.path.join(current.request.folder,image)
 
+    # -------------------------------------------------------------------------
     def pageHeader(self, canvas, doc):
         """
-            This method will generate the basic look of a page.
+            Method to generate the basic look of a page.
             It is a callback method and will not be called directly
         """
+
         canvas.saveState()
         if self.logo and os.path.exists(self.logo):
             im = Image.open(self.logo)
@@ -2805,37 +2874,39 @@ class S3PDF(S3Method):
             width = iwidth * (height/iheight)
             canvas.drawImage(self.logo,
                              inch,
-                             doc.pagesize[1]-1.2*inch,
+                             doc.pagesize[1] - 1.2 * inch,
                              width = width,
                              height = height)
         if self.headerBanner and os.path.exists(self.headerBanner):
             im = Image.open(self.headerBanner)
             (iwidth, iheight) = im.size
             height = 0.75 * inch
-            width = iwidth * (height/iheight)
+            width = iwidth * (height / iheight)
             canvas.drawImage(self.headerBanner,
-                             3*inch,
-                             doc.pagesize[1]-0.95*inch,
+                             3 * inch,
+                             doc.pagesize[1] - 0.95 * inch,
                              width = width,
                              height = height)
-        canvas.setFont("Helvetica-Bold", 16)
+        canvas.setFont("Helvetica-Bold", 14)
         canvas.drawCentredString(doc.pagesize[0] / 2.0,
                                  doc.pagesize[1] - 1.3*inch, self.title
                                 )
-        canvas.setFont("Helvetica-Bold", 9)
+        canvas.setFont("Helvetica-Bold", 8)
         now = S3DateTime.datetime_represent(datetime.utcnow(), utc=True)
-        canvas.drawCentredString(doc.pagesize[0] - 1.5*inch,
-                                 doc.pagesize[1] - 1.3*inch, now
+        canvas.drawCentredString(doc.pagesize[0] - 1.5 * inch,
+                                 doc.pagesize[1] - 1.3 * inch, now
                                 )
         canvas.restoreState()
 
+    # -------------------------------------------------------------------------
     def pageFooter(self, canvas, doc):
         """
-            This method will generate the basic look of a page.
+            Method to generate the basic look of a page.
             It is a callback method and will not be called directly
         """
+
         canvas.saveState()
-        canvas.setFont("Helvetica", 9)
+        canvas.setFont("Helvetica", 7)
         canvas.drawString(inch, 0.75 * inch,
                           "Page %d %s" % (doc.page,
                                           self.prevtitle
@@ -2844,10 +2915,10 @@ class S3PDF(S3Method):
         self.prevtitle = self.title
         canvas.restoreState()
 
-
+    # -------------------------------------------------------------------------
     def buildDoc(self):
         """
-            This method will build the pdf document.
+            Method to build the PDF document.
             The response headers are set up for a pdf document and the document
             is then sent
 
@@ -2862,46 +2933,53 @@ class S3PDF(S3Method):
         self.output.seek(0)
         return self.output.read()
 
-    # Nested classes that extended external libraries
+    # Nested classes that extend external libraries
     # If the external library failed to be imported then we get a stacktrace
     if reportLabImported:
+
+        # =====================================================================
         class S3PDFOCRForm(BaseDocTemplate):
             """
                 Extended class of the BaseDocTemplate to be used with OCR Forms.
                 The form has a standard page template that draws handles on the
                 page in the four corners, the middle of the side and bottom edges
-
-                @author: Shiv Deepak
             """
+
             _invalidInitArgs = ("pageTemplates",)
 
+            # -----------------------------------------------------------------
             def __init__(self, filename, **attr):
+
                 BaseDocTemplate.__init__(self, filename, **attr)
                 self.formUUID = attr.get("formUUID", "")
                 self.formResourceName = attr.get("formResourceName", "")
                 self.formRevision = attr.get("formRevision", "")
                 self.pdfTitle = attr.get("pdfTitle", "OCR Form")
                 self.content = []
-                self.leftMargin = 50
-                self.rightMargin = 50
-                self.topMargin = 50
-                self.bottomMargin = 50
+                self.leftMargin = 20
+                self.rightMargin = 20
+                self.topMargin = 20
+                self.bottomMargin = 20
                 settings = current.deployment_settings
                 if settings.get_paper_size() == "Letter":
                     self.paper_size = LETTER
                 else:
                     self.paper_size = A4
 
+            # -----------------------------------------------------------------
             def handle_pageBegin(self):
                 """
-                    override base method to add a change of page template after the firstpage.
+                    Override base method to add a change of page template after
+                    the firstpage.
                 """
-                self._handle_pageBegin()
-                self._handle_nextPageTemplate('Later')
 
+                self._handle_pageBegin()
+                self._handle_nextPageTemplate("Later")
+
+            # -----------------------------------------------------------------
             def build(self, content=[], canvasmaker=canvas.Canvas, **attr):
                 """
-                    build the document using the flowables.
+                    Build the document using the flowables.
                 """
 
                 T = current.T
@@ -2910,12 +2988,12 @@ class S3PDF(S3Method):
                                self.bottomMargin,
                                self.width,
                                self.height,
-                               id='normal')
-                self.addPageTemplates([PageTemplate(id='First',
+                               id="normal")
+                self.addPageTemplates([PageTemplate(id="First",
                                                     frames=frameT,
                                                     onPage=self.firstPageTemplate,
                                                     pagesize=self.pagesize),
-                                       PageTemplate(id='Later',
+                                       PageTemplate(id="Later",
                                                     frames=frameT,
                                                     onPage=self.laterPageTemplate,
                                                     pagesize=self.pagesize)])
@@ -2930,84 +3008,93 @@ class S3PDF(S3Method):
                 styleSheet = getStyleSheet()
                 self.content = [Paragraph(html_unescape_and_strip(self.pdfTitle), styleSheet["Title"])]
                 # Print input instructions
+                append = self.content.append
                 for eachInstruction in ocrInstructions:
-                    self.content.append(Paragraph(html_unescape_and_strip(eachInstruction),
-                                                  styleSheet["Instructions"]))
+                    append(Paragraph(html_unescape_and_strip(eachInstruction),
+                                     styleSheet["Instructions"]))
 
                 # Add content
                 self.content.extend(content)
                 # Build OCRable PDF form
-                BaseDocTemplate.build(self, self.content, canvasmaker=canvasmaker)
+                BaseDocTemplate.build(self, self.content,
+                                      canvasmaker=canvasmaker)
                 self.numPages = self.canv.getPageNumber() - 1
 
+            # -----------------------------------------------------------------
             def firstPageTemplate(self, canvas, doc):
                 """
                     Template for first page
                 """
+
                 self.laterPageTemplate(canvas, doc)
 
+            # -----------------------------------------------------------------
             def laterPageTemplate(self, canvas, doc):
                 """
                     Template for all pages but first
                 """
+
                 self.pageDecorate(canvas, doc)
                 self.pageMeta(canvas, doc)
 
+            # -----------------------------------------------------------------
             def pageDecorate(self, canvas, doc):
                 """
-                    Decorate Page For OCRing
+                    Decorate Page with blocks for OCR-ability
                 """
 
                 canvas.saveState()
                 pagewidth, pageheight = self.paper_size
-                canvas.rect(20, 20, 20, 20, fill=1)                            #btlf
-                canvas.rect(pagewidth - 40, 20, 20, 20, fill=1)                #btrt
-                canvas.rect(20, pageheight - 40, 20, 20, fill=1)               #tplf
-                canvas.rect(pagewidth/2 - 10, 20, 20, 20, fill=1)              #btmd
-                canvas.rect(20, pageheight/2 - 10, 20, 20, fill=1)             #mdlf
-                canvas.rect(pagewidth - 40, pageheight - 40, 20, 20, fill=1)   #tprt
-                canvas.rect(pagewidth - 40, pageheight/2 - 10, 20, 20, fill=1) #mdrt
+                canvas.rect(10, 10, 10, 10, fill=1)                       #btlf
+                canvas.rect(pagewidth - 20, 10, 10, 10, fill=1)           #btrt
+                canvas.rect(10, pageheight - 20, 10, 10, fill=1)          #tplf
+                canvas.rect(pagewidth / 2 - 5, 10, 10, 10, fill=1)        #btmd
+                canvas.rect(10, pageheight / 2 - 5, 10, 10, fill=1)       #mdlf
+                canvas.rect(pagewidth - 20,
+                            pageheight - 20, 10, 10, fill=1)              #tprt
+                canvas.rect(pagewidth - 20,
+                            pageheight / 2 - 5, 10, 10, fill=1)           #mdrt
                 canvas.restoreState()
 
+            # -----------------------------------------------------------------
             def pageMeta(self, canvas, doc):
                 """
-                    put pagenumber and other mata info on each page
+                    Put pagenumber and other meta info on each page
                 """
+
                 canvas.saveState()
-                canvas.setFont("Helvetica", 10)
+                canvas.setFont("Helvetica", 7)
                 pageNumberText = "Page %s" % self.canv.getPageNumber()
                 pagewidth, pageheight = self.paper_size
-                metaHeight = 27
-                pageNumberWidth = pagewidth - (((len(pageNumberText)+2)*5) + 40)
+                metaHeight = 14
+                pageNumberWidth = pagewidth - (((len(pageNumberText) + 2) * 5) + 40)
                 pageNumberHeight = metaHeight
                 canvas.drawString(pageNumberWidth, pageNumberHeight, pageNumberText)
 
                 uuidText = "UUID %s" % self.formUUID
-                uuidWidth = 40 + 5
+                uuidWidth = 40
                 uuidHeight = metaHeight
                 canvas.drawString(uuidWidth, uuidHeight, uuidText)
                 resourceNameText = self.formResourceName
                 revisionText = self.formRevision
                 otherMetaText = "Resource %s      Revision %s" % (resourceNameText,
                                                                   revisionText)
-                otherMetaWidth = (pagewidth/2) + 20
+                otherMetaWidth = (pagewidth / 2) + 20
                 otherMetaHeight = metaHeight
                 canvas.drawString(otherMetaWidth, otherMetaHeight, otherMetaText)
                 canvas.restoreState()
-        # end of class S3PDFORCForm
-# end of class S3PDF
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3PDFDataSource:
     """
         Class to get the labels and the data from the database
     """
-    def __init__(self,
-                 obj,
-                ):
+
+    def __init__(self, obj):
         """
             Method to create the S3PDFDataSource object
         """
+
         self.resource = obj.resource
         self.list_fields = obj.list_fields
         self.report_groupby = obj.report_groupby
@@ -3016,6 +3103,7 @@ class S3PDFDataSource:
         self.labels = None
         self.records = False
 
+    # -------------------------------------------------------------------------
     def select(self):
         """
             Internally used method to get the data from the database
@@ -3031,9 +3119,6 @@ class S3PDFDataSource:
 
             The returned records are stored in the records property.
         """
-
-        response = current.response
-        manager = current.manager
 
         resource = self.resource
         list_fields = self.list_fields
@@ -3052,8 +3137,9 @@ class S3PDFDataSource:
             list_fields = [f for f in list_fields if f not in indices]
 
         # Filter and orderby
-        if response.s3.filter is not None:
-            resource.add_filter(response.s3.filter)
+        filter = current.response.s3.filter
+        if filter is not None:
+            resource.add_filter(filter)
         orderby = self.report_groupby
 
         # Retrieve the resource contents
@@ -3084,6 +3170,7 @@ class S3PDFDataSource:
 
             Used to remove the report_groupby label (if present)
         """
+
         # Collect the labels from the select() call
         labels = self.labels
         if self.report_groupby != None:
@@ -3157,11 +3244,7 @@ class S3PDFDataSource:
             rowNumber += 1
         return (subheadingList, data)
 
-# end of class S3PDFDataSource
-
-
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3PDFRHeader():
     """
         Class to build a simple table that holds the details of one record,
@@ -3170,21 +3253,23 @@ class S3PDFRHeader():
         This class doesn't need to be called directly.
         Rather see S3PDF.addrHeader()
     """
+
     def __init__(self,
                  document,
                  resource=None,
                  raw_data=None,
                  list_fields=None,
                  hide_comments=False
-                ):
+                 ):
         """
-            Method to create a rHeader object
+            Method to create an rHeader object
 
-            @param document: A S3PDF object
-            @param resource: A S3Resource object
+            @param document: An S3PDF object
+            @param resource: An S3Resource object
             @param list_fields: A list of field names
             @param hide_comments: Any comment field will be hidden
         """
+
         self.pdf = document
         self.resource = resource
         self.raw_data = raw_data
@@ -3196,6 +3281,7 @@ class S3PDFRHeader():
         self.labels = []
         self.fontsize = 10
 
+    # -------------------------------------------------------------------------
     def build(self):
         """
             Method to build the table.
@@ -3204,6 +3290,7 @@ class S3PDFRHeader():
                      just one table object, but if the table needs to be split
                      across columns then one object per page will be created.
         """
+
         if self.resource != None:
             ds = S3PDFDataSource(self)
             # Get records
@@ -3220,14 +3307,14 @@ class S3PDFRHeader():
         if len(self.data) == 0:
             return None
         else:
+            NONE = current.messages["NONE"]
             for index in range(len(self.labels)):
                 try:
                     value = data[0][index]
                 except:
-                    value = "-"
+                    value = NONE
                 self.rheader.append([self.labels[index],
-                                     value]
-                                   )
+                                     value])
         content = []
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -3242,56 +3329,60 @@ class S3PDFRHeader():
                      )
         content.append(table)
         return content
-# end of class S3PDFRHeader
-
-
-
 
 # =============================================================================
 # Custom Flowables (used by OCR)
 if reportLabImported:
+
+    # =========================================================================
     class DrawHrLine(Flowable):
-        """ Draw a horizontal line """
+        """
+            Draw a horizontal line
+        """
+
         def __init__(self, lineThickness):
             Flowable.__init__(self)
             self.lineThickness = 1
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
 
+        # ---------------------------------------------------------------------
         def draw(self):
             canv = self.canv
             pagewidth, pageheight = self.paper_size
             self.canv.line(0, -5, pagewidth - 100, -5)
 
+        # ---------------------------------------------------------------------
         def wrap(self, availWidth, availHeight):
             self._width = availWidth
             self._height = self.lineThickness
             return self._width, self._height
 
-
+    # =========================================================================
     class StringInputBoxes(Flowable):
-        """ Draw a input boxes in a complete line """
+        """
+            Draw input boxes in a complete line
+        """
+
         def __init__(self, numBoxes=None, etreeElem=None):
             Flowable.__init__(self)
             self.spaceAfter = 2
             self.sideLength = 15
             self.numBoxes = numBoxes
-            self.fontsize = 14
+            self.fontsize = 10
             self.etreeElem = etreeElem
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
 
+        # ---------------------------------------------------------------------
         def draw(self):
             canv = self.canv
             pagewidth, pageheight = self.paper_size
-            numBoxes = int((pagewidth-\
-                                (100+self.fontsize))/self.sideLength)
+            numBoxes = int((pagewidth - (100 + self.fontsize)) / self.sideLength)
             if self.numBoxes != None and\
                     isinstance(self.numBoxes, int):
                 numBoxes = self.numBoxes
@@ -3302,314 +3393,406 @@ if reportLabImported:
             xpadding = 6 # default
             ypadding = 4
             margin = 50 # as set
-            markerOrigin = (29,29) # top left marker location
-            # reportlabs coordinate system uses bottom left
-            # as origin, we have to take top left marker as
-            # origin as to provide input for  Python Imaging.
-            xCord = pagewidth -\
-                (self.layoutCords[0]+xpadding+margin) -\
-                markerOrigin[0]+\
-                self.fontsize
-            yCord = pageheight -\
-                (self.layoutCords[1]+ypadding+margin) -\
-                markerOrigin[1]
-            for eachbox in xrange(numBoxes):
+            # Reportlab's coordinate system uses bottom left
+            # as origin, so we have to take top left marker as
+            # origin to provide input for Python Imaging.
+            markerOrigin = (29, 29) # top left marker location
+            xCoord = pagewidth - \
+                     (self.layoutCoords[0] + xpadding + margin) - \
+                     markerOrigin[0] + \
+                     self.fontsize
+            yCoord = pageheight - \
+                     (self.layoutCoords[1] + ypadding + margin) - \
+                     markerOrigin[1]
+            for box in xrange(numBoxes):
                 self.canv.rect(widthPointer,
                                0,
                                self.sideLength,
                                self.sideLength)
-                widthPointer+=self.sideLength
+                widthPointer += self.sideLength
             StringInputBoxEtree = etree.SubElement(self.etreeElem,
                                                    "textbox",
-                                                   x="%s" % xCord,
-                                                   y="%s" % yCord,
+                                                   x="%s" % xCoord,
+                                                   y="%s" % yCoord,
                                                    side="%s" % self.sideLength,
                                                    boxes="%s" % numBoxes,
                                                    page="%s" % self.canv.getPageNumber())
             StringInputBoxEtree.text = " "
 
+        # ---------------------------------------------------------------------
         def wrap(self, availWidth, availHeight):
-            self.layoutCords = availWidth, availHeight
+            self.layoutCoords = availWidth, availHeight
             self._width = availWidth
             self._height = self.sideLength + self.spaceAfter
             return self._width, self._height
 
-
+    # =========================================================================
     class DateBoxes(Flowable):
-        """ Draw a input boxes in a complete line """
+        """
+            Draw date boxes
+        """
+
         def __init__(self, etreeElem):
             Flowable.__init__(self)
             self.spaceAfter = 2
             self.sideLength = 15
-            self.fontsize = 14
+            self.fontsize = 10
             self.etreeElem = etreeElem
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
 
+        # ---------------------------------------------------------------------
         def draw(self):
             canv = self.canv
             pagewidth, pageheight = self.paper_size
             canv.setLineWidth(0.90)
             canv.setStrokeGray(0.9)
             widthPointer = self.fontsize
-            # values are set manually
+            # Values are set manually
             xpadding = 6 # default
             ypadding = 4
             margin = 50 # as set
-            markerOrigin = (29,29) # top left marker location
-            # reportlabs coordinate system uses bottom left
-            # as origin, we have to take top left marker as
-            # origin as to provide input for  Python Imaging.
-            xCord = pagewidth -\
-                (self.layoutCords[0]+xpadding+margin) -\
-                markerOrigin[0]+\
-                self.fontsize
-            yCord = pageheight -\
-                (self.layoutCords[1]+ypadding+margin) -\
-                markerOrigin[1]
+            # Reportlab's coordinate system uses bottom left
+            # as origin, so we have to take top left marker as
+            # origin to provide input for Python Imaging.
+            markerOrigin = (29, 29) # top left marker location
+            xCoord = pagewidth - \
+                     (self.layoutCoords[0] + xpadding + margin) - \
+                     markerOrigin[0] + \
+                     self.fontsize
+            yCoord = pageheight - \
+                     (self.layoutCoords[1] + ypadding + margin) - \
+                     markerOrigin[1]
 
-            for eachbox in xrange(1, 11):
-                if eachbox not in (3,6):
-                    self.canv.rect(widthPointer,
-                                   0,
-                                   self.sideLength,
-                                   self.sideLength)
-                widthPointer+=15
+            sideLength = self.sideLength
+            rect = self.canv.rect
+            for box in xrange(1, 11):
+                if box not in (3, 6):
+                    rect(widthPointer,
+                         0,
+                         sideLength,
+                         sideLength)
+                else:
+                    self.canv.drawString(widthPointer + 5,
+                                         self.height,
+                                         "/")
+                widthPointer += 15
+            getPageNumber = self.canv.getPageNumber
+            dtformat = current.deployment_settings.get_L10n_datetime_format()
+            if str(dtformat)[:2] == "%m":
+                # US-style
+                DateBoxEtree = etree.SubElement(self.etreeElem,
+                                                "textbox",
+                                                x="%s" % xCoord,
+                                                y="%s" % yCoord,
+                                                side="%s" % sideLength,
+                                                boxes="2",
+                                                page="%s" % getPageNumber())
+                DateBoxEtree.text = "MO"
+                DateBoxEtree = etree.SubElement(self.etreeElem,
+                                                "textbox",
+                                                x="%s" % (xCoord + (sideLength * 3)),
+                                                y="%s" % yCoord,
+                                                side="%s" % sideLength,
+                                                boxes="2",
+                                                page="%s" % getPageNumber())
+                DateBoxEtree.text = "DD"
+            else:
+                # ISO-style
+                DateBoxEtree = etree.SubElement(self.etreeElem,
+                                                "textbox",
+                                                x="%s" % xCoord,
+                                                y="%s" % yCoord,
+                                                side="%s" % sideLength,
+                                                boxes="2",
+                                                page="%s" % getPageNumber())
+                DateBoxEtree.text = "DD"
+                DateBoxEtree = etree.SubElement(self.etreeElem,
+                                                "textbox",
+                                                x="%s" % (xCoord + (sideLength * 3)),
+                                                y="%s" % yCoord,
+                                                side="%s" % sideLength,
+                                                boxes="2",
+                                                page="%s" % getPageNumber())
+                DateBoxEtree.text = "MO"
             DateBoxEtree = etree.SubElement(self.etreeElem,
                                             "textbox",
-                                            x="%s" % xCord,
-                                            y="%s" % yCord,
-                                            side="%s" % self.sideLength,
-                                            boxes="2",
-                                            page="%s" % self.canv.getPageNumber())
-            DateBoxEtree.text = "DD"
-            DateBoxEtree = etree.SubElement(self.etreeElem,
-                                            "textbox",
-                                            x="%s" % (xCord+(self.sideLength*3)),
-                                            y="%s" % yCord,
-                                            side="%s" % self.sideLength,
-                                            boxes="2",
-                                            page="%s" % self.canv.getPageNumber())
-            DateBoxEtree.text = "MO"
-            DateBoxEtree = etree.SubElement(self.etreeElem,
-                                            "textbox",
-                                            x="%s" % (xCord+(self.sideLength*6)),
-                                            y="%s" % yCord,
-                                            side="%s" % self.sideLength,
+                                            x="%s" % (xCoord + (sideLength * 6)),
+                                            y="%s" % yCoord,
+                                            side="%s" % sideLength,
                                             boxes="4",
-                                            page="%s" % self.canv.getPageNumber())
+                                            page="%s" % getPageNumber())
             DateBoxEtree.text = "YYYY"
 
+        # ---------------------------------------------------------------------
         def wrap(self, availWidth, availHeight):
-            self.layoutCords = availWidth, availHeight
+            self.layoutCoords = availWidth, availHeight
             self._width = availWidth
             self._height = self.sideLength + self.spaceAfter
             return self._width, self._height
 
-
+    # =========================================================================
     class DateTimeBoxes(Flowable):
-        """ Draw a input boxes in a complete line """
+        """
+            Draw datetime boxes
+        """
+
         def __init__(self, etreeElem):
             Flowable.__init__(self)
             self.spaceAfter = 2
             self.sideLength = 15
-            self.fontsize = 14
+            self.fontsize = 10
             self.etreeElem = etreeElem
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
 
+        # ---------------------------------------------------------------------
         def draw(self):
             canv = self.canv
             pagewidth, pageheight = self.paper_size
             canv.setLineWidth(0.90)
             canv.setStrokeGray(0.9)
             widthPointer = self.fontsize
-            # values are set manually
+            # Values are set manually
             xpadding = 6 # default
             ypadding = 4
             margin = 50 # as set
-            markerOrigin = (29,29) # top left marker location
-            # reportlabs coordinate system uses bottom left
-            # as origin, we have to take top left marker as
-            # origin as to provide input for  Python Imaging.
-            xCord = pagewidth -\
-                (self.layoutCords[0]+xpadding+margin) -\
-                markerOrigin[0]+\
-                self.fontsize
-            yCord = pageheight -\
-                (self.layoutCords[1]+ypadding+margin) -\
-                markerOrigin[1]
+            # Reportlab's coordinate system uses bottom-left
+            # as origin, so we have to take top-left marker as
+            # origin to provide input for Python Imaging.
+            markerOrigin = (29, 29) # top-left marker location
+            xCoord = pagewidth - \
+                     (self.layoutCoords[0] + xpadding + margin) - \
+                     markerOrigin[0]+\
+                     self.fontsize
+            yCoord = pageheight - \
+                     (self.layoutCoords[1] + ypadding + margin) - \
+                     markerOrigin[1]
 
-            for eachbox in xrange(1, 18):
-                if eachbox not in (3,6,7,10,13):
+            for box in xrange(1, 18):
+                if box not in (3, 6, 7, 10, 13):
                     self.canv.rect(widthPointer,
                                    0,
                                    self.sideLength,
                                    self.sideLength)
-                widthPointer+=15
+                widthPointer += 15
             DateTimeBoxEtree = etree.SubElement(self.etreeElem,
                                                 "textbox",
-                                                x="%s" % xCord,
-                                                y="%s" % yCord,
+                                                x="%s" % xCoord,
+                                                y="%s" % yCoord,
                                                 side="%s" % self.sideLength,
                                                 boxes="2",
                                                 page="%s" % self.canv.getPageNumber())
             DateTimeBoxEtree.text = "HH"
             DateTimeBoxEtree = etree.SubElement(self.etreeElem,
                                                 "textbox",
-                                                x="%s" % (xCord+(self.sideLength*3)),
-                                                y="%s" % yCord,
+                                                x="%s" % (xCoord + (self.sideLength * 3)),
+                                                y="%s" % yCoord,
                                                 side="%s" % self.sideLength,
                                                 boxes="2",
                                                 page="%s" % self.canv.getPageNumber())
             DateTimeBoxEtree.text = "MM"
+            dtformat = current.deployment_settings.get_L10n_datetime_format()
+            if str(dtformat)[:2] == "%m":
+                # US-style
+                DateTimeBoxEtree = etree.SubElement(self.etreeElem,
+                                                    "textbox",
+                                                    x="%s" % (xCoord + (self.sideLength * 7)),
+                                                    y="%s" % yCoord,
+                                                    side="%s" % self.sideLength,
+                                                    boxes="2",
+                                                    page="%s" % self.canv.getPageNumber())
+                DateTimeBoxEtree.text = "MO"
+                DateTimeBoxEtree = etree.SubElement(self.etreeElem,
+                                                    "textbox",
+                                                    x="%s" % (xCoord + (self.sideLength * 10)),
+                                                    y="%s" % yCoord,
+                                                    side="%s" % self.sideLength,
+                                                    boxes="2",
+                                                    page="%s" % self.canv.getPageNumber())
+                DateTimeBoxEtree.text = "DD"
+            else:
+                # ISO-style
+                DateTimeBoxEtree = etree.SubElement(self.etreeElem,
+                                                    "textbox",
+                                                    x="%s" % (xCoord + (self.sideLength * 7)),
+                                                    y="%s" % yCoord,
+                                                    side="%s" % self.sideLength,
+                                                    boxes="2",
+                                                    page="%s" % self.canv.getPageNumber())
+                DateTimeBoxEtree.text = "DD"
+                DateTimeBoxEtree = etree.SubElement(self.etreeElem,
+                                                    "textbox",
+                                                    x="%s" % (xCoord + (self.sideLength * 10)),
+                                                    y="%s" % yCoord,
+                                                    side="%s" % self.sideLength,
+                                                    boxes="2",
+                                                    page="%s" % self.canv.getPageNumber())
+                DateTimeBoxEtree.text = "MO"
             DateTimeBoxEtree = etree.SubElement(self.etreeElem,
                                                 "textbox",
-                                                x="%s" % (xCord+(self.sideLength*7)),
-                                                y="%s" % yCord,
-                                                side="%s" % self.sideLength,
-                                                boxes="2",
-                                                page="%s" % self.canv.getPageNumber())
-            DateTimeBoxEtree.text = "DD"
-            DateTimeBoxEtree = etree.SubElement(self.etreeElem,
-                                                "textbox",
-                                                x="%s" % (xCord+(self.sideLength*10)),
-                                                y="%s" % yCord,
-                                                side="%s" % self.sideLength,
-                                                boxes="2",
-                                                page="%s" % self.canv.getPageNumber())
-            DateTimeBoxEtree.text = "MO"
-            DateTimeBoxEtree = etree.SubElement(self.etreeElem,
-                                                "textbox",
-                                                x="%s" % (xCord+(self.sideLength*13)),
-                                                y="%s" % yCord,
+                                                x="%s" % (xCoord + (self.sideLength * 13)),
+                                                y="%s" % yCoord,
                                                 side="%s" % self.sideLength,
                                                 boxes="4",
                                                 page="%s" % self.canv.getPageNumber())
             DateTimeBoxEtree.text = "YYYY"
 
+        # ---------------------------------------------------------------------
         def wrap(self, availWidth, availHeight):
-            self.layoutCords = availWidth, availHeight
+            self.layoutCoords = availWidth, availHeight
             self._width = availWidth
             self._height = self.sideLength + self.spaceAfter
             return self._width, self._height
 
+    # =========================================================================
+    class DrawOptionBoxes(Flowable):
+        """
+            Draw a set of Option Boxes (for Boolean or Multi-Select)
+            - along with Labels
+        """
 
-    class DrawOptionBox(Flowable):
-        """ write text without wrap """
-        def __init__(self, text, etreeElem, elemValue):
+        def __init__(self, etreeElem, labels, values):
             Flowable.__init__(self)
-            self.text = text
-            self.fontsize = 14
-            self.spaceAfter = 2
             self.etreeElem = etreeElem
-            self.elemValue = elemValue
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            self.fontsize = 8
+            self.spaceAfter = 2
+            self.labels = labels
+            self.text = labels[0]
+            self.values = values
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
 
+        # ---------------------------------------------------------------------
         def draw(self):
             canv = self.canv
             pagewidth, pageheight = self.paper_size
             canv.setLineWidth(0.90)
             canv.setStrokeGray(0.9)
-            radius = (self.fontsize/2)-1
-            circleCenter = (self.width+self.fontsize,
-                            self.height+(self.fontsize/4)+1)
-            # values are set manually
+            fontsize = self.fontsize
+            radius = (fontsize / 2) - 1
+            # Values are set manually
             xpadding = 6 # default
             ypadding = 8
             margin = 50 # as set
-            markerOrigin = (29,29) # top left marker location
-            # reportlabs coordinate system uses bottom left
-            # as origin, we have to take top left marker as
-            # origin as to provide input for  Python Imaging.
-            xCord = pagewidth -\
-                (self.layoutCords[0]+xpadding+margin) -\
-                markerOrigin[0]+\
-                circleCenter[0]
-            yCord = pageheight -\
-                (self.layoutCords[1]+ypadding+margin) -\
-                markerOrigin[1]+\
-                circleCenter[0]
-            self.canv.circle(circleCenter[0],
-                             circleCenter[1],
-                             radius,
-                             fill=0)
-            self.canv.drawString(self.width+(self.fontsize*2),
-                                 self.height,
-                                 html_unescape_and_strip(self.text))
-            optionBoxEtree = etree.SubElement(self.etreeElem,
-                                              "optionbox",
-                                              x="%s" % xCord,
-                                              y="%s" % yCord,
-                                              radius="%s" % radius,
-                                              boxes="1",
-                                              page="%s" % self.canv.getPageNumber())
-            optionBoxEtree.set("value", self.elemValue)
-            optionBoxEtree.text = self.text
+            # Reportlab's coordinate system uses bottom left
+            # as origin, so we have to take top-left marker as
+            # origin to provide input for Python Imaging.
+            markerOrigin = (29, 29) # top-left marker location
+            layoutCoords = self.layoutCoords
+            pwidth = pagewidth - (layoutCoords[0] + xpadding + margin) - markerOrigin[0]
+            pheight = pageheight - (layoutCoords[1] + ypadding + margin) - markerOrigin[1]
+            labels = self.labels
+            index = 0
+            values = self.values
+            circle = self.canv.circle
+            drawString = self.canv.drawString
+            getPageNumber = self.canv.getPageNumber
+            etreeElem = self.etreeElem
+            height = self.height
+            cheight = height + (fontsize / 4) + 1
+            width = self.width
+            # Width of the circle
+            cwidth = width + fontsize
+            # Initial X for the elements
+            _cwidth = width + fontsize
+            _swidth = width + (fontsize * 2)
+            for label in labels:
+                # Draw circle to fill-in
+                circleCenter = (_cwidth, cheight)
+                circle(circleCenter[0],
+                       circleCenter[1],
+                       radius,
+                       fill=0)
+                # Add label
+                drawString(_swidth, height,
+                           html_unescape_and_strip(label))
+                xCoord = pwidth + circleCenter[0]
+                yCoord = pheight + circleCenter[0]
+                optionBoxEtree = etree.SubElement(etreeElem,
+                                                  "optionbox",
+                                                  x="%s" % xCoord,
+                                                  y="%s" % yCoord,
+                                                  radius="%s" % radius,
+                                                  boxes="1",
+                                                  page="%s" % getPageNumber())
+                optionBoxEtree.set("value", values[index])
+                optionBoxEtree.text = label
+                xwidth = cwidth + (fontsize * (len(label) + 2)) / 1.4
+                _cwidth += xwidth
+                _swidth += xwidth
+                index += 1
 
+        # ---------------------------------------------------------------------
         def wrap(self, availWidth, availHeight):
-            self.layoutCords = availWidth, availHeight
-            self._width = (self.fontsize*(len(self.text)+8))/2
-            self._height = self.fontsize + self.spaceAfter
+            self.layoutCoords = availWidth, availHeight
+            width = 0
+            for label in self.labels:
+                width += (len(label) + 8)
+            fontsize = self.fontsize
+            self._width = (fontsize * width) / 2
+            self._height = fontsize + self.spaceAfter
             return self._width, self._height
 
-
+    # =========================================================================
     class DrawHintBox(Flowable):
-        """ write text without wrap """
+        """
+            Draw Help Text to explain how to fill out a question
+        """
+
         def __init__(self, text=""):
             Flowable.__init__(self)
             self.text = text
-            self.fontsize = 12
-            self.spaceAfter = 6
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            self.fontsize = 6
+            self.spaceAfter = 2
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
 
+        # ---------------------------------------------------------------------
         def draw(self):
             canv = self.canv
             canv.setFillGray(0.4)
-            self.canv.drawString(self.width+(self.fontsize/2),
+            self.canv.drawString(self.width + (self.fontsize / 2),
                                  self.height,
                                  html_unescape_and_strip(self.text))
 
-
+        # ---------------------------------------------------------------------
         def wrap(self, availWidth, availHeight):
-            self._width = (self.fontsize*(len(self.text)+4))/2
-            self._height = self.fontsize + self.spaceAfter
+            fontsize = self.fontsize
+            self._width = (fontsize * (len(self.text) + 4)) / 2
+            self._height = fontsize + self.spaceAfter
             return self._width, self._height
 
-
-    # end of custom Flowables
+    # -------------------------------------------------------------------------
     # Custom styleSheets
-    _baseFontNameB = tt2ps(_baseFontName,1,0)
-    _baseFontNameI = tt2ps(_baseFontName,0,1)
-    _baseFontNameBI = tt2ps(_baseFontName,1,1)
+    _baseFontNameB = tt2ps(_baseFontName, 1, 0)
+    _baseFontNameI = tt2ps(_baseFontName, 0, 1)
+    _baseFontNameBI = tt2ps(_baseFontName, 1, 1)
 
     def getStyleSheet():
+        """
+        """
+
         styleSheet = getSampleStyleSheet()
         styleSheet.add(ParagraphStyle(name="Instructions",
                                       parent=styleSheet["Bullet"],
                                       fontName=_baseFontName,
-                                      fontSize=13,
+                                      fontSize=12,
                                       firstLineIndent=0,
                                       spaceBefore=3),
                        alias="Inst")
         styleSheet.add(ParagraphStyle(name="Section",
                                       parent=styleSheet["Normal"],
                                       fontName=_baseFontName,
-                                      fontSize=14,
+                                      fontSize=13,
                                       spaceBefore=5,
                                       spaceAfter=5,
                                       firstLineIndent=0),
@@ -3617,7 +3800,7 @@ if reportLabImported:
         styleSheet.add(ParagraphStyle(name="Question",
                                       parent=styleSheet["Normal"],
                                       fontName=_baseFontName,
-                                      fontSize=13,
+                                      fontSize=11,
                                       firstLineIndent=0,
                                       spaceAfter=5,
                                       spaceBefore=10),
@@ -3625,16 +3808,16 @@ if reportLabImported:
         styleSheet.add(ParagraphStyle(name="DefaultAnswer",
                                       parent=styleSheet["Normal"],
                                       fontName=_baseFontName,
-                                      fontSize=12,
+                                      fontSize=10,
                                       firstLineIndent=0,
                                       spaceBefore=3),
                        alias="DefAns")
         return styleSheet
-    # end of custom styleSheet definations
 
 # Helper functions (used by OCR)
 html_unescape_and_strip = lambda m: html_strip(html_unescape(m))
 
+# =============================================================================
 def html_unescape(text):
     """
         Helper function, unscape any html special characters
@@ -3644,8 +3827,12 @@ def html_unescape(text):
                   lambda m: unichr(name2codepoint[m.group(1)]),
                   text)
 
+# =============================================================================
 def html_strip(text):
-    """Strips html markup from text"""
+    """
+        Strips html markup from text
+    """
+
     mark = 0
     markstart = 0
     markend = 0
@@ -3674,30 +3861,33 @@ def html_strip(text):
 
     return text
 
-# convert unicode to ascii compatible strings
-cast2ascii = lambda m: m if isinstance(m, str) else\
-    unicodedata.normalize("NFKD",
-                          m).encode("ascii",
-                                    "ignore")
-
+# =============================================================================
+# Convert unicode to ascii compatible strings
+cast2ascii = lambda m: \
+    m if isinstance(m, str) else unicodedata.normalize("NFKD",
+                                                       m).encode("ascii",
+                                                                 "ignore")
 
 # =============================================================================
-# S3OCRImageParser
-
 class S3OCRImageParser(object):
     """
         Image Parsing and OCR Utility
     """
 
     def __init__(self, s3method, r):
-        """ Instialise it with environment variables and functions """
+        """
+            Intialise class instance with environment variables and functions
+        """
 
         self.r = r
         self.request = current.request
         checkDependencies(r)
 
+    # -------------------------------------------------------------------------
     def parse(self, form_uuid, set_uuid, **kwargs):
-        """ performs OCR on a given set of pages """
+        """
+            Performs OCR on a given set of pages
+        """
 
         raw_images = {}
         images = {}
@@ -3768,57 +3958,58 @@ class S3OCRImageParser(object):
         s3xml_root_etree = etree.Element("s3xml")
         parent_resource_exist = False
 
-        for eachresource in layout_etree:
+        SubElement = etree.SubElement
+        for resource in layout_etree:
             # Create data etree
             if not is_component:
                 if parent_resource_exist == False:
-                    s3xml_parent_resource_etree = etree.SubElement(s3xml_root_etree,
-                                                                   "resource")
+                    s3xml_parent_resource_etree = SubElement(s3xml_root_etree,
+                                                             "resource")
                     s3xml_resource_etree = s3xml_parent_resource_etree
                     parent_resource_exist = True
                 else:
-                    s3xml_resource_etree = etree.SubElement(s3xml_parent_resource_etree,
-                                                                   "resource")
+                    s3xml_resource_etree = SubElement(s3xml_parent_resource_etree,
+                                                      "resource")
             else:
-                    s3xml_resource_etree = etree.SubElement(s3xml_root_etree,
-                                                                   "resource")
+                    s3xml_resource_etree = SubElement(s3xml_root_etree,
+                                                      "resource")
 
             s3xml_resource_etree.set("name",
-                                     eachresource.attrib.get("name", None))
+                                     resource.attrib.get("name", None))
 
-            for eachfield in eachresource:
-                field_name = eachfield.attrib.get("name", None)
-                field_type = eachfield.attrib.get("type", None)
-                field_reference = eachfield.attrib.get("reference")
+            for field in resource:
+                field_name = field.attrib.get("name", None)
+                field_type = field.attrib.get("type", None)
+                field_reference = field.attrib.get("reference")
 
                 if field_reference == "1":
                     field_is_reference = True
-                    field_resource = eachfield.attrib.get("resource")
+                    field_resource = field.attrib.get("resource")
                 else:
                     field_is_reference = False
 
                 # Create data/reference etree
                 if field_is_reference:
-                    s3xml_reference_etree = etree.SubElement(s3xml_resource_etree,
-                                                         "reference")
+                    s3xml_reference_etree = SubElement(s3xml_resource_etree,
+                                                       "reference")
                     s3xml_reference_etree.set("field", field_name)
                     s3xml_reference_etree.set("resource", field_resource)
 
-                    s3xml_sub_reference_etree = etree.SubElement(s3xml_reference_etree,
-                                                                   "resource")
+                    s3xml_sub_reference_etree = SubElement(s3xml_reference_etree,
+                                                           "resource")
                     s3xml_sub_reference_etree.set("name", field_resource)
 
-                    s3xml_field_etree = etree.SubElement(s3xml_sub_reference_etree,
-                                                         "data")
+                    s3xml_field_etree = SubElement(s3xml_sub_reference_etree,
+                                                   "data")
                     s3xml_field_etree.set("field", "name")
 
                 else:
-                    s3xml_field_etree = etree.SubElement(s3xml_resource_etree,
-                                                         "data")
+                    s3xml_field_etree = SubElement(s3xml_resource_etree,
+                                                   "data")
                     s3xml_field_etree.set("field", field_name)
                     #s3xml_field_etree.set("type", field_type)
 
-                components = eachfield.getchildren()
+                components = field.getchildren()
                 numcomponents = len(components)
                 null_field = False
                 if numcomponents == 0:
@@ -3830,20 +4021,21 @@ class S3OCRImageParser(object):
                             linenum = 0
                             OCRText = []
                             OCRValue = []
-                            for eachcomponent in components:
-                                 comp_x = float(eachcomponent.attrib.get("x"))
-                                 comp_y = float(eachcomponent.attrib.get("y"))
-                                 comp_boxes = int(eachcomponent.attrib.get("boxes"))
-                                 comp_radius = float(eachcomponent.attrib.get("radius"))
-                                 comp_page = int(eachcomponent.attrib.get("page"))
-                                 comp_value = str(eachcomponent.attrib.get("value"))
-                                 comp_text = str(eachcomponent.text)
-                                 try:
+                            for component in components:
+                                get = component.attrib.get
+                                comp_x = float(get("x"))
+                                comp_y = float(get("y"))
+                                comp_boxes = int(get("boxes"))
+                                comp_radius = float(get("radius"))
+                                comp_page = int(get("page"))
+                                comp_value = str(get("value"))
+                                comp_text = str(component.text)
+                                try:
                                     page_origin = images[comp_page]["markers"]
-                                 except(KeyError):
+                                except(KeyError):
                                      self.r.error(501,
                                                   T("insufficient number of pages provided"))
-                                 crop_box = (
+                                crop_box = (
                                      int(page_origin[0][0]+\
                                              (comp_x*\
                                                   images[comp_page]["scalefactor"]["x"])-\
@@ -3861,21 +4053,21 @@ class S3OCRImageParser(object):
                                                   images[comp_page]["scalefactor"]["y"])+\
                                              comp_radius*images[comp_page]["scalefactor"]["y"]),
                                      )
-                                 temp_image = images[comp_page]["image"].crop(crop_box)
-                                 cropped_image = images[comp_page]["image"].crop(crop_box)
-                                 result = self.__ocrIt(cropped_image,
-                                                       form_uuid,
-                                                       resourcename,
-                                                       linenum,
-                                                       content_type="optionbox",
-                                                       resource_table=eachresource.attrib.get("name"),
-                                                       field_name=eachfield.attrib.get("name"),
-                                                       field_value=comp_value)
-                                 if result:
-                                     OCRText.append(unicode.strip(comp_text.decode("utf-8")))
-                                     OCRValue.append(unicode.strip(comp_value.decode("utf-8")))
+                                temp_image = images[comp_page]["image"].crop(crop_box)
+                                cropped_image = images[comp_page]["image"].crop(crop_box)
+                                result = self.__ocrIt(cropped_image,
+                                                      form_uuid,
+                                                      resourcename,
+                                                      linenum,
+                                                      content_type="optionbox",
+                                                      resource_table=resource.attrib.get("name"),
+                                                      field_name=field.attrib.get("name"),
+                                                      field_value=comp_value)
+                                if result:
+                                    OCRText.append(unicode.strip(comp_text.decode("utf-8")))
+                                    OCRValue.append(unicode.strip(comp_value.decode("utf-8")))
 
-                                 linenum+=1
+                                linenum += 1
 
                             # Store values into xml
                             if len(OCRValue) in [0, 1]:
@@ -3899,13 +4091,14 @@ class S3OCRImageParser(object):
                                 # Date(Time) Text Box
                                 OCRedValues = {}
                                 comp_count = 1
-                                for eachcomponent in components:
-                                    comp_x = float(eachcomponent.attrib.get("x"))
-                                    comp_y = float(eachcomponent.attrib.get("y"))
-                                    comp_boxes = int(eachcomponent.attrib.get("boxes"))
-                                    comp_side = float(eachcomponent.attrib.get("side"))
-                                    comp_page = int(eachcomponent.attrib.get("page"))
-                                    comp_meta = str(eachcomponent.text)
+                                for component in components:
+                                    get = component.attrib.get
+                                    comp_x = float(get("x"))
+                                    comp_y = float(get("y"))
+                                    comp_boxes = int(get("boxes"))
+                                    comp_side = float(get("side"))
+                                    comp_page = int(get("page"))
+                                    comp_meta = str(component.text)
                                     try:
                                         page_origin = images[comp_page]["markers"]
                                     except(KeyError):
@@ -3932,15 +4125,15 @@ class S3OCRImageParser(object):
                                                           form_uuid,
                                                           resourcename,
                                                           linenum,
-                                                          resource_table=eachresource.attrib.get("name"),
-                                                          field_name=eachfield.attrib.get("name"),
+                                                          resource_table=resource.attrib.get("name"),
+                                                          field_name=field.attrib.get("name"),
                                                           field_seq=comp_count)
                                     linenum += 1
                                     comp_count += 1
 
                                     OCRedValues[comp_meta] = unicode.strip(output.decode("utf-8"))
 
-                                #YYYY
+                                # YYYY
                                 yyyy = datetime.now().year
                                 try:
                                     if int(OCRedValues["YYYY"]) in range(1800, 2300):
@@ -3953,14 +4146,14 @@ class S3OCRImageParser(object):
                                 else:
                                     leapyear = False
 
-                                #MO
+                                # MO
                                 try:
                                     if int(OCRedValues["MO"]) in range(1, 13):
                                         mo = int(OCRedValues["MO"])
                                 except:
                                     mo = 1
 
-                                #DD
+                                # DD
                                 try:
                                     if int(OCRedValues["DD"]) in range(1, 32):
                                         dd = int(OCRedValues["DD"])
@@ -3979,14 +4172,14 @@ class S3OCRImageParser(object):
                                             dd = 1
 
                                 if field_type == "datetime":
-                                    #MM
+                                    # MM
                                     try:
                                         if int(OCRedValues["MM"]) in range(0, 60):
                                             mm = int(OCRedValues["MM"])
                                     except:
                                         mm = 0
 
-                                    #MM
+                                    # MM
                                     try:
                                         if int(OCRedValues["HH"]) in range(0, 24):
                                             hh = int(OCRedValues["HH"])
@@ -4009,13 +4202,13 @@ class S3OCRImageParser(object):
                                 # Normal Text Box
                                 ocrText = ""
                                 comp_count = 1
-                                for eachcomponent in components:
-                                    comp_x = float(eachcomponent.attrib.get("x"))
-                                    comp_y = float(eachcomponent.attrib.get("y"))
-                                    comp_boxes = int(eachcomponent.attrib.get("boxes"))
-                                    comp_side = float(eachcomponent.attrib.get("side"))
-                                    comp_page = int(eachcomponent.attrib.get("page"))
-                                    comp_meta = str(eachcomponent.text)
+                                for component in components:
+                                    comp_x = float(component.attrib.get("x"))
+                                    comp_y = float(component.attrib.get("y"))
+                                    comp_boxes = int(component.attrib.get("boxes"))
+                                    comp_side = float(component.attrib.get("side"))
+                                    comp_page = int(component.attrib.get("page"))
+                                    comp_meta = str(component.text)
                                     try:
                                         page_origin = images[comp_page]["markers"]
                                     except(KeyError):
@@ -4042,8 +4235,8 @@ class S3OCRImageParser(object):
                                                           form_uuid,
                                                           resourcename,
                                                           linenum,
-                                                          resource_table=eachresource.attrib.get("name"),
-                                                          field_name=eachfield.attrib.get("name"),
+                                                          resource_table=resource.attrib.get("name"),
+                                                          field_name=field.attrib.get("name"),
                                                           field_seq=comp_count)
                                     ocrText += output
                                     linenum += 1
@@ -4081,8 +4274,11 @@ class S3OCRImageParser(object):
         output = etree.tostring(s3xml_root_etree, pretty_print=True)
         return output
 
+    # -------------------------------------------------------------------------
     def __strip_spaces(self, text):
-        """ Remove all spaces from a string """
+        """
+            Remove all spaces from a string
+        """
 
         try:
             text = "".join(text.split())
@@ -4091,13 +4287,16 @@ class S3OCRImageParser(object):
 
         return text
 
+    # -------------------------------------------------------------------------
     def __convert_utc(self,
                       yyyy,
                       mo,
                       dd,
                       hh,
                       mm):
-        """ Convert local time to UTC """
+        """
+            Convert local time to UTC
+        """
 
         timetuple = datetime.strptime("%s-%s-%s %s:%s:00" % (yyyy,
                                                              mo,
@@ -4126,6 +4325,7 @@ class S3OCRImageParser(object):
 
         return utctime
 
+    # -------------------------------------------------------------------------
     def __ocrIt(self,
                 image,
                 form_uuid,
@@ -4133,7 +4333,9 @@ class S3OCRImageParser(object):
                 linenum,
                 content_type="textbox",
                 **kwargs):
-        """ put Tesseract to work, actual OCRing will be done here """
+        """
+            Put Tesseract to work, actual OCRing will be done here
+        """
 
         db = current.db
         ocr_field_crops = "ocr_field_crops"
@@ -4221,8 +4423,12 @@ class S3OCRImageParser(object):
                 shutil.rmtree(ocr_temp_dir)
             return output
 
+    # -------------------------------------------------------------------------
     def __convertImage2binary(self, image, threshold = 180):
-        """ Converts the image into binary based on a threshold. here it is 180"""
+        """
+            Converts the image into binary based on a threshold. here it is 180
+        """
+
         image = ImageOps.grayscale(image)
         image.convert("L")
 
@@ -4236,29 +4442,30 @@ class S3OCRImageParser(object):
                     image.putpixel((x,y), 255)
         return image
 
+    # -------------------------------------------------------------------------
     def __findRegions(self, im):
         """
-        Return the list of regions which are found by the following algorithm.
+            Return the list of regions which are found by the following algorithm.
 
-        -----------------------------------------------------------
-        Raster Scanning Algorithm for Connected Component Analysis:
-        -----------------------------------------------------------
+            -----------------------------------------------------------
+            Raster Scanning Algorithm for Connected Component Analysis:
+            -----------------------------------------------------------
 
-        On the first pass:
-        =================
-        1. Iterate through each element of the data by column, then by row (Raster Scanning)
-        2. If the element is not the background
-            1. Get the neighboring elements of the current element
-            2. If there are no neighbors, uniquely label the current element and continue
-            3. Otherwise, find the neighbor with the smallest label and assign it to the current element
-            4. Store the equivalence between neighboring labels
+            On the first pass:
+            =================
+            1. Iterate through each element of the data by column, then by row (Raster Scanning)
+            2. If the element is not the background
+                1. Get the neighboring elements of the current element
+                2. If there are no neighbors, uniquely label the current element and continue
+                3. Otherwise, find the neighbor with the smallest label and assign it to the current element
+                4. Store the equivalence between neighboring labels
 
-        On the second pass:
-        ===================
-        1. Iterate through each element of the data by column, then by row
-        2. If the element is not the background
-           1. Relabel the element with the lowest equivalent label
-        ( source: http://en.wikipedia.org/wiki/Connected_Component_Labeling )
+            On the second pass:
+            ===================
+            1. Iterate through each element of the data by column, then by row
+            2. If the element is not the background
+               1. Relabel the element with the lowest equivalent label
+            ( source: http://en.wikipedia.org/wiki/Connected_Component_Labeling )
         """
 
         width, height  = im.size
@@ -4270,11 +4477,11 @@ class S3OCRImageParser(object):
         equivalences = {}
         n_regions = 0
 
-        #first pass. find regions.
+        # First pass: find regions.
         for x in xrange(width):
             for y in xrange(height):
-                #look for a black pixel
-                if im.getpixel((x, y)) == 0 : #BLACK
+                # Look for a black pixel
+                if im.getpixel((x, y)) == 0 : # BLACK
                     # get the region number from north or west or create new region
                     region_n = pixel_region[x-1][y] if x > 0 else 0
                     region_w = pixel_region[x][y-1] if y > 0 else 0
@@ -4298,7 +4505,7 @@ class S3OCRImageParser(object):
 
                     pixel_region[x][y] = new_region
 
-        #Scan image again, assigning all equivalent regions the same region value.
+        # Scan image again, assigning all equivalent regions the same region value.
         for x in xrange(width):
             for y in xrange(height):
                 r = pixel_region[x][y]
@@ -4313,33 +4520,50 @@ class S3OCRImageParser(object):
 
         return list(regions.itervalues())
 
+    # -------------------------------------------------------------------------
     def __getOrientation(self, markers):
-        """ Returns orientation of the sheet in radians """
+        """
+            Returns orientation of the sheet in radians
+        """
+
         x1, y1 = markers[0]
         x2, y2 = markers[2]
         try:
-            slope = ((x2-x1)*1.0) / ((y2-y1)*1.0)
+            slope = ((x2 - x1) * 1.0) / ((y2 - y1) * 1.0)
         except(ZeroDivisionError):
             slope = 999999999999999999999999999
-        return math.atan(slope)*(180.0/math.pi)*(-1)
+        return math.atan(slope) * (180.0 / math.pi) * (-1)
 
+    # -------------------------------------------------------------------------
     def __scaleFactor(self, markers):
-        """ Returns the scale factors lengthwise and breadthwise """
+        """
+            Returns the scale factors lengthwise and breadthwise
+        """
+
         stdWidth = sum((596, -60))
         stdHeight = sum((842, -60))
         li = [markers[0], markers[2]]
         sf_y = self.__distance(li)/stdHeight
         li = [markers[6], markers[2]]
         sf_x = self.__distance(li)/stdWidth
-        return {"x":sf_x, "y":sf_y}
+        return {"x": sf_x,
+                "y": sf_y
+                }
 
+    # -------------------------------------------------------------------------
     def __distance(self, li):
-        """ returns the euclidean distance if the input is of the form [(x1, y1), (x2, y2)]"""
+        """
+            Returns the euclidean distance if the input is of the form [(x1, y1), (x2, y2)]
+        """
+
         return math.sqrt(math.fsum((math.pow(math.fsum((int(li[1][0]), -int(li[0][0]))), 2), math.pow(math.fsum((int(li[1][1]), -int(li[0][1]))), 2))))
 
-
+    # -------------------------------------------------------------------------
     def __getMarkers(self, image):
-        """ Gets the markers on the OCR image """
+        """
+            Gets the markers on the OCR image
+        """
+
         centers = {}
         present = 0
 
@@ -4364,8 +4588,11 @@ class S3OCRImageParser(object):
         #_debug(markers)
         return markers
 
+    # =========================================================================
     class __Region():
-        """ Self explainatory """
+        """
+        """
+
         def __init__(self, x, y):
             """ Initialize the region """
             self._pixels = [(x, y)]
@@ -4375,6 +4602,7 @@ class S3OCRImageParser(object):
             self._max_y = y
             self.area = 1
 
+        # ---------------------------------------------------------------------
         def add(self, x, y):
             """ Add a pixel to the region """
             self._pixels.append((x, y))
@@ -4384,19 +4612,22 @@ class S3OCRImageParser(object):
             self._min_y = min(self._min_y, y)
             self._max_y = max(self._max_y, y)
 
+        # ---------------------------------------------------------------------
         def centroid(self):
             """ Returns the centroid of the bounding box """
-            return ((self._min_x + self._max_x)/2 , (self._min_y + self._max_y)/2)
+            return ((self._min_x + self._max_x) / 2,
+                    (self._min_y + self._max_y) / 2)
 
+        # ---------------------------------------------------------------------
         def box(self):
             """ Returns the bounding box of the region """
             return [ (self._min_x, self._min_y) , (self._max_x, self._max_y)]
 
+        # ---------------------------------------------------------------------
         def aspectratio(self):
             """ Calculating the aspect ratio of the region """
             width = self._max_x - self._min_x
             length = self._max_y - self._min_y
             return float(width)/float(length)
 
-# end S3OCRImageParser
 # END =========================================================================

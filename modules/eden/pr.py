@@ -2020,7 +2020,7 @@ class S3PersonEducationModel(S3Model):
 
 # =============================================================================
 class S3PersonDetailsModel(S3Model):
-    """ Extra details for People """
+    """ Extra optional details for People """
 
     names = ["pr_person_details",
              ]
@@ -2096,16 +2096,16 @@ class S3PersonDetailsModel(S3Model):
                                   *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ADDRESS = T("Add Person's Details")
+        ADD_DETAILS = T("Add Person's Details")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ADDRESS,
+            title_create = ADD_DETAILS,
             title_display = T("Person's Details"),
             title_list = T("Persons' Details"),
             title_update = T("Edit Person's Details"),
             title_search = T("Search Person's Details"),
             subtitle_create = T("Add New Person's Details"),
             label_list_button = T("List Persons' Details"),
-            label_create_button = ADD_ADDRESS,
+            label_create_button = ADD_DETAILS,
             msg_record_created = T("Person's Details added"),
             msg_record_modified = T("Person's Details updated"),
             msg_record_deleted = T("Person's Details deleted"),

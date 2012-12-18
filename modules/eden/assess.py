@@ -131,19 +131,19 @@ assess_personal_protection_opts = {
     11 : T("Ear plugs"),
     }
 
-assess_skills_required_opts = {
-    1 : T("Pump equipment"),
-    2 : T("Mold removal"),
-    3 : T("Demolition/gutting"),
-    4 : T("Construction"),
-    }
+#assess_skills_required_opts = {
+#    1 : T("Pump equipment"),
+#    2 : T("Mold removal"),
+#    3 : T("Demolition/gutting"),
+#    4 : T("Construction"),
+#    }
 
-assess_special_skills_opts = {
-    1 : T("Plumber"),
-    2 : T("Engineer"),
-    3 : T("Electrician"),
-    4 : T("Other"),
-    }
+#assess_special_skills_opts = {
+#    1 : T("Plumber"),
+#    2 : T("Engineer"),
+#    3 : T("Electrician"),
+#    4 : T("Other"),
+#    }
 
 assess_vulnerability_opts = {
     1 : T("Elderly"),
@@ -277,6 +277,9 @@ class S3AssessBuildingModel(S3Model):
                                         requires=IS_NULL_OR(s3_phone_requires),
                                         represent = lambda v: v or NONE,
                                         label=T("Phone Number")),
+                                  Field("contact_other",
+                                        represent = lambda v: v or NONE,
+                                        label=T("Other Contact Information")),
                                   self.gis_location_id(),
                                   Field("homeowner_availability",
                                         represent = lambda v: v or NONE,
@@ -416,6 +419,23 @@ class S3AssessBuildingModel(S3Model):
                                         represent = lambda v: v or NONE,
                                         label=T("Depth (feet)"),
                                         ),
+                                  Field("first_flooding", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_IN_SET(yes_no_opts)
+                                                ),
+                                        represent = lambda opt: \
+                                            yes_no_opts.get(opt,
+                                                            UNKNOWN_OPT),
+                                        widget = lambda f, v, **attr: \
+                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                        label=T("First Floor Flooding")),
+                                  Field("first_flooding_depth", "integer",
+                                        requires=IS_EMPTY_OR(
+                                                    IS_INT_IN_RANGE(1, 99)
+                                                    ),
+                                        represent = lambda v: v or NONE,
+                                        label=T("Depth (feet)"),
+                                        ),
                                   Field("drywall", "integer",
                                         requires=IS_EMPTY_OR(
                                                     IS_IN_SET(yes_no_opts)
@@ -546,33 +566,33 @@ class S3AssessBuildingModel(S3Model):
                                   #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
                                   #      label=T("All Teams Must Have Personal Protectivity Equipment"),
                                   #      ),
-                                  Field("skills_required", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_skills_required_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_skills_required_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
-                                        label=T("Special Skills Required"),
-                                        ),
-                                  Field("special_skills_required", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_special_skills_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_special_skills_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
-                                        label=T("Special Skills Required"),
-                                        ),
-                                  s3_comments("special_skills_other",
+                                  #Field("skills_required", "list:integer",
+                                  #      requires=IS_EMPTY_OR(
+                                  #                  IS_IN_SET(assess_skills_required_opts,
+                                  #                            multiple=True)
+                                  #              ),
+                                  #      represent = lambda ids: \
+                                  #          assess_multi_type_represent(ids,
+                                  #                                      assess_skills_required_opts),
+                                  #      widget = lambda f, v, **attr: \
+                                  #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
+                                  #      label=T("Skills Required"),
+                                  #      ),
+                                  #Field("special_skills_required", "list:integer",
+                                  #      requires=IS_EMPTY_OR(
+                                  #                  IS_IN_SET(assess_special_skills_opts,
+                                  #                            multiple=True)
+                                  #              ),
+                                  #      represent = lambda ids: \
+                                  #          assess_multi_type_represent(ids,
+                                  #                                      assess_special_skills_opts),
+                                  #      widget = lambda f, v, **attr: \
+                                  #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
+                                  #      label=T("Special Skills Required"),
+                                  #      ),
+                                  s3_comments("special_skills",
                                               comment=None,
-                                              label=T("Other")),
+                                              label=T("Special Tools and Skills")),
                                   Field("estimated_volunteers",
                                         represent = lambda v: v or NONE,
                                         label=T("Estimated Volunteers"),
@@ -619,6 +639,9 @@ class S3AssessBuildingModel(S3Model):
                                   s3_date("date_ready",
                                           label=T("Date Ready")),
                                   s3_comments(),
+                                  s3_comments("progress",
+                                              comment=None,
+                                              label=T("Progress and Notes")),
                                   *s3_meta_fields())
 
         # CRUD Strings

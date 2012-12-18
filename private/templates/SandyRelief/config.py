@@ -138,6 +138,8 @@ settings.req.type_inv_label = "Supplies"
 settings.req.summary = True
 
 settings.org.site_label = "Facility"
+# Uncomment to show the date when a Site (Facilities-only for now) was last contacted
+settings.org.site_last_contacted = True
 # Enable certain fields just for specific Organisations
 # empty list => disabled for all (including Admin)
 #settings.org.dependent_fields = { \
@@ -505,10 +507,10 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = None,
     #    )),
-    #("ocr", Storage(
-    #       name_nice = T("Optical Character Recognition"),
-    #       #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
-    #       restricted = False,
-    #       module_type = 10
-    #   )),
+    ("ocr", Storage(
+           name_nice = T("Optical Character Recognition"),
+           #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
+           restricted = False,
+           module_type = 10
+       )),
 ])
