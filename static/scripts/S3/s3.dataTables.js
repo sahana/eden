@@ -854,7 +854,9 @@ $(document).ready(function() {
                                 Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
                             } else if (Actions[i]._jqclick) {
                                 Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
-                                fnActionCallBacks[t].push([id, S3ActionCallBack]);
+                                if (typeof S3ActionCallBack != 'undefined') {
+                                    fnActionCallBacks[t].push([id, S3ActionCallBack]);
+                                }
                             } else {
                                 if (Actions[i].icon) {
                                     label = '<img src="' + Actions[i].icon + '" alt="' + label + '" title="' + label + '">';

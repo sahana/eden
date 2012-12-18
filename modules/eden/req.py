@@ -313,10 +313,9 @@ class S3RequestModel(S3Model):
         table.virtualfields.append(ReqVirtualFields())
 
         if len(req_type_opts) == 1:
-            k, v = req_type_opts.popitem()
+            k, v = req_type_opts.items()[0]
             field = table.type
             field.default = k
-            field.requires = k
             field.writable = False
             field.readable = False
 
