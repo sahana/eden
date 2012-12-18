@@ -41,15 +41,15 @@ li a.delete-need {
     text-decoration: none;
 }
 
-.pl-container ul#need {
+.pl-container ul#urgent {
     border: 2px solid red;
 }
 
-.pl-container ul#no_need {
+.pl-container ul#no {
     border: 2px solid green;
 }
 
-.pl-container ul#accepting {
+.pl-container ul#need {
     border: 2px solid yellow;
 }
     
