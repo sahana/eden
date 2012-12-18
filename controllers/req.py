@@ -503,7 +503,7 @@ S3OptionsFilter({
     # Post-process
     def postp(r, output):
 
-        if r.interactive:
+        if r.interactive and r.method != "import":
             if not r.component:
                 s3_action_buttons(r)
                 #s3_action_buttons(r, copyable=True)
