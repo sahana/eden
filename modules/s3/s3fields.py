@@ -210,6 +210,7 @@ class S3Represent(object):
                  options=None,
                  translate=False,
                  linkto=None,
+                 show_link=False,
                  multiple=False,
                  default=None,
                  none=None):
@@ -229,6 +230,7 @@ class S3Represent(object):
             @param translate: translate all representations (using T)
             @param linkto: a URL (as string) to link representations to,
                            with "[id]" as placeholder for the key
+            @param show_link: whether to add a URL to representations
             @param default: default representation for unknown options
             @param none: representation for empty fields (None or empty list)
         """
@@ -242,6 +244,7 @@ class S3Represent(object):
         self.list_type = multiple
         self.translate = translate
         self.linkto = linkto
+        self.show_link = show_link
         self.default = default
         self.none = none
         self.setup = False
@@ -314,15 +317,18 @@ class S3Represent(object):
             @param v: the representation of the key
         """
 
+        k = s3_unicode(k)
         if self.linkto:
-            k = s3_unicode(k)
-            return A(v, _href=self.linkto.replace("[id]", k) \
-                                         .replace("%5Bid%5D", k))
+            url = self.linkto.replace("[id]", k) \
+                             .replace("%5Bid%5D", k)
         else:
-            return v
+            c, f = self.lookup.split("_", 1)
+            url = URL(c=c, f=f, args=k)
+
+        return A(v, _href=url)
 
     # -------------------------------------------------------------------------
-    def __call__(self, value, row=None, show_link=True):
+    def __call__(self, value, row=None, show_link=False):
         """
             Represent a single value (standard entry point).
 
@@ -331,7 +337,7 @@ class S3Represent(object):
             @param show_link: render the representation as link
         """
 
-        show_link = show_link and self.linkto is not None
+        show_link = show_link and self.show_link
         if self.list_type:
             return self.multiple(value, rows=row,
                                  list_type=False, show_link=show_link)
@@ -356,7 +362,7 @@ class S3Represent(object):
             @param show_link: render each representation as link
         """
 
-        show_link = show_link and self.linkto is not None
+        show_link = show_link and self.show_link
         if self.list_type and list_type:
             from itertools import chain
             try:
@@ -510,8 +516,8 @@ class S3Represent(object):
             Lazy lookup values.
 
             @param values: list of values to lookup
-            @param rows: rows referenced by values (if values are foreign
-                         keys), optional
+            @param rows: rows referenced by values (if values are foreign keys)
+                         optional
         """
 
         self._setup()

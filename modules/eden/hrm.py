@@ -1980,13 +1980,13 @@ class S3HRSkillModel(S3Model):
                     ),
                     S3SearchOptionsWidget(
                       name="training_search_L1",
-                      field="person_id$L1",
+                      field="person_id$location_id$L1",
                       location_level="L1",
                       cols = 3,
                     ),
                     S3SearchOptionsWidget(
                       name="training_search_L2",
-                      field="person_id$L2",
+                      field="person_id$location_id$L2",
                       location_level="L2",
                       cols = 3,
                     ),
@@ -2024,8 +2024,8 @@ class S3HRSkillModel(S3Model):
                          (messages.ORGANISATION, "organisation"),
                          (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
-                         "person_id$L1",
-                         "person_id$L2",
+                         "person_id$location_id$L1",
+                         "person_id$location_id$L2",
                          ]
 
         # Resource Configuration
@@ -2038,13 +2038,13 @@ class S3HRSkillModel(S3Model):
                       search=[
                         S3SearchOptionsWidget(
                             name="training_search_L1",
-                            field="person_id$L1",
+                            field="person_id$location_id$L1",
                             location_level="L1",
                             cols = 3,
                         ),
                         S3SearchOptionsWidget(
                             name="training_search_L2",
-                            field="person_id$L2",
+                            field="person_id$location_id$L2",
                             location_level="L2",
                             cols = 3,
                         ),
@@ -3012,8 +3012,7 @@ class S3HRProgrammeModel(S3Model):
         tablename = "hrm_programme_hours"
         table = define_table(tablename,
                              self.pr_person_id(
-                               represent = lambda id: \
-                                   self.pr_person_represent(id, show_link=True)
+                                represent = self.pr_PersonRepresent(show_link=True)
                                ),
                              programme_id(),
                              s3_date(future=0),

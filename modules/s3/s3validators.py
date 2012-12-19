@@ -105,7 +105,8 @@ class IS_LAT(object):
 
         INPUT(_type="text", _name="name", requires=IS_LAT())
 
-        latitude has to be in degrees between -90 & 90
+        Latitude has to be in decimal degrees between -90 & 90
+        - we attempt to convert DMS format into decimal degrees
     """
     def __init__(self,
                  error_message = "Latitude/Northing should be between -90 & 90!"
@@ -120,9 +121,44 @@ class IS_LAT(object):
             value = float(value)
             if self.minimum <= value <= self.maximum:
                 return (value, None)
-        except ValueError:
-            pass
-        return (value, self.error_message)
+            else:
+                return (value, self.error_message)
+        except:
+            pattern = re.compile("^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
+            if not pattern.match(value):
+                return (value, self.error_message)
+            else:
+                val = []
+                val.append(value)
+                sep = []
+                count = 0
+                for i in val[0]:
+                    try:
+                        int(i)
+                        count += 1
+                    except:
+                        sep.append(count)
+                        count += 1
+                sec = ''
+                posn = sep[1]
+                while posn != (count-1):
+                    sec = sec + val[0][posn+1]#to join the numbers for seconds
+                    posn += 1
+                posn2 = sep[0]
+                mins=''
+                while posn2 != (sep[1]-1):
+                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
+                    posn2 += 1
+                deg = ''
+                posn3 = 0
+                while posn3 != (sep[0]):
+                    deg = deg + val[0][posn3] # to join the numbers for degree
+                    posn3 += 1
+                e = int(sec)/60 #formula to get back decimal degree
+                f = int(mins) + e #formula
+                g = int(f) / 60 #formula
+                value = int(deg) + g                
+                return (value, None)
 
 # =============================================================================
 class IS_LON(object):
@@ -131,7 +167,8 @@ class IS_LON(object):
 
         INPUT(_type="text", _name="name", requires=IS_LON())
 
-        longitude has to be in degrees between -180 & 180
+        Longitude has to be in decimal degrees between -180 & 180
+        - we attempt to convert DMS format into decimal degrees
     """
     def __init__(self,
                  error_message = "Longitude/Easting should be between -180 & 180!"
@@ -146,9 +183,44 @@ class IS_LON(object):
             value = float(value)
             if self.minimum <= value <= self.maximum:
                 return (value, None)
-        except ValueError:
-            pass
-        return (value, self.error_message)
+            else:
+                return (value, self.error_message)
+        except:
+            pattern = re.compile("^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
+            if not pattern.match(value):
+                return (value, self.error_message)
+            else:
+                val = []
+                val.append(value)
+                sep = []
+                count = 0
+                for i in val[0]:
+                    try:
+                        int(i)
+                        count += 1
+                    except:
+                        sep.append(count)
+                        count += 1
+                sec = ''
+                posn = sep[1]
+                while posn != (count-1):
+                    sec = sec + val[0][posn+1]#to join the numbers for seconds
+                    posn += 1
+                posn2 = sep[0]
+                mins=''
+                while posn2 != (sep[1]-1):
+                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
+                    posn2 += 1
+                deg = ''
+                posn3 = 0
+                while posn3 != (sep[0]):
+                    deg = deg + val[0][posn3] # to join the numbers for degree
+                    posn3 += 1
+                e = int(sec)/60 #formula to get back decimal degree
+                f = int(mins) + e #formula
+                g = int(f) / 60 #formula
+                value = int(deg) + g                
+                return (value, None)
 
 # =============================================================================
 class IS_NUMBER(object):

@@ -2172,13 +2172,14 @@ def assess_rheader(r, tabs=[]):
         rheader_tabs = s3_rheader_tabs(r, tabs)
         assess = r.record
         if assess:
+            table = db.assess_assess
             rheader = DIV(TABLE(TR(
                                    TH("%s: " % T("Date & Time")),
-                                   assess.datetime,
+                                   table.datetime.represent(assess.datetime),
                                    TH("%s: " % T("Location")),
                                    gis_location_represent(assess.location_id),
                                    TH("%s: " % T("Assessor")),
-                                   s3db.pr_person_represent(assess.assessor_person_id),
+                                   table.assessor_person_id.represent(assess.assessor_person_id),
                                   ),
                                ),
                           rheader_tabs

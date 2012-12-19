@@ -1219,7 +1219,7 @@ def commit_rheader(r):
                                           table.req_id.represent(record.req_id),
                                          ),
                                       TR( TH( "%s: " % T("Committing Person")),
-                                          s3db.pr_person_represent(record.committer_id),
+                                          table.committer_id.represent(record.committer_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),
                                           ),

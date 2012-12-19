@@ -180,8 +180,7 @@ def project():
                     group = r.vars.get("group", None)
 
                     table = db.project_human_resource
-                    s3db.hrm_human_resource.person_id.represent = lambda id: \
-                        s3db.pr_person_represent(id, show_link=True)
+                    db.hrm_human_resource.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
                     # These values are defined in hrm_type_opts
                     if group:
                         crud_strings = s3.crud_strings

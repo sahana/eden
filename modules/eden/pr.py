@@ -44,7 +44,8 @@ __all__ = ["S3PersonEntity",
            # Representation Methods
            "pr_get_entities",
            "pr_pentity_represent",
-           "pr_person_represent",
+           #"pr_person_represent",
+           "pr_PersonRepresent",
            "pr_person_phone_represent",
            "pr_person_comment",
            "pr_image_represent",
@@ -515,6 +516,7 @@ class S3PersonModel(S3Model):
              "pr_age_group",
              "pr_age_group_opts",
              "pr_person_id",
+             "pr_person_represent",
              ]
 
     def model(self):
@@ -644,8 +646,7 @@ class S3PersonModel(S3Model):
                                                                        T("By selecting this you agree that we may contact you.")))),
                                    ),
                              s3_comments(),
-                             # @ToDo: Remove the lx_fields when we can Search person_id$location_id$Lx
-                             *(s3_lx_fields() + s3_meta_fields()))
+                             s3_meta_fields())
 
         # CRUD Strings
         ADD_PERSON = messages.ADD_PERSON
@@ -733,15 +734,17 @@ class S3PersonModel(S3Model):
                                     T("Type the first few characters of one of the Person's names."),
                                     child="person_id")
 
+        person_represent = pr_PersonRepresent()
+
         person_id = S3ReusableField("person_id", table,
                                     sortby = ["first_name", "middle_name", "last_name"],
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "pr_person.id",
-                                                          pr_person_represent,
+                                                          person_represent,
                                                           orderby="pr_person.first_name",
                                                           sort=True,
                                                           error_message=T("Person must be specified!"))),
-                                    represent = pr_person_represent,
+                                    represent = person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
                                     ondelete = "RESTRICT",
@@ -785,6 +788,7 @@ class S3PersonModel(S3Model):
             pr_age_group = pr_age_group,
             pr_age_group_opts = pr_age_group_opts,
             pr_person_id = person_id,
+            pr_person_represent = person_represent,
         )
 
     # -------------------------------------------------------------------------
@@ -3332,23 +3336,75 @@ def pr_pentity_represent(id, row=None, show_label=True,
     return pe_str
 
 # =============================================================================
-def pr_person_represent(id, row=None, show_link=False):
-    """
-        Represent a Person in option fields or list views
+#def pr_person_represent(id, row=None, show_link=False):
+#    """
+#        Represent a Person in option fields or list views
+#
+#        @param show_link: whether to make the output into a hyperlink
+#    """
+#
+#    if row:
+#        name = s3_fullname(row)
+#        id = row.id
+#    elif not id:
+#        return current.messages["NONE"]
+#    else:
+#        name = current.cache.ram("pr_person_%s" % id,
+#                                 lambda: s3_fullname(id),
+#                                 time_expire=60)
+#    if show_link:
+#        request = current.request
+#        group = request.get_vars.get("group", None)
+#        c = request.controller
+#        if group == "staff" or \
+#           c == "hrm":
+#            controller = "hrm"
+#        elif group == "volunteer" or \
+#             c == "vol":
+#            controller = "vol"
+#        else:
+#            controller = "pr"
+#        name = A(name,
+#                 _href = URL(c=controller, f="person", args=[id]))
+#    return name
 
-        @param show_link: whether to make the output into a hyperlink
+# =============================================================================
+class pr_PersonRepresent(S3Represent):
+    """
+        Extends S3Represent to change the link method
     """
 
-    if row:
-        name = s3_fullname(row)
-        id = row.id
-    elif not id:
-        return current.messages["NONE"]
-    else:
-        name = current.cache.ram("pr_person_%s" % id,
-                                 lambda: s3_fullname(id),
-                                 time_expire=60)
-    if show_link:
+    def __init__(self,
+                 lookup="pr_person",
+                 key=None,
+                 fields=["first_name", "middle_name", "last_name"],
+                 labels=None,
+                 options=None,
+                 translate=False,
+                 linkto=None,
+                 show_link=False,
+                 multiple=False,
+                 default=None,
+                 none=None):
+        super(pr_PersonRepresent, self).__init__(lookup,
+                                                 key,
+                                                 fields,
+                                                 labels,
+                                                 options,
+                                                 translate,
+                                                 linkto,
+                                                 show_link,
+                                                 multiple,
+                                                 default,
+                                                 none)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def link(k, v):
+        """
+            Access the person via either HRM, Vol or PR controllers
+        """
+
         request = current.request
         group = request.get_vars.get("group", None)
         c = request.controller
@@ -3356,13 +3412,12 @@ def pr_person_represent(id, row=None, show_link=False):
            c == "hrm":
             controller = "hrm"
         elif group == "volunteer" or \
-             c == "vol":
+           c == "vol":
             controller = "vol"
         else:
             controller = "pr"
-        name = A(name,
-                 _href = URL(c=controller, f="person", args=[id]))
-    return name
+        k = s3_unicode(k)
+        return A(v, _href=URL(c=controller, f="person", args=k))
 
 # =============================================================================
 def pr_person_phone_represent(id, show_link=True):
