@@ -317,16 +317,12 @@ class S3Represent(object):
             @param v: the representation of the key
         """
 
-        k = s3_unicode(k)
         if self.linkto:
-            url = self.linkto.replace("[id]", k) \
-                             .replace("%5Bid%5D", k)
+            k = s3_unicode(k)
+            return A(v, _href=self.linkto.replace("[id]", k) \
+                                         .replace("%5Bid%5D", k))
         else:
-            # NB This is a little slow - better to provide an explicit linkto
-            c, f = self.lookup.split("_", 1)
-            url = URL(c=c, f=f, args=k)
-
-        return A(v, _href=url)
+            return v
 
     # -------------------------------------------------------------------------
     def __call__(self, value, row=None, show_link=False):
@@ -503,6 +499,9 @@ class S3Represent(object):
                         else:
                             self.fields = [self.key]
                     self.table = table
+                if self.linkto is None and self.show_link:
+                    c, f = tablename.split("_", 1)
+                    self.linkto = URL(c=c, f=f, args=["[id]"])
 
         labels = self.labels
         self.slabels = isinstance(labels, basestring)
