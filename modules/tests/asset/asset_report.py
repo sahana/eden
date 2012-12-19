@@ -42,19 +42,27 @@ class AssetReport(SeleniumUnitTest):
         self.login(account="admin", nexturl="asset/asset/report")
 
     def test_asset_report(self):
-        self.report("Item", "Category", False,
+        self.report(None, "Item", "Category", None,
             ("Motorcyle - Yamaha - DT50MX", "Default > Vehicle", 5))
 
     def test_asset_report_filter(self):
-        self.report("Item", "Category", False,
+        self.report(
+            ({
+                "label": "Default > Vehicle",
+                "value": True
+            },), "Item", "Category", None,
             ("Motorcyle - Yamaha - DT50MX", "Default > Vehicle", 5),
-            params={
-                ("label", "Default > Vehicle"): True
-            }, row_count=1)
+            row_count=1)
 
-    def test_asset_report_filter_L1_L2(self):
-        self.report("Item", "Category", False,
-            params={
-                ("label", "Timor-Leste"): True,
-                ("label", "Ainaro"): True
-            }, row_count=8)
+    def test_asset_report_filter_L0_L1(self):
+        self.report(
+            ({
+                "name": "asset_search_select_location_id$L0",
+                "label": "Timor-Leste",
+                "value": True
+            },
+            {
+                "name": "asset_search_select_location_id$L1",
+                "label": "Ainaro",
+                "value": True
+            }), "Item", "Category", None, row_count=5)
