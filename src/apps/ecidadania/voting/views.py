@@ -313,7 +313,3 @@ class DeleteVoting(DeleteView):
         context = super(DeleteVoting, self).get_context_data(**kwargs)
         context['get_place'] = self.space
         return context
-<<<<<<< HEAD
-=======
-
->>>>>>> 3e7df9f27b613886700b6288296030732e15e98b
