@@ -206,6 +206,8 @@ class S3RequestModel(S3Model):
                                                   writable = True,
                                                   empty = False,
                                                   #required = True,
+                                                  filterby = "obsolete",
+                                                  filter_opts = [False],
                                                   instance_types = auth.org_site_types,
                                                   updateable = True,
                                                   widget = site_widget,

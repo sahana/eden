@@ -1680,6 +1680,7 @@ class S3FacilityModel(S3Model):
                                             "email",
                                             "website",
                                             "site_details.last_contacted",
+                                            "obsolete",
                                             "comments",
                                             )
 
