@@ -419,19 +419,12 @@ def organisation_list_represent(l):
 
     organisation_represent = s3db.org_organisation_represent
     if l:
-        max = 4
-        if len(l) > max:
-            count = 1
-            for x in l:
-                if count == 1:
-                    output = organisation_represent(x)
-                elif count > max:
-                    return "%s, etc" % output
-                else:
-                    output = "%s, %s" % (output, organisation_represent(x))
-                count += 1
+        max_length = 4
+        if len(l) > max_length:
+            return "%s, etc" % \
+                   organisation_represent.multiple(l[:max_length])
         else:
-            return ", ".join([organisation_represent(x) for x in l])
+            return organisation_represent.multiple(l)
     else:
         return NONE
 

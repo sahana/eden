@@ -394,7 +394,7 @@ class S3Represent(object):
         return self.none
 
     # -------------------------------------------------------------------------
-    def bulk(self, values, rows=None, show_link=True):
+    def bulk(self, values, rows=None, list_type=True, show_link=True):
         """
             Represent multiple values as dict {value: representation}
 
@@ -411,7 +411,7 @@ class S3Represent(object):
         """
 
         show_link = show_link and self.show_link
-        if self.list_type:
+        if self.list_type and list_type:
             from itertools import chain
             try:
                 hasnone = None in values
