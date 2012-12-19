@@ -136,7 +136,7 @@ class SeleniumUnitTest(Web2UnitTest):
         return rows
 
     # -------------------------------------------------------------------------
-    def search(self, form_type, results_expected, params, row_count, **kwargs):
+    def search(self, form_type, results_expected, fields, row_count, **kwargs):
         '''
         Generic method to test the validity of search results.
 
@@ -145,10 +145,9 @@ class SeleniumUnitTest(Web2UnitTest):
 
         @param results_expected: Are results expected?
 
-        @param params: A dictionary mapping from XPath queries for search form
-                       fields to their respective values.
+        @param fields: See the `fields` function.
 
-        @param row_counts: Expected row counts as a tuple: (start, end, length)
+        @param row_count: Expected row count
 
         Keyword arguments:
 
@@ -191,9 +190,8 @@ class SeleniumUnitTest(Web2UnitTest):
 
         time.sleep(1)
 
-        self.do_actions(params)
+        self.fill_fields(fields)
 
-        #params.keys()[-1].submit()
         browser.find_element_by_name(("simple_submit", "advanced_submit")[form_type]).click()
 
         if results_expected == True:
@@ -207,7 +205,7 @@ class SeleniumUnitTest(Web2UnitTest):
         # We"re done entering and submitting data; now we need to check if the
         # results produced are valid.
 
-        self.assertTrue(row_count == self.dt_row_cnt()[:3],
+        self.assertTrue(row_count == self.dt_row_cnt()[2],
                         "Row count did not match.")
 
         if "data" in kwargs.keys():
@@ -228,9 +226,10 @@ class SeleniumUnitTest(Web2UnitTest):
         if "match_column" in kwargs.keys():
             column_index = kwargs["match_column"][0]
             kwargs["match_column"] = kwargs["match_column"][1:]
-            for i, value in enumerate(kwargs["match_column"], 1):
-                self.assertTrue(dt_data_item(column=column_index,
-                    row=i) == value, "Column match failed.")
+            shown_items = [dt_data_item(column=column_index,
+            row=r) for r in xrange(1, len(kwargs["match_column"]) + 1)]
+            for item in kwargs["match_column"]:
+                self.assertTrue(item in shown_items)
 
         return self.dt_data()
 
@@ -394,17 +393,31 @@ class SeleniumUnitTest(Web2UnitTest):
         return result
 
     # -------------------------------------------------------------------------
+    def select_option(self, select_elem, option_label):
+        if select_elem:
+            select_elem.click()
+            found = False
+            for option in select_elem.find_elements_by_tag_name("option"):
+                if option.text == option_label:
+                    option.click()
+                    found = True
+                    return True
+            if not found:
+                return False
+
+    # -------------------------------------------------------------------------
     class InvalidReportOrGroupException(Exception):
         pass
 
     # -------------------------------------------------------------------------
-    def report(self, report_of, grouped_by, show_totals, *args, **kwargs):
+    def report(self, fields, report_of, grouped_by, report_fact, *args, **kwargs):
         browser = self.browser
+        show_totals = True
 
         browser.find_element_by_xpath("//a[text()='Reset all filters']").click()
 
-        if 'params' in kwargs:
-            self.do_actions(kwargs['params'])
+        if fields:
+            self.fill_fields(fields)
 
         # Open the report options fieldset:
         report_options = browser.find_element_by_css_selector("#report_options button")
@@ -413,39 +426,18 @@ class SeleniumUnitTest(Web2UnitTest):
 
         # Select the item to make a report of:
         rows_select = browser.find_element_by_id("report-rows")
-        rows_select.click()
-        found = False
-        for option in rows_select.find_elements_by_tag_name("option"):
-            if option.text == report_of:
-                option.click()
-                found = True
-                break
-        if not found:
+        if not self.select_option(rows_select, report_of):
             raise self.InvalidReportOrGroupException()
 
         # Select the value to group by:
         cols_select = browser.find_element_by_id("report-cols")
-        cols_select.click()
-        found = False
-        for option in cols_select.find_elements_by_tag_name("option"):
-            if option.text == grouped_by:
-                option.click()
-                found = True
-                break
-        if not found:
+        if not self.select_option(cols_select, grouped_by):
             raise self.InvalidReportOrGroupException()
 
         # Select the value to base the report on
-        if "report_fact" in kwargs:
-            cols_select = browser.find_element_by_id("report-fact")
-            cols_select.click()
-            found = False
-            for option in cols_select.find_elements_by_tag_name("option"):
-                if option.text == kwargs['report_fact']:
-                    option.click()
-                    found = True
-                    break
-            if not found:
+        if report_fact:
+            fact_select = browser.find_element_by_id("report-fact")
+            if not self.select_option(fact_select, report_fact):
                 raise self.InvalidReportOrGroupException()
 
         browser.find_element_by_xpath("//input[@type='submit']").click()
@@ -491,30 +483,34 @@ class SeleniumUnitTest(Web2UnitTest):
                 "//table[@id='list']/tbody/tr")))
 
     # -------------------------------------------------------------------------
-    def do_actions(self, params):
+    def fill_fields(self, fields):
+        """
+        Fills form fields with values.
+
+        @param fields A list of dicts that specifies the fields to fill.
+        """
+
         browser = self.browser
 
-        for query_type, field_query in params.keys():
-            if query_type == "xpath":
-                element = browser.find_element_by_xpath(field_query)
-            elif query_type == "id":
-                element = browser.find_element_by_id(field_query)
-            elif query_type == "name":
-                element = browser.find_element_by_name(field_query)
-            elif query_type == "label":
-                element = browser.find_element_by_xpath(
-                    "//label[contains(text(),'{0}')]".format(field_query))
-            params[element] = params[(query_type, field_query)]
-            del params[(query_type, field_query)]
+        for field_spec in fields:
+            value = field_spec["value"]
 
-        # More data types could be added here as and when they're required
+            for query_type in ("xpath", "class", "name", "id"):
+                if query_type in field_spec.keys():
+                    field = getattr(browser, 'find_element_by_' + query_type)
+                    field = field(field_spec[query_type])
 
-        for element, value in params.iteritems():
+            if ("label" in field_spec) and ("name" in field_spec):
+                xpath = "//*[contains(@for,'{name}') and contains(text(), '{label}')]".format(**field_spec)
+                field = browser.find_element_by_xpath(xpath)
+            elif "label" in field_spec:
+                field = browser.find_element_by_xpath(
+                    "//label[contains(text(),'{label}')]".format(**field_spec))
 
-            if isinstance(value, basestring):  # Text input fields
-                element.send_keys(value)
-            elif isinstance(value, bool) and value:  # Checkboxes
-                element.click()
+            if isinstance(value, basestring):  # Text inputs
+                field.send_keys(value)
+            elif isinstance(value, bool) and value:  # Checkboxes and radios
+                field.click()
 
     # -------------------------------------------------------------------------
     def dt_filter(self,
