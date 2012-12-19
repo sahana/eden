@@ -423,8 +423,6 @@ def person():
                 r.component_id = hr_id
             configure("hrm_human_resource",
                       insertable = False)
-            #if not r.component_id or r.method in ("create", "update"):
-            #    s3base.s3_address_hide(s3db.pr_address)
         return True
     s3.prep = prep
 

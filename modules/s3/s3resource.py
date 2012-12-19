@@ -3118,12 +3118,11 @@ class S3Resource(object):
                     duplicates.append(record_id)
 
             if represent:
-                this = record[key]
                 if lazy:
                     for record in records:
-                        record[key] = this.render()
-                elif joined and type(this) is list:
-                    record[key] = ", ".join(this)
+                        record[key] = record[key].render()
+                elif joined and type(record[key]) is list:
+                    record[key] = ", ".join(record[key])
 
             if show_links is False and hasattr(renderer, "linkto"):
                 renderer.linkto = linkto

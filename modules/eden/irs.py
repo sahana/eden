@@ -333,7 +333,7 @@ class S3IRSModel(S3Model):
                                          (T("No"),
                                           T("Yes"))[closed == True]),
                              s3_comments(),
-                             *(s3_lx_fields() + s3_meta_fields()))
+                             *s3_meta_fields())
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
         crud_strings[tablename] = Storage(
@@ -366,13 +366,13 @@ class S3IRSModel(S3Model):
                     ),
                     S3SearchOptionsWidget(
                         name="incident_search_L1",
-                        field="L1",
+                        field="location_id$L1",
                         location_level="L1",
                         cols = 3,
                     ),
                     S3SearchOptionsWidget(
                         name="incident_search_L2",
-                        field="L2",
+                        field="location_id$L2",
                         location_level="L2",
                         cols = 3,
                     ),
@@ -393,8 +393,8 @@ class S3IRSModel(S3Model):
         report_fields = [
                          "category",
                          "datetime",
-                         "L1",
-                         "L2",
+                         "location_id$L1",
+                         "location_id$L2",
                          ]
 
         # Resource Configuration
@@ -405,13 +405,13 @@ class S3IRSModel(S3Model):
                       search=[
                             S3SearchOptionsWidget(
                                 name="incident_search_L1",
-                                field="L1",
+                                field="location_id$L1",
                                 location_level="L1",
                                 cols = 3,
                             ),
                             S3SearchOptionsWidget(
                                 name="incident_search_L2",
-                                field="L2",
+                                field="location_id$L2",
                                 location_level="L2",
                                 cols = 3,
                             ),
@@ -432,7 +432,7 @@ class S3IRSModel(S3Model):
                       cols=report_fields,
                       fact=report_fields,
                       methods=["count", "list"],
-                      defaults = dict(rows="L1",
+                      defaults = dict(rows="location_id$L1",
                                       cols="category",
                                       fact="datetime",
                                       aggregate="count")
@@ -532,7 +532,6 @@ class S3IRSModel(S3Model):
 
         configure("irs_ireport",
                   create_onaccept=self.ireport_onaccept,
-                  onvalidation=s3_lx_onvalidation,
                   create_next=create_next,
                   update_next=URL(args=["[id]", "update"])
                   )

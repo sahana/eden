@@ -408,10 +408,6 @@ class S3MembersModel(S3Model):
             return
         record.update_record(**data)
 
-        #if data.location_id:
-        #    # Populate the Lx fields
-        #    s3_lx_update(mtable, record.id)
-
     # -------------------------------------------------------------------------
     @staticmethod
     def member_duplicate(item):

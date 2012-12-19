@@ -107,9 +107,9 @@ class S3LocationModel(S3Model):
         if current.deployment_settings.get_gis_spatialdb():
             # Add a spatial field
             # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
-            meta_spatial_fields = (s3_lx_fields() + s3_meta_fields() + (Field("the_geom", "geometry()", readable=False, writable=False),))
+            meta_spatial_fields = (s3_meta_fields() + (Field("the_geom", "geometry()", readable=False, writable=False),))
         else:
-            meta_spatial_fields = (s3_lx_fields() + s3_meta_fields())
+            meta_spatial_fields = (s3_meta_fields())
 
         tablename = "gis_location"
         table = self.define_table(tablename,
@@ -194,6 +194,25 @@ class S3LocationModel(S3Model):
                                    represent = lambda v: v or "",
                                    label = T("Postcode")),
                              s3_comments(),
+                             Field("L5",
+                                   readable=False,
+                                   writable=False),
+                             Field("L4",
+                                   readable=False,
+                                   writable=False),
+                             Field("L3",
+                                   readable=False,
+                                   writable=False),
+                             Field("L2",
+                                   readable=False,
+                                   writable=False),
+                             Field("L1",
+                                   readable=False,
+                                   writable=False),
+                             Field("L0",
+                                   #label=current.messages.COUNTRY,
+                                   readable=False,
+                                   writable=False),
                              *meta_spatial_fields)
 
         # Default the owning role to Authenticated. This can be used to allow the site

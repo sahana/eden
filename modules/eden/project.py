@@ -1447,7 +1447,6 @@ class S3Project3WModel(S3Model):
                   create_next=URL(c="project", f="location",
                                   args=["[id]", "beneficiary"]),
                   search_method=project_location_search,
-                  #onaccept=self.project_location_onaccept,
                   deduplicate=self.project_location_deduplicate,
                   report_options=Storage(search = advanced_search,
                                          rows=report_fields,
@@ -2024,22 +2023,6 @@ class S3Project3WModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_location_onaccept(form):
-        """
-            Populate the Lx fields from the location_id
-            - disabled
-        """
-
-        #vars = form.vars
-        #location_id = vars.location_id
-        #if location_id:
-        #    # Populate the Lx fields
-        #    s3_lx_update(current.db.project_location, vars.id)
-
         return
 
     # -------------------------------------------------------------------------

@@ -646,7 +646,7 @@ class S3PersonModel(S3Model):
                                                                        T("By selecting this you agree that we may contact you.")))),
                                    ),
                              s3_comments(),
-                             s3_meta_fields())
+                             *s3_meta_fields())
 
         # CRUD Strings
         ADD_PERSON = messages.ADD_PERSON
@@ -1448,7 +1448,6 @@ class S3PersonAddressModel(S3Model):
         # Resource configuration
         self.configure(tablename,
                        onaccept=self.address_onaccept,
-                       onvalidation=s3_address_onvalidation,
                        deduplicate=self.address_deduplicate,
                        list_fields = ["id",
                                       "type",
@@ -1498,9 +1497,6 @@ class S3PersonAddressModel(S3Model):
             S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
             person = db(table.pe_id == pe_id).select(table.id,
                                                      limitby=(0, 1)).first()
-            if person:
-                # Update the Lx fields
-                s3_lx_update(table, person.id)
         else:
             # Check if a base location already exists
             query = (table.pe_id == pe_id)
@@ -1509,8 +1505,6 @@ class S3PersonAddressModel(S3Model):
             if person and not person.location_id:
                 # Hasn't yet been set so use this
                 S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
-                # Update the Lx fields
-                s3_lx_update(table, person.id)
 
         if person and str(vars.type) == "1": # Home Address
             if settings.has_module("hrm"):
@@ -1522,8 +1516,6 @@ class S3PersonAddressModel(S3Model):
                 hrs = db(query).select(htable.id)
                 for hr in hrs:
                     db(htable.id == hr.id).update(location_id=location_id)
-                    # Update the Lx fields
-                    #s3_lx_update(htable, hr.id)
             if settings.has_module("member"):
                 # Also check for any Member record(s)
                 mtable = s3db.member_membership
@@ -1532,8 +1524,6 @@ class S3PersonAddressModel(S3Model):
                 members = db(query).select(mtable.id)
                 for member in members:
                     db(mtable.id == member.id).update(location_id=location_id)
-                    # Update the Lx fields
-                    #s3_lx_update(mtable, member.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3371,7 +3361,8 @@ def pr_pentity_represent(id, row=None, show_label=True,
 # =============================================================================
 class pr_PersonRepresent(S3Represent):
     """
-        Extends S3Represent to change the link method
+        Extends S3Represent to change the link method to access the person via
+                            either HRM, Vol or PR controllers
     """
 
     def __init__(self,
@@ -3386,6 +3377,24 @@ class pr_PersonRepresent(S3Represent):
                  multiple=False,
                  default=None,
                  none=None):
+
+        if show_link and not linkto:
+            request = current.request
+            group = request.get_vars.get("group", None)
+            if group == "staff":
+                controller = "hrm"
+            elif group == "volunteer":
+                controller = "vol"
+            else:
+                c = request.controller
+                if c == "hrm":
+                    controller = "hrm"
+                elif c == "vol":
+                    controller = "vol"
+                else:
+                    controller = "pr"
+            linkto = URL(c=controller, f="person", args=["[id]"])
+
         super(pr_PersonRepresent, self).__init__(lookup,
                                                  key,
                                                  fields,
@@ -3397,27 +3406,6 @@ class pr_PersonRepresent(S3Represent):
                                                  multiple,
                                                  default,
                                                  none)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def link(k, v):
-        """
-            Access the person via either HRM, Vol or PR controllers
-        """
-
-        request = current.request
-        group = request.get_vars.get("group", None)
-        c = request.controller
-        if group == "staff" or \
-           c == "hrm":
-            controller = "hrm"
-        elif group == "volunteer" or \
-           c == "vol":
-            controller = "vol"
-        else:
-            controller = "pr"
-        k = s3_unicode(k)
-        return A(v, _href=URL(c=controller, f="person", args=k))
 
 # =============================================================================
 def pr_person_phone_represent(id, show_link=True):

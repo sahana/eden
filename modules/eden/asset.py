@@ -204,7 +204,7 @@ S3OptionsFilter({
                                        writable=False,
                                        comment=self.pr_person_comment(child="assigned_to_id")),
                              s3_comments(),
-                             *(s3_address_fields() + s3_meta_fields()))
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
@@ -662,8 +662,6 @@ S3OptionsFilter({
                 # Set Base Location
                 asset_tracker.set_base_location(tracker(s3db.org_site,
                                                         vars.site_id))
-                # Populate the address fields
-                s3_address_update(atable, asset_id)
             elif status == ASSET_LOG_ASSIGN:
                 if type == "person":#
                     if vars.check_in_to_person:
@@ -988,8 +986,6 @@ def asset_controller():
         # Location Filter
         s3db.gis_location_filter(r)
 
-        if r.interactive:
-            s3_address_hide(r.table)
         if r.component_name == "log":
             s3db.asset_log_prep(r)
             #if r.method == "update":

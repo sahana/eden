@@ -3430,9 +3430,6 @@ def hrm_human_resource_onaccept(form):
     if data:
         record.update_record(**data)
 
-        # Populate the Lx fields
-        s3_lx_update(ptable, person_id)
-
     if user and record.organisation_id:
         profile = dict()
         if not user.organisation_id:
