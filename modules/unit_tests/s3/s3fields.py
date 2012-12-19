@@ -171,7 +171,8 @@ class S3RepresentTests(unittest.TestCase):
 
         r = S3Represent(lookup="org_organisation",
                         multiple=True,
-                        linkto=URL(c="org", f="organisation", args=["[id]"]))
+                        #linkto=URL(c="org", f="organisation", args=["[id]"]),
+                        show_link=True)
 
         a = current.request.application
                         
@@ -368,7 +369,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
 
         renderer = S3Represent(lookup="org_organisation",
-                               linkto=URL(c="org", f="organisation", args=["[id]"]))
+                               #linkto=URL(c="org", f="organisation", args=["[id]"]),
+                               show_link=True)
         table = resource.table
         table.organisation_id.represent = renderer
 
@@ -456,7 +458,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         ftable = s3db.org_facility
         renderer = S3Represent(lookup="gis_location",
-                               linkto=URL(c="gis", f="location", args=["[id]"]))
+                               #linkto=URL(c="gis", f="location", args=["[id]"]),
+                               show_link=True)
         ftable.location_id.represent = renderer
 
         resource = s3db.resource("org_organisation", id=self.org.id)
@@ -559,7 +562,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
-                               linkto=URL(c="org", f="facility_type", args=["[id]"]))
+                               #linkto=URL(c="org", f="facility_type", args=["[id]"]),
+                               show_link=True)
         table = resource.table
         table.facility_type_id.represent = renderer
 
@@ -695,7 +699,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         ftable = s3db.table("org_facility")
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
-                               linkto=URL(c="org", f="facility_type", args=["[id]"]))
+                               #linkto=URL(c="org", f="facility_type", args=["[id]"]),
+                               show_link=True)
         ftable.facility_type_id.represent = renderer
 
         org = self.org

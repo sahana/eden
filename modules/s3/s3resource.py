@@ -1959,7 +1959,6 @@ class S3Resource(object):
         root = etree.Element(xml.TAG.root)
         
         export_map = Storage()
-        lazy = []
         reference_map = []
         
         prefix = self.prefix
@@ -1969,6 +1968,8 @@ class S3Resource(object):
         else:
             url = "/%s/%s" % (prefix, name)
 
+        # Use lazy representations
+        lazy = []
         current.auth_user_represent = S3Represent(lookup="auth_user",
                                                   fields=["email"])
 
@@ -2263,13 +2264,14 @@ class S3Resource(object):
         table = self.table
 
         # Replace user ID representation by lazy method
-        user_ids = ("created_by", "modified_by", "owned_by_user")
         auth_user_represent = Storage()
-        for fn in user_ids:
-            if hasattr(table, fn):
-                f = ogetattr(table, fn)
-                auth_user_represent[fn] = f.represent
-                f.represent = current.auth_user_represent
+        if hasattr(current, "auth_user_represent"):
+            user_ids = ("created_by", "modified_by", "owned_by_user")
+            for fn in user_ids:
+                if hasattr(table, fn):
+                    f = ogetattr(table, fn)
+                    auth_user_represent[fn] = f.represent
+                    f.represent = current.auth_user_represent
 
         #postprocess = s3db.get_config(tablename, "onexport", None)
 
