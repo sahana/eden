@@ -18,10 +18,23 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This file contains various chec functions for the permission system integrated
+This file contains various check functions for the permission system integrated
 inside the spaces module and also some checks for the django auth
 system.
 """
+
+def has_operation_permission(user, space, object_permission, allow):
+
+    """
+    Checks if the user has all the required permissions to perform a operation.
+    :user: User object
+    :space: Space object
+    :object_permission: Specific operation permission 
+    :allow: List of users to allow, can be: admins, mods or users
+    """
+    return has_all_permissions(user) \
+    or (has_space_permission(user, space, allow) \
+    and user.has_perm(object_permission))
 
 def has_space_permission(user, space, allow=[]):
 
@@ -47,7 +60,4 @@ def has_space_permission(user, space, allow=[]):
             pass
 
 def has_all_permissions(user):
-    if user.is_staff or user.is_superuser:
-        return True
-    else:
-        return False
+    return user.is_staff or user.is_superuser
