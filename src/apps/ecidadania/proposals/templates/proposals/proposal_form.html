@@ -25,15 +25,17 @@ automatically if found in the data models.
     <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
 {% endblock %}
 
-{% block extrajs %}
-    <script type="text/javascript" src="{{ STATIC_URL }}/ http://openlayers.org/api/OpenLayers.js"></script>
-{% endblock %}
-
 {% block space %}
     <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
 {% endblock %}
 
 {% block content %}
+
+<style type="text/css">
+        #map img { 
+            max-width: none;  
+        }
+</style>
 
 <div class="row">
     <div class="span12">
@@ -103,7 +105,7 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div class="control-group {% if form.latitude.errors %}error{% endif %}">
+            <div class="control-group {% if form.latitude.errors %}error{% endif %} hidden">
                 <label class="control-label">{{ form.latitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
@@ -120,7 +122,7 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div class="control-group {% if form.longitude.errors %}error{% endif %}">
+            <div class="control-group {% if form.longitude.errors %}error{% endif %} hidden">
                 <label class="control-label">{{ form.longitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
@@ -137,18 +139,11 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div style="width:500px; height:300px;" id="map"></div>
+            If you want to add geo info click: <a id="showmap" class="btn btn-default" style="margin-bottom:15px;">{% trans "Show map" %}</a>
+            <div id="map" style="width:900px;height:500px;border:1px solid #AAA;" class="hidden"></div>
 
-            <script>
-                var map = new OpenLayers.Map('map');
-                var wms = new OpenLayers.Layer.WMS(
-                    "OpenLayers WMS",
-                    "http://vmap0.tiles.osgeo.org/wms/vmap0",
-                    {'layers':'basic'} );
-                    map.addLayer(wms);
-                    map.zoomToMaxExtent();
-            </script>
-
+            <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/proposal_tools.js"></script>
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
             <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />
