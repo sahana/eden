@@ -413,7 +413,7 @@ class S3Represent(object):
                    would still have to construct the final string/HTML.
         """
 
-        show_link = show_link and self.linkto is not None
+        show_link = show_link and self.show_link
         if self.list_type:
             from itertools import chain
             try:
@@ -452,7 +452,7 @@ class S3Represent(object):
                               be the same as used with bulk()
         """
 
-        show_link = show_link and self.linkto is not None
+        show_link = show_link and self.show_link
         if show_link:
             labels = [(labels[v], ", ")
                       if v in labels else (self.default, ", ")
@@ -502,6 +502,9 @@ class S3Represent(object):
                         else:
                             self.fields = [self.key]
                     self.table = table
+                if self.linkto is None and self.show_link:
+                    c, f = tablename.split("_", 1)
+                    self.linkto = URL(c=c, f=f, args=["[id]"])
 
         labels = self.labels
         self.slabels = isinstance(labels, basestring)

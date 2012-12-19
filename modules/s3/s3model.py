@@ -58,6 +58,8 @@ ogetattr = object.__getattribute__
 class S3Model(object):
     """ Base class for S3 models """
 
+    _s3model = True
+
     LOCK = "s3_model_lock"
     LOAD = "s3_model_load"
     DELETED = "deleted"
@@ -201,21 +203,23 @@ class S3Model(object):
                 generic = []
                 for n in module.__all__:
                     model = module.__dict__[n]
-                    if type(model).__name__ == "type":
+                    if hasattr(model, "_s3model"):
                         if loaded:
                             continue
                         if hasattr(model, "names"):
                             if tablename in model.names:
                                 model(prefix)
                                 loaded = True
-                                generic = []
                             else:
                                 continue
                         else:
                             generic.append(n)
-                    elif n.startswith("%s_" % prefix):
+                    else:
+                        if n == tablename:
+                            loaded = True
                         s3[n] = model
-                [module.__dict__[n](prefix) for n in generic]
+                if not loaded:
+                    [module.__dict__[n](prefix) for n in generic]
         if not db_only and tablename in s3:
             return s3[tablename]
         elif hasattr(db, tablename):
