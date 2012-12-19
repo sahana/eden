@@ -51,9 +51,9 @@ class CreateProject(SeleniumUnitTest):
         self.create("project_project", 
                     [("organisation_id", 
                       "International Federation of Red Cross and Red Crescent Societies (IFRC)", 
-                      "option"),
+                      "automatic"),
                      ( "name",
-                       "Community Strengthening through Dance" ),
+                       "Community Strengthening through Dance4" ),
                      ( "comments",
                        "Host National Society")
                     ]
@@ -83,7 +83,7 @@ class CreateProject(SeleniumUnitTest):
         self.create("project_location", 
                     [( "location_id",
                        "Aileu Vila",
-                       "autocomplete"),
+                       "automatic"),
                      # If using LocationSelector:
                      #( "L0",
                      #  "Timor-Leste",
