@@ -325,7 +325,7 @@ class S3Represent(object):
             return v
 
     # -------------------------------------------------------------------------
-    def __call__(self, value, row=None, show_link=False):
+    def __call__(self, value, row=None, show_link=True):
         """
             Represent a single value (standard entry point).
 
