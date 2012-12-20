@@ -459,18 +459,9 @@ class S3AutocompleteWidget(FormWidget):
              self.link_filter, self.post_process, self.delay, self.min_length)
 
         if value:
-            text = str(field.represent(default["value"]))
+            text = s3_unicode(field.represent(value))
             if "<" in text:
-                # Strip Markup
-                try:
-                    markup = etree.XML(text)
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except etree.XMLSyntaxError:
-                    pass
+                text = s3_strip_markup(text)
             represent = text
         else:
             represent = ""
@@ -809,18 +800,9 @@ $('#%(dummy_input)s').blur(function(){
 
         if value:
             # Provide the representation for the current/default Value
-            text = str(field.represent(default["value"]))
+            text = str(field.represent(value))
             if "<" in text:
-                # Strip Markup
-                try:
-                    markup = etree.XML(text)
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except etree.XMLSyntaxError:
-                    pass
+                text = s3_strip_markup(text)
             represent = text
         else:
             represent = ""
@@ -1010,18 +992,9 @@ $('#%(dummy_input)s').blur(function(){
 
         if value:
             # Provide the representation for the current/default Value
-            text = str(field.represent(default["value"]))
+            text = s3_unicode(field.represent(value))
             if "<" in text:
-                # Strip Markup
-                try:
-                    markup = etree.XML(text)
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except etree.XMLSyntaxError:
-                    pass
+                text = s3_strip_markup(text)
             represent = text
         else:
             represent = ""
@@ -1164,18 +1137,9 @@ $('#%(dummy_input)s').blur(function(){
 
         if value:
             # Provide the representation for the current/default Value
-            text = str(field.represent(default["value"]))
+            text = s3_unicode(field.represent(value))
             if "<" in text:
-                # Strip Markup
-                try:
-                    markup = etree.XML(text)
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except etree.XMLSyntaxError:
-                    pass
+                text = s3_strip_markup(text)
             represent = text
         else:
             represent = ""
@@ -1283,18 +1247,9 @@ $('#%(dummy_input)s').blur(function(){
 
         if value:
             # Provide the representation for the current/default Value
-            text = str(field.represent(default["value"]))
+            text = s3_unicode(field.represent(value))
             if "<" in text:
-                # Strip Markup
-                try:
-                    markup = etree.XML(text)
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except etree.XMLSyntaxError:
-                    pass
+                text = s3_strip_markup(text)
             represent = text
         else:
             represent = ""
@@ -1401,18 +1356,9 @@ $('#%(dummy_input)s').blur(function(){
 
     if value:
         # Provide the representation for the current/default Value
-        text = s3_unicode(field.represent(default["value"]))
+        text = s3_unicode(field.represent(value))
         if "<" in text:
-            # Strip Markup
-            try:
-                markup = etree.XML(text)
-                text = markup.xpath(".//text()")
-                if text:
-                    text = " ".join(text)
-                else:
-                    text = ""
-            except etree.XMLSyntaxError:
-                pass
+            text = s3_strip_markup(text)
         represent = text
     else:
         represent = ""
