@@ -2,6 +2,7 @@ from unit_tests.s3.s3aaa import *
 from unit_tests.s3.s3cfg import *
 from unit_tests.s3.s3crud import *
 #from unit_tests.s3.s3datatable import *
+from unit_tests.s3.s3validators import *
 from unit_tests.s3.s3fields import *
 from unit_tests.s3.s3import import *
 from unit_tests.s3.s3model import *

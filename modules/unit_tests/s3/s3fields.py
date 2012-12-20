@@ -165,6 +165,49 @@ class S3RepresentTests(unittest.TestCase):
         self.assertTrue(isinstance(result, lazyT))
         self.assertEqual(result, current.T(self.name1))
 
+    def testRowsPrecedence(self):
+
+        # Check that rows get preferred over values
+        r = S3Represent(lookup="org_organisation")
+
+        otable = current.s3db.org_organisation
+        org1 = otable[self.id1]
+        org2 = otable[self.id2]
+
+        # Test single value
+        self.assertEqual(r(None, row=org1), self.name1)
+        self.assertEqual(r(self.id2, row=org1), self.name1)
+
+        # Test multiple
+        result = r.multiple(None, rows=[org1, org2])
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue(", " in result)
+        result = result.split(", ")
+        self.assertEqual(len(result), 2)
+        self.assertTrue(self.name1 in result)
+        self.assertTrue(self.name2 in result)
+
+        result = r.multiple([self.id1], rows=[org1, org2])
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue(", " in result)
+        result = result.split(", ")
+        self.assertEqual(len(result), 2)
+        self.assertTrue(self.name1 in result)
+        self.assertTrue(self.name2 in result)
+
+        # Test bulk
+        result = r.bulk(None, rows=[org1, org2])
+        self.assertTrue(len(result), 3)
+        self.assertEqual(result[self.id1], self.name1)
+        self.assertEqual(result[self.id2], self.name2)
+        self.assertTrue(None in result)
+
+        result = r.bulk([self.id1], rows=[org1, org2])
+        self.assertTrue(len(result), 3)
+        self.assertEqual(result[self.id1], self.name1)
+        self.assertEqual(result[self.id2], self.name2)
+        self.assertTrue(None in result)
+
     # -------------------------------------------------------------------------
     def testListReference(self):
         """ Test Foreign Key Representation in list:reference types """
@@ -928,7 +971,7 @@ if __name__ == "__main__":
     run_suite(
         S3RepresentTests,
         S3ExtractLazyFKRepresentationTests,
-        S3ExportLazyFKRepresentationTests
+        S3ExportLazyFKRepresentationTests,
     )
 
 # END ========================================================================
