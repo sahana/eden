@@ -445,7 +445,7 @@ class S3OrganisationModel(S3Model):
                                                  title=ORGANISATION,
                                                  tooltip=help)
 
-        org_organisation_represent = current.s3db.org_OrganisationRepresent()
+        org_organisation_represent = org_OrganisationRepresent()
 
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
@@ -2675,10 +2675,11 @@ class org_OrganisationRepresent(S3Represent):
             @param values: the organisation IDs
         """
 
+        db = current.db
         s3db = current.s3db
         otable = s3db.org_organisation
-        btable = s3db.org_organisation_branch
-        ptable = s3db.org_organisation.with_alias("org_parent_organisation")
+        btable = db.org_organisation_branch
+        ptable = db.org_organisation.with_alias("org_parent_organisation")
 
         left = [btable.on(btable.branch_id == otable.id),
                 ptable.on(ptable.id == btable.organisation_id)]
@@ -2687,11 +2688,11 @@ class org_OrganisationRepresent(S3Represent):
             query = (otable.id == values[0])
         else:
             query = (otable.id.belongs(values))
-        rows = current.db(query).select(otable.id,
-                                        otable.name,
-                                        otable.acronym,
-                                        ptable.name,
-                                        left=left)
+        rows = db(query).select(otable.id,
+                                otable.name,
+                                otable.acronym,
+                                ptable.name,
+                                left=left)
         self.queries += 1
         return rows
 
