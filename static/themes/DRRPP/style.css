@@ -236,6 +236,7 @@ div.form-container div.buttonrow { margin-left: 180px; }
 /* Colours */
 /* Action Buttons */
 .action-btn,
+.delete-btn-ajax,
 .delete-btn {
     color: #fff;
     background-color: #90AABC;
@@ -244,6 +245,7 @@ div.form-container div.buttonrow { margin-left: 180px; }
     border-top: #f4edd4;
 }
 .action-btn:hover,
+.delete-btn-ajax:hover,
 .delete-btn:hover {
     background-color: #FAB73D;
 }

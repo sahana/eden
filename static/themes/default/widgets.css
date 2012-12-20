@@ -620,6 +620,7 @@ div#last_update {
 
 /* Action Buttons */
 .action-btn,
+.delete-btn-ajax,
 .delete-btn {
     cursor: pointer;
     line-height: 1.5;
@@ -636,6 +637,7 @@ div#last_update {
     border-radius: 2px;
 }
 .action-btn:hover,
+.delete-btn-ajax:hover,
 .delete-btn:hover {
     text-decoration: none;
     color: #fff;
