@@ -28,29 +28,31 @@ from apps.ecidadania.voting.url_names import *
 
 
 urlpatterns = patterns('apps.ecidadania.voting.views',
-    url(_(r'^list/$'), ListPolls.as_view(), name=LIST_POLL),
 
-    url(_(r'^addpoll/$'), AddPoll, name=ADD_POLL),
+    url(r'^list/$', ListVotings.as_view(), name=LIST_VOTING),
+
+    url(r'^list/polls/$', ListPolls.as_view(), name=LIST_POLL),
+
+    url(r'^add/$', AddVoting.as_view(), name=ADD_VOTING),
+
+    url(r'^add/poll/$', AddPoll, name=ADD_POLL),
+
+    url(r'^poll/(?P<poll_id>\d+)/edit/$', EditPoll, name=EDIT_POLL),
+
+    url(r'^(?P<voting_id>\d+)/edit/$', EditVoting.as_view(),
+        name=EDIT_VOTING),
         
-    url(_(r'^(?P<poll_id>\d+)/delete/$'), DeletePoll.as_view(),
+    url(r'^poll/(?P<poll_id>\d+)/delete/$', DeletePoll.as_view(),
         name=DELETE_POLL),
         
-    url(_(r'^(?P<poll_id>\d+)/edit/$'), EditPoll, name=EDIT_POLL),
-        
-    url(_(r'^(?P<pk>\d+)/$'), DetailView.as_view(model = Poll,
-        template_name ='voting/poll_detail.html'), name=VIEW_POLL),
-
-    url(_(r'^(?P<poll_id>\d+)/vote/$'), 'vote', name=VOTE_POLL),
-
-    url(_(r'^addvoting/$'), AddVoting.as_view(), name=ADD_VOTING),
-
-    url(_(r'^(?P<voting_id>\d+)/deletevoting/$'), DeleteVoting.as_view(),
+    url(r'^(?P<voting_id>\d+)/delete/$', DeleteVoting.as_view(),
         name=DELETE_VOTING),
+        
+    url(_(r'^poll/(?P<poll_id>\d+)/$'), DetailView.as_view(), name=VIEW_POLL),
 
-    url(_(r'^(?P<voting_id>\d+)/editvoting/$'), EditVoting.as_view(),
-        name=EDIT_VOTING),
+    url(r'^(?P<voting_id>\d+)/$', ViewVoting.as_view(), name=VIEW_VOTING),
 
-    url(r'^(?P<voting_id>\d+)', ViewVoting.as_view(), name=VIEW_VOTING),
+    url(r'^poll/(?P<poll_id>\d+)/edit/$', EditPoll, name=EDIT_POLL),
 )
 
 

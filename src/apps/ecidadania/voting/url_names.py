@@ -31,7 +31,7 @@ VIEW_POLL = 'view-poll'
 
 LIST_POLL = 'list-polls'
 
-VOTE_POLL = 'vote'
+VOTE_POLL = 'vote-poll'
 
 ADD_VOTING = 'add-voting'
 
@@ -39,6 +39,8 @@ EDIT_VOTING = 'edit-voting'
 
 DELETE_VOTING = 'delete-voting'
 
-VOTE_VOTING = ''
+VOTE_VOTING = 'vote-voting'
 
 VIEW_VOTING = 'view-voting'
+
+LIST_VOTING = 'list-votings'

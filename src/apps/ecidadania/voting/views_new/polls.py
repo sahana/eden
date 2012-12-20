@@ -87,6 +87,12 @@ def AddPoll(request, space_url):
     
     return render_to_response('not_allowed.html',context_instance=RequestContext(request))
 
+class ViewPoll(DetailView):
+
+    """
+    """
+    pass
+
 def EditPoll(request, space_url, poll_id):
 
     """
