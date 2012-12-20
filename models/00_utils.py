@@ -340,7 +340,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 hook = r.resource.components[name]
                 fkey = "%s.%s" % (name, hook.fkey)
                 vars = request.vars.copy()
-                vars.update({fkey: r.id})
+                vars.update({fkey: r.record[hook.fkey]})
                 url = URL(prefix, name, args=["create"], vars=vars)
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)

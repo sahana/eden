@@ -71,8 +71,7 @@ def index2():
         # Start of TEST CODE for multiple dataTables,
         #this also required views/inv/index.html to be modified
         from s3.s3utils import S3DataTable
-        request = current.request
-        vars = current.request.get_vars
+        vars = request.get_vars
         if request.extension == "html" or request.vars.id == "warehouse_list_1":
             resource = s3db.resource("inv_warehouse")
             totalrows = resource.count()
@@ -83,7 +82,7 @@ def index2():
             start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
             limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
             rfields = resource.resolve_selectors(list_fields)[0]
-            (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+            (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
             resource.add_filter(filter)
             filteredrows = resource.count()
             rows = resource.select(list_fields,
@@ -136,7 +135,7 @@ def index2():
                                "total_value",
                                ]
                 rfields = resource.resolve_selectors(list_fields)[0]
-                (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+                (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
                 resource.add_filter(filter)
                 (rfields, joins, left, distinct) = resource.resolve_selectors(list_fields)
                 site_list = {}
@@ -308,11 +307,9 @@ def warehouse():
     # CRUD pre-process
     def prep(r):
         
-        if r.id:
-            r.table.obsolete.readable = r.table.obsolete.writable = True
-
         if r.component:
-            if r.component.name == "inv_item":
+            component_name = r.component_name
+            if component_name == "inv_item":
                 # Filter out items which are already in this inventory
                 s3db.inv_prep(r)
                 # Remove the Warehouse Name from the list_fields
@@ -323,12 +320,12 @@ def warehouse():
                 except:
                     pass
 
-            elif r.component.name == "recv" or \
-                 r.component.name == "send":
+            elif component_name == "recv" or \
+                 component_name == "send":
                 # Filter out items which are already in this inventory
                 s3db.inv_prep(r)
 
-            elif r.component.name == "human_resource":
+            elif component_name == "human_resource":
                 # Filter out people which are already staff for this warehouse
                 s3base.s3_filter_staff(r)
                 # Cascade the organisation_id from the hospital to the staff
@@ -336,18 +333,21 @@ def warehouse():
                 htable.organisation_id.default = r.record.organisation_id
                 htable.organisation_id.writable = False
 
-            elif r.component.name == "req":
+            elif component_name == "req":
                 s3db.req_prep(r)
                 if r.method != "update" and r.method != "read":
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
                     s3db.req_create_form_mods()
 
+        elif r.id:
+            r.table.obsolete.readable = r.table.obsolete.writable = True
+
         # "show_obsolete" var option can be added (btn?) later to
         # disable this filter
         if r.method in [None, "list"] and \
             not r.vars.get("show_obsolete", False):
-            r.resource.add_filter(s3db.inv_warehouse.obsolete != True)
+            r.resource.add_filter(db.inv_warehouse.obsolete != True)
         return True
     s3.prep = prep
 
@@ -387,7 +387,11 @@ def warehouse():
 
 # -----------------------------------------------------------------------------
 def supplier():
-    current.request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    """
+        Filtered version of the organisation() REST controller
+    """
+
+    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
     return s3db.org_organisation_controller()
 
 # =============================================================================
