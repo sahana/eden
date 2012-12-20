@@ -2631,6 +2631,7 @@ def org_organisation_requires(updateable=False,
 
 # =============================================================================
 class org_OrganisationRepresent(S3Represent):
+    """ Representation of Organisations """
 
     def __init__(self,
                  translate=False,
@@ -2639,8 +2640,23 @@ class org_OrganisationRepresent(S3Represent):
                  acronym=True,
                  multiple=False):
 
+        if parent:
+            # Need a custom lookup
+            self.parent = True
+            self.lookup_rows = self.custom_lookup_rows
+            fields=["org_organisation.name",
+                    "org_organisation.acronym",
+                    "org_parent_organisation.name"]
+        else:
+            # Can use standard lookup of fields
+            self.parent = False
+            fields = ["name", "acronym"]
+
         super(org_OrganisationRepresent, self) \
              .__init__(lookup="org_organisation",
+                       fields=["org_organisation.name",
+                               "org_organisation.acronym",
+                               "org_parent_organisation.name"],
                        show_link=show_link,
                        translate=translate,
                        multiple=multiple)
@@ -2648,7 +2664,16 @@ class org_OrganisationRepresent(S3Represent):
         self.parent = parent
         self.acronym = acronym
 
-    def lookup_rows(self, key, values, fields=[]):
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for organisation rows, does a
+            left join with the parent organisation. Parameters
+            key and fields are not used, but are kept for API
+            compatiblity reasons.
+
+            @param values: the organisation IDs
+        """
 
         db = current.db
         s3db = current.s3db
@@ -2671,18 +2696,31 @@ class org_OrganisationRepresent(S3Represent):
         self.queries += 1
         return rows
 
+    # -------------------------------------------------------------------------
     def represent_row(self, row):
+        """
+            Represent a single Row
 
-        name = row["org_organisation.name"]
-        acronym = row["org_organisation.acronym"]
-        parent = row["org_parent_organisation.name"]
+            @param row: the org_organisation Row
+        """
+
+        if self.parent:
+            # Custom Row (with the parent left-joined)
+            name = row["org_organisation.name"]
+            acronym = row["org_organisation.acronym"]
+        else:
+            # Standard row (from fields)
+            name = row["name"]
+            acronym = row["acronym"]
 
         if not name:
             return self.default
         if self.acronym and acronym:
             name = "%s (%s)" % (name, acronym)
-        if self.parent and parent:
-            name = "%s > %s" % (parent, name)
+        if self.parent:
+            parent = row["org_parent_organisation.name"]
+            if parent:
+                name = "%s > %s" % (parent, name)
         return name
         
 # =============================================================================

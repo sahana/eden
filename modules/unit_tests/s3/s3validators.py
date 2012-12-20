@@ -6,7 +6,9 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3validators.py
 #
 import unittest
+from gluon import current
 from gluon.dal import Query
+from s3.s3fields import *
 
 # =============================================================================
 class ISLatTest(unittest.TestCase):
@@ -37,6 +39,101 @@ class ISLonTest(unittest.TestCase):
     pass
 
 # =============================================================================
+class ISONEOFLazyRepresentationTests(unittest.TestCase):
+
+    def setUp(self):
+
+        s3db = current.s3db
+
+        orgs = [Storage(name="ISONEOF%s" % i,
+                        acronym="IOO%s" % i)
+                for i in xrange(5)]
+
+        ids = []
+        table = s3db.org_organisation
+        for org in orgs:
+            org_id = table.insert(**org)
+            org["id"] = org_id
+            s3db.update_super(table, org)
+            ids.append(org_id)
+
+        current.auth.override = True
+        self.ids = ids
+        self.orgs = orgs
+
+    # -------------------------------------------------------------------------
+    def testIsOneOfBuildSet(self):
+
+        renderer = S3Represent(lookup="org_organisation")
+
+        db = current.db
+        table = current.s3db.org_organisation
+        validator = IS_ONE_OF(db(table.id.belongs(self.ids)),
+                              "org_organisation.id",
+                              renderer)
+
+        options = Storage(validator.options())
+        for org in self.orgs:
+            self.assertTrue(str(org.id) in options)
+            self.assertEqual(options[str(org.id)], org.name)
+        self.assertEqual(renderer.queries, 0)
+
+    # -------------------------------------------------------------------------
+    def testOrgOrganisationRepresent(self):
+
+        s3db = current.s3db
+        renderer = s3db.org_OrganisationRepresent()
+
+        db = current.db
+        table = s3db.org_organisation
+        validator = IS_ONE_OF(db(table.id.belongs(self.ids)),
+                              "org_organisation.id",
+                              renderer)
+
+        options = Storage(validator.options())
+        for org in self.orgs:
+            self.assertTrue(str(org.id) in options)
+            self.assertEqual(options[str(org.id)],
+                             "%s (%s)" % (org.name, org.acronym))
+        self.assertEqual(renderer.queries, 1) # using custom query
+
+        renderer = s3db.org_OrganisationRepresent(parent=False)
+
+        db = current.db
+        table = current.s3db.org_organisation
+        validator = IS_ONE_OF(db(table.id.belongs(self.ids)),
+                              "org_organisation.id",
+                              renderer)
+
+        options = Storage(validator.options())
+        for org in self.orgs:
+            self.assertTrue(str(org.id) in options)
+            self.assertEqual(options[str(org.id)],
+                             "%s (%s)" % (org.name, org.acronym))
+        self.assertEqual(renderer.queries, 0) # using default query
+
+        renderer = s3db.org_OrganisationRepresent(parent=False,
+                                                  acronym=False)
+
+        db = current.db
+        table = current.s3db.org_organisation
+        validator = IS_ONE_OF(db(table.id.belongs(self.ids)),
+                              "org_organisation.id",
+                              renderer)
+
+        options = Storage(validator.options())
+        for org in self.orgs:
+            self.assertTrue(str(org.id) in options)
+            self.assertEqual(options[str(org.id)], org.name)
+        self.assertEqual(renderer.queries, 0) # using default query
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -54,6 +151,7 @@ if __name__ == "__main__":
     run_suite(
         ISLatTest,
         ISLonTest,
+        ISONEOFLazyRepresentationTests,
     )
 
 # END ========================================================================

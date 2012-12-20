@@ -29,6 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import sys
 import datetime
 from uuid import uuid4
 
@@ -40,6 +41,7 @@ from gluon import *
 #from gluon.validators import *
 from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
+from gluon.languages import lazyT
 
 from s3navigation import S3ScriptItem
 from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent, s3_unicode
@@ -201,7 +203,7 @@ class S3Represent(object):
         @group Internal Methods: _setup,
                                  _lookup
     """
-
+    
     def __init__(self,
                  lookup=None,
                  key=None,
@@ -256,8 +258,17 @@ class S3Represent(object):
         self.func_code = Storage(co_argcount = 2)
         self.func_defaults = None
 
+        if hasattr(self, "lookup_rows"):
+            self.custom_lookup = True
+        else:
+            self.lookup_rows = self._lookup_rows
+            self.custom_lookup = False
+
+        self.func_code = Storage(co_argcount = 3)
+        self.func_defaults = ["row", "show_link"]
+
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def _lookup_rows(self, key, values, fields=[]):
         """
             Lookup all rows referenced by values.
             (in foreign key representations)
@@ -283,23 +294,27 @@ class S3Represent(object):
             (in foreign key representations)
 
             @param row: the row
+
+            @return: the representation of the Row, or None if there
+                     is an error in the Row
         """
 
         labels = self.labels
+
         if self.slabels:
+            # String Template
             v = labels % row
         elif self.clabels:
+            # External Renderer
             v = labels(row)
         else:
-            values = [row[f] for f in self.fields]
+            # Default
+            values = [row[f] for f in self.fields if row[f] not in (None, "")]
             if values:
-                try:
-                    v = " ".join([v for v in values if v])
-                except:
-                    v = " ".join([v for v in values if v])
+                v = " ".join([s3_unicode(v) for v in values])
             else:
                 v = self.none
-        if self.translate:
+        if self.translate and not type(v) is lazyT:
             return current.T(v)
         else:
             return v
@@ -337,10 +352,21 @@ class S3Represent(object):
             @param show_link: render the representation as link
         """
 
+        self._setup()
         show_link = show_link and self.show_link
+
         if self.list_type:
-            return self.multiple(value, rows=row,
-                                 list_type=False, show_link=show_link)
+            # Is a list-type => use multiple
+            return self.multiple(value,
+                                 rows=row,
+                                 list_type=False,
+                                 show_link=show_link)
+
+        # Prefer the row over the value
+        if row and self.table:
+            value = row[self.key]
+
+        # Lookup the representation
         if value:
             rows = [row] if row is not None else None
             items = self._lookup([value], rows=rows)
@@ -362,8 +388,14 @@ class S3Represent(object):
             @param show_link: render each representation as link
         """
 
+        self._setup()
         show_link = show_link and self.show_link
-        if self.list_type and list_type:
+
+        # Get the values
+        if rows and self.table:
+            key = self.key
+            values = [row[key] for row in rows]
+        elif self.list_type and list_type:
             from itertools import chain
             try:
                 hasnone = None in values
@@ -376,6 +408,8 @@ class S3Represent(object):
                 raise ValueError("List of lists expected, got %s" % values)
         else:
             values = [values] if type(values) is not list else values
+
+        # Lookup the representations
         if values:
             default = self.default
             items = self._lookup(values, rows=rows)
@@ -413,8 +447,14 @@ class S3Represent(object):
                    would still have to construct the final string/HTML.
         """
 
+        self._setup()
         show_link = show_link and self.show_link
-        if self.list_type and list_type:
+
+        # Get the values
+        if rows and self.table:
+            key = self.key
+            values = [row[key] for row in rows]
+        elif self.list_type and list_type:
             from itertools import chain
             try:
                 hasnone = None in values
@@ -427,6 +467,8 @@ class S3Represent(object):
                 raise ValueError("List of lists expected, got %s" % values)
         else:
             values = [values] if type(values) is not list else values
+
+        # Lookup the representations
         if values:
             labels = self._lookup(values, rows=rows)
             if show_link:
@@ -483,12 +525,13 @@ class S3Represent(object):
         if self.none is None:
             self.none = messages["NONE"]
 
-        # Lookup table options
+        # Initialize theset
         if self.options is not None:
             self.theset = self.options
         else:
             self.theset = {}
-            
+
+        # Lookup table parameters and linkto
         if self.table is None:
             tablename = self.tablename
             if tablename:
@@ -506,8 +549,11 @@ class S3Represent(object):
                     c, f = tablename.split("_", 1)
                     self.linkto = URL(c=c, f=f, args=["[id]"])
 
+        # What type of renderer do we use?
         labels = self.labels
+        # String template?
         self.slabels = isinstance(labels, basestring)
+        # External renderer?
         self.clabels = callable(labels)
 
         self.setup = True
@@ -523,11 +569,12 @@ class S3Represent(object):
                          optional
         """
 
-        self._setup()
         theset = self.theset
         
         items = {}
         lookup = {}
+
+        # Check whether values are already in theset
         for v in values:
             if v is None:
                 items[v] = self.none
@@ -538,6 +585,7 @@ class S3Represent(object):
         if self.table is None or not lookup:
             return items
 
+        # Get the primary key
         pkey = self.key
         table = self.table
         ogetattr = object.__getattribute__
@@ -546,34 +594,43 @@ class S3Represent(object):
         except AttributeError:
             return items
 
+        # Use the given rows to lookup the values
         pop = lookup.pop
         represent_row = self.represent_row
-        if rows:
+        if rows and not self.custom_lookup:
             for row in rows:
                 k = row[key]
                 if k not in theset:
                     theset[k] = represent_row(row)
                 if pop(k, None):
                     items[k] = theset[k]
-            if not lookup:
-                return items
 
-        lookup = lookup.keys()
-        try:
-            # Need for speed: assume all fields are in table
-            fields = [ogetattr(table, f) for f in self.fields]
-        except AttributeError:
-            # Ok - they are not: provide debug output and filter fields
-            if current.response.s3.debug:
-                from s3utils import s3_debug
-                s3_debug(sys.exc_info()[1])
-            fields = [ogetattr(table, f)
-                      for f in self.fields if hasattr(table, f)]
-        rows = self.lookup_rows(key, lookup, fields=fields)
+        # Retrieve additional rows as needed
+        if lookup:
+            if not self.custom_lookup:
+                try:
+                    # Need for speed: assume all fields are in table
+                    fields = [ogetattr(table, f) for f in self.fields]
+                except AttributeError:
+                    # Ok - they are not: provide debug output and filter fields
+                    if current.response.s3.debug:
+                        from s3utils import s3_debug
+                        s3_debug(sys.exc_info()[1])
+                    fields = [ogetattr(table, f)
+                              for f in self.fields if hasattr(table, f)]
+            else:
+                fields = []
+            rows = self.lookup_rows(key, lookup.keys(), fields=fields)
+            for row in rows:
+                k = row[key]
+                lookup.pop(k, None)
+                items[k] = theset[k] = represent_row(row)
 
-        for row in rows:
-            k = row[key]
-            items[k] = theset[k] = represent_row(row)
+        if lookup:
+            for k in lookup:
+                items[k] = self.default
+
+        # Done
         return items
 
 # =============================================================================
