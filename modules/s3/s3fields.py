@@ -522,9 +522,7 @@ class S3Represent(object):
 
         self._setup()
         theset = self.theset
-
-        ogetattr = object.__getattribute__
-
+        
         items = {}
         lookup = {}
         for v in values:
@@ -539,6 +537,7 @@ class S3Represent(object):
 
         pkey = self.key
         table = self.table
+        ogetattr = object.__getattribute__
         try:
             key = ogetattr(table, pkey)
         except AttributeError:

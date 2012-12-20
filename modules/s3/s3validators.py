@@ -617,7 +617,9 @@ class IS_ONE_OF_EMPTY(Validator):
                 if hasattr(label, "bulk"):
                     # S3Represent
                     values = [r[self.kfield] for r in records]
-                    d = label.bulk(values, list_type=False, show_link=False)
+                    d = label.bulk(values,
+                                   list_type=False,
+                                   show_link=False)
                     labels = [d[v] if v in d else d[None] for v in values]
                 else:
                     # Representation function
