@@ -682,8 +682,17 @@ class IS_ONE_OF_EMPTY(Validator):
             self.theset = [str(r[self.kfield]) for r in records]
             label = self.label
             try:
-                # Is a function
-                labels = map(label, [], records)
+                # Is callable
+                if hasattr(label, "bulk"):
+                    # S3Represent
+                    values = [r[self.kfield] for r in records]
+                    d = label.bulk(values,
+                                   list_type=False,
+                                   show_link=False)
+                    labels = [d[v] if v in d else d[None] for v in values]
+                else:
+                    # Representation function
+                    labels = map(label, [], records)
             except TypeError:
                 if isinstance(label, str):
                     labels = map(lambda r: label % dict(r), records)

@@ -636,16 +636,29 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 represent = field.represent
 
             if callable(represent):
-                # Execute, if callable
-                args = {"show_link": False} \
-                       if "show_link" in represent.func_code.co_varnames else {}
-                if multiple:
-                    repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
-                                           (opt, represent([opt], **args))
+                if hasattr(represent, "bulk"):
+                    # S3Represent => use bulk option
+                    opt_dict = represent.bulk(opt_values,
+                                              list_type=False,
+                                              show_link=False)
+                    if None in opt_values:
+                        opt_dict[None] = EMPTY
+                    elif None in opt_dict:
+                        del opt_dict[None]
+                    if "" in opt_values:
+                        opt_dict[""] = EMPTY
+                    opt_list = opt_dict.items()
                 else:
-                    repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
-                                           (opt, represent(opt, **args))
-                opt_list = map(repr_opt, opt_values)
+                    # Standard represent function
+                    args = {"show_link": False} \
+                           if "show_link" in represent.func_code.co_varnames else {}
+                    if multiple:
+                        repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
+                                               (opt, represent([opt], **args))
+                    else:
+                        repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
+                                               (opt, represent(opt, **args))
+                    opt_list = map(repr_opt, opt_values)
 
             elif isinstance(represent, str) and field_type[:9] == "reference":
                 # Feed the format string

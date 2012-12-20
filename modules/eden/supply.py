@@ -1464,8 +1464,8 @@ class item_entity_virtualfields:
             record = current.db(query).select(otable.organisation_id,
                                               limitby=(0, 1)).first()
             if record:
-                organisation = s3db.org_organisation_represent(record.organisation_id,
-                                                               acronym=False)
+                organisation = s3db.org_OrganisationRepresent(acronym=False)\
+                                                             (record.organisation_id)
         elif instance_type == "proc_plan_item":
             tablename = instance_type
             itable = s3db[instance_type]
