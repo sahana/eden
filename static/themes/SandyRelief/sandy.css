@@ -1283,6 +1283,7 @@ b.red {
   padding: 0;
 }
 .action-btn,
+.delete-btn-ajax,
 .delete-btn {
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1309,12 +1310,15 @@ b.red {
   white-space: nowrap;
 }
 .action-btn:visited,
+.delete-btn-ajax:visited,
 .delete-btn:visited {
   color: #ffffff !important;
 }
 .action-btn:hover,
+.delete-btn-ajax:hover,
 .delete-btn:hover,
 .action-btn:focus,
+.delete-btn-ajax:focus,
 .delete-btn:focus {
   color: #ffffff !important;
   background: #222222;

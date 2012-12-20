@@ -3678,7 +3678,7 @@ def pr_contacts(r, **attr):
         else:
             edit_btn = DIV()
         if crud._permitted(method="delete"):
-            delete_btn = A(T("Delete"), _class="deleteBtn delete-btn fright")
+            delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
         else:
             delete_btn = DIV()
         return (edit_btn, delete_btn)
