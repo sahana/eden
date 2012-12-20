@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# REST Unit Tests
+# Model Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3rest.py
+# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3model.py
 #
 import unittest
 from gluon.dal import Query

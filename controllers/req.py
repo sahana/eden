@@ -219,17 +219,6 @@ def req_template():
 def req_controller():
     """ REST Controller """
 
-    # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
-    if "req_item_id" in request.vars and "inv_item_id" in request.vars:
-        inv_item = s3db.inv_inv_item[request.vars.inv_item_id]
-        site_id = inv_item.site_id
-        item_id = inv_item.item_id
-        s3db.req_req_item[request.vars.req_item_id] = dict(site_id = site_id)
-        response.confirmation = T("%(item)s requested from %(site)s" % \
-            {"item":s3db.supply_item_represent(item_id, show_link=False),
-             "site":s3db.org_site_represent(site_id, show_link=False)
-             })
-
     def prep(r):
 
         table = r.table
@@ -251,6 +240,24 @@ def req_controller():
                (request.vars.type and int(request.vars.type))
 
         if r.interactive:
+            # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
+            if "req_item_id" in request.vars and "inv_item_id" in request.vars:
+                iitable = s3db.inv_inv_item
+                inv_item = db(iitable.id == request.vars.inv_item_id).select(iitable.site_id,
+                                                                             iitable.item_id,
+                                                                             limitby=(0, 1)
+                                                                             ).first()
+                site_id = inv_item.site_id
+                item_id = inv_item.item_id
+                db(s3db.req_req_item.id == request.vars.req_item_id).update(site_id = site_id)
+                response.confirmation = T("%(item)s requested from %(site)s" % \
+                    {"item": s3db.supply_item_represent(item_id, show_link=False),
+                     "site": s3db.org_site_represent(site_id, show_link=False)
+                     })
+            elif "req.site_id" in request.get_vars:
+                # Called from 'Make new request' button on [siteinstance]/req page
+                table.site_id.default = request.get_vars.get("req.site_id")
+
             table.requester_id.represent = requester_represent
 
             # Set Fields and Labels depending on type
@@ -355,7 +362,8 @@ def req_controller():
                     #        r.table.site_id.default = site.site_id
                     # Use site_id in User Profile
                     if auth.is_logged_in():
-                        r.table.site_id.default = auth.user.site_id
+                        if not table.site_id.default:
+                            table.site_id.default = auth.user.site_id
 
                 elif method == "map":
                     # Tell the client to request per-feature markers

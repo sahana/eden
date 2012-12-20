@@ -30,6 +30,9 @@
 
 """
 
+# True Division: http://www.python.org/dev/peps/pep-0238/
+from __future__ import division
+
 __all__ = ["single_phone_number_pattern",
            "multi_phone_number_pattern",
            "s3_single_phone_requires",
@@ -106,11 +109,16 @@ class IS_LAT(object):
         INPUT(_type="text", _name="name", requires=IS_LAT())
 
         Latitude has to be in decimal degrees between -90 & 90
-        - we attempt to convert DMS format into decimal degrees
+        - we can convert D/M/S or D°M'S" format into decimal degrees:
+        Zero padded, separated by spaces or : or (d, m, s) or (°, ', ") or run together and followed by cardinal direction initial (N,S) Note: Only seconds can have decimals places. A decimal point with no trailing digits is invalid.
+        Matches	
+        40:26:46N | 40°26′47″N | 40d 26m 47s N | 90 00 00.0 | 89 59 50.4141 S | 00 00 00.0
+        Non-Matches	
+        90 00 00.001 N | 9 00 00.00 N | 9 00 00.00 | 90 61 50.4121 S | -90 48 50. N | 90 00 00. N | 00 00 00.
     """
     def __init__(self,
                  error_message = "Latitude/Northing should be between -90 & 90!"
-                ):
+                 ):
         self.minimum = -90
         self.maximum = 90
         self.error_message = error_message
@@ -118,47 +126,76 @@ class IS_LAT(object):
     # -------------------------------------------------------------------------
     def __call__(self, value):
         try:
+            # Already in decimal degrees?
             value = float(value)
-            if self.minimum <= value <= self.maximum:
-                return (value, None)
-            else:
-                return (value, self.error_message)
         except:
-            pattern = re.compile("^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
+            # Convert to decimal degrees
+
+            # 1st do a quick pattern match to see if we can decode
+            pattern = re.compile("-?(90[ :°d]*00[ :\'\'m]*00(\.0+)?|[0-8][0-9][ :°d]*[0-5][0-9][ :\'\'m]*[0-5][0-9](\.\d+)?)[ :\?\"s]*(N|n|S|s)?")
             if not pattern.match(value):
-                return (value, self.error_message)
+                return (value, current.T("Unable to decode this format - use decimal degrees or a valid DMS format"))
+
+            # Split the string into the numbers & separators
+            degs = 0
+            mins = 0
+            secs = 0
+            negative = False
+            dms = "d"
+            for i in value:
+                try:
+                    # Is this a number?
+                    int(i)
+                    if not degs:
+                        degs = i
+                    elif dms == "d":
+                        degs = "%s%s" % (degs, i)
+                    elif dms == "m":
+                        if not mins:
+                            mins = i
+                        else:
+                            mins = "%s%s" % (mins, i)
+                    elif dms == "s":
+                        if not secs:
+                            secs = i
+                        else:
+                            secs = "%s%s" % (secs, i)
+                except:
+                    # Not a number
+                    if i == ".":
+                        if dms == "m":
+                            mins = "%s." % mins
+                        elif dms == "s":
+                            secs = "%s." % secs
+                    elif i in ["S", "s"]:
+                        negative = True
+                    elif i == "-":
+                        negative = True
+                    elif dms == "d":
+                        dms = "m"
+                    elif dms == "m":
+                        dms = "s"
+
+            # Convert to decimal degrees
+            if secs:
+                m = float(secs) / 60
             else:
-                val = []
-                val.append(value)
-                sep = []
-                count = 0
-                for i in val[0]:
-                    try:
-                        int(i)
-                        count += 1
-                    except:
-                        sep.append(count)
-                        count += 1
-                sec = ''
-                posn = sep[1]
-                while posn != (count-1):
-                    sec = sec + val[0][posn+1]#to join the numbers for seconds
-                    posn += 1
-                posn2 = sep[0]
-                mins=''
-                while posn2 != (sep[1]-1):
-                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
-                    posn2 += 1
-                deg = ''
-                posn3 = 0
-                while posn3 != (sep[0]):
-                    deg = deg + val[0][posn3] # to join the numbers for degree
-                    posn3 += 1
-                e = int(sec)/60 #formula to get back decimal degree
-                f = int(mins) + e #formula
-                g = int(f) / 60 #formula
-                value = int(deg) + g                
-                return (value, None)
+                m = 0
+            mins = float(mins) + m
+            if mins:
+                d = mins / 60
+            else:
+                d = 0
+            value = int(degs) + d
+
+            # Apply the direction
+            if negative:
+                value = -value
+
+        if self.minimum <= value <= self.maximum:
+            return (value, None)
+        else:
+            return (value, current.T(self.error_message))
 
 # =============================================================================
 class IS_LON(object):
@@ -168,11 +205,16 @@ class IS_LON(object):
         INPUT(_type="text", _name="name", requires=IS_LON())
 
         Longitude has to be in decimal degrees between -180 & 180
-        - we attempt to convert DMS format into decimal degrees
+        - we can convert D/M/S format into decimal degrees
+        Zero padded, separated by spaces or : or (d, m, s) or (°, ', ") or run together and followed by cardinal direction initial (E,W) Note: Only seconds can have decimals places. A decimal point with no trailing digits is invalid.
+        Matches	
+        079:56:55W | 079°58′36″W | 079d 58′ 36″ W | 180 00 00.0 | 090 29 20.4 E | 000 00 00.0
+        Non-Matches	
+        180 00 00.001 E | 79 00 00.00 E | -79 00 00.00 | 090 29 20.4 E | -090 29 20.4 E | 180 00 00. E | 000 00 00.
     """
     def __init__(self,
                  error_message = "Longitude/Easting should be between -180 & 180!"
-                ):
+                 ):
         self.minimum = -180
         self.maximum = 180
         self.error_message = error_message
@@ -180,47 +222,74 @@ class IS_LON(object):
     # -------------------------------------------------------------------------
     def __call__(self, value):
         try:
+            # Already in decimal degrees?
             value = float(value)
-            if self.minimum <= value <= self.maximum:
-                return (value, None)
-            else:
-                return (value, self.error_message)
         except:
-            pattern = re.compile("^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
+            # Convert to decimal degrees
+
+            # 1st do a quick pattern match to see if we can decode
+            pattern = re.compile("-?(180[ :°d]*00[ :\'\'m]*00(\.0+)?|(1[0-7][0-9]|0[0-9][0-9])[ :°d]*[0-5][0-9][ :\'\'m]*[0-5][0-9](\.\d+)?)[ :\?\"s]*(E|e|W|w)?")
             if not pattern.match(value):
-                return (value, self.error_message)
+                return (value, current.T("Unable to decode this format - use decimal degrees or a valid DMS format"))
+
+            # Split the string into the numbers & separators
+            degs = 0
+            mins = 0
+            secs = 0
+            negative = False
+            dms = "d"
+            for i in value:
+                try:
+                    # Is this a number?
+                    int(i)
+                    if not degs:
+                        degs = i
+                    elif dms == "d":
+                        degs = "%s%s" % (degs, i)
+                    elif dms == "m":
+                        if not mins:
+                            mins = i
+                        else:
+                            mins = "%s%s" % (mins, i)
+                    elif dms == "s":
+                        if not secs:
+                            secs = i
+                        else:
+                            secs = "%s%s" % (secs, i)
+                except:
+                    # Not a number
+                    if i == ".":
+                        if dms == "d":
+                            degs = "%s." % degs
+                        if dms == "m":
+                            mins = "%s." % mins
+                        elif dms == "s":
+                            secs = "%s." % secs
+                    elif i in ["E", "e"]:
+                        negative = True
+                    elif i == "-":
+                        negative = True
+                    elif dms == "d":
+                        dms = "m"
+                    elif dms == "m":
+                        dms = "s"
+
+            # Convert to decimal degrees
+            if secs:
+                m = float(secs) / 60
             else:
-                val = []
-                val.append(value)
-                sep = []
-                count = 0
-                for i in val[0]:
-                    try:
-                        int(i)
-                        count += 1
-                    except:
-                        sep.append(count)
-                        count += 1
-                sec = ''
-                posn = sep[1]
-                while posn != (count-1):
-                    sec = sec + val[0][posn+1]#to join the numbers for seconds
-                    posn += 1
-                posn2 = sep[0]
-                mins=''
-                while posn2 != (sep[1]-1):
-                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
-                    posn2 += 1
-                deg = ''
-                posn3 = 0
-                while posn3 != (sep[0]):
-                    deg = deg + val[0][posn3] # to join the numbers for degree
-                    posn3 += 1
-                e = int(sec)/60 #formula to get back decimal degree
-                f = int(mins) + e #formula
-                g = int(f) / 60 #formula
-                value = int(deg) + g                
-                return (value, None)
+                m = 0
+            mins = float(mins) + m
+            if mins:
+                d = mins / 60
+            else:
+                d = 0
+            value = int(degs) + d
+
+        if self.minimum <= value <= self.maximum:
+            return (value, None)
+        else:
+            return (value, current.T(self.error_message))
 
 # =============================================================================
 class IS_NUMBER(object):
