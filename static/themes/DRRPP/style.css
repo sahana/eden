@@ -74,6 +74,12 @@ strong {
     list-style-type: disc;
     margin: 0 0 4px 20px;
 }
+/* Except here */
+#content ul.x-tab-strip,
+#content ul.x-tree-node-ct,
+#content ul.x-tree-root-ct {
+    list-style: none outside none;
+}
 
 /* Buttons */
 .button-left {

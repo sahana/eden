@@ -264,9 +264,6 @@ class S3Represent(object):
             self.lookup_rows = self._lookup_rows
             self.custom_lookup = False
 
-        self.func_code = Storage(co_argcount = 3)
-        self.func_defaults = ["row", "show_link"]
-
     # -------------------------------------------------------------------------
     def _lookup_rows(self, key, values, fields=[]):
         """
