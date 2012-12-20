@@ -494,6 +494,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Represent uses a custom lookup, so we only
                 # retrieve the keys here
                 fields = [kfield]
+                orderby = kfield
             else:
                 # Represent uses a standard field lookup, so
                 # we can do that right here
@@ -511,7 +512,7 @@ class IS_ONE_OF_EMPTY(Validator):
             ks = [kfield]
             try:
                 table = current.s3db[ktable]
-                fields =[str(f) for f in table if f not in ("wkt", "the_geom")]
+                fields =[str(f) for f in table if f.name not in ("wkt", "the_geom")]
             except RuntimeError:
                 fields = "all"
 
@@ -628,7 +629,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Note this does not support filtering.
                 orderby = self.orderby or \
                           reduce(lambda a, b: a|b, (f for f in fields
-                                                    if not f.name == "id"))
+                                                    if f.type != "id"))
                 # Caching breaks Colorbox dropdown refreshes
                 #dd = dict(orderby=orderby, cache=(current.cache.ram, 60))
                 dd = dict(orderby=orderby)

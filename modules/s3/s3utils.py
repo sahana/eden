@@ -2659,6 +2659,16 @@ class S3MarkupStripper(HTMLParser.HTMLParser):
     def stripped(self):
         return "".join(self.result)
 
+def s3_strip_markup(text):
+
+    try:
+        stripper = S3MarkupStripper()
+        stripper.feed(text)
+        text = stripper.stripped()
+    except Exception, e:
+        pass
+    return text
+
 # =============================================================================
 class S3DataTable(object):
     """
