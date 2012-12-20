@@ -203,7 +203,7 @@ class S3Represent(object):
         @group Internal Methods: _setup,
                                  _lookup
     """
-
+    
     def __init__(self,
                  lookup=None,
                  key=None,
@@ -260,6 +260,9 @@ class S3Represent(object):
         else:
             self.lookup_rows = self._lookup_rows
             self.custom_lookup = False
+
+        self.func_code = Storage(co_argcount = 3)
+        self.func_defaults = ["row", "show_link"]
 
     # -------------------------------------------------------------------------
     def _lookup_rows(self, key, values, fields=[]):
