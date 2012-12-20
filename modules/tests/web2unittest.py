@@ -278,7 +278,31 @@ class SeleniumUnitTest(Web2UnitTest):
                 time.sleep(details[3])
             if len(details) >= 3:
                 el_type = details[2]
-                if el_type == "option":
+                if el_type == "automatic":
+                    try:
+                        browser.find_element_by_id("dummy_"+el_id)
+                        if len(details) >= 5:
+                            needle = details[4]
+                        else:
+                            needle = el_value
+                        raw_value = self.w_autocomplete(el_value,
+                                                        el_id,
+                                                        needle,
+                                                        )
+                    except NoSuchElementException:
+                        el = browser.find_element_by_id(el_id)
+                        raw_value = False
+                        for option in el.find_elements_by_tag_name("option"):
+                            if option.text == el_value:
+                                option.click()
+                                raw_value = option.get_attribute("value")
+                                try:
+                                    raw_value = int(raw_value)
+                                except:
+                                    pass
+                                break
+                        
+                elif el_type == "option":
                     el = browser.find_element_by_id(el_id)
                     raw_value = False
                     for option in el.find_elements_by_tag_name("option"):
