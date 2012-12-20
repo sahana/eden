@@ -90,7 +90,8 @@
         </div>
     </div>
 
+    <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/proposal_tools.js"></script>
-    <script type="text/javascript">viewMap( {{ location.latitude }}, {{ location.longitude }} )</script>
+    <script type="text/javascript">toggleMap();viewMap( {{ proposal.latitude }}, {{ proposal.longitude }} );</script>
 
 {% endblock %}

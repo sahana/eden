@@ -105,7 +105,7 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div class="control-group {% if form.latitude.errors %}error{% endif %} hidden">
+            <div class="control-group {% if form.latitude.errors %}error{% endif %}">
                 <label class="control-label">{{ form.latitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
@@ -122,7 +122,7 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div class="control-group {% if form.longitude.errors %}error{% endif %} hidden">
+            <div class="control-group {% if form.longitude.errors %}error{% endif %}">
                 <label class="control-label">{{ form.longitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
@@ -139,11 +139,13 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            If you want to add geo info click: <a id="showmap" class="btn btn-default" style="margin-bottom:15px;">{% trans "Show map" %}</a>
+            {% trans "If you want to add location information please click "Show map" %}:
+            <a id="showmap" class="btn btn-default" style="margin-bottom:15px;">{% trans "Show map" %}</a>
             <div id="map" style="width:900px;height:500px;border:1px solid #AAA;" class="hidden"></div>
 
             <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/proposal_tools.js"></script>
+            <script type="text/javascript">clickMap();startMap();toggleMap();</script>
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
             <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />

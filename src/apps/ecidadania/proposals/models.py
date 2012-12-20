@@ -163,9 +163,9 @@ class Proposal(BaseProposalAbstractModel):
     tags = TagField(help_text = _('Insert here relevant words related with \
         the proposal'))
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
-        max_digits=8, decimal_places=6, help_text =_('Specify it in decimal'))
+        max_digits=17, decimal_places=15, help_text =_('Specify it in decimal'))
     longitude = models.DecimalField(_('Longitude'), blank=True, null=True,
-        max_digits=8, decimal_places=6, help_text =_('Specify it in decimal'))
+        max_digits=17, decimal_places=15, help_text =_('Specify it in decimal'))
     closed = models.NullBooleanField(default=False, blank=True)
     closed_by = models.ForeignKey(User, blank=True, null=True,
         related_name='proposal_closed_by')

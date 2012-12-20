@@ -61,7 +61,7 @@
         <div id="jsnotify">
             <div class="hidden" id="basic-template">
                 <a class="ui-notify-cross ui-notify-close" href="#">x</a>
-                <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}/assets/icons/#{icon}" alt="warning" /></div>
+                <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}assets/icons/#{icon}" alt="warning" /></div>
                 <h1>#{title}</h1>
                 <p>#{text}</p>
             </div>
@@ -74,13 +74,13 @@
                         {% block header %}
                             <div id="logo">
 	                            {% block logo %}
-	                                <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
+	                                <a href="/"><img src="{{ STATIC_URL }}assets/logos/index.png"/></a>
 	                            {% endblock %}
 	                        </div>
             
  	                        <div id="banner">
 	                            {% block banner %}
-		                            <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
+		                            <img src="{{ STATIC_URL }}assets/banners/index.png"/>
  	                            {% endblock %}
 	                        </div>
                         {% endblock %}

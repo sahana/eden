@@ -42,7 +42,8 @@ function clickMap() {
         in the map. This function MUST be initialized before startMap().
     */
 
-    OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
+    OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, { 
+
         defaultHandlerOptions: {
             'single': true,
             'double': false,
@@ -71,11 +72,8 @@ function clickMap() {
             // Save coordinates to form. First we truncate them to 6 decimals
             trunclon = Math.floor(lonlat.lon * 1000) / 1000;
             trunclat = Math.floor(lonlat.lat * 1000) / 1000;
-            $("input[name='longitude']").val(trunclon);
-            $("input[name='latitude']").val(trunclat);
-            var markers = new OpenLayers.Layer.Markers( "Markers" );
-            map.addLayer(markers); 
-            markers.addMarker(new OpenLayers.Marker(lonlat));
+            $("input[name='longitude']").val(lonlat.lon);
+            $("input[name='latitude']").val(lonlat.lat);
             // For debugging
             //alert("You clicked near " + lonlat.lat + " N, " +
             //                          + lonlat.lon + " E");
@@ -101,13 +99,14 @@ function startMap() {
     map.addControl(click);
     click.activate();
 
+    var markers = new OpenLayers.Layer.Markers( "Markers" );
+    map.addLayer(markers);
+    marker = new OpenLayers.Marker(defaultcoord);
+    markers.addMarker(marker);
+
     // MARKER STUFF. It's not the best place to be but we need it working now.
     // This is shitty code that needs to be improved ASAP.
     map.events.register("click", map , function(e){
-        var markers = new OpenLayers.Layer.Markers( "Markers" );
-        marker = new OpenLayers.Marker(lonlat) ;
-        markers.addMarker(marker);
-        map.addLayer(markers);
         var opx = map.getLayerPxFromViewPortPx(e.xy) ;
         marker.map = map ;
         marker.moveTo(opx) ;
@@ -121,24 +120,21 @@ function viewMap(lat, lon) {
     map = new OpenLayers.Map('map');
     var osm = new OpenLayers.Layer.OSM();
     var markers = new OpenLayers.Layer.Markers( "Markers" );
-    var defaultcoord = new OpenLayers.LonLat(lon, lat).transform(fromProjection, toProjection);
+    var coords = new OpenLayers.LonLat(lon, lat)
+    var defaultcoord = coords.transform(fromProjection, toProjection);
     
     map.addLayer(osm);
     map.addLayer(markers);
     map.setCenter(defaultcoord, 10);
-
-    var size = new OpenLayers.Size(21,25);
-    var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
-    var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png',size,offset);
-    markers.addMarker(new OpenLayers.Marker(defaultcoords,icon));
+    markers.addMarker(new OpenLayers.Marker(defaultcoord));
 }
 
 /*******************
     MAIN LOOP
 ********************/
 
-$(document).ready(function() {
-    clickMap();
-    startMap();
-    toggleMap();
-});
+// $(document).ready(function() {
+//     clickMap();
+//     startMap();
+//     toggleMap();
+// });
