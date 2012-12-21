@@ -1005,11 +1005,28 @@ $(document).ready(function() {
     }); */
 });
 
+function s3AppendUrlQuery(url, extension, query) {
+    var parts = url.split('?'), q = '';
+    var newurl = parts[0] + '.' + extension;
+    if (parts.length > 1) {
+        if (query) {
+            q = '&' + query;
+        }
+        return (newurl + '?' + parts[1] + q);
+    } else {
+        if (query) {
+            q = '?' + query;
+        }
+        return (newurl + q);
+    }
+}
+
 function s3FormatRequest(representation, tableid, url) {
     var t = tableIdReverse('#' + tableid);
     var dt = oDataTable[t];
     var oSetting = dt.dataTableSettings[t];
     if (oSetting) {
+
         var argData = 'id=' + tableid;
         var serverFilterArgs = $('#' + tableid + '_dataTable_filter');
         if (serverFilterArgs.val() != '') {
@@ -1024,9 +1041,9 @@ function s3FormatRequest(representation, tableid, url) {
             argData += '&iSortCol_' + i + '=' + aaSort[i][0];
             argData += '&sSortDir_' + i + '=' + aaSort[i][1];
         }
-        url = url + '.' + representation + '?' + argData;
+        url = s3AppendUrlQuery(url, representation, argData);
     } else {
-        url = url + '.' + representation;
+        url = s3AppendUrlQuery(url, representation, '');
     }
     window.location = url;
 }
