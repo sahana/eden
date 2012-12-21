@@ -1737,7 +1737,15 @@ class S3FacilityModel(S3Model):
         """
 
         s3db = current.s3db
-        s3db.pr_update_affiliations(s3db.org_facility, form.vars)
+
+        ftable = s3db.org_facility
+        query = (ftable._id == form.vars.id)
+        record = current.db(query).select(ftable._id,
+                                          ftable.pe_id,
+                                          ftable.organisation_id,
+                                          limitby=(0, 1)).first()
+        if record:
+            s3db.pr_update_affiliations(ftable, record)
 
     # -------------------------------------------------------------------------
     @staticmethod
