@@ -209,6 +209,23 @@ class S3Codec(object):
         return dx.strftime(str(format))
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def crud_string(tablename, name):
+        """
+            Get a CRUD string
+
+            @param tablename: the table name
+            @param name: the name of the CRUD string
+        """
+
+        crud_strings = current.response.s3.crud_strings
+        # CRUD strings for this table
+        _crud_strings = crud_strings.get(tablename, crud_strings)
+        return _crud_strings.get(name,
+                                 # Default fallback
+                                 crud_strings.get(name, None))
+
+    # -------------------------------------------------------------------------
     # Error handling
     # -------------------------------------------------------------------------
     @staticmethod

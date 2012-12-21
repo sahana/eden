@@ -84,47 +84,36 @@ class S3XLS(S3Codec):
             @param report_groupby: a Field object of the field to group the records by
         """
 
-        from s3.s3utils import S3DataTable
-        s3 = current.response.s3
-
-        # Use the title_list CRUD string for the title
-        name = "title_list"
-        tablename = resource.tablename
-        crud_strings = s3.crud_strings.get(tablename, s3.crud_strings)
-        not_found = s3.crud_strings.get(name, current.request.function)
-        title = str(crud_strings.get(name, not_found))
+        title = self.crud_string(resource.tablename, "title_list")
 
         rfields = resource.resolve_selectors(list_fields)[0]
 
         types = []
-        for f in rfields:
-            if f.show:
-                if f.field:
-                    types.append(f.field.type)
-                else:
-                    # Virtual Field
-                    types.append("string")
-
         lfields = []
         heading = {}
-        for field in rfields:
-            if field.show:
-                selector = "%s.%s" % (field.tname, field.fname)
-                lfields.append(selector)
-                heading[selector] = (field.label)
+        for rfield in rfields:
+            if rfield.show:
+                lfields.append(rfield.colname)
+                heading[rfield.colname] = rfield.label
+                if rfield.ftype == "virtual":
+                    types.append("string")
+                else:
+                    types.append(rfield.ftype)
 
-        (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+        vars = Storage(current.request.vars)
+        vars["iColumns"] = len(rfields)
+        filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
-        current.manager.ROWSPERPAGE = None # needed to get all the data
-        rows = resource.select(list_fields,
-                               orderby=orderby,
-                               )
-        items = resource.extract(rows,
-                                 list_fields,
-                                 represent=True,
-                                 )
 
-        return (title, types, lfields,  heading, items)
+        rows = resource.select(list_fields,
+                               left=left,
+                               start=None,
+                               limit=None,
+                               orderby=orderby)
+
+        items = resource.extract(rows, list_fields, represent=True)
+
+        return (title, types, lfields, heading, items)
 
     # -------------------------------------------------------------------------
     def encode(self, data_source, **attr):
