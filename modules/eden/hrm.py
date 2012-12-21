@@ -2297,6 +2297,7 @@ class S3HRSkillModel(S3Model):
             label_create = s3.crud_strings["hrm_competency_rating"].label_create_button
             comment = S3AddResourceLink(c="hrm",
                                         f="competency_rating",
+                                        vars={"child":"competency_id"},
                                         label=label_create,
                                         tooltip=T("Add a new competency rating to the catalog."))
         else:
