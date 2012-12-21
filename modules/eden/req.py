@@ -592,7 +592,7 @@ S3OptionsFilter({
  'targetName':'requester_id',
  'lookupPrefix':'hrm',
  'lookupResource':'staff',
- 'lookupURL':S3.Ap.concat('/hrm/staff_for_site'),
+ 'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
