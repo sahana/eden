@@ -141,6 +141,7 @@ DJANGO_APPS = (
     'django.contrib.comments',
     'django.contrib.admin',
     'django.contrib.comments',
+    'south',
 )
 
 # Stablish message storage
