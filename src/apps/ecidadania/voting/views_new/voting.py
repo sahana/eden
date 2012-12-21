@@ -43,6 +43,7 @@ from apps.ecidadania.voting.models import *
 from apps.ecidadania.voting.forms import *
 from apps.ecidadania.proposals.models import *
 
+
 class AddVoting(FormView):
 
     """
@@ -80,6 +81,7 @@ class AddVoting(FormView):
         context['get_place'] = self.space
         return context
 
+
 class ViewVoting(DetailView):
 
     """
@@ -107,6 +109,7 @@ class ViewVoting(DetailView):
         context['all_proposals'] = all_proposals
 
         return context
+
 
 class EditVoting(UpdateView):
 
@@ -162,3 +165,68 @@ class DeleteVoting(DeleteView):
         context = super(DeleteVoting, self).get_context_data(**kwargs)
         context['get_place'] = self.space
         return context
+
+class ListVotings(ListView):
+
+    """
+    List all the existing votings inside the space. This is meant to be a
+    tabbed view, just like the spaces list. The user can see the open and
+    closed votings.
+
+    .. versionadded:: 0.1.7 beta
+    """
+    paginate_by = 10
+
+    def get_queryset(self):
+        key = self.kwargs['space_url']
+        current_space = get_or_insert_object_in_cache(Space, key, url=key)
+        votings = Voting.objects.filter(space=current_space)
+        return votings
+
+    def get_context_data(self, **kwargs):
+        context = super(ListVotings, self).get_context_data(**kwargs)
+        key = self.kwargs['space_url']
+        space = get_or_insert_object_in_cache(Space, key, url=key)
+        context['get_place'] = space
+        return context
+
+
+def vote_voting(request, space_url, voting_id):
+
+    """
+    View to control the votes during a votation process. Do not confuse with
+    proposals support_votes.
+    """
+    place = get_object_or_404(Space, url=space_url)
+    v = get_object_or_404(Voting, pk=voting_id)
+
+    
+    try:
+        selected_choice = p.choice_set.get(pk=request.POST['choice'])
+    except (KeyError, Choice.DoesNotExist):
+        return render_to_response('voting/poll_detail.html', {
+            'poll': p,
+            'error_message': "You didn't select a choice.",
+        }, context_instance=RequestContext(request))
+    else:
+        selected_choice.votes += 1
+        selected_choice.save()
+        return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
+
+class ConfirmVote(models.Model):
+
+    """
+    Intent data model. Intent stores the reference of a user-token when a user
+    asks entering in a restricted space.
+
+    .. versionadded: 0.1.5
+    """
+    user = models.ForeignKey(User)
+    proposal = models.ForeignKey(Proposal)
+    token = models.CharField(max_length=32)
+    requested_on = models.DateTimeField(auto_now_add=True)
+
+    def get_approve_url(self):
+        site = Site.objects.all()[0]
+        return "http://%s%svote/approve/%s" % (site.domain, self.proposal.get_absolute_url(), self.token)
+

@@ -52,7 +52,9 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
     url(r'^(?P<voting_id>\d+)/$', ViewVoting.as_view(), name=VIEW_VOTING),
 
-    url(r'^poll/(?P<poll_id>\d+)/edit/$', EditPoll, name=EDIT_POLL),
+    url(r'^vote/poll/(?P<poll_id>\d+)/$', VotePoll.as_view(), name=VOTE_POLL),
+
+    url(r'^vote/(?P<voting_id>\d+)/$', VoteVoting.as_view(), name=VOTE_VOTING),
 )
 
 

@@ -51,12 +51,6 @@ OPTIONAL_FIELDS = (
     ('longitude', _('Longitude'))
 )
 
-PONDERATIONS = (
-    ('users', _('Users')),
-    ('fixed', _('Fixed')),
-    ('none', _('No ponderation'))
-)
-
 class BaseProposalAbstractModel(models.Model):
 
     """
@@ -176,7 +170,9 @@ class Proposal(BaseProposalAbstractModel):
         help_text = _("Select proposals from the list"))
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
-    support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
+    support_votes = models.ManyToManyField(User, null=True, blank=True,
+        verbose_name=_('Support votes from'))
+    votes = models.ManyToManyField(User, verbose_name=_('Votes from')
                                             null=True, blank=True)
     refurbished = models.NullBooleanField(default=False, blank=True)
     budget = models.IntegerField(blank=True, null=True)
@@ -229,21 +225,3 @@ class ProposalField(models.Model):
     class Meta:
         verbose_name = _('ProposalField')
         verbose_name_plural = _('ProposalFields')
-
-class ConfirmVote(models.Model):
-
-    """
-    Intent data model. Intent stores the reference of a user-token when a user
-    asks entering in a restricted space.
-
-    .. versionadded: 0.1.5
-    """
-    user = models.ForeignKey(User)
-    proposal = models.ForeignKey(Proposal)
-    token = models.CharField(max_length=32)
-    requested_on = models.DateTimeField(auto_now_add=True)
-
-    def get_approve_url(self):
-        site = Site.objects.all()[0]
-        return "http://%s%svote/approve/%s" % (site.domain, self.proposal.get_absolute_url(), self.token)
-

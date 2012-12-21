@@ -26,6 +26,14 @@ from apps.thirdparty.tagging.models import Tag
 from core.spaces.models import Space
 from apps.ecidadania.proposals.models import *
 
+
+PONDERATIONS = (
+    ('users', _('Users')),
+    ('fixed', _('Fixed')),
+    ('none', _('No ponderation'))
+)
+
+
 class Poll(models.Model):
     
     """
@@ -63,6 +71,7 @@ class Poll(models.Model):
             return ('view-polls', (), {
                 'poll_id': str(self.id)})
 
+
 class Choice(models.Model):
     poll = models.ForeignKey(Poll)
     choice_text = models.CharField(_('Choice'), max_length=200, blank=True, null=True, help_text=_('Enter choice to be voted upon'))
@@ -78,6 +87,7 @@ class Choice(models.Model):
             return ('view-polls', (), {
                 'poll_id': str(self.id)})
 
+
 class Voting(models.Model):
     title = models.CharField(_('Title'), max_length=200, unique=True)
     description = models.TextField(_('Description'), blank=True, null=True)
@@ -88,6 +98,8 @@ class Voting(models.Model):
     author = models.ForeignKey(User, blank=True, null=True)
     start_date = models.DateField(_('Start date'), blank=True, null=True)
     end_date = models.DateField(_('End date'), blank=True, null=True)
+    ponderation = model.CharField(_('Ponderation'), null=True, blank=True,
+        choices=PONDERATIONS)
 
     proposalsets = models.ManyToManyField(ProposalSet, blank=True, null=True)
 
