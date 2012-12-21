@@ -724,7 +724,7 @@ class SeleniumUnitTest(Web2UnitTest):
                         ):
 
         el_id = "%s_%s" % (tablename, field)
-        raw_value = w_autocomplete(item_repr, el_id)
+        raw_value = self.w_autocomplete(item_repr, el_id)
         # Now wait for the pack_item to be populated
         browser = current.test_config.browser
         el_id = "%s_%s" % (tablename, "item_pack_id")
@@ -740,7 +740,7 @@ class SeleniumUnitTest(Web2UnitTest):
                           ):
 
         el_id = "%s_%s" % (tablename, field)
-        raw_value = w_autocomplete(item_repr, el_id)
+        raw_value = self.w_autocomplete(item_repr, el_id)
         # Now wait for the pack_item to be populated
         browser = current.test_config.browser
         el_id = "%s_%s" % (tablename, "site_id")
