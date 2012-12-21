@@ -799,7 +799,7 @@ def staff_for_site():
     """
 
     try:
-        site_id = request.get_vars.get("staff.site_id")
+        site_id = request.args[0]
     except:
         result = current.xml.json_message(False, 400, "No Site provided!")
     else:
