@@ -800,7 +800,7 @@ $('#%(dummy_input)s').blur(function(){
 
         if value:
             # Provide the representation for the current/default Value
-            text = str(field.represent(value))
+            text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
             represent = text
