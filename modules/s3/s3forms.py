@@ -964,6 +964,7 @@ class S3SQLCustomForm(S3SQLForm):
         data[table._id.name] = accept_id
         prefix, name = tablename.split("_", 1)
         form = Storage(vars=Storage(data), record=oldrecord)
+        #form = Storage(vars=data, record=oldrecord)
 
         # Audit
         if record_id is None:
@@ -974,7 +975,7 @@ class S3SQLCustomForm(S3SQLForm):
                   record=accept_id, representation=format)
 
         # Update super entity links
-        s3db.update_super(table, data)
+        s3db.update_super(table, form.vars)
 
         if accept_id:
             if record_id is None:
@@ -986,7 +987,7 @@ class S3SQLCustomForm(S3SQLForm):
                 # Update realm
                 update_realm = s3db.get_config(table, "update_realm")
                 if update_realm:
-                    current.auth.set_realm_entity(table, Storage(data),
+                    current.auth.set_realm_entity(table, form.vars,
                                                   force_update=True)
 
             # Store session vars
