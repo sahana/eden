@@ -171,9 +171,9 @@ class Proposal(BaseProposalAbstractModel):
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, null=True, blank=True,
-        verbose_name=_('Support votes from'))
+        verbose_name=_('Support votes from'), related_name='support_votes')
     votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
-        null=True, blank=True)
+        null=True, blank=True, related_name='voting_votes')
     refurbished = models.NullBooleanField(default=False, blank=True)
     budget = models.IntegerField(blank=True, null=True)
 

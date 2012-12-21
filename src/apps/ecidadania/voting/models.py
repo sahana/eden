@@ -98,8 +98,8 @@ class Voting(models.Model):
     author = models.ForeignKey(User, blank=True, null=True)
     start_date = models.DateField(_('Start date'), blank=True, null=True)
     end_date = models.DateField(_('End date'), blank=True, null=True)
-    ponderation = models.CharField(_('Ponderation'), null=True, blank=True,
-        choices=PONDERATIONS)
+    ponderation = models.CharField(_('Ponderation'), max_lenght=3, null=True,
+        blank=True, choices=PONDERATIONS)
 
     proposalsets = models.ManyToManyField(ProposalSet, blank=True, null=True)
 
