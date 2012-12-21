@@ -80,7 +80,7 @@ $('.contact').each(function () {
     var contact = $(this);
     var id = contact.attr('id').match(/\d+/);
 
-    contact.find('a.deleteBtn').click(function (e) {
+    contact.find('a.delete-btn-ajax').click(function (e) {
         if (confirm(i18n.delete_confirmation)) {
             $.post(S3.Ap.concat('/pr/contact/' + id[0] + '/delete'));
             contact.addClass('hide');
@@ -171,7 +171,7 @@ $('.emergency').each(function () {
     var emergency = $(this);
     var id = emergency.attr('id').match(/\d+/);
 
-    emergency.find('a.deleteBtn').click(function (e) {
+    emergency.find('a.delete-btn-ajax').click(function (e) {
         if (confirm(i18n.delete_confirmation)) {
             $.post(S3.Ap.concat('/pr/contact_emergency/' + id + '/delete'));
             emergency.addClass('hide');

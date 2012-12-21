@@ -283,6 +283,7 @@ div.form-container form fieldset input.errorfield {
 /* Colours */
 /* Action Buttons */
 .action-btn,
+.delete-btn-ajax,
 .delete-btn {
     color: #fff;
     background-color: #590f12;
@@ -291,6 +292,7 @@ div.form-container form fieldset input.errorfield {
     border-top: #f4edd4;
 }
 .action-btn:hover,
+.delete-btn-ajax:hover,
 .delete-btn:hover {
     background-color: #dc032e;
 }

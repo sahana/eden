@@ -7621,12 +7621,21 @@ class S3Map(S3Search):
                     "active"    : True,
                     "marker"    : marker
                 }]
+            # @ToDo: deployment_setting for whether to show WMSBrowser in Search?
+            # @ToDo: WMSBrowser setting should come from hierarchy
+            config = gis.get_config()
+            if config.wmsbrowser_url:
+                wms_browser = {"name": config.wmsbrowser_name,
+                               "url": config.wmsbrowser_url}
+            else:
+                wms_browser = {}
             map = gis.show_map(feature_resources=feature_resources,
                                catalogue_layers=True,
                                legend=True,
                                toolbar=True,
                                collapsed=True,
                                search = True,
+                               wms_browser = wms_browser,
                                )
 
         else:
