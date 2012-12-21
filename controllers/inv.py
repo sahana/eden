@@ -330,7 +330,7 @@ def warehouse():
                 s3base.s3_filter_staff(r)
                 # Cascade the organisation_id from the hospital to the staff
                 htable = s3db.hrm_human_resource
-                htable.organisation_id.default = r.record.organisation_id
+                htable.organisation_id.default = r.record and r.record.organisation_id
                 htable.organisation_id.writable = False
 
             elif component_name == "req":
