@@ -2259,7 +2259,7 @@ S3OptionsFilter({
         tracktable = db.inv_track_item
         table.date.readable = True
 
-        record = table[r.id]
+        record = db(table.id == r.id).select(limitby=(0, 1)).first()
         send_ref = record.send_ref
         # hide the inv_item field
         tracktable.send_inv_item_id.readable = False

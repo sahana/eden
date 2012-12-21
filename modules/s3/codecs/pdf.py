@@ -115,6 +115,7 @@ class S3RL_PDF(S3Codec):
             @param r: the S3Request object
             @param attr: dictionary of parameters:
                  * pdf_callback:    callback to be used rather than r
+                 * method:          "read" to not include a list view when no component is specified
                  * list_fields:     Fields to include in list views
                  * pdf_componentname: The name of the component to use
                                          This should be a component of the resource
@@ -153,8 +154,9 @@ class S3RL_PDF(S3Codec):
         self.pdf_orderby = attr.get("pdf_orderby")
         self.pdf_hide_comments = attr.get("pdf_hide_comments")
         self.table_autogrow = attr.get("pdf_table_autogrow")
-        self.pdf_header_padding = attr.get("pdf_header_padding",0)
-        self.pdf_footer_padding = attr.get("pdf_footer_padding",0)
+        self.pdf_header_padding = attr.get("pdf_header_padding", 0)
+        self.pdf_footer_padding = attr.get("pdf_footer_padding", 0)
+
         # Get the title & filename
         now = request.now.isoformat()[:19].replace("T", " ")
         title = attr.get("pdf_title")
@@ -164,12 +166,14 @@ class S3RL_PDF(S3Codec):
         self.filename = attr.get("pdf_filename")
         if self.filename == None:
             self.filename = "%s_%s.pdf" % (title, now)
-        # get the pdf document template
+
+        # Get the Doc Template
         paper_size = attr.get("paper_size")
-        pdf_paper_alignment = attr.get("pdf_paper_alignment","Portrait")
+        pdf_paper_alignment = attr.get("pdf_paper_alignment", "Portrait")
         doc = EdenDocTemplate(title=docTitle,
                               paper_size = paper_size,
                               paper_alignment = pdf_paper_alignment)
+
         # Get the header
         header_flowable = None
         header = attr.get("pdf_header")
@@ -179,7 +183,8 @@ class S3RL_PDF(S3Codec):
             header_flowable = self.get_html_flowable(header,
                                                      doc.printable_width)
             if self.pdf_header_padding:
-                header_flowable.append(Spacer(1,self.pdf_header_padding))
+                header_flowable.append(Spacer(1, self.pdf_header_padding))
+
         # Get the footer
         footer_flowable = None
         footer = attr.get("pdf_footer")
@@ -190,6 +195,7 @@ class S3RL_PDF(S3Codec):
                                                      doc.printable_width)
             if self.pdf_footer_padding:
                 footer_flowable.append(Spacer(1, self.pdf_footer_padding))
+
         # Build report template
 
         # Get data for the body of the text
@@ -209,32 +215,35 @@ class S3RL_PDF(S3Codec):
                                              id = r.id)
             body_flowable = self.get_resource_flowable(resource.components[component],
                                                        doc)
+        elif r.component:
+            body_flowable = self.get_resource_flowable(r.component,
+                                                           doc)
         else:
-            if r.component:
-                resource = r.component
-            else:
-                resource = r.resource
-            body_flowable = self.get_resource_flowable(resource,
-                                                       doc)
+            method = attr.get("method", "list")
+            if method != "read":
+                body_flowable = self.get_resource_flowable(r.resource,
+                                                           doc)
+
         styleSheet = getSampleStyleSheet()
-        self.normalstyle = styleSheet["Normal"]
-        self.normalstyle.fontName = "Helvetica"
-        self.normalstyle.fontSize = 9
+        style = styleSheet["Normal"]
+        style.fontName = "Helvetica"
+        style.fontSize = 9
         if not body_flowable:
-            body_flowable = [Paragraph("",self.normalstyle)]
+            body_flowable = [Paragraph("", style)]
+        self.normalstyle = style
+
         # Build the pdf
         doc.build(header_flowable,
                   body_flowable,
                   footer_flowable,
-                 )
-        # return the generated pdf
-        # Set content type and disposition headers
+                  )
+
+        # Return the generated pdf
         if response:
             disposition = "attachment; filename=\"%s\"" % self.filename
             response.headers["Content-Type"] = contenttype(".pdf")
             response.headers["Content-disposition"] = disposition
 
-        # Return the stream
         doc.output.seek(0)
         return doc.output.read()
 
@@ -308,16 +317,15 @@ class EdenDocTemplate(BaseDocTemplate):
         2) Even Page
         3) Odd Page
         4) Landscape Page
-
     """
 
     def __init__(self,
                  title = "Sahana Eden",
-                 margin = (0.5*inch,  # top
-                           0.3*inch,  # left
-                           0.5*inch,  # bottom
-                           0.3*inch), # right
-                 margin_inside = 0.0*inch, # used for odd even pages
+                 margin = (0.5 * inch,  # top
+                           0.3 * inch,  # left
+                           0.5 * inch,  # bottom
+                           0.3 * inch), # right
+                 margin_inside = 0.0 * inch, # used for odd even pages
                  paper_size = None,
                  paper_alignment = "Portrait"):
         """
@@ -347,7 +355,7 @@ class EdenDocTemplate(BaseDocTemplate):
                                  rightMargin = self.rightMargin,
                                  topMargin = self.topMargin,
                                  bottomMargin = self.bottomMargin,
-                                )
+                                 )
 
         self.MINIMUM_MARGIN_SIZE = 0.2 * inch
         self.body_flowable = None
@@ -360,7 +368,7 @@ class EdenDocTemplate(BaseDocTemplate):
             Function to return the size a flowable will require
         """
         if not flowable:
-            return (0,0)
+            return (0, 0)
         if not isinstance(flowable, list):
             flowable = [flowable]
         w = 0
@@ -395,7 +403,7 @@ class EdenDocTemplate(BaseDocTemplate):
     def calc_body_size(self,
                        header_flowable,
                        footer_flowable,
-                      ):
+                       ):
         """
             Helper function to calculate the various sizes of the page
         """
@@ -446,7 +454,7 @@ class EdenDocTemplate(BaseDocTemplate):
                            topPadding = 0,
                            id = "body",
                            showBoundary = showBoundary
-                          )
+                           )
 
         self.body_frame = body_frame
         self.normalPage = PageTemplate(id = "Normal",
@@ -538,9 +546,9 @@ class EdenDocTemplate(BaseDocTemplate):
         """
 
         if style == "*GREY":
-            return [("TEXTCOLOR",cell, cell, colors.lightgrey)]
+            return [("TEXTCOLOR", cell, cell, colors.lightgrey)]
         elif style == "*RED":
-            return [("TEXTCOLOR",cell, cell, colors.red)]
+            return [("TEXTCOLOR", cell, cell, colors.red)]
         return []
 
     # -------------------------------------------------------------------------
@@ -581,7 +589,7 @@ class S3PDFTable(object):
                  hide_comments = False,
                  autogrow = False,
                  body_height = 0,
-                ):
+                 ):
         """
             Method to create a table object
 
@@ -595,8 +603,7 @@ class S3PDFTable(object):
             @param hide_comments: Any comment field will be hidden
         """
 
-        settings = current.deployment_settings
-        if settings.get_paper_size() == "Letter":
+        if current.deployment_settings.get_paper_size() == "Letter":
             self.paper_size = LETTER
         else:
             self.paper_size = A4
@@ -700,9 +707,9 @@ class S3PDFTable(object):
                 if self.list_fields[i] == field:
                     break
                 i += 1
-            list_fields = self.list_fields[0:i]+self.list_fields[i+1:]
+            list_fields = self.list_fields[0:i] + self.list_fields[i+1:]
             self.list_fields = list_fields
-            labels = self.labels[0:i]+self.labels[i+1:]
+            labels = self.labels[0:i] + self.labels[i+1:]
             self.labels = labels
             currentGroup = None
             r = 0
@@ -766,7 +773,7 @@ class S3PDFTable(object):
                     proportion = surplus / col_width
                     newcols = []
                     for col in cols:
-                        newcols.append(col+col*proportion)
+                        newcols.append(col + col * proportion)
                     newColWidth.append(newcols)
             self.newColWidth = newColWidth
         startRow = 0
@@ -1082,7 +1089,7 @@ class S3html2pdf():
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
         self.style_lookup = {"pdf_title": self.titlestyle
-                            }
+                             }
 
     # -------------------------------------------------------------------------
     def parse(self, html):
@@ -1172,8 +1179,8 @@ class S3html2pdf():
             if os.path.exists(src):
                 I = Image(src)
             else:
-                src = src.rsplit("/",1)
-                src = os.path.join(current.request.folder,"uploads/", src[1])
+                src = src.rsplit("/", 1)
+                src = os.path.join(current.request.folder, "uploads/", src[1])
                 if os.path.exists(src):
                     I = Image(src)
         if not I:
@@ -1184,15 +1191,15 @@ class S3html2pdf():
         # @todo: extract the number from a 60px value
 #        if "_height" in html.attributes:
 #            height = int(html.attributes["_height"]) * inch / 80.0
-#            width = iwidth * (height/iheight)
+#            width = iwidth * (height / iheight)
 #        elif "_width" in html.attributes:
 #            width = int(html.attributes["_width"]) * inch / 80.0
-#            height = iheight * (width/iwidth)
+#            height = iheight * (width / iwidth)
 #        else:
 #            height = 1.0 * inch
-#            width = iwidth * (height/iheight)
+#            width = iwidth * (height / iheight)
         height = 1.0 * inch
-        width = iwidth * (height/iheight)
+        width = iwidth * (height / iheight)
         I.drawHeight = height
         I.drawWidth = width
         return [I]
@@ -1263,11 +1270,11 @@ class S3html2pdf():
                         result = self.select_tag(detail, title=isinstance(component, TH))
                         if result != None:
                             row.append(result)
-                            if isinstance(component,TH):
+                            if isinstance(component, TH):
                                 style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
                                 style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
                             if colspan > 1:
-                                for i in xrange(1,colspan):
+                                for i in xrange(1, colspan):
                                     row.append("")
                                 style.append(("SPAN", (colCnt, rowCnt), (colCnt + colspan - 1, rowCnt)))
                                 colCnt += colspan

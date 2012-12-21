@@ -168,6 +168,7 @@ class S3AssessBuildingModel(S3Model):
     """
 
     names = ["assess_building",
+             "assess_building_rheader",
              ]
 
     def model(self):
@@ -710,10 +711,17 @@ class S3AssessBuildingModel(S3Model):
                         }
                        )
 
+        # Generate Work Order
+        self.set_method("assess", "building",
+                        method="form",
+                        action=self.assess_building_form)
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3.*)
         #
-        return Storage()
+        return Storage(
+                assess_building_rheader = self.assess_building_rheader
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -733,6 +741,196 @@ class S3AssessBuildingModel(S3Model):
                 vars.status = 3
 
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assess_building_rheader(r):
+        """ Resource Header """
+        
+        if r.representation != "html" or r.method == "import":
+            # RHeaders only used in interactive views
+            return None
+
+        rheader = TABLE(A(T("Print Work Order"),
+                        _href = URL(args = [r.record.id, "form"]
+                                    ),
+                        _class = "action-btn"
+                        ))
+        return rheader
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assess_building_form(r, **attr):
+        """
+            Generate a PDF of a Work Order
+
+            @ToDo: Move this to Template?
+        """
+
+        db = current.db
+        table = db.assess_building
+        gtable = db.gis_location
+        query = (table.id == r.id)
+        left = gtable.on(gtable.id == table.location_id)
+        record = db(query).select(left=left,
+                                  limitby=(0, 1)).first()
+        location = record.gis_location
+        record = record.assess_building
+        address = location.get("address", current.messages["NONE"])
+        header = TABLE(
+                    TR(TD(),
+                       TD(),
+                       TD(),
+                       TD("Rockaways", _align="right"),
+                       ),
+                    TR(TD(),
+                       TD(),
+                       TD(),
+                       TD("HOUSEHOLD ASSESSMENT"),
+                       ),
+                    TR(TD(),
+                       TD(),
+                       TD(),
+                       TD("Database ID: %s" % record.database_id),
+                       ),
+                    TR(TD("Intake Date: %s" % table.date.represent(record.date)),
+                       ),
+                    TR(TD("Assessor 1: %s" % record.assessor1,
+                          _colspan=2,
+                          ),
+                       TD("Assessor 2: %s" % record.assessor2,
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Name: %s" % record.name),
+                       TD("Phone Number: %s" % table.phone.represent(record.phone)),
+                       TD("Other Contact: %s" % table.contact_other.represent(record.contact_other),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Address: %s" % address,
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Homeowner Availability: %s" % record.homeowner_availability,
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Type of Property: %s" % table.type_of_property.represent(record.type_of_property),
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("# of Inhabitants: %s" % table.inhabitants.represent(record.inhabitants)),
+                       TD("Year Built: %s" % table.year_built.represent(record.year_built)),
+                       TD("Ownership: %s" % table.ownership.represent(record.ownership)),
+                       ),
+                    TR(TD("Current Residence: %s" % table.current_residence.represent(record.current_residence),
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Intention to Stay Home: %s" % table.intention.represent(record.intention),
+                          _colspan=2,
+                          ),
+                       TD("Vulnerabilities: %s" % table.vulnerability.represent(record.vulnerability),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Based on the DOB/FEMA sticker, the property is: %s" % table.building_status.represent(record.building_status),
+                          _colspan=2,
+                          ),
+                       TD("Type of Insurance: %s" % table.insurance.represent(record.insurance),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Work Requested: %s" % table.work_requested.represent(record.work_requested),
+                          _colspan=2),
+                       TD("Construction Type: %s" % table.construction_type.represent(record.construction_type),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Damages"),
+                       TD("Electricity: %s" % table.electricity.represent(record.electricity)),
+                       TD("Gas: %s" % table.gas.represent(record.gas)),
+                       TD("Basement Flooding: %s Depth: %s feet" % (table.basement_flooding.represent(record.basement_flooding),
+                                                                    table.basement_flooding_depth.represent(record.basement_flooding_depth))),
+                       ),
+                    TR(TD(),
+                       TD("Drywall: %s" % table.drywall.represent(record.drywall)),
+                       TD("Floor: %s" % table.floor.represent(record.floor)),
+                       TD("First Floor Flooding: %s Depth: %s feet" % (table.first_flooding.represent(record.first_flooding),
+                                                                       table.first_flooding_depth.represent(record.first_flooding_depth))),
+                       ),
+                    TR(TD("Remove Loose Debris: %s" % table.remove_loose_debris.represent(record.remove_loose_debris)),
+                       TD("Remove Furniture: %s" % table.remove_furniture.represent(record.remove_furniture)),
+                       TD("Remove Water Heater: %s" % table.remove_water_heater.represent(record.remove_water_heater)),
+                       TD("Remove Major Appliances: %s" % table.remove_appliances.represent(record.remove_appliances)),
+                       ),
+                    TR(TD("Asbestos: %s" % table.asbestos.represent(record.asbestos)),
+                       ),
+                    TR(TD("Source of Damages: %s" % table.damage_source.represent(record.damage_source),
+                          _colspan=2,
+                          ),
+                       TD("Other: %s" % table.damage_source_other.represent(record.damage_source_other),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Additional Description of Damage: %s" % table.damage_details.represent(record.damage_details),
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Workplan: %s" % table.work_plan.represent(record.work_plan),
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Special Skills: %s" % table.special_skills.represent(record.special_skills),
+                          _colspan=4,
+                          ),
+                       ),
+                     TR(TD("Estimated Volunteers: %s" % table.estimated_volunteers.represent(record.estimated_volunteers),
+                          _colspan=2,
+                          ),
+                       TD("Estimated Days: %s" % table.estimated_days.represent(record.estimated_days),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Additional Needs: %s" % table.additional_needs.represent(record.additional_needs),
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Approval: %s" % table.approval.represent(record.approval)),
+                       TD("Details: %s" % table.approval_details.represent(record.approval_details),
+                          _colspan=3,
+                          ),
+                       ),
+                    TR(TD("Permission from Owner to Work: %s" % table.permission.represent(record.permission),
+                          _colspan=2,
+                          ),
+                       TD("Date Ready: %s" % table.date_ready.represent(record.date_ready),
+                          _colspan=2,
+                          ),
+                       ),
+                    TR(TD("Comments: %s" % table.comments.represent(record.comments),
+                          _colspan=4,
+                          ),
+                       ),
+                    TR(TD("Progress and Notes: %s" % table.progress.represent(record.progress),
+                          _colspan=4,
+                          _rowspan=4,
+                          ),
+                       ),
+                    )
+        
+        WORK_ORDER = current.T("Work Order")
+        exporter = S3Exporter().pdf
+        return exporter(r,
+                        method = "read",
+                        pdf_title = WORK_ORDER,
+                        pdf_filename = "%s %s" % (WORK_ORDER,
+                                                  record.database_id),
+                        pdf_header = header,
+                        pdf_header_padding = 12,
+                        pdf_table_autogrow = "B",
+                        **attr
+                        )
 
 # =============================================================================
 class S3AssessCanvassModel(S3Model):
