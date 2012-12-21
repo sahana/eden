@@ -747,7 +747,7 @@ class S3AssessBuildingModel(S3Model):
     def assess_building_rheader(r):
         """ Resource Header """
         
-        if r.representation != "html" or r.method == "import":
+        if r.representation != "html" or r.method == "import" or not r.record:
             # RHeaders only used in interactive views
             return None
 
