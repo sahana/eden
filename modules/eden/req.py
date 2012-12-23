@@ -653,6 +653,8 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
         """
 
         s3db = current.s3db
+        table = s3db.req_req
+        
         if type == 1:
             # Dropdown not Autocomplete
             itable = s3db.req_req_item
@@ -693,6 +695,27 @@ S3OptionsFilter({
                     if settings.get_req_use_commit():
                         fields.insert(7, "commit_status")
                 fields.insert(7, "date_recv")
+
+                if settings.get_req_requester_from_site():
+                    # Filter the list of Contacts to those for the site
+                    table.requester_id.widget = None
+                    current.response.s3.jquery_ready.append('''
+                    S3OptionsFilter({
+                    'triggerName':'site_id',
+                    'targetName':'requester_id',
+                    'lookupPrefix':'hrm',
+                    'lookupResource':'staff',
+                    'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
+                    'msgNoRecords':'%s',
+                    'optional':true,
+                    })''' % T("No contacts yet defined for this site"))
+                    table.site_id.comment = A(T("Set as default Site"),
+                                      _id="req_req_site_id_link",
+                                      _target="_blank",
+                                      _href=URL(c="default",
+                                                f="user",
+                                                args=["profile"]))
+
             if settings.get_req_items_ask_purpose():
                 fields.insert(6, "purpose")
             if method != "update":
@@ -735,6 +758,27 @@ S3OptionsFilter({
                     if settings.get_req_use_commit():
                         fields.insert(8, "commit_status")
                 fields.insert(8, "date_recv")
+
+                if settings.get_req_requester_from_site():
+                    # Filter the list of Contacts to those for the site
+                    table.requester_id.widget = None
+                    current.response.s3.jquery_ready.append('''
+                    S3OptionsFilter({
+                    'triggerName':'site_id',
+                    'targetName':'requester_id',
+                    'lookupPrefix':'hrm',
+                    'lookupResource':'staff',
+                    'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
+                    'msgNoRecords':'%s',
+                    'optional':true,
+                    })''' % T("No contacts yet defined for this site"))
+                    table.site_id.comment = A(T("Set as default Site"),
+                                      _id="req_req_site_id_link",
+                                      _target="_blank",
+                                      _href=URL(c="default",
+                                                f="user",
+                                                args=["profile"]))
+
             else:
                 fields.insert(1, "is_template")
             if settings.get_req_use_req_number() and \
