@@ -90,8 +90,10 @@ def AddPoll(request, space_url):
 class ViewPoll(DetailView):
 
     """
+    Displays an specific poll.
     """
-    pass
+    model = Poll
+    template_name = '../templates/voting/poll_detail.html'
 
 def EditPoll(request, space_url, poll_id):
 

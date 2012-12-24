@@ -50,11 +50,11 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
     url(r'^(?P<voting_id>\d+)/delete/$', DeleteVoting.as_view(),
         name=DELETE_VOTING),
         
-    url(_(r'^poll/(?P<poll_id>\d+)/$'), DetailView.as_view(), name=VIEW_POLL),
+    url(_(r'^poll/(?P<pk>\d+)/$'), ViewPoll.as_view(), name=VIEW_POLL),
 
     url(r'^(?P<voting_id>\d+)/$', ViewVoting.as_view(), name=VIEW_VOTING),
 
-    url(r'^vote/poll/(?P<poll_id>\d+)/$', 'polls.vote_poll', name=VOTE_POLL),
+    url(r'^poll/(?P<poll_id>\d+)/vote/$', 'polls.vote_poll', name=VOTE_POLL),
 
     url(r'^vote/(?P<voting_id>\d+)/$', 'voting.vote_voting', name=VOTE_VOTING),
 )
