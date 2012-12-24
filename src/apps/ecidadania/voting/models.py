@@ -98,7 +98,7 @@ class Voting(models.Model):
     author = models.ForeignKey(User, blank=True, null=True)
     start_date = models.DateField(_('Start date'), blank=True, null=True)
     end_date = models.DateField(_('End date'), blank=True, null=True)
-    ponderation = models.CharField(_('Ponderation'), max_lenght=3, null=True,
+    ponderation = models.CharField(_('Ponderation'), max_length=3, null=True,
         blank=True, choices=PONDERATIONS)
 
     proposalsets = models.ManyToManyField(ProposalSet, blank=True, null=True)
@@ -115,3 +115,20 @@ class Voting(models.Model):
             return ('view-votings', (), {
                 'voting_id': str(self.id)})
    
+class ConfirmVote(models.Model):
+
+    """
+    Intent data model. Intent stores the reference of a user-token when a user
+    asks entering in a restricted space.
+
+    .. versionadded: 0.1.5
+    """
+    user = models.ForeignKey(User)
+    proposal = models.ForeignKey(Proposal)
+    token = models.CharField(max_length=32)
+    requested_on = models.DateTimeField(auto_now_add=True)
+
+    def get_approve_url(self):
+        site = Site.objects.all()[0]
+        return "http://%s%svote/approve/%s" % (site.domain, self.proposal.get_absolute_url(), self.token)
+

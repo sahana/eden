@@ -212,21 +212,3 @@ def vote_voting(request, space_url, voting_id):
         selected_choice.votes += 1
         selected_choice.save()
         return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
-
-class ConfirmVote(models.Model):
-
-    """
-    Intent data model. Intent stores the reference of a user-token when a user
-    asks entering in a restricted space.
-
-    .. versionadded: 0.1.5
-    """
-    user = models.ForeignKey(User)
-    proposal = models.ForeignKey(Proposal)
-    token = models.CharField(max_length=32)
-    requested_on = models.DateTimeField(auto_now_add=True)
-
-    def get_approve_url(self):
-        site = Site.objects.all()[0]
-        return "http://%s%svote/approve/%s" % (site.domain, self.proposal.get_absolute_url(), self.token)
-
