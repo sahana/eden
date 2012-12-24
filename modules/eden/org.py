@@ -2998,7 +2998,7 @@ def org_organisation_controller():
                 otable.country.default = record.country
                 # Represent orgs without the parent prefix as we have that context already
                 s3db.org_organisation_branch.branch_id.represent = \
-                    s3db.org_organisation_represent(parent=False)
+                    org_OrganisationRepresent(parent=False)
 
             elif r.component_name == "task" and \
                  r.method != "update" and r.method != "read":
