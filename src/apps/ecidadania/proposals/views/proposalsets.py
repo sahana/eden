@@ -45,7 +45,7 @@ from apps.ecidadania.proposals import url_names as urln_prop
 from core.spaces import url_names as urln_space
 from core.spaces.models import Space
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
-        ProposalField, ConfirmVote
+        ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm, ProposalFormInSet

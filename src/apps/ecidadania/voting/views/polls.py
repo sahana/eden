@@ -184,7 +184,7 @@ class ListPolls(ListView):
         return context
 
 
-def vote(request, poll_id, space_url):
+def vote_poll(request, poll_id, space_url):
     place = get_object_or_404(Space, url=space_url)
     p = get_object_or_404(Poll, pk=poll_id)
     try:

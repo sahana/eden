@@ -42,7 +42,7 @@ from core.spaces import url_names as urln_space
 from core.spaces.models import Space
 from core.permissions import has_space_permission, has_all_permissions
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
-        ProposalField, ConfirmVote
+        ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
