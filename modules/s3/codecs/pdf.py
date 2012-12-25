@@ -45,6 +45,7 @@ from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
 from ..s3codec import S3Codec
+from ..s3utils import s3_unicode
 
 # Import the specialist libraries
 try:
@@ -617,14 +618,14 @@ class S3PDFTable(object):
             data = []
             for value in rfields:
                 text = row[value.colname]
-                if isinstance(text, str):
+                if isinstance(text, basestring):
                     data.append(text)
                 else:
                     try:
                         # extract the text from the html tag
                         data.append(text.components[0])
                     except:
-                        data.append(str(text))
+                        data.append(s3_unicode(text))
             self.raw_data.append(data)
         self.labels = [field.label for field in self.rfields]
         self.list_fields = [field.fname for field in self.rfields]

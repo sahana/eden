@@ -46,6 +46,7 @@ except ImportError:
     raise
 
 from ..s3codec import S3Codec
+from ..s3utils import s3_unicode, s3_strip_markup
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -111,7 +112,8 @@ class S3XLS(S3Codec):
                                limit=None,
                                orderby=orderby)
 
-        items = resource.extract(rows, list_fields, represent=True)
+        items = resource.extract(rows, list_fields,
+                                 represent=True, show_links=False)
 
         return (title, types, lfields, heading, items)
 
@@ -279,18 +281,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
             else:
                 style = styleOdd
             if report_groupby:
-                represent = item[report_groupby]
-                # Strip away markup from representation
-                try:
-                    markup = etree.XML(str(represent))
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                    represent = text
-                except:
-                    pass
+                represent = s3_strip_markup(s3_unicode(item[report_groupby]))
                 if subheading != represent:
                     subheading = represent
                     sheet1.write_merge(rowCnt, rowCnt, 0, totalCols,
@@ -301,6 +292,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                         style = styleEven
                     else:
                         style = styleOdd
+
             for field in lfields:
                 label = headers[field]
                 if label == groupby_label:
@@ -308,25 +300,12 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 if label == "Id":
                     colCnt += 1
                     continue
-                represent = item[field]
+                represent = s3_strip_markup(s3_unicode(item[field]))
                 coltype = types[colCnt]
                 if coltype == "sort":
                     continue
-                if type(represent) is not str:
-                    represent = unicode(represent)
                 if len(represent) > max_cell_size:
                     represent = represent[:max_cell_size]
-                # Strip away markup from representation
-                try:
-                    markup = etree.XML(str(represent))
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                    represent = text
-                except:
-                    pass
                 value = represent
                 if coltype == "date":
                     try:

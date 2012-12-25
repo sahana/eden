@@ -166,12 +166,13 @@ class S3OrganisationModel(S3Model):
 
         configure("org_sector", deduplicate=self.org_sector_duplicate)
 
-        sector_comment = S3AddResourceLink(c="org", f="sector",
-                                           label=ADD_SECTOR,
-                                           title=SECTOR,
-                                           tooltip=help)
+        sector_comment = lambda child: S3AddResourceLink(c="org", f="sector",
+                                                         vars={"child":child},
+                                                         label=ADD_SECTOR,
+                                                         title=SECTOR,
+                                                         tooltip=help)
 
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup="org_sector")
         sector_id = S3ReusableField("sector_id", "reference org_sector",
                                     sortby="abrv",
                                     requires=IS_NULL_OR(
@@ -183,7 +184,7 @@ class S3OrganisationModel(S3Model):
                                                           )
                                                         ),
                                     represent=represent,
-                                    comment=sector_comment,
+                                    comment=sector_comment("sector_id"),
                                     label=SECTOR,
                                     ondelete="SET NULL")
 
@@ -198,8 +199,9 @@ class S3OrganisationModel(S3Model):
                                                           multiple=True
                                                           )
                                                         ),
-                                    represent=s3_represent_multi_id(table),
-                                    comment=sector_comment,
+                                    represent=S3Represent(lookup="org_sector",
+                                                          multiple=True),
+                                    comment=sector_comment("multi_sector_id"),
                                     label=SECTOR,
                                     ondelete="SET NULL")
 
