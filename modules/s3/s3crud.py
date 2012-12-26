@@ -287,7 +287,7 @@ class S3CRUD(S3Method):
 
             # Navigate-away confirmation
             if self.settings.navigate_away_confirm:
-                response.s3.jquery_ready.append("S3EnableNavigateAwayConfirm()")
+                response.s3.jquery_ready.append("S3EnableNavigateAwayConfirm();")
 
             # Put the form into output
             output["form"] = form
