@@ -553,11 +553,11 @@ class S3Report(S3CRUD):
                 LEGEND(T("Report Options"),
                     BUTTON(self.SHOW,
                            _type="button",
-                           _class="toggle-text"),
+                           _class="toggle-text",
+                           _style="display:none"),
                     BUTTON(self.HIDE,
                            _type="button",
-                           _class="toggle-text",
-                           _style="display:none")
+                           _class="toggle-text")
                 ),
                 selectors, _id="report_options")
 
