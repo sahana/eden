@@ -2798,6 +2798,7 @@ def req_item_ondelete(row):
     """
 
     db = current.db
+    sitable = db.supply_item
     ritable = db.req_req_item
     item = db(ritable.id == row.id).select(ritable.deleted_fk,
                                            limitby=(0, 1)).first()
