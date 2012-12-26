@@ -382,27 +382,43 @@ function S3ConfirmClick(ElementID, Message) {
 
 // ============================================================================
 // Code to warn on exit without saving
-function S3SetNavigateAwayConfirm() {
-    window.onbeforeunload = function() {
+
+function S3NavigateAwayConfirm() {
+    var dirty = false;
+
+    $(':input:not(input[id=gis_location_advanced_checkbox])[name][type!=hidden]').each(function (i, e) {
+        if($(e).val() != $(e).data("original_value")) {
+            console.log(e);
+            console.log($(e).data("original_value"));
+            dirty = true;
+        }
+    });
+
+    if(dirty) {
         return i18n.unsaved_changes;
-    };
-};
+    }
+}
 
 function S3ClearNavigateAwayConfirm() {
     window.onbeforeunload = function() {};
-};
+}
 
 function S3EnableNavigateAwayConfirm() {
     $(document).ready(function() {
+        $(':input:not(input[id=gis_location_advanced_checkbox])[name][type!=hidden]').each(function (i, e) {
+            $(e).data('original_value', $(e).val());
+        });
+
         if ( $('[class=error]').length > 0 ) {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
-        $(':input:not(input[id=gis_location_advanced_checkbox])').keypress( S3SetNavigateAwayConfirm );
-        $(':input:not(input[id=gis_location_advanced_checkbox])').change( S3SetNavigateAwayConfirm );
-        $('form').submit( S3ClearNavigateAwayConfirm );
+
+
+        window.onbeforeunload = S3NavigateAwayConfirm;
+        $('form').submit(S3ClearNavigateAwayConfirm);
     });
-};
+}
 
 // ============================================================================
 /**
