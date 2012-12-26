@@ -2656,9 +2656,7 @@ class org_OrganisationRepresent(S3Represent):
 
         super(org_OrganisationRepresent, self) \
              .__init__(lookup="org_organisation",
-                       fields=["org_organisation.name",
-                               "org_organisation.acronym",
-                               "org_parent_organisation.name"],
+                       fields=fields,
                        show_link=show_link,
                        translate=translate,
                        multiple=multiple)
@@ -3000,7 +2998,7 @@ def org_organisation_controller():
                 otable.country.default = record.country
                 # Represent orgs without the parent prefix as we have that context already
                 s3db.org_organisation_branch.branch_id.represent = \
-                    s3db.org_organisation_represent(parent=False)
+                    org_OrganisationRepresent(parent=False)
 
             elif r.component_name == "task" and \
                  r.method != "update" and r.method != "read":

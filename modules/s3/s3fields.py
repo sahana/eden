@@ -685,6 +685,8 @@ class S3RepresentLazy(object):
         else:
             labels = renderer.theset
         if renderer.list_type:
+            if not value:
+                value = []
             if self.multiple:
                 return renderer.multiple(value)
             else:
