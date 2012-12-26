@@ -89,13 +89,25 @@ def add_poll(request, space_url):
     return render_to_response('not_allowed.html',
         context_instance=RequestContext(request))
 
+
 class ViewPoll(DetailView):
 
     """
     Displays an specific poll.
     """
-    model = Poll
-    template_name = '../templates/voting/poll_detail.html'
+    context_object_name = 'poll'
+    template_name = 'voting/poll_detail.html'
+
+    def get_object(self):
+        poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
+        return poll
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewPoll, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space,
+            url=self.kwargs['space_url'])
+        return context
+
 
 def edit_poll(request, space_url, poll_id):
 
