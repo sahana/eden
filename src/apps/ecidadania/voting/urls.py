@@ -23,9 +23,9 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from apps.ecidadania.voting.views.polls import AddPoll, ViewPoll, EditPoll, \
-    DeletePoll, ListPolls
-from apps.ecidadania.voting.views.voting import *
+from apps.ecidadania.voting.views.polls import ViewPoll, DeletePoll, ListPolls
+from apps.ecidadania.voting.views.voting import ViewVoting, ListVotings, \
+    AddVoting, EditVoting, DeleteVoting
 from apps.ecidadania.voting.url_names import *
 
 
@@ -37,9 +37,9 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
     url(r'^add/$', AddVoting.as_view(), name=ADD_VOTING),
 
-    url(r'^add/poll/$', AddPoll, name=ADD_POLL),
+    url(r'^add/poll/$', 'polls.add_poll', name=ADD_POLL),
 
-    url(r'^poll/(?P<poll_id>\d+)/edit/$', EditPoll, name=EDIT_POLL),
+    url(r'^poll/(?P<poll_id>\d+)/edit/$', 'polls.edit_poll', name=EDIT_POLL),
 
     url(r'^(?P<voting_id>\d+)/edit/$', EditVoting.as_view(),
         name=EDIT_VOTING),
@@ -54,9 +54,10 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
     url(r'^(?P<voting_id>\d+)/$', ViewVoting.as_view(), name=VIEW_VOTING),
 
-    url(r'^poll/(?P<poll_id>\d+)/vote/$', 'polls.vote_poll', name=VOTE_POLL),
+    url(r'^vote/poll/(?P<poll_id>\d+)/$', 'polls.vote_poll', name=VOTE_POLL),
 
-    url(r'^vote/(?P<voting_id>\d+)/$', 'voting.vote_voting', name=VOTE_VOTING),
+    url(r'^vote/voting/(?P<voting_id>\d+)/$', 'voting.vote_voting',
+        name=VOTE_VOTING),
 )
 
 
