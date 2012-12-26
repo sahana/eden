@@ -199,16 +199,16 @@ def vote_voting(request, space_url, voting_id):
     """
     place = get_object_or_404(Space, url=space_url)
     v = get_object_or_404(Voting, pk=voting_id)
+    proposal = get_object_or_404(Proposal, pk=request.POST['propid'])
 
-    
-    try:
-        selected_choice = p.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Choice.DoesNotExist):
-        return render_to_response('voting/poll_detail.html', {
-            'poll': p,
-            'error_message': "You didn't select a choice.",
-        }, context_instance=RequestContext(request))
+    if has_space_permission(request.user, space, allow=['admins', 'mods', 'users']):
+        try:
+            prop.votes.add(request.user)
+            return HttpResponse(" Support vote emmited.")
+        except:
+            return HttpResponse("Error P01: Couldn't emit the vote. Couldn't \
+                add the user to the count. Contact support and tell them the \
+                error code.")
     else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
+        return HttpResponse("Error P02: Couldn't emit the vote. You're not \
+            allowed.")
