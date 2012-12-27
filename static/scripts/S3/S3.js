@@ -743,7 +743,13 @@ function S3OptionsFilter(settings) {
 
         // Get the lookup value from the trigger field
         var lookupValue = '';
-        if (triggerField.length == 1) {
+        if (triggerField.attr('type') == 'checkbox') {
+            checkboxesWidget = triggerField.closest('.checkboxes-widget-s3');
+            if (checkboxesWidget) {
+                triggerField = checkboxesWidget;
+            }
+        }
+        if (triggerField.length == 1 && !triggerField.hasClass('checkboxes-widget-s3')) {
             // SELECT
             lookupValue = triggerField.val();
         } else if (triggerField.length > 1) {
@@ -752,6 +758,12 @@ function S3OptionsFilter(settings) {
             triggerField.filter('input:checked').each(function() {
                 lookupValue.push($(this).val());
             });
+        } else if (triggerField.hasClass('checkboxes-widget-s3')) {
+            lookupValue = new Array();
+            triggerField.find('input:checked').each(function() {
+                lookupValue.push($(this).val());
+            });
+            
         }
 
         // Disable the target field if no value selected

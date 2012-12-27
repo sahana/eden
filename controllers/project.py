@@ -320,7 +320,10 @@ def project_multi_theme_id_widget():
     """
     ptable = s3db.project_project
     sector_ids = [int(id) for id in request.vars.sector_ids.split(",") if id]
-    value = [int(id) for id in request.vars.value.split(",") if id]
+    if "value" in request.vars:
+        value = [int(id) for id in request.vars.value.split(",") if id]
+    else:
+        value = []
     
     set_project_multi_theme_id_requires(sector_ids)
     widget = ptable.multi_theme_id.widget(ptable.multi_theme_id,
