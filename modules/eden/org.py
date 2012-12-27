@@ -3075,6 +3075,18 @@ def org_organisation_controller():
                             msg_list_empty=T("No Partner Organisations currently registered")
                             ),
                     }
+
+                # Filter type field
+                type_names = [name.lower().strip()
+                              for name in type_filter.split(",")]
+                fquery = s3db.org_organisation_type.name.lower().belongs(type_names)
+                field = r.table.organisation_type_id
+                field.requires = IS_NULL_OR(IS_ONE_OF(current.db(fquery),
+                                                      "org_organisation_type.id",
+                                                      field.represent,
+                                                      sort=True))
+                field.comment = None # AddResourceLink makes no sense here
+
                 if type_filter in type_crud_strings:
                     s3.crud_strings.org_organisation = type_crud_strings[type_filter]
 
