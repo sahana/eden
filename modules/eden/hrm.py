@@ -4181,7 +4181,7 @@ def hrm_rheader(r, tabs=[],
                 if enable_active_field:
                     if not hr:
                         # @ToDo: Handle multiple active HR records
-                        htable = s3db.hrm_human_resoruce
+                        htable = s3db.hrm_human_resource
                         query = (htable.person_id == r.id) & \
                                 (htable.deleted == False)
                         hr = db(query).select(htable.id, limitby=(0, 1)).first()
