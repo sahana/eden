@@ -29,6 +29,8 @@ DELETE_POLL = 'delete-poll'
 
 VIEW_POLL = 'view-poll'
 
+VIEW_RESULT = 'view-result'
+
 LIST_POLL = 'list-polls'
 
 VOTE_POLL = 'vote-poll'

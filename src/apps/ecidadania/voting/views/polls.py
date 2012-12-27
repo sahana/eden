@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
@@ -36,6 +36,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from helpers.cache import get_or_insert_object_in_cache
 from django.core.urlresolvers import NoReverseMatch, reverse
 from django.template.response import TemplateResponse
+from django.db.models import Count
 
 from core.spaces.models import Space
 from core.spaces import url_names as urln
@@ -106,6 +107,34 @@ class ViewPoll(DetailView):
         context = super(ViewPoll, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space,
             url=self.kwargs['space_url'])
+        return context
+
+
+class ViewPollResults(DetailView):
+
+    """
+    Displays an specific poll.
+    """
+    context_object_name = 'poll'
+    template_name = 'voting/poll_results.html'
+
+    def get_object(self):
+        poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
+        return poll
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewPollResults, self).get_context_data(**kwargs)
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
+        context['get_place'] = space
+
+        votes_count = Choice.objects.filter(poll=poll)\
+            .annotate(Count('votes'))
+
+        for i,x in enumerate(votes_count):
+            if x.id == int(self.kwargs['pk']):
+                self.get_position = i
+        context['votes_count'] = votes_count[int(self.get_position)].votes__count
         return context
 
 
@@ -206,17 +235,24 @@ class ListPolls(ListView):
 
 
 def vote_poll(request, poll_id, space_url):
-    place = get_object_or_404(Space, url=space_url)
-    p = get_object_or_404(Poll, pk=poll_id)
-    try:
-        selected_choice = p.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Choice.DoesNotExist):
-        return render_to_response('voting/poll_detail.html', {
-            'poll': p,
-            'error_message': "You didn't select a choice.",
-        }, context_instance=RequestContext(request))
+
+    """
+    Vote on a choice inside the polls.
+
+    .. versionadded:: 0.1.5
+    """
+    space = get_object_or_404(Space, url=space_url)
+    choice = get_object_or_404(Choice, pk=request.POST['choice'])
+    poll = get_object_or_404(Poll, pk=poll_id)
+
+    if request.method == 'POST' and has_space_permission(request.user, space,
+    allow=['admins', 'mods', 'users']):
+        poll.participants.add(request.user)
+        choice.votes.add(request.user)
+        return render_to_response('voting/poll_results.html',
+            {'poll': poll, 'get_place': space, 'error_message': "You didn't \
+            select a choice."}, context_instance=RequestContext(request))
+
     else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        return TemplateResponse(request, 'voting/poll_results.html',
-            {'poll':p, 'get_place': place})
+        return HttpResponse("Error P02: Couldn't emit the vote. You're not \
+            allowed.")

@@ -37,7 +37,12 @@ PONDERATIONS = (
 class Poll(models.Model):
     
     """
-    Model of a new Poll
+    Data model for Polls. It stores the question and some data like the space
+    and dates. The most important field is "participants". It allows us to
+    limit the times a user can vote in a Poll, using it with the vote field in
+    Choices model.
+
+    .. versionadded:: 0.1.5
     """
 
     question = models.CharField(_('Question'), max_length=200,
@@ -45,12 +50,14 @@ class Poll(models.Model):
     pub_date = models.DateTimeField(_('Date'), auto_now_add=True)
     poll_lastup = models.DateTimeField(_('Last update'), auto_now=True)
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
-        null=True, help_text=_('Change the user that will figure as the author'))
+        null=True, help_text=_('Change the user that will figure as the \
+        author'), related_name='poll-author')
+    participants = models.ManyToManyField(User, blank=True, null=True)
     space = models.ForeignKey(Space, verbose_name=_('Publish in'), blank=True,
         null=True, help_text=_('If you want to post to the index leave this \
         blank'))
     poll_tags = TagField(help_text=_('Insert here relevant words related with \
-                            the poll'))
+        the poll'))
 
     def __unicode__(self):
         return self.question
@@ -75,7 +82,8 @@ class Poll(models.Model):
 class Choice(models.Model):
     poll = models.ForeignKey(Poll)
     choice_text = models.CharField(_('Choice'), max_length=200, blank=True, null=True, help_text=_('Enter choice to be voted upon'))
-    votes = models.IntegerField(blank=True, null=True, default='0')
+    #votes = models.IntegerField(blank=True, null=True, default='0')
+    votes = models.ManyToManyField(User, blank=True, null=True)
     
     @models.permalink
     def get_absolute_url(self):
