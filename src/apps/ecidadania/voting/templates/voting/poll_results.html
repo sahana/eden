@@ -35,7 +35,7 @@
 
     <ul>
         {% for choice in poll.choice_set.all %}
-            <li>{{ choice.choice_text }} -- {{ votes_count }} {% trans "vote" %}{{ choice.votes|pluralize }}</li>
+            <li>{{ choice.choice_text }} -- {{ choice.votes.count }} {% trans "vote" %}{{ choice.votes|pluralize }}</li>
         {% endfor %}
     </ul>
 

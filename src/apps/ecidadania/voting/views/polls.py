@@ -125,16 +125,7 @@ class ViewPollResults(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ViewPollResults, self).get_context_data(**kwargs)
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
         context['get_place'] = space
-
-        votes_count = Choice.objects.filter(poll=poll)\
-            .annotate(Count('votes'))
-
-        for i,x in enumerate(votes_count):
-            if x.id == int(self.kwargs['pk']):
-                self.get_position = i
-        context['votes_count'] = votes_count[int(self.get_position)].votes__count
         return context
 
 
