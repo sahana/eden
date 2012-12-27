@@ -272,6 +272,10 @@ class S3Merge(S3Method):
         # Datatable Filter
         totalrows = displayrows = resource.count()
         if representation == "aadata":
+            # Workaround for datatables with 2 action columns:
+            for k in vars:
+                if k[:9] == "iSortCol_":
+                    vars[k] = str(int(vars[k]) - 1)
             searchq, orderby, left = resource.datatable_filter(list_fields,
                                                                vars)
             if searchq is not None:
@@ -297,22 +301,23 @@ class S3Merge(S3Method):
         response = current.response
 
         if representation == "aadata":
-
+            
             output = dt.json(totalrows,
                              displayrows,
                              datatable_id,
                              sEcho,
                              dt_bulk_actions = [(current.T("Merge"),
                                                  "merge", "pair-action")])
-
         elif representation == "html":
             # Initial HTML response
             T = current.T
             output = {"title": T("De-duplicate Records")}
 
-            url = "/%s/%s/%s/deduplicate.aadata" % (r.application,
-                                                  r.controller,
-                                                  r.function)
+            url = r.url(representation="aadata")
+
+            #url = "/%s/%s/%s/deduplicate.aadata" % (r.application,
+                                                    #r.controller,
+                                                    #r.function)
             items =  dt.html(totalrows,
                              displayrows,
                              datatable_id,
