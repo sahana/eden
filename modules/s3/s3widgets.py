@@ -459,6 +459,10 @@ class S3AutocompleteWidget(FormWidget):
              self.link_filter, self.post_process, self.delay, self.min_length)
 
         if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
             text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
@@ -700,6 +704,7 @@ class S3PersonAutocompleteWidget(FormWidget):
                  controller = "pr",
                  function = "person_search",
                  post_process = "",
+                 hideerror = False,
                  delay = 450,   # milliseconds
                  min_length=2): # Increase this for large deployments
 
@@ -708,6 +713,7 @@ class S3PersonAutocompleteWidget(FormWidget):
         self.min_length = min_length
         self.c = controller
         self.f = function
+        self.hideerror = hideerror
 
     def __call__(self, field, value, **attributes):
 
@@ -799,6 +805,10 @@ $('#%(dummy_input)s').blur(function(){
               real_input = real_input)))
 
         if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
             # Provide the representation for the current/default Value
             text = s3_unicode(field.represent(value))
             if "<" in text:
@@ -817,7 +827,7 @@ $('#%(dummy_input)s').blur(function(){
                             _height=32, _width=32,
                             _id="%s_throbber" % dummy_input,
                             _class="throbber hide"),
-                        INPUT(**attr),
+                        INPUT(hideerror=self.hideerror, **attr),
                         requires = field.requires
                       )
 
@@ -991,6 +1001,10 @@ $('#%(dummy_input)s').blur(function(){
               real_input = real_input)))
 
         if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
             # Provide the representation for the current/default Value
             text = s3_unicode(field.represent(value))
             if "<" in text:
@@ -1136,6 +1150,10 @@ $('#%(dummy_input)s').blur(function(){
              real_input=real_input)))
 
         if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
             # Provide the representation for the current/default Value
             text = s3_unicode(field.represent(value))
             if "<" in text:
@@ -1246,6 +1264,10 @@ $('#%(dummy_input)s').blur(function(){
              real_input=real_input)))
 
         if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
             # Provide the representation for the current/default Value
             text = s3_unicode(field.represent(value))
             if "<" in text:
@@ -1355,6 +1377,10 @@ $('#%(dummy_input)s').blur(function(){
 })''' % locals()))
 
     if value:
+        try:
+            value = long(value)
+        except ValueError:
+            pass
         # Provide the representation for the current/default Value
         text = s3_unicode(field.represent(value))
         if "<" in text:
@@ -2762,7 +2788,7 @@ class S3AddPersonWidget(FormWidget):
         if self.select_existing:
             # Autocomplete
             select = '''select_person($('#%s').val())''' % real_input
-            widget = S3PersonAutocompleteWidget(post_process=select)
+            widget = S3PersonAutocompleteWidget(post_process=select, hideerror=True)
             ac_row = TR(TD(LABEL("%s: " % T("Name"),
                                  _class="hide",
                                  _id="person_autocomplete_label"),
@@ -2864,11 +2890,23 @@ class S3AddPersonWidget(FormWidget):
         if required:
             s3.has_required = True
 
+        if current.request.env.request_method == "POST" and not value:
+            post_vars = current.request.post_vars
+            data = Storage(ptable._filter_fields(post_vars))
+            data["email"] = post_vars["email"]
+            data["mobile_phone"] = post_vars["mobile_phone"]
+            record_id = 0
+        else:
+            data = None
+            record_id = value
+
         form = SQLFORM.factory(table_name="pr_person",
+                               record=data,
                                labels=labels,
                                formstyle=formstyle,
                                upload="default/download",
                                separator = "",
+                               record_id = record_id,
                                *fields)
         trs = []
         for tr in form[0]:

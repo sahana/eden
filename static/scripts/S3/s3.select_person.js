@@ -79,66 +79,68 @@ function edit_selected_person_form() {
 
 // Called on post-process by the Autocomplete Widget
 function select_person(person_id) {
-    var controller = $('#select_from_registry_row').attr('controller');
-    if (controller) {
-        $('#select_from_registry').addClass('hide');
-        $('#clear_form_link').addClass('hide');
-        $('#person_load_throbber').removeClass('hide');
-        clear_person_form();
-        var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
-        $.getJSONS3(url, function(data) {
-            try {
-                var person = data['$_pr_person'][0];
-                disable_person_fields();
-                $(addPerson_real_input).val(person['@id']);
-                if (person.hasOwnProperty('first_name')) {
-                    $('#pr_person_first_name').val(person['first_name']);
-                }
-                if (person.hasOwnProperty('middle_name')) {
-                    $('#pr_person_middle_name').val(person['middle_name']);
-                }
-                if (person.hasOwnProperty('last_name')) {
-                    $('#pr_person_last_name').val(person['last_name']);
-                }
-                if (person.hasOwnProperty('gender')) {
-                    $('#pr_person_gender').val(person['gender']['@value']);
-                }
-                if (person.hasOwnProperty('date_of_birth')) {
-                    $('#pr_person_date_of_birth').val(person['date_of_birth']['@value']);
-                }
-                if (person.hasOwnProperty('occupation')) {
-                    $('#pr_person_occupation').val(person['occupation']);
-                }
+    if (person_id) {
+        var controller = $('#select_from_registry_row').attr('controller');
+        if (controller) {
+            $('#select_from_registry').addClass('hide');
+            $('#clear_form_link').addClass('hide');
+            $('#person_load_throbber').removeClass('hide');
+            clear_person_form();
+            var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
+            $.getJSONS3(url, function(data) {
                 try {
-                    $.each(person['$_pr_contact'], function() {
-                        var method = this['contact_method']['@value'];
-                        var value = this['value'];
-                        if (typeof(value) === 'undefined') {
-                            // ignore
-                        } else {
-                            if (method == "\"EMAIL\"") {
-                                $('#pr_person_email').val(value);
+                    var person = data['$_pr_person'][0];
+                    disable_person_fields();
+                    $(addPerson_real_input).val(person['@id']);
+                    if (person.hasOwnProperty('first_name')) {
+                        $('#pr_person_first_name').val(person['first_name']);
+                    }
+                    if (person.hasOwnProperty('middle_name')) {
+                        $('#pr_person_middle_name').val(person['middle_name']);
+                    }
+                    if (person.hasOwnProperty('last_name')) {
+                        $('#pr_person_last_name').val(person['last_name']);
+                    }
+                    if (person.hasOwnProperty('gender')) {
+                        $('#pr_person_gender').val(person['gender']['@value']);
+                    }
+                    if (person.hasOwnProperty('date_of_birth')) {
+                        $('#pr_person_date_of_birth').val(person['date_of_birth']['@value']);
+                    }
+                    if (person.hasOwnProperty('occupation')) {
+                        $('#pr_person_occupation').val(person['occupation']);
+                    }
+                    try {
+                        $.each(person['$_pr_contact'], function() {
+                            var method = this['contact_method']['@value'];
+                            var value = this['value'];
+                            if (typeof(value) === 'undefined') {
+                                // ignore
+                            } else {
+                                if (method == "\"EMAIL\"") {
+                                    $('#pr_person_email').val(value);
+                                }
+                                else if (method == "\"SMS\"") {
+                                    $('#pr_person_mobile_phone').val(value);
+                                }
                             }
-                            else if (method == "\"SMS\"") {
-                                $('#pr_person_mobile_phone').val(value);
-                            }
-                        }
-                    });
+                        });
+                    }
+                    catch(e) {
+                        // continue
+                    }
                 }
                 catch(e) {
-                    // continue
+                    $(addPerson_real_input).val('');
                 }
-            }
-            catch(e) {
-                $(addPerson_real_input).val('');
-            }
-            $('#person_load_throbber').addClass('hide');
-            $('#select_from_registry').removeClass('hide');
-            $('#clear_form_link').removeClass('hide');
-            $('#edit_selected_person_link').removeClass('hide');
-        });
-        $('#person_autocomplete_row').addClass('hide');
-        $('#select_from_registry_row').removeClass('hide');
+                $('#person_load_throbber').addClass('hide');
+                $('#select_from_registry').removeClass('hide');
+                $('#clear_form_link').removeClass('hide');
+                $('#edit_selected_person_link').removeClass('hide');
+            });
+            $('#person_autocomplete_row').addClass('hide');
+            $('#select_from_registry_row').removeClass('hide');
+        }
     }
 };
 
