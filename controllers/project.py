@@ -366,7 +366,8 @@ def organisation():
                                args="report", vars=request.get_vars),
                      _class="action-btn")
 
-        return s3_rest_controller(list_btn=list_btn,
+        return s3_rest_controller("org", resourcename,
+                                  list_btn=list_btn,
                                   csv_template="organisation")
     else:
         tabs = [
