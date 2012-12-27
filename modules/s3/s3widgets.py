@@ -474,7 +474,7 @@ class S3AutocompleteWidget(FormWidget):
         return TAG[""](
                         INPUT(_id=dummy_input,
                               _class="string",
-                              _value=str(represent.encode("utf-8"))),
+                              _value=represent.encode("utf-8")),
                         IMG(_src="/%s/static/img/ajax-loader.gif" % \
                                  current.request.application,
                             _height=32, _width=32,
@@ -821,7 +821,7 @@ $('#%(dummy_input)s').blur(function(){
         return TAG[""](
                         INPUT(_id=dummy_input,
                               _class="string",
-                              _value=str(represent.encode("utf-8"))),
+                              _value=represent.encode("utf-8")),
                         IMG(_src="/%s/static/img/ajax-loader.gif" % \
                                  current.request.application,
                             _height=32, _width=32,
@@ -1017,7 +1017,7 @@ $('#%(dummy_input)s').blur(function(){
         return TAG[""](
                         INPUT(_id=dummy_input,
                               _class="string",
-                              _value=str(represent.encode("utf-8"))),
+                              _value=represent.encode("utf-8")),
                         IMG(_src="/%s/static/img/ajax-loader.gif" % \
                                  request.application,
                             _height=32, _width=32,
@@ -1166,7 +1166,7 @@ $('#%(dummy_input)s').blur(function(){
         return TAG[""](
                         INPUT(_id=dummy_input,
                               _class="string",
-                              _value=str(represent.encode("utf-8"))),
+                              _value=represent.encode("utf-8")),
                         IMG(_src="/%s/static/img/ajax-loader.gif" % \
                                  current.request.application,
                             _height=32, _width=32,
@@ -1280,7 +1280,7 @@ $('#%(dummy_input)s').blur(function(){
         return TAG[""](
                         INPUT(_id=dummy_input,
                               _class="string",
-                              _value=str(represent.encode("utf-8"))),
+                              _value=represent.encode("utf-8")),
                         IMG(_src="/%s/static/img/ajax-loader.gif" % \
                                  current.request.application,
                             _height=32, _width=32,
@@ -3826,7 +3826,7 @@ def s3_checkboxes_widget(field,
                                   _name=field.name,
                                   _id=input_id,
                                   hideerror=True,
-                                  _value=str(s3_unicode(k).encode("utf-8")),
+                                  _value=s3_unicode(k).encode("utf-8"),
                                   value=(k in values)),
                             LABEL(v,
                                   _for=input_id,
