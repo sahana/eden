@@ -1106,6 +1106,8 @@ class S3GISConfigModel(S3Model):
                                     label = T("Marker"),
                                     comment=S3AddResourceLink(c="gis",
                                                               f="marker",
+                                                              vars={"child":"marker_id",
+                                                                    "parent": "symbology"},
                                                               label=ADD_MARKER,
                                                               title=T("Marker"),
                                                               tooltip="%s|%s|%s" % (T("Defines the icon used for display of features on interactive map & KML exports."),
