@@ -104,8 +104,12 @@ def person():
     tablename = "pr_person"
     table = s3db.pr_person
 
+    s3db.configure(tablename, deletable=False)
     s3.crud_strings[tablename].update(
             title_upload = T("Import Members"))
+
+    s3db.configure("member_membership",
+                   delete_next=URL("member", "membership"))
 
     # Custom Method for Contacts
     s3db.set_method("pr", resourcename,
@@ -153,33 +157,51 @@ def person():
 
     # CRUD pre-process
     def prep(r):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                # Assume members under 120
-                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
-            resource = r.resource
-            if resource.count() == 1:
-                resource.load()
-                r.record = resource.records().first()
-                if r.record:
-                    r.id = r.record.id
-            if not r.record:
-                session.error = T("Record not found")
-                redirect(URL(f="membership",
-                             #args=["search"]
-                             ))
-            member_id = request.get_vars.get("membership.id", None)
-            if member_id and r.component_name == "membership":
-                r.component_id = member_id
-            s3db.configure("member_membership",
-                            insertable = False)
+        if r.interactive:
+            if r.component_name == "membership":
+                s3.crud_strings["member_membership"].update(
+                    label_delete_button = T("Delete Membership"),
+                    label_list_button = T("List Memberships")
+                )
+
+            if r.method != "import":
+                if not r.component:
+                    # Assume members under 120
+                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+                resource = r.resource
+                if resource.count() == 1:
+                    resource.load()
+                    r.record = resource.records().first()
+                    if r.record:
+                        r.id = r.record.id
+                if not r.record:
+                    session.error = T("Record not found")
+                    redirect(URL(f="membership",
+                                #args=["search"]
+                                ))
+                member_id = request.get_vars.get("membership.id", None)
+                if member_id and r.component_name == "membership":
+                    r.component_id = member_id
+                s3db.configure("member_membership",
+                                insertable = False)
         return True
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive and r.component and r.component_name == "membership":
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
+        if r.interactive:
+            if not r.component and "buttons" in output:
+                # Provide correct list-button (non-native controller)
+                buttons = output["buttons"]
+                if "list_btn" in buttons:
+                    crud_button = r.resource.crud.crud_button
+                    buttons["list_btn"] = crud_button(None,
+                                                tablename="member_membership",
+                                                name="label_list_button",
+                                                _href=URL(c="member", f="membership"),
+                                                _id="list-btn")
+            elif r.component_name == "membership":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
 '''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
         return output
     s3.postp = postp

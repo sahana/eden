@@ -1686,6 +1686,9 @@ class S3CRUD(S3Method):
 
         record_id = attr.get("record_id", None)
 
+        remove_filters = lambda vars: dict([(k, vars[k])
+                                            for k in vars if "." not in k])
+
         # Button labels
         crud_string = self.crud_string
         ADD = crud_string(tablename, "label_create_button")
@@ -1699,7 +1702,7 @@ class S3CRUD(S3Method):
         href_add = url(method="create", representation=representation)
         href_edit = url(method="update", representation=representation)
         href_delete = url(method="delete", representation=representation)
-        href_list = url(method="")
+        href_list = url(method="", vars=remove_filters(r.get_vars))
 
         # Table CRUD configuration
         config = self._config
