@@ -61,7 +61,7 @@
 
     <!-- ****************************************************************** -->
 
-    <xsl:template match="Organisation">
+    <xsl:template name="Organisation">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <resource name="org_organisation">
