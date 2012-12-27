@@ -7,6 +7,18 @@
 tasks = {}
 
 # -----------------------------------------------------------------------------
+def crop_image(path, x1, y1, x2, y2, width):
+    from PIL import Image
+    image = Image.open(path)
+
+    scale_factor = image.size[0] / float(width)
+
+    points = map(int, map(lambda a: a * scale_factor, (x1, y1, x2, y2)))
+    image.crop(points).save(path)
+
+tasks["crop_image"] = crop_image
+
+# -----------------------------------------------------------------------------)
 def gis_download_kml(record_id, filename, session_id_name, session_id,
                      user_id=None):
     """
