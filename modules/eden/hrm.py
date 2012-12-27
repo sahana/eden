@@ -3099,7 +3099,7 @@ def hrm_programme_hours_onaccept(form):
     active = s3db.vol_active(person_id)
 
     # Read the current value
-    htable = db.hrm_human_resource
+    htable = s3db.hrm_human_resource
     dtable = s3db.vol_details
     query = (htable.person_id == person_id) & \
             (dtable.human_resource_id == htable.id)
