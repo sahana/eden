@@ -823,6 +823,7 @@ def survey_build_template_summary(template_id):
     # Turn off server side pagination
     s3 = current.response.s3
     s3.no_sspag = True
+    s3.no_formats = True
 
     s3.dataTableID = None
     attr = S3DataTable.getConfigData()
@@ -831,6 +832,7 @@ def survey_build_template_summary(template_id):
                                   [[0, 'asc']], # order by
                                   "", # the filter string
                                   None, # the rfields
+                                  dt_action_col = -1,
                                   **attr
                                   )
     return form
