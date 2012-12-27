@@ -1815,21 +1815,28 @@ class S3CRUD(S3Method):
             table = r.table
             args = ["[id]"]
 
+        get_vars = Storage()
+        if "viewing" in r.get_vars:
+            get_vars["viewing"] = r.get_vars["viewing"]
+
         # Open-action (Update or Read)
         if editable and has_permission("update", table) and \
            not ownership_required("update", table):
             if not update_url:
-                update_url = URL(args = args + ["update"])
+                update_url = URL(args = args + ["update"],
+                                 vars = get_vars)
             s3crud.action_button(labels.UPDATE, update_url)
         else:
             if not read_url:
-                read_url = URL(args = args)
+                read_url = URL(args = args,
+                               vars = get_vars)
             s3crud.action_button(labels.READ, read_url)
 
         # Delete-action
         if deletable and has_permission("delete", table):
             if not delete_url:
-                delete_url = URL(args = args + ["delete"])
+                delete_url = URL(args = args + ["delete"],
+                                 vars = get_vars)
             if ownership_required("delete", table):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
