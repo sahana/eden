@@ -215,6 +215,9 @@
                                                 </a>
                                             {% endif %}
                                         {% endif %}
+                                        <a href="{% url 'view-result' get_place.url poll.id %}" title="{% trans 'Results' %}">
+                                            <i class="icon-tasks" style="font-size:16px;"></i>
+                                        </a>
                                     </li>
                                 {% empty %}
                                     <li>{% trans "There are no polls at this moment." %}</li>

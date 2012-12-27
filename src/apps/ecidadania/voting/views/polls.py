@@ -42,6 +42,7 @@ from core.spaces.models import Space
 from core.spaces import url_names as urln
 from core.permissions import has_all_permissions, has_space_permission, \
     has_operation_permission
+from apps.ecidadania.voting import url_names as urln_voting
 from apps.ecidadania.voting.models import Choice, Poll
 from apps.ecidadania.voting.forms import PollForm, ChoiceFormSet
 from apps.ecidadania.proposals.models import Proposal
@@ -99,9 +100,15 @@ class ViewPoll(DetailView):
     context_object_name = 'poll'
     template_name = 'voting/poll_detail.html'
 
-    def get_object(self):
+    def get(self, request, **kwargs):
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
         poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
-        return poll
+
+        if self.request.user in poll.participants.all():
+            return HttpResponseRedirect(reverse(urln_voting.VIEW_RESULT,
+                kwargs={'space_url': space.url, 'pk':poll.id}))
+        else:
+            return super(ViewPoll, self).get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ViewPoll, self).get_context_data(**kwargs)

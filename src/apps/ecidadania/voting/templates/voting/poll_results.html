@@ -39,5 +39,6 @@
         {% endfor %}
     </ul>
 
-    <a class="btn btn-default" href="{% url 'list-polls' get_place.url %}">Vote again?</a>
+    <hr />
+    <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
 {% endblock %}
