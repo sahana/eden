@@ -66,7 +66,10 @@ if __name__ == '__main__':
         sys.exit(1)
 
     from gluon.custom_import import custom_import_install
-    custom_import_install(os.environ['WEB2PY_PATH'])
+    try:
+        custom_import_install()
+    except:
+        custom_import_install(os.environ['WEB2PY_PATH'])
     from gluon.shell import env
     _env = env(app, c=None, import_models=True)
     globals().update(**_env)

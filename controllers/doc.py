@@ -130,6 +130,19 @@ def image():
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.method == "update" and r.http == "POST":
+            if not r.vars.get('imagecrop-points'):
+                return output
+            filename = r.resource.records()[0]["file"]
+            points = map(float, r.vars.get('imagecrop-points').split(","))
+            path = os.path.join(current.request.folder, "uploads", "images",
+                filename)
+            current.s3task.async("crop_image",
+                args=[path] + points + [S3ImageCropWidget.DEFAULT_WIDTH])
+        return output
+    s3.postp = postp
+
     output = s3_rest_controller()
     return output
 

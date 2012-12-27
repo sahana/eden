@@ -34,6 +34,7 @@ __all__ = ["S3HiddenWidget",
            "S3DateTimeWidget",
            "S3BooleanWidget",
            #"S3UploadWidget",
+           "S3ImageCropWidget",
            "S3AutocompleteWidget",
            "S3LocationAutocompleteWidget",
            "S3LatLonWidget",
@@ -405,6 +406,59 @@ class S3UploadWidget(UploadWidget):
                           A(UploadWidget.GENERIC_DESCRIPTION, _href = url),
                           "]", br, image)
         return inp
+
+
+class S3ImageCropWidget(FormWidget):
+    """
+    Allows the user to crop an image and uploads it. Cropping is done
+    client-side where supported, otherwise using PIL.
+    """
+
+    DEFAULT_WIDTH = 300
+
+    def __call__(self, field, value, download_url=None, **attributes):
+        request = current.request
+        s3 = current.response.s3
+        T = current.T
+
+        script_dir = "/%s/static/scripts" % request.application
+
+        if s3.debug and \
+           "%s/jquery.Jcrop.js" % script_dir not in s3.scripts:
+            s3.scripts.append("%s/jquery.Jcrop.js" % script_dir)
+
+        if s3.debug and \
+            "%s/jquery.color.js" % script_dir not in s3.scripts:
+            s3.scripts.append("%s/jquery.color.js" % script_dir)
+
+        s3.scripts.append("%s/S3/s3.imagecrop.widget.js" % script_dir)
+
+        s3.stylesheets.append("plugins/jquery.Jcrop.css")
+
+        attr = self._attributes(field, {
+                "_type": "file",
+                "_class": "imagecrop-upload"
+            }, **attributes)
+
+        elements = [INPUT(**attr), INPUT(_type="hidden", _name="imagecrop-points")]
+
+        if value and download_url:
+            if callable(download_url):
+                download_url = download_url()
+
+            URL = download_url + '/' + value
+            elements.append(IMG(_class="imagecrop-preview",
+                _style="display: hidden;", _src=URL,
+                _width=str(self.DEFAULT_WIDTH)+'px'))
+            elements.append(DIV(_class="tooltip",
+                              _title="%s|%s" % (T("Crop Image"),
+                              T("You can select an area on the image and save to crop it."))))
+        else:
+            elements.append(DIV(_class="tooltip",
+                              _title="%s|%s" % (T("Upload Image"),
+                              T("Select an image to upload. You can crop this later by opening this record."))))
+
+        return DIV(elements)
 
 # =============================================================================
 class S3AutocompleteWidget(FormWidget):
