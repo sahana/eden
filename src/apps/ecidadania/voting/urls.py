@@ -34,7 +34,7 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
     url(r'^$', ListVotings.as_view(), name=LIST_VOTING),
 
-    url(r'^polls/$', ListPolls.as_view(), name=LIST_POLL),
+    url(r'^poll/$', ListPolls.as_view(), name=LIST_POLL),
 
     url(r'^add/$', AddVoting.as_view(), name=ADD_VOTING),
 
