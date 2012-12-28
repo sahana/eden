@@ -3079,12 +3079,14 @@ def org_organisation_controller():
                 # Filter type field
                 type_names = [name.lower().strip()
                               for name in type_filter.split(",")]
-                fquery = s3db.org_organisation_type.name.lower().belongs(type_names)
+                fquery = s3db.org_organisation_type.name.lower() \
+                                                   .belongs(type_names)
                 field = r.table.organisation_type_id
-                field.requires = IS_NULL_OR(IS_ONE_OF(current.db(fquery),
-                                                      "org_organisation_type.id",
-                                                      field.represent,
-                                                      sort=True))
+                field.requires = IS_ONE_OF(current.db(fquery),
+                                    "org_organisation_type.id",
+                                    label=field.represent,
+                                    error_message=T("Please choose a type"),
+                                    sort=True)
                 field.comment = None # AddResourceLink makes no sense here
 
                 if type_filter in type_crud_strings:
