@@ -254,6 +254,9 @@ class S3AssessBuildingModel(S3Model):
                                         widget = lambda f, v, **attr: \
                                             SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
                                         label=T("Mold Status")),
+                                  s3_comments("mold_notes",
+                                              comment=None,
+                                              label=T("Mold Notes")),
                                   Field("priority", "integer",
                                         requires=IS_EMPTY_OR(
                                                     IS_IN_SET(assess_priority_opts)
