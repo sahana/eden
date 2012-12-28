@@ -71,8 +71,8 @@ def add_new_debate(request, space_url):
     if has_space_permission(request.user, place, allow=['admins']) \
     or has_all_permissions(request.user):
 
-        RowFormSet = inlineformset_factory(Debate, Row)
-        ColumnFormSet = inlineformset_factory(Debate, Column)
+        RowFormSet = inlineformset_factory(Debate, Row, extra=1)
+        ColumnFormSet = inlineformset_factory(Debate, Column, extra=1)
 
         debate_form = DebateForm(request.POST or None)
         row_formset = RowFormSet(request.POST or None, prefix="rowform")
@@ -131,8 +131,8 @@ def edit_debate(request, space_url, pk):
     if has_space_permission(request.user, place, allow=['admins']) \
     or has_all_permissions(request.user):
 
-        RowFormSet = inlineformset_factory(Debate, Row)
-        ColumnFormSet = inlineformset_factory(Debate, Column)
+        RowFormSet = inlineformset_factory(Debate, Row, extra=1)
+        ColumnFormSet = inlineformset_factory(Debate, Column, extra=1)
 
         instance = Debate.objects.get(pk=pk)
         debate_form = DebateForm(request.POST or None, instance=instance)
