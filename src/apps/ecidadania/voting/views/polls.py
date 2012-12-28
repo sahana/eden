@@ -104,7 +104,9 @@ class ViewPoll(DetailView):
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
         poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
 
-        if self.request.user in poll.participants.all():
+        if self.request.user in poll.participants.all()
+        or datetime.date.today() >= poll.end_date \
+        or datetime.date.today() <  poll.start_date:
             return HttpResponseRedirect(reverse(urln_voting.VIEW_RESULT,
                 kwargs={'space_url': space.url, 'pk':poll.id}))
         else:
