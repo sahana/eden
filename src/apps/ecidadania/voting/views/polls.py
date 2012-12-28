@@ -18,14 +18,12 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
-from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
-from django.views.generic import FormView
 from django.template import RequestContext
 from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
@@ -34,8 +32,7 @@ from django.forms.formsets import formset_factory, BaseFormSet
 from django.forms.models import modelformset_factory, inlineformset_factory
 from django.core.exceptions import ObjectDoesNotExist
 from helpers.cache import get_or_insert_object_in_cache
-from django.core.urlresolvers import NoReverseMatch, reverse
-from django.template.response import TemplateResponse
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 
 from core.spaces.models import Space
@@ -104,7 +101,7 @@ class ViewPoll(DetailView):
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
         poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
 
-        if self.request.user in poll.participants.all()
+        if self.request.user in poll.participants.all() \
         or datetime.date.today() >= poll.end_date \
         or datetime.date.today() <  poll.start_date:
             return HttpResponseRedirect(reverse(urln_voting.VIEW_RESULT,
@@ -147,6 +144,7 @@ def edit_poll(request, space_url, poll_id):
     :context: form, get_place, choiceform, pollid
     """
     place = get_object_or_404(Space, url=space_url)
+
     if has_operation_permission(request.user, place, 'voting.change_poll',
         allow=['admins', 'mods']):
      
@@ -168,7 +166,8 @@ def edit_poll(request, space_url, poll_id):
                     choice = form.save(commit=False)
                     choice.poll = instance
                     choice.save()
-                return redirect('/spaces/' + space_url)
+                return HttpResponseRedirect(reverse(urln.SPACE_INDEX,
+                kwargs={'space_url': place.url}))
 
         return render_to_response('voting/poll_form.html',
                                  {'form': poll_form,
