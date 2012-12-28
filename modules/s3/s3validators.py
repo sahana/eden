@@ -76,8 +76,10 @@ def translate(text):
             return str(current.T(text))
     return str(text)
 
+from s3utils import S3DateTime, s3_unicode
+    
 def options_sorter(x, y):
-    return (str(x[1]).upper() > str(y[1]).upper() and 1) or -1
+    return (s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() and 1) or -1
 
 # -----------------------------------------------------------------------------
 # Phone number requires
@@ -618,10 +620,18 @@ class IS_ONE_OF_EMPTY(Validator):
                     if not self.orderby:
                         dd.update(orderby=table[filterby])
 
-                if self.left is not None:
-                    self.left.append(left)
-                else:
-                    self.left = left
+                if left is not None:
+                    if self.left is not None:
+                        if not isinstance(left, list):
+                            left = [left]
+                        ljoins = [str(join) for join in self.left]
+                        for join in left:
+                            ljoin = str(join)
+                            if ljoin not in ljoins:
+                                self.left.append(join)
+                                ljoins.append(ljoin)
+                    else:
+                        self.left = left
                 if self.left is not None:
                     dd.update(left=self.left)
                 records = dbset(query).select(distinct=True, *fields, **dd)
@@ -662,26 +672,25 @@ class IS_ONE_OF_EMPTY(Validator):
             self.labels = labels
 
             if labels and self.sort:
-                orig_labels = self.labels
-                orig_theset = self.theset
 
-                labels = []
-                theset = []
+                items = zip(self.theset, self.labels)
+                
+                # Alternative variant that handles generator objects,
+                # doesn't seem necessary, retained here just in case:
+                #orig_labels = self.labels
+                #orig_theset = self.theset
+                #items = []
+                #for i in xrange(len(orig_theset)):
+                    #label = orig_labels[i]
+                    ##if hasattr(label, "flatten"):
+                        ##try:
+                            ##label = label.flatten()
+                        ##except:
+                            ##pass
+                    #items.append((orig_theset[i], label))
 
-                for label in orig_labels:
-                    try:
-                        labels.append(label.flatten())
-                    except:
-                        labels.append(label)
-                orig_labels = list(labels)
-                labels.sort()
-
-                for label in labels:
-                     orig_index = orig_labels.index(label)
-                     theset.append(orig_theset[orig_index])
-
-                self.labels = labels
-                self.theset = theset
+                items.sort(key=lambda item: s3_unicode(item[1]).lower())
+                self.theset, self.labels = zip(*items)
 
         else:
             self.theset = None
@@ -824,7 +833,6 @@ class IS_ONE_OF_EMPTY(Validator):
 
 # =============================================================================
 class IS_ONE_OF(IS_ONE_OF_EMPTY):
-
     """
         Extends IS_ONE_OF_EMPTY by restoring the 'options' method.
     """
@@ -832,13 +840,10 @@ class IS_ONE_OF(IS_ONE_OF_EMPTY):
     def options(self):
 
         self.build_set()
-        items = [(k, self.labels[i]) for (i, k) in enumerate(self.theset)]
-        if self.sort:
-            items.sort(options_sorter)
+        items = zip(self.theset, self.labels)
         if self.zero != None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
-
 
 # =============================================================================
 class IS_ONE_OF_EMPTY_SELECT(IS_ONE_OF_EMPTY):
@@ -1810,25 +1815,12 @@ class IS_UTC_OFFSET(Validator):
         self.error_message = error_message
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_offset_value(offset_str):
-        if offset_str and len(offset_str) >= 5 and \
-            (offset_str[-5] == "+" or offset_str[-5] == "-") and \
-            offset_str[-4:].isdigit():
-            offset_hrs = int(offset_str[-5] + offset_str[-4:-2])
-            offset_min = int(offset_str[-5] + offset_str[-2:])
-            offset = 3600 * offset_hrs + 60 * offset_min
-            return offset
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
     def __call__(self, value):
 
         if value and isinstance(value, str):
             _offset_str = value.strip()
 
-            offset = self.get_offset_value(_offset_str)
+            offset = S3DateTime.get_offset_value(_offset_str)
 
             if offset is not None and offset > -86340 and offset < 86340:
                 # Add a leading 'UTC ',
@@ -1914,7 +1906,7 @@ class IS_UTC_DATETIME(Validator):
             self.utc_offset = "UTC +0000" # fallback to UTC
         else:
             self.utc_offset = offset
-        delta = IS_UTC_OFFSET.get_offset_value(self.utc_offset)
+        delta = S3DateTime.get_offset_value(self.utc_offset)
         return delta
 
     # -------------------------------------------------------------------------

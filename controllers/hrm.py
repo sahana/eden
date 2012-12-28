@@ -51,6 +51,13 @@ def human_resource():
             elif r.method == "delete":
                 # Don't redirect
                 pass
+            elif r.method == "deduplicate":
+                # Don't use AddPersonWidget here
+                from gluon.sqlhtml import OptionsWidget
+                field = r.table.person_id
+                field.requires = IS_ONE_OF(db, "pr_person.id",
+                                           label = field.represent)
+                field.widget = OptionsWidget.widget
             elif r.id:
                 # Redirect to person controller
                 vars = {
@@ -404,25 +411,24 @@ def person():
             resource = r.resource
             if mode is not None:
                 r.resource.build_query(id=s3_logged_in_person())
-            else:
+            elif r.method != "deduplicate":
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:
                         session.error = response.error
                     redirect(URL(r=r, f="staff"))
-            if resource.count() == 1:
-                resource.load()
-                r.record = resource.records().first()
-                if r.record:
-                    r.id = r.record.id
-            if not r.record:
-                session.error = T("Record not found")
-                redirect(URL(f="staff",
-                             args=["search"]))
-            if hr_id and r.component_name == "human_resource":
-                r.component_id = hr_id
-            configure("hrm_human_resource",
-                      insertable = False)
+                if resource.count() == 1:
+                    resource.load()
+                    r.record = resource.records().first()
+                    if r.record:
+                        r.id = r.record.id
+                if not r.record:
+                    session.error = T("Record not found")
+                    redirect(URL(f="staff", args=["search"]))
+                if hr_id and r.component_name == "human_resource":
+                    r.component_id = hr_id
+                configure("hrm_human_resource", insertable = False)
+                
         return True
     s3.prep = prep
 
@@ -464,7 +470,9 @@ def person():
                                     dict(label="Type",
                                          field=s3db.hrm_human_resource.type)
                                                   ],
-                                )
+                                # Better in the native person controller:
+                                deduplicate="",
+                               )
     return output
 
 # -----------------------------------------------------------------------------

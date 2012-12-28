@@ -51,8 +51,6 @@ from gluon.sqlhtml import SQLTABLE
 from gluon.tools import Crud
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3validators import IS_UTC_OFFSET
-
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3Utils: DEBUG MODE"
@@ -1995,8 +1993,8 @@ class S3DateTime(object):
     """
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def date_represent(date, utc=False):
+    @classmethod
+    def date_represent(cls, date, utc=False):
         """
             Represent the date according to deployment settings &/or T()
 
@@ -2010,7 +2008,7 @@ class S3DateTime(object):
         format = settings.get_L10n_date_format()
 
         if date and isinstance(date, datetime.datetime) and utc:
-            offset = IS_UTC_OFFSET.get_offset_value(session.s3.utc_offset)
+            offset = cls.get_offset_value(session.s3.utc_offset)
             if offset:
                 date = date + datetime.timedelta(seconds=offset)
 
@@ -2020,8 +2018,8 @@ class S3DateTime(object):
             return current.messages["NONE"]
 
     # -----------------------------------------------------------------------------
-    @staticmethod
-    def time_represent(time, utc=False):
+    @classmethod
+    def time_represent(cls, time, utc=False):
         """
             Represent the date according to deployment settings &/or T()
 
@@ -2034,7 +2032,7 @@ class S3DateTime(object):
         format = settings.get_L10n_time_format()
 
         if time and utc:
-            offset = IS_UTC_OFFSET.get_offset_value(session.s3.utc_offset)
+            offset = cls.get_offset_value(session.s3.utc_offset)
             if offset:
                 time = time + datetime.timedelta(seconds=offset)
 
@@ -2044,8 +2042,8 @@ class S3DateTime(object):
             return current.messages["NONE"]
 
     # -----------------------------------------------------------------------------
-    @staticmethod
-    def datetime_represent(dt, utc=False):
+    @classmethod
+    def datetime_represent(cls, dt, utc=False):
         """
             Represent the datetime according to deployment settings &/or T()
 
@@ -2057,7 +2055,7 @@ class S3DateTime(object):
         xml = current.xml
 
         if dt and utc:
-            offset = IS_UTC_OFFSET.get_offset_value(session.s3.utc_offset)
+            offset = cls.get_offset_value(session.s3.utc_offset)
             if offset:
                 dt = dt + datetime.timedelta(seconds=offset)
 
@@ -2065,6 +2063,24 @@ class S3DateTime(object):
             return xml.encode_local_datetime(dt)
         else:
             return current.messages["NONE"]
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def get_offset_value(offset_str):
+        """
+            Convert an UTC offset string into a UTC offset value in seconds
+
+            @param offset_str: the UTC offset as string
+        """
+        if offset_str and len(offset_str) >= 5 and \
+            (offset_str[-5] == "+" or offset_str[-5] == "-") and \
+            offset_str[-4:].isdigit():
+            offset_hrs = int(offset_str[-5] + offset_str[-4:-2])
+            offset_min = int(offset_str[-5] + offset_str[-2:])
+            offset = 3600 * offset_hrs + 60 * offset_min
+            return offset
+        else:
+            return None
 
 # =============================================================================
 class S3MultiPath:
