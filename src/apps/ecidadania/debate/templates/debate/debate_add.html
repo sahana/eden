@@ -81,6 +81,9 @@ automatically if found in the data models.
                     {{ colform.management_form }}
                     <th id="corner" class="corner-criteria"></th>
                     {% for col in colform.forms %}
+                     {% if form.title.value %}
+                        {{ col.id }}
+                     {% endif %}
                         <th id="debate-vcriteria{{ debate_id }}" class="criteria-vtitle">
                             {{ col.criteria }}
                         </th>
@@ -90,6 +93,9 @@ automatically if found in the data models.
                 <tbody id="debate-body">
                 {{ rowform.management_form }}
                 {% for row in rowform.forms %}
+                     {% if form.title.value %}
+                        {{ row.id }}
+                     {% endif %}
                 <tr>
                     <td id="debate-hcriteria" class="criteria-htitle">
                         <div id="debate-ttitle">

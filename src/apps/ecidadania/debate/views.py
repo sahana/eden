@@ -43,6 +43,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import connection
+from django.forms.models import modelformset_factory, inlineformset_factory
 
 from apps.ecidadania.debate import url_names as urln
 from apps.ecidadania.debate.models import Debate, Note, Row, Column
@@ -134,7 +135,59 @@ def add_new_debate(request, space_url):
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
 
+@permission_required('debate.edit_debate')
+def edit_debate(request, space_url, pk):
 
+
+    place = get_object_or_404(Space, url=space_url)
+
+    if has_space_permission(request.user, place, allow=['admins']) \
+    or has_all_permissions(request.user):
+
+        RowFormSet = inlineformset_factory(Debate, Row)
+        ColumnFormSet = inlineformset_factory(Debate, Column)
+
+        instance = Debate.objects.get(pk=pk)
+        debate_form = DebateForm(request.POST or None, instance=instance)
+        row_formset = RowFormSet(request.POST or None, instance=instance, prefix="rowform")
+        column_formset = ColumnFormSet(request.POST or None, instance=instance, prefix="colform")
+
+
+        if request.user.has_perm('debate.debate_edit') or has_all_permissions():
+            if request.method == 'POST':
+                if debate_form.is_valid() and row_formset.is_valid() \
+                and column_formset.is_valid():
+                    debate_form_uncommited = debate_form.save(commit=False)
+                    debate_form_uncommited.space = place
+                    debate_form_uncommited.author = request.user
+
+                    saved_debate = debate_form_uncommited.save()
+                    debate_instance = get_object_or_404(Debate,
+                        pk=pk)
+                        
+                    row = row_formset.save(commit=False)
+                    for form in row:
+                        form.debate = instance
+                        form.save()
+
+                    column = column_formset.save(commit=False)
+                    for form in column:
+                        form.debate = instance
+                        form.save()
+
+                    return HttpResponseRedirect(reverse(urln.DEBATE_VIEW,
+                        kwargs={'space_url': space_url,
+                                'debate_id': str(debate_form_uncommited.id)}))
+
+            return render_to_response('debate/debate_add.html',
+                                  {'form': debate_form,
+                                   'rowform': row_formset,
+                                   'colform': column_formset,
+                                   'get_place': place,
+                                   'debateid': pk},
+                                  context_instance=RequestContext(request))
+    return render_to_response('not_allowed.html',
+                              context_instance=RequestContext(request))
 def get_debates(request):
 
     """

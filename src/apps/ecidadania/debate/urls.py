@@ -23,8 +23,8 @@ access to '/spaces/'.
 """
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
-
-from apps.ecidadania.debate.views import ListDebates, ViewDebate
+from django.contrib.auth.decorators import permission_required
+from apps.ecidadania.debate.views import ListDebates, ViewDebate, edit_debate 
 from apps.ecidadania.debate.url_names import *
 
 urlpatterns = patterns('apps.ecidadania.debate.views',
@@ -44,8 +44,8 @@ urlpatterns = patterns('apps.ecidadania.debate.views',
     url(r'^delete_note/', 'delete_note', name=NOTE_DELETE),
 
     # Editing debates is not allowed at this time
-    #(r'^(?P<debate_id>\d+)', 'edit_debate'),
+    url(r'^edit/(?P<pk>\d+)/', 'edit_debate', name=DEBATE_EDIT),
 
-    #(r'^(?P<debate_id>\d+)', 'delete_debate'),
+    #(r'^edit/(?P<pk>\d+)', 'delete_debate'),
 
 )
