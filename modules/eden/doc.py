@@ -184,7 +184,8 @@ class S3DocumentLibrary(S3Model):
                                    # upload folder needs to be visible to the download() function as well as the upload
                                    uploadfolder = os.path.join(current.request.folder,
                                                                "uploads",
-                                                               "images")),
+                                                               "images"),
+                                   widget=S3ImageCropWidget()),
                              Field("name", length=128,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
