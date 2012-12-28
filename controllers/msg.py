@@ -1483,14 +1483,14 @@ def twitter_settings():
         return True
     s3.prep = prep
 
-    # Post-processor
+    # Post-process
     def user_postp(r, output):
-        output["list_btn"] = ""
-        if r.http == "GET" and r.method in ("create", "update"):
-            rheader = A(T("Collect PIN from Twitter"),
-                        _href=T(session.s3.twitter_oauth_url),
-                        _target="_blank")
-            output["rheader"] = rheader  
+        if r.interactive and isinstance(output, dict):
+            if r.http == "GET" and r.method in ("create", "update"):
+                rheader = A(T("Collect PIN from Twitter"),
+                            _href=T(session.s3.twitter_oauth_url),
+                            _target="_blank")
+                output["rheader"] = rheader
         return output
     s3.postp = user_postp
 
@@ -1498,7 +1498,7 @@ def twitter_settings():
                    listadd=False,
                    deletable=False)
 
-    return s3_rest_controller()
+    return s3_rest_controller(deduplicate="", list_btn="")
 
 # =============================================================================
 # The following functions hook into the pr functions:
