@@ -199,7 +199,7 @@ def facility_marker_fn(record):
 # -----------------------------------------------------------------------------
 def facility():
     """ RESTful CRUD controller """
-    
+
     # Pre-processor
     def prep(r):
         # Location Filter
