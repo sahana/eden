@@ -7,7 +7,7 @@
 {{if settings.has_module("msg"):}}
 <h3>{{=T("Messaging")}}:</h3>
 <ul>
-  <li><a href='{{=URL(c="msg", f="email_settings", args=[1, "update"])}}'>{{=T("Email")}}</a>
+  <li><a href='{{=URL(c="msg", f="inbound_email_settings")}}'>{{=T("Email")}}</a>
   <li><a href='{{=URL(c="msg", f="setting", args=[1, "update"])}}'>{{=T("SMS Outbound")}}</a>
   <li><a href='{{=URL(c="msg", f="modem_settings")}}'>{{=T("SMS Modems (Inbound & Outbound)")}}</a>
   <li><a href='{{=URL(c="msg", f="twitter_settings", args=[1, "update"])}}'>{{=T("Twitter")}}</a>
