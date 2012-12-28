@@ -138,10 +138,6 @@ def add_new_debate(request, space_url):
 @permission_required('debate.edit_debate')
 def edit_debate(request, space_url, pk):
 
-    #model = Debate
-    #form_class = DebateForm
-    #template_name = 'debate/debate_add.html'
-    #success_url = '/asdasd/'
 
     place = get_object_or_404(Space, url=space_url)
 
@@ -168,16 +164,16 @@ def edit_debate(request, space_url, pk):
                     saved_debate = debate_form_uncommited.save()
                     debate_instance = get_object_or_404(Debate,
                         pk=pk)
+                        
+                    row = row_formset.save(commit=False)
+                    for form in row:
+                        form.debate = instance
+                        form.save()
 
-                    for form in row_formset.forms:
-                        row = form.save(commit=False)
-                        row.debate = instance
-                        row.save()
-
-                    for form in column_formset.forms:
-                        column = form.save(commit=False)
-                        column.debate = instance
-                        column.save()
+                    column = column_formset.save(commit=False)
+                    for form in column:
+                        form.debate = instance
+                        form.save()
 
                     return HttpResponseRedirect(reverse(urln.DEBATE_VIEW,
                         kwargs={'space_url': space_url,
