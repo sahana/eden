@@ -92,7 +92,10 @@ def add_poll(request, space_url):
 class ViewPoll(DetailView):
 
     """
-    Displays an specific poll.
+    Display a poll. If the poll didn't start, ended, or the user already voted
+    the user will be redirected to the VotePollResults view.
+
+    ..versionadded:: 0.1.7
     """
     context_object_name = 'poll'
     template_name = 'voting/poll_detail.html'
@@ -119,7 +122,9 @@ class ViewPoll(DetailView):
 class ViewPollResults(DetailView):
 
     """
-    Displays an specific poll.
+    Displays an specific poll results.
+
+    .. versionadded:: 0.1.7 beta
     """
     context_object_name = 'poll'
     template_name = 'voting/poll_results.html'
@@ -210,6 +215,7 @@ class DeletePoll(DeleteView):
 class ListPolls(ListView):
     """
     Return a list of polls for the current space.
+    
     :context: get_place
     """
     paginate_by = 10

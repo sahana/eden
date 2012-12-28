@@ -124,7 +124,8 @@ class Voting(models.Model):
         else:
             return ('view-votings', (), {
                 'voting_id': str(self.id)})
-   
+
+
 class ConfirmVote(models.Model):
 
     """

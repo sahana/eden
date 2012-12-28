@@ -47,8 +47,8 @@ from apps.ecidadania.proposals.models import *
 class AddVoting(FormView):
 
     """
-    Create a new voting process. Only registered users belonging to a concrete group
-    are allowed to create voting processes.
+    Create a new voting process. Only registered users belonging to a concrete
+    group are allowed to create voting processes.
 
     versionadded: 0.1
 
