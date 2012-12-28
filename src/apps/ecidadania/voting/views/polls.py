@@ -170,7 +170,7 @@ def edit_poll(request, space_url, poll_id):
                     choice.save()
                 return redirect('/spaces/' + space_url)
 
-        return render_to_response('voting/poll_edit.html',
+        return render_to_response('voting/poll_form.html',
                                  {'form': poll_form,
                                   'choiceform': choice_form,
                                   'get_place': place,

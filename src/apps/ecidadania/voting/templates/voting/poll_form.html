@@ -94,6 +94,44 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                 </div>
             </div>
 
+            <div class="control-group {% if form.start_date.errors %}error{% endif%}">
+                <label class="control-label">{{ form.start_date.label }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        {{ form.start_date }}
+                        {% if form.start_date.help_text %}
+                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.start_date.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.start_date.errors %}
+                    <p class="help-block">
+                        {% for error in form.start_date.errors %}
+                        {{ error|escape }}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="control-group {% if form.end_date.errors %}error{% endif%}">
+                <label class="control-label">{{ form.end_date.label }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        {{ form.end_date }}
+                        {% if form.end_date.help_text %}
+                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.end_date.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.end_date.errors %}
+                    <p class="help-block">
+                        {% for error in form.end_date.errors %}
+                        {{ error|escape }}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
             <hr>
             
             {{ choiceform.management_form }}
