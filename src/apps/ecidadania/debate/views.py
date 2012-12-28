@@ -71,26 +71,13 @@ def add_new_debate(request, space_url):
     if has_space_permission(request.user, place, allow=['admins']) \
     or has_all_permissions(request.user):
 
-        # Define FormSets
-        # This class is used to make empty formset forms required
-        # See http://stackoverflow.com/questions/2406537/django-formsets-make
-        # -first-required/4951032#4951032
-        class RequiredFormSet(BaseFormSet):
-            """
-            """
-            def __init__(self, *args, **kwargs):
-                super(RequiredFormSet, self).__init__(*args, **kwargs)
-                for form in self.forms:
-                    form.empty_permitted = False
-
-        RowFormSet = formset_factory(RowForm, max_num=10,
-            formset=RequiredFormSet, can_delete=True)
-        ColumnFormSet = formset_factory(ColumnForm, max_num=10,
-            formset=RequiredFormSet, can_delete=True)
+        RowFormSet = inlineformset_factory(Debate, Row)
+        ColumnFormSet = inlineformset_factory(Debate, Column)
 
         debate_form = DebateForm(request.POST or None)
         row_formset = RowFormSet(request.POST or None, prefix="rowform")
         column_formset = ColumnFormSet(request.POST or None, prefix="colform")
+
 
         # Get the last PK and add 1 to get the current PK
         try:
@@ -110,16 +97,16 @@ def add_new_debate(request, space_url):
                     saved_debate = debate_form_uncommited.save()
                     debate_instance = get_object_or_404(Debate,
                         pk=current_debate_id)
-
-                    for form in row_formset.forms:
-                        row = form.save(commit=False)
-                        row.debate = debate_instance
-                        row.save()
-
-                    for form in column_formset.forms:
-                        column = form.save(commit=False)
-                        column.debate = debate_instance
-                        column.save()
+                    
+                    row = row_formset.save(commit=False)
+                    for form in row:
+                        form.debate = debate_instance
+                        form.save()
+                    
+                    column = column_formset.save(commit=False)
+                    for form in column:
+                        form.debate = debate_instance
+                        form.save()
 
                     return HttpResponseRedirect(reverse(urln.DEBATE_VIEW,
                         kwargs={'space_url': space_url,
