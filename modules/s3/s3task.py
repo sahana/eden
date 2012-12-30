@@ -252,10 +252,10 @@ class S3Task(object):
             # Run the task synchronously
             _args = []
             for arg in args:
-                if isinstance(arg, (int, long)):
+                if isinstance(arg, (int, long, float)):
                     _args.append(str(arg))
                 elif isinstance(arg, str):
-                    _args.append("'%s'" % str(arg))
+                    _args.append("%s" % str(json.dumps(arg)))
                 else:
                     raise HTTP(501, "Unhandled arg type")
             args = " ,".join(_args)
