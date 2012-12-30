@@ -5,6 +5,7 @@
 'Ability to customize the list of human resource tracked at a Shelter': 'Ability to customise the list of human resource tracked at a Shelter',
 'Ability to customize the list of important facilities needed at a Shelter': 'Ability to customise the list of important facilities needed at a Shelter',
 "Acronym of the organization's name, eg. IFRC.": "Acronym of the organisation's name, eg. IFRC.",
+'ACTION REQUIRED': 'ACTION REQUIRED',
 'Add all organizations which are involved in different roles in this project': 'Add all organisations which are involved in different roles in this project',
 'Add New Branch Organization': 'Add New Branch Organisation',
 'Add New Organization': 'Add New Organisation',
@@ -170,5 +171,6 @@
 'User ID': 'User ID',
 'UTC Offset': 'UTC Offset',
 'Utilization Report': 'Utilisation Report',
+'WARNING': 'WARNING',
 'Year that the organization was founded': 'Year that the organisation was founded',
 }
