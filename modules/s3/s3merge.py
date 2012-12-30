@@ -285,9 +285,6 @@ class S3Merge(S3Method):
         totalrows = displayrows = resource.count()
         if representation == "aadata":
             # Workaround for datatables with 2 action columns:
-            for k in vars:
-                if k[:9] == "iSortCol_":
-                    vars[k] = str(int(vars[k]) - 1)
             searchq, orderby, left = resource.datatable_filter(list_fields,
                                                                vars)
             if searchq is not None:
