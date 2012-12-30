@@ -1060,30 +1060,56 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     """ Test datatable_filter """
 
     # -------------------------------------------------------------------------
-    def testDataTableFilter_01(self):
+    def testDataTableFilterStandard(self):
         """ Test Standard Data Table """
         resource = current.s3db.resource("hrm_certificate_skill")
-        vars = Storage({"bSortable_0": "false", "bSortable_1": "true", "bSortable_2": "true", "sSortDir_0": "asc",
-                        "iSortCol_0": "1", "iColumns": "3", "iSortingCols": "1"})
-        searchq, orderby, left = resource.datatable_filter(["id", "skill_id", "competency_id"], vars)
+        vars = Storage({"bSortable_0": "false",
+                        "bSortable_1": "true",
+                        "bSortable_2": "true",
+                        "sSortDir_0": "asc",
+                        "iSortCol_0": "1",
+                        "iColumns": "3",
+                        "iSortingCols": "1"})
+        searchq, orderby, left = resource.datatable_filter(["id",
+                                                            "skill_id",
+                                                            "competency_id"],
+                                                            vars)
         self.assertEqual(orderby, "hrm_skill.name asc")
 
     # -------------------------------------------------------------------------
-    def testDataTableFilter_02(self):
+    def testDataTableFilterWithBulkColumn(self):
         """ Test De-Duplicator Data Table """
         resource = current.s3db.resource("hrm_certificate_skill")
-        vars = Storage({"bSortable_0": "false", "bSortable_1": "false", "bSortable_2": "true", "bSortable_3": "true", "sSortDir_0": "desc",
-                        "iSortCol_0": "2", "iColumns": "4", "iSortingCols": "1"})
-        searchq, orderby, left = resource.datatable_filter(["id", "skill_id", "competency_id"], vars)
+        vars = Storage({"bSortable_0": "false",
+                        "bSortable_1": "false",
+                        "bSortable_2": "true",
+                        "bSortable_3": "true",
+                        "sSortDir_0": "desc",
+                        "iSortCol_0": "2",
+                        "iColumns": "4",
+                        "iSortingCols": "1"})
+        searchq, orderby, left = resource.datatable_filter(["id",
+                                                            "skill_id",
+                                                            "competency_id"],
+                                                            vars)
         self.assertEqual(orderby, "hrm_skill.name desc")
 
     # -------------------------------------------------------------------------
-    def testDataTableFilter_03(self):
+    def testDataTableFilterOther(self):
         """ Test Other Data Table """
         resource = current.s3db.resource("hrm_certificate_skill")
-        vars = Storage({"bSortable_0": "false", "bSortable_1": "true", "bSortable_2": "false", "bSortable_3": "true", "sSortDir_0": "desc",
-                        "iSortCol_0": "3", "iColumns": "4","iSortingCols": "1"})
-        searchq, orderby, left = resource.datatable_filter(["id", "skill_id", "competency_id"], vars)
+        vars = Storage({"bSortable_0": "false",
+                        "bSortable_1": "true",
+                        "bSortable_2": "false",
+                        "bSortable_3": "true",
+                        "sSortDir_0": "desc",
+                        "iSortCol_0": "3",
+                        "iColumns": "4",
+                        "iSortingCols": "1"})
+        searchq, orderby, left = resource.datatable_filter(["id",
+                                                            "skill_id",
+                                                            "competency_id"],
+                                                            vars)
         self.assertEqual(orderby, "hrm_competency_rating.priority desc")
 
 # =============================================================================
@@ -2382,7 +2408,7 @@ if __name__ == "__main__":
         ResourceDataObjectAPITests,
 
         ResourceDataAccessTests,
-        ResourceDataTableFilterTest,
+        ResourceDataTableFilterTests,
         ResourceGetTests,
         #ResourceInsertTest,
         #ResourceSelectTests,
