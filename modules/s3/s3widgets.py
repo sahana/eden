@@ -229,7 +229,7 @@ class S3DateTimeWidget(FormWidget):
         selector = str(field).replace(".", "_")
 
         now = request.utcnow
-        offset = IS_UTC_OFFSET.get_offset_value(current.session.s3.utc_offset)
+        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
         if offset:
             now = now + datetime.timedelta(seconds=offset)
         timedelta = datetime.timedelta
