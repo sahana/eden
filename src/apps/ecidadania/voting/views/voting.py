@@ -212,3 +212,9 @@ def vote_voting(request, space_url, voting_id):
     else:
         return HttpResponse("Error P02: Couldn't emit the vote. You're not \
             allowed.")
+
+def validate_voting(request, space_url, vote, hash):
+
+    """
+    """
+    

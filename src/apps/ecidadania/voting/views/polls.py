@@ -122,9 +122,12 @@ class ViewPoll(DetailView):
 class ViewPollResults(DetailView):
 
     """
-    Displays an specific poll results.
+    Displays an specific poll results. The results are always available even
+    after the end_date.
 
     .. versionadded:: 0.1.7 beta
+
+    :context: get_place
     """
     context_object_name = 'poll'
     template_name = 'voting/poll_results.html'
@@ -215,7 +218,7 @@ class DeletePoll(DeleteView):
 class ListPolls(ListView):
     """
     Return a list of polls for the current space.
-    
+
     :context: get_place
     """
     paginate_by = 10
