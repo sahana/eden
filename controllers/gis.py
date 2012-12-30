@@ -39,7 +39,10 @@ def index():
         # IE (even 9) doesn't like the dynamic full-screen, so simply do a page refresh for now
         # Remove components from embedded Map's containers without destroying their contents
         # Add a full-screen window which will inherit these components
-        script = "/%s/static/scripts/fullscreen.js" % request.application
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
         s3.scripts.append(script)
 
     # Include an embedded Map on the index page

@@ -219,6 +219,7 @@ def dojs(dogis = False, warnings = True):
     for filename in [
                      "contacts",
                      "embed_component",
+                     "gis.fullscreen",
                      "locationselector.widget",
                      "popup",
                      "timeline",
