@@ -199,8 +199,8 @@ class S3VolClusterDataModel(S3Model):
         # Volunteer Cluster Link Table
         cluster_type_filter = '''
 S3OptionsFilter({
- 'triggerName':'sub_volunteer_cluster_vol_cluster_type_id',
- 'targetName':'sub_volunteer_cluster_vol_cluster_id',
+ 'triggerName':'vol_cluster_type_id',
+ 'targetName':'vol_cluster_id',
  'lookupKey':'vol_cluster_type_id',
  'lookupPrefix':'vol',
  'lookupResource':'cluster',
