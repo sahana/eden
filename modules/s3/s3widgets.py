@@ -34,6 +34,7 @@ __all__ = ["S3HiddenWidget",
            "S3DateTimeWidget",
            "S3BooleanWidget",
            #"S3UploadWidget",
+           "S3ImageCropWidget",
            "S3AutocompleteWidget",
            "S3LocationAutocompleteWidget",
            "S3LatLonWidget",
@@ -405,6 +406,84 @@ class S3UploadWidget(UploadWidget):
                           A(UploadWidget.GENERIC_DESCRIPTION, _href = url),
                           "]", br, image)
         return inp
+
+
+class S3ImageCropWidget(FormWidget):
+    """
+    Allows the user to crop an image and uploads it. Cropping is done
+    client-side where supported, otherwise using PIL.
+    """
+
+    DEFAULT_WIDTH = 300
+
+    def __init__(self, image_bounds=None):
+        self.image_bounds = image_bounds
+
+    def __call__(self, field, value, download_url=None, **attributes):
+        request = current.request
+        s3 = current.response.s3
+        T = current.T
+
+        script_dir = "/%s/static/scripts" % request.application
+
+        if s3.debug and \
+           "%s/jquery.Jcrop.js" % script_dir not in s3.scripts:
+            s3.scripts.append("%s/jquery.Jcrop.js" % script_dir)
+
+        if s3.debug and \
+            "%s/jquery.color.js" % script_dir not in s3.scripts:
+            s3.scripts.append("%s/jquery.color.js" % script_dir)
+
+        s3.scripts.append("%s/S3/s3.imagecrop.widget.js" % script_dir)
+
+        s3.stylesheets.append("plugins/jquery.Jcrop.css")
+
+        attr = self._attributes(field, {
+                "_type": "file",
+                "_class": "imagecrop-upload"
+            }, **attributes)
+
+        elements = [INPUT(_type="hidden", _name="imagecrop-points")]
+
+        if value and download_url:
+            if callable(download_url):
+                download_url = download_url()
+
+            URL = download_url + '/' + value
+
+            elements.append(IMG(_class="imagecrop-preview",
+                _style="display: hidden;", _src=URL,
+                _width=str(self.DEFAULT_WIDTH)+'px'))
+            elements.append(P(T("You can select an area on the image and save to crop it."), _class="imagecrop-help",
+              _style="display: none;"))
+            elements.append(INPUT(_value=T("Crop Image"), _type="button", _class="imagecrop-toggle"))
+            elements.append(INPUT(**attr))
+            # Set up the canvas
+            canvas = TAG["canvas"](_class="imagecrop-canvas", _style="display: none;")
+            elements.append(canvas)
+
+        else:
+            elements.append(DIV(_class="tooltip",
+              _title=T("Crop Image|Select an image to upload. You can crop this later by opening this record.")))
+            # Set up the canvas
+            canvas = TAG["canvas"](_class="imagecrop-canvas", _style="display: none;")
+            if self.image_bounds:
+                canvas.attributes["_width"] = self.image_bounds[0]
+                canvas.attributes["_height"] = self.image_bounds[1]
+                canvas.attributes["_style"] = "background: black;"
+            elements.append(INPUT(**attr))
+            elements.append(INPUT(_type="hidden", _name="imagecrop-data", _class="imagecrop-data"))
+            elements.append(P(T("Drag an image below to crop and scale it before uploading it:")))
+            elements.append(canvas)
+
+        # Prevent multiple widgets on the same page from interfering with each
+        # other.
+        import uuid
+        uid = "cropwidget-" + uuid.uuid4().hex
+        for element in elements:
+          element.attributes["_data-uid"] = uid
+
+        return DIV(elements)
 
 # =============================================================================
 class S3AutocompleteWidget(FormWidget):
@@ -2227,7 +2306,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
             script = "s3.locationselector.widget.min.js"
 
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
-        
+
         if self.polygon:
             hidden = ""
             if value:
@@ -2547,7 +2626,7 @@ class S3PriorityListWidget(StringWidget):
     """
         Widget to broadcast facility needs
     """
-    
+
     def __call__(self, field, value, **attributes):
 
         s3 = current.response.s3
