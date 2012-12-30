@@ -17,6 +17,7 @@
 }
 #wrapper {
     overflow:hidden;
+    width: 100%;
 }
 #single-col,
 #right-col,

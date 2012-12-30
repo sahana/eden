@@ -3711,7 +3711,12 @@ class S3Resource(object):
             columns = []
             for i in xrange(numcols):
                 try:
-                    rfield = rfields[int(vars["iSortCol_%s" % i])]
+                    iSortCol = int(vars["iSortCol_%s" % i])
+                    # for every non-sortable column to the left of sortable column subtract 1
+                    for j in xrange(iSortCol):
+                        if vars["bSortable_%s" % j] == 'false' :
+                            iSortCol -= 1
+                    rfield = rfields[iSortCol + 1]
                 except:
                     columns.append(None)
                 else:

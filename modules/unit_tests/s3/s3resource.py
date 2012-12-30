@@ -1056,6 +1056,37 @@ class ResourceDataAccessTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class ResourceDataTableFilterTests(unittest.TestCase):
+    """ Test datatable_filter """
+
+    # -------------------------------------------------------------------------
+    def testDataTableFilter_01(self):
+        """ Test Standard Data Table """
+        resource = current.s3db.resource("hrm_certificate_skill")
+        vars = Storage({"bSortable_0": "false", "bSortable_1": "true", "bSortable_2": "true", "sSortDir_0": "asc",
+                        "iSortCol_0": "1", "iColumns": "3", "iSortingCols": "1"})
+        searchq, orderby, left = resource.datatable_filter(["id", "skill_id", "competency_id"], vars)
+        self.assertEqual(orderby, "hrm_skill.name asc")
+
+    # -------------------------------------------------------------------------
+    def testDataTableFilter_02(self):
+        """ Test De-Duplicator Data Table """
+        resource = current.s3db.resource("hrm_certificate_skill")
+        vars = Storage({"bSortable_0": "false", "bSortable_1": "false", "bSortable_2": "true", "bSortable_3": "true", "sSortDir_0": "desc",
+                        "iSortCol_0": "2", "iColumns": "4", "iSortingCols": "1"})
+        searchq, orderby, left = resource.datatable_filter(["id", "skill_id", "competency_id"], vars)
+        self.assertEqual(orderby, "hrm_skill.name desc")
+
+    # -------------------------------------------------------------------------
+    def testDataTableFilter_03(self):
+        """ Test Other Data Table """
+        resource = current.s3db.resource("hrm_certificate_skill")
+        vars = Storage({"bSortable_0": "false", "bSortable_1": "true", "bSortable_2": "false", "bSortable_3": "true", "sSortDir_0": "desc",
+                        "iSortCol_0": "3", "iColumns": "4","iSortingCols": "1"})
+        searchq, orderby, left = resource.datatable_filter(["id", "skill_id", "competency_id"], vars)
+        self.assertEqual(orderby, "hrm_competency_rating.priority desc")
+
+# =============================================================================
 class ResourceExportTests(unittest.TestCase):
     """ Test XML export of resources """
 
@@ -1297,7 +1328,7 @@ class ResourceImportTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-class ResourceDataObjectAPITests(unittest.TestCase):
+class ResourceDataObjectAPITests (unittest.TestCase):
     """ Test the S3Resource Data Object API """
 
     # -------------------------------------------------------------------------
@@ -2351,6 +2382,7 @@ if __name__ == "__main__":
         ResourceDataObjectAPITests,
 
         ResourceDataAccessTests,
+        ResourceDataTableFilterTest,
         ResourceGetTests,
         #ResourceInsertTest,
         #ResourceSelectTests,
