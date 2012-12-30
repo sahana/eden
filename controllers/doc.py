@@ -122,6 +122,7 @@ def source():
 # =============================================================================
 def image():
     """ RESTful CRUD controller """
+
     # Pre-processor
     def prep(r):
         # Location Filter
@@ -131,13 +132,12 @@ def image():
 
     def postp(r, output):
         if r.method == "update" and r.http == "POST":
-            points = r.vars.get('imagecrop-points')
+            points = r.vars.get("imagecrop-points")
             if not points:
                 return output
             filename = r.resource.records()[0]["file"]
             points = map(float, points.split(","))
-            path = os.path.join(current.request.folder, "uploads", "images",
-                filename)
+            path = os.path.join(request.folder, "uploads", "images", filename)
             current.s3task.async("crop_image",
                 args=[path] + points + [S3ImageCropWidget.DEFAULT_WIDTH])
         return output

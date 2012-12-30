@@ -66,10 +66,11 @@ if __name__ == '__main__':
         sys.exit(1)
 
     from gluon.custom_import import custom_import_install
-    # This function changed in Web2py revision b8afce7 2012-10-11.
     try:
+        # Web2py post revision b8afce7 2012-10-11
         custom_import_install()
     except:
+        # Web2py pre revision b8afce7 2012-10-11
         custom_import_install(os.environ['WEB2PY_PATH'])
     from gluon.shell import env
     _env = env(app, c=None, import_models=True)

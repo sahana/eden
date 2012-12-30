@@ -407,11 +407,11 @@ class S3UploadWidget(UploadWidget):
                           "]", br, image)
         return inp
 
-
+# =============================================================================
 class S3ImageCropWidget(FormWidget):
     """
-    Allows the user to crop an image and uploads it. Cropping is done
-    client-side where supported, otherwise using PIL.
+        Allows the user to crop an image and uploads it.
+        Cropping is done client-side where supported, otherwise using PIL.
     """
 
     DEFAULT_WIDTH = 300

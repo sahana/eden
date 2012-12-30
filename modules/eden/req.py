@@ -654,7 +654,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
 
         s3db = current.s3db
         table = s3db.req_req
-        
+
         if type == 1:
             # Dropdown not Autocomplete
             itable = s3db.req_req_item
@@ -700,15 +700,15 @@ S3OptionsFilter({
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     current.response.s3.jquery_ready.append('''
-                    S3OptionsFilter({
-                    'triggerName':'site_id',
-                    'targetName':'requester_id',
-                    'lookupPrefix':'hrm',
-                    'lookupResource':'staff',
-                    'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
-                    'msgNoRecords':'%s',
-                    'optional':true,
-                    })''' % T("No contacts yet defined for this site"))
+S3OptionsFilter({
+ 'triggerName':'site_id',
+ 'targetName':'requester_id',
+ 'lookupPrefix':'hrm',
+ 'lookupResource':'staff',
+ 'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
+ 'msgNoRecords':'%s',
+ 'optional':true,
+})''' % T("No contacts yet defined for this site"))
                     table.site_id.comment = A(T("Set as default Site"),
                                       _id="req_req_site_id_link",
                                       _target="_blank",
@@ -763,15 +763,15 @@ S3OptionsFilter({
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     current.response.s3.jquery_ready.append('''
-                    S3OptionsFilter({
-                    'triggerName':'site_id',
-                    'targetName':'requester_id',
-                    'lookupPrefix':'hrm',
-                    'lookupResource':'staff',
-                    'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
-                    'msgNoRecords':'%s',
-                    'optional':true,
-                    })''' % T("No contacts yet defined for this site"))
+S3OptionsFilter({
+ 'triggerName':'site_id',
+ 'targetName':'requester_id',
+ 'lookupPrefix':'hrm',
+ 'lookupResource':'staff',
+ 'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
+ 'msgNoRecords':'%s',
+ 'optional':true,
+})''' % T("No contacts yet defined for this site"))
                     table.site_id.comment = A(T("Set as default Site"),
                                       _id="req_req_site_id_link",
                                       _target="_blank",
