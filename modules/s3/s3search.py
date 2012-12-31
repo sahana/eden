@@ -54,6 +54,7 @@ from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widge
 from s3export import S3Exporter
 
 from s3resource import S3FieldSelector, S3Resource
+from ..s3 import *
 
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
@@ -357,31 +358,45 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         ftype = str(search_field.type)
         input_min = input_max = None
         if ftype == "integer":
+            attr.update(_type="text")
             requires = IS_EMPTY_OR(IS_INT_IN_RANGE())
         elif ftype == "date":
+            attr.update(_type="date")
             attr.update(_class="date")
             requires = IS_EMPTY_OR(IS_DATE(format=settings.get_L10n_date_format()))
         elif ftype == "time":
+            attr.update(_type="time")
             attr.update(_class="time")
             requires = IS_EMPTY_OR(IS_TIME())
         elif ftype == "datetime":
-            attr.update(_class="datetime")
+            attr.update(_type="text")
+            attr.update(_class="anytime")
             requires = IS_EMPTY_OR(IS_DATETIME(format=settings.get_L10n_datetime_format()))
+	    self.getDateTimeCalendar()
         else:
             raise SyntaxError("Unsupported search field type")
 
-        attr.update(_type="text")
         trl = TR(_class="sublabels")
         tri = TR()
 
         # dictionaries for storing details of the input elements
         name = attr["_name"]
-        self.widmin = dict(name="%s_min" % name,
-                           label=T("min"),
-                           requires=requires,
-                           attributes=attr)
-        self.widmax = dict(name="%s_max" % name,
-                           label=T("max"),
+
+	
+	fname="%s_min" % attr["_name"]
+	min_value=vars[fname]
+	if min_value is None:
+		min_value=""
+	
+	fname="%s_max" % attr["_name"]
+	max_value=vars[fname]
+	if max_value is None:
+		max_value=""
+
+	attr.update(_value=min_value)
+
+	self.widmin = dict(name="%s_min" % name,
+                           label=T("Min"),
                            requires=requires,
                            attributes=attr)
 
@@ -392,6 +407,13 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             self.names.append(self.widmin["name"])
             trl.append(min_label)
             tri.append(min_input)
+	
+	attr.update(_value=max_value)
+
+        self.widmax = dict(name="%s_max" % name,
+                           label=T("Max"),
+                           requires=requires,
+                           attributes=attr)
 
         if select_max:
             max_label = self.widget_label(self.widmax)
@@ -404,6 +426,69 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         w = TABLE(trl, tri, _class="s3searchminmaxwidget")
 
         return w
+
+    # -------------------------------------------------------------------------
+    def getDateTimeCalendar(self):
+	
+        settings = current.deployment_settings
+	format = str(settings.get_L10n_datetime_format())
+	s3 = current.response.s3
+        request = current.request
+ 	past=876000     # how many hours into the past the date can be set to
+        future=876000
+	selectors=["id-"+self.attr["_name"]+"_min", "id-"+self.attr["_name"]+"_max"]
+        firstDOW = settings.get_L10n_firstDOW()
+	
+
+	now = request.utcnow
+        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
+        if offset:
+            now = now + datetime.timedelta(seconds=offset)
+        timedelta = datetime.timedelta
+        earliest = now - timedelta(hours = past)
+        latest = now + timedelta(hours = future)
+
+        # Round to the nearest half hour
+        if earliest < now < latest:
+            start = now
+        else:
+            start = earliest
+        seconds = (start - start.min).seconds
+        rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
+        rounded = start + datetime.timedelta(0, rounding - seconds, -start.microsecond)
+
+        rounded = rounded.strftime(format)
+        earliest = earliest.strftime(format)
+        latest = latest.strftime(format)
+
+	
+	script_dir = "/%s/static/scripts" % current.request.application
+        s3.scripts.append("%s/anytime.js" % script_dir)
+        s3.stylesheets.append("plugins/anytime.css")
+            
+	for selector in selectors:
+		s3.jquery_ready.append(
+'''$('#%(selector)s').click(function(){
+if (!$('#%(selector)s').val()){
+ $('#%(selector)s').val('%(rounded)s')
+ $('#%(selector)s').AnyTime_picker({
+  askSecond:false,
+  firstDOW:%(firstDOW)s,
+  earliest:'%(earliest)s',
+  latest:'%(latest)s',
+  format:'%(format)s'
+ }).focus()
+}})
+clear_button=$('<input type="button" value="clear"/>').click(function(e){
+ $('#%(selector)s').val('')
+})
+$('#%(selector)s').after(clear_button)''' % \
+		dict(rounded=rounded,
+			selector=selector,
+			firstDOW=firstDOW,
+			earliest=earliest,
+			latest=latest,
+			format=format.replace("%M", "%i")))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1492,6 +1577,12 @@ i18n.edit_saved_search="%s"
 
         # Construct list|map|msg tabs as appropriate
         tabs = []
+	try :
+		if query is None:
+			#Do nothing
+			query=None
+	except:
+		dt=None
         if dt is not None:
             filter = session.s3.filter
             app = request.application
