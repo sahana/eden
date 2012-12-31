@@ -60,8 +60,10 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
     url(r'^vote/poll/(?P<poll_id>\d+)/$', 'polls.vote_poll', name=VOTE_POLL),
 
-    url(r'^vote/voting/(?P<voting_id>\d+)/$', 'voting.vote_voting',
-        name=VOTE_VOTING),
+    url(r'^vote/voting/$', 'voting.vote_voting', name=VOTE_VOTING),
+
+    url(r'^vote/validate/(?P<token>\w+)/$', 'voting.validate_voting',
+        name=VALIDATE_VOTE),
 )
 
 

@@ -34,7 +34,15 @@ class PollForm(ModelForm):
 ChoiceFormSet = modelformset_factory(Choice, exclude=('poll'), extra=5)
 
 class VotingForm(ModelForm):
-        """
-        """
-        class Meta:
-            model = Voting
+
+    """
+    """
+    class Meta:
+        model = Voting
+
+class VoteForm(ModelForm):
+
+    """
+    """
+    class Meta:
+        model = ConfirmVote

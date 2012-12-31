@@ -95,7 +95,7 @@ class ValidateIntent(DetailView):
             url=space_url)
 
         if has_space_permission(self.request.user, space_object,
-                                 allow=['admins','mods']) \
+            allow=['admins','mods']) \
         or has_all_permissions(self.request.user):
             try:
                 intent = Intent.objects.get(token=self.kwargs['token'])

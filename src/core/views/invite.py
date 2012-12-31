@@ -22,6 +22,7 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.shortcuts import render_to_response
 from django.template import RequestContext, loader, Context
 from django.utils.translation import ugettext_lazy as _
+from e_cidadania import settings
 
 def invite(request):
 
@@ -46,8 +47,7 @@ def invite(request):
                                                 RequestContext(request,
                                                 {'msg': usr_msg}))
 
-        email = EmailMultiAlternatives(_('Invitation to join e-cidadania'), plain_msg, 
-                'noreply@ecidadania.org', [], addr_list)
+        email = EmailMultiAlternatives(_('Invitation to join e-cidadania'), plain_msg, settings.DEFAULT_FROM_EMAIL, [], addr_list)
         email.attach_alternative(html_msg, 'text/html')
         email.send(fail_silently=False)
         return render_to_response('invite_done.html',

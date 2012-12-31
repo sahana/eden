@@ -3,9 +3,8 @@
 {% load wysiwyg %}
 
 {% block title %}
-{{ voting.title }}
+    {{ voting.title }}
 {% endblock %}
-
 
 {% block logo %}
     {% if get_place %}
@@ -31,6 +30,35 @@
     {% endif %}
 {% endblock %}
 
+{% block extrajs %}
+    <script type="text/javascript">
+        function upvote(proposal) {
+            var request = $.ajax({
+                type: "POST",
+                url: "../vote/voting/",
+                data: { propid: proposal },
+                success: function(data)
+                {
+                $("#jsnotify").notify("create", {
+                    title:"An email has been sent",
+                    text:"We sent you an email for validating the vote.",
+                    icon:"alert.png",
+                    expires: 0
+                })
+                }
+            });
+
+            request.fail(function(jqXHR, textStatus) {
+                $("#jsnotify").notify("create", {
+                    title:"Couldn't vote the proposal",
+                    text:"There has been an error." + textStatus,
+                    icon:"alert.png"
+                });
+            })
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
     <h2>{{ voting.title }}</h2>
     <div class="row">
@@ -44,33 +72,54 @@
                 <li><strong>{% trans "Vote on the following:" %}</strong></li>
                 <li><strong>{% trans "Proposal sets" %}</strong></li>
                 {% for pset in proposalsets %}
-                    <li><a href="{{ pset.debate.get_absolute_url }}">{{ pset }}</a></li>
+                    <li><a href="{{ pset.get_absolute_url }}">{{ pset }}</a>
                     {% if pset.debate %}
-                        <li><strong>{% trans "This proposal set is linked to:" %}</strong> <a href="{{ pset.debate.get_absolute_url }}">{{ pset.debate }}</a></li>
+                        <strong>{% trans "linked to" %}</strong> <a href="{{ pset.debate.get_absolute_url }}">{{ pset.debate }}</a>
                     {% endif %}
+                    </li>
                 {% endfor %}
             </ul>
         </div>
 
         <div class="span9">
-            {% for all in all_proposals %}
-                {% if all.proposalset.pk == proposalset.pk %}
-                    <a href="{{ all.get_absolute_url }}">{{ all }}</a>
-                    <br/><b>{% trans "Description:" %}</b> {{ all.description|truncatewords:40 }}
-                    <br /><b>{% trans "Current votes status:" %}</b> {{ all.support_votes.count }}
-                    <br />
-                    <br />
-                {% endif %}
+            {% for set in proposalsets %}
+                {% for p in all_proposals%}
+                    {% if p.proposalset.pk == set.pk %}
+                        <div class="proposal-wrapper" style="margin-bottom:15px;">
+                            <div class="span1">
+                                <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ p.votes.count }}</p>
+                                {% if not request.user in p.votes %}
+                                    <button onclick="upvote({{ p.id }})" class="btn btn-small" {% if user in p.votes.all %}disabled="disabled"{% endif %}>{% trans "vote" %}</button>
+                                {% endif %}
+                            </div>
+                        
+                            <div id="proposal">
+                                <div class="title"><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></div>
+                                <div class="message">{{ p.description|truncatewords:40 }}</div>
+                            </div>
+                            <div style="clear:left;"></div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
             {% endfor %}
 
-            <h6>{% trans "Unlinked proposals:" %}</h6>
+            <h4>{% trans "Unlinked proposals:" %}</h4>
             <br />
-            {% for proposal in proposals %}
-                <a href="{{ proposal.get_absolute_url }}">{{ proposal }}</a>
-                <br/><b>{% trans "Description:" %}</b> {{ proposal.description|truncatewords:40 }}
-                <br /><b>{% trans "Current votes status:" %}</b> {{ proposal.support_votes.count }}
-                <br />
-                <br />
+            {% for p in proposals %}
+                <div class="proposal-wrapper" style="margin-bottom:15px;">
+                    <div class="span1">
+                        <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ p.votes.count }}</p>
+                        {% if not request.user in p.votes %}
+                            <button onclick="upvote({{ p.id }})" class="btn btn-small" {% if user in p.votes.all %}disabled="disabled"{% endif %}>{% trans "vote" %}</button>
+                        {% endif %}
+                    </div>
+                        
+                    <div id="proposal">
+                        <div class="title"><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></div>
+                        <div class="message">{{ p.description|truncatewords:40 }}</div>
+                    </div>
+                    <div style="clear:left;"></div>
+                </div>
             {% endfor %}
         </div>
     </div>

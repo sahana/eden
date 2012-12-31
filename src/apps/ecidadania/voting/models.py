@@ -134,9 +134,9 @@ class ConfirmVote(models.Model):
 
     .. versionadded: 0.1.5
     """
-    user = models.ForeignKey(User)
-    proposal = models.ForeignKey(Proposal)
-    token = models.CharField(max_length=32)
+    user = models.ForeignKey(User, blank=True, null=True)
+    proposal = models.ForeignKey(Proposal, blank=True, null=True)
+    token = models.CharField(max_length=32, blank=True, null=True)
     requested_on = models.DateTimeField(auto_now_add=True)
 
     def get_approve_url(self):

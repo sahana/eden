@@ -46,3 +46,5 @@ VOTE_VOTING = 'vote-voting'
 VIEW_VOTING = 'view-voting'
 
 LIST_VOTING = 'list-votings'
+
+VALIDATE_VOTE = 'validate-vote'
