@@ -29,56 +29,73 @@
 
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
+import functools
 
-class Warehouses(SeleniumUnitTest):
-    def org010_warehouse_search(self):
-        """
-            @case: org010
-            @description: Search Warehouse
-            
-            * DOES NOT WORK
-        """
+def _kwsearch(instance, column, items, keyword):
+    for item in [instance.dt_data_item(i, column) for i in xrange(1, items + 1)]:
+        if not (keyword.strip().lower() in item.strip().lower()):
+            return False
+    return True
+
+class SearchWarehouse(SeleniumUnitTest):
+    
+    def setUp(self):
+        super(SeleniumUnitTest, self).setUp()
         print "\n"
+        self.login(account="admin", nexturl="inv/warehouse/search?clear_opts=1")
 
-        # Login, if not-already done so
-        self.login(account="normal", nexturl="hrm/staff/search")
-        
-        # ORG010
-		# Warehouse Search by keyword
-		self.search( "warehouse_search_text", 
-                     "ainaro")
-				
-		# Search by Organization
-		self.search( "warehouse_search",
-					[( "text",
-					   ""), 		# Clear text field
-					 ( "org",
-					   "Timor-Leste Red Cross Society",
-					   "checked")
-					 
-		# Search by State/Province
-		self.search( "warehouse_search",
-					[( "org",
-					   "Timor-Leste Red Cross Society",
-					   "unchecked"),
-					 ( self.browser.find_element_by_id("location_search_select_L1_label_A").click()),
-					 ( "location",
-					   "Manatuto",
-					   "checked"),
-					 ( "location",
-					   "Ainaro",
-					   "checked")]
-					 )			 
-		
-		# Or Alternatively			 
-		# Search by State/Province (using find_element)
-		self.search( "warehouse_search",
-					[( "org",
-					   "Timor-Leste Red Cross Society",
-					   "unchecked"),
-					 ( self.browser.find_element_by_id("location_search_select_L1_label_A").click()),
-					 ( self.browser.find_element_by_id("id-warehouse_search_location-Manatuto").click()),
-					 ( self.browser.find_element_by_id("id-warehouse_search_location-Ainaro").click())]
-					 )
-		
-		
+
+    def test_warehouse_01_search_name(self):
+        """
+            @case: warehouse_01
+            @description: Search Warehouse - Simple Search
+        """
+        w = current.s3db["inv_warehouse"]
+        key="na"
+        dbRowCount = current.db( (w.deleted != "T") & (w.name.like("%"+ key + "%")) ).count()
+        self.search(self.search.advanced_form,
+            True,
+            ({
+                "id": "warehouse_search_simple",
+                "value": key
+            },), dbRowCount,
+            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=2)
+        )    
+
+    def test_warehouse_02_search_by_Organization(self):
+        """
+            @case: warehouse_02
+            @description: Search Warehouse - Advanced Search by Organization
+        """
+        w = current.s3db["inv_warehouse"]
+        o = current.s3db["org_organisation"]
+        key="Timor-Leste Red Cross Society"
+        dbRowCount = current.db((w.deleted != "T") & (w.organisation_id == o.id) & (o.name == key)).count()
+        self.search(self.search.advanced_form,
+            True,
+            ({
+                "name": "warehouse_search_org",
+                "label": key,
+                "value": True
+            },), dbRowCount,
+            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=3)
+        )    
+
+    def test_warehouse_03_search_by_District(self):
+        """
+            @case: warehouse_03
+            @description: Search Warehouse - Advanced Search by District
+        """
+        w = current.s3db["inv_warehouse"]
+        l = current.s3db["gis_location"]
+        key="Viqueque"
+        dbRowCount = current.db((w.deleted != "T") & (w.location_id == l.id) & (l.L2 == key)).count()
+        self.search(self.search.advanced_form,
+            True,
+            ({
+                "name": "warehouse_search_location",
+                "label": key,
+                "value": True
+            },), dbRowCount,
+            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=5)
+        )    

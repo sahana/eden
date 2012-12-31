@@ -194,6 +194,8 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser.find_element_by_name(("simple_submit", "advanced_submit")[form_type]).click()
 
+        time.sleep(1)
+
         if results_expected == True:
             self.assertFalse(
             browser.find_element_by_id("table-container").text
@@ -204,9 +206,11 @@ class SeleniumUnitTest(Web2UnitTest):
 
         # We"re done entering and submitting data; now we need to check if the
         # results produced are valid.
-
-        self.assertTrue(row_count == self.dt_row_cnt()[2],
-                        "Row count did not match.")
+        htmlRowCount = self.dt_row_cnt()[2]
+        successMsg = "DB row count (" + str(row_count) + ") matches the HTML datatable row count (" + str(htmlRowCount) + ")." 
+        failMsg = "DB row count (" + str(row_count) + ") does not match the HTML datatable row count (" + str(htmlRowCount) + ")." 
+        self.assertTrue(row_count == htmlRowCount, failMsg)
+        self.reporter(successMsg)
 
         if "data" in kwargs.keys():
             self.assertTrue(bool(kwargs["data"](self.dt_data())),

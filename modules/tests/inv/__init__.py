@@ -5,3 +5,4 @@ from create_warehouse import *
 from create_item import *
 from create_catalog import *
 from create_category import *
+from warehouse_search import *
