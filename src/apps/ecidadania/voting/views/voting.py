@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+import hashlib
+
+from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -36,7 +39,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from helpers.cache import get_or_insert_object_in_cache
 from django.core.urlresolvers import NoReverseMatch, reverse
 from django.template.response import TemplateResponse
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.sites.models import get_current_site
 
+from e_cidadania import settings
 from core.spaces.models import Space
 from core.permissions import has_all_permissions, has_space_permission, has_operation_permission
 from apps.ecidadania.voting.models import *
@@ -86,6 +92,9 @@ class ViewVoting(DetailView):
 
     """
     View a specific voting process.
+
+    Proposals: Return unlinked proposals (not linked to sets)
+    All_proposals
     """
     context_object_name = 'voting'
     template_name = 'voting/voting_detail.html'
@@ -104,6 +113,10 @@ class ViewVoting(DetailView):
         all_proposals = Proposal.objects.all()
         proposalsets = voting.proposalsets.all()
         proposals = voting.proposals.all()
+        print "proposalsets: %s" % proposalsets
+        print "proposals: %s" % proposals
+        print "all_proposals: %s" % all_proposals
+        print "prop inside set: %s" % Proposal.objects.filter(proposalset=proposalsets)
         context['proposalsets'] = proposalsets
         context['proposals'] = proposals
         context['all_proposals'] = all_proposals
@@ -191,30 +204,59 @@ class ListVotings(ListView):
         return context
 
 
-def vote_voting(request, space_url, voting_id):
+def vote_voting(request, space_url):
 
     """
     View to control the votes during a votation process. Do not confuse with
-    proposals support_votes.
-    """
-    place = get_object_or_404(Space, url=space_url)
-    v = get_object_or_404(Voting, pk=voting_id)
-    proposal = get_object_or_404(Proposal, pk=request.POST['propid'])
+    proposals support_votes. This function creates a new ConfirmVote object
+    trough VoteForm with the user and a token. After that an email is sent
+    to the user with the token for validation. This function does not add the
+    votes.
 
-    if has_space_permission(request.user, space, allow=['admins', 'mods', 'users']):
-        try:
-            prop.votes.add(request.user)
-            return HttpResponse(" Support vote emmited.")
-        except:
-            return HttpResponse("Error P01: Couldn't emit the vote. Couldn't \
-                add the user to the count. Contact support and tell them the \
-                error code.")
+    .. versionadded:: 0.1.7
+    """
+    proposal = get_object_or_404(Proposal, pk=request.POST['propid'])
+    space = get_object_or_404(Space, url=space_url)
+    voteform = VoteForm(request.POST)
+
+    if has_space_permission(request.user, space, allow=['admins', 'mods',
+        'users']):
+        if request.method == 'POST' and voteform.is_valid():
+            # Generate the objetct
+            token = hashlib.md5("%s%s%s" % (request.user, space,
+                        datetime.datetime.now())).hexdigest()
+            voteform_uncommitted = voteform.save(commit=False)
+            voteform_uncommitted.user = request.user
+            voteform_uncommitted.token = token
+            voteform_uncommitted.proposal = proposal
+            voteform_uncommitted.save()
+
+            # Send the email to the user. Get URL, get user mail, send mail.
+            space_absolute_url = space.get_absolute_url()
+            full_url = ''.join(['http://', get_current_site(request).domain,
+                        space_absolute_url, 'vote/validate/', token])
+            user_email = request.user.email
+            subject = _("Validate your vote")
+            body = _("You voted recently on a process in our platform, please validate your vote following this link: %s") % full_url
+            send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [user_email])
+
+            return HttpResponse("Vote emmited")
+
     else:
         return HttpResponse("Error P02: Couldn't emit the vote. You're not \
             allowed.")
 
-def validate_voting(request, space_url, vote, hash):
+def validate_voting(request, token):
 
     """
+    Validate the votes done in a votation process. This function checks if the
+    token provided by the user is the same located in the database. If the
+    token is the same, a vote is added, if not, we redirect the user to an
+    error page.
     """
-    
+    space = get_object_or_404(Space, url=space_url)
+    voting = get_object_or_404(Voting, pk=voting_id)
+    try:
+        token = ConfirmVote.object.get(token=token)
+    except:
+        return HttpResponse("Couldn't find the token for validation.")
