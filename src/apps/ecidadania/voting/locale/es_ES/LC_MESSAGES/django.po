@@ -1,123 +1,115 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Oscar Carballal <oscar.carballal@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
-"POT-Creation-Date: 2012-12-17 13:02+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-12-31 15:22+0100\n"
 "PO-Revision-Date: 2012-12-13 16:26+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.com/projects/p/ecidadania/language/es_ES/)\n"
+"Language-Team: Spanish (Spain) (http://www.transifex.com/projects/p/"
+"ecidadania/language/es_ES/)\n"
+"Language: es_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: models.py:35
+#: models.py:31
+msgid "Users"
+msgstr ""
+
+#: models.py:32
+msgid "Fixed"
+msgstr ""
+
+#: models.py:33
+msgid "No ponderation"
+msgstr ""
+
+#: models.py:48
 msgid "Question"
 msgstr "Pregunta"
 
-#: models.py:36
+#: models.py:49
 msgid "Max: 200 characters"
 msgstr "Máximo: 200 caracteres"
 
-#: models.py:37
+#: models.py:50
 msgid "Date"
 msgstr "Fecha"
 
-#: models.py:38 models.py:87
+#: models.py:51 models.py:107
 msgid "Last update"
 msgstr "Última actualización"
 
-#: models.py:39
+#: models.py:52
 msgid "Author"
 msgstr "Autor"
 
-#: models.py:40
-msgid "Change the user that will figure as the author"
+#: models.py:53
+#, fuzzy
+msgid "Change the user that will figure as the         author"
 msgstr "Cambiar el usuario que figura como autor"
 
-#: models.py:41
+#: models.py:56
 msgid "Publish in"
 msgstr "Publicar en"
 
-#: models.py:42
+#: models.py:57
 msgid "If you want to post to the index leave this         blank"
 msgstr "Si quieres publicarlo en el índice deja esto en blanco"
 
-#: models.py:44
-msgid ""
-"Insert here relevant words related with                             the poll"
+#: models.py:59
+#, fuzzy
+msgid "Insert here relevant words related with         the poll"
 msgstr "Introduce aqui palabras relevantes con la encuesta"
 
-#: models.py:68
-msgid "Choice"
-msgstr "Elección"
-
-#: models.py:68
-msgid "Enter choice to be voted upon"
-msgstr "Introduce la elección que se votará"
-
-#: models.py:82
-msgid "Title"
-msgstr "Título"
-
-#: models.py:83
-msgid "Description"
-msgstr "Descripción"
-
-#: models.py:86
-msgid "Date created"
-msgstr "Fecha de creación"
-
-#: models.py:89
+#: models.py:61 models.py:109
 msgid "Start date"
 msgstr "Fecha de comienzo"
 
-#: models.py:90
+#: models.py:62 models.py:110
 msgid "End date"
 msgstr "Fecha de finalización"
 
-#: urls.py:31
-msgid "^list/$"
-msgstr "^lista/$"
+#: models.py:86
+msgid "Choice"
+msgstr "Elección"
 
-#: urls.py:33
-msgid "^addpoll/$"
-msgstr "^añadirencuesta/$"
+#: models.py:86
+msgid "Enter choice to be voted upon"
+msgstr "Introduce la elección que se votará"
 
-#: urls.py:35
-msgid "^(?P<poll_id>\\d+)/delete/$"
-msgstr "^(?P<poll_id>\\d+)/eliminar/$"
+#: models.py:102
+msgid "Title"
+msgstr "Título"
 
-#: urls.py:38
-msgid "^(?P<poll_id>\\d+)/edit/$"
-msgstr "^(?P<poll_id>\\d+)/editar/$"
+#: models.py:103
+msgid "Description"
+msgstr "Descripción"
 
-#: urls.py:40
-msgid "^(?P<pk>\\d+)/$"
+#: models.py:106
+msgid "Date created"
+msgstr "Fecha de creación"
+
+#: models.py:111
+msgid "Ponderation"
+msgstr ""
+
+#: urls.py:54
+#, fuzzy
+msgid "^poll/(?P<pk>\\d+)/$"
 msgstr "^(?P<pk>\\d+)/$"
 
-#: urls.py:43
-msgid "^(?P<poll_id>\\d+)/vote/$"
-msgstr "^(?P<poll_id>\\d+)/votar/$"
-
-#: urls.py:45
-msgid "^addvoting/$"
-msgstr "^añadirvoto/$"
-
-#: urls.py:47
-msgid "^(?P<voting_id>\\d+)/deletevoting/$"
-msgstr "^(?P<voting_id>\\d+)/eliminarvoto/$"
-
-#: urls.py:50
-msgid "^(?P<voting_id>\\d+)/editvoting/$"
-msgstr "^(?P<voting_id>\\d+)/editarvoto/$"
+#: urls.py:56
+#, fuzzy
+msgid "^poll/(?P<pk>\\d+)/results/$"
+msgstr "^(?P<pk>\\d+)/$"
 
 #: templates/voting/poll_confirm_delete.html:6
 msgid "View poll "
@@ -130,13 +122,16 @@ msgstr "Eliminar encuesta"
 #: templates/voting/poll_confirm_delete.html:37
 msgid ""
 "Are you sure you want to delete this poll? This action cannot be undone."
-msgstr "¿Estás seguro de que quieres eliminar esta encuesta? Esta acción no se puede deshacer."
+msgstr ""
+"¿Estás seguro de que quieres eliminar esta encuesta? Esta acción no se puede "
+"deshacer."
 
 #: templates/voting/poll_confirm_delete.html:40
-#: templates/voting/poll_edit.html:187 templates/voting/poll_form.html:185
-#: templates/voting/poll_list.html:64
+#: templates/voting/poll_detail.html:49 templates/voting/poll_edit.html:187
+#: templates/voting/poll_form.html:223 templates/voting/poll_list.html:64
+#: templates/voting/poll_results.html:43
 #: templates/voting/voting_confirm_delete.html:40
-#: templates/voting/voting_form.html:217
+#: templates/voting/voting_form.html:217 templates/voting/voting_list.html:64
 msgid "Go back"
 msgstr "Volver"
 
@@ -149,7 +144,7 @@ msgstr "Eliminar"
 msgid "View poll"
 msgstr "Ver encuesta"
 
-#: templates/voting/poll_detail.html:37 templates/voting/voting_detail.html:40
+#: templates/voting/poll_detail.html:37 templates/voting/voting_detail.html:68
 msgid "Created by:"
 msgstr "Creada por:"
 
@@ -157,7 +152,7 @@ msgstr "Creada por:"
 msgid "Created on:"
 msgstr "Creada el:"
 
-#: templates/voting/poll_detail.html:48
+#: templates/voting/poll_detail.html:50
 msgid "Vote"
 msgstr "Voto"
 
@@ -166,12 +161,12 @@ msgstr "Voto"
 msgid "Edit poll"
 msgstr "Editar encuesta"
 
-#: templates/voting/poll_edit.html:145 templates/voting/poll_form.html:143
+#: templates/voting/poll_edit.html:145 templates/voting/poll_form.html:181
 #: templates/voting/voting_form.html:175
 msgid "Staff members options"
 msgstr "Opciones de los miembros del staff"
 
-#: templates/voting/poll_edit.html:188 templates/voting/poll_form.html:186
+#: templates/voting/poll_edit.html:188 templates/voting/poll_form.html:224
 #: templates/voting/voting_form.html:218
 msgid "Publish"
 msgstr "Publicar"
@@ -188,19 +183,19 @@ msgstr "Lista de encuestas"
 msgid "Polls archive"
 msgstr "Archivo de encuestas"
 
-#: templates/voting/poll_list.html:44
+#: templates/voting/poll_list.html:44 templates/voting/voting_list.html:44
 msgid "There are no polls in this space."
 msgstr "No hay encuestas en este espacio."
 
-#: templates/voting/poll_list.html:51
+#: templates/voting/poll_list.html:51 templates/voting/voting_list.html:51
 msgid "previous"
 msgstr "anterior"
 
-#: templates/voting/poll_list.html:54
+#: templates/voting/poll_list.html:54 templates/voting/voting_list.html:54
 msgid "of"
 msgstr "de"
 
-#: templates/voting/poll_list.html:57
+#: templates/voting/poll_list.html:57 templates/voting/voting_list.html:57
 msgid "next"
 msgstr "siguiente"
 
@@ -208,7 +203,9 @@ msgstr "siguiente"
 msgid "Results"
 msgstr "Resultados"
 
-#: templates/voting/poll_results.html:37
+#: templates/voting/poll_results.html:38
+#: templates/voting/voting_detail.html:92
+#: templates/voting/voting_detail.html:113
 msgid "vote"
 msgstr "votar"
 
@@ -224,40 +221,35 @@ msgstr "Eliminar votación"
 msgid ""
 "Are you sure you want to delete this voting process? This action cannot be "
 "undone."
-msgstr "¿Estás seguro de querer eliminar esta votación? Esta acción no se puede deshacer."
+msgstr ""
+"¿Estás seguro de querer eliminar esta votación? Esta acción no se puede "
+"deshacer."
 
-#: templates/voting/voting_detail.html:39
-#: templates/voting/voting_detail.html:59
-#: templates/voting/voting_detail.html:70
+#: templates/voting/voting_detail.html:67
 msgid "Description:"
 msgstr "Descripción"
 
-#: templates/voting/voting_detail.html:41
+#: templates/voting/voting_detail.html:69
 msgid "Start date:"
 msgstr "Fecha inicio:"
 
-#: templates/voting/voting_detail.html:42
+#: templates/voting/voting_detail.html:70
 msgid "End date:"
 msgstr "Fecha final:"
 
-#: templates/voting/voting_detail.html:44
+#: templates/voting/voting_detail.html:72
 msgid "Vote on the following:"
 msgstr "Votar lo siguiente:"
 
-#: templates/voting/voting_detail.html:45
+#: templates/voting/voting_detail.html:73
 msgid "Proposal sets"
 msgstr "Sets de propuestas"
 
-#: templates/voting/voting_detail.html:49
-msgid "This proposal set is linked to:"
-msgstr "Este set de propuestas esta enlazado a:"
+#: templates/voting/voting_detail.html:77
+msgid "linked to"
+msgstr ""
 
-#: templates/voting/voting_detail.html:60
-#: templates/voting/voting_detail.html:71
-msgid "Current votes status:"
-msgstr "Estado actual de los votos:"
-
-#: templates/voting/voting_detail.html:66
+#: templates/voting/voting_detail.html:106
 msgid "Unlinked proposals:"
 msgstr "Propuestas sin enlazar:"
 
@@ -268,3 +260,53 @@ msgstr "Editar votación"
 #: templates/voting/voting_form.html:9 templates/voting/voting_form.html:48
 msgid "Create new voting process"
 msgstr "Crear nueva votación"
+
+#: templates/voting/voting_list.html:4
+msgid "Voting list"
+msgstr ""
+
+#: templates/voting/voting_list.html:33
+#, fuzzy
+msgid "Voting archive"
+msgstr "Archivo de encuestas"
+
+#: views/voting.py:239
+msgid "Validate your vote"
+msgstr ""
+
+#: views/voting.py:240
+#, python-format
+msgid ""
+"You voted recently on a process in our platform, please validate your vote "
+"following this link: %s"
+msgstr ""
+
+#~ msgid "This proposal set is linked to:"
+#~ msgstr "Este set de propuestas esta enlazado a:"
+
+#~ msgid "Current votes status:"
+#~ msgstr "Estado actual de los votos:"
+
+#~ msgid "^list/$"
+#~ msgstr "^lista/$"
+
+#~ msgid "^addpoll/$"
+#~ msgstr "^añadirencuesta/$"
+
+#~ msgid "^(?P<poll_id>\\d+)/delete/$"
+#~ msgstr "^(?P<poll_id>\\d+)/eliminar/$"
+
+#~ msgid "^(?P<poll_id>\\d+)/edit/$"
+#~ msgstr "^(?P<poll_id>\\d+)/editar/$"
+
+#~ msgid "^(?P<poll_id>\\d+)/vote/$"
+#~ msgstr "^(?P<poll_id>\\d+)/votar/$"
+
+#~ msgid "^addvoting/$"
+#~ msgstr "^añadirvoto/$"
+
+#~ msgid "^(?P<voting_id>\\d+)/deletevoting/$"
+#~ msgstr "^(?P<voting_id>\\d+)/eliminarvoto/$"
+
+#~ msgid "^(?P<voting_id>\\d+)/editvoting/$"
+#~ msgstr "^(?P<voting_id>\\d+)/editarvoto/$"

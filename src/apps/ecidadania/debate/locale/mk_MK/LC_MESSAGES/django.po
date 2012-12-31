@@ -1,20 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
-"POT-Creation-Date: 2012-12-17 13:02+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-12-31 15:23+0100\n"
 "PO-Revision-Date: 2012-12-17 12:08+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/ecidadania/language/mk_MK/)\n"
+"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/"
+"ecidadania/language/mk_MK/)\n"
+"Language: mk_MK\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: mk_MK\n"
 "Plural-Forms: nplurals=2; plural=(n % 10 == 1 && n % 100 != 11) ? 0 : 1;\n"
 
 #: models.py:42 models.py:111
@@ -72,9 +73,12 @@ msgstr ""
 
 #: templates/debate/debate_add.html:50
 msgid ""
-"To create a debate, you must fill the fields with any criteria necessary for it,\n"
-"                    in this docuemntation page we have an example of a debate that you can follow to create yours.\n"
-"                    For the rest of the fields, just follow their respective instructions."
+"To create a debate, you must fill the fields with any criteria necessary for "
+"it,\n"
+"                    in this docuemntation page we have an example of a "
+"debate that you can follow to create yours.\n"
+"                    For the rest of the fields, just follow their respective "
+"instructions."
 msgstr ""
 
 #: templates/debate/debate_add.html:56
@@ -97,26 +101,26 @@ msgstr ""
 msgid "Add row"
 msgstr ""
 
-#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:106
+#: templates/debate/debate_add.html:111 templates/debate/debate_view.html:106
 msgid "Add new note"
 msgstr ""
 
-#: templates/debate/debate_add.html:106
+#: templates/debate/debate_add.html:112
 msgid "Change color"
 msgstr ""
 
-#: templates/debate/debate_add.html:110
+#: templates/debate/debate_add.html:116
 #: templates/debate/debate_add_simple.html:60
 msgid "Other debate data"
 msgstr ""
 
-#: templates/debate/debate_add.html:215
+#: templates/debate/debate_add.html:221
 #: templates/debate/debate_add_simple.html:121
 #: templates/debate/debate_view.html:140
 msgid "Cancel"
 msgstr ""
 
-#: templates/debate/debate_add.html:216
+#: templates/debate/debate_add.html:222
 #: templates/debate/debate_add_simple.html:120
 #: templates/debate/debate_view.html:141
 msgid "Save"

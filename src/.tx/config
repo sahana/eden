@@ -80,3 +80,27 @@ trans.es_ES = apps/ecidadania/voting/locale/es_ES/LC_MESSAGES/django.po
 trans.gl_ES = apps/ecidadania/voting/locale/gl_ES/LC_MESSAGES/django.po
 trans.mk_MK = apps/ecidadania/voting/locale/mk_MK/LC_MESSAGES/django.po
 trans.fr = apps/ecidadania/voting/locale/fr_FR/LC_MESSAGES/django.po
+
+[ecidadania.debate-javascript]
+source_file = apps/ecidadania/debate/locale/en_GB/LC_MESSAGES/djangojs.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/debate/locale/es_ES/LC_MESSAGES/djangojs.po
+trans.gl_ES = apps/ecidadania/debate/locale/gl_ES/LC_MESSAGES/djangojs.po
+trans.mk_MK = apps/ecidadania/debate/locale/mk_MK/LC_MESSAGES/djangojs.po
+trans.fr = apps/ecidadania/debate/locale/fr_FR/LC_MESSAGES/djangojs.po
+
+[ecidadania.core-javascript]
+source_file = e_cidadania/locale/en_GB/LC_MESSAGES/djangojs.po
+source_lang = en_GB
+trans.es_ES = e_cidadania/locale/es_ES/LC_MESSAGES/djangojs.po
+trans.gl_ES = e_cidadania/locale/gl_ES/LC_MESSAGES/djangojs.po
+trans.mk_MK = e_cidadania/locale/mk_MK/LC_MESSAGES/djangojs.po
+trans.fr = e_cidadania/locale/fr_FR/LC_MESSAGES/djangojs.po
+
+[ecidadania.proposals-javascript]
+source_file = apps/ecidadania/proposals/locale/en_GB/LC_MESSAGES/djangojs.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/proposals/locale/es_ES/LC_MESSAGES/djangojs.po
+trans.gl_ES = apps/ecidadania/proposals/locale/gl_ES/LC_MESSAGES/djangojs.po
+trans.mk_MK = apps/ecidadania/proposals/locale/mk_MK/LC_MESSAGES/djangojs.po
+trans.fr = apps/ecidadania/proposals/locale/fr_FR/LC_MESSAGES/djangojs.po

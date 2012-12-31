@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-17 13:17+0100\n"
+"POT-Creation-Date: 2012-12-31 15:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,43 +155,50 @@ msgstr ""
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:30
+#: templates/site_index.html:23
+msgid ""
+"Would you like the debates and decisions to be more inclusive? Well done and "
+"integrative proposals where participation is always a nice and enriching "
+"experience? We too, that's why we created e-cidadania."
+msgstr ""
+
+#: templates/site_index.html:25
 msgid "Latest participative processes"
 msgstr ""
 
-#: templates/site_index.html:37
+#: templates/site_index.html:32
 msgid "Public"
 msgstr ""
 
-#: templates/site_index.html:39
+#: templates/site_index.html:34
 msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:43
+#: templates/site_index.html:38
 msgid "There are no processes."
 msgstr ""
 
-#: templates/site_index.html:54
+#: templates/site_index.html:49
 msgid "View all the processes"
 msgstr ""
 
-#: templates/site_index.html:67
+#: templates/site_index.html:62
 msgid "Sign in"
 msgstr ""
 
-#: templates/site_index.html:71
+#: templates/site_index.html:66
 msgid "Forgot your password?"
 msgstr ""
 
-#: templates/site_index.html:72
+#: templates/site_index.html:67
 msgid "Invite someone!"
 msgstr ""
 
-#: templates/site_index.html:79
+#: templates/site_index.html:74
 msgid "First time here? Register!"
 msgstr ""
 
-#: templates/site_index.html:85
+#: templates/site_index.html:80
 msgid "Register"
 msgstr ""
 
