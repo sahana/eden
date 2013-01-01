@@ -1151,9 +1151,12 @@ class S3SQLField(S3SQLFormElement):
 
         rfield = S3ResourceField(resource, self.selector)
 
-        subtables = Storage([(c.tablename, c.alias)
-                             for c in resource.components.values()
-                             if not c.multiple])
+        if resource.components:
+            subtables = Storage([(c.tablename, c.alias)
+                                 for c in resource.components.values()
+                                 if not c.multiple])
+        else:
+            subtables = Storage()
 
         tname = rfield.tname
         if rfield.field is not None:
@@ -1169,6 +1172,9 @@ class S3SQLField(S3SQLFormElement):
                 name = "sub_%s_%s" % (alias, rfield.fname)
                 f = self._rename_field(field, name)
                 return alias, rfield.field.name, f
+
+            else:
+                raise SyntaxError("Invalid subtable: %s" % tname)
         else:
             raise SyntaxError("Invalid selector: %s" % self.selector)
 
