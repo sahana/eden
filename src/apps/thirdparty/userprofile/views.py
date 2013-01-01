@@ -348,8 +348,8 @@ def register(request):
             newuser.save()
 
             # Add the user to the space administrators group
-            #u_group = Group.objects.get(name='Space administrators')
-            #u_group.user_set.add(newuser)
+            u_group = Group.objects.get(name='Space administrators')
+            u_group.user_set.add(newuser)
             return HttpResponseRedirect('%scomplete/' % request.path_info)
     else:
         form = RegistrationForm()
