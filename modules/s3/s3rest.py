@@ -1359,7 +1359,7 @@ class S3Request(object):
         """
 
         json_formats = current.manager.json_formats
-        if format in json_formats:
+        if r.representation in json_formats:
             as_json = True
             content_type = "application/json"
         else:
