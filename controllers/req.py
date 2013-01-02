@@ -561,6 +561,15 @@ S3OptionsFilter({
                 #         restrict = restrict
                 #        )
                 #    )
+                s3.actions.append(
+                        dict(url = URL(c="req", f="req",
+                                       args=["[id]", "commit_all", "send"]),
+                             _class = "action-btn send-btn",
+                             label = str(T("Send"))
+                            )
+                        )
+                s3.jquery_ready.append(
+'''S3ConfirmClick('.send-btn','%s')''' % T("Are you sure you want to commit to this request and send a shipment?"))
             else:
                 s3_action_buttons(r)
                 if r.component.name == "req_item" and settings.get_req_prompt_match():

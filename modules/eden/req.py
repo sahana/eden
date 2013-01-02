@@ -1024,6 +1024,9 @@ S3OptionsFilter({
             db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
             msg = T("You have committed to this Request. Please check that all details are correct and update as-required.")
 
+        if "send" in r.args:
+            redirect(URL(f="send_commit", args=[cid]))
+
         current.session.confirmation = msg
         redirect(URL(c="req", f="commit", args=[cid]))
 
