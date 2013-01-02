@@ -5591,8 +5591,11 @@ class GIS(object):
             mouse_position = '''S3.gis.mouse_position=true\n'''
 
         # OSM Authoring
-        if config.osm_oauth_consumer_key and \
-           config.osm_oauth_consumer_secret:
+        # These settings were originally in GIS, but have now been moved to
+        # auth_user_options. However, they're still displayed in the same
+        # place.
+        
+        if s3db.auth_user_options_get_osm(config.pe_id):
             osm_auth = '''S3.gis.osm_oauth='%s'\n''' % T("Zoom in closer to Edit OpenStreetMap layer")
         else:
             osm_auth = ""

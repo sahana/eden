@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AuthModel"]
+__all__ = ["S3AuthModel", "S3UserOptions", "auth_user_options_get_osm"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -86,5 +86,47 @@ class S3AuthModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage()
+
+
+# =============================================================================
+class S3UserOptions(S3Model):
+    
+    names = ["auth_user_options"]
+    
+    def model(self):
+        table = self.define_table("auth_user_options",
+                                  current.s3db.super_link("pe_id", "pr_pentity"),
+                                  Field("user_id", current.auth.settings.table_user),
+                                  Field("osm_oauth_consumer_key"),
+                                  Field("osm_oauth_consumer_secret"),
+                                  *s3_meta_fields())
+        
+        T = current.T
+
+        table.osm_oauth_consumer_key.label = T("OpenStreetMap OAuth Consumer Key")
+        table.osm_oauth_consumer_key.comment = DIV(
+        _class="stickytip",
+        _title="%s|%s|%s" % (
+        T("OpenStreetMap OAuth Consumer Key"),
+        T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
+        dict(name_short=current.deployment_settings.get_system_name_short()),
+         T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
+        dict(url=A("http://www.openstreetmap.org",
+         _href="http://www.openstreetmap.org",
+         _target="blank"))))
+        table.osm_oauth_consumer_secret.label = T("OpenStreetMap OAuth Consumer Secret")
+
+# =============================================================================
+
+def auth_user_options_get_osm(pe_id):
+    """Gets only the OSM related options for a pe_id"""
+    db = current.db
+    table = current.s3db.auth_user_options
+    query = (table.pe_id == pe_id)
+    record = db(query).select(limitby=(0, 1)).first()
+    if record:
+        return record.osm_oauth_consumer_key, record.osm_oauth_consumer_secret
+    else:
+        return None
        
 # END =========================================================================
