@@ -566,7 +566,6 @@ def person():
                method="contacts",
                action=s3db.pr_contacts)
 
-
     if settings.has_module("asset"):
         # Assets as component of people
         s3db.add_component("asset_asset",
@@ -608,6 +607,27 @@ def person():
                     table.medical_conditions.readable = True
                     table.other_details.writable = True
                     table.other_details.readable = True
+
+                if r.component_name == "config":
+                    s3db.add_component("auth_user_options",
+                        gis_config=dict(joinby="pe_id", pkey="pe_id", multiple=False)
+                    )
+
+                    from s3.s3forms import S3SQLCustomForm
+
+                    _config = s3db.gis_config
+                    current.s3db.gis_config_form_setup()
+                    # Name will be generated from person's name.
+                    _config.name.readable = _config.name.writable = False
+                    # Hide Location
+                    _config.region_location_id.readable = _config.region_location_id.writable = False
+
+                    fields = s3db.gis_config.fields + [
+                          "user_options.osm_oauth_consumer_key",
+                          "user_options.osm_oauth_consumer_secret"
+                      ]
+                    crud_form = S3SQLCustomForm(*fields)
+                    s3db.configure("gis_config", crud_form=crud_form)
             else:
                 table = r.table
                 table.pe_label.readable = False
@@ -644,12 +664,74 @@ def person():
                                       _class="action-btn")
         return output
     s3.postp = postp
+    
+    if settings.get_hrm_staff_experience() == "experience":
+        experience_tab = (T("Experience"), "experience")
+    else:
+        experience_tab = None
 
+    if settings.get_hrm_use_certificates():
+        certificates_tab = (T("Certificates"), "certificate")
+    else:
+        certificates_tab = None
+    
+    if settings.get_hrm_use_credentials():
+        credentials_tab = (T("Credentials"), "credential")
+    else:
+        credentials_tab = None
+    
+    if settings.get_hrm_use_description():
+        description_tab = (T("Description"), "physical_description")
+    else:
+        description_tab = None
+    
+    if settings.get_hrm_use_education():
+        education_tab = (T("Education"), "education")
+    else:
+        education_tab = None
+    
+    if settings.get_hrm_use_id():
+        id_tab = (T("ID"), "identity")
+    else:
+        id_tab = None
+    
+    if settings.get_hrm_use_skills():
+        skills_tab = (T("Skills"), "competency")
+    else:
+        skills_tab = None
+    
+    if settings.get_hrm_use_teams():
+        teams_tab = (T("Teams"), "group_membership")
+    else:
+        teams_tab = None
+    
+    if settings.get_hrm_use_trainings():
+        trainings_tab = (T("Trainings"), "training")
+    else:
+        trainings_tab = None
+    
+    tabs = [(T("Person Details"), None),
+            (T("User Account"), "user"),
+            (T("Staff/Volunteer Record"), "human_resource"),
+            id_tab,
+            description_tab,
+            (T("Address"), "address"),
+            (T("Contacts"), "contacts"),
+            education_tab,
+            trainings_tab,
+            certificates_tab,
+            skills_tab,
+            credentials_tab,
+            experience_tab,
+            teams_tab,
+            (T("Map Options"), "config"),
+            # (T("Assets"), "asset"),
+           ]
+    
     output = s3_rest_controller("pr", "person",
                                 native=False,
                                 rheader = lambda r: \
-                                    s3db.hrm_rheader(r, profile=True),
-                                )
+                                    s3db.pr_rheader(r, tabs=tabs))
     return output
 
 # -----------------------------------------------------------------------------
