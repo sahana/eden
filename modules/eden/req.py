@@ -203,7 +203,7 @@ class S3RequestModel(S3Model):
                                                   label = T("Requested For Facility"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                                   readable = True,
-                                                  writable = True,
+                                                  writable = False,
                                                   empty = False,
                                                   #required = True,
                                                   filterby = "obsolete",
