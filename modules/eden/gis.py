@@ -1348,10 +1348,6 @@ class S3GISConfigModel(S3Model):
                              Field("wmsbrowser_name",
                                    # @ToDo: Remove default once we have cascading working
                                    default="Web Map Service"),
-                             # OpenStreetMap settings:
-                             # Register your app by logging in to www.openstreetmap.org & then selecting 'oauth settings'
-                             Field("osm_oauth_consumer_key"),
-                             Field("osm_oauth_consumer_secret"),
                              # Note: This hasn't yet been changed for any instance
                              # Do we really need it to be configurable?
                              Field("zoom_levels", "integer",
@@ -1529,18 +1525,6 @@ class S3GISConfigModel(S3Model):
                 T("Web Map Service Browser URL"),
                 T("The URL for the GetCapabilities page of a Web Map Service (WMS) whose layers you want available via the Browser panel on the Map."),
                 T("The form of the URL is http://your/web/map/service?service=WMS&request=GetCapabilities where your/web/map/service stands for the URL path to the WMS.")))
-        table.osm_oauth_consumer_key.label = T("OpenStreetMap OAuth Consumer Key")
-        table.osm_oauth_consumer_key.comment = DIV(
-            _class="stickytip",
-            _title="%s|%s|%s" % (
-                T("OpenStreetMap OAuth Consumer Key"),
-                T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
-                    dict(name_short=current.deployment_settings.get_system_name_short()),
-                T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
-                    dict(url=A("http://www.openstreetmap.org",
-                         _href="http://www.openstreetmap.org",
-                         _target="blank"))))
-        table.osm_oauth_consumer_secret.label = T("OpenStreetMap OAuth Consumer Secret")
         table.geocoder.label = T("Use Geocoder for address lookups?")
         table.min_lat.label = T("Minimum Location Latitude")
         table.min_lat.comment = DIV(

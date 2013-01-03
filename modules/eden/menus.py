@@ -185,8 +185,7 @@ class S3MainMenu(object):
                            **attr)(
                             MM("Logout", m="logout", _id="auth_menu_logout"),
                             MM("User Profile", m="profile"),
-                            MM("Personal Data", c="pr", f="person", m="update",
-                                vars={"person.pe_id" : auth.user.pe_id}),
+                            MM("Personal Data", c="default", f="person", m="update"),
                             MM("Contact Details", c="pr", f="person",
                                 args="contact",
                                 vars={"person.pe_id" : auth.user.pe_id}),
