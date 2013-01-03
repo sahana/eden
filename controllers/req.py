@@ -254,9 +254,12 @@ def req_controller():
                     {"item": s3db.supply_item_represent(item_id, show_link=False),
                      "site": s3db.org_site_represent(site_id, show_link=False)
                      })
-            elif "req.site_id" in request.get_vars:
+            elif "req.site_id" in r.get_vars:
                 # Called from 'Make new request' button on [siteinstance]/req page
                 table.site_id.default = request.get_vars.get("req.site_id")
+                table.site_id.writable = False
+                if r.http == "POST":
+                    del r.get_vars["req.site_id"]
 
             table.requester_id.represent = requester_represent
 
