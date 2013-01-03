@@ -158,6 +158,11 @@ table.dataTable tr.even td.sorting_3 { background-color: #F9F9FF; }
 	color: #333 !important;
 }
 
+.paginate_button_disabled {
+	opacity: 0.5;
+	cursor: not-allowed !important;
+}
+
 .paging_full_numbers a.paginate_button {
 	background-color: #ddd;
 }
@@ -201,7 +206,7 @@ table.dataTable tr.even td.sorting_3 { background-color: #F9F9FF; }
 
 .sorting_asc_disabled { background: url('../../img/jquery.dataTables/sort_asc_disabled.png') no-repeat center right; }
 .sorting_desc_disabled { background: url('../../img/jquery.dataTables/sort_desc_disabled.png') no-repeat center right; }
- 
+
 table.dataTable thead th:active,
 table.dataTable thead td:active {
 	outline: none;
