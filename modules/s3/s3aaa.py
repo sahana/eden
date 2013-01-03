@@ -167,6 +167,7 @@ class AuthS3(Auth):
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
+        self.settings.password_min_length = 8
 
         self.messages.lock_keys = False
 
