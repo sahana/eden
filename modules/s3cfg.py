@@ -121,6 +121,12 @@ class S3Config(Storage):
         """
         return self.auth.get("hmac_key", "akeytochange")
 
+    def get_auth_password_min_length(self):
+     	""" 
+            To set the Minimum Password Length
+ 	    """
+        return self.auth.get("password_min_length", int(4))
+
     def get_auth_facebook(self):
         """
             Read the FaceBook OAuth settings
