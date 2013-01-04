@@ -50,17 +50,12 @@ class SearchStaff(SeleniumUnitTest):
             @case: hrm002-01
             @description: Search Members - Simple Search
         """
-        h = current.s3db["hrm_human_resource"]
-        p = current.s3db["pr_person"]
-        dbRowCount = current.db((h.deleted != 'T') & (h.type == 1) & (h.person_id == p.id) & ( (p.first_name.like('%mem%')) | (p.middle_name.like('%mem%')) | (p.last_name.like('%mem%')) )).count()
         key="Mem"
         self.search(self.search.simple_form,
             True,
-            ({
-                "id": "human_resource_search_simple",
-                "value": key
-            },), dbRowCount,
-            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=2)
+            [],
+            ["hrm_human_resource", key],
+            manual_check=functools.partial(_kwsearch, keyword=key, items=1, column=2)
         )
 
 
