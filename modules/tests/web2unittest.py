@@ -30,6 +30,7 @@ import sys
 import time
 import unittest
 from unittest.case import SkipTest, _ExpectedFailure, _UnexpectedSuccess
+from s3.s3resource import S3FieldSelector
 
 from dateutil.relativedelta import relativedelta
 from selenium.common.exceptions import NoSuchElementException
@@ -145,9 +146,13 @@ class SeleniumUnitTest(Web2UnitTest):
 
         @param results_expected: Are results expected?
 
-        @param fields: See the `fields` function.
+        @param fields: See the `fields` function. 
+                       For search.simple_form, an empty list [] can be pass. The field will be taken from s3resource.
 
         @param row_count: Expected row count
+                       For search.simple_form, [resource tablename, key] can be pass to get the resource and eventually the DB row count.
+                       Note: Since we are ruuning this without any user credentials, we need to set 
+                               "settings.security.policy = 1" in 00_config.py.
 
         Keyword arguments:
 
@@ -171,6 +176,25 @@ class SeleniumUnitTest(Web2UnitTest):
         column in the result data table. The first value must be the index of
         the row to match against.
         '''
+
+        if not isinstance(row_count, int):
+            if isinstance(row_count, (list, tuple)) and form_type == self.search.simple_form:
+                try:
+                    key = row_count[1]
+                    resource = current.s3db.resource(row_count[0])
+                    simpleSearch = resource.search.simple[0]
+                    if len(fields) == 0:
+                        fields = ({"name":simpleSearch[0],"value":key},)
+                    searchFields = simpleSearch[1].field
+                    for i in xrange(len(searchFields)):
+                        if i == 0:
+                            query = (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
+                        else:
+                            query |= (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
+                    resource.add_filter(query)
+                    row_count = resource.count()
+                except:
+                    self.fail("Fail to get DB row count.")
 
         browser = self.browser
 
