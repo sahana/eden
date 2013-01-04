@@ -131,7 +131,6 @@ else:
 _settings = auth.settings
 _settings.lock_keys = False
 
-_settings.password_min_length = 4
 _settings.expiration = 28800  # seconds
 
 _settings.facebook = settings.get_auth_facebook()
