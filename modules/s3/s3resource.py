@@ -3124,7 +3124,7 @@ class S3Resource(object):
                     for record in records:
                         record[key] = record[key].render()
                 elif joined and type(record[key]) is list:
-                    record[key] = ", ".join(record[key])
+                    record[key] = ", ".join([s3_unicode(s) for s in record[key]])
 
             if show_links is False and hasattr(renderer, "linkto"):
                 renderer.linkto = linkto
