@@ -781,6 +781,7 @@ class S3Resource(object):
             @param ondelete: on-delete callback
             @param format: the representation format of the request (optional)
             @param cascade: this is a cascade delete (prevents rollbacks/commits)
+            @param replaced_by: used by record merger
 
             @return: number of records deleted
 
@@ -1762,7 +1763,8 @@ class S3Resource(object):
                    as_tree=False,
                    as_json=False,
                    maxbounds=False,
-                   pretty_print=False, **args):
+                   pretty_print=False,
+                   **args):
         """
             Export this resource as S3XML
 

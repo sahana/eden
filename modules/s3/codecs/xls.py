@@ -76,13 +76,12 @@ class S3XLS(S3Codec):
 
 
     # -------------------------------------------------------------------------
-    def extractResource(self, resource, list_fields, report_groupby):
+    def extractResource(self, resource, list_fields):
         """
             Extract the items from the resource
 
             @param resource: the resource
             @param list_fields: fields to include in list views
-            @param report_groupby: a Field object of the field to group the records by
         """
 
         title = self.crud_string(resource.tablename, "title_list")
@@ -123,11 +122,11 @@ class S3XLS(S3Codec):
             Export data as a Microsoft Excel spreadsheet
 
             @param data_source: the source of the data that is to be encoded
-                               as a spreadsheet. This may be:
-                               resource: the resource
-                               item:     a list of pre-fetched values
-                                         the headings are in the first row
-                                         the data types are in the second row
+                                as a spreadsheet. This may be:
+                                resource: the resource
+                                item:     a list of pre-fetched values
+                                          the headings are in the first row
+                                          the data types are in the second row
             @param attr: dictionary of parameters:
                  * title:          The main title of the report
                  * list_fields:    Fields to include in list views
@@ -171,8 +170,7 @@ class S3XLS(S3Codec):
             items = data_source[2:]
         else:
             (title, types, lfields, headers, items) = self.extractResource(data_source,
-                                                                           list_fields,
-                                                                           report_groupby)
+                                                                           list_fields)
         report_groupby = lfields[group] if group else None
         if len(items) > 0 and len(headers) != len(items[0]):
             from ..s3utils import s3_debug
@@ -193,10 +191,12 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         # Initialize output
         output = StringIO()
 
-        # Create the workbook and a sheet in it
+        # Create the workbook
         book = xlwt.Workbook(encoding="utf-8")
+
+        # Add a sheet
         # The spreadsheet doesn't like a / in the sheet name, so replace any with a space
-        sheet1 = book.add_sheet(str(title.replace("/"," ")))
+        sheet1 = book.add_sheet(str(title.replace("/", " ")))
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()

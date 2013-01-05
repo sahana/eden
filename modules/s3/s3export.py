@@ -59,12 +59,14 @@ class S3Exporter(object):
     def xls(self, *args, **kwargs):
 
         codec = S3Codec.get_codec("xls").encode
+        # args[0] = S3Resource()
         return codec(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def pdf(self, *args, **kwargs):
 
         codec = S3Codec.get_codec("pdf").encode
+        # args[0] = S3Request()
         return codec(*args, **kwargs)
 
     # -------------------------------------------------------------------------

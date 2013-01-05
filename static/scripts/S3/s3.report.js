@@ -88,8 +88,7 @@ function reportRenderPieChart(json, dim) {
     }
     $('#chart-header').html('<h4>'+layer + ' ' + title+'</h4>');
 
-    reportChart = jQuery.plot($('#chart'), data,
-        {
+    reportChart = jQuery.plot($('#chart'), data, {
             series: {
                 pie: {
                     show: true,
@@ -249,7 +248,9 @@ function reportRenderBreakdown(json, dim) {
         cdim = json['c'];
         rows = src.rows;
         cols = src.cols;
-        get_data = function(i, j) { return idata[i][j]; };
+        get_data = function(i, j) {
+            return idata[i][j];
+        };
     } else {
         // breakdown rows by cols
         title = json['x'];
@@ -257,7 +258,9 @@ function reportRenderBreakdown(json, dim) {
         cdim = json['r'];
         rows = src.cols;
         cols = src.rows;
-        get_data = function(i, j) { return idata[j][i]; };
+        get_data = function(i, j) {
+            return idata[j][i];
+        };
     }
 
     var height = Math.max(rows.length * Math.max((cols.length + 1) * 16, 50) + 70, 360);
@@ -277,7 +280,7 @@ function reportRenderBreakdown(json, dim) {
         // every col gives a series
         var series = {label: cols[c][2]};
         var values = [];
-        for (var r=0; r<rows.length; r++) {
+        for (var r=0; r < rows.length; r++) {
             var index = (r + 1) * (cols.length + 1) - c;
             var value = get_data(r, c);
             if (value > xmax) {
@@ -290,15 +293,14 @@ function reportRenderBreakdown(json, dim) {
     }
 
     var yaxis_ticks = [];
-    for (r=0; r<rows.length; r++) {
+    for (r=0; r < rows.length; r++) {
         var label = rows[r][2];
         index = (r + 1) * (cols.length + 1) + 1;
         yaxis_ticks.push([index, label]);
     }
 
-    $('#chart-header').html('<h4>'+layer + ' ' + title+'</h4>');
-    reportChart = jQuery.plot($('#chart'), odata,
-        {
+    $('#chart-header').html('<h4>' + layer + ' ' + title + '</h4>');
+    reportChart = jQuery.plot($('#chart'), odata, {
             series: {
                 bars: {
                     show: true,
@@ -422,16 +424,16 @@ $(document).ready(function() {
         emptyChart();
         reportRenderBreakdown(json_data, 1);
     });
-    $('.hide-chart').click(function(){
+    $('.hide-chart').click(function() {
         $('#chart-container').addClass('hide');
     });
     // Toggle the report options
-    $('#reportform legend').click(function(){
+    $('#reportform legend').click(function() {
         $(this).siblings().toggle();
         $(this).children().toggle();
     });
     // Toggle pivot table
-    $('.pivot-table-control').click(function(){
+    $('.pivot-table-control').click(function() {
         $(this).siblings().toggle();
         $(this).children().toggle();
     });
@@ -470,9 +472,10 @@ $(document).ready(function() {
             }
         }
     });
-    // Hide the report options when the page loads
     if (json_data.h) {
+        // Hide the report options when the page loads
         $('#report_options legend').siblings().toggle();
+        $('#report_options legend').children().toggle();
     }
 
     // Render default chart

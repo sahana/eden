@@ -103,11 +103,9 @@ class S3Report(S3CRUD):
 
         tablename = self.tablename
 
-        # Get the options -----------------------------------------------------
-
+        # Get the options
         # Figure out which set of options to use:
         # POST > GET > session > table defaults > list view
-
         if r.http == "POST":
             # Form has been submitted
             form_values = r.post_vars
@@ -178,8 +176,7 @@ class S3Report(S3CRUD):
             if "filter" in s3:
                 del s3["filter"]
 
-        # Generate the report and resource filter form ------------------------
-
+        # Generate the report and resource filter form
         show_form = attr.get("interactive_report", True)
         if show_form:
 
@@ -228,8 +225,7 @@ class S3Report(S3CRUD):
             query = None
             form = None
 
-        # Process the form values ---------------------------------------------
-
+        # Process the form values
         # Get rows, cols, fact and aggregate
         rows = form_values.get("rows", None)
         cols = form_values.get("cols", None)
@@ -270,8 +266,7 @@ class S3Report(S3CRUD):
                         layer = l
                     layers.append((layer, method))
 
-        # Generate the report -------------------------------------------------
-
+        # Generate the report
         resource = self.resource
         representation = r.representation
 
@@ -384,8 +379,7 @@ class S3Report(S3CRUD):
         else:
             r.error(501, current.manager.ERROR.BAD_METHOD)
 
-        # Complete the page ---------------------------------------------------
-
+        # Complete the page
         if representation in ("html", "iframe"):
             crud_string = self.crud_string
             title = crud_string(tablename, "title_report")
@@ -454,6 +448,7 @@ class S3Report(S3CRUD):
         resource = self.resource
         vars = form_values if form_values else self.request.vars
         trows = []
+        tappend = trows.append
         for widget in filter_widgets:
             name = widget.attr["_name"]
             _widget = widget.widget(resource, vars)
@@ -473,7 +468,7 @@ class S3Report(S3CRUD):
             tr = TR(TD("%s: " % label, _class="w2p_fl"),
                     TD(widget.widget(resource, vars)),
                     TD(comment))
-            trows.append(tr)
+            tappend(tr)
 
         return FIELDSET(
                     LEGEND(T("Filter Options"),
@@ -501,16 +496,14 @@ class S3Report(S3CRUD):
         request = current.request
         resource = self.resource
 
-        # Get the config options ----------------------------------------------
-
+        # Get the config options
         _config = self._config
         report_options = _config("report_options", Storage())
 
         label = lambda s, **attr: TD(LABEL("%s:" % s, **attr),
                                      _class="w2p_fl")
 
-        # Rows/Columns selector -----------------------------------------------
-
+        # Rows/Columns selector
         fs = self._field_select
         select_rows = fs("rows", report_options, form_values)
         select_cols = fs("cols", report_options, form_values)
@@ -521,8 +514,7 @@ class S3Report(S3CRUD):
                             )
                           )
 
-        # Layer selector ------------------------------------------------------
-
+        # Layer selector
         layer, hidden = self._method_select("fact",
                                             report_options, form_values)
         single_opt = {"_class": "report-fact-single-option"} \
@@ -531,8 +523,7 @@ class S3Report(S3CRUD):
             selectors.append(TR(label(T("Value"), _for="report-fact"),
                                 TD(layer), **single_opt))
 
-        # Show Totals switch --------------------------------------------------
-
+        # Show Totals switch
         # totals are "on" or True by default
         show_totals = True
         if "totals" in form_values:
@@ -547,17 +538,17 @@ class S3Report(S3CRUD):
                                      _name="totals",
                                      value=show_totals))))
 
-        # Render field set ----------------------------------------------------
-
+        # Render field set
         form_report_options = FIELDSET(
                 LEGEND(T("Report Options"),
                     BUTTON(self.SHOW,
                            _type="button",
                            _class="toggle-text",
-                           _style="display:none"),
+                           _style="display:none" if not hidden else ""),
                     BUTTON(self.HIDE,
                            _type="button",
-                           _class="toggle-text")
+                           _class="toggle-text",
+                           _style="display:none" if hidden else "")
                 ),
                 selectors, _id="report_options")
 
@@ -976,7 +967,7 @@ class S3ContingencyTable(TABLE):
                                     for fk in fvalue:
                                         if fk not in layer_ids:
                                             layer_ids.append(fk)
-                                            layer_values[fk] = str(field.represent(fk))
+                                            layer_values[fk] = s3_unicode(field.represent(fk))
                                 else:
                                     if id not in layer_ids:
                                         layer_ids.append(id)

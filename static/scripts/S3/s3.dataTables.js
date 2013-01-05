@@ -1026,7 +1026,6 @@ function s3FormatRequest(representation, tableid, url) {
     var dt = oDataTable[t];
     var oSetting = dt.dataTableSettings[t];
     if (oSetting) {
-
         var argData = 'id=' + tableid;
         var serverFilterArgs = $('#' + tableid + '_dataTable_filter');
         if (serverFilterArgs.val() != '') {

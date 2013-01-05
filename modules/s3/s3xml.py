@@ -1193,6 +1193,7 @@ class S3XML(S3Codec):
             it
 
             @param table: the database table
+            
             @param element: the element
             @param original: the original record
             @param files: list of attached upload files

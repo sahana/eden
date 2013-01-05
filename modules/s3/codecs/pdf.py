@@ -111,7 +111,7 @@ class S3RL_PDF(S3Codec):
     # -------------------------------------------------------------------------
     def encode(self, r, **attr):
         """
-            Export data as a PDF spreadsheet
+            Export data as a PDF document
 
             @param r: the S3Request object
             @param attr: dictionary of parameters:
@@ -146,9 +146,7 @@ class S3RL_PDF(S3Codec):
             current.session.error = self.ERROR.RL_ERROR
             redirect(URL(extension=""))
 
-        # Environment
-        request = current.request
-        response = current.response
+        # Settings
         self.r = r
         self.list_fields = attr.get("list_fields")
         self.pdf_groupby = attr.get("pdf_groupby")
@@ -159,7 +157,7 @@ class S3RL_PDF(S3Codec):
         self.pdf_footer_padding = attr.get("pdf_footer_padding", 0)
 
         # Get the title & filename
-        now = request.now.isoformat()[:19].replace("T", " ")
+        now = current.request.now.isoformat()[:19].replace("T", " ")
         title = attr.get("pdf_title")
         if title == None:
             title = "Report"
@@ -216,14 +214,14 @@ class S3RL_PDF(S3Codec):
                                              id = r.id)
             body_flowable = self.get_resource_flowable(resource.components[component],
                                                        doc)
+        elif r.link:
+            body_flowable = self.get_resource_flowable(r.link, doc)
         elif r.component:
-            body_flowable = self.get_resource_flowable(r.component,
-                                                           doc)
+            body_flowable = self.get_resource_flowable(r.component, doc)
         else:
             method = attr.get("method", "list")
             if method != "read":
-                body_flowable = self.get_resource_flowable(r.resource,
-                                                           doc)
+                body_flowable = self.get_resource_flowable(r.resource, doc)
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
@@ -233,13 +231,14 @@ class S3RL_PDF(S3Codec):
             body_flowable = [Paragraph("", style)]
         self.normalstyle = style
 
-        # Build the pdf
+        # Build the PDF
         doc.build(header_flowable,
                   body_flowable,
                   footer_flowable,
                   )
 
-        # Return the generated pdf
+        # Return the generated PDF
+        response = current.response
         if response:
             disposition = "attachment; filename=\"%s\"" % self.filename
             response.headers["Content-Type"] = contenttype(".pdf")
@@ -279,26 +278,42 @@ class S3RL_PDF(S3Codec):
         """
 
         from s3.s3utils import S3DataTable
-        if not self.list_fields:
-            self.list_fields = []
+
+        list_fields = self.list_fields
+        if list_fields:
+            try:
+                # Remove the ID field as we're not using this for the Action Buttons
+                list_fields.remove("id")
+            except:
+                pass
+        else:
+            list_fields = []
             fields = resource.readable_fields()
             for field in fields:
                 if field.type == "id":
                     continue
                 if self.pdf_hide_comments and field.name == "comments":
                     continue
-                self.list_fields.append(field.name)
-        rfields = resource.resolve_selectors(self.list_fields)[0]
-        (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+                list_fields.append(field.name)
+
+        rfields = resource.resolve_selectors(list_fields)[0]
+
+        vars = Storage(current.request.vars)
+        vars["iColumns"] = len(rfields)
+        filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
+
         current.manager.ROWSPERPAGE = None # needed to get all the data
-        rows = resource.select(self.list_fields,
-                               orderby=orderby,
-                               )
+        rows = resource.select(list_fields,
+                               left=left,
+                               start=None,
+                               limit=None,
+                               orderby=orderby)
         data = resource.extract(rows,
-                                self.list_fields,
+                                list_fields,
                                 represent=True,
                                 )
+
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
                                rfields,
@@ -596,8 +611,7 @@ class S3PDFTable(object):
 
             @param document: A S3PDF object
             @param raw_data: A list of rows
-            @param list_fields: A list of field names
-            @param labels: a list of labels
+            @param rfields: A list of field selectors
             @param groupby: A field name that is to be used as a sub-group
                    All the records that share the same pdf_groupby value
                    will be clustered together
@@ -610,25 +624,29 @@ class S3PDFTable(object):
             self.paper_size = A4
 
         self.pdf = document
-        # @todo: change the code to use raw_data directly rather than this
+        # @todo: Change the code to use raw_data directly rather than this
         #        conversion to an ordered list of values
+        # @ToDo: We don't want to include in the output the selectors added as extra_fields
         self.rfields = rfields
-        self.raw_data = []
+        rdata = []
+        rappend = rdata.append
         for row in raw_data:
             data = []
-            for value in rfields:
-                text = row[value.colname]
-                if isinstance(text, basestring):
-                    data.append(text)
+            dappend = data.append
+            for selector in rfields:
+                value = row[selector.colname]
+                if isinstance(value, basestring):
+                    dappend(value)
                 else:
                     try:
-                        # extract the text from the html tag
-                        data.append(text.components[0])
+                        # Extract the text from the html tag
+                        dappend(value.components[0])
                     except:
-                        data.append(s3_unicode(text))
-            self.raw_data.append(data)
-        self.labels = [field.label for field in self.rfields]
-        self.list_fields = [field.fname for field in self.rfields]
+                        dappend(s3_unicode(value))
+            rdata.append(data)
+        self.raw_data = rdata
+        self.labels = [selector.label for selector in self.rfields]
+        self.list_fields = [selector.fname for selector in self.rfields]
         self.pdf_groupby = groupby
         self.hideComments = hide_comments
         self.autogrow = autogrow
@@ -641,7 +659,7 @@ class S3PDFTable(object):
         self.newColWidth = [] # @todo: remove this (but see presentation)
         self.rowHeights = []
         self.style = None
-        # temp document to test the table size, default to A4 portrait
+        # Temp document to test the table size, default to A4 portrait
         # @todo: use custom template
         # @todo: set pagesize for pdf component not whole document
         self.tempDoc = EdenDocTemplate()
@@ -667,25 +685,28 @@ class S3PDFTable(object):
 
         if self.pdf_groupby:
             data = self.group_data()
-            self.data = [self.labels] + data
+            data = [self.labels] + data
         elif self.raw_data != None:
-            self.data = [self.labels] + self.raw_data
+            data = [self.labels] + self.raw_data
         # Only build the table if we have some data
-        if not self.data or not (self.data[0]):
+        if not data or not (data[0]):
             return None
         endCol = len(self.labels) - 1
-        rowCnt = len(self.data)
+        rowCnt = len(data)
 
         self.style = self.tableStyle(0, rowCnt, endCol)
-        tempTable = Table(self.data, repeatRows=1,
-                          style=self.style, hAlign="LEFT"
-                         )
+        tempTable = Table(data,
+                          repeatRows=1,
+                          style=self.style,
+                          hAlign="LEFT"
+                          )
+        self.data = data
         self.tempDoc.build(None, [tempTable], None)
         self.newColWidth = [tempTable._colWidths]
         self.rowHeights = [tempTable._rowHeights]
-        self.pages.append(self.data)
+        self.pages.append(data)
         if not self.tweakDoc(tempTable):
-            #print "Need to split the table"
+            # Need to split the table
             self.pages = self.splitTable(tempTable)
         return self.presentation()
 
@@ -698,24 +719,24 @@ class S3PDFTable(object):
         newData = []
         data = self.raw_data
         level = 0
+        list_fields = self.list_fields
         for field in groups:
             level += 1
             field = field.strip()
-            # find the location of field in list_fields
+            # Find the location of field in list_fields
             i = 0
-            rowlength = len(self.list_fields)
+            rowlength = len(list_fields)
             while i < rowlength:
-                if self.list_fields[i] == field:
+                if list_fields[i] == field:
                     break
                 i += 1
-            list_fields = self.list_fields[0:i] + self.list_fields[i+1:]
-            self.list_fields = list_fields
-            labels = self.labels[0:i] + self.labels[i+1:]
+            list_fields = list_fields[0:i] + list_fields[i + 1:]
+            labels = self.labels[0:i] + self.labels[i + 1:]
             self.labels = labels
             currentGroup = None
             r = 0
             for row in data:
-                if r+1 in self.subheadingList:
+                if r + 1 in self.subheadingList:
                     newData.append(row)
                     r += 1
                 else:
@@ -728,7 +749,7 @@ class S3PDFTable(object):
                             currentGroup = group
                             self.subheadingList.append(r)
                             self.subheadingLevel[r] = level
-                            # all existing subheadings after this point need to
+                            # All existing subheadings after this point need to
                             # be shuffled down one place.
                             for x in range (len(self.subheadingList)):
                                 if self.subheadingList[x] > r:
@@ -745,6 +766,8 @@ class S3PDFTable(object):
                         r += 1
             data = newData
             newData = []
+
+        self.list_fields = list_fields
         return data
 
     # -------------------------------------------------------------------------
@@ -763,7 +786,7 @@ class S3PDFTable(object):
         totalPagesAcross = len(self.newColWidth)
         if self.autogrow == "H" or self.autogrow == "B":
             printable_width = self.pdf.printable_width
-            # expand the columns to use all the available space
+            # Expand the columns to use all the available space
             newColWidth = []
             for cols in self.newColWidth:
                 col_width = 0
@@ -797,14 +820,14 @@ class S3PDFTable(object):
             endCol = len(colWidths) - 1
             rowCnt = len(page)
             self.style = self.tableStyle(startRow, rowCnt, endCol)
-            (page,self.style) = self.pdf.addCellStyling(page, self.style)
+            (page, self.style) = self.pdf.addCellStyling(page, self.style)
             p = Table(page, repeatRows=1,
                       style=self.style,
                       hAlign="LEFT",
                       colWidths=colWidths
                      )
             content.append(p)
-            # add a page break, except for the last page.
+            # Add a page break, except for the last page.
             if currentPage + 1 < len(self.pages):
                 content.append(PageBreak())
             currentPage += 1
@@ -819,11 +842,10 @@ class S3PDFTable(object):
             on the width of a page.
         """
 
-        currentLeftMargin = self.pdf.leftMargin
-        currentRightMargin = self.pdf.rightMargin
-        availableMarginSpace = currentLeftMargin \
-                             + currentRightMargin \
-                             - 2 * self.pdf.MINIMUM_MARGIN_SIZE
+        _pdf =  self.pdf
+        availableMarginSpace = _pdf.leftMargin \
+                             + _pdf.rightMargin \
+                             - 2 * _pdf.MINIMUM_MARGIN_SIZE
         return availableMarginSpace
 
     # -------------------------------------------------------------------------
@@ -839,8 +861,9 @@ class S3PDFTable(object):
         rowCnt = len(self.data)
         # Check margins
         if currentOverlap < availableMarginSpace:
-            self.pdf.leftMargin -= currentOverlap / 2
-            self.pdf.rightMargin -= currentOverlap / 2
+            _pdf = self.pdf
+            _pdf.leftMargin -= currentOverlap / 2
+            _pdf.rightMargin -= currentOverlap / 2
             return True
         return False
 
@@ -878,7 +901,6 @@ class S3PDFTable(object):
         if self.tweakFont(tableWidth, originalFont -3, colWidths):
             return True
         return False
-        # end of function minorTweaks
 
     # -------------------------------------------------------------------------
     def tweakDoc(self, table):
@@ -979,35 +1001,38 @@ class S3PDFTable(object):
             startCol = 0
             for endCol in colSplit:
                 page = []
+                pappend = page.append
                 label = []
+                lappend = label.append
                 for colIndex in range(startCol, endCol):
                     try:
-                        label.append(self.labels[colIndex])
+                        lappend(self.labels[colIndex])
                     except IndexError:
-                        label.append("")
-                page.append(label)
+                        lappend("")
+                pappend(label)
                 for rowIndex in range(startRow, endRow):
                     line = []
+                    lappend = line.append
                     for colIndex in range(startCol, endCol):
                         try:
-                            line.append(self.data[rowIndex][colIndex])
+                            lappend(self.data[rowIndex][colIndex])
                         except IndexError: # No data to add.
                             # If this is the first column of a subheading row then repeat the subheading
                             if len(line) == 0 and rowIndex in self.subheadingList:
                                 try:
-                                    line.append(self.data[rowIndex][0])
+                                    lappend(self.data[rowIndex][0])
                                 except IndexError:
-                                    line.append("")
+                                    lappend("")
                             else:
-                                line.append("")
-                    page.append(line)
+                                lappend("")
+                    pappend(line)
                 pages.append(page)
                 startCol = endCol
             startRow = endRow
         return pages
 
     # -------------------------------------------------------------------------
-    def tableStyle(self, startRow, rowCnt, endCol, colour_required = False):
+    def tableStyle(self, startRow, rowCnt, endCol, colour_required=False):
         """
             Internally used method to assign a style to the table
 
@@ -1029,36 +1054,36 @@ class S3PDFTable(object):
                  ("LINEBELOW", (0, 0), (endCol, 0), 1, Color(0, 0, 0)),
                  ("FONTNAME", (0, 0), (endCol, 0), "Helvetica-Bold"),
                 ]
+        sappend = style.append
         if colour_required:
-            style.append(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
+            sappend(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
         else:
-            style.append(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
-            style.append(("INNERGRID", (0, 0), (-1, -1), 0.2, colors.lightgrey))
+            sappend(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
+            sappend(("INNERGRID", (0, 0), (-1, -1), 0.2, colors.lightgrey))
         if self.pdf_groupby != None:
-            style.append(("LEFTPADDING", (0, 0), (-1, -1), 20))
+            sappend(("LEFTPADDING", (0, 0), (-1, -1), 20))
         rowColourCnt = 0 # used to alternate the colours correctly when we have subheadings
         for i in range(rowCnt):
             # If subheading
             if startRow + i in self.subheadingList:
                 level = self.subheadingLevel[startRow + i]
                 if colour_required:
-                    style.append(("BACKGROUND", (0, i), (endCol, i),
-                                  self.headerColour))
-                style.append(("FONTNAME", (0, i), (endCol, i),
-                              "Helvetica-Bold"))
-                style.append(("SPAN", (0, i), (endCol, i)))
-                style.append(("LEFTPADDING", (0, i), (endCol, i), 6 * level))
+                    sappend(("BACKGROUND", (0, i), (endCol, i),
+                             self.headerColour))
+                sappend(("FONTNAME", (0, i), (endCol, i), "Helvetica-Bold"))
+                sappend(("SPAN", (0, i), (endCol, i)))
+                sappend(("LEFTPADDING", (0, i), (endCol, i), 6 * level))
             elif i > 0:
                 if colour_required:
                     if rowColourCnt % 2 == 0:
-                        style.append(("BACKGROUND", (0, i), (endCol, i),
-                                      self.evenColour))
+                        sappend(("BACKGROUND", (0, i), (endCol, i),
+                                 self.evenColour))
                         rowColourCnt += 1
                     else:
-                        style.append(("BACKGROUND", (0, i), (endCol, i),
-                                      self.oddColour))
+                        sappend(("BACKGROUND", (0, i), (endCol, i),
+                                 self.oddColour))
                         rowColourCnt += 1
-        style.append(("BOX", (0, 0), (-1, -1), 1, Color(0, 0, 0)))
+        sappend(("BOX", (0, 0), (-1, -1), 1, Color(0, 0, 0)))
         return style
 
 # =============================================================================
@@ -1071,6 +1096,7 @@ class S3html2pdf():
             Method that takes html in the web2py helper objects
             and converts it to pdf
         """
+
         self.exclude_class_list = exclude_class_list
         self.pageWidth = pageWidth
         self.fontsize = 10
@@ -1089,8 +1115,7 @@ class S3html2pdf():
         # Then add the style and the name to the lookup dict below
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
-        self.style_lookup = {"pdf_title": self.titlestyle
-                             }
+        self.style_lookup = {"pdf_title": self.titlestyle}
 
     # -------------------------------------------------------------------------
     def parse(self, html):
@@ -1146,8 +1171,9 @@ class S3html2pdf():
         """
 
         content = []
+        select_tag = self.select_tag
         for component in html.components:
-            result = self.select_tag(component)
+            result = select_tag(component)
             if result != None:
                 content += result
         if content == []:
@@ -1160,8 +1186,9 @@ class S3html2pdf():
         """
 
         content = []
+        select_tag = self.select_tag
         for component in html.components:
-            result = self.select_tag(component)
+            result = select_tag(component)
             if result != None:
                 content += result
         if content == []:
@@ -1211,8 +1238,9 @@ class S3html2pdf():
         """
 
         content = []
+        select_tag = self.select_tag
         for component in html.components:
-            result = self.select_tag(component)
+            result = select_tag(component)
             if result != None:
                 content += result
         if content == []:
@@ -1230,16 +1258,19 @@ class S3html2pdf():
                  ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
                 ]
         content = []
+        cappend = content.append
         rowCnt = 0
         result = None
+        exclude_tag = self.exclude_tag
+        parse_tr = self.parse_tr
         for component in html.components:
-            if self.exclude_tag(component):
+            if exclude_tag(component):
                 continue
             if isinstance(component, TR):
-                result = self.parse_tr(component, style, rowCnt)
+                result = parse_tr(component, style, rowCnt)
                 rowCnt += 1
             if result != None:
-                content.append(result)
+                cappend(result)
         if content == []:
             return None
         table = Table(content,
@@ -1256,28 +1287,32 @@ class S3html2pdf():
         """
 
         row = []
+        rappend = row.append
+        sappend = style.append
         colCnt = 0
+        exclude_tag = self.exclude_tag
+        select_tag = self.select_tag
         for component in html.components:
             if isinstance(component, (TH, TD)):
-                if self.exclude_tag(component):
+                if exclude_tag(component):
                     continue
                 colspan = 1
                 if "_colspan" in component.attributes:
                     colspan = component.attributes["_colspan"]
                 if component.components == []:
-                    row.append("")
+                    rappend("")
                 else:
                     for detail in component.components:
-                        result = self.select_tag(detail, title=isinstance(component, TH))
+                        result = select_tag(detail, title=isinstance(component, TH))
                         if result != None:
-                            row.append(result)
+                            rappend(result)
                             if isinstance(component, TH):
-                                style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
-                                style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
+                                sappend(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
+                                sappend(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
                             if colspan > 1:
                                 for i in xrange(1, colspan):
-                                    row.append("")
-                                style.append(("SPAN", (colCnt, rowCnt), (colCnt + colspan - 1, rowCnt)))
+                                    rappend("")
+                                sappend(("SPAN", (colCnt, rowCnt), (colCnt + colspan - 1, rowCnt)))
                                 colCnt += colspan
                             else:
                                 colCnt += 1

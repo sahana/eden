@@ -40,12 +40,14 @@
     <xsl:param name="prefix"/>
     <xsl:param name="name"/>
     <xsl:param name="id"/>
+    <xsl:param name="alias"/>
     <xsl:param name="component"/>
     <xsl:param name="mode"/>
     <xsl:param name="utcnow"/>
 
     <!-- ****************************************************************** -->
-    <xsl:include href="base.xsl"/> <!-- Do not remove this line! -->
+    <!-- Defaults if no special case provided here -->
+    <xsl:include href="base.xsl"/>
     <xsl:include href="../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->

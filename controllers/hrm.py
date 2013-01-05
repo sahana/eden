@@ -606,7 +606,8 @@ def department():
         return True
     s3.prep = prep
 
-    s3.filter = auth.filter_by_root_org(s3db.hrm_department)
+    if not auth.s3_has_role(ADMIN):
+        s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
     output = s3_rest_controller()
     return output

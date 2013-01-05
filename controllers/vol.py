@@ -644,7 +644,8 @@ def department():
         return True
     s3.prep = prep
 
-    s3.filter = auth.filter_by_root_org(s3db.hrm_department)
+    if not auth.s3_has_role(ADMIN):
+        s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
     output = s3_rest_controller("hrm", resourcename)
     return output
@@ -792,9 +793,11 @@ def certificate_skill():
 def training():
     """ Training Controller - used for Searching for Participants """
 
+    # Filter to just Volunteers
     table = s3db.hrm_human_resource
     s3.filter = ((table.type == 2) & \
                  (s3db.hrm_training.person_id == table.person_id))
+
     return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
@@ -853,6 +856,19 @@ def programme():
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_programme)
 
+    def prep(r):
+        if r.component_name == "person":
+            s3db.configure("hrm_programme_hours",
+                           list_fields=["id",
+                                        "person_id",
+                                        "training",
+                                        "programme_id",
+                                        "date",
+                                        "hours",
+                                        ])
+        return True
+    s3.prep = prep
+
     output = s3_rest_controller("hrm", resourcename,
                                 rheader=s3db.hrm_rheader)
     return output
@@ -870,8 +886,11 @@ def programme_hours():
         redirect(URL(f="index"))
 
     output = s3_rest_controller("hrm", resourcename,
-                                csv_template = ("hrm", "programme_hours"))
+                                csv_stylesheet=("hrm", "programme_hours.xsl"),
+                                csv_template=("hrm", "programme_hours")
+                                )
     return output
+
 # =============================================================================
 def cluster_type():
     """ Volunteer Clusters controller """

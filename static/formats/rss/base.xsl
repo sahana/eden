@@ -114,8 +114,16 @@
     <xsl:template name="resource_url">
         <xsl:variable name="resource_url"
                       select="concat($base_url, '/', $prefix, '/', $name)"/>
-        <xsl:variable name="component_name"
-                      select="substring-after($component, '_')"/>
+        <xsl:variable name="component_name">
+            <xsl:choose>
+                <xsl:when test="$alias">
+                    <xsl:value-of select="$alias"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="substring-after($component, '_')"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:choose>
             <xsl:when test="$id and $component">
                 <xsl:value-of select="concat($resource_url, '/', $id, '/', $component_name)"/>

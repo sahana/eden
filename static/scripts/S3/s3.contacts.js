@@ -53,7 +53,7 @@ $('.address').each(function () {
 });
 */
 
-$('#contact-add').click(function () {
+$('#contact-add').click(function() {
     // Show a Spinner
     $('#contact-add_throbber').removeClass('hide').show();
     var button = $(this);
@@ -76,7 +76,7 @@ $('#contact-add').click(function () {
     });
 });
 
-$('.contact').each(function () {
+$('.contact').each(function() {
     var contact = $(this);
     var id = contact.attr('id').match(/\d+/);
 
@@ -87,7 +87,7 @@ $('.contact').each(function () {
         }
     });
 
-    contact.find('a.editBtn').click(function (e) {
+    contact.find('a.editBtn').click(function(e) {
         var span = contact.find('span');
         var current = span.html();
 
@@ -107,7 +107,7 @@ $('.contact').each(function () {
         span.replaceWith(formHolder);
         contact.addClass('edit');
 
-        form.submit(function (e) {
+        form.submit(function(e) {
             e.preventDefault();
             $('#pr_contact_value_error').remove();
             contact.removeClass('edit').addClass('saving');
@@ -115,7 +115,7 @@ $('.contact').each(function () {
             form.find('input[type=submit]').addClass('hide');
             $.post(S3.Ap.concat('/pr/contact/' + id[0] + '.s3json'),
                 '{"$_pr_contact":' + JSON.stringify({'value': input.val()}) + '}',
-                function (data) {
+                function(data) {
                     if (data.status == 'failed') {
                         try {
                             error_message = data.tree.$_pr_contact[0].value['@error']
@@ -144,7 +144,7 @@ $('.contact').each(function () {
     });
 });
 
-$('#emergency-add').click(function () {
+$('#emergency-add').click(function() {
     // Show a Spinner
     $('#emergency-add_throbber').removeClass('hide').show();
     var button = $(this);
@@ -167,7 +167,7 @@ $('#emergency-add').click(function () {
     });
 });
 
-$('.emergency').each(function () {
+$('.emergency').each(function() {
     var emergency = $(this);
     var id = emergency.attr('id').match(/\d+/);
 
@@ -178,7 +178,7 @@ $('.emergency').each(function () {
         }
     });
 
-    emergency.find('a.editBtn').click(function () {
+    emergency.find('a.editBtn').click(function() {
         // Show a Spinner
         $('#emergency-add_throbber').removeClass('hide').show();
         // Download the form
@@ -193,7 +193,7 @@ $('.emergency').each(function () {
             // Load the Form into the iframe
             emergency.next().html(data);
             // Modify the submission URL
-            var url2 = S3.Ap.concat('/pr/contact_emergency/' + id + '/update?person=' + personId);
+            var url2 = S3.Ap.concat('/pr/contact_emergency/' + id + '/update?person=' + personId + '&controller=' + controller);
             $('#popup').find('form').attr('action', url2);
             // Hide the spinner
             $('#emergency-add_throbber').hide();

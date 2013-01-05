@@ -1065,7 +1065,15 @@ class S3GroupModel(S3Model):
                   main="name",
                   extra="description")
 
-        # Reusable fields
+        # Reusable field
+        if current.request.controller in ("hrm", "vol"):
+            label = T("Add Team")
+            title = T("Create Team")
+            tooltip = T("Create a new Team.")
+        else:
+            label = crud_strings.pr_group.label_create_button
+            title = T("Create Group")
+            tooltip = T("Create a new Group.")
         group_id = S3ReusableField("group_id", table,
                                    sortby="name",
                                    requires = IS_NULL_OR(
@@ -1076,9 +1084,9 @@ class S3GroupModel(S3Model):
                                    represent = self.group_represent,
                                    comment=S3AddResourceLink(#c="pr",
                                                              f="group",
-                                                             label=crud_strings.pr_group.label_create_button,
-                                                             title=T("Create Group Entry"),
-                                                             tooltip=T("Create a group entry in the registry.")),
+                                                             label=label,
+                                                             title=title,
+                                                             tooltip=tooltip),
                                    ondelete = "RESTRICT")
 
         # Components
@@ -3666,7 +3674,7 @@ def pr_contacts(r, **attr):
                 "FACEBOOK": 8,
                 "FAX": 9,
                 "OTHER": 10
-            }
+                }
         return keys[key[0]]
     items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
@@ -3722,7 +3730,7 @@ def pr_contacts(r, **attr):
     for contact in emergency:
         name = contact.name or ""
         if name:
-            name = "%s, "% name
+            name = "%s, " % name
         relationship = contact.relationship or ""
         if relationship:
             relationship = "%s, "% relationship
