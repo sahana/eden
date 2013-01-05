@@ -1145,7 +1145,7 @@ class S3Search(S3CRUD):
 
         save_options = {
             "url": URL(c="pr", f="saved_search", vars={"format": "s3json"}),
-            "url_detail": URL(c="pr", f="person", args=[person_id, "saved_search", "<id>", "update"]),
+            "url_detail": URL(c="default", f="person", args=[person_id, "saved_search", "<id>", "update"]),
             "data": json.dumps({
                 "$_pr_saved_search": [
                     {
@@ -1386,8 +1386,9 @@ i18n.edit_saved_search="%s"
                     search_url_vars = query.serialize_url(resource)
                 search_url = r.url(method = "", vars = search_url_vars)
 
-                # Create a Save Search widget
-                save_search = self.save_search_widget(r, query, **attr)
+                if settings.get_save_search_widget():
+                    # Create a Save Search widget
+                    save_search = self.save_search_widget(r, query, **attr)
 
             # Add sub-queries
             resource.add_filter(dq)

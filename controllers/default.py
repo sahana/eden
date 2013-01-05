@@ -528,6 +528,8 @@ def person():
     if not request.args or request.args[0] != user_person_id:
         request.args = [str(user_person_id)]
 
+    set_method = s3db.set_method
+
     # Custom Method for User
     def auth_profile_method(r, **attr):
         # Custom View
@@ -555,8 +557,6 @@ def person():
                 form = form,
             )
 
-    set_method = s3db.set_method
-
     set_method("pr", "person",
                method="user",
                action=auth_profile_method)
@@ -566,26 +566,25 @@ def person():
                method="contacts",
                action=s3db.pr_contacts)
 
-    if settings.has_module("asset"):
-        # Assets as component of people
-        s3db.add_component("asset_asset",
-                           pr_person="assigned_to_id")
+    #if settings.has_module("asset"):
+    #    # Assets as component of people
+    #    s3db.add_component("asset_asset",
+    #                       pr_person="assigned_to_id")
 
-    group = request.get_vars.get("group", "staff")
-
-    # Configure person table
+    # Configure person table for personal mode
     tablename = "pr_person"
     table = s3db[tablename]
-    if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
-       (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
-        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
-    #s3db.configure(tablename,
-    #               deletable=False)
 
-    # Configure for personal mode
     s3.crud_strings[tablename].update(
         title_display = T("Personal Profile"),
         title_update = T("Personal Profile"))
+
+    # Organisation Dependent Fields
+    set_org_dependent_field = settings.set_org_dependent_field
+    set_org_dependent_field("pr_person_details", "father_name")
+    set_org_dependent_field("pr_person_details", "mother_name")
+    set_org_dependent_field("pr_person_details", "affiliations")
+    set_org_dependent_field("pr_person_details", "company")
 
     # CRUD pre-process
     def prep(r):
@@ -608,7 +607,19 @@ def person():
                     table.other_details.writable = True
                     table.other_details.readable = True
 
-                if r.component_name == "config":
+                elif r.component_name == "saved_search":
+                    if r.method == "load":
+                        if r.component_id:
+                            table = db.pr_saved_search
+                            record = db(table.id == r.component_id).select(table.url,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
+                            if record:
+                                redirect(record.url)
+                            else:
+                                raise HTTP(404)
+
+                elif r.component_name == "config":
                     s3db.add_component("auth_user_options",
                         gis_config=dict(joinby="pe_id", pkey="pe_id", multiple=False)
                     )
@@ -616,7 +627,7 @@ def person():
                     from s3.s3forms import S3SQLCustomForm
 
                     _config = s3db.gis_config
-                    current.s3db.gis_config_form_setup()
+                    s3db.gis_config_form_setup()
                     # Name will be generated from person's name.
                     _config.name.readable = _config.name.writable = False
                     # Hide Location
@@ -655,6 +666,13 @@ def person():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+            elif r.component_name == "saved_search" and r.method in (None, "search"):
+                s3_action_buttons(r)
+                s3.actions.append(
+                    dict(url=URL(args=r.args + ["[id]", "load"]),
+                         label=str(T("Load")),
+                         _class="action-btn")
+                )
             elif r.component_name == "asset":
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline
@@ -664,7 +682,7 @@ def person():
                                       _class="action-btn")
         return output
     s3.postp = postp
-    
+
     if settings.get_hrm_staff_experience() == "experience":
         experience_tab = (T("Experience"), "experience")
     else:
@@ -674,42 +692,47 @@ def person():
         certificates_tab = (T("Certificates"), "certificate")
     else:
         certificates_tab = None
-    
+
     if settings.get_hrm_use_credentials():
         credentials_tab = (T("Credentials"), "credential")
     else:
         credentials_tab = None
-    
+
     if settings.get_hrm_use_description():
         description_tab = (T("Description"), "physical_description")
     else:
         description_tab = None
-    
+
     if settings.get_hrm_use_education():
         education_tab = (T("Education"), "education")
     else:
         education_tab = None
-    
+
     if settings.get_hrm_use_id():
         id_tab = (T("ID"), "identity")
     else:
         id_tab = None
-    
+
     if settings.get_hrm_use_skills():
         skills_tab = (T("Skills"), "competency")
     else:
         skills_tab = None
-    
+
     if settings.get_hrm_use_teams():
         teams_tab = (T("Teams"), "group_membership")
     else:
         teams_tab = None
-    
+
     if settings.get_hrm_use_trainings():
         trainings_tab = (T("Trainings"), "training")
     else:
         trainings_tab = None
-    
+
+    if settings.get_save_search_widget():
+        searches_tab = (T("Saved Searches"), "saved_search")
+    else:
+        searches_tab = None
+
     tabs = [(T("Person Details"), None),
             (T("User Account"), "user"),
             (T("Staff/Volunteer Record"), "human_resource"),
@@ -724,9 +747,10 @@ def person():
             credentials_tab,
             experience_tab,
             teams_tab,
+            #(T("Assets"), "asset"),
             (T("Map Options"), "config"),
-            # (T("Assets"), "asset"),
-           ]
+            searches_tab,
+            ]
     
     output = s3_rest_controller("pr", "person",
                                 native=False,

@@ -1,6 +1,7 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 AUTHENTICATED,Authenticated,,gis,index,,,READ,,,,,
 AUTHENTICATED,Authenticated,,default,person,gis_location,,READ|CREATE|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,default,person,pr_saved_search,,,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
 AUTHENTICATED,Authenticated,,,,pr_person,,,READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,hrm_human_resource,,,READ,,,,

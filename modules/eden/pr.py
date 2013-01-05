@@ -1148,7 +1148,7 @@ class S3GroupModel(S3Model):
                                "person_id",
                                "group_head",
                                "description"
-                              ])
+                               ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*

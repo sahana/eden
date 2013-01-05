@@ -184,10 +184,10 @@ def person():
     s3.postp = postp
 
     s3db.configure("pr_group_membership",
-                    list_fields=["id",
-                                 "group_id",
-                                 "group_head",
-                                 "description"
+                   list_fields=["id",
+                                "group_id",
+                                "group_head",
+                                "description"
                                 ])
 
     # Basic tabs
