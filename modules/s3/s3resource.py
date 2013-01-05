@@ -3079,7 +3079,7 @@ class S3Resource(object):
                 renderer.linkto = None
 
             key = rfield.colname
-            joined = rfield.tname != self.tablename
+            joined = rfield.tname != self.tablename and rfield.multiple
 
             duplicates = []
             for row in rows:
@@ -4015,6 +4015,7 @@ class S3ResourceField(object):
         self.join = lf.join
         self.left = lf.left
         self.distinct = lf.distinct
+        self.multiple = lf.multiple
 
         self.field = lf.field
 
@@ -4095,6 +4096,7 @@ class S3ResourceField(object):
             tn = None
             fn = selector
 
+        multiple = True
         if tn and tn != resource.alias:
             # Field in a component
             if tn not in resource.components:
@@ -4110,6 +4112,7 @@ class S3ResourceField(object):
                 join[tn] = j
                 left[tn] = l
                 table = c.table
+                multiple = c.multiple
             else:
                 raise AttributeError("%s is not a component of %s" % (tn, tablename))
         else:
@@ -4263,7 +4266,8 @@ class S3ResourceField(object):
             kresource = s3db.resource(ktablename, vars=[])
             field = S3ResourceField.resolve(kresource, tail, join=join, left=left)
             field.update(selector=original,
-                         distinct=field.distinct or distinct)
+                         distinct=field.distinct or distinct,
+                         multiple=field.multiple or multiple)
             return field
 
         else:
@@ -4275,7 +4279,8 @@ class S3ResourceField(object):
                             field=f,
                             join=join,
                             left=left,
-                            distinct=distinct)
+                            distinct=distinct,
+                            multiple=multiple)
             return field
 
     # -------------------------------------------------------------------------
