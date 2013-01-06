@@ -5788,7 +5788,7 @@
 'You have a personal map configuration. To change your personal configuration, click ': 'You have a personal map configuration. To change your personal configuration, click ',
 'You have found a dead body?': '您找到一个停用身体?',
 "You have personalised settings, so changes made here won't be visible to you. To change your personalised settings, click": '您已經設定密碼,因此在這裡進行的變更不會顯示給您。 若要變更您的設定,請按一下个人化',
-"You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.": '您有未儲存的變更。 現在按一下"取消",然后"儲存",以儲存它們。 按一下確定以立即舍棄它們。',
+"You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.": "您有未儲存的變更。 現在按一下'取消',然后'儲存',以儲存它們。 按一下確定以立即舍棄它們。",
 "You haven't made any calculations": '您尚未進行任何計算',
 'You must be logged in to register volunteers.': '您必须登入,才能登錄参与者。',
 'You must be logged in to report persons missing or found.': '您必须登入,才能報告人員遺漏或找到。',
