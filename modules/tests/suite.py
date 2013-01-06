@@ -193,11 +193,18 @@ parser.add_argument("--force-debug",
                     const=True,
                     help = desc)
 desc = """Set a threshold in seconds.
-If takes longer than this to get the link then it will be reported.
+If in the smoke tests it takes longer than this to get the link then it will be reported.
 """
 parser.add_argument("--threshold",
                     type = int,
                     default = 10,
+                    help = desc)
+desc = """Smoke test report only.
+Don't actually run the smoke tests but rebuild the smoke test report.
+"""
+parser.add_argument("--smoke-report",
+                    action='store_const',
+                    const=True,
                     help = desc)
 argsObj = parser.parse_args()
 args = argsObj.__dict__
@@ -259,6 +266,7 @@ elif args["suite"] == "smoke":
     try:
         from tests.smoke import *
         broken_links = BrokenLinkTest()
+        broken_links.setReportOnly( args["smoke_report"])
         broken_links.setDepth(args["link_depth"])
         broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])
@@ -283,6 +291,7 @@ elif args["suite"] == "complete":
     try:
         from tests.smoke import *
         broken_links = BrokenLinkTest()
+        broken_links.setReportOnly( args["smoke_report"])
         broken_links.setDepth(args["link_depth"])
         broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])

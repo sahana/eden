@@ -73,6 +73,7 @@ class BrokenLinkTest(Web2UnitTest):
         # Typically this will be some variables passed in via the URL 
         self.strip_url = ("?_next=",
                           )
+        self.reportOnly = False
         self.maxDepth = 16 # sanity check
         self.setThreshold(10)
         self.setUser("test@example.com/eden")
@@ -86,6 +87,9 @@ class BrokenLinkTest(Web2UnitTest):
         self.urlParentList = {}
         # dictionary of ReportData objects indexed on the url
         self.results = {}
+
+    def setReportOnly(self, action):
+        self.reportOnly = action
 
     def setDepth(self, depth):
         self.maxDepth = depth
@@ -147,26 +151,27 @@ class BrokenLinkTest(Web2UnitTest):
         url = self.homeURL + "/default/index"
         to_visit = [url]
         start = time()
-        for depth in range(self.maxDepth):
-            if len(to_visit) == 0:
-                break
-            self.linkDepth.append(len(to_visit))
-            self.totalLinks += len(to_visit)
-            visit_start = time()
-            url_visited = "%d urls" % len(to_visit)
-            to_visit = self.visit(to_visit, depth)
-            msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
-            self.reporter(msg)
-            if self.config.verbose >= 2:
-                if self.config.verbose >= 3:
-                    print >> self.stdout
-                if self.stdout.isatty(): # terminal should support colour
-                    msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
-                print >> self.stdout, msg
-        if len(to_visit) > 0:
-            self.linkDepth.append(len(to_visit))
-        finish = time()
-        self.reporter("Finished took %.3f seconds" % (finish - start))
+        if not self.reportOnly:
+            for depth in range(self.maxDepth):
+                if len(to_visit) == 0:
+                    break
+                self.linkDepth.append(len(to_visit))
+                self.totalLinks += len(to_visit)
+                visit_start = time()
+                url_visited = "%d urls" % len(to_visit)
+                to_visit = self.visit(to_visit, depth)
+                msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
+                self.reporter(msg)
+                if self.config.verbose >= 2:
+                    if self.config.verbose >= 3:
+                        print >> self.stdout
+                    if self.stdout.isatty(): # terminal should support colour
+                        msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
+                    print >> self.stdout, msg
+            if len(to_visit) > 0:
+                self.linkDepth.append(len(to_visit))
+            finish = time()
+            self.reporter("Finished took %.3f seconds" % (finish - start))
         self.report()
 
     def visit(self, url_list, depth):
@@ -237,7 +242,7 @@ class BrokenLinkTest(Web2UnitTest):
                     # capture the details and add to brokenLinks
                     if record_data:
                         current_results.broken = True
-                        current_results.ticket = url[len(self.homeURL):]
+                        current_results.ticket = url
                     break # no need to check any other links on this page
                 if url.find(self.homeURL) == -1:
                     continue
@@ -266,7 +271,9 @@ class BrokenLinkTest(Web2UnitTest):
         self.brokenReport()
         self.timeReport()
         if self.config.record_timings:
-            self.record_timings()
+            if not self.reportOnly:
+                self.record_timings()
+            self.scatterplot()
         self.depthReport()
 
     def record_timings(self):
@@ -286,27 +293,28 @@ class BrokenLinkTest(Web2UnitTest):
         try:
             workbook = xlrd.open_workbook(filename=rec_time_filename,
                                           formatting_info=True)
-            try:
-                summary = self.read_timings_sheet(workbook)
-                if len(summary["date"]) > 100:
-                    # Need to rotate the file
-                    # 1) make a summary and save this
-                    report_timings_summary(summary, rec_time_filename)
-                    # 2) archive the file
-                    from zipfile import ZipFile
-                    archive = ZipFile("rec_time.zip", "a")
-                    arc_name = "%s-%s.xls" % (rec_time_filename[:-4],
-                                              current.request.now.date()
-                                              )
-                    archive.write(filename,arc_name)
-                    # 3) clear the current file
-                    import os
-                    os.unlink(rec_time_filename)
-                    summary = {}
-            except:
-                summary = {}
         except:
+            workbook = None
             summary = {}
+        if workbook:
+            summary = self.read_timings_sheet(workbook)
+            if len(summary["date"]) > 100:
+                # Need to rotate the file
+                # 1) make a summary and save this
+                self.report_timings_summary(summary, rec_time_filename)
+                # 2) archive the file
+                from zipfile import ZipFile
+                import os
+                zip_filename = os.path.join(self.config.path, "rec_time.zip")
+                archive = ZipFile(zip_filename, "a")
+                arc_name = "%s-%s.xls" % (rec_time_filename[len(self.config.path):-4],
+                                          current.request.now.date()
+                                          )
+                archive.write(rec_time_filename,arc_name)
+                archive.close()
+                # 3) clear the current file
+                os.unlink(rec_time_filename)
+                summary = {}
         if "date" not in summary:
             last_col = 0
             summary["date"] = [current.request.now.date()]
@@ -321,7 +329,7 @@ class BrokenLinkTest(Web2UnitTest):
             if shortage > 0:
                 summary[url] = summary[url] + ['']*shortage
             summary[url].append((rd_obj.get_duration(), rd_obj.is_broken()))
-        self.write_timings_sheet(rec_time_filename, summary)
+        self.write_timings_sheet(summary, rec_time_filename)
 
     def read_timings_sheet(self, workbook):
         """
@@ -345,7 +353,7 @@ class BrokenLinkTest(Web2UnitTest):
                 summary[url].append((duration, broken))
         return summary
 
-    def write_timings_sheet(self, filename, summary):
+    def write_timings_sheet(self, summary, filename=None):
         import xlwt
         RED = 0x0A
         book = xlwt.Workbook(encoding="utf-8")
@@ -370,21 +378,83 @@ class BrokenLinkTest(Web2UnitTest):
                     sheet.write(row,col,data[0])
                 col += 1
             row += 1
-        book.save(filename)
+        if filename:
+            book.save(filename)
+        return book
 
-    def report_timings_summary(self, summary, summary_file_name = None):
+    def report_timings_summary(self,
+                               summary,
+                               summary_file_name = None,
+                               mean_threshold = 1):
         """
             This will extract the details from the sheet and optionally save
             them to a summary file
+
+            summary: the summary details returned from the spreadsheet (read_timings_sheet)
+            summary_file_name: name of the file to record the summary details (if required)
+            mean_threshold: The minimum number of values required to include
+                            the mean in the regression calculations
         """
-        # @todo calculate the summary details
+        import numpy
+        import datetime
         good_values = []
         other_values = []
         total_values = []
+        for date in summary["date"]:
+             good_values.append([])
+             other_values.append([])
+             total_values.append([])
+        for (url,results)  in summary.items():
+            if url == "date":
+                continue
+            else:
+                cnt = 0
+            for (duration, broken) in results:
+                if duration != "":
+                    total_values[cnt].append(duration)
+                    if broken:
+                        other_values[cnt].append(duration)
+                    else:
+                        good_values[cnt].append(duration)
+                cnt += 1
+        # get the number of days each entry is after the first date
+        # and calculate the average, if the average is NAN then ignore both
+        date_summary = []
+        gv_mean = []
+        gv_std = []
+        gv_date = []
+        cnt = 0
+        start = datetime.datetime.strptime(summary["date"][0],"%Y-%m-%d")
+        for list in good_values:
+            if len(list) > mean_threshold:
+                mean = numpy.mean(list)
+                std = numpy.std(list)
+                if not numpy.isnan(mean):
+                    this_date = datetime.datetime.strptime(summary["date"][cnt],"%Y-%m-%d")
+                    date_summary.append((this_date - start).days)
+                    gv_mean.append(mean)
+                    gv_std.append(std)
+                    gv_date.append(summary["date"][cnt])
+            cnt += 1
+        # calculate the regression line
+        if len(gv_mean) > 2:
+            (m,b) = numpy.polyfit(date_summary, gv_mean, 1)
+        else:
+            m = b = 0
+
         if summary_file_name != None:
+            book = self.write_timings_sheet(summary)
+            sheet = book.add_sheet("summary")
+            row = 0
+            for date in gv_date:
+                sheet.write(row,0,str(date))
+                sheet.write(row,1,gv_mean[row])
+                row += 1
+            sheet.write(row,0,"Trend")
+            sheet.write(row,1,m)
             # Save the details to the summary file
-            # @todo save the details to the file
-            pass
+            book.save(summary_file_name)
+        return (date_summary, gv_mean, gv_std, m, b)
 
     def report_model_url(self):
         print "Report breakdown by module"
@@ -449,6 +519,55 @@ class BrokenLinkTest(Web2UnitTest):
         std = numpy.std(linktimes)
         msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
         self.reporter(msg)
+
+    def scatterplot(self):
+        """
+            Method to draw a scatterplot of the average time to download links
+            against time. Add a regression line to show the trend over time.
+        """
+        try:
+            from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+            self.FigureCanvas = FigureCanvas
+            from matplotlib.figure import Figure
+            self.Figure = Figure
+            import numpy
+        except ImportError:
+            return
+        try:
+            import xlrd
+        except:
+            import_error += "ERROR: the xlrd modules is needed to record timings\n"
+        rec_time_filename = self.config.record_timings_filename
+        try:
+            workbook = xlrd.open_workbook(filename=rec_time_filename,
+                                          formatting_info=True)
+        except:
+            return
+        import numpy
+        # Only include the mean in the regression values if there are at least 10 URL timings
+        summary = self.read_timings_sheet(workbook)
+        (date_summary, gv_mean, gv_std, m, b) = self.report_timings_summary(summary, mean_threshold=10)
+        if len(gv_mean) <= 2:
+            return
+        fig = Figure(figsize=(5, 2.5))
+        canvas = self.FigureCanvas(fig)
+        ax = fig.add_subplot(111)
+        linear = numpy.poly1d([m,b])
+        denom = numpy.max(gv_std)/50
+        size = gv_std/denom
+        ax.scatter(date_summary, gv_mean, marker="d", s=size)
+        ax.plot(date_summary, linear(date_summary), '--r')
+
+        chart = StringIO()
+        canvas.print_figure(chart)
+        image = chart.getvalue()
+        import base64
+        base64Img = base64.b64encode(image)
+        image = "<img src=\"data:image/png;base64,%s\">" % base64Img
+        self.reporter("Scatterplot of average link times per successful run")
+        self.reporter(image)
+        self.reporter("The trend line has a current slope of %s" % m)
+        self.reporter("The y-intercept is %s seconds" % b)
 
     def depthReport(self):
         """
