@@ -86,7 +86,8 @@ def add_new_debate(request, space_url):
         except ObjectDoesNotExist:
             current_debate_id = 1
 
-        if request.user.has_perm('debate.debate_add') or has_all_permissions():
+        if request.user.has_perm('debate.debate_add') \
+        or has_all_permissions(request.user):
             if request.method == 'POST':
                 if debate_form.is_valid() and row_formset.is_valid() \
                 and column_formset.is_valid():
@@ -140,7 +141,8 @@ def edit_debate(request, space_url, pk):
         column_formset = ColumnFormSet(request.POST or None, instance=instance, prefix="colform")
 
 
-        if request.user.has_perm('debate.debate_edit') or has_all_permissions():
+        if request.user.has_perm('debate.debate_edit') \
+        or has_all_permissions(request.user):
             if request.method == 'POST':
                 if debate_form.is_valid() and row_formset.is_valid() \
                 and column_formset.is_valid():
