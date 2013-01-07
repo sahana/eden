@@ -4651,7 +4651,8 @@ def hrm_group_controller():
             ]
 
     output = current.rest_controller("pr", "group",
-                                rheader=lambda r: s3db.pr_rheader(r, tabs=tabs))
+                                     rheader=lambda r: \
+                                        s3db.pr_rheader(r, tabs=tabs))
 
     return output
 

@@ -1017,6 +1017,7 @@ class S3GroupModel(S3Model):
                                    requires = IS_NOT_EMPTY()),
                              Field("description",
                                    label=T("Group Description"),
+                                   represent = lambda v: v or messages["NONE"],
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Group description"),
                                                                    T("A brief description of the group (optional)")))

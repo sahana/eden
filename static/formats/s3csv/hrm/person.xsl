@@ -19,6 +19,7 @@
          Office Country.................optional.....office country
          Office City....................optional.....office city
          Office Postcode................optional.....office postcode
+         Department.....................optional.....human_resource department
          Job Title......................optional.....human_resource job title
          Job Role.......................optional.....human_resource job role
          Start Date.....................optional.....human_resource start date
@@ -143,17 +144,23 @@
              match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'], '/', col[@field='Office'])"/>
 
+    <xsl:key name="departments"
+             match="row"
+             use="concat(col[@field='Organisation'], '/', col[@field='Department'])"/>
+
     <xsl:key name="jobtitles"
              match="row"
-             use="col[contains(
-                    document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
-                    concat('|', @field, '|'))]"/>
+             use="concat(col[@field='Organisation'], '/',
+                         col[contains(
+                             document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
+                             concat('|', @field, '|'))])"/>
 
     <xsl:key name="jobroles"
              match="row"
-             use="col[contains(
-                    document(../labels.xml)/labels/column[@name='JobRole']/match/text(),
-                    concat('|', @field, '|'))]"/>
+             use="concat(col[@field='Organisation'], '/',
+                         col[contains(
+                             document(../labels.xml)/labels/column[@name='JobRole']/match/text(),
+                             concat('|', @field, '|'))])"/>
 
     <xsl:key name="volunteerclusters"
              match="row"
@@ -201,14 +208,25 @@
                 <xsl:call-template name="Office"/>
             </xsl:for-each>
 
+            <!-- Departments -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('departments',
+                                                        concat(col[@field='Organisation'], '/',
+                                                               col[@field='Department']))[1])]">
+                <xsl:call-template name="Department">
+                    <xsl:with-param name="type">resource</xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
             <!-- Job Titles -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('jobtitles',
-                                            col[contains(
-                                                document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
-                                                concat('|', @field, '|'))]
+                                            concat(col[@field='Organisation'], '/',
+                                                   col[contains(
+                                                       document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
+                                                       concat('|', @field, '|'))])
                                         )[1])]">
-                    <xsl:call-template name="JobTitle">
+                <xsl:call-template name="JobTitle">
                     <xsl:with-param name="type">resource</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
@@ -216,9 +234,10 @@
             <!-- Job Roles -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('jobroles',
-                                            col[contains(
-                                                document(../labels.xml)/labels/column[@name='JobRoles']/match/text(),
-                                                concat('|', @field, '|'))]
+                                            concat(col[@field='Organisation'], '/',
+                                                   col[contains(
+                                                       document(../labels.xml)/labels/column[@name='JobRoles']/match/text(),
+                                                       concat('|', @field, '|'))])
                                         )[1])]">
                 <xsl:call-template name="JobRole">
                     <xsl:with-param name="type">resource</xsl:with-param>
@@ -247,6 +266,49 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Department">
+
+        <xsl:param name="type"/>
+
+        <xsl:variable name="Department" select="col[@field='Department']/text()"/>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <xsl:if test="$Department!=''">
+            <!-- Create the Department -->
+            <xsl:choose>
+                <xsl:when test="$type='reference'">
+                    <reference field="department_id" resource="hrm_department">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$Department)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:otherwise>
+                    <resource name="hrm_department">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$Department)"/>
+                        </xsl:attribute>
+
+                        <data field="name">
+                            <xsl:value-of select="$Department"/>
+                        </data>
+
+                        <!-- Link to Organisation to filter lookup lists -->
+                        <xsl:if test="$OrgName!=''">
+                            <reference field="organisation_id" resource="org_organisation">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="$OrgName"/>
+                                </xsl:attribute>
+                            </reference>
+                        </xsl:if>
+                    </resource>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="JobTitle">
 
         <xsl:param name="type"/>
@@ -264,14 +326,14 @@
                 <xsl:when test="$type='reference'">
                     <reference field="job_title_id" resource="hrm_job_title">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$JobName"/>
+                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
                         </xsl:attribute>
                     </reference>
                 </xsl:when>
                 <xsl:otherwise>
                     <resource name="hrm_job_title">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$JobName"/>
+                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
                         </xsl:attribute>
 
                         <data field="name">
@@ -311,14 +373,14 @@
                 <xsl:when test="$type='reference'">
                     <reference field="job_role_id" resource="hrm_job_role">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$JobName"/>
+                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
                         </xsl:attribute>
                     </reference>
                 </xsl:when>
                 <xsl:otherwise>
                     <resource name="hrm_job_role">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$JobName"/>
+                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
                         </xsl:attribute>
 
                         <data field="name">
@@ -350,7 +412,7 @@
                 <!-- This is the Branch -->
                 <resource name="org_organisation">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                        <xsl:value-of select="concat(col[@field='Organisation'],'/',$BranchName)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$BranchName"/></data>
                     <!-- Don't create Orgs as Branches of themselves -->
@@ -412,7 +474,7 @@
                     <xsl:attribute name="tuid">
                         <xsl:choose>
                             <xsl:when test="$BranchName!=''">
-                                <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                                <xsl:value-of select="concat($OrgName,'/',$BranchName)"/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <xsl:value-of select="$OrgName"/>
@@ -512,7 +574,7 @@
 	                </xsl:variable>
 	                <data field="religion"><xsl:value-of select="$religion"/></data>
 	            </xsl:if>
-	            <data field="nationality">
+	            <xsl:variable name="l0">
                     <xsl:choose>
                         <xsl:when test="col[@field='Nationality']!=''">
                             <xsl:value-of select="col[@field='Nationality']"/>
@@ -521,6 +583,23 @@
                             <xsl:value-of select="col[@field='Passport Country']"/>
                         </xsl:when>
                     </xsl:choose>
+                </xsl:variable>
+                <xsl:variable name="countrycode">
+                    <xsl:choose>
+                        <xsl:when test="string-length($l0)!=2">
+                            <xsl:call-template name="countryname2iso">
+                                <xsl:with-param name="country">
+                                    <xsl:value-of select="$l0"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$l0"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <data field="nationality">
+                    <xsl:value-of select="$countrycode"/>
                 </data>
 	            <data field="occupation"><xsl:value-of select="col[@field='Occupation']"/></data>
 	            <data field="company"><xsl:value-of select="col[@field='Company']"/></data>
@@ -650,7 +729,7 @@
                 <xsl:attribute name="tuid">
                     <xsl:choose>
                         <xsl:when test="$BranchName!=''">
-                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                            <xsl:value-of select="concat($OrgName,'/',$BranchName)"/>
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="$OrgName"/>
@@ -680,8 +759,13 @@
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>
 
-            <!-- Link to Job Role -->
+            <!-- Link to Department -->
             <xsl:call-template name="JobRole">
+                <xsl:with-param name="type">reference</xsl:with-param>
+            </xsl:call-template>
+
+            <!-- Link to Job Role -->
+            <xsl:call-template name="Department">
                 <xsl:with-param name="type">reference</xsl:with-param>
             </xsl:call-template>
 
@@ -695,7 +779,7 @@
                 <xsl:attribute name="tuid">
                     <xsl:choose>
                         <xsl:when test="$BranchName!=''">
-                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                            <xsl:value-of select="concat($OrgName,'/',$BranchName)"/>
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="$OrgName"/>
@@ -771,18 +855,18 @@
                 <data field="type" value="1"/>
                 <data field="value"><xsl:value-of select="col[@field='Passport No']/text()"/></data>
                 <data field="valid_until"><xsl:value-of select="col[@field='Passport Expiry Date']/text()"/></data>
-                <xsl:variable name="passportCountry" select="col[@field='Passport Country']/text()"/>
+                <xsl:variable name="l0" select="col[@field='Passport Country']/text()"/>
                 <xsl:variable name="countrycode">
                     <xsl:choose>
-                        <xsl:when test="string-length($passportCountry)!=2">
+                        <xsl:when test="string-length($l0)!=2">
                             <xsl:call-template name="countryname2iso">
                                 <xsl:with-param name="country">
-                                    <xsl:value-of select="$passportCountry"/>
+                                    <xsl:value-of select="$l0"/>
                                 </xsl:with-param>
                             </xsl:call-template>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:value-of select="passportCountry"/>
+                            <xsl:value-of select="$l0"/>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
@@ -1182,7 +1266,7 @@
                             </xsl:attribute>
                             <data field="name"><xsl:value-of select="$item"/></data>
                             <!-- Relief Team -->
-                            <data field="type">3</data>
+                            <data field="group_type">3</data>
                         </resource>
                     </reference>
                 </resource>
@@ -1281,6 +1365,7 @@
             </resource>
         </xsl:if>
     </xsl:template>
+
     <!-- ****************************************************************** -->
     <xsl:template name="VolunteerCluster">
         <xsl:variable name="volunteercluster" select="col[@field='Volunteer Cluster']"/>
@@ -1299,6 +1384,7 @@
             </resource>
         </xsl:if>
     </xsl:template>
+
     <!-- ****************************************************************** -->
     <xsl:template name="VolunteerClusterPosition">
         <xsl:variable name="volunteerclusterposition" select="col[@field='Volunteer Cluster Position']"/>

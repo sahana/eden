@@ -947,7 +947,7 @@ class S3Resource(object):
                             remaining = db(query).select(table._id,
                                                          limitby=(0, 1)).first()
                             if not remaining:
-                                query = linked.table[fkey] == this[rkey]
+                                query = (linked.table[fkey] == this[rkey])
                                 linked = define_resource(linked.table,
                                                          filter=query,
                                                          unapproved=True)

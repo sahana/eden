@@ -35,7 +35,9 @@
 
 """
 
-__all__ = ["S3Msg", "S3Compose"]
+__all__ = ["S3Msg",
+           "S3Compose",
+           ]
 
 import base64
 import datetime
@@ -1819,7 +1821,7 @@ class S3Compose(S3CRUD):
                                                     show_label=False)
             else:
                 # @ToDo: This should be the filter results
-                represent = T("Multiple")
+                represent = "%s (%s)" % (T("Multiple"), len(recipients))
             pe_row.append(TD(represent))
         else:
             # @ToDo: This should be an S3Search form

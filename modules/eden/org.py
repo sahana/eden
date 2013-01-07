@@ -536,13 +536,13 @@ class S3OrganisationModel(S3Model):
                   search_method=organisation_search,
                   deduplicate=self.organisation_duplicate,
                   list_fields=["id",
-                                 "name",
-                                 "acronym",
-                                 "organisation_type_id",
-                                 "multi_sector_id",
-                                 "country",
-                                 "website"
-                                ])
+                               "name",
+                               "acronym",
+                               "organisation_type_id",
+                               "multi_sector_id",
+                               "country",
+                               "website"
+                               ])
 
         # Components
 
@@ -611,7 +611,7 @@ class S3OrganisationModel(S3Model):
                                     key="branch_id",
                                     actuate="embed",
                                     autocomplete="name",
-                                    autodelete=False))
+                                    autodelete=True))
 
         # For imports
         add_component("org_organisation",
@@ -2932,6 +2932,7 @@ def org_organisation_controller():
         multiple controllers for unified menus
     """
 
+    db = current.db
     s3db = current.s3db
     s3 = current.response.s3
     T = current.T
@@ -2948,14 +2949,14 @@ def org_organisation_controller():
             s3db.configure(r.tablename, list_fields=list_fields + ["pe_id"])
         elif r.interactive:
             request = current.request
-            r.table.country.default = current.gis.get_default_country("code")
+            gis = current.gis
+            r.table.country.default = gis.get_default_country("code")
 
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
                 lfilter = current.session.s3.location_filter
                 if lfilter:
                     # Include those whose parent is in a different country
-                    db = current.db
                     gtable = s3db.gis_location
                     query = (gtable.id == lfilter)
                     row = db(query).select(gtable.id,
@@ -2965,7 +2966,7 @@ def org_organisation_controller():
                                            limitby=(0, 1)).first()
                     if row and row.level:
                         if row.level != "L0":
-                            code = current.gis.get_parent_country(row, key_type="code")
+                            code = gis.get_parent_country(row, key_type="code")
                         else:
                             ttable = s3db.gis_location_tag
                             query = (ttable.tag == "ISO2") & \
@@ -3079,14 +3080,21 @@ def org_organisation_controller():
                 # Filter type field
                 type_names = [name.lower().strip()
                               for name in type_filter.split(",")]
-                fquery = s3db.org_organisation_type.name.lower() \
-                                                   .belongs(type_names)
+                type_table = s3db.org_organisation_type
+                fquery = (type_table.name.lower().belongs(type_names))
                 field = r.table.organisation_type_id
-                field.requires = IS_ONE_OF(current.db(fquery),
-                                    "org_organisation_type.id",
-                                    label=field.represent,
-                                    error_message=T("Please choose a type"),
-                                    sort=True)
+                list_fields = s3db.get_config("org_organisation", "list_fields")
+                try:
+                    list_fields.remove("organisation_type_id")
+                except:
+                    pass
+                else:
+                    s3db.configure("org_organisation", list_fields=list_fields)
+                field.requires = IS_ONE_OF(db(fquery),
+                                           "org_organisation_type.id",
+                                           label=field.represent,
+                                           error_message=T("Please choose a type"),
+                                           sort=True)
                 field.comment = None # AddResourceLink makes no sense here
 
                 if type_filter in type_crud_strings:
@@ -3094,15 +3102,13 @@ def org_organisation_controller():
 
                 # default the Type
                 if not r.method or r.method == "create":
-                    type_table = s3db.org_organisation_type
-                    query = type_table.name == type_filter
-                    row = current.db(query).select(type_table.id,
-                                                   limitby=(0, 1)).first()
+                    query = (type_table.name == type_filter)
+                    row = db(query).select(type_table.id,
+                                           limitby=(0, 1)).first()
                     type = row and row.id
                     if type:
-                        org_type_field = s3db.org_organisation.organisation_type_id
-                        org_type_field.default = type
-                        org_type_field.writable = False
+                        field.default = type
+                        field.writable = False
 
         return True
     s3.prep = prep
@@ -3121,9 +3127,9 @@ def org_organisation_controller():
                 row = None
                 if r.id:
                     query = (table.organisation_id == r.id)
-                    row = current.db(query).select(field1,
-                                                   field2,
-                                                   limitby=(0, 1)).first()
+                    row = db(query).select(field1,
+                                           field2,
+                                           limitby=(0, 1)).first()
                 s3_formstyle = settings.get_ui_formstyle()
                 if r.method == "read" and \
                    "item" in output:

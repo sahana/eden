@@ -254,13 +254,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
         hrm_vars = session.s3.hrm
 
         ADMIN = current.auth.get_system_roles().ADMIN
+        SECTORS = "Clusters" if current.deployment_settings.get_ui_cluster() \
+                             else "Sectors"
 
         manager_mode = lambda i: hrm_vars.mode is None
         personal_mode = lambda i: hrm_vars.mode is not None
         is_org_admin = lambda i: hrm_vars.orgs and True or \
                                  ADMIN in session.s3.roles
 
-        staff = {"group":"staff"}
+        staff = {"group": "staff"}
 
         return M()(
                     M("Staff", c="hrm", f=("staff", "person"),
@@ -344,6 +346,29 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         #M("Skill Equivalence", f="certificate_skill"),
+                    ),
+                    M("Organization Types", c="org", f="organisation_type",
+                      restrict=[ADMIN],
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Office Types", c="org", f="office_type",
+                      restrict=[ADMIN],
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    #M("Facility Types", c="org", f="facility_type",
+                    #  restrict=[ADMIN],
+                    #  check=manager_mode)(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
+                    M(SECTORS, f="sector", c="org", restrict=[ADMIN],
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
                     ),
                     #M("My Profile", c="hrm", f="person",
                     #  check=personal_mode, vars=dict(mode="personal")),

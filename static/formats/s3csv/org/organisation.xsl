@@ -122,11 +122,25 @@
             </xsl:if>
 
             <xsl:if test="col[@field='Country']!=''">
-                <data field="country">
+                <xsl:variable name="l0">
                     <xsl:value-of select="col[@field='Country']"/>
-                    <!--<xsl:call-template name="iso2countryname">
-                        <xsl:with-param name="country" select="col[@field='country']"/>
-                    </xsl:call-template>-->
+                </xsl:variable>
+                <xsl:variable name="countrycode">
+                    <xsl:choose>
+                        <xsl:when test="string-length($l0)!=2">
+                            <xsl:call-template name="countryname2iso">
+                                <xsl:with-param name="country">
+                                    <xsl:value-of select="$l0"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$l0"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <data field="country">
+                    <xsl:value-of select="$countrycode"/>
                 </data>
             </xsl:if>
             <xsl:if test="col[@field='Region']!=''">
