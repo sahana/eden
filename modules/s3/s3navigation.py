@@ -42,6 +42,7 @@ __all__ = ["S3NavigationItem",
 
 from gluon import *
 from gluon.storage import Storage
+from s3utils import s3_unicode
 
 # =============================================================================
 class S3NavigationItem(object):
@@ -642,7 +643,7 @@ class S3NavigationItem(object):
             extra = 1
             rvars = request.get_vars
             for k, v in vars.iteritems():
-                if k not in rvars or k in rvars and rvars[k] != v:
+                if k not in rvars or k in rvars and rvars[k] != s3_unicode(v):
                     extra = 0
                     break
                 else:

@@ -296,7 +296,8 @@ class S3RL_PDF(S3Codec):
                     continue
                 list_fields.append(field.name)
 
-        rfields = resource.resolve_selectors(list_fields)[0]
+        rfields = resource.resolve_selectors(list_fields,
+                                             extra_fields=False)[0]
 
         vars = Storage(current.request.vars)
         vars["iColumns"] = len(rfields)
@@ -312,7 +313,7 @@ class S3RL_PDF(S3Codec):
         data = resource.extract(rows,
                                 list_fields,
                                 represent=True,
-                                )
+                                show_links=False)
 
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
