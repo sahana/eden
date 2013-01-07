@@ -1,13 +1,15 @@
 {% load i18n %}
 <ul class="nav">
-    <li class="active"><a href="/">{% trans "Home" %}</a></li>
+    <li class="active"><a href="/">{% trans "Explore" %}</a></li>
+    <li><a href="http://blog.ecidadania.org">{% trans "Blog" %}</a></li>
+    <li><a href="http://docs.ecidadania.org">{% trans "Help" %}</a></li>
+</ul>
+
+<ul class="nav pull-right">
     {% if not user.is_authenticated %}
         <li><a href="{% url 'login' %}?next={{request.path}}">{% trans "Login" %}</a></li>
         <li><a href="{% url 'signup' %}?next={{request.path}}">{% trans "Sign up" %}</a></li>
     {% endif %}
-</ul>
-
-<ul class="nav pull-right">
     <li class="dropdown">
     
         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><img src="{{ STATIC_URL }}/assets/flags/{{ request.LANGUAGE_CODE }}.gif" alt="{% trans 'Language' %}" title="{% trans 'Language' %}" /><b class="caret"></b></a>

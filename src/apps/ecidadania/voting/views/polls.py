@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
+import datetime
 
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
@@ -102,7 +102,7 @@ class ViewPoll(DetailView):
     context_object_name = 'poll'
     template_name = 'voting/poll_detail.html'
 
-    def get(self, request, **kwargs):
+    def get_object(self):
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
         poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
 
@@ -112,7 +112,7 @@ class ViewPoll(DetailView):
             return HttpResponseRedirect(reverse(urln_voting.VIEW_RESULT,
                 kwargs={'space_url': space.url, 'pk':poll.id}))
         else:
-            return super(ViewPoll, self).get(request, **kwargs)
+            return poll
 
     def get_context_data(self, **kwargs):
         context = super(ViewPoll, self).get_context_data(**kwargs)
