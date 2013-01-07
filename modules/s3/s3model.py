@@ -438,6 +438,8 @@ class S3Model(object):
                     autocomplete = None
                     values = None
                     multiple = True
+                    filterby = None
+                    filterfor = None
                 else:
                     alias = link.get("name", name)
                     joinby = link.get("joinby", None)
@@ -462,6 +464,9 @@ class S3Model(object):
                     autocomplete = link.get("autocomplete", None)
                     values = link.get("values", None)
                     multiple = link.get("multiple", True)
+                    filterby = link.get("filterby", None)
+                    filterfor = link.get("filterfor", None)
+                    
                 component = Storage(tablename=tablename,
                                     pkey=pkey,
                                     fkey=fkey,
@@ -472,7 +477,10 @@ class S3Model(object):
                                     autodelete=autodelete,
                                     autocomplete=autocomplete,
                                     values=values,
-                                    multiple=multiple)
+                                    multiple=multiple,
+                                    filterby=filterby,
+                                    filterfor=filterfor
+                                    )
 
                 hooks[alias] = component
             components[primary] = hooks
@@ -605,6 +613,12 @@ class S3Model(object):
                 component.actuate = None
                 component.autocomplete = None
                 component.autodelete = None
+
+            if hook.filterby is not None:
+                component.filterby = hook.filterby
+
+            if hook.filterfor is not None:
+                component.filterfor = hook.filterfor
 
             components[alias] = component
         return components
