@@ -349,6 +349,9 @@ class S3Resource(object):
             @param alias: the alias
             @param hook: the hook
         """
+        
+        if alias is not None and hook.filterby is not None:
+            hook.table = hook.table.with_alias(alias)
 
         # Create as resource
         component = S3Resource(hook.table,
@@ -371,6 +374,10 @@ class S3Resource(object):
         component.alias = alias
         component.multiple = hook.multiple
         component.values = hook.values
+        if hook.filterby is not None and hook.filterfor is not None:
+            component.filter = (hook.table[hook.filterby] == hook.filterfor)
+        else:
+            component.filter = None    
 
         # Copy properties to the link
         if component.link is not None:
@@ -618,7 +625,11 @@ class S3Resource(object):
                 # Make sure the primary key of the table this field
                 # belongs to is included in the SELECT
                 qtables.append(tname)
-                pkey = qtable._id
+                # if tname is an alias, get primary key from id instead of _id
+                if hasattr(qtable, "_ot") and qtable._ot != tname:
+                    pkey = qtable.id
+                else:    
+                    pkey = qtable._id
                 if not groupby:
                     qfields.append(pkey)
                 if str(field) == str(pkey):
@@ -2155,10 +2166,29 @@ class S3Resource(object):
 
         # Export components
         if components is not None:
-            for component in self.components.values():
-
+            bypass_components = []
+            resource_components = self.components.values()
+            l = len(resource_components)
+            for i in xrange(l):
+                skip_component = False
+                component = resource_components[i] 
                 # Shall this component be included?
-                if components and component.tablename not in components:
+                if components and (component.tablename not in components or \
+                                  component.tablename in bypass_components):
+                    continue
+                
+                for j in xrange(i+1, l):
+                    next_component = resource_components[j]
+                    if (not hasattr(component.table, "_ot")) and hasattr(next_component.table, "_ot") and \
+                            component.tablename == next_component.table._ot:
+                        bypass_components.append(next_component.tablename)
+
+                    if hasattr(component.table, "_ot") and (not hasattr(next_component.table, "_ot")) and \
+                            component.table._ot == next_component.tablename:
+                        skip_component = True
+                        break
+
+                if skip_component:
                     continue
 
                 cpkey = component.table._id
@@ -3409,7 +3439,6 @@ class S3Resource(object):
             rkey = self.rkey
             join = ((ltable[pkey] == linktable[lkey]) &
                     (linktable[rkey] == rtable[fkey]))
-
             if DELETED in linktable:
                 join = ((linktable[DELETED] != True) & join)
 
@@ -3417,6 +3446,9 @@ class S3Resource(object):
             join = (ltable[pkey] == rtable[fkey])
             if DELETED in rtable:
                 join &= (rtable[DELETED] != True)
+
+        if self.filter is not None:
+            join &= self.filter
 
         return join
 
@@ -3446,13 +3478,23 @@ class S3Resource(object):
             lquery = (ltable[pkey] == linktable[lkey])
             if DELETED in linktable:
                 lquery &= (linktable[DELETED] != True)
+
+            if self.filter is not None:
+                rquery = (linktable[rkey] == rtable[fkey]) & self.filter
+            else:    
+                rquery = (linktable[rkey] == rtable[fkey])
+                
             join = [linktable.on(lquery),
-                    rtable.on(linktable[rkey] == rtable[fkey])]
+                    rtable.on(rquery)] 
 
         else:
             lquery = (ltable[pkey] == rtable[fkey])
             if DELETED in rtable:
                 lquery &= (rtable[DELETED] != True)
+
+            if self.filter is not None:
+                lquery &= self.filter
+
             join = [rtable.on(lquery)]
 
         return join
