@@ -116,8 +116,8 @@ def staff():
                    "department_id",
                    "site_id",
                    #"site_contact",
-                   (T("Email"),"pr_email_contact.value"),
-                   (settings.get_ui_label_mobile_phone(),"pr_phone_contact.value")
+                   (T("Email"),"email.value"),
+                   (settings.get_ui_label_mobile_phone(),"phone.value")
                    ]
     if settings.get_hrm_use_trainings():
         list_fields.append("person_id$training.course_id")

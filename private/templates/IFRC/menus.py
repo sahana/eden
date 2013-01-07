@@ -328,7 +328,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("Staff Report", m="report"),
                         M("Expiring Staff Contracts Report",
-                          vars=dict(expiring=1)),
+                          vars=dict(expiring="1")),
                         M("Training Report", f="training", m="report"),
                     ),
                     M("Training Course Catalog", c="hrm", f="course",

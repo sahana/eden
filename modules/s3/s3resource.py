@@ -351,7 +351,10 @@ class S3Resource(object):
         """
         
         if alias is not None and hook.filterby is not None:
-            hook.table = hook.table.with_alias(alias)
+            table_alias = "%s_%s_%s" % (hook.prefix,
+                                        hook.alias,
+                                        hook.name)
+            hook.table = hook.table.with_alias(table_alias)
 
         # Create as resource
         component = S3Resource(hook.table,
@@ -3136,12 +3139,12 @@ class S3Resource(object):
                     continue
                 else:
                     this = record[key]
-                if record_id in duplicates:
+                if record_id in duplicates and value not in this:
                     if lazy:
                         this.value.append(lazy_value)
                     else:
                         this.append(value)
-                elif joined:
+                elif joined and value != this:
                     if lazy:
                         this.value = [this.value, lazy_value]
                         this.multiple = True
@@ -3150,11 +3153,12 @@ class S3Resource(object):
                     duplicates.append(record_id)
 
             if represent:
-                if lazy:
-                    for record in records:
+                for record in records:
+                    if lazy:
                         record[key] = record[key].render()
-                elif joined and type(record[key]) is list:
-                    record[key] = ", ".join([s3_unicode(s) for s in record[key]])
+                    elif joined and type(record[key]) is list:
+                        record[key] = ", ".join([s3_unicode(s)
+                                                 for s in record[key]])
 
             if show_links is False and hasattr(renderer, "linkto"):
                 renderer.linkto = linkto
