@@ -65,7 +65,7 @@ from gluon.html import *
 from s3codec import S3Codec
 from s3crud import S3CRUD
 from s3utils import s3_debug
-from s3validators import IS_ONE_OF, IS_ONE_OF_EMPTY
+from s3validators import IS_IN_SET, IS_ONE_OF, IS_ONE_OF_EMPTY
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
 NOTPHONECHARS = ALLCHARS.translate(IDENTITYTRANS, string.digits)
@@ -109,34 +109,36 @@ class S3Msg(object):
 
         # Full range of contact options
         self.CONTACT_OPTS = {
-                "EMAIL":        T("Email"),
-                "SMS": current.deployment_settings.get_ui_label_mobile_phone(),
-                "HOME_PHONE":   T("Home phone"),
-                "WORK_PHONE":   T("Work phone"),
-                "FAX":          T("Fax"),
-                "SKYPE":        T("Skype"),
-                "TWITTER":      T("Twitter"),
-                "FACEBOOK":     T("Facebook"),
-                "RADIO":        T("Radio Callsign"),
-                #"XMPP":        "XMPP",
-                "OTHER":        T("other")
+                "EMAIL":       T("Email"),
+                "SMS":         current.deployment_settings.get_ui_label_mobile_phone(),
+                "HOME_PHONE":  T("Home phone"),
+                "WORK_PHONE":  T("Work phone"),
+                "FAX":         T("Fax"),
+                "SKYPE":       T("Skype"),
+                "TWITTER":     T("Twitter"),
+                "FACEBOOK":    T("Facebook"),
+                "RADIO":       T("Radio Callsign"),
+                #"XMPP":       "XMPP",
+                "OTHER":       T("other")
             }
 
         # Those contact options to which we can send notifications
-        # NB Coded into hrm controller (map_popup) & s3.msg.js
+        # NB Coded into hrm_map_popup & s3.msg.js
         self.MSG_CONTACT_OPTS = {
-                "EMAIL":    T("Email"),
-                "SMS":      current.deployment_settings.get_ui_label_mobile_phone(),
-                "TWITTER":  T("Twitter"),
-                #"XMPP":    "XMPP",
-                "TWILIO":   T("Twilio SMS")
+                "EMAIL":   T("Email"),
+                "SMS":     current.deployment_settings.get_ui_label_mobile_phone(),
+                "TWITTER": T("Twitter"),
+                #"XMPP":   "XMPP",
             }
 
+        # SMS Gateways
         self.GATEWAY_OPTS = {
                 "MODEM":   T("Modem"),
                 "SMTP":    T("SMTP"),
                 "TROPO":   T("Tropo"),
-                "WEB_API": T("Web API")
+                # Currently only available for Inbound
+                #"TWILIO":  T("Twilio"),
+                "WEB_API": T("Web API"),
             }
 
     # -------------------------------------------------------------------------
@@ -295,7 +297,7 @@ class S3Msg(object):
                 message = "",
                 url = None,
                 formid = None,
-               ):
+                ):
         """
             Form to Compose a Message
 
@@ -316,14 +318,13 @@ class S3Msg(object):
 
         T = current.T
         vars = current.request.vars
-
+        db = current.db
         s3db = current.s3db
         ltable = s3db.msg_log
         otable = s3db.msg_outbox
 
         if not url:
-            url = URL(c="msg",
-                      f="compose")
+            url = URL(c="msg", f="compose")
 
         auth = current.auth
         if auth.is_logged_in() or auth.basic():
@@ -363,20 +364,61 @@ class S3Msg(object):
             elif "group_id" in vars:
                 # @ToDo
                 pass
-            elif "hrm_id" in vars:
+            elif "human_resource.id" in vars:
                 # @ToDo
                 pass
 
         if recipient:
-            ltable.pe_id.default = recipient
             otable.pe_id.default = recipient
-            ltable.pe_id.requires = IS_ONE_OF_EMPTY(current.db,
+            ltable.pe_id.default = recipient
+            ltable.pe_id.requires = IS_ONE_OF_EMPTY(db,
                                                     "pr_pentity.pe_id",
                                                     multiple=True)
+            # Restrict message options to those available for the entity
+            petable = s3db.pr_pentity
+            entity_type = db(petable.pe_id == recipient).select(petable.instance_type,
+                                                                limitby=(0, 1)
+                                                                ).first().instance_type
+            if entity_type == "pr_person":
+                all_contact_opts = self.MSG_CONTACT_OPTS
+                contact_method_opts = {}
+                ctable = s3db.pr_contact
+                query = (ctable.deleted != True) & \
+                        (ctable.pe_id == recipient)
+                rows = db(query).select(ctable.contact_method)
+                for row in rows:
+                    if row.contact_method in all_contact_opts:
+                        contact_method_opts[row.contact_method] = all_contact_opts[row.contact_method]
+                if not contact_method_opts:
+                    current.session.error = T("There are no contacts available for this person!")
+                    request = current.request
+                    controller = request.controller
+                    vars = request.get_vars
+                    if controller == "hrm":
+                        url = URL(c="hrm", f="person", args="contacts",
+                                  vars={"group": "staff",
+                                        "human_resource.id": vars.get("human_resource.id")})
+                    elif controller == "vol":
+                        url = URL(c="vol", f="person", args="contacts",
+                                  vars={"group": "volunteer",
+                                        "human_resource.id": vars.get("human_resource.id")})
+                    elif controller == "member":
+                        url = URL(c="member", f="person", args="contacts",
+                                  vars={"membership.id": vars.get("membership.id")})
+                    else:
+                        # @ToDo: Lookup the type
+                        url = URL(f="index")
+                    redirect(url)
+                otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
+                                                              zero=None)
+                if type not in contact_method_opts:
+                    otable.pr_message_method.default = contact_method_opts.popitem()[0]
+            #elif entity_type = "pr_group":
+                # @ToDo: Loop through members
         else:
             if recipient_type:
                 # Filter by Recipient Type
-                otable.pe_id.requires = IS_ONE_OF(current.db,
+                otable.pe_id.requires = IS_ONE_OF(db,
                                                   "pr_pentity.pe_id",
                                                   orderby="instance_type",
                                                   filterby="instance_type",
@@ -1474,10 +1516,11 @@ class S3Msg(object):
         """ Extracts the source_task_id from a given message. """
 
         db = current.db
-        table = db["scheduler_task"]
-        records = db(table.id > 0).select()
+        table = db.scheduler_task
+        records = db(table.id > 0).select(table.id,
+                                          table.vars)
         for record in records:
-            if record.vars.split(":") == ["{\"username\""," \"%s\"}" %username] :
+            if record.vars.split(":") == ["{\"username\""," \"%s\"}" % username] :
                 return record.id
 
     # -------------------------------------------------------------------------
@@ -1768,22 +1811,24 @@ class S3Compose(S3CRUD):
         ltable.message.label = T("Message")
         #ltable.priority.label = T("Priority")
 
+        recipients = []
+
         if "pe_id" in table:
             field = "pe_id"
         elif "person_id" in table:
             field = "person_id$pe_id"
-        elif "group_id" in table:
-            field = None # "group_id$pe_id"?
+        #elif "group_id" in table:
+        #    # @ToDo
+        #    field = "group_id$pe_id"
         else:
             field = None
+
         if field:
             records = resource.select([field])
             if records:
                 rfield = resource.resolve_selector(field)
                 items = resource.extract(records, [field])
                 recipients = [item[rfield.colname] for item in items]
-            else:
-                recipients = []
 
         if recipients:
             self.recipients = recipients
@@ -1817,11 +1862,42 @@ class S3Compose(S3CRUD):
                     _id="msg_outbox_pe_id__row")
         if recipients:
             if len(recipients) == 1:
-                represent = s3.pr_pentity_represent(recipients[0],
+                recipient = recipients[0]
+                represent = s3.pr_pentity_represent(recipient,
                                                     show_label=False)
+                # Restrict message options to those available for the entity
+                # @ToDo: Support Groups, etc by looking up Entity Type
+                ctable = s3db.pr_contact
+                rows = db(ctable.pe_id == recipient).select(ctable.contact_method)
+                contact_method_opts = [row.contact_method for row in rows]
+                if not contact_method_opts:
+                    current.session.error = T("There are no contacts available for this person!")
+                    request = current.request
+                    controller = request.controller
+                    vars = request.get_vars
+                    if controller == "hrm":
+                        url = URL(c="hrm", f="person", args="contacts",
+                                  vars={"group": "staff",
+                                        "human_resource.id": vars.get("human_resource.id")})
+                    elif controller == "vol":
+                        url = URL(c="vol", f="person", args="contacts",
+                                  vars={"group": "volunteer",
+                                        "human_resource.id": vars.get("human_resource.id")})
+                    elif controller == "member":
+                        url = URL(c="member", f="person", args="contacts",
+                                  vars={"membership.id": vars.get("membership.id")})
+                    else:
+                        # @ToDo: Lookup the type
+                        url = URL(f="index")
+                    redirect(url)
+                otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
+                                                              zero=None)
+                if type not in contact_method_opts:
+                    otable.pr_message_method.default = contact_method_opts[0]
             else:
-                # @ToDo: This should be the filter results
-                represent = "%s (%s)" % (T("Multiple"), len(recipients))
+                # @ToDo: This should display all the Recipients (truncated with option to see all)
+                # - wait for pr_PentityRepresent for bulk representation.
+                represent = "%(number)s Recipients" % dict(number=len(recipients))
             pe_row.append(TD(represent))
         else:
             # @ToDo: This should be an S3Search form

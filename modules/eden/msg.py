@@ -236,16 +236,16 @@ class S3MessagingModel(S3Model):
         # Inbound Messages
         # ---------------------------------------------------------------------
         # Channel - For inbound messages this tells which channel the message came in from.
-        tablename = "msg_channel"
-        table = define_table(tablename,
-                             message_id(),
-                             Field("pr_message_method",
-                                   length=32,
-                                   requires = IS_IN_SET(msg_contact_method_opts,
-                                                        zero=None),
-                                   default = "EMAIL"),
-                             Field("log"),
-                             *s3_meta_fields())
+        #tablename = "msg_channel"
+        #table = define_table(tablename,
+        #                     message_id(),
+        #                     Field("pr_message_method",
+        #                           length=32,
+        #                           requires = IS_IN_SET(msg_contact_method_opts, # @ToDo: Inbound channels are more than Outbound as should include Gateway
+        #                                                zero=None),
+        #                           default = "EMAIL"),
+        #                     Field("log"),
+        #                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)

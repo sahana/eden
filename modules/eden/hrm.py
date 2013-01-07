@@ -3497,9 +3497,9 @@ def hrm_compose():
     s3db = current.s3db
     vars = current.request.vars
 
-    if "hrm_id" in vars:
-        id = vars.hrm_id
-        fieldname = "hrm_id"
+    if "human_resource.id" in vars:
+        fieldname = "human_resource.id"
+        id = vars.get(fieldname)
         table = s3db.pr_person
         htable = s3db.hrm_human_resource
         query = (htable.id == id) & \

@@ -1256,6 +1256,7 @@ class S3ContactModel(S3Model):
         T = current.T
 
         define_table = self.define_table
+        messages = current.messages
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -1277,11 +1278,12 @@ class S3ContactModel(S3Model):
                                    default = "SMS",
                                    label = T("Contact Method"),
                                    represent = lambda opt: \
-                                        contact_methods.get(opt, current.messages.UNKNOWN_OPT)),
+                                        contact_methods.get(opt, messages.UNKNOWN_OPT)),
                              Field("value",
                                    label= T("Value"),
                                    notnull=True,
                                    requires = IS_NOT_EMPTY(),
+                                   represent = lambda v: v or messages["NONE"],
                                   ),
                              Field("priority", "integer",
                                    label= T("Priority"),

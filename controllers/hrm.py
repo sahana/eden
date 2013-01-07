@@ -82,7 +82,7 @@ def human_resource():
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",
-                                   vars = {"hrm_id": "[id]"}),
+                                   vars = {"human_resource.id": "[id]"}),
                         "_class": "action-btn",
                         "label": str(T("Send Message"))})
         elif r.representation == "plain" and \
@@ -172,6 +172,11 @@ def staff():
                 }
                 redirect(URL(f="person",
                              vars=vars))
+            elif r.method == "import":
+                # Redirect to person controller
+                redirect(URL(f="person",
+                             args="import",
+                             vars={"group": "staff"}))
         return True
     s3.prep = prep
 
@@ -188,7 +193,7 @@ def staff():
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                             "url": URL(f="compose",
-                                       vars = {"hrm_id": "[id]"}),
+                                       vars = {"human_resource.id": "[id]"}),
                             "_class": "action-btn",
                             "label": str(T("Send Message"))
                         })
