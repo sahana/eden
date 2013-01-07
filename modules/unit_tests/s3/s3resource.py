@@ -3,7 +3,7 @@
 # S3Resource Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3resource.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3resource.py
 #
 import unittest
 import datetime
@@ -1111,7 +1111,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
                                                             "competency_id"],
                                                             vars)
         self.assertEqual(orderby, "hrm_competency_rating.priority desc")
-
+        
 # =============================================================================
 class ResourceExportTests(unittest.TestCase):
     """ Test XML export of resources """
@@ -1143,6 +1143,7 @@ class ResourceExportTests(unittest.TestCase):
             attrib = child.attrib
             self.assertEqual(attrib["name"], "org_office")
             self.assertTrue("uuid" in attrib)
+
 
     # -------------------------------------------------------------------------
     def testExportTreeWithMaxBounds(self):
@@ -2375,6 +2376,111 @@ class URLQueryParserTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class ResourceComponentAliasTests(unittest.TestCase):
+    """ Test components from the same table but different aliases """
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
+    def testGetJoinLinkTableComponentAlias(self):
+        """ Join for a link-table component with alias """
+
+        resource = current.s3db.resource("hrm_human_resource")
+
+        component = resource.components["pr_email_contact"]
+        join = component.get_join()
+        self.assertEqual(str(join), "(((pr_person.deleted <> 'T') AND "
+                         "((hrm_human_resource.person_id = pr_person.id) AND "
+                         "(pr_person.pe_id = pr_email_contact.pe_id))) AND "
+                         "(pr_email_contact.contact_method = 'EMAIL'))")
+
+        component = resource.components["pr_phone_contact"]
+        join = component.get_join()
+        self.assertEqual(str(join), "(((pr_person.deleted <> 'T') AND "
+                         "((hrm_human_resource.person_id = pr_person.id) AND "
+                         "(pr_person.pe_id = pr_phone_contact.pe_id))) AND "
+                         "(pr_phone_contact.contact_method = 'SMS'))")
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
+    def testGetLeftJoinLinkTableComponentAlias(self):
+        """ Left Join for a link-table component with alias """
+
+        resource = current.s3db.resource("hrm_human_resource")
+        
+        component = resource.components["pr_email_contact"]
+        ljoin = component.get_left_join()
+        self.assertTrue(isinstance(ljoin, list))
+        self.assertEqual(len(ljoin), 2)
+        self.assertEqual(str(ljoin[0]), "pr_person ON "
+                                        "((hrm_human_resource.person_id = pr_person.id) AND "
+                                        "(pr_person.deleted <> 'T'))")
+        self.assertEqual(str(ljoin[1]), "pr_contact AS pr_email_contact ON "
+                                        "((pr_person.pe_id = pr_email_contact.pe_id) AND "
+                                        "(pr_email_contact.contact_method = 'EMAIL'))")
+
+        component = resource.components["pr_phone_contact"]
+        ljoin = component.get_left_join()
+        self.assertTrue(isinstance(ljoin, list))
+        self.assertEqual(len(ljoin), 2)
+        self.assertEqual(str(ljoin[0]), "pr_person ON "
+                                        "((hrm_human_resource.person_id = pr_person.id) AND "
+                                        "(pr_person.deleted <> 'T'))")
+        self.assertEqual(str(ljoin[1]), "pr_contact AS pr_phone_contact ON "
+                                        "((pr_person.pe_id = pr_phone_contact.pe_id) AND "
+                                        "(pr_phone_contact.contact_method = 'SMS'))")
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
+    def testSelectWithLinkTableComponentAlias(self):
+        """ Select for a resource with link-table components that have aliases """
+
+        resource = current.s3db.resource("hrm_human_resource")
+        fields = ['id', 'person_id', 'job_title_id', 'organisation_id', 'department_id', 'site_id', \
+                 'pr_email_contact.value', 'pr_phone_contact.value', 'person_id$training.course_id', \
+                 'person_id$certification.certificate_id', 'end_date', 'status']
+        rows, count, ids = resource.select(fields=fields, count=True, getids=True)
+        if count > 0:
+            self.assertTrue(hasattr(rows.records[0],"pr_email_contact"))
+            self.assertTrue(hasattr(rows.records[0],"pr_phone_contact"))
+        
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testExportTreeWithComponentAlias(self):
+        """ Test export of a resource that has components from the same table but different aliases """
+
+        current.auth.override = True
+        s3db = current.s3db
+        s3db.add_component("org_office",
+                      org_organisation=dict(name="org_field_office",
+                                            joinby="organisation_id",
+                                            filterby="office_type_id",
+                                            filterfor=5
+                                            )
+                      )
+        s3db.add_component("org_office",
+                      org_organisation=dict(name="org_hq_office",
+                                            joinby="organisation_id",
+                                            filterby="office_type_id",
+                                            filterfor=4
+                                            )
+                      )
+        resource = s3db.resource("org_organisation")
+        self.assertEqual(str(resource.components.org_field_office.filter), \
+                         "(org_field_office.office_type_id = 5)")
+        self.assertEqual(str(resource.components.org_hq_office.filter), \
+                         "(org_hq_office.office_type_id = 4)")
+        
+        tree = resource.export_tree(mcomponents=["org_field_office","org_hq_office"])
+        self.assertTrue(resource.components.org_field_office._length > 0)
+        self.assertTrue(resource.components.org_hq_office._length > 0)
+        self.assertTrue(resource.components.office._length is None)
+        
+        tree = resource.export_tree(mcomponents=["org_office","org_field_office","org_hq_office"])
+        self.assertTrue(resource.components.office._length > 0)
+        self.assertTrue(resource.components.org_field_office._length is None)
+        self.assertTrue(resource.components.org_hq_office._length is None)
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -2425,6 +2531,7 @@ if __name__ == "__main__":
 
         ResourceExportTests,
         ResourceImportTests,
+        ResourceComponentAliasTests,
     )
 
 # END ========================================================================

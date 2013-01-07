@@ -346,7 +346,30 @@ class S3HRModel(S3Model):
 
         # Email & Phone
         # @ToDo: Replace with Filterable Components
-        table.virtualfields.append(HRMVirtualFields())
+        #table.virtualfields.append(HRMVirtualFields())
+        add_component("pr_contact",
+                       hrm_human_resource=dict(name="pr_email_contact",
+                        link="pr_person",
+                        joinby="id",
+                        key="pe_id",
+                        fkey="pe_id",
+                        pkey="person_id",
+                        filterby="contact_method",
+                        filterfor="EMAIL"
+                        ) 
+                      )
+    
+        add_component("pr_contact",
+                        hrm_human_resource=dict(name="pr_phone_contact",
+                        link="pr_person",
+                        joinby="id",
+                        key="pe_id",
+                        fkey="pe_id",
+                        pkey="person_id",
+                        filterby="contact_method",
+                        filterfor="SMS"
+                        ) 
+                      )
 
         # Components
         # Availability
