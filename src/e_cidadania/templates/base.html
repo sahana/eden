@@ -41,7 +41,14 @@
             <div class="navbar-inner">
                 <div class="container">
                     {% block space %}
-                        <a class="brand" style="font-family:Arial;" href="/">e-<strong>cidadania</strong> {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
+                        <a class="brand" style="font-family:Arial;" href="/">
+                            {% if debug_mode %}
+                                <img style="margin-top:-12px;margin-bottom:-10px;position:relative;" src="{{ STATIC_URL }}assets/icons/debug.png"/>
+                            {% else %}
+                                <img style="margin-top:-12px;margin-bottom:-10px;position:relative;" src="{{ STATIC_URL }}assets/icons/beta.png"/>
+                            {% endif %}
+                            <span style="margin-left:-13px;">e-</span><strong>cidadania</strong>
+                        </a>
                     {% endblock %}
                     {% include "menu.html" %}
                 </div>
