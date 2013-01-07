@@ -2386,14 +2386,14 @@ class ResourceComponentAliasTests(unittest.TestCase):
 
         resource = current.s3db.resource("hrm_human_resource")
 
-        component = resource.components["pr_email_contact"]
+        component = resource.components["email"]
         join = component.get_join()
         self.assertEqual(str(join), "(((pr_person.deleted <> 'T') AND "
                          "((hrm_human_resource.person_id = pr_person.id) AND "
                          "(pr_person.pe_id = pr_email_contact.pe_id))) AND "
                          "(pr_email_contact.contact_method = 'EMAIL'))")
 
-        component = resource.components["pr_phone_contact"]
+        component = resource.components["phone"]
         join = component.get_join()
         self.assertEqual(str(join), "(((pr_person.deleted <> 'T') AND "
                          "((hrm_human_resource.person_id = pr_person.id) AND "
@@ -2407,7 +2407,7 @@ class ResourceComponentAliasTests(unittest.TestCase):
 
         resource = current.s3db.resource("hrm_human_resource")
         
-        component = resource.components["pr_email_contact"]
+        component = resource.components["email"]
         ljoin = component.get_left_join()
         self.assertTrue(isinstance(ljoin, list))
         self.assertEqual(len(ljoin), 2)
@@ -2418,7 +2418,7 @@ class ResourceComponentAliasTests(unittest.TestCase):
                                         "((pr_person.pe_id = pr_email_contact.pe_id) AND "
                                         "(pr_email_contact.contact_method = 'EMAIL'))")
 
-        component = resource.components["pr_phone_contact"]
+        component = resource.components["phone"]
         ljoin = component.get_left_join()
         self.assertTrue(isinstance(ljoin, list))
         self.assertEqual(len(ljoin), 2)
@@ -2436,7 +2436,7 @@ class ResourceComponentAliasTests(unittest.TestCase):
 
         resource = current.s3db.resource("hrm_human_resource")
         fields = ['id', 'person_id', 'job_title_id', 'organisation_id', 'department_id', 'site_id', \
-                 'pr_email_contact.value', 'pr_phone_contact.value', 'person_id$training.course_id', \
+                 'email.value', 'phone.value', 'person_id$training.course_id', \
                  'person_id$certification.certificate_id', 'end_date', 'status']
         rows, count, ids = resource.select(fields=fields, count=True, getids=True)
         if count > 0:
@@ -2444,6 +2444,9 @@ class ResourceComponentAliasTests(unittest.TestCase):
             self.assertTrue(hasattr(rows.records[0],"pr_phone_contact"))
         
     # -------------------------------------------------------------------------
+    # Disabled - @todo: must create test records (otherwise component can be
+    # empty regardless) - and check the actual office_type_ids (can not assume 4/5)
+    @unittest.skip("disabled until fixed")
     @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
     def testExportTreeWithComponentAlias(self):
         """ Test export of a resource that has components from the same table but different aliases """
@@ -2451,34 +2454,34 @@ class ResourceComponentAliasTests(unittest.TestCase):
         current.auth.override = True
         s3db = current.s3db
         s3db.add_component("org_office",
-                      org_organisation=dict(name="org_field_office",
+                      org_organisation=dict(name="fieldoffice",
                                             joinby="organisation_id",
                                             filterby="office_type_id",
                                             filterfor=5
                                             )
                       )
         s3db.add_component("org_office",
-                      org_organisation=dict(name="org_hq_office",
+                      org_organisation=dict(name="hq",
                                             joinby="organisation_id",
                                             filterby="office_type_id",
                                             filterfor=4
                                             )
                       )
         resource = s3db.resource("org_organisation")
-        self.assertEqual(str(resource.components.org_field_office.filter), \
-                         "(org_field_office.office_type_id = 5)")
-        self.assertEqual(str(resource.components.org_hq_office.filter), \
+        self.assertEqual(str(resource.components.fieldoffice.filter), \
+                         "(org_fieldoffice_office.office_type_id = 5)")
+        self.assertEqual(str(resource.components.hq.filter), \
                          "(org_hq_office.office_type_id = 4)")
         
-        tree = resource.export_tree(mcomponents=["org_field_office","org_hq_office"])
-        self.assertTrue(resource.components.org_field_office._length > 0)
-        self.assertTrue(resource.components.org_hq_office._length > 0)
+        tree = resource.export_tree(mcomponents=["fieldoffice","hq"])
+        self.assertTrue(resource.components.fieldoffice._length > 0)
+        self.assertTrue(resource.components.hq._length > 0)
         self.assertTrue(resource.components.office._length is None)
         
-        tree = resource.export_tree(mcomponents=["org_office","org_field_office","org_hq_office"])
+        tree = resource.export_tree(mcomponents=["org_office","fieldoffice","hq"])
         self.assertTrue(resource.components.office._length > 0)
-        self.assertTrue(resource.components.org_field_office._length is None)
-        self.assertTrue(resource.components.org_hq_office._length is None)
+        self.assertTrue(resource.components.fieldoffice._length is None)
+        self.assertTrue(resource.components.hq._length is None)
 
 # =============================================================================
 def run_suite(*test_classes):

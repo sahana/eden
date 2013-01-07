@@ -354,7 +354,11 @@ class S3Resource(object):
             table_alias = "%s_%s_%s" % (hook.prefix,
                                         hook.alias,
                                         hook.name)
-            hook.table = hook.table.with_alias(table_alias)
+            table = hook.table.with_alias(table_alias)
+            table._id = table[table._id.name]
+            hook.table = table
+        else:
+            table_alias = None
 
         # Create as resource
         component = S3Resource(hook.table,
@@ -364,6 +368,10 @@ class S3Resource(object):
                                include_deleted=self.include_deleted,
                                approved=self._approved,
                                unapproved=self._unapproved)
+
+        if table_alias:
+            component.tablename = hook.tablename
+            component._alias = table_alias
 
         # Update component properties
         component.pkey = hook.pkey
@@ -377,7 +385,8 @@ class S3Resource(object):
         component.alias = alias
         component.multiple = hook.multiple
         component.values = hook.values
-        if hook.filterby is not None and hook.filterfor is not None:
+
+        if hook.filterby is not None:
             component.filter = (hook.table[hook.filterby] == hook.filterfor)
         else:
             component.filter = None    
@@ -2169,29 +2178,20 @@ class S3Resource(object):
 
         # Export components
         if components is not None:
-            bypass_components = []
+
             resource_components = self.components.values()
-            l = len(resource_components)
-            for i in xrange(l):
-                skip_component = False
-                component = resource_components[i] 
+            unfiltered = [c for c in resource_components if c.filter is None]
+            
+            for component in resource_components:
+                ctablename = component.tablename
+                    
                 # Shall this component be included?
-                if components and (component.tablename not in components or \
-                                  component.tablename in bypass_components):
+                if components and ctablename not in components:
                     continue
-                
-                for j in xrange(i+1, l):
-                    next_component = resource_components[j]
-                    if (not hasattr(component.table, "_ot")) and hasattr(next_component.table, "_ot") and \
-                            component.tablename == next_component.table._ot:
-                        bypass_components.append(next_component.tablename)
 
-                    if hasattr(component.table, "_ot") and (not hasattr(next_component.table, "_ot")) and \
-                            component.table._ot == next_component.tablename:
-                        skip_component = True
-                        break
-
-                if skip_component:
+                # We skip a filtered component if an unfiltered
+                # component of the same table is available:
+                if component.filter is not None and ctablename in unfiltered:
                     continue
 
                 cpkey = component.table._id

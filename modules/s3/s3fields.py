@@ -654,6 +654,10 @@ class S3RepresentLazy(object):
         renderer.lazy.append(value)
 
     def __repr__(self):
+
+        return s3_unicode(self.represent())
+
+    def represent(self):
         """ Represent as string """
 
         value = self.value
@@ -707,7 +711,7 @@ class S3RepresentLazy(object):
         """
 
         # Render value
-        text = repr(self)
+        text = self.represent()
 
         # Strip markup + XML-escape
         if text and "<" in text:
