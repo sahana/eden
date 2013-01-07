@@ -421,7 +421,7 @@ class S3PersonEntity(S3Model):
                                         itable.organisation_id,
                                         limitby=(0, 1)).first()
                 if instance:
-                    s3db.pr_update_affiliations("org_site", instance)
+                    pr_update_affiliations("org_site", instance)
         return
 
     # -------------------------------------------------------------------------

@@ -759,7 +759,11 @@ class S3CRUD(S3Method):
                 r.error(404, current.manager.error, next=r.url(method=""))
             current.response.confirmation = message
             r.http = "DELETE" # must be set for immediate redirect
-            self.next = delete_next or r.url(method="")
+            next = r.get_vars.get("_next", None)
+            if next:
+                self.next = next
+            else:
+                self.next = delete_next or r.url(method="")
 
         elif r.http == "DELETE":
             # Delete the records and return a JSON message

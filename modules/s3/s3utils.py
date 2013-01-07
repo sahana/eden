@@ -2897,10 +2897,10 @@ class S3DataTable(object):
 
         T = current.T
         s3 = current.response.s3
-        application = current.request.application
+        request = current.request
+        application = request.application
 
         # @todo: this needs rework
-        #        - s3FormatRequest must retain any URL filters
         #        - s3FormatRequest must remove the "search" method
         #        - other data formats could have other list_fields,
         #          hence applying the datatable sorting/filters is
@@ -2909,7 +2909,15 @@ class S3DataTable(object):
             end = s3.datatable_ajax_source.find(".aadata")
             default_url = s3.datatable_ajax_source[:end] # strip '.aadata' extension
         else:
-            default_url = current.request.url
+            default_url = request.url
+
+        # Keep any URL filters
+        vars = request.get_vars
+        if vars:
+            default_url = "%s?" % default_url
+            for var in vars:
+                default_url = "%s%s=%s&" % (default_url, var, vars[var])
+
         iconList = []
         url = s3.formats.pdf if s3.formats.pdf else default_url
         iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
@@ -2966,11 +2974,14 @@ class S3DataTable(object):
                     iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
                                         _onclick="s3FormatRequest('kml','%s','%s');" % (id, default_url),
                                         _alt=T("Export in KML format"),
+                                        _title=T("Export in KML format"),
                                         ))
+                    break
         if "map" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/map_icon.png" % application,
                                 _onclick="s3FormatRequest('map','%s','%s');" % (id, s3.formats.map),
                                 _alt=T("Show on map"),
+                                _title=T("Show on map"),
                                 ))
 
         for icon in iconList:

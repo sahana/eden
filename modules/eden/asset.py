@@ -188,8 +188,7 @@ S3OptionsFilter({
                                              label = T("Supplier/Donor"),
                                              ondelete = "SET NULL"),
                              s3_date("purchase_date",
-                                     label = T("Purchase Date")
-                                     ),
+                                     label = T("Purchase Date")),
                              Field("purchase_price", "double",
                                    #default=0.00,
                                    represent=lambda v, row=None: \
@@ -314,6 +313,7 @@ S3OptionsFilter({
         configure(tablename,
                   super_entity = ("supply_item_entity", "sit_trackable"),
                   mark_required = ["organisation_id"],
+                  # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   onaccept=self.asset_onaccept,

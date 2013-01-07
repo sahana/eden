@@ -1524,11 +1524,10 @@ class S3FacilityModel(S3Model):
                                                           multiple=True)),
                                    represent=self.org_facility_type_multirepresent,
                                    widget = CheckboxesWidgetS3.widget,
-                                   # @ToDo: Support CheckboxesWidgetS3 with Add Popup
-                                   #comment=S3AddResourceLink(c="org",
-                                   #                            f="facility_type",
-                                   #                            label=ADD_FAC,
-                                   #                            tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
+                                   comment=S3AddResourceLink(c="org",
+                                                             f="facility_type",
+                                                             label=ADD_FAC,
+                                                             tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
                                    label=T("Type")),
                              self.org_organisation_id(
                                 #widget=S3OrganisationAutocompleteWidget(
@@ -2834,7 +2833,7 @@ def org_rheader(r, tabs=[]):
                     (T("Projects"), "project"),
                     (T("User Roles"), "roles"),
                     #(T("Tasks"), "task"),
-                   ]
+                    ]
             if settings.has_module("asset"):
                 tabs.insert(6,(T("Assets"), "asset"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -2857,14 +2856,12 @@ def org_rheader(r, tabs=[]):
 
         rheader = DIV()
         logo = org_organisation_logo(record)
-        rData = TABLE(
-                        TR(
-                            TH("%s: " % table.name.label),
-                            record.name,
-                          ),
-                        website,
-                        sectors,
-                        )
+        rData = TABLE(TR(TH("%s: " % table.name.label),
+                         record.name,
+                         ),
+                      website,
+                      sectors,
+                      )
         if logo:
             rheader.append(TABLE(TR(TD(logo), TD(rData))))
         else:
@@ -2876,7 +2873,7 @@ def org_rheader(r, tabs=[]):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (STAFF, "human_resource"),
-               ]
+                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
             tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
         if settings.get_req_summary():
@@ -2912,10 +2909,14 @@ def org_rheader(r, tabs=[]):
 
         rheader.append(rheader_tabs)
 
+        if settings.has_module("inv"):
+            # Build footer
+            s3db.inv_rfooter(r, record)
+
     elif tablename in ("org_organisation_type", "org_office_type"):
         tabs = [(T("Basic Details"), None),
                 (T("Tags"), "tag"),
-               ]
+                ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(
                             TH("%s: " % table.name.label),
@@ -2983,39 +2984,55 @@ def org_organisation_controller():
                     branch_filter = (S3FieldSelector("parent.id") == None)
                 r.resource.add_filter(branch_filter)
 
-            elif r.component_name == "human_resource" and r.component_id:
-                # Workaround until widget is fixed:
-                htable = s3db.hrm_human_resource
-                htable.person_id.widget = None
-                htable.person_id.writable = False
+            else:
+                cname = r.component_name
+                if cname == "human_resource" and r.component_id:
+                    # Workaround until widget is fixed:
+                    htable = s3db.hrm_human_resource
+                    htable.person_id.widget = None
+                    htable.person_id.writable = False
 
-            elif r.component_name == "branch":
-                # Branches default to the same type/sector/country as the parent
-                otable = r.table
-                record = r.record
-                otable.organisation_type_id.default = record.organisation_type_id
-                otable.multi_sector_id.default = record.multi_sector_id
-                otable.region.default = record.region
-                otable.country.default = record.country
-                # Represent orgs without the parent prefix as we have that context already
-                s3db.org_organisation_branch.branch_id.represent = \
-                    org_OrganisationRepresent(parent=False)
+                elif cname == "branch":
+                    # Branches default to the same type/sector/country as the parent
+                    otable = r.table
+                    record = r.record
+                    otable.organisation_type_id.default = record.organisation_type_id
+                    otable.multi_sector_id.default = record.multi_sector_id
+                    otable.region.default = record.region
+                    otable.country.default = record.country
+                    # Represent orgs without the parent prefix as we have that context already
+                    s3db.org_organisation_branch.branch_id.represent = \
+                        org_OrganisationRepresent(parent=False)
 
-            elif r.component_name == "task" and \
-                 r.method != "update" and r.method != "read":
-                # Create or ListCreate
-                ttable = r.component.table
-                ttable.organisation_id.default = r.id
-                ttable.status.writable = False
-                ttable.status.readable = False
+                elif cname == "task" and \
+                     r.method != "update" and r.method != "read":
+                    # Create or ListCreate
+                    ttable = r.component.table
+                    ttable.organisation_id.default = r.id
+                    ttable.status.writable = False
+                    ttable.status.readable = False
 
-            elif r.component_name == "project" and r.link:
-                # Hide/show host role after project selection in embed-widget
-                tn = r.link.tablename
-                s3db.configure(tn,
-                               post_process='''hide_host_role($('#%s').val())''')
-                s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
-                    request.application)
+                elif cname == "asset":
+                    # Filter the Site field
+                    field = s3db.super_link("site_id", "org_site",
+                                            empty = False,
+                                            filterby="organisation_id",
+                                            filter_opts=(r.id,),
+                                            represent = s3db.org_site_represent,
+                                            )
+                    atable = s3db.asset_asset
+                    atable.site_id.requires = field.requires
+                    # Stay within Organisation tab
+                    s3db.configure("asset_asset",
+                                   create_next = None)
+
+                elif cname == "project" and r.link:
+                    # Hide/show host role after project selection in embed-widget
+                    tn = r.link.tablename
+                    s3db.configure(tn,
+                                   post_process='''hide_host_role($('#%s').val())''')
+                    s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
+                        request.application)
 
             s3db.configure("project_project", create_next=None)
 
@@ -3185,11 +3202,36 @@ def org_organisation_controller():
                         except:
                             # A non-standard formstyle with just a single row
                             pass
+
+            else:
+                cname = r.component_name
+                if cname == "human_resource":
+                    # Modify action button to open staff instead of human_resource
+                    read_url = URL(c="hrm", f="staff", args=["[id]"])
+                    delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
+                                     # Stay within Tab on deletes
+                                     vars={"_next": URL(args=current.request.args)})
+                    update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+                    S3CRUD.action_buttons(r, read_url=read_url,
+                                             delete_url=delete_url,
+                                             update_url=update_url)
+
+                elif cname == "document":
+                    # Modify action button to stay within organisation tab
+                    id = r.record.id
+                    read_url = URL(args=[id, "document", "[id]"])
+                    delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
+                                     # Stay within Tab on deletes
+                                     vars={"_next": URL(args=request.args)})
+                    update_url = URL(args=[id, "document", "[id]", "update"])
+                    S3CRUD.action_buttons(r, read_url=read_url,
+                                             delete_url=delete_url,
+                                             update_url=update_url)
         return output
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
-                                     native=False, rheader=s3db.org_rheader)
+                                     native=False, rheader=org_rheader)
     return output
 
 # =============================================================================
@@ -3229,7 +3271,7 @@ def org_office_controller():
 
         if r.interactive:
             if r.component:
-                cname = r.component.name
+                cname = r.component_name
                 if cname in ("inv_item", "recv", "send"):
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
@@ -3260,6 +3302,21 @@ def org_office_controller():
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
                     s3db.req_create_form_mods()
+
+                elif cname == "asset":
+                    # Default/Hide the Organisation & Site fields
+                    record = r.record
+                    atable = s3db.asset_asset
+                    field = atable.organisation_id
+                    field.default = record.organisation_id
+                    field.readable = field.writable = False
+                    field = atable.site_id
+                    field.default = record.site_id
+                    field.readable = field.writable = False
+                    # Stay within Office tab
+                    s3db.configure("asset_asset",
+                                   create_next = None)
+
             elif r.id:
                 table.obsolete.readable = table.obsolete.writable = True
 
@@ -3337,22 +3394,34 @@ def org_office_controller():
                         except:
                             # A non-standard formstyle with just a single row
                             pass
-            elif r.component_name == "human_resource":
-                # Modify action button to open staff instead of human_resource
-                read_url = URL(c="hrm", f="staff", args=["[id]"])
-                delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"])
-                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                S3CRUD.action_buttons(r, read_url=read_url,
-                                         delete_url=delete_url,
-                                         update_url=update_url)
+
+            else:
+                cname = r.component_name
+                if cname == "human_resource":
+                    # Modify action button to open staff instead of human_resource
+                    read_url = URL(c="hrm", f="staff", args=["[id]"])
+                    delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
+                                     # Stay within Tab on deletes
+                                     vars={"_next": URL(args=request.args)})
+                    update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+                    S3CRUD.action_buttons(r, read_url=read_url,
+                                             delete_url=delete_url,
+                                             update_url=update_url)
+                elif cname == "document":
+                    # Modify action button to stay within office tab
+                    id = r.record.id
+                    read_url = URL(args=[id, "document", "[id]"])
+                    delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
+                                     # Stay within Tab on deletes
+                                     vars={"_next": URL(args=request.args)})
+                    update_url = URL(args=[id, "document", "[id]", "update"])
+                    S3CRUD.action_buttons(r, read_url=read_url,
+                                             delete_url=delete_url,
+                                             update_url=update_url)
         return output
     s3.postp = postp
 
-    if "inv_item" in request.args:
-        rheader = s3db.inv_warehouse_rheader
-    else:
-        rheader = s3db.org_rheader
-    output = current.rest_controller("org", "office", rheader=rheader)
+    output = current.rest_controller("org", "office", rheader=org_rheader)
     return output
 
 # END =========================================================================

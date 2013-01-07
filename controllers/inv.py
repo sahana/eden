@@ -340,6 +340,20 @@ def warehouse():
                     # inc list_create (list_fields over-rides)
                     s3db.req_create_form_mods()
 
+            elif component_name == "asset":
+                # Default/Hide the Organisation & Site fields
+                record = r.record
+                atable = s3db.asset_asset
+                field = atable.organisation_id
+                field.default = record.organisation_id
+                field.readable = field.writable = False
+                field = atable.site_id
+                field.default = record.site_id
+                field.readable = field.writable = False
+                # Stay within Warehouse tab
+                s3db.configure("asset_asset",
+                               create_next = None)
+
         elif r.id:
             r.table.obsolete.readable = r.table.obsolete.writable = True
 
@@ -360,6 +374,30 @@ def warehouse():
             s3mgr.crud.action_buttons(r,
                                       read_url=read_url,
                                       update_url=update_url)
+        else:
+            cname = r.component_name
+            if cname == "human_resource":
+                # Modify action button to open staff instead of human_resource
+                read_url = URL(c="hrm", f="staff", args=["[id]"])
+                delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
+                                 # Stay within Tab on deletes
+                                 vars={"_next": URL(args=request.args)})
+                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+                s3mgr.crud.action_buttons(r, read_url=read_url,
+                                          delete_url=delete_url,
+                                          update_url=update_url)
+            elif cname == "document":
+                # Modify action button to stay within warehouse tab
+                id = r.record.id
+                read_url = URL(args=[id, "document", "[id]"])
+                delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
+                                 # Stay within Tab on deletes
+                                 vars={"_next": URL(args=request.args)})
+                update_url = URL(args=[id, "document", "[id]", "update"])
+                s3mgr.crud.action_buttons(r, read_url=read_url,
+                                          delete_url=delete_url,
+                                          update_url=update_url)
+
         if "add_btn" in output:
             del output["add_btn"]
         return output

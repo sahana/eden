@@ -172,6 +172,8 @@ class S3HRModel(S3Model):
                                   Field("code",
                                         #readable=False,
                                         #writable=False,
+                                        represent = lambda v: \
+                                            v or messages["NONE"],
                                         label=T("Staff ID")),
                                   self.hrm_job_title_id(
                                                         #readable = False if group == "volunteer" else True,
@@ -653,10 +655,15 @@ class S3HRModel(S3Model):
     def hrm_human_resource_ondelete(row):
         """ On-delete routine for HR records """
 
-        htable = current.db.hrm_human_resource
+        db = current.db
+        htable = db.hrm_human_resource
 
         if row and "id" in row:
-            record = htable[row.id]
+            record = db(htable.id == row.id).select(htable.deleted,
+                                                    htable.deleted_fk,
+                                                    htable.person_id,
+                                                    limitby=(0, 1)
+                                                    ).first()
         else:
             return
 
@@ -666,10 +673,9 @@ class S3HRModel(S3Model):
                 person_id = fk.get("person_id", None)
             except:
                 return
-            if not person_id:
-                return
 
-            current.s3db.pr_update_affiliations(htable, record)
+            if person_id:
+                current.s3db.pr_update_affiliations(htable, record)
 
     # -------------------------------------------------------------------------
     @staticmethod

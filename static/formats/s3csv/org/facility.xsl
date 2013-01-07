@@ -47,7 +47,7 @@
         </xsl:call-template>
     </xsl:variable>
 
-    <xsl:variable name="OrgName">
+    <xsl:variable name="Organisation">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">Organisation</xsl:with-param>
         </xsl:call-template>
@@ -70,7 +70,7 @@
 
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('jobtitles',
+                                        generate-id(key('organisation',
                                             col[contains(
                                                 document(../labels.xml)/labels/column[@name='Organisation']/match/text(),
                                                 concat('|', @field, '|'))]
@@ -88,6 +88,11 @@
         <!-- Create the variables -->
         <xsl:variable name="FacilityName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
+        <xsl:variable name="OrgName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Organisation"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <resource name="org_facility">
             <!-- Link to Location -->
@@ -141,6 +146,12 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
+
+        <xsl:variable name="OrgName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Organisation"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <xsl:if test="$OrgName!=''">
             <resource name="org_organisation">

@@ -207,7 +207,7 @@ def facility():
 
         if r.interactive:
             if r.component:
-                cname = r.component.name
+                cname = r.component_name
                 if cname in ("inv_item", "recv", "send"):
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
@@ -251,6 +251,20 @@ def facility():
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
                     s3db.req_create_form_mods()
+
+                elif cname == "asset":
+                    # Default/Hide the Organisation & Site fields
+                    record = r.record
+                    atable = s3db.asset_asset
+                    field = atable.organisation_id
+                    field.default = record.organisation_id
+                    field.readable = field.writable = False
+                    field = atable.site_id
+                    field.default = record.site_id
+                    field.readable = field.writable = False
+                    # Stay within Facility tab
+                    s3db.configure("asset_asset",
+                                   create_next = None)
 
             elif r.id:
                 field = r.table.obsolete

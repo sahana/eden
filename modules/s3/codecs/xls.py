@@ -195,8 +195,12 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         book = xlwt.Workbook(encoding="utf-8")
 
         # Add a sheet
-        # The spreadsheet doesn't like a / in the sheet name, so replace any with a space
-        sheet1 = book.add_sheet(str(title.replace("/", " ")))
+        # Can't have a / in the sheet_name, so replace any with a space
+        sheet_name = str(title.replace("/", " "))
+        # sheet_name cannot be over 31 chars
+        if len(sheet_name) > 31:
+            sheet_name = sheet_name[:31]
+        sheet1 = book.add_sheet(sheet_name)
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()

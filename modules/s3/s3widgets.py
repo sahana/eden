@@ -2738,15 +2738,15 @@ class CheckboxesWidgetS3(OptionsWidget):
         - supports also integer-type keys in option sets
         - has an identifiable class for styling
 
-        Used in Sync, Projects, Assess
+        Used in Sync, Projects, Assess, Facilities
     """
 
     @classmethod
     def widget(cls, field, value, **attributes):
         """
-        generates a TABLE tag, including INPUT checkboxes (multiple allowed)
+            generates a TABLE tag, including INPUT checkboxes (multiple allowed)
 
-        see also: :meth:`FormWidget.widget`
+            see also: :meth:`FormWidget.widget`
         """
 
         #values = re.compile("[\w\-:]+").findall(str(value))
@@ -2784,8 +2784,8 @@ class CheckboxesWidgetS3(OptionsWidget):
             T = current.T
             opts.append(TR(TD(SPAN(T("no options available"),
                                    _class="no-options-available"),
-                              INPUT(_type="hide",
-                                    _name=field.name,
+                              INPUT(_name=field.name,
+                                    _class="hide",
                                     _value=None))))
 
         for r_index in range(rows):

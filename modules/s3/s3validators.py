@@ -602,7 +602,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     if filter_opts:
                         if None in filter_opts:
                             # Needs special handling (doesn't show up in 'belongs')
-                            _query = (table[filterby]== None)
+                            _query = (table[filterby] == None)
                             filter_opts = [f for f in filter_opts if f is not None]
                             if filter_opts:
                                 _query = _query | (table[filterby].belongs(filter_opts))

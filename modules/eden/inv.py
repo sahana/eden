@@ -32,7 +32,8 @@ __all__ = ["S3WarehouseModel",
            "S3TrackingModel",
            "S3AdjustModel",
            "inv_tabs",
-           "inv_warehouse_rheader",
+           "inv_rheader",
+           "inv_rfooter",
            "inv_recv_crud_strings",
            "inv_recv_rheader",
            "inv_send_rheader",
@@ -2974,8 +2975,8 @@ def inv_tabs(r):
     return []
 
 # =============================================================================
-def inv_warehouse_rheader(r):
-    """ Resource Header for warehouses and inventory items """
+def inv_rheader(r):
+    """ Resource Header for Warehouses and Inventory Items """
 
     if r.representation != "html" or r.method == "import":
         # RHeaders only used in interactive views
@@ -2998,7 +2999,7 @@ def inv_warehouse_rheader(r):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
-               ]
+                ]
         if current.auth.s3_has_permission("create", "hrm_human_resource"):
             tabs.append((T("Assign Staff"), "human_resource_site"))
         if settings.has_module("asset"):
@@ -3026,7 +3027,6 @@ def inv_warehouse_rheader(r):
         rheader.append(rheader_tabs)
 
     elif tablename == "inv_inv_item":
-
         # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "track_movement/"),
@@ -3049,7 +3049,6 @@ def inv_warehouse_rheader(r):
                     ), rheader_tabs)
 
     elif tablename == "inv_track_item":
-
         # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "inv_item/"),
@@ -3076,42 +3075,50 @@ def inv_warehouse_rheader(r):
                     ), rheader_tabs)
 
     # Build footer
-    if "site_id" in record:
-
-        rfooter = TAG[""]()
-        if (r.component and r.component.name == "inv_item"):
-            if r.component_id:
-                asi_btn = A( T("Adjust Stock Item"),
-                              _href = URL(c = "inv",
-                                          f = "adj",
-                                          args = ["create"],
-                                          vars = {"site":record.site_id,
-                                                  "item":r.component_id},
-                                          ),
-                              _class = "action-btn"
-                              )
-                rfooter.append(asi_btn)
-            else:
-                as_btn = A( T("Adjust Stock"),
-                              _href = URL(c = "inv",
-                                          f = "adj",
-                                          args = ["create"],
-                                          vars = {"site":record.site_id},
-                                          ),
-                              _class = "action-btn"
-                              )
-                rfooter.append(as_btn)
-            ts_btn = A( T("Track Shipment"),
-                          _href = URL(c = "inv",
-                                      f = "track_movement",
-                                      vars = {"viewing":"inv_item.%s" % r.component_id},
-                                      ),
-                          _class = "action-btn"
-                          )
-            rfooter.append(ts_btn)
-            current.response.s3.rfooter = rfooter
+    inv_rfooter(r, record)
 
     return rheader
+
+# =============================================================================
+def inv_rfooter(r, record):
+    """ Resource Footer for Warehouses and Inventory Items """
+
+    if "site_id" not in record:
+        return
+
+    if (r.component and r.component.name == "inv_item"):
+        T = current.T
+        rfooter = TAG[""]()
+        if r.component_id:
+            asi_btn = A(T("Adjust Stock Item"),
+                        _href = URL(c = "inv",
+                                    f = "adj",
+                                    args = ["create"],
+                                    vars = {"site": record.site_id,
+                                            "item": r.component_id},
+                                    ),
+                        _class = "action-btn"
+                        )
+            rfooter.append(asi_btn)
+        else:
+            as_btn = A(T("Adjust Stock"),
+                       _href = URL(c = "inv",
+                                   f = "adj",
+                                   args = ["create"],
+                                   vars = {"site": record.site_id},
+                                   ),
+                       _class = "action-btn"
+                       )
+            rfooter.append(as_btn)
+        ts_btn = A(T("Track Shipment"),
+                   _href = URL(c = "inv",
+                               f = "track_movement",
+                               vars = {"viewing": "inv_item.%s" % r.component_id},
+                               ),
+                   _class = "action-btn"
+                   )
+        rfooter.append(ts_btn)
+        current.response.s3.rfooter = rfooter
 
 # =============================================================================
 def inv_recv_crud_strings():
