@@ -841,16 +841,38 @@ class S3ContingencyTable(TABLE):
 
         # Layer titles --------------------------------------------------------
 
+        # Get custom labels from report options
+        layer_labels = Storage()
+        report_options = resource.get_config("report_options", None)
+        if report_options and "fact" in report_options:
+            layer_opts = report_options["fact"]
+            for item in layer_opts:
+                if isinstance(item, (tuple, list)) and len(item) == 3:
+                    if not "." in item[0].split("$")[0]:
+                        item = ("%s.%s" % (resource.alias, item[0]),
+                                item[1],
+                                item[2])
+                    layer_labels[(item[0], item[1])] = item[2]
+                    
         labels = []
         get_mname = S3Report.mname
-        for field_name, method in layers:
-            # @todo: get the layer label from the report options
-            label = get_label(rfields, field_name, tablename, "fact")
-            mname = get_mname(method)
-            if not labels:
-                m = method == "list" and get_mname("count") or mname
-                layer_label = "%s (%s)" % (label, m)
-            labels.append("%s (%s)" % (label, mname))
+
+        for layer in layers:
+            if layer in layer_labels:
+                # Custom label
+                label = layer_labels[layer]
+                if not labels:
+                    layer_label = label
+                labels.append(s3_unicode(label))
+            else:
+                # Construct label from field-label and method
+                label = get_label(rfields, layer[0], tablename, "fact")
+                mname = get_mname(layer[1])
+                if not labels:
+                    m = layer[1] == "list" and get_mname("count") or mname
+                    layer_label = "%s (%s)" % (label, m)
+                labels.append("%s (%s)" % (label, mname))
+
         layers_title = TH(" / ".join(labels))
 
         # Columns field title -------------------------------------------------
