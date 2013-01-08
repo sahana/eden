@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-31 15:23+0100\n"
+"POT-Creation-Date: 2013-01-08 11:55+0100\n"
 "PO-Revision-Date: 2012-12-17 12:09+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/ecidadania/"
@@ -42,6 +42,36 @@ msgid ""
 msgstr ""
 "On va envoyer un régiment de spagetti pour réparer tout ça. En attendant, "
 "vous pouvez retourner à l'indexe."
+
+#: templates/explore.html:9
+msgid "Recent processes"
+msgstr ""
+
+#: templates/explore.html:15 templates/explore.html.py:28
+#: templates/explore.html:41
+#, fuzzy
+msgid "There are no recent spaces."
+msgstr "Créer un nouvel espace"
+
+#: templates/explore.html:20
+msgid "Public processes"
+msgstr ""
+
+#: templates/explore.html:33
+msgid "Private processes"
+msgstr ""
+
+#: templates/explore.html:49
+msgid "Latest news from public processes"
+msgstr ""
+
+#: templates/explore.html:54
+msgid "There are no posts."
+msgstr ""
+
+#: templates/explore.html:59
+msgid "What we say in twitter"
+msgstr ""
 
 #: templates/invite.html:9 templates/invite_done.html:4
 msgid "Invite your friends to e-cidadania"
@@ -104,42 +134,50 @@ msgid "Go to index"
 msgstr "Aller à l'indexe"
 
 #: templates/menu.html:3
-msgid "Home"
-msgstr "Accueil"
+msgid "Explore"
+msgstr ""
+
+#: templates/menu.html:4
+msgid "Blog"
+msgstr ""
 
 #: templates/menu.html:5
+msgid "Help"
+msgstr ""
+
+#: templates/menu.html:10
 msgid "Login"
 msgstr "Identification"
 
-#: templates/menu.html:6
+#: templates/menu.html:11
 msgid "Sign up"
 msgstr "Enregistrement"
 
-#: templates/menu.html:13
+#: templates/menu.html:15
 msgid "Language"
 msgstr "Langue"
 
-#: templates/menu.html:33
+#: templates/menu.html:35
 msgid "My profile"
 msgstr ""
 
-#: templates/menu.html:45
+#: templates/menu.html:47
 msgid "Administration"
 msgstr "Administration"
 
-#: templates/menu.html:46
+#: templates/menu.html:48
 msgid "Add news"
 msgstr "Ajouter des nouvelles"
 
-#: templates/menu.html:50
+#: templates/menu.html:52
 msgid "Create new space"
 msgstr "Créer un nouvel espace"
 
-#: templates/menu.html:52
+#: templates/menu.html:54
 msgid "Edit profile"
 msgstr "Editer le profil"
 
-#: templates/menu.html:54
+#: templates/menu.html:56
 msgid "Logout"
 msgstr "Déconnexion"
 
@@ -383,3 +421,6 @@ msgid ""
 "If you have any questions dont hesitate and send us a mail to "
 "support@ecidadania.org."
 msgstr ""
+
+#~ msgid "Home"
+#~ msgstr "Accueil"

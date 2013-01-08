@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-31 15:23+0100\n"
+"POT-Creation-Date: 2013-01-08 11:55+0100\n"
 "PO-Revision-Date: 2012-12-17 12:09+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/"
@@ -38,6 +38,35 @@ msgstr ""
 msgid ""
 "We will send the spaguetti squad to repair this. Meanwhile you can go back "
 "to the index."
+msgstr ""
+
+#: templates/explore.html:9
+msgid "Recent processes"
+msgstr ""
+
+#: templates/explore.html:15 templates/explore.html.py:28
+#: templates/explore.html:41
+msgid "There are no recent spaces."
+msgstr ""
+
+#: templates/explore.html:20
+msgid "Public processes"
+msgstr ""
+
+#: templates/explore.html:33
+msgid "Private processes"
+msgstr ""
+
+#: templates/explore.html:49
+msgid "Latest news from public processes"
+msgstr ""
+
+#: templates/explore.html:54
+msgid "There are no posts."
+msgstr ""
+
+#: templates/explore.html:59
+msgid "What we say in twitter"
 msgstr ""
 
 #: templates/invite.html:9 templates/invite_done.html:4
@@ -94,42 +123,50 @@ msgid "Go to index"
 msgstr ""
 
 #: templates/menu.html:3
-msgid "Home"
+msgid "Explore"
+msgstr ""
+
+#: templates/menu.html:4
+msgid "Blog"
 msgstr ""
 
 #: templates/menu.html:5
+msgid "Help"
+msgstr ""
+
+#: templates/menu.html:10
 msgid "Login"
 msgstr ""
 
-#: templates/menu.html:6
+#: templates/menu.html:11
 msgid "Sign up"
 msgstr ""
 
-#: templates/menu.html:13
+#: templates/menu.html:15
 msgid "Language"
 msgstr ""
 
-#: templates/menu.html:33
+#: templates/menu.html:35
 msgid "My profile"
 msgstr ""
 
-#: templates/menu.html:45
+#: templates/menu.html:47
 msgid "Administration"
 msgstr ""
 
-#: templates/menu.html:46
+#: templates/menu.html:48
 msgid "Add news"
 msgstr ""
 
-#: templates/menu.html:50
+#: templates/menu.html:52
 msgid "Create new space"
 msgstr ""
 
-#: templates/menu.html:52
+#: templates/menu.html:54
 msgid "Edit profile"
 msgstr ""
 
-#: templates/menu.html:54
+#: templates/menu.html:56
 msgid "Logout"
 msgstr ""
 
