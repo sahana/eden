@@ -367,7 +367,7 @@ class S3ProjectModel(S3Model):
                                    readable = False if multi_budgets else True,
                                    writable = False if multi_budgets else True,
                                    label = T("Budget"),
-                                   represent = lambda v, row=None: \
+                                   represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3_currency(
                                          readable = False if multi_budgets else True,
@@ -792,10 +792,10 @@ S3OptionsFilter({
                                                         IS_ONE_OF(db, "project_activity_type.id",
                                                                   represent,
                                                                   sort=True)),
-                                           represent = lambda id, row=None: \
-                                                       s3_get_db_field_value(tablename = "project_activity_type",
-                                                                             fieldname = "name",
-                                                                             look_up_value = id),
+                                           represent = lambda id: \
+                                            s3_get_db_field_value(tablename = "project_activity_type",
+                                                                  fieldname = "name",
+                                                                  look_up_value = id),
                                            label = T("Activity Type"),
                                            comment = S3AddResourceLink(title=ADD_ACTIVITY_TYPE,
                                                                        c="project",
@@ -875,9 +875,6 @@ S3OptionsFilter({
     def project_project_onvalidation(form):
         """ Form validation """
 
-        # if the project has an Host National Society organisation
-        # update organisation_id with its id
-
         if not form.vars.code and "name" in form.vars:
             # Populate code from name
             form.vars.code = form.vars.name
@@ -893,7 +890,10 @@ S3OptionsFilter({
         settings = current.deployment_settings
         if settings.get_project_multiple_organisations():
             # Create/update project_organisation record from the organisation_id
+            # Not in form.vars if added via component tab)
             vars = form.vars
+            organisation_id = vars.organisation_id or \
+                              current.request.post_vars.organisation_id
 
             lead_role = settings.get_project_organisation_lead_role()
 
@@ -902,13 +902,11 @@ S3OptionsFilter({
                     (otable.role == lead_role)
 
             # Update the lead organisation
-            count = current.db(query).update(
-                                        organisation_id = vars.organisation_id
-                                        )
+            count = current.db(query).update(organisation_id = organisation_id)
             if not count:
                 # If there is no record to update, then create a new one
                 otable.insert(project_id = vars.id,
-                              organisation_id = vars.organisation_id,
+                              organisation_id = organisation_id,
                               role = lead_role,
                               )
 
@@ -1643,7 +1641,8 @@ class S3Project3WModel(S3Model):
                                  Field("value", "double",
                                        label = T("Quantity"),
                                        requires = IS_INT_IN_RANGE(0, 99999999),
-                                       represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                                       represent = lambda v: \
+                                        IS_INT_AMOUNT.represent(v)),
                                  s3_date("date",
                                          label = T("Start Date"),
                                          #empty = False,
@@ -1850,12 +1849,12 @@ class S3Project3WModel(S3Model):
                                 ),
                              Field("role", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
-                                   represent = lambda opt, row=None: \
-                                               project_organisation_roles.get(opt, NONE)),
+                                   represent = lambda opt: \
+                                    project_organisation_roles.get(opt, NONE)),
                              Field("amount", "double",
                                    requires = IS_NULL_OR(IS_FLOAT_AMOUNT()),
-                                   represent = lambda v, row=None: \
-                                               IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                   represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
                                    widget = IS_FLOAT_AMOUNT.widget,
                                    label = T("Funds Contributed by this Organization")),
                              s3_currency(),
@@ -3100,9 +3099,9 @@ class S3ProjectTaskModel(S3Model):
                                    readable = staff,
                                    writable = staff,
                                    label = T("Status"),
-                                   represent = lambda opt, row=None: \
-                                               project_task_status_opts.get(opt,
-                                                                            UNKNOWN_OPT)),
+                                   represent = lambda opt: \
+                                    project_task_status_opts.get(opt,
+                                                                 UNKNOWN_OPT)),
                              *s3_meta_fields())
 
         # Field configurations
@@ -4365,14 +4364,13 @@ class S3ProjectOrganisationVirtualFields:
 class S3ProjectOrganisationFundingVirtualFields:
     """ Virtual fields for the project_project table """
 
-    # -------------------------------------------------------------------------
     def total_organisation_amount(self):
         """ Total of project_organisation amounts for project"""
 
-        potable = current.s3db.project_organisation
-        query = (potable.deleted != True) & \
-                (potable.project_id == self.project_project.id)
-        sum_field = potable.amount.sum()
+        table = current.s3db.project_organisation
+        query = (table.deleted != True) & \
+                (table.project_id == self.project_project.id)
+        sum_field = table.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
 
 # =============================================================================
@@ -4381,14 +4379,13 @@ class S3ProjectBudgetVirtualFields:
         Virtual fields for the project_project table when multi_budgets=True
     """
 
-    # -------------------------------------------------------------------------
     def total_annual_budget(self):
         """ Total of all annual budgets for project"""
 
-        pabtable = current.s3db.project_annual_budget
-        query = (pabtable.deleted != True) & \
-                (pabtable.project_id == self.project_project.id)
-        sum_field = pabtable.amount.sum()
+        table = current.s3db.project_annual_budget
+        query = (table.deleted != True) & \
+                (table.project_id == self.project_project.id)
+        sum_field = table.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
 
 # =============================================================================

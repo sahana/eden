@@ -1067,7 +1067,7 @@ S3OptionsFilter({
             s3_has_permission = current.auth.s3_has_permission
             if settings.has_module("req") and \
                s3_has_permission("read", "req_req", c="req"):
-                tabs= [(T("Requests"), "req")]
+                tabs = [(T("Requests"), "req")]
                 if s3_has_permission("read", "req_req",
                                      c=current.request.controller,
                                      f="req_match"):
@@ -3389,7 +3389,7 @@ def req_match():
     elif tablename == "org_facility":
         rheader = s3db.org_facility_rheader
     elif tablename == "inv_warehouse":
-        rheader = s3db.inv_warehouse_rheader
+        rheader = s3db.inv_rheader
     elif tablename == "cr_shelter":
         rheader = s3db.cr_shelter_rheader
     elif tablename == "hms_hospital":
@@ -3400,15 +3400,31 @@ def req_match():
     s3.filter = (s3db.req_req.site_id != site_id)
     s3db.configure("req_req", insertable=False)
 
+    # Pre-process
+    def prep(r):
+        # Plugin OrgRoleManager
+        auth = current.auth
+        if auth.user is not None and \
+           tablename in S3OrgRoleManager.ENTITY_TYPES:
+
+            sr = auth.get_system_roles()
+            realms = auth.user.realms or Storage()
+
+            if sr.ADMIN in realms or sr.ORG_ADMIN in realms and \
+               (realms[sr.ORG_ADMIN] is None or \
+                r.record.pe_id in realms[sr.ORG_ADMIN]):
+                r.set_handler("roles", S3OrgRoleManager())
+        return True
+    s3.prep = prep
+
     # Post-process
     def postp(r, output):
         if r.representation == "html":
             output["title"] = s3.crud_strings[tablename].title_display
         return output
-
     s3.postp = postp
 
-    output = current.rest_controller("req", "req", rheader = rheader)
+    output = current.rest_controller("req", "req", rheader=rheader)
 
     return output
 

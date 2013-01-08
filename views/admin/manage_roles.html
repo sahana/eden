@@ -1,97 +1,83 @@
 {{extend "layout.html"}}
-
-{{try:}}
-	{{=H2(T("User Roles"))}}
-{{except:}}
-	{{pass}}
-
+<style type="text/css">
+#component table{
+ background-color:white;
+}
+#component th,
+#component td{
+ border:1px solid #ccc;
+ padding:0.5em;
+ white-space:nowrap;
+}
+#component th{
+ font-weight:bold;
+ background-color:#e2e4ff;
+}
+#component caption{
+ font-weight:bold;
+ white-space:nowrap;
+ padding:0.5em 0;
+}
+</style>
+{{try:}}{{=H2(T("User Roles"))}}{{except:}}{{pass}}
 <div id="rheader">
-{{try:}}
-	{{=XML(rheader)}}
+{{try:}}{{=XML(rheader)}}
 </div>
 <div id="component">
 {{except:}}
 <div>
 {{pass}}
-
-<style type="text/css">
-	#component table {
-		background-color: white;
-	}
-	#component th,
-	#component td {
-		border:1px solid #ccc;
-		padding:0.5em;
-		white-space: nowrap;
-	}
-
-	#component th {
-		font-weight:bold;
-		background-color: #e2e4ff;
-	}
-
-	#component caption {
-		font-weight: bold;
-		white-space: nowrap;
-		padding: 0.5em 0;
-	}
-</style>
-
 <h3>{{=T("Assigned Roles")}}</h3>
-
 {{if globals().get("pagination_list", False):}}
-	<form action="" method="GET">
-		<fieldset>
-			<legend>Page</legend>
-			{{for offset in range(pagination_pages):}}
-				{{if offset == pagination_offset:}}
-					<button name="page_offset" value="{{=offset}}" disabled="disabled">{{=offset + 1}}</button>
-				{{else:}}
-					<button name="page_offset" value="{{=offset}}">{{=offset + 1}}</button>
-				{{pass}}
-			{{pass}}
-			<input type="hidden" name="page_size" value="{{=pagination_size}}">
-		</fieldset>
-	</form>
+ <form action="" method="GET">
+  <fieldset>
+   <legend>Page</legend>
+   {{for offset in range(pagination_pages):}}
+    {{if offset == pagination_offset:}}
+     <button name="page_offset" value="{{=offset}}" disabled="disabled">{{=offset + 1}}</button>
+    {{else:}}
+     <button name="page_offset" value="{{=offset}}">{{=offset + 1}}</button>
+    {{pass}}
+   {{pass}}
+   <input type="hidden" name="page_size" value="{{=pagination_size}}">
+  </fieldset>
+ </form>
 {{pass}}
-
 {{if globals().get("form", False):}}
-	{{=form.custom.begin}}
+ {{=form.custom.begin}}
 {{pass}}
-
 <table>
-	<thead>
-		<tr>
-			<th>{{=foreign_object_label}}</th>
-			<th>Module</th>
-			<th>Access Level</th>
-		</tr>
-	</thead>
-	{{if globals().get("pagination_list", False):}}
-		{{for object_name, object_id in pagination_list:}}
-			<tbody>
-				{{first_row = True}}
-				{{for role in assigned_roles[object_id]:}}
-					<tr>
-						{{if first_row:}}
-							{{first_row = False}}
-							<td rowspan="{{=len(assigned_roles[object_id])}}"><a href="?edit={{=object_id}}" title="Edit roles for {{=object_name}}">{{=object_name}}</a></td>
-						{{pass}}
-						<td>{{=roles[role]["module"]["label"]}}</td>
-						<td>{{=roles[role]["acl"]["label"]}}</td>
-					</tr>
-				{{pass}}
-			</tbody>
-		{{pass}}
+ <thead>
+  <tr>
+    <th>{{=foreign_object_label}}</th>
+    <th>Module</th>
+    <th>Access Level</th>
+  </tr>
+ </thead>
+{{if globals().get("pagination_list", False):}}
+ {{for object_name, object_id in pagination_list:}}
+  <tbody>
+	{{first_row = True}}
+	{{for role in assigned_roles[object_id]:}}
+	<tr>
+	{{if first_row:}}
+	 {{first_row = False}}
+	 <td rowspan="{{=len(assigned_roles[object_id])}}"><a href="?edit={{=object_id}}" title="Edit roles for {{=object_name}}">{{=object_name}}</a></td>
 	{{pass}}
-	<!-- regular table form for assigning roles to a user -->
-	{{if globals().get("form", False):}}
-		<tbody>
-			{{include "admin/_role_form.html"}}
-		</tbody>
-	{{pass}}
-</table>
-
+ 	 <td>{{=roles[role]["module"]["label"]}}</td>
+ 	 <td>{{=roles[role]["acl"]["label"]}}</td>
+	</tr>
+    {{pass}}
+  </tbody>
+  {{pass}}
+{{pass}}
+<!-- regular table form for assigning roles to a user -->
 {{if globals().get("form", False):}}
-	{{=form.custom.end}}
+ <tbody>
+ {{include "admin/_role_form.html"}}
+ </tbody>
+{{pass}}
+</table>
+{{if globals().get("form", False):}}
+ {{=form.custom.end}}
 {{pass}}

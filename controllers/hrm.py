@@ -197,6 +197,9 @@ def staff():
                             "_class": "action-btn",
                             "label": str(T("Send Message"))
                         })
+                #s3.scripts.append("/%s/static/scripts/jquery.doubleScroll.js" % appname)
+                #s3.jquery_ready.append('''$('.dataTable_table').doubleScroll()''')
+                #s3.jquery_ready.append('''$('.dataTables_wrapper').doubleScroll()''')
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups

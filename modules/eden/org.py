@@ -3209,7 +3209,7 @@ def org_organisation_controller():
                     # Modify action button to open staff instead of human_resource
                     read_url = URL(c="hrm", f="staff", args=["[id]"])
                     #delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
-                                     ## Stay within Tab on deletes
+                                     ## Stay within Tab on deletes (but this doesn't catch errors, best to keep default)
                                      #vars={"_next": URL(args=current.request.args)})
                     update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
@@ -3221,7 +3221,7 @@ def org_organisation_controller():
                     id = r.record.id
                     read_url = URL(args=[id, "document", "[id]"])
                     #delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
-                                     ## Stay within Tab on deletes
+                                     ## Stay within Tab on deletes (but this doesn't catch errors, best to keep default)
                                      #vars={"_next": URL(args=request.args)})
                     update_url = URL(args=[id, "document", "[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
@@ -3401,7 +3401,7 @@ def org_office_controller():
                     # Modify action button to open staff instead of human_resource
                     read_url = URL(c="hrm", f="staff", args=["[id]"])
                     #delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
-                                     ## Stay within Tab on deletes
+                                     ## Stay within Tab on deletes (but this doesn't catch errors, best to keep default)
                                      #vars={"_next": URL(args=request.args)})
                     update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
@@ -3412,7 +3412,7 @@ def org_office_controller():
                     id = r.record.id
                     read_url = URL(args=[id, "document", "[id]"])
                     #delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
-                                     ## Stay within Tab on deletes
+                                     ## Stay within Tab on deletes (but this doesn't catch errors, best to keep default)
                                      #vars={"_next": URL(args=request.args)})
                     update_url = URL(args=[id, "document", "[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
