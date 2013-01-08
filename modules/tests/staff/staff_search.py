@@ -50,17 +50,12 @@ class SearchStaff(SeleniumUnitTest):
             @case: hrm002-01
             @description: Search Members - Simple Search
         """
-        h = current.s3db["hrm_human_resource"]
-        p = current.s3db["pr_person"]
-        dbRowCount = current.db((h.deleted != 'T') & (h.type == 1) & (h.person_id == p.id) & ( (p.first_name.like('%mem%')) | (p.middle_name.like('%mem%')) | (p.last_name.like('%mem%')) )).count()
         key="Mem"
         self.search(self.search.simple_form,
             True,
-            ({
-                "id": "human_resource_search_simple",
-                "value": key
-            },), dbRowCount,
-            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=2)
+            [],
+            {"tablename":"hrm_human_resource", "key":key, "filters":[("type",1)]},
+            manual_check=functools.partial(_kwsearch, keyword=key, items=1, column=2)
         )
 
 
@@ -69,9 +64,6 @@ class SearchStaff(SeleniumUnitTest):
             @case: hrm002-02
             @description: Search Members - Advanced Search by Organization
         """
-        h = current.s3db["hrm_human_resource"]
-        o = current.s3db["org_organisation"]
-        dbRowCount = current.db((h.deleted != 'T') & (h.type == 1) & (h.organisation_id == o.id) & (o.name == 'Finnish Red Cross')).count()
         key="Finnish Red Cross (FRC)"
         self.search(self.search.advanced_form,
             True,
@@ -79,8 +71,9 @@ class SearchStaff(SeleniumUnitTest):
                 "name": "human_resource_search_org",
                 "label": key,
                 "value": True
-            },), dbRowCount,
-            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=4)
+            },),
+            {"tablename":"hrm_human_resource", "filters":[("type",1)]},
+            manual_check=functools.partial(_kwsearch, keyword=key, items=1, column=4)
         )
 
 
@@ -89,9 +82,6 @@ class SearchStaff(SeleniumUnitTest):
             @case: hrm002-03
             @description: Search Members - Advanced Search by Facility
         """
-        h = current.s3db["hrm_human_resource"]
-        ofc = current.s3db["org_office"]
-        dbRowCount = current.db((h.deleted != 'T') & (h.type == 1) & (h.site_id == ofc.site_id) & ( (ofc.name == 'AP Zone') | (ofc.name == 'Victoria Branch Office') )).count()
         self.search(self.search.advanced_form,
             True,
             (
@@ -105,8 +95,9 @@ class SearchStaff(SeleniumUnitTest):
                 "label": "Victoria Branch Office (Office)",
                 "value": True
             },
-             ), dbRowCount,
-            manual_check=functools.partial(_kwsearch, keyword="(Office)", items=dbRowCount, column=6)
+            ),
+            {"tablename":"hrm_human_resource", "filters":[("type",1)]},
+            manual_check=functools.partial(_kwsearch, keyword="(Office)", items=1, column=6)
         )
 
       
@@ -115,11 +106,6 @@ class SearchStaff(SeleniumUnitTest):
             @case: hrm002-04
             @description: Search Members - Advanced Search by Training
         """
-        h = current.s3db["hrm_human_resource"]
-        p = current.s3db["pr_person"]
-        t = current.s3db["hrm_training"]
-        c = current.s3db["hrm_course"]
-        dbRowCount = len(current.db((h.deleted != 'T') & (h.type == 1) & (h.person_id == p.id) & (t.person_id == p.id) & (t.course_id == c.id) &  (c.name == 'Basics of First Aid') ).select(h.id, distinct=True))
         key="Basics of First Aid"
         self.search(self.search.advanced_form,
             True,
@@ -127,8 +113,9 @@ class SearchStaff(SeleniumUnitTest):
                 "name": "human_resource_search_training",
                 "label": key,
                 "value": True
-            },), dbRowCount,
-            manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=9)
+            },),
+            {"tablename":"hrm_human_resource", "filters":[("type",1)]},
+            manual_check=functools.partial(_kwsearch, keyword=key, items=1, column=9)
         )
 
            
