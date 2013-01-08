@@ -959,8 +959,9 @@ class S3Resource(object):
                             remaining = db(query).select(table._id,
                                                          limitby=(0, 1)).first()
                             if not remaining:
-                                query = (linked.table[fkey] == this[rkey])
-                                linked = define_resource(linked.table,
+                                linked_table = s3db.table(linked.tablename)
+                                query = (linked_table[fkey] == this[rkey])
+                                linked = define_resource(linked_table,
                                                          filter=query,
                                                          unapproved=True)
                                 ondelete = get_config(linked.tablename, "ondelete")
