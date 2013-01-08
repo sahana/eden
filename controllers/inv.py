@@ -379,21 +379,7 @@ def warehouse():
             if cname == "human_resource":
                 # Modify action button to open staff instead of human_resource
                 read_url = URL(c="hrm", f="staff", args=["[id]"])
-                #delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
-                                 ## Stay within Tab on deletes
-                                 #vars={"_next": URL(args=request.args)})
                 update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                s3mgr.crud.action_buttons(r, read_url=read_url,
-                                          #delete_url=delete_url,
-                                          update_url=update_url)
-            elif cname == "document":
-                # Modify action button to stay within warehouse tab
-                id = r.record.id
-                read_url = URL(args=[id, "document", "[id]"])
-                #delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
-                                 ## Stay within Tab on deletes
-                                 #vars={"_next": URL(args=request.args)})
-                update_url = URL(args=[id, "document", "[id]", "update"])
                 s3mgr.crud.action_buttons(r, read_url=read_url,
                                           #delete_url=delete_url,
                                           update_url=update_url)
@@ -413,6 +399,7 @@ def warehouse():
                                 rheader=s3db.inv_rheader,
                                 csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
+                                native=False,
                                 # Extra fields for CSV uploads:
                                 #csv_extra_fields = [
                                 #         dict(label="Organisation",
