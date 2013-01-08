@@ -2899,10 +2899,10 @@ def potlatch2():
     """
 
     config = gis.get_config()
-    key, secret = s3db.auth_user_options_get_osm(config.pe_id)
-    osm_oauth_consumer_key = key
-    osm_oauth_consumer_secret = secret
-    if osm_oauth_consumer_key and osm_oauth_consumer_secret:
+    pe_id = auth.s3_user_pe_id(auth.user.id) if auth.s3_logged_in() else None
+ 	opt = s3db.auth_user_options_get_osm(auth.user.pe_id) if pe_id else None
+ 	if opt:
+ 	    osm_oauth_consumer_key, osm_oauth_consumer_secret = opt
         gpx_url = None
         if "gpx_id" in request.vars:
             # Pass in a GPX Track

@@ -2085,7 +2085,7 @@ class GIS(object):
                         markers[record[pkey]] = marker
 
                 markers[tablename] = markers
-                
+
         # Lookup the LatLons now so that it can be done as a single
         # query rather than per record
         #if DEBUG:
@@ -4680,7 +4680,7 @@ class GIS(object):
                 _path = Lx.path
                 if _path and L0_name and L1_name and L2_name and L3_name and L4_name:
                     _path = "%s/%s" % (_path, id)
-                
+
                 else:
                     # This feature needs to be updated
                     _path = self.update_location_tree(Lx)
@@ -5591,7 +5591,8 @@ class GIS(object):
             mouse_position = '''S3.gis.mouse_position=true\n'''
 
         # OSM Authoring
-        if s3db.auth_user_options_get_osm(config.pe_id):
+        pe_id = auth.s3_user_pe_id(auth.user.id) if auth.s3_logged_in() else None
+        if pe_id and s3db.auth_user_options_get_osm(pe_id):
             osm_auth = '''S3.gis.osm_oauth='%s'\n''' % T("Zoom in closer to Edit OpenStreetMap layer")
         else:
             osm_auth = ""
