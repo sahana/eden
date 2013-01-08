@@ -111,20 +111,25 @@ function select_person(person_id) {
                         $('#pr_person_occupation').val(person['occupation']);
                     }
                     try {
-                        $.each(person['$_pr_contact'], function() {
-                            var method = this['contact_method']['@value'];
-                            var value = this['value'];
-                            if (typeof(value) === 'undefined') {
-                                // ignore
-                            } else {
-                                if (method == "\"EMAIL\"") {
-                                    $('#pr_person_email').val(value);
+                        var contacts = person['$_pr_contact'], contact, method, value;
+                        if (contacts !== undefined) {
+                            for (var i = 0; i <= contacts.length; i++) {
+                                contact = contacts[i];
+                                method = contact['contact_method']['@value'];
+                                value = contact['value'];
+                                if (value.hasOwnProperty('@value')) {
+                                    value = value['@value'];
                                 }
-                                else if (method == "\"SMS\"") {
-                                    $('#pr_person_mobile_phone').val(value);
+                                if (value !== undefined) {
+                                    if (method == "EMAIL") {
+                                        $('#pr_person_email').val(value);
+                                    }
+                                    else if (method == "SMS") {
+                                        $('#pr_person_mobile_phone').val(value);
+                                    }
                                 }
                             }
-                        });
+                        }
                     }
                     catch(e) {
                         // continue
