@@ -64,6 +64,9 @@ urlpatterns += patterns('',
     # Invitations
     url(r'^invite/', 'core.views.invite.invite', name='invite'),
     
+    # Explore
+    url(r'^explore/$', 'core.views.explore.explore', name='explore'),
+    
     # News (this view of news is only for the index)
     url(r'^news/$', ListNews.as_view(), name='list-site-news'),
     
