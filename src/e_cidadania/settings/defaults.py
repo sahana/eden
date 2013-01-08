@@ -27,7 +27,7 @@ Plase refer to the 'configuration' section of the documentation for guidance.
 import os
 
 # e-cidadania version and current status
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 __status__ = "beta"
 
 # Get the current working directory so we can fill automatically other variables.
@@ -196,10 +196,6 @@ LOGGING = {
         },
     }
 }
-
-# SELECT ENVIROMENT
-# Tell django what environment you will run. Options: development, production. 
-# Default: development
 
 # Combine all the apps in the django variable INSTALLED_APPS
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES

@@ -60,6 +60,8 @@ as version control system, so you will have to install it in your computer.
 Installing
 ----------
 
+.. warning:: Since e-cidadania 0.1.5 we included an automated buildout system. If you are going to develop in e-cidadania you should take a look to the :doc:`../dev/environment`.
+
 The installation process for e-cidadania is quite simple.
 
 Requirements
@@ -95,9 +97,6 @@ Platform
 ````````
 There isn't a proper installation process in e-cidadania, you just have to copy
 the files to you preferred installation directory.
-
-If you're going to make tests or develop e-cidadania, it is better that you
-follow the instructions on how to build the development environment: :doc:`../dev/environment`
 
 If you are going to use it in production, or you just want to give e-cidadania
 a try follow this steps:
