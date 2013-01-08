@@ -581,7 +581,9 @@ class S3OrganisationModel(S3Model):
                                     link="project_organisation",
                                     joinby="organisation_id",
                                     key="project_id",
-                                    actuate="embed",
+                                    # Embed widget doesn't currently support 2 fields of same name (8 hours)
+                                    #actuate="embed",
+                                    actuate="hide",
                                     autocomplete="name",
                                     autodelete=False))
         else:

@@ -145,6 +145,8 @@
     </column>
 
    <column name="Postcode">
+        <!-- Special Element match for key generation -->
+        <match>|Postcode|postcode|Zip|Zipcode|zipcode|</match>
         <label>Postcode</label>
         <label>postcode</label>
         <label>Zip</label>
@@ -153,6 +155,8 @@
     </column>
 
    <column name="Organisation">
+        <!-- Special Element match for key generation -->
+        <match>|Organisation|Organization|organisation|organization|</match>
         <label>Organisation</label>
         <label>Organization</label>
         <label>organisation</label>
