@@ -1050,8 +1050,6 @@ class S3XML(S3Codec):
                 value = encode_iso_datetime(v).decode("utf-8")
             elif fieldtype in ("date", "time"):
                 value = str(formatter(v)).decode("utf-8")
-            elif fieldtype in ("string", "text"):
-                value = "" if v is None else v
 
             # Get the representation
             is_lazy = False
@@ -1872,6 +1870,11 @@ class S3XML(S3Codec):
                         continue
                     if a == ATTRIBUTE.field and tag in (TAG.data, TAG.reference):
                         continue
+                    if a == ATTRIBUTE.value:
+                        try:
+                            v = json.loads(v)
+                        except:
+                            pass
                 else:
                     if a == ATTRIBUTE.value:
                         try:
