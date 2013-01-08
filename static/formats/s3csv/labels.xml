@@ -153,6 +153,7 @@
     </column>
 
    <column name="Organisation">
+        <match>|Organisation|Organization|organisation|organization|</match>
         <label>Organisation</label>
         <label>Organization</label>
         <label>organisation</label>

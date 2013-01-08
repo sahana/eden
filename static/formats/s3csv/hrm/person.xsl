@@ -152,14 +152,14 @@
              match="row"
              use="concat(col[@field='Organisation'], '/',
                          col[contains(
-                             document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
+                             document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
                              concat('|', @field, '|'))])"/>
 
     <xsl:key name="jobroles"
              match="row"
              use="concat(col[@field='Organisation'], '/',
                          col[contains(
-                             document(../labels.xml)/labels/column[@name='JobRole']/match/text(),
+                             document('../labels.xml')/labels/column[@name='JobRole']/match/text(),
                              concat('|', @field, '|'))])"/>
 
     <xsl:key name="volunteerclusters"
@@ -223,7 +223,7 @@
                                         generate-id(key('jobtitles',
                                             concat(col[@field='Organisation'], '/',
                                                    col[contains(
-                                                       document(../labels.xml)/labels/column[@name='JobTitle']/match/text(),
+                                                       document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
                                                        concat('|', @field, '|'))])
                                         )[1])]">
                 <xsl:call-template name="JobTitle">
@@ -236,7 +236,7 @@
                                         generate-id(key('jobroles',
                                             concat(col[@field='Organisation'], '/',
                                                    col[contains(
-                                                       document(../labels.xml)/labels/column[@name='JobRoles']/match/text(),
+                                                       document('../labels.xml')/labels/column[@name='JobRoles']/match/text(),
                                                        concat('|', @field, '|'))])
                                         )[1])]">
                 <xsl:call-template name="JobRole">

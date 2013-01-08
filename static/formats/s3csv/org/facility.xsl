@@ -57,7 +57,7 @@
     <!-- Indexes for faster processing -->
     <xsl:key name="facility_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[contains(
-                    document(../labels.xml)/labels/column[@name='Organisation']/match/text(),
+                    document('../labels.xml')/labels/column[@name='Organisation']/match/text(),
                     concat('|', @field, '|'))]"/>
 
     <!-- ****************************************************************** -->
@@ -72,7 +72,7 @@
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('organisation',
                                             col[contains(
-                                                document(../labels.xml)/labels/column[@name='Organisation']/match/text(),
+                                                document('../labels.xml')/labels/column[@name='Organisation']/match/text(),
                                                 concat('|', @field, '|'))]
                                         )[1])]">
                 <xsl:call-template name="Organisation"/>
