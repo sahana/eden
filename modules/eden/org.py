@@ -3208,24 +3208,24 @@ def org_organisation_controller():
                 if cname == "human_resource":
                     # Modify action button to open staff instead of human_resource
                     read_url = URL(c="hrm", f="staff", args=["[id]"])
-                    delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
-                                     # Stay within Tab on deletes
-                                     vars={"_next": URL(args=current.request.args)})
+                    #delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
+                                     ## Stay within Tab on deletes
+                                     #vars={"_next": URL(args=current.request.args)})
                     update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
-                                             delete_url=delete_url,
+                                             #delete_url=delete_url,
                                              update_url=update_url)
 
                 elif cname == "document":
                     # Modify action button to stay within organisation tab
                     id = r.record.id
                     read_url = URL(args=[id, "document", "[id]"])
-                    delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
-                                     # Stay within Tab on deletes
-                                     vars={"_next": URL(args=request.args)})
+                    #delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
+                                     ## Stay within Tab on deletes
+                                     #vars={"_next": URL(args=request.args)})
                     update_url = URL(args=[id, "document", "[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
-                                             delete_url=delete_url,
+                                             #delete_url=delete_url,
                                              update_url=update_url)
         return output
     s3.postp = postp
@@ -3400,23 +3400,23 @@ def org_office_controller():
                 if cname == "human_resource":
                     # Modify action button to open staff instead of human_resource
                     read_url = URL(c="hrm", f="staff", args=["[id]"])
-                    delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
-                                     # Stay within Tab on deletes
-                                     vars={"_next": URL(args=request.args)})
+                    #delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
+                                     ## Stay within Tab on deletes
+                                     #vars={"_next": URL(args=request.args)})
                     update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
-                                             delete_url=delete_url,
+                                             #delete_url=delete_url,
                                              update_url=update_url)
                 elif cname == "document":
                     # Modify action button to stay within office tab
                     id = r.record.id
                     read_url = URL(args=[id, "document", "[id]"])
-                    delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
-                                     # Stay within Tab on deletes
-                                     vars={"_next": URL(args=request.args)})
+                    #delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
+                                     ## Stay within Tab on deletes
+                                     #vars={"_next": URL(args=request.args)})
                     update_url = URL(args=[id, "document", "[id]", "update"])
                     S3CRUD.action_buttons(r, read_url=read_url,
-                                             delete_url=delete_url,
+                                             #delete_url=delete_url,
                                              update_url=update_url)
         return output
     s3.postp = postp

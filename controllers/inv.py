@@ -379,23 +379,23 @@ def warehouse():
             if cname == "human_resource":
                 # Modify action button to open staff instead of human_resource
                 read_url = URL(c="hrm", f="staff", args=["[id]"])
-                delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
-                                 # Stay within Tab on deletes
-                                 vars={"_next": URL(args=request.args)})
+                #delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"],
+                                 ## Stay within Tab on deletes
+                                 #vars={"_next": URL(args=request.args)})
                 update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
                 s3mgr.crud.action_buttons(r, read_url=read_url,
-                                          delete_url=delete_url,
+                                          #delete_url=delete_url,
                                           update_url=update_url)
             elif cname == "document":
                 # Modify action button to stay within warehouse tab
                 id = r.record.id
                 read_url = URL(args=[id, "document", "[id]"])
-                delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
-                                 # Stay within Tab on deletes
-                                 vars={"_next": URL(args=request.args)})
+                #delete_url = URL(c="doc", f="document", args=["[id]", "delete"],
+                                 ## Stay within Tab on deletes
+                                 #vars={"_next": URL(args=request.args)})
                 update_url = URL(args=[id, "document", "[id]", "update"])
                 s3mgr.crud.action_buttons(r, read_url=read_url,
-                                          delete_url=delete_url,
+                                          #delete_url=delete_url,
                                           update_url=update_url)
 
         if "add_btn" in output:
@@ -410,7 +410,7 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % resourcename
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.inv_warehouse_rheader,
+                                rheader=s3db.inv_rheader,
                                 csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
@@ -550,7 +550,7 @@ def inv_item():
                        deletable=False,
                        )
 
-    output = s3_rest_controller(rheader=s3db.inv_warehouse_rheader,
+    output = s3_rest_controller(rheader=s3db.inv_rheader,
                                 #csv_extra_fields = [dict(label="Organisation",
                                 #                         field=s3db.org_organisation_id(comment=None))
                                 #                    ],
@@ -587,7 +587,7 @@ def track_movement():
     s3.prep = prep
 
     output = s3_rest_controller("inv", "track_item",
-                                rheader=s3db.inv_warehouse_rheader,
+                                rheader=s3db.inv_rheader,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -1422,7 +1422,7 @@ def track_item():
                             )
             s3.filter = (table.expiry_date != None)
 
-    output = s3_rest_controller(rheader=s3db.inv_warehouse_rheader)
+    output = s3_rest_controller(rheader=s3db.inv_rheader)
     return output
 
 # =============================================================================
