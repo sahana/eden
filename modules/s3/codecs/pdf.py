@@ -635,14 +635,24 @@ class S3PDFTable(object):
             dappend = data.append
             for selector in rfields:
                 value = row[selector.colname]
-                if isinstance(value, basestring):
-                    dappend(value)
-                else:
-                    try:
-                        # Extract the text from the html tag
-                        dappend(value.components[0])
-                    except:
-                        dappend(s3_unicode(value))
+
+                # Try to convert Web2py elements to ReportLab equivalents
+                dvalue = None
+                while True:
+                    if isinstance(value, (basestring, lazyT)):
+                        dvalue = value
+                    elif isinstance(value, IMG):
+                        dvalue = S3html2pdf.parse_img(value)[0]
+                    elif isinstance(value, DIV):
+                        if len(value.components) > 0:
+                            value = value.components[0]
+                            continue
+                        else:
+                            dvalue = s3_unicode(value)
+                    else:
+                        dvalue = s3_unicode(value)
+                    break
+                dappend(dvalue)
             rdata.append(data)
         self.raw_data = rdata
         self.labels = [selector.label for selector in self.rfields]
@@ -1139,7 +1149,7 @@ class S3html2pdf():
         elif isinstance(html, P):
             return self.parse_p(html)
         elif isinstance(html, IMG):
-            return self.parse_img(html)
+            return S3html2pdf.parse_img(html)
         elif isinstance(html, DIV):
             return self.parse_div(html)
         elif (isinstance(html, str) or isinstance(html, lazyT)):
@@ -1196,14 +1206,27 @@ class S3html2pdf():
         return content
 
     # -------------------------------------------------------------------------
-    def parse_img(self, html):
+    @staticmethod
+    def parse_img(html):
         """
-        """
+        Parses an IMG element from Web2py and converts it into an Image
+        that ReportLab can use.
 
+        @param html: the IMG element  to convert
+        @return: a list containing an Image that ReportLab can use
+
+
+        @note: The `src` attribute of the image must either
+        point to a static resource, directly to a file, or to an upload.
+        """
         I = None
         from reportlab.platypus import Image
+
         if "_src" in html.attributes:
             src = html.attributes["_src"]
+            if src.startswith("/%s/static" % current.request.application):
+                src = src.split("/%s/" % current.request.application)[-1]
+                src = os.path.join(current.request.folder, src)
             if os.path.exists(src):
                 I = Image(src)
             else:
@@ -1217,22 +1240,21 @@ class S3html2pdf():
         iwidth = I.drawWidth
         iheight = I.drawHeight
         # @todo: extract the number from a 60px value
-#        if "_height" in html.attributes:
-#            height = int(html.attributes["_height"]) * inch / 80.0
-#            width = iwidth * (height / iheight)
-#        elif "_width" in html.attributes:
-#            width = int(html.attributes["_width"]) * inch / 80.0
-#            height = iheight * (width / iwidth)
-#        else:
-#            height = 1.0 * inch
-#            width = iwidth * (height / iheight)
+        #        if "_height" in html.attributes:
+        #            height = int(html.attributes["_height"]) * inch / 80.0
+        #            width = iwidth * (height / iheight)
+        #        elif "_width" in html.attributes:
+        #            width = int(html.attributes["_width"]) * inch / 80.0
+        #            height = iheight * (width / iwidth)
+        #        else:
+        #            height = 1.0 * inch
+        #            width = iwidth * (height / iheight)
         height = 1.0 * inch
         width = iwidth * (height / iheight)
         I.drawHeight = height
         I.drawWidth = width
         return [I]
 
-    # -------------------------------------------------------------------------
     def parse_p(self, html):
         """
         """
