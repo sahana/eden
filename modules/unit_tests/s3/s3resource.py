@@ -2519,41 +2519,41 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        #ComponentJoinConstructionTests,
-        #ComponentLeftJoinConstructionTests,
+        ComponentJoinConstructionTests,
+        ComponentLeftJoinConstructionTests,
 
-        #FieldSelectorResolutionTests,
+        FieldSelectorResolutionTests,
 
-        #ResourceFilterJoinTests,
-        #ResourceFilterQueryTests,
+        ResourceFilterJoinTests,
+        ResourceFilterQueryTests,
 
-        #URLQueryParserTests,
+        URLQueryParserTests,
 
-        #URLQuerySerializerTests,
-        #URLFilterSerializerTests,
+        URLQuerySerializerTests,
+        URLFilterSerializerTests,
 
-        #ResourceFieldTests,
-        #ResourceLazyVirtualFieldsSupportTests,
-        #ResourceDataObjectAPITests,
+        ResourceFieldTests,
+        ResourceLazyVirtualFieldsSupportTests,
+        ResourceDataObjectAPITests,
 
-        #ResourceDataAccessTests,
-        #ResourceDataTableFilterTests,
-        #ResourceGetTests,
-        ##ResourceInsertTest,
-        ##ResourceSelectTests,
-        ##ResourceUpdateTests,
-        ##ResourceDeleteTests,
+        ResourceDataAccessTests,
+        ResourceDataTableFilterTests,
+        ResourceGetTests,
+        #ResourceInsertTest,
+        #ResourceSelectTests,
+        #ResourceUpdateTests,
+        #ResourceDeleteTests,
 
-        ##ResourceApproveTests,
-        ##ResourceRejectTests,
+        #ResourceApproveTests,
+        #ResourceRejectTests,
 
-        ##ResourceMergeTests,
-        #MergeOrganisationsTests,
-        #MergePersonsTests,
-        #MergeLocationsTests,
+        #ResourceMergeTests,
+        MergeOrganisationsTests,
+        MergePersonsTests,
+        MergeLocationsTests,
 
-        #ResourceExportTests,
-        #ResourceImportTests,
+        ResourceExportTests,
+        ResourceImportTests,
         ResourceComponentAliasTests,
     )
 
