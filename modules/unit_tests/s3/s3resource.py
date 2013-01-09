@@ -2376,8 +2376,35 @@ class URLQueryParserTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-class ResourceComponentAliasTests(unittest.TestCase):
+class ResourceFilteredComponentTests(unittest.TestCase):
     """ Test components from the same table but different aliases """
+
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testAttachComponentWithFilter(self):
+        """ Test Component Instantiation With Filter """
+
+        s3db = current.s3db
+
+        # Define a filtered component
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=5))
+
+        # Define the resource
+        resource = s3db.resource("org_organisation", components=["test"])
+
+        # Check the component
+        component = resource.components["test"]
+        self.assertEqual(component.tablename, "org_office")
+        self.assertEqual(component._alias, "org_test_office")
+        self.assertEqual(component.table._tablename, "org_test_office")
+        self.assertEqual(str(component.filter),
+                         "(org_test_office.office_type_id = 5)")
+
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
@@ -2489,12 +2516,15 @@ class ResourceComponentAliasTests(unittest.TestCase):
         """ Test resolution of field selectors in filtered components """
 
         s3db = current.s3db
+
+        # Define a filtered component
         s3db.add_component("org_office",
                            org_organisation = dict(name="test",
                                                    joinby="organisation_id",
                                                    filterby="office_type_id",
                                                    filterfor=5))
 
+        # Define the resource
         resource = s3db.resource("org_organisation")
 
         # Make sure an S3ResourceField of the component is using the
@@ -2502,6 +2532,9 @@ class ResourceComponentAliasTests(unittest.TestCase):
         rfield = S3ResourceField(resource, "test.name")
         self.assertEqual(rfield.tname, "org_test_office")
         self.assertEqual(rfield.colname, "org_test_office.name")
+
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
         
 # =============================================================================
 def run_suite(*test_classes):
@@ -2554,7 +2587,7 @@ if __name__ == "__main__":
 
         ResourceExportTests,
         ResourceImportTests,
-        ResourceComponentAliasTests,
+        ResourceFilteredComponentTests,
     )
 
 # END ========================================================================
