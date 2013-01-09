@@ -52,6 +52,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_ADD_PERSON_WIDGET",
            "IS_COMBO_BOX",
            "IS_IN_SET_LAZY",
+           "IS_PROCESSED_IMAGE",
            "QUANTITY_INV_ITEM",
            ]
 
@@ -1793,6 +1794,91 @@ class IS_ADD_PERSON_WIDGET(Validator):
                                        T("Could not add person record"))
 
         return (person_id, None)
+
+# =============================================================================
+class IS_PROCESSED_IMAGE(Validator):
+    """
+        Uses an S3ImageCropWidget to allow the user to crop/scale images and
+        processes the results sent by the browser.
+
+        @author: aviraldg
+
+        @param file_cb: callback that returns the file for this field
+
+        @param error_message: the error message to be returned
+
+        @param image_bounds: the boundaries for the processed image
+
+        @param upload_path: upload path for the image
+    """
+
+    def __init__(self,
+                 field_name,
+                 file_cb,
+                 error_message="No image was specified!",
+                 image_bounds=(300, 300),
+                 upload_path=None):
+        self.field_name = field_name
+        self.file_cb = file_cb
+        self.error_message = error_message
+        self.image_bounds = image_bounds
+        self.upload_path = upload_path
+
+    def __call__(self, value):
+        r = current.request
+        vars = r.post_vars
+
+        if r.env.request_method == "GET":
+            return value, None
+
+        # If there's a newly uploaded file, accept it. It'll be processed in
+        # the update form.
+        # NOTE: A FieldStorage with data evaluates as False (odd!)
+        file = vars.get(self.field_name)
+        if file not in ("", None):
+            return file, None
+
+        encoded_file = vars.get("imagecrop-data")
+        file = self.file_cb()
+
+        if not (encoded_file or file):
+            return value, current.T(self.error_message)
+
+        # Decode the base64-encoded image from the client side image crop
+        # process if, that worked.
+        if encoded_file:
+            import base64
+            import uuid
+            try:
+                from cStringIO import StringIO
+            except ImportError:
+                from StringIO import StringIO
+
+            metadata, encoded_file = encoded_file.split(",")
+            filename, datatype, enctype = metadata.split(";")
+
+            f = Storage()
+            f.filename = uuid.uuid4().hex + filename
+
+            f.file = StringIO(base64.decodestring(encoded_file))
+
+            return f, None
+
+        # Crop the image, if we've got the crop points.
+        points = vars.get("imagecrop-points")
+        if points and file:
+            import os
+            points = map(float, points.split(","))
+
+            if not self.upload_path:
+                path = os.path.join(r.folder, "uploads", "images", file)
+            else:
+                path = os.path.join(self.upload_path, file)
+
+            current.s3task.async("crop_image",
+                args=[path] + points + [self.image_bounds[0]])
+
+            return None, None
 
 # =============================================================================
 class IS_UTC_OFFSET(Validator):
