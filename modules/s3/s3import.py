@@ -2726,20 +2726,17 @@ class S3ImportJob():
 
                 # Get the component tablename
                 ctablename = celement.get(xml.ATTRIBUTE.name, None)
-                if not ctablename:
+                if not ctablename or ctablename not in cnames:
                     continue
 
                 # Get the component alias (for disambiguation)
                 calias = celement.get(xml.ATTRIBUTE.alias, None)
                 if calias is None:
-                    if ctablename not in cnames:
-                        continue
                     aliases = cnames[ctablename]
                     if len(aliases) == 1:
                         calias = aliases[0]
                     else:
-                        # ambiguous components *must* use alias
-                        continue
+                        calias = ctablename.split("_", 1)[1]
                 if (ctablename, calias) not in cinfos:
                     continue
                 else:

@@ -2500,8 +2500,8 @@ class ResourceComponentAliasTests(unittest.TestCase):
         # Make sure an S3ResourceField of the component is using the
         # correct table alias (critical for data extraction from Rows)
         rfield = S3ResourceField(resource, "test.name")
-        self.assertEqual(tname, "org_test_office")
-        self.assertEqual(colname, "org_test_office.name")
+        self.assertEqual(rfield.tname, "org_test_office")
+        self.assertEqual(rfield.colname, "org_test_office.name")
         
 # =============================================================================
 def run_suite(*test_classes):
