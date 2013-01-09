@@ -2638,7 +2638,8 @@ S3OptionsFilter({
             # @ToDo: Save the results for the onaccept
 
         if max_kits < quantity:
-            form.errors.quantity = T("You can only make %d kit(s) with the available stock" % int(max_kits))
+            form.errors.quantity = T("You can only make %d kit(s) with the available stock") % \
+                                        int(max_kits)
 
         return
 

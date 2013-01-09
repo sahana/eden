@@ -7,6 +7,7 @@
 """
 
 if settings.get_L10n_languages_readonly():
+    # Make the Language files read-only for improved performance
     T.is_writable = False
 
 # Are we running in debug mode?

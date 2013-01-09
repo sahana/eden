@@ -25,7 +25,7 @@ def s3_menu_postp():
         if record:
             label = record.pe_label
             response.menu_options[-3][-1].append(
-                [T("Candidate Matches for Body %s" % label),
+                [T("Candidate Matches for Body %(label)s") % dict(label=label),
                  False, URL(f="person",
                             vars=dict(match=record.id))]
             )

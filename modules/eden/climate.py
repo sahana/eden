@@ -70,14 +70,13 @@ class S3ClimateModel(S3Model):
     def model(self):
 
         T = current.T
-        auth = current.auth
         db = current.db
-        s3 = current.response.s3
-        utcnow = current.request.utcnow
+        auth = current.auth
 
         NONE = current.messages["NONE"]
 
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -228,8 +227,21 @@ class S3ClimateModel(S3Model):
                              ),
                             )
 
-        CRUD_strings(tablename,
-                     entity = "Station Parameter")
+        ADD = T("Add new Station Parameter")
+        crud_strings[tablename] = Storage(
+            title_create = ADD,
+            title_display = T("Station Parameter Details"),
+            title_list = T("Station Parameters"),
+            title_update = T("Edit Station Parameter"),
+            title_search = T("Search Station Parameters"),
+            subtitle_create = ADD,
+            label_list_button = T("List Station Parameters"),
+            label_create_button = ADD,
+            label_delete_button = T("Remove Station Parameter"),
+            msg_record_created = T("Station Parameter added"),
+            msg_record_modified = T("Station Parameter updated"),
+            msg_record_deleted = T("Station Parameter removed"),
+            msg_list_empty = T("No Station Parameters"))
 
         table.virtualfields.append(station_parameters_virtualfields())
 
@@ -288,8 +300,21 @@ class S3ClimateModel(S3Model):
                     ]
                 )
 
-        CRUD_strings(tablename,
-                     entity = "Dataset Price")
+        ADD = T("Add new Dataset Price")
+        crud_strings[tablename] = Storage(
+            title_create = ADD,
+            title_display = T("Dataset Price Details"),
+            title_list = T("Dataset Prices"),
+            title_update = T("Edit Dataset Price"),
+            title_search = T("Search Dataset Prices"),
+            subtitle_create = ADD,
+            label_list_button = T("List Dataset Prices"),
+            label_create_button = ADD,
+            label_delete_button = T("Remove Dataset Price"),
+            msg_record_created = T("Dataset Price added"),
+            msg_record_modified = T("Dataset Price updated"),
+            msg_record_deleted = T("Dataset Price removed"),
+            msg_list_empty = T("No Dataset Prices"))
 
         tablename = "climate_purchase"
         table = define_table(tablename,
@@ -355,12 +380,21 @@ class S3ClimateModel(S3Model):
         if not auth.s3_has_role(ADMIN):
             table.paid.writable = False
 
-        CRUD_strings(tablename,
-                     entity = "Purchased Data Detail",
-                     CREATE = T("Purchase New Data"),
-                     created = T("Data Purchase In Process"),
-                     LIST = T("All Purchased Data")
-                    )
+        ADD = T("Purchase New Data")
+        crud_strings[tablename] = Storage(
+            title_create = ADD,
+            title_display = T("Purchased Data Details"),
+            title_list = T("All Purchased Data"),
+            title_update = T("Edit Purchased Data"),
+            title_search = T("Search Purchased Data"),
+            subtitle_create = ADD,
+            label_list_button = T("List Dataset Prices"),
+            label_create_button = ADD,
+            label_delete_button = T("Remove Purchased Data"),
+            msg_record_created = T("Data Purchase In Process"),
+            msg_record_modified = T("Purchased Data updated"),
+            msg_record_deleted = T("Purchased Data removed"),
+            msg_list_empty = T("No Data Purchased"))
 
         configure(tablename,
                   onaccept = self.climate_purchase_onaccept,
@@ -389,12 +423,21 @@ class S3ClimateModel(S3Model):
                      Field("query_definition", "text"),
                      )
 
-        CRUD_strings(tablename,
-                     entity = "Saved Query",
-                     CREATE = T("Save Query"),
-                     created = "Query Saved",
-                     LIST = T("Saved Queries")
-                    )
+        ADD = T("Save Query")
+        crud_strings[tablename] = Storage(
+            title_create = ADD,
+            title_display = T("Saved Query Details"),
+            title_list = T("Saved Queries"),
+            title_update = T("Edit Saved Query"),
+            title_search = T("Search Saved Queries"),
+            subtitle_create = ADD,
+            label_list_button = T("List Saved Queries"),
+            label_create_button = ADD,
+            label_delete_button = T("Remove Saved Query"),
+            msg_record_created = T("Query Saved"),
+            msg_record_modified = T("Saved Query updated"),
+            msg_record_deleted = T("Saved Query removed"),
+            msg_list_empty = T("No Saved Queries"))
 
         configure(tablename,
                   listadd = False)
@@ -581,45 +624,6 @@ class station_parameters_virtualfields(dict, object):
             return "%s-%s" % (month, year)
         else:
             return current.messages["NONE"]
-
-# =============================================================================
-def CRUD_strings(tablename,
-                 entity,
-                 entities = None,
-                 CREATE = None,
-                 created = None,
-                 LIST = None
-                ):
-    """
-        Non-i18n way of creating CRUD Strings
-
-        @ToDo: Deprecate
-    """
-
-    T = current.T
-
-    if entities is None:
-        entities = entity+"s"
-    if CREATE is None:
-        CREATE = T("Add new "+entity)
-    if created is None:
-        created = entity+" added"
-    if LIST is None:
-        LIST = T("List "+entities)
-    current.response.s3.crud_strings[tablename] = Storage(
-        title_create = CREATE,
-        title_display = T(entity+" Details"),
-        title_list = T(entities),
-        title_update = T("Edit "+entity),
-        title_search = T("Search "+entities),
-        subtitle_create = CREATE,
-        label_list_button = LIST,
-        label_create_button = CREATE,
-        label_delete_button = T("Remove "+entity),
-        msg_record_created = T(created),
-        msg_record_modified = T(entity+" updated"),
-        msg_record_deleted = T(entity+" removed"),
-        msg_list_empty = T("No "+entities))
 
 # =============================================================================
 def climate_first_run():

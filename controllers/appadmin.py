@@ -223,10 +223,10 @@ def select():
             if form.vars.update_check and form.vars.update_fields:
                 db(query).update(**eval_in_global_env('dict(%s)'
                                   % form.vars.update_fields))
-                response.flash = T('%s rows updated', nrows)
+                response.flash = T('%(count)s rows updated') % dict(count=nrows)
             elif form.vars.delete_check:
                 db(query).delete()
-                response.flash = T('%s rows deleted', nrows)
+                response.flash = T('%(count)s rows deleted') % dict(count=nrows)
             nrows = db(query).count()
             if orderby:
                 rows = db(query).select(limitby=(start, stop),

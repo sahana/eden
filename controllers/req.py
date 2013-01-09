@@ -250,10 +250,10 @@ def req_controller():
                 site_id = inv_item.site_id
                 item_id = inv_item.item_id
                 db(s3db.req_req_item.id == request.vars.req_item_id).update(site_id = site_id)
-                response.confirmation = T("%(item)s requested from %(site)s" % \
+                response.confirmation = T("%(item)s requested from %(site)s") % \
                     {"item": s3db.supply_item_represent(item_id, show_link=False),
                      "site": s3db.org_site_represent(site_id, show_link=False)
-                     })
+                     }
             elif "req.site_id" in r.get_vars:
                 # Called from 'Make new request' button on [siteinstance]/req page
                 table.site_id.default = request.get_vars.get("req.site_id")
