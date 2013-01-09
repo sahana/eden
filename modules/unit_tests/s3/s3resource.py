@@ -2483,6 +2483,26 @@ class ResourceComponentAliasTests(unittest.TestCase):
         self.assertTrue(resource.components.fieldoffice._length is None)
         self.assertTrue(resource.components.hq._length is None)
 
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testResolveSelectorFilteredComponent(self):
+        """ Test resolution of field selectors in filtered components """
+
+        s3db = current.s3db
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=5))
+
+        resource = s3db.resource("org_organisation")
+
+        # Make sure an S3ResourceField of the component is using the
+        # correct table alias (critical for data extraction from Rows)
+        rfield = S3ResourceField(resource, "test.name")
+        self.assertEqual(tname, "org_test_office")
+        self.assertEqual(colname, "org_test_office.name")
+        
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
@@ -2499,41 +2519,41 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        ComponentJoinConstructionTests,
-        ComponentLeftJoinConstructionTests,
+        #ComponentJoinConstructionTests,
+        #ComponentLeftJoinConstructionTests,
 
-        FieldSelectorResolutionTests,
+        #FieldSelectorResolutionTests,
 
-        ResourceFilterJoinTests,
-        ResourceFilterQueryTests,
+        #ResourceFilterJoinTests,
+        #ResourceFilterQueryTests,
 
-        URLQueryParserTests,
+        #URLQueryParserTests,
 
-        URLQuerySerializerTests,
-        URLFilterSerializerTests,
+        #URLQuerySerializerTests,
+        #URLFilterSerializerTests,
 
-        ResourceFieldTests,
-        ResourceLazyVirtualFieldsSupportTests,
-        ResourceDataObjectAPITests,
+        #ResourceFieldTests,
+        #ResourceLazyVirtualFieldsSupportTests,
+        #ResourceDataObjectAPITests,
 
-        ResourceDataAccessTests,
-        ResourceDataTableFilterTests,
-        ResourceGetTests,
-        #ResourceInsertTest,
-        #ResourceSelectTests,
-        #ResourceUpdateTests,
-        #ResourceDeleteTests,
+        #ResourceDataAccessTests,
+        #ResourceDataTableFilterTests,
+        #ResourceGetTests,
+        ##ResourceInsertTest,
+        ##ResourceSelectTests,
+        ##ResourceUpdateTests,
+        ##ResourceDeleteTests,
 
-        #ResourceApproveTests,
-        #ResourceRejectTests,
+        ##ResourceApproveTests,
+        ##ResourceRejectTests,
 
-        #ResourceMergeTests,
-        MergeOrganisationsTests,
-        MergePersonsTests,
-        MergeLocationsTests,
+        ##ResourceMergeTests,
+        #MergeOrganisationsTests,
+        #MergePersonsTests,
+        #MergeLocationsTests,
 
-        ResourceExportTests,
-        ResourceImportTests,
+        #ResourceExportTests,
+        #ResourceImportTests,
         ResourceComponentAliasTests,
     )
 
