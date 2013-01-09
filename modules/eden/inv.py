@@ -1104,6 +1104,61 @@ class S3TrackingModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
+        # Search Method
+        send_search = S3Search(
+                simple=(S3SearchSimpleWidget(
+                        name="send_search_text_simple",
+                        label=T("Search"),
+                        field=["sender_id$first_name",
+                               "sender_id$middle_name",
+                               "sender_id$last_name",
+                               "comments",
+                               "from_site_id$name",
+                               "site_id$name",
+                               "send_ref",
+                              ]
+                        )),
+                advanced=(S3SearchSimpleWidget(
+                          name="send_search_text_advanced",
+                          label=T("Search"),
+                          field=["from_person",
+                                 "side_id$name",
+                                 "comments",
+                                 "recipient_id$first_name",
+                                 "recipient_id$middle_name",
+                                 "recipient_id$last_name"
+                                 ]
+                         ),
+                         S3SearchOptionsWidget(
+                         name="send_search_org",
+                         label=T("To Organization"),
+                         field="to_site_id",
+                         cols=2
+                         ),
+                         S3SearchSimpleWidget(
+                         name="send_search_shipment_type",
+                         label=T("Shipment Type"),
+                         field="type"
+                         ),
+                         S3SearchSimpleWidget(
+                         name="send_search_transport_type",
+                         label=T("Type of Transport"),
+                         field="transport_type" 
+                         ),
+                         S3SearchMinMaxWidget(
+                         name="recv_search_date",
+                         method="range",
+                         label=T("Date Sent"),
+                         field="date"
+                         ),
+                         S3SearchMinMaxWidget(
+                         name="recv_search_delivery_date",
+                         method="range",
+                         label=T("Estimated Delivery Date"),
+                         field="delivery_date"
+                         )         
+              ))
+              
         # CRUD strings
         ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
@@ -1176,6 +1231,7 @@ class S3TrackingModel(S3Model):
                   # It shouldn't be possible for the user to delete a send item
                   # unless *maybe* if it is pending and has no items referencing it
                   deletable=False,
+                  search_method = send_search,
                   onaccept = self.inv_send_onaccept,
                   onvalidation = self.inv_send_onvalidation,
                   create_next = send_item_url,

@@ -1086,6 +1086,7 @@ class S3OptionsMenu(object):
                     M("Sent Shipments", c="inv", f="send")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Search", f="send", m="search"),
                         M("Search Shipped Items", f="track_item", m="search"),
                     ),
                     M("Items", c="supply", f="item")(
