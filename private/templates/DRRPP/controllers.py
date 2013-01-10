@@ -76,15 +76,15 @@ class index():
         add_pipeline_project_link = URL(c="project",
                                         f="project",
                                         args=["create"],
-                                        vars=dict(set_status_id = "1"))
+                                        vars={"project.status_id": "Proposed"})
         add_current_project_link = URL(c="project",
                                        f="project",
                                        args=["create"],
-                                       vars=dict(set_status_id = "2"))
+                                       vars={"project.status_id": "Current"})
         add_completed_project_link = URL(c="project",
                                          f="project",
                                          args=["create"],
-                                         vars=dict(set_status_id = "3"))
+                                         vars={"project.status_id": "Completed"})
         add_offline_project_link = URL(c="static",
                                        f="DRR_Project_Portal_New_Project_Form.doc")
 

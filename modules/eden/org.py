@@ -433,13 +433,15 @@ class S3OrganisationModel(S3Model):
             msg_list_empty=T("No Organizations currently registered"))
 
         # @ToDo: Deployment_setting
-        organisation_dropdown_not_ac = False
+        organisation_dropdown_not_ac = True
         if organisation_dropdown_not_ac:
             help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")
             widget = None
         else:
             help = T("Enter some characters to bring up a list of possible matches")
             widget = S3OrganisationAutocompleteWidget()
+        #else:
+        #    widget = SQLFORM.widgets.options.widget
 
         organisation_comment = S3AddResourceLink(c="org",
                                                  f="organisation",
@@ -465,7 +467,7 @@ class S3OrganisationModel(S3Model):
                                           label=ORGANISATION,
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget = None #SQLFORM.widgets.options.widget,
+                                          widget = widget,
                                          )
 
         organisations_id = S3ReusableField("organisations_id",

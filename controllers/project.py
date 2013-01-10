@@ -41,7 +41,7 @@ def inline():
                     # Project Organisations
                     S3SQLInlineComponent(
                         "organisation",
-                        label=T("Participating Organisations"),
+                        label=T("Participating Organizations"),
                         fields=["organisation_id",
                                 "role",
                                 "amount"
@@ -117,6 +117,14 @@ def project():
                     r.method = "search"
                     # If just a few Projects, then a List is sufficient
                     #r.method = "list"
+                elif request.get_vars.get("project.status_id", None):
+                    stable = s3db.project_status
+                    status = request.get_vars.get("project.status_id")
+                    row = db(stable.name == status).select(stable.id,
+                                                           limitby=(0, 1)).first()
+                    if row:
+                        table.status_id.default = row.id
+                        table.status_id.writable = False
             else:
                 if r.component_name == "organisation":
                     if r.method != "update":
@@ -252,6 +260,7 @@ def project():
                               "project", # Need to specify as sometimes we come via index()
                               rheader=rheader,
                               csv_template="project")
+
 # -----------------------------------------------------------------------------
 def set_project_multi_theme_id_requires(sector_ids):
     """

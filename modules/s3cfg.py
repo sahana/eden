@@ -1251,6 +1251,13 @@ class S3Config(Storage):
         """
         return self.project.get("community", False)
 
+    #def get_project_locations_from_countries(self):
+    #    """
+    #        Create a project_location for each country that a Project is
+    #        implemented in
+    #    """
+    #    return self.project.get("locations_from_countries", False)
+
     def get_project_milestones(self):
         """
             Use Milestones in Projects

@@ -91,6 +91,9 @@ settings.project.mode_drr = True
 settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
+# Uncomment this to create a project_location for each country which is a project is implemented in
+# - done via Custom Form instead
+#settings.project.locations_from_countries = True
 # Uncomment this to use multiple Budgets per project
 #settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
@@ -193,7 +196,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         s3forms.S3SQLInlineComponent(
             "output",
             label=T("Outputs:"),
-            comment = "Bob",
+            #comment = "Bob",
             fields=["output","status"],
         ),
         "hfa",
@@ -203,7 +206,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         s3forms.S3SQLInlineComponent(
             "organisation",
             name = "partner",
-            label=T("Partner Organisations:"),
+            label=T("Partner Organizations:"),
             fields=["organisation_id","comments"],
             filterby = dict(field = "role",
                             options = "2"
@@ -229,7 +232,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             "document",
             name = "file",
             label=T("Files"),
-            fields=["file","comments"],
+            fields=["file", "comments"],
             filterby = dict(field = "file",
                             options = "",
                             invert = True,
@@ -240,7 +243,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             "document",
             name = "url",
             label=T("Links"),
-            fields=["url","comments"],
+            fields=["url", "comments"],
             filterby = dict(field = "url",
                             options = None,
                             invert = True,

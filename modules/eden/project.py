@@ -236,7 +236,7 @@ class S3ProjectModel(S3Model):
 
         crud_form = s3forms.S3SQLCustomForm(
                         "name",
-                        # Project Organisations
+                        # Project Sectors
                         s3forms.S3SQLInlineComponent(
                             "theme_sector",
                             label=T("Theme Sectors"),
@@ -328,7 +328,7 @@ class S3ProjectModel(S3Model):
                              # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
                              organisation_id(
                                 label = org_label,
-                                requires = self.org_organisation_requires(updateable=True,
+                                requires = self.org_organisation_requires(updateable=True, # Only allowed to add Projects for Orgs that the user has write access to
                                                                           required=True),
                                 ),
                              Field("name", unique = True,
@@ -819,7 +819,7 @@ S3OptionsFilter({
 
         crud_form = s3forms.S3SQLCustomForm(
                         "name",
-                        # Project Organisations
+                        # Project Sectors
                         s3forms.S3SQLInlineComponent(
                             "activity_type_sector",
                             label=T("Activity Type Sectors"),
@@ -890,7 +890,7 @@ S3OptionsFilter({
         settings = current.deployment_settings
         if settings.get_project_multiple_organisations():
             # Create/update project_organisation record from the organisation_id
-            # Not in form.vars if added via component tab)
+            # (Not in form.vars if added via component tab)
             vars = form.vars
             organisation_id = vars.organisation_id or \
                               current.request.post_vars.organisation_id
@@ -909,6 +909,15 @@ S3OptionsFilter({
                               organisation_id = organisation_id,
                               role = lead_role,
                               )
+
+        # Done via Custom Form instead
+        #if settings.get_project_locations_from_countries():
+        #    # Create project_location records from the countries_id
+        #    countries_id = form.vars.countries_id
+        #    if record and record.countries_id == countries_id:
+        #        # No need to make changes
+        #        return
+            
 
     # -------------------------------------------------------------------------
     @staticmethod

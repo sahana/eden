@@ -2259,14 +2259,16 @@ class S3FeatureLayerModel(S3Model):
                         list_fields=["id",
                                      "name",
                                      "description",
-                                     "module",
-                                     "resource",
+                                     "controller",
+                                     "function",
                                      "filter",
-                                     "filter_field",
-                                     "filter_value",
+                                     #"filter_field",
+                                     #"filter_value",
                                      "popup_label",
                                      "popup_fields",
                                      "dir",
+                                     "trackable",
+                                     "polygons",
                                      ])
 
         # Components

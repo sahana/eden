@@ -225,6 +225,7 @@ class S3MessagingModel(S3Model):
                              *s3_meta_fields())
 
         configure(tablename,
+                  orderby = ~table.created_on,
                   list_fields=["id",
                                "message_id",
                                "pe_id",
