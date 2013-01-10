@@ -2376,8 +2376,221 @@ class URLQueryParserTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-class ResourceComponentAliasTests(unittest.TestCase):
+class ResourceFilteredComponentTests(unittest.TestCase):
     """ Test components from the same table but different aliases """
+
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testAttachFilteredComponent(self):
+        """ Test instantiation of filtered component """
+
+        s3db = current.s3db
+
+        # Define a filtered component
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=5))
+
+        # Define the resource
+        resource = s3db.resource("org_organisation", components=["test"])
+
+        # Check the component
+        component = resource.components["test"]
+        self.assertEqual(component.tablename, "org_office")
+        self.assertEqual(component._alias, "org_test_office")
+        self.assertEqual(component.table._tablename, "org_test_office")
+        self.assertEqual(str(component.filter),
+                         "(org_test_office.office_type_id = 5)")
+
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testResolveSelectorWithFilteredComponent(self):
+        """ Test resolution of field selectors for filtered components """
+
+        s3db = current.s3db
+
+        # Define a filtered component
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=5))
+
+        # Define the resource
+        resource = s3db.resource("org_organisation")
+
+        # Make sure an S3ResourceField of the component is using the
+        # correct table alias (critical for data extraction from Rows)
+        rfield = S3ResourceField(resource, "test.name")
+        self.assertEqual(rfield.tname, "org_test_office")
+        self.assertEqual(rfield.colname, "org_test_office.name")
+
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testURLQueryWithFilteredComponent(self):
+        """ Test resolution of URL queries for fields in filtered components """
+
+        s3db = current.s3db
+        auth = current.auth
+
+        # Define a filtered component
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=5))
+
+        # Define the resource
+        resource = s3db.resource("org_organisation")
+
+        # Translate a URL query into a DAL query, check that
+        # the correct table alias is used
+        query = S3URLQuery.parse(resource, {"test.name__like": "xyz*"})
+        self.assertEqual(str(query.test[0].query(resource)),
+                         "(LOWER(org_test_office.name) LIKE 'xyz%')")
+
+        # Add the query to the resource
+        auth.override = True
+        resource.add_filter(query.test[0])
+        rfilter = resource.rfilter
+        
+        # Check that the aliased table is properly joined
+        self.assertEqual(str(rfilter.get_left_joins()[0]),
+                         "org_office AS org_test_office ON "
+                         "(((org_test_office.organisation_id = org_organisation.id) AND "
+                         "(org_test_office.deleted <> 'T')) AND "
+                         "(org_test_office.office_type_id = 5))")
+        # ...and the effective query of the master contains the filter
+        # and is using the correct alias
+        self.assertEqual(str(resource.get_query()),
+                         "(((org_organisation.deleted <> 'T') AND "
+                         "(org_organisation.id > 0)) AND "
+                         "(LOWER(org_test_office.name) LIKE 'xyz%'))")
+
+        # Check the query of the component
+        self.assertEqual(str(resource.components["test"].get_query()),
+                         "((((org_test_office.deleted <> 'T') AND "
+                         "(org_test_office.id > 0)) AND "
+                         "(((org_organisation.deleted <> 'T') AND "
+                         "(org_organisation.id > 0)) AND "
+                         "(LOWER(org_test_office.name) LIKE 'xyz%'))) AND "
+                         "(((org_test_office.organisation_id = org_organisation.id) AND "
+                         "(org_test_office.deleted <> 'T')) AND "
+                         "(org_test_office.office_type_id = 5)))")
+        
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
+
+        auth.override = False
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testDataTableFilterWithFilteredComponent(self):
+        """
+            Test translation of datatable filter/sorting for fields in
+            filtered components
+        """
+        
+        s3db = current.s3db
+
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=5))
+
+        resource = s3db.resource("org_organisation")
+        fields = ["id", "name", "test.name", "test.office_type_id$name"]
+        vars = Storage({"bSortable_0": "false", # action column
+                        "bSortable_1": "true",
+                        "bSortable_2": "true",
+                        "bSortable_3": "true",
+                        "sSortDir_0": "asc",
+                        "iSortCol_0": "2",
+                        "sSortDir_1": "desc",
+                        "iSortCol_1": "3",
+                        "iColumns": "4",
+                        "iSortingCols": "2",
+                        "sSearch": "test"})
+        searchq, orderby, left = resource.datatable_filter(fields, vars)
+        self.assertEqual(str(searchq),
+                         "(((LOWER(org_organisation.name) LIKE '%test%') OR "
+                         "(LOWER(org_test_office.name) LIKE '%test%')) OR "
+                         "(LOWER(org_office_type.name) LIKE '%test%'))")
+        self.assertEqual(orderby,
+                         "org_test_office.name asc, "
+                         "org_office_type.name desc")
+        
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testSelectWithFilteredComponent(self):
+        """ Test S3Resource.select/extract with fields in a filtered component """
+    
+        s3db = current.s3db
+        auth = current.auth
+        
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="FCTESTORG">
+        <data field="name">FilteredComponentsTestOrg</data>
+        <resource name="org_office" uuid="FCTESTOFFICE">
+            <data field="name">FilteredComponentsTestOffice</data>
+            <reference field="office_type_id" resource="org_office_type">
+                <resource name="org_office_type" uuid="FCTESTTYPE">
+                    <data field="name">FilteredComponentsTestType</data>
+                </resource>
+            </reference>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        auth.override = True
+        
+        resource = s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+
+        resource = s3db.resource("org_office_type", uid="FCTESTTYPE")
+        row = resource.select(["id"])[0]
+        type_id = row.id
+
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=type_id))
+        
+        resource = current.s3db.resource("org_organisation", uid="FCTESTORG")
+        fields = ["id", "name", "test.name", "test.office_type_id$name"]
+        rows = resource.select(fields)
+
+        result = resource.extract(rows, fields)
+        self.assertEqual(len(result), 1)
+        result = result[0]
+        self.assertTrue("org_organisation.name" in result)
+        self.assertEqual(result["org_organisation.name"], "FilteredComponentsTestOrg")
+        self.assertTrue("org_test_office.name" in result)
+        self.assertEqual(result["org_test_office.name"], "FilteredComponentsTestOffice")
+        self.assertTrue("org_office_type.name" in result)
+        self.assertEqual(result["org_office_type.name"], "FilteredComponentsTestType")
+
+        # Remove the component hook
+        del current.model.components["org_organisation"]["test"]
+
+        current.db.rollback()
+        auth.override = False
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
@@ -2430,20 +2643,6 @@ class ResourceComponentAliasTests(unittest.TestCase):
                                         "(pr_phone_contact.contact_method = 'SMS'))")
 
     # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
-    def testSelectWithLinkTableComponentAlias(self):
-        """ Select for a resource with link-table components that have aliases """
-
-        resource = current.s3db.resource("hrm_human_resource")
-        fields = ['id', 'person_id', 'job_title_id', 'organisation_id', 'department_id', 'site_id', \
-                 'email.value', 'phone.value', 'person_id$training.course_id', \
-                 'person_id$certification.certificate_id', 'end_date', 'status']
-        rows, count, ids = resource.select(fields=fields, count=True, getids=True)
-        if count > 0:
-            self.assertTrue(hasattr(rows.records[0],"pr_email_contact"))
-            self.assertTrue(hasattr(rows.records[0],"pr_phone_contact"))
-        
-    # -------------------------------------------------------------------------
     # Disabled - @todo: must create test records (otherwise component can be
     # empty regardless) - and check the actual office_type_ids (can not assume 4/5)
     @unittest.skip("disabled until fixed")
@@ -2483,26 +2682,6 @@ class ResourceComponentAliasTests(unittest.TestCase):
         self.assertTrue(resource.components.fieldoffice._length is None)
         self.assertTrue(resource.components.hq._length is None)
 
-    # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
-    def testResolveSelectorFilteredComponent(self):
-        """ Test resolution of field selectors in filtered components """
-
-        s3db = current.s3db
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=5))
-
-        resource = s3db.resource("org_organisation")
-
-        # Make sure an S3ResourceField of the component is using the
-        # correct table alias (critical for data extraction from Rows)
-        rfield = S3ResourceField(resource, "test.name")
-        self.assertEqual(rfield.tname, "org_test_office")
-        self.assertEqual(rfield.colname, "org_test_office.name")
-        
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
@@ -2554,7 +2733,7 @@ if __name__ == "__main__":
 
         ResourceExportTests,
         ResourceImportTests,
-        ResourceComponentAliasTests,
+        ResourceFilteredComponentTests,
     )
 
 # END ========================================================================
