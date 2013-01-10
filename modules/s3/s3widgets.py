@@ -33,6 +33,7 @@ __all__ = ["S3HiddenWidget",
            "S3DateWidget",
            "S3DateTimeWidget",
            "S3BooleanWidget",
+           "S3ColorPickerWidget",
            #"S3UploadWidget",
            "S3ImageCropWidget",
            "S3AutocompleteWidget",
@@ -354,6 +355,60 @@ $('#%s').click(function(){
                         INPUT(**attr),
                         requires = field.requires
                       )
+
+# =============================================================================
+class S3ColorPickerWidget(FormWidget):
+    """
+        Displays an <input type="color"> widget to allow the user to pick a
+        color, and falls back to using JSColor or a regular text input if
+        necessary.
+    """
+
+    DEFAULT_OPTIONS = {
+        "showInput": True,
+        "showInitial": True,
+        "preferredFormat": "hex",
+        "showPalette": True,
+        "palette": ("red", "yellow", "green", "blue", "white", "black")
+    }
+
+    def __init__(self, options=None):
+        """
+            @param options: options for the JavaScript widget
+            @see: http://bgrins.github.com/spectrum/
+        """
+        self.options = dict(self.DEFAULT_OPTIONS)
+        self.options.update(options or {})
+
+    def __call__(self, field, value, **attributes):
+        s3 = current.response.s3
+        app = current.request.application
+
+        min = "" if s3.debug else ".min"
+
+        script = "/%s/static/scripts/spectrum%s.js" % (app, min)
+        style = "spectrum%s.css" % min
+
+        if script not in s3.scripts:
+            s3.scripts.append(script)
+
+        if style not in s3.stylesheets:
+            s3.stylesheets.append(style)
+
+        s3.jquery_ready.append("""
+        var sp_options = %s;
+        sp_options.change = function (color) {
+            this.value = color.toHex();
+        };
+        $('.color').spectrum(sp_options);
+        """ % json.dumps(self.options) if self.options else "")
+
+        attr = self._attributes(field, {
+            "_class": "color",
+            "_value": value
+        }, **attributes)
+
+        return INPUT(**attr)
 
 # =============================================================================
 class S3UploadWidget(UploadWidget):

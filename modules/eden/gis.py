@@ -2402,7 +2402,8 @@ class S3MapModel(S3Model):
                              Field("shape",
                                    requires=IS_NULL_OR(IS_IN_SET(["circle", "square", "star", "x", "cross", "triangle"]))),
                              Field("size", "integer"),
-                             Field("colour", requires=IS_NULL_OR(IS_HTML_COLOUR())),
+                             Field("colour", requires=IS_NULL_OR(IS_HTML_COLOUR()),
+                                 widget=S3ColorPickerWidget(),),
                              gis_opacity()(),
                              *s3_meta_fields())
 
@@ -3220,6 +3221,7 @@ class S3MapModel(S3Model):
                              Field("bgcolor", length=32,
                                    label=T("Background Color"),
                                    requires=IS_NULL_OR(IS_HTML_COLOUR()),
+                                   widget=S3ColorPickerWidget(),
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Background Color"),
                                                                  T("Optional selection of a background color.")))),

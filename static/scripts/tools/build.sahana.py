@@ -235,6 +235,14 @@ def dojs(dogis = False, warnings = True):
         except:
             pass
         shutil.move(outputFilename, "../S3")
+
+    for filename in ("spectrum",):
+        print "Compressing %s.js" % filename
+        in_f = os.path.join("..", filename + ".js")
+        out_f = os.path.join("..", filename + ".min.js")
+        with open(in_f, "r") as inp:
+            with open(out_f, "w") as out:
+                out.write(minimize(inp.read()))
         
     if dogis:
         sourceDirectoryGIS = "../S3"
