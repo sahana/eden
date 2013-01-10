@@ -6719,7 +6719,8 @@ class S3RoleManager(S3Method):
                                                      for_pe=pe_id)
                                 removed += 1
                     if removed:
-                        session.confirmation = T("%s Roles of the user removed" % removed)
+                        session.confirmation = T("%(count)s Roles of the user removed") % \
+                                                    dict(count=removed)
                         redirect(r.url())
 
                 # Add form ----------------------------------------------------
@@ -6965,7 +6966,8 @@ class S3RoleManager(S3Method):
                                                      for_pe=row.pe_id)
                                 removed += 1
                     if removed:
-                        session.confirmation = T("%s Users removed from Role" % removed)
+                        session.confirmation = T("%(count)s Users removed from Role") % \
+                                                    dict(count=removed)
                         redirect(r.url())
 
                 # Add-Form ----------------------------------------------------
@@ -7048,7 +7050,7 @@ class S3RoleManager(S3Method):
                              _href=URL(c="admin", f="role"),
                              _class="action-btn")
                 if group_id != sr.ADMIN:
-                    edit_btn = A(T("Edit Permissions for %s" % group_role),
+                    edit_btn = A(T("Edit Permissions for %(role)s") % dict(role=group_role),
                                  _href=URL(c="admin", f="role",
                                            args=[group_id]),
                                  _class="action-lnk")

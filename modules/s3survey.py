@@ -2854,9 +2854,9 @@ class S3AnalysisPriority():
         if key == -1:
             return ""
         elif key == 0:
-            return T("At or below %s" % (pBand[1]))
+            return T("At or below %s") % (pBand[1])
         elif key == len(pBand)-1:
-            return T("Above %s" % (pBand[len(pBand)-1]))
+            return T("Above %s") % (pBand[len(pBand)-1])
         else:
             return "%s - %s" % (pBand[key], pBand[key+1])
 

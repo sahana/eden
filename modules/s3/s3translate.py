@@ -28,11 +28,8 @@
 """
 
 import os
-import sys
 import parser
-import symbol
 import token
-import csv
 
 from gluon import current
 
@@ -106,7 +103,7 @@ class TranslateAPI:
             if module in self.grp.d.keys():
                 return self.grp.d[module]
             else:
-                print "Module '%s' doesn't exist!" %module
+                print "Module '%s' doesn't exist!" % module
                 return []
 
         # ---------------------------------------------------------------------
@@ -120,6 +117,7 @@ class TranslateAPI:
                 return []
 
             strings = []
+            sappend = strings.append
 
             R = TranslateReadFiles()
 
@@ -128,10 +126,11 @@ class TranslateAPI:
                 tmpstr = []
                 if f.endswith(".py") == True:
                     tmpstr = R.findstr(f, "ALL", self.grp.modlist)
-                elif f.endswith(".html") == True or f.endswith(".js") == True:
+                elif f.endswith(".html") == True or \
+                     f.endswith(".js") == True:
                     tmpstr = R.read_html_js(f)
                 for s in tmpstr:
-                    strings.append((f + ":" + str(s[0]), s[1]))
+                    sappend(("%s:%s" % (f, str(s[0])), s[1]))
 
             # Handle "special" files separately
             fileList = self.grp.d["special"]
@@ -141,7 +140,7 @@ class TranslateAPI:
                 if f.endswith(".py") == True:
                     tmpstr = R.findstr(f, module, self.grp.modlist)
                 for s in tmpstr:
-                    strings.append((f + ":" + str(s[0]), s[1]))
+                    sappend(("%s:%s" % (f, str(s[0])), s[1]))
 
             return strings
 
@@ -157,6 +156,7 @@ class TranslateAPI:
 
             R = TranslateReadFiles()
             strings = []
+            sappend = strings.append
             tmpstr = []
 
             if filename.endswith(".py") == True:
@@ -169,7 +169,7 @@ class TranslateAPI:
                 return []
 
             for s in tmpstr:
-                strings.append((filename + ":" + str(s[0]), s[1]))
+                sappend(("%s:%s" % (filename, str(s[0])), s[1]))
             return strings
 
 # =============================================================================
@@ -184,21 +184,20 @@ class TranslateGetFiles:
                 the "special" key.
             """
 
-            # The dictionary described above
-            self.d = {}
-
-            # Retrieve a list of eden modules
-            self.modlist = self.get_module_list()
-
-            # Initialize to an empty list for each key
-            for m in self.modlist:
-                self.d[m] = []
+            # Initialize to an empty list for each module
+            d = {}
+            modlist = self.get_module_list()
+            for m in modlist:
+                d[m] = []
 
             # List of files belonging to 'core' module
-            self.d["core"] = []
+            d["core"] = []
 
             # 'special' files which contain strings from more than one module
-            self.d["special"] = []
+            d["special"] = []
+
+            self.d = d
+            self.modlist = modlist
 
             # Directories which are not required to be searched
             self.rest_dirs = ["languages", "deployment-templates", "docs",
@@ -214,12 +213,13 @@ class TranslateGetFiles:
             """
 
             mod = []
+            mappend = mod.append
             cont_dir = os.path.join(current.request.folder, "controllers")
             mod_files = os.listdir(cont_dir)
 
             for f in mod_files:
                 if f[0] != ".":
-                    mod.append(f[:-3])
+                    mappend(f[:-3])
 
             return mod
 
@@ -231,8 +231,9 @@ class TranslateGetFiles:
 
             appname = current.request.application
 
-            currentDir = os.path.abspath(currentDir)
-            base_dir = os.path.basename(currentDir)
+            path = os.path
+            currentDir = path.abspath(currentDir)
+            base_dir = path.basename(currentDir)
 
             if base_dir in self.rest_dirs:
                 return
@@ -244,14 +245,14 @@ class TranslateGetFiles:
             files = os.listdir(currentDir)
 
             for f in files:
-                curFile = os.path.join(currentDir, f)
-                baseFile = os.path.basename(curFile)
-                if os.path.isdir(curFile):
+                curFile = path.join(currentDir, f)
+                baseFile = path.basename(curFile)
+                if path.isdir(curFile):
 
                     # If the current directory is /views,
                     # categorize files based on the directory name
                     if base_dir == "views":
-                        self.group_files(curFile, os.path.basename(curFile),
+                        self.group_files(curFile, path.basename(curFile),
                                          vflag)
                     else:
                         self.group_files(curFile, curmod, vflag)
@@ -272,7 +273,7 @@ class TranslateGetFiles:
                         base = "special"
                     else:
                         # Remove '.py'
-                        base = os.path.splitext(f)[0]
+                        base = path.splitext(f)[0]
 
                         # If file is inside /modules/s3 directory and
                         # has "s3" as prefix, remove "s3" to get module name
@@ -320,8 +321,9 @@ class TranslateParseFiles:
                 id = entry[0]
                 value = entry[1]
                 if isinstance(value, list):
+                    parseList = self.parseList
                     for element in entry:
-                        self.parseList(element, tmpstr)
+                        parseList(element, tmpstr)
                 else:
                     if token.tok_name[id] == "STRING":
                         tmpstr.append(value)
@@ -337,8 +339,9 @@ class TranslateParseFiles:
                 # If the element is not a root node,
                 # go deeper into the tree using dfs
                 if isinstance(value, list):
+                    parseConfig = self.parseConfig
                     for element in entry:
-                        self.parseConfig(spmod, strings, element, modlist)
+                        parseConfig(spmod, strings, element, modlist)
                 else:
                     if self.fflag == 1 and token.tok_name[id] == "NAME":
                     # Here, func_name stores the module_name of the form
@@ -410,8 +413,9 @@ class TranslateParseFiles:
                 id = entry[0]
                 value = entry[1]
                 if isinstance(value, list):
+                    parseS3cfg = self.parseS3cfg
                     for element in entry:
-                        self.parseS3cfg(spmod, strings, element, modlist)
+                        parseS3cfg(spmod, strings, element, modlist)
                 else:
 
                     # If value is a function name, store it in func_name
@@ -469,8 +473,9 @@ class TranslateParseFiles:
                 id = entry[0]
                 value = entry[1]
                 if isinstance(value, list):
+                    parseMenu = self.parseMenu
                     for element in entry:
-                        self.parseMenu(spmod, strings, element, level + 1)
+                        parseMenu(spmod, strings, element, level + 1)
                 else:
 
                     # If value is a class name, store it in class_name
@@ -570,8 +575,9 @@ class TranslateParseFiles:
                 id = entry[0]
                 value = entry[1]
                 if isinstance(value, list):
+                    parseAll = self.parseAll
                     for element in entry:
-                        self.parseAll(strings, element)
+                        parseAll(strings, element)
                 else:
                     # If current element is 'T', set sflag
                     if token.tok_name[id] == "NAME" and value == "T":
@@ -640,7 +646,7 @@ class TranslateReadFiles:
             # Read all contents of file
             fileContent = f.read()
             # Remove CL-RF and NOEOL characters
-            fileContent = fileContent.replace("\r", "") + "\n"
+            fileContent = "%s\n" % fileContent.replace("\r", "")
 
             P = TranslateParseFiles()
 
@@ -666,20 +672,24 @@ class TranslateReadFiles:
                 # strings belonging to different modules
                 appname = current.request.application
                 if fileName.endswith("/%s/modules/eden/menus.py" % appname) == True:
+                    parseMenu = P.parseMenu
                     for element in stList:
-                        P.parseMenu(spmod, strings, element, 0)
+                        parseMenu(spmod, strings, element, 0)
 
                 elif fileName.endswith("/%s/modules/s3cfg.py" % appname) == True:
+                    parseS3cfg = P.parseS3cfg
                     for element in stList:
-                        P.parseS3cfg(spmod, strings, element, modlist)
+                        parseS3cfg(spmod, strings, element, modlist)
 
                 elif os.path.basename(fileName) == "000_config.py" or \
                      os.path.basename(fileName) == "config.py":
+                    parseConfig = P.parseConfig
                     for element in stList:
-                        P.parseConfig(spmod, strings, element, modlist)
+                        parseConfig(spmod, strings, element, modlist)
 
             # Extract strings from deployment_settings.variable() calls
             final_strings = []
+            fsappend = final_strings.append
             settings = current.deployment_settings
             for (loc, s) in strings:
                 if s[0] != '"' and s[0] != "'" and "settings." in s:
@@ -694,7 +704,7 @@ class TranslateReadFiles:
                     for atr in l[1:]:
                         obj = getattr(obj, atr)()
                     s = obj
-                final_strings.append((loc, s))
+                fsappend((loc, s))
 
             return final_strings
 
@@ -713,16 +723,18 @@ class TranslateReadFiles:
                                + r'(?:"""(?:[^"]|"{1,2}(?!"))*""")|'\
                                + r'(?:"(?:[^"\\]|\\.)*"))'
             regex_trans = re.compile(PY_STRING_LITERAL_RE, re.DOTALL)
+            findall = regex_trans.findall
 
             html_js_file = open(filename)
             linecount = 0
             strings = []
+            sappend = strings.append
 
             for line in html_js_file:
                 linecount += 1
-                occur = regex_trans.findall(line)
+                occur = findall(line)
                 for s in occur:
-                    strings.append((linecount, s))
+                    sappend((linecount, s))
 
             html_js_file.close()
             return strings
@@ -733,7 +745,8 @@ class TranslateReadFiles:
                 Function to return the list of user-supplied strings
             """
 
-            user_file = os.path.join(current.request.folder, "uploads", "user_strings.txt")
+            user_file = os.path.join(current.request.folder, "uploads",
+                                     "user_strings.txt")
 
             strings = []
             COMMENT = "User supplied"
@@ -741,8 +754,7 @@ class TranslateReadFiles:
             if os.path.exists(user_file):
                 f = open(user_file, "r")
                 for line in f:
-                    line = line.replace("\n", "")
-                    line = line.replace("\r", "")
+                    line = line.replace("\n", "").replace("\r", "")
                     strings.append((COMMENT, line))
                 f.close()
 
@@ -755,14 +767,16 @@ class TranslateReadFiles:
                 with newly uploaded strings
             """
 
-            user_file = os.path.join(current.request.folder, "uploads", "user_strings.txt")
+            user_file = os.path.join(current.request.folder, "uploads",
+                                     "user_strings.txt")
 
             oldstrings = []
+            oappend = oldstrings.append
 
             if os.path.exists(user_file):
                 f = open(user_file, "r")
                 for line in f:
-                    oldstrings.append(line)
+                    oappend(line)
                 f.close()
 
             # Append user strings if not already present
@@ -793,25 +807,30 @@ class TranslateReadFiles:
 
             P = TranslateParseFiles()
 
+            parseList = P.parseList
             for element in stList:
-                P.parseList(element, tmpstr)
+                parseList(element, tmpstr)
 
             strings = []
+            sappend = strings.append
             # Store the strings as (original string, translated string) tuple
             for i in range(0, len(tmpstr)):
                 if i%2 == 0:
-                    strings.append((tmpstr[i][1:-1], tmpstr[i + 1][1:-1]))
+                    sappend((tmpstr[i][1:-1], tmpstr[i + 1][1:-1]))
             return strings
 
         # ---------------------------------------------------------------------
         def read_csvfile(self, fileName):
             """ Function to read a csv file and return a list of rows """
 
+            import csv
+
             data = []
+            dappend = data.append
             f = open(fileName, "rb")
             transReader = csv.reader(f)
             for row in transReader:
-                data.append(row)
+                dappend(row)
             f.close()
             return data
 
@@ -837,13 +856,15 @@ class TranslateReportStatus:
 
             # List containing all the strings in the eden code
             all_strings = []
+            asappend = all_strings.append
             # Dictionary keyed on modules containg the indices of strings
             # in all_strings which belong to the corresponding module
             string_dict = {}
             ind = 0
 
             for mod in modlist:
-                string_dict[mod] = []
+                string_list = []
+                sappend = string_list.append
                 strings = A.get_strings_by_module(mod)
                 for (l, s) in strings:
                     # Removing quotes around the strings
@@ -852,15 +873,17 @@ class TranslateReportStatus:
                         s = s[1:-1]
 
                     if s not in all_strings:
-                        all_strings.append(s)
-                        string_dict[mod].append(ind)
+                        asappend(s)
+                        sappend(ind)
                         ind += 1
                     else:
                         tmpind = all_strings.index(s)
-                        string_dict[mod].append(tmpind)
+                        sappend(tmpind)
+                string_dict[mod] = string_list
 
             # Save all_strings and string_dict as pickle objects in a file
-            data_file = os.path.join(current.request.folder, "uploads", "temp.pkl")
+            data_file = os.path.join(current.request.folder, "uploads",
+                                     "temp.pkl")
 
             f = open(data_file, "wb")
             pickle.dump(all_strings, f)
@@ -895,10 +918,11 @@ class TranslateReportStatus:
 
             # translated_strings contains those strings which are translated
             translated_strings = []
+            tappend = translated_strings.append
             for (s1, s2) in lang_strings:
                 if not s2.startswith("*** "):
                     if s1 != s2 or lang_code == "en-gb":
-                        translated_strings.append(s1)
+                        tappend(s1)
 
             # Retrieve the data stored in master file
             data_file = os.path.join(base_dir, "uploads", "temp.pkl")
@@ -1002,6 +1026,7 @@ class StringsToExcel:
             """
 
             l = []
+            lappend = l.append
 
             for (d1, d2) in Strings:
                 if (d1[0] == '"' and d1[-1] == '"') or \
@@ -1010,7 +1035,7 @@ class StringsToExcel:
                 if (d2[0] == '"' and d2[-1] == '"') or \
                    (d2[0] == "'" and d2[-1] == "'"):
                     d2 = d2[1:-1]
-                l.append((d1, d2))
+                lappend((d1, d2))
 
             return l
 
@@ -1033,10 +1058,11 @@ class StringsToExcel:
                 else:
                     uniq[data] = loc
 
-            l=[]
+            l = []
+            lappend = l.append
 
             for data in uniq.keys():
-                l.append((uniq[data], data))
+                lappend((uniq[data], data))
 
             return l
 
@@ -1108,6 +1134,7 @@ class StringsToExcel:
             """
 
             request = current.request
+            appname = request.application
             langfile = os.path.join(request.folder, "languages", langfile)
 
             # If the language file doesn't exist, create it
@@ -1151,18 +1178,18 @@ class StringsToExcel:
                     i += 1
 
                 # Remove the prefix from the filename
-                l = l.split(request.application, 1)[1]
+                l = l.split(appname, 1)[1]
                 if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
                     Strings.append((l, s, OldStrings[i][1]))
                 else:
                     Strings.append((l, s, ""))
 
-            # Create excel file
             if filetype == "xls":
+                # Create excel file
                 return self.create_spreadsheet(Strings)
-            # Create pootle file
             elif filetype == "po":
+                # Create pootle file
                 C = CsvToWeb2py()
                 return C.export_to_po(Strings)
 
@@ -1174,10 +1201,12 @@ class CsvToWeb2py:
         def write_csvfile(self, fileName, data):
             """ Function to write a list of rows into a csv file """
 
+            import csv
+
             f = open(fileName, "wb")
 
             # Quote all the elements while writing
-            transWriter = csv.writer(f, delimiter=" ",\
+            transWriter = csv.writer(f, delimiter=" ",
                                      quotechar='"', quoting = csv.QUOTE_ALL)
             transWriter.writerow(["location", "source", "target"])
             for row in data:
@@ -1200,6 +1229,7 @@ class CsvToWeb2py:
             g = NamedTemporaryFile(delete=False)
             pofilename = "%s.po" % g.name
             # Shell needed on Win32
+            # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
             call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
 
             h = open(pofilename, "r")
@@ -1252,8 +1282,9 @@ class CsvToWeb2py:
             # Created a list of sorted tuples
             # (location, original string, translated string)
             data = []
+            dappend = data.append
             for k in sorted(d.keys()):
-                data.append([d[k][0], k, d[k][1]])
+                dappend([d[k][0], k, d[k][1]])
 
             # Create intermediate csv file
             f = NamedTemporaryFile(delete=False)
@@ -1264,6 +1295,7 @@ class CsvToWeb2py:
             g = NamedTemporaryFile(delete=False)
             pofilename = "%s.po" % g.name
             # Shell needed for Win32
+            # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
             call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
 
             # Convert the po file to w2p language file

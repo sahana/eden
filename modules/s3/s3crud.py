@@ -332,7 +332,8 @@ class S3CRUD(S3Method):
                 try:
                     infile = open(infile, "rb")
                 except:
-                    session.error = current.T("Cannot read from file: %s" % infile)
+                    session.error = current.T("Cannot read from file: %(filename)s") % \
+                                                dict(filename=infile)
                     redirect(r.url(method="", representation="html"))
             try:
                 self.import_csv(infile, table=table)

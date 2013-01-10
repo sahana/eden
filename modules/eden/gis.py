@@ -985,7 +985,7 @@ class S3LocationHierarchyModel(S3Model):
             table[field].comment = DIV(
                         _class="tooltip",
                         _title="%s|%s|%s" % (
-                            T("Is editing level L%d locations allowed?" % n),
+                            T("Is editing level L%d locations allowed?") % n,
                             edit_Ln_tip_1,
                             edit_Ln_tip_2
                             )
