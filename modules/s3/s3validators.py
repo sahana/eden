@@ -392,7 +392,7 @@ class IS_HTML_COLOUR(IS_MATCH):
     """
 
     def __init__(self,
-                 error_message="must be a 6 digit hex code!"
+                 error_message="must be a 6 digit hex code! (format: rrggbb)"
                 ):
         IS_MATCH.__init__(self, "^[0-9a-fA-F]{6}$", error_message)
 
