@@ -3831,8 +3831,12 @@ class S3Resource(object):
         append, insert = s.append, s.insert
         for i in xrange(len(joins)):
             join = joins[i]
+            try:
+                tn = join.first._tablename
+            except AttributeError:
+                tn = str(join.first)
             for j in xrange(len(s)):
-                if str(join.first) in str(s[j].second):
+                if tn in str(s[j].second):
                     insert(j, join)
                     join = None
                     break

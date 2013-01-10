@@ -2407,6 +2407,64 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         del current.model.components["org_organisation"]["test"]
 
     # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testSelectComponentWithFilter(self):
+        """ Test S3Resource.select/extract with fields in a filtered component """
+    
+        s3db = current.s3db
+        auth = current.auth
+        
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="FCTESTORG">
+        <data field="name">FilteredComponentsTestOrg</data>
+        <resource name="org_office" uuid="FCTESTOFFICE">
+            <data field="name">FilteredComponentsTestOffice</data>
+            <reference field="office_type_id" resource="org_office_type">
+                <resource name="org_office_type" uuid="FCTESTTYPE">
+                    <data field="name">FilteredComponentsTestType</data>
+                </resource>
+            </reference>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        auth.override = True
+        
+        resource = s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+
+        resource = s3db.resource("org_office_type", uid="FCTESTTYPE")
+        row = resource.select(["id"])[0]
+        type_id = row.id
+
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=type_id))
+        
+        resource = current.s3db.resource("org_organisation", uid="FCTESTORG")
+        fields = ["id", "name", "test.name", "test.office_type_id$name"]
+        rows = resource.select(fields)
+
+        result = resource.extract(rows, fields)
+        self.assertEqual(len(result), 1)
+        result = result[0]
+        self.assertTrue("org_organisation.name" in result)
+        self.assertEqual(result["org_organisation.name"], "FilteredComponentsTestOrg")
+        self.assertTrue("org_test_office.name" in result)
+        self.assertEqual(result["org_test_office.name"], "FilteredComponentsTestOffice")
+        self.assertTrue("org_office_type.name" in result)
+        self.assertEqual(result["org_office_type.name"], "FilteredComponentsTestType")
+
+        current.db.rollback()
+        auth.override = False
+
+    # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
     def testGetJoinLinkTableComponentAlias(self):
         """ Join for a link-table component with alias """
@@ -2456,20 +2514,6 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                                         "((pr_person.pe_id = pr_phone_contact.pe_id) AND "
                                         "(pr_phone_contact.contact_method = 'SMS'))")
 
-    # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("hrm"), "hrm module disabled")
-    def testSelectWithLinkTableComponentAlias(self):
-        """ Select for a resource with link-table components that have aliases """
-
-        resource = current.s3db.resource("hrm_human_resource")
-        fields = ['id', 'person_id', 'job_title_id', 'organisation_id', 'department_id', 'site_id', \
-                 'email.value', 'phone.value', 'person_id$training.course_id', \
-                 'person_id$certification.certificate_id', 'end_date', 'status']
-        rows, count, ids = resource.select(fields=fields, count=True, getids=True)
-        if count > 0:
-            self.assertTrue(hasattr(rows.records[0],"pr_email_contact"))
-            self.assertTrue(hasattr(rows.records[0],"pr_phone_contact"))
-        
     # -------------------------------------------------------------------------
     # Disabled - @todo: must create test records (otherwise component can be
     # empty regardless) - and check the actual office_type_ids (can not assume 4/5)
