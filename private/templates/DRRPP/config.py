@@ -197,7 +197,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             "output",
             label=T("Outputs:"),
             #comment = "Bob",
-            fields=["output","status"],
+            fields=["output", "status"],
         ),
         "hfa",
         "drrpp.rfa",
@@ -207,7 +207,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             "organisation",
             name = "partner",
             label=T("Partner Organizations:"),
-            fields=["organisation_id","comments"],
+            fields=["organisation_id", "comments"],
             filterby = dict(field = "role",
                             options = "2"
                             )
@@ -217,7 +217,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             "organisation",
             name = "donor",
             label=T("Donor(s):"),
-            fields=["organisation_id","amount", "currency"],
+            fields=["organisation_id", "amount", "currency"],
             filterby = dict(field = "role",
                             options = "3"
                             )

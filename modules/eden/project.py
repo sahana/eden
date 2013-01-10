@@ -2093,7 +2093,7 @@ class S3Project3WModel(S3Model):
             project.organisation to point to the same organisation
             & update the realm_entity.
 
-            In DRRPP, update the donors field
+            #In DRRPP, update the donors field
         """
         db = current.db
         s3db = current.s3db
@@ -2106,19 +2106,19 @@ class S3Project3WModel(S3Model):
                                                      limitby=(0, 1)
                                                      ).first().project_id
 
-        if current.deployment_settings.get_template() == "DRRPP":
-            dtable = db.project_drrpp
+        #if current.deployment_settings.get_template() == "DRRPP":
+        #    dtable = db.project_drrpp
 
             # Get all the Donors for this Project
-            query = (otable.deleted == False) & \
-                    (otable.role == 3) & \
-                    (otable.project_id == project_id)
-            rows = db(query).select(otable.organisation_id)
-            if rows:
-                db(dtable.project_id == project_id).update(
-                        # @ToDo: Remove if row.organisation_id once we have the DRRPP import working
-                        donors=[row.organisation_id for row in rows if row.organisation_id]
-                    )
+        #    query = (otable.deleted == False) & \
+        #            (otable.role == 3) & \
+        #            (otable.project_id == project_id)
+        #    rows = db(query).select(otable.organisation_id)
+        #    if rows:
+        #        db(dtable.project_id == project_id).update(
+        #                # @ToDo: Remove if row.organisation_id once we have the DRRPP import working
+        #                donors=[row.organisation_id for row in rows if row.organisation_id]
+        #            )
 
         if str(vars.role) == \
              str(current.response.s3.project_organisation_lead_role):
@@ -2791,13 +2791,13 @@ class S3ProjectDRRPPModel(S3Model):
                            label = T("Duration (months)"),
                            ),
                      Field("activities", "text",
-                           label = T("Activities)"),
+                           label = T("Activities"),
                            ),
                      # Populated onaccept from project_organisation
-                     # IS this field needed? Donors should be saved under project_organisation
-                     Field("donors", "list:reference org_organisation",
-                           label = T("Donor(s)"),
-                           ),
+                     # Is this field needed? Donors should be saved under project_organisation
+                     #Field("donors", "list:reference org_organisation",
+                     #      label = T("Donor(s)"),
+                     #      ),
                      Field("rfa", "list:integer",
                            label = T("RFA Priorities"),
                            requires = IS_NULL_OR(IS_IN_SET(project_rfa_opts().keys(),
@@ -2821,7 +2821,7 @@ class S3ProjectDRRPPModel(S3Model):
                      Field("focal_person", "string",
                            label = T("Focal Person"),
                            ),
-                     self.org_organisation_id(label = (T("Organisation"))),
+                     self.org_organisation_id(label = (T("Organization"))),
                      Field("email", "string",
                            label = T("Focal Person"),
                            ),
@@ -2899,10 +2899,13 @@ class S3ProjectDRRPPModel(S3Model):
         data = item.data
         name = data.get("name", None)
         project_id = data.get("project_id", None)
-        if name and project_id:
+        if name:
             table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.name == name)
+            query = (table.name == name)
+            if project_id:
+                query &= ((table.project_id == project_id) | \
+                          (table.project_id == None))
+
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:

@@ -299,7 +299,9 @@
                     <xsl:value-of select="$ContactOrganisation"/>
                 </xsl:attribute>
 
-                <data field="name"><xsl:value-of select="reference[@field='contact_organisation_id']"/></data>
+                <data field="name">
+                    <xsl:value-of select="reference[@field='contact_organisation_id']"/>
+                </data>
 
                 <xsl:if test="$ContactName!=''">
                     <resource name="hrm_human_resource">
@@ -611,7 +613,7 @@
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="@uuid"/>
+                <xsl:value-of select="data[@field='name']"/>
             </xsl:attribute>
             <xsl:attribute name="created_on">
                 <xsl:value-of select="@created_on"/>
@@ -696,7 +698,9 @@
                 </xsl:if>
                 <!-- NB This requires a custom onvalidation to lookup the org to convert to integer-->
                 <xsl:if test="$organisation!=''">
-                    <data field="organisation_id"><xsl:value-of select="$organisation"/></data>
+                    <data field="organisation_id">
+                        <xsl:value-of select="$organisation"/>
+                    </data>
                 </xsl:if>
             </resource>
         </xsl:if>
@@ -778,9 +782,11 @@
             <xsl:when test="$arg='impl_org'">
                 <resource name="project_organisation">
                     <data field="role">2</data>
-                    <resource name="org_organisation">
-                        <data field="name"><xsl:value-of select="$item"/></data>
-                    </resource>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$item"/>
+                        </xsl:attribute>
+                    </reference>
                 </resource>
             </xsl:when>
 
@@ -788,9 +794,11 @@
             <xsl:when test="$arg='donor'">
                 <resource name="project_organisation">
                     <data field="role">3</data>
-                    <resource name="org_organisation">
-                        <data field="name"><xsl:value-of select="$item"/></data>
-                    </resource>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$item"/>
+                        </xsl:attribute>
+                    </reference>
                 </resource>
             </xsl:when>
 
@@ -798,11 +806,12 @@
             <xsl:when test="$arg='output'">
                 <resource name="project_output">
                     <data field="name"><xsl:value-of select="$item"/></data>
+                    <!-- Not needed as inline component
                     <reference field="project_id" resource="project_project">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="reference[@field='project_id']/@uuid"/>
                         </xsl:attribute>
-                    </reference>
+                    </reference>-->
                 </resource>
             </xsl:when>
 
