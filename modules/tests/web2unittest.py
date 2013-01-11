@@ -38,6 +38,8 @@ from gluon import current
 
 from s3.s3utils import s3_unicode
 from s3.s3widgets import *
+from s3.s3search import *
+from s3.s3resource import S3FieldSelector
 
 from tests.core import *
 
@@ -145,9 +147,13 @@ class SeleniumUnitTest(Web2UnitTest):
 
         @param results_expected: Are results expected?
 
-        @param fields: See the `fields` function.
+        @param fields: See the `fields` function. 
+                       For search.simple_form, an empty list [] can be pass. The field will be taken from s3resource.
 
         @param row_count: Expected row count
+                       For search.simple_form, 
+                               {"tablename":tablename, "key":key, "filters":[(field,value),...]} 
+                                 can be pass to get the resource and eventually the DB row count.
 
         Keyword arguments:
 
@@ -172,6 +178,29 @@ class SeleniumUnitTest(Web2UnitTest):
         the row to match against.
         '''
 
+        current.auth.override = True
+        if isinstance(row_count, dict) and form_type == self.search.simple_form:
+            key = row_count["key"]
+            resource = current.s3db.resource(row_count["tablename"])
+            simpleSearch = resource.search.simple[0]
+            if len(fields) == 0:
+                fields = ({"name":simpleSearch[0],"value":key},)
+            searchFields = simpleSearch[1].field
+            for i in xrange(len(searchFields)):
+                if i == 0:
+                    query = (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
+                else:
+                    query |= (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
+
+            filters = row_count.get("filters", None)
+            if filters is not None:
+                for filter in filters:
+                    qfilter = (resource.table[filter[0]] == filter[1])
+                    resource.add_filter(qfilter)
+
+            resource.add_filter(query)
+            row_count = resource.count()
+
         browser = self.browser
 
         browser.find_element_by_xpath("//a[text()='Clear']").click()
@@ -191,6 +220,31 @@ class SeleniumUnitTest(Web2UnitTest):
         time.sleep(1)
 
         self.fill_fields(fields)
+
+        if isinstance(row_count, dict) and form_type == self.search.advanced_form:
+            resource = current.s3db.resource(row_count["tablename"])
+            search_list = resource.search.advanced
+            for search in search_list:
+                widget = search[1]
+                if isinstance(widget, S3SearchOptionsWidget):
+                    values = []
+                    elem_list = browser.find_elements_by_name(widget.attr._name)
+                    for elem in elem_list:
+                        if elem.get_attribute("checked"):
+                            values.append(int(s3_unicode(elem.get_attribute("value"))))
+                    if len(values) > 0:
+                        query = widget.query(resource,values)
+                        resource.add_filter(query)
+
+            filters = row_count.get("filters", None)
+            if filters is not None:
+                for filter in filters:
+                    qfilter = (resource.table[filter[0]] == filter[1])
+                    resource.add_filter(qfilter)
+
+            resource.add_filter(query)
+            row_count = resource.count()
+
 
         browser.find_element_by_name(("simple_submit", "advanced_submit")[form_type]).click()
 
