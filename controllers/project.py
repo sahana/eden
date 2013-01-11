@@ -233,6 +233,10 @@ def project():
             # Use the group to filter the component list
             group = r.vars.get("group", None)
             if group:
+                if group == "staff":
+                    group = 1
+                elif group == "volunteer":
+                    group = 2
                 filter_by_type = (db.hrm_human_resource.type == group)
                 r.resource.add_component_filter("human_resource", filter_by_type)
 
