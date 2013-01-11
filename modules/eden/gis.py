@@ -156,10 +156,6 @@ class S3LocationModel(S3Model):
                              Field("lon", "double",
                                    label = T("Longitude"),
                                    requires = IS_NULL_OR(IS_LON()),
-                                   comment = A(T("Conversion Tool"),
-                                               _style="cursor:pointer;",
-                                               _title=T("You can use the Conversion Tool to convert from either GPS coordinates or Degrees/Minutes/Seconds."),
-                                               _id="gis_location_converter-btn"),
                                    ),
                              Field("wkt", "text",
                                    # Full WKT validation is done in the onvalidation callback

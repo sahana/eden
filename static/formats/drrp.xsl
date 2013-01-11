@@ -83,8 +83,8 @@
 
         <xsl:variable name="Status" select="data[@field='status_id']"/>
         <xsl:variable name="Countries" select="data[@field='country_dummy']"/>
-        <xsl:variable name="LeadOrganisation" select="reference[@field='lead_organisation_id']/@uuid"/>
-        <xsl:variable name="ContactOrganisation" select="reference[@field='contact_organisation_id']/@uuid"/>
+        <xsl:variable name="LeadOrganisation" select="reference[@field='lead_organisation_id']"/>
+        <xsl:variable name="ContactOrganisation" select="reference[@field='contact_organisation_id']"/>
         <xsl:variable name="ContactName" select="data[@field='contact_name']"/>
         <xsl:variable name="ContactEmail" select="data[@field='contact_email']"/>
         <xsl:variable name="ContactPhone" select="data[@field='contact_phone']"/>
@@ -593,6 +593,9 @@
     <xsl:template match="resource[@name='drrpp_output']">
 
         <resource name="project_output">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('OUTPUT',data[@field='name'])"/>
+            </xsl:attribute>
             <data field="name"><xsl:value-of select="data[@field='output']"/></data>
             <xsl:choose>
                 <xsl:when test="data[@field='status']='Proposed'">
@@ -805,6 +808,9 @@
             <!-- Outputs -->
             <xsl:when test="$arg='output'">
                 <resource name="project_output">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('OUTPUT',$item)"/>
+                    </xsl:attribute>
                     <data field="name"><xsl:value-of select="$item"/></data>
                     <!-- Not needed as inline component
                     <reference field="project_id" resource="project_project">

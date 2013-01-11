@@ -11,6 +11,7 @@
          Project Name.........string..........Project Name
          Project Comments.....string..........Project comments
          Status...............string..........Project status
+         Donor Organisations..
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
          Activities...........comma-sep list..List of Activity Types
@@ -347,7 +348,11 @@
                     </xsl:call-template>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:value-of select="$l0"/>
+                    <xsl:call-template name="uppercase">
+                        <xsl:with-param name="string">
+                           <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>

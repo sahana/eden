@@ -1200,7 +1200,7 @@ def stats_parameter_represent(id, row=None):
 def stats_demographic_data_controller():
     """
         Function to be called from controller functions to display all
-        requests as a tab for a site.
+        demographic data as a tab for a location.
     """
 
     vars = current.request.vars

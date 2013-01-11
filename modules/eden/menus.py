@@ -1529,9 +1529,8 @@ class S3OptionsMenu(object):
                       ),
                     M("Funding", f="organisation", args="report"),
                  ),
-                 M("Import", f="index", p="create")(
-                    M("Import Projects", f="project",
-                      m="import", p="create"),
+                 M("Import", f="project", m="import", p="create")(
+                    M("Import Projects", m="import", p="create"),
                     M("Import Project Organizations", f="organisation",
                       m="import", p="create"),
                     M(IMPORT, f="location",

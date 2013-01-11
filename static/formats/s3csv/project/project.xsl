@@ -18,7 +18,7 @@
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
          Countries............comma-sep list..List of country names or ISO codes
-         Departments..........comma-sep list..List of Organisation Sectors (Departments)
+         Sectors..............comma-sep list..List of Organisation Sectors
          Hazards..............comma-sep list..List of Hazard names
          HFA..................comma-sep list..List of HFA priorities (integer numbers)
          Budget:XXXX..........float...........Budget for year XXX (multiple allowed)
@@ -87,7 +87,7 @@
         <!-- Optional Classifications -->
         <xsl:variable name="Status" select="col[@field='Status']"/>
         <xsl:variable name="Countries" select="col[@field='Countries']"/>
-        <xsl:variable name="Sectors" select="col[@field='Departments']"/>
+        <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
         <xsl:variable name="Hazards" select="col[@field='Hazards']"/>
         <xsl:variable name="Themes" select="col[@field='Themes']"/>
         <xsl:variable name="HFA" select="col[@field='HFA']"/>
@@ -288,7 +288,11 @@
                             </xsl:call-template>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:value-of select="$item"/>
+                            <xsl:call-template name="uppercase">
+                                <xsl:with-param name="string">
+                                    <xsl:value-of select="$item"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>

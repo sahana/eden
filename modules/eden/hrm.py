@@ -362,7 +362,7 @@ class S3HRModel(S3Model):
                             #multiple=False,
                         )
                       )
-    
+
         add_component("pr_contact",
                         hrm_human_resource=dict(
                             name="phone",

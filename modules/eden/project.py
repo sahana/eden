@@ -385,7 +385,8 @@ class S3ProjectModel(S3Model):
                                        readable = use_sectors,
                                        writable = use_sectors,
                                        widget = lambda f, v, **attr: \
-                                        CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                                        CheckboxesWidgetS3.widget(f, v, cols=3,
+                                                                  **attr),
                                        ),
                              multi_theme_id(
                                             readable = mode_3w and \
@@ -406,14 +407,16 @@ S3OptionsFilter({
                                    label = T("HFA Priorities"),
                                    readable = mode_drr,
                                    writable = mode_drr,
-                                   requires = IS_NULL_OR(IS_IN_SET(project_hfa_opts.keys(),
-                                                                   labels = ["HFA %s" % hfa for hfa in project_hfa_opts.keys()],
-                                                                   multiple = True)),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(project_hfa_opts.keys(),
+                                                          labels = ["HFA %s" % hfa \
+                                                                    for hfa in project_hfa_opts.keys()],
+                                                          multiple = True)),
                                    represent = self.hfa_opts_represent,
                                    widget = lambda f, v, **attr: \
-                                              s3_grouped_checkboxes_widget(f, v,
-                                                                           help_field=project_hfa_opts,
-                                                                           **attr)
+                                    s3_grouped_checkboxes_widget(f, v,
+                                                                 help_field=project_hfa_opts,
+                                                                 **attr)
                                    ),
                              Field("objectives", "text",
                                    readable = mode_3w,
@@ -1540,13 +1543,13 @@ class S3Project3WModel(S3Model):
                         ),
                         S3SearchOptionsWidget(
                             name="location_contact_search_L1",
-                            field="person_id$location_id$L1",
+                            field="project_location_id$location_id$L1",
                             location_level="L1",
                             cols = 3,
                         ),
                         S3SearchOptionsWidget(
                             name="location_contact_search_L2",
-                            field="person_id$location_id$L2",
+                            field="project_location_id$location_id$L2",
                             location_level="L2",
                             cols = 3,
                         )
@@ -1900,16 +1903,16 @@ class S3Project3WModel(S3Model):
                          "amount",
                          "currency",
                          ]
-        report_options = Storage( rows = report_fields,
-                                  cols = report_fields,
-                                  fact = report_fields,
-                                  #methods = ["sum"],
-                                  defaults = Storage( rows = "organisation.organisation_id",
-                                                      cols  ="organisation.currency",
-                                                      fact = "organisation.amount",
-                                                      aggregate = "sum",
-                                                      totals = False
-                                                      )
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 #methods = ["sum"],
+                                 defaults = Storage(rows = "organisation.organisation_id",
+                                                    cols = "organisation.currency",
+                                                    fact = "organisation.amount",
+                                                    aggregate = "sum",
+                                                    totals = False
+                                                    )
                                  )
 
         # Resource Configuration
@@ -4253,12 +4256,12 @@ def multi_theme_percentage_represent(id):
 # =============================================================================
 def project_location_represent(id, row=None):
     """
+        Represent a Project Location (Community)
     """
 
-    if not id:
-        return current.messages["NONE"]
-
     if not row:
+        if not id:
+            return current.messages["NONE"]
         db = current.db
         table = db.project_location
         row = db(table.id == id).select(table.location_id,
@@ -4306,7 +4309,7 @@ class S3ProjectDRRPPVirtualFields:
     # -------------------------------------------------------------------------
     def rfa(self):
         """
-            Donors for Project
+            RFAs for Project
 
             @ToDo: Replace this with component lookup
                    - or make role configurable

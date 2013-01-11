@@ -228,6 +228,14 @@ def project():
                     doc_table.person_id.readable = doc_table.person_id.writable = False
                     doc_table.location_id.readable = doc_table.location_id.writable = False
 
+        elif r.component_name == "human_resource":
+            # We need to also filter PDF/XLS/RSS/XML exports
+            # Use the group to filter the component list
+            group = r.vars.get("group", None)
+            if group:
+                filter_by_type = (db.hrm_human_resource.type == group)
+                r.resource.add_component_filter("human_resource", filter_by_type)
+
         return True
     s3.prep = prep
 
@@ -368,20 +376,22 @@ def organisation():
     """ RESTful CRUD controller """
 
     if settings.get_project_multiple_organisations():
+        # e.g. IFRC
         s3db.configure("project_organisation",
                        insertable=False,
                        editable=False,
                        deletable=False)
 
-        list_btn = A(T("Funding Report"),
-                     _href=URL(c="project", f="organisation",
-                               args="report", vars=request.get_vars),
-                     _class="action-btn")
+        #list_btn = A(T("Funding Report"),
+        #             _href=URL(c="project", f="organisation",
+        #                      args="report", vars=request.get_vars),
+        #             _class="action-btn")
 
-        return s3_rest_controller("org", resourcename,
-                                  list_btn=list_btn,
-                                  csv_template="organisation")
+        return s3_rest_controller(#list_btn=list_btn,
+                                  )
+
     else:
+        # e.g. DRRPP
         tabs = [
                 (T("Basic Details"), None),
                 (T("Projects"), "project"),

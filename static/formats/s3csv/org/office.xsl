@@ -30,7 +30,7 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Indexes for faster processing -->
@@ -201,7 +201,11 @@
                     </xsl:call-template>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:value-of select="$l0"/>
+                    <xsl:call-template name="uppercase">
+                        <xsl:with-param name="string">
+                           <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>

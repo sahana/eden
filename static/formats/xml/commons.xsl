@@ -247,7 +247,7 @@
     <xsl:template name="ResolveColumnHeader">
 
         <xsl:param name="colname"/>
-        <xsl:variable name="labels" select="document('labels.xml')//labels"/>
+        <xsl:variable name="labels" select="document('../s3csv/labels.xml')//labels"/>
         <xsl:variable name="src" select="//labels/column[@name=$colname]"/>
         <xsl:variable name="map" select="$labels/column[@name=$colname]"/>
         <xsl:value-of select="concat('|', $colname, '|')"/>
@@ -287,7 +287,7 @@
         <xsl:variable name="colname" select="substring-before(substring-after($colhdrs, '|'), '|')"/>
         <xsl:variable name="col" select="col[contains($colhdrs, concat('|', @field, '|'))][1]"/>
         <xsl:variable name="srcmap" select="//labels/column[@name=$colname]"/>
-        <xsl:variable name="lblmap" select="document('labels.xml')//labels/column[@name=$colname]"/>
+        <xsl:variable name="lblmap" select="document('../s3csv/labels.xml')//labels/column[@name=$colname]"/>
         <xsl:variable name="label" select="$col/text()"/>
         <xsl:variable name="alt1" select="$srcmap/option[@name=$label or ./label/text()=$label]"/>
         <xsl:variable name="alt2" select="$lblmap/option[@name=$label or ./label/text()=$label]"/>

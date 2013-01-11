@@ -115,7 +115,11 @@
                     </xsl:call-template>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:value-of select="$l0"/>
+                    <xsl:call-template name="uppercase">
+                        <xsl:with-param name="string">
+                           <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
@@ -191,7 +195,11 @@
                         </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$l0"/>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$l0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
@@ -241,7 +249,11 @@
                         </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$l0"/>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$l0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
@@ -302,7 +314,11 @@
                         </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$l0"/>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$l0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
@@ -372,7 +388,11 @@
                         </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$l0"/>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$l0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
@@ -451,7 +471,11 @@
                         </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$l0"/>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$l0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
