@@ -521,7 +521,7 @@ class S3CRUD(S3Method):
 
         elif representation == "pdf":
             exporter = S3Exporter().pdf
-            return exporter(r, **attr)
+            return exporter(resource, request=r, **attr)
 
         elif representation == "xls":
             list_fields = _config("list_fields")
@@ -1064,7 +1064,8 @@ class S3CRUD(S3Method):
 
         elif representation == "pdf":
             exporter = S3Exporter().pdf
-            return exporter(r,
+            return exporter(resource,
+                            request=r,
                             list_fields=list_fields,
                             report_hide_comments = report_hide_comments,
                             report_filename = report_filename,

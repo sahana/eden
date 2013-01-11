@@ -809,7 +809,27 @@ def training():
 def training_event():
     """ Training Events Controller """
 
+    table = s3db.hrm_training
+    table.person_id.widget = S3PersonAutocompleteWidget(controller="vol")
+
     return s3db.hrm_training_event_controller()
+
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        Search for persons who are registered as volunteers, for
+        S3PersonAutocompleteWidgets which need to be filtered.
+    """
+
+    htable = s3db.hrm_human_resource
+    ptable = s3db.pr_person
+
+    s3.filter = ((htable.type == 2) & (htable.person_id == ptable.id))
+
+    s3.prep = lambda r: r.representation == "json" and \
+                        r.method == "search"
+
+    return s3_rest_controller("pr", "person")
 
 # =============================================================================
 def skill_competencies():

@@ -900,7 +900,7 @@ S3OptionsFilter({
         record = db(table.id == r.id).select(limitby=(0, 1)).first()
 
         if record.type == 1:
-            pdf_componentname = "req_req_item"
+            pdf_componentname = "req_item"
             list_fields = ["item_id",
                            "item_pack_id",
                            "quantity",
@@ -909,7 +909,7 @@ S3OptionsFilter({
                            "quantity_fulfil",
                            ]
         elif record.type == 3:
-            pdf_componentname = "req_req_skill"
+            pdf_componentname = "req_skill"
             list_fields = ["skill_id",
                            "quantity",
                            "quantity_commit",
@@ -926,7 +926,8 @@ S3OptionsFilter({
             filename = None
 
         exporter = S3Exporter().pdf
-        return exporter(r,
+        return exporter(r.resource,
+                        request=r,
                         method = "list",
                         pdf_title = current.deployment_settings.get_req_form_name(),
                         pdf_filename = filename,
