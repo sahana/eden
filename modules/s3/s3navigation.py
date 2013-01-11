@@ -614,15 +614,33 @@ class S3NavigationItem(object):
         if not c and self.parent is None:
             return 1
 
+
+        rvars = request.get_vars
+        controller = request.controller
+        function = request.function
+
+        # Handle "viewing" (foreign controller in a tab)
+        # NOTE: this tries to match the item against the resource name
+        # in "viewing", so if the target controller/function of the item
+        # are different from prefix/name in the resource name, then this
+        # may require additional match_controller/match_function to be
+        # set for this item! (beware ambiguity then, though)
+        if "viewing" in rvars:
+            try:
+                tn, record_id = rvars["viewing"].split(".")
+                controller, function = tn.split("_", 1)
+            except:
+                pass
+
         # Controller
-        if request.controller == c or request.controller in mc:
+        if controller == c or controller in mc:
             level = 1
 
         # Function
         if level == 1:
             f = self.get("function")
             mf = self.get("match_function")
-            if request.function == f or request.function in mf:
+            if function == f or function in mf:
                 level = 2
             elif f == "index":
                 # "weak" match: homepage link matches any function
@@ -641,7 +659,6 @@ class S3NavigationItem(object):
         #   7 = args match and vars match
         if level == 2:
             extra = 1
-            rvars = request.get_vars
             for k, v in vars.iteritems():
                 if k not in rvars or k in rvars and rvars[k] != s3_unicode(v):
                     extra = 0
