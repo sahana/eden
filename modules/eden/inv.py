@@ -1990,6 +1990,7 @@ S3OptionsFilter({
             # Default to the Search tab in the location selector
             s3.gis.tab = "search"
             record = db(sendtable.id == r.id).select(sendtable.status,
+                                                     sendtable.req_ref,
                                                      limitby=(0, 1)
                                                      ).first()
             if record:
@@ -2349,9 +2350,10 @@ S3OptionsFilter({
             list_fields.append("currency")
             list_fields.append("pack_value")
         exporter = S3Exporter().pdf
-        return exporter(r,
+        return exporter(r.resource,
+                        request=r,
                         method = "list",
-                        pdf_componentname = "inv_track_item",
+                        pdf_componentname = "track_item",
                         pdf_title = settings.get_inv_send_form_name(),
                         pdf_filename = send_ref,
                         list_fields = list_fields,
@@ -2488,13 +2490,14 @@ S3OptionsFilter({
                        "bin"
                        ]
         exporter = S3Exporter().pdf
-        return exporter(r,
+        return exporter(r.resource,
+                        request=r,
                         method = "list",
                         pdf_title = T(current.deployment_settings.get_inv_recv_form_name()),
                         pdf_filename = recv_ref,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
-                        pdf_componentname = "inv_track_item",
+                        pdf_componentname = "track_item",
                         pdf_header_padding = 12,
                         pdf_footer = inv_recv_pdf_footer,
                         pdf_table_autogrow = "B",
@@ -2523,12 +2526,13 @@ S3OptionsFilter({
         site = field.represent(site_id, False)
 
         exporter = S3Exporter().pdf
-        return exporter(r,
+        return exporter(r.resource,
+                        request=r,
                         method="list",
                         pdf_title="Donation Certificate",
                         pdf_filename="DC-%s" % site,
                         pdf_hide_comments=True,
-                        pdf_componentname = "inv_track_item",
+                        pdf_componentname = "track_item",
                         **attr
                        )
 
