@@ -174,10 +174,10 @@ def facility_marker_fn(record):
             marker = "%s_red" % marker
         elif reqs == 2:
             # Medium
-            marker = "%s_yellow" % marker
+            marker = "%s_gold" % marker
         elif reqs == 1:
             # Low
-            marker = "%s_green" % marker
+            marker = "%s_lime" % marker
 
     mtable = db.gis_marker
     try:
