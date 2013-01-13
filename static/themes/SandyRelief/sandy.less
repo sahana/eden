@@ -940,6 +940,28 @@ b.red {
 	}
 }
 
+.paging_full_numbers {
+	height: 31px;
+	line-height: 31px;
+	padding: 0 15px;
+	a.paginate_button, 
+	a.paginate_active {
+		border: 0;
+		.border-radius(0);
+		padding: 0 9px;
+		margin: 0;
+	}
+	a.paginate_active {
+		background-color: @brand;
+	}
+}
+
+
+.paginate_button_disabled {
+	opacity: .4;
+	background: transparent!important;
+}
+
 
 .list_formats {
     position: absolute;
@@ -975,6 +997,9 @@ b.red {
     td.sorting_1 {
         background-color: @brandlight!important;
     }
+	tr.even td.sorting_1 {
+		background-color: #fff9d9!important;
+	}
     tfoot th {
 	    border-top: 0;
     }
