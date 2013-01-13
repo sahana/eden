@@ -607,6 +607,7 @@ class S3Resource(object):
 
         # Limitby
         if vfltr is None:
+            #limitby = None
             limitby = self.limitby(start=start, limit=limit)
             if limitby is not None:
                 attributes["limitby"] = limitby
@@ -3140,10 +3141,11 @@ class S3Resource(object):
                     continue
                 else:
                     this = record[key]
-                if record_id in duplicates and value not in this:
+                if record_id in duplicates:
                     if lazy:
-                        this.value.append(lazy_value)
-                    else:
+                        if lazy_value not in this.value:
+                            this.value.append(lazy_value)
+                    elif value not in this:
                         this.append(value)
                 elif joined and value != this:
                     if lazy:
