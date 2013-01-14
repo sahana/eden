@@ -468,7 +468,6 @@ def person():
         orgname = None
 
     output = s3_rest_controller("pr", resourcename,
-                                native=False,
                                 rheader=s3db.hrm_rheader,
                                 orgname=orgname,
                                 replace_option=T("Remove existing data before import"),
@@ -564,7 +563,6 @@ def profile():
     s3.postp = postp
 
     output = s3_rest_controller("pr", "person",
-                                native=False,
                                 rheader=s3db.hrm_rheader,
                                 )
     return output

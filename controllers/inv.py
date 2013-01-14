@@ -399,7 +399,6 @@ def warehouse():
                                 rheader=s3db.inv_rheader,
                                 csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
-                                native=False,
                                 # Extra fields for CSV uploads:
                                 #csv_extra_fields = [
                                 #         dict(label="Organisation",

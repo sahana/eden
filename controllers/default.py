@@ -753,7 +753,6 @@ def person():
             ]
     
     output = s3_rest_controller("pr", "person",
-                                native=False,
                                 rheader = lambda r: \
                                     s3db.pr_rheader(r, tabs=tabs))
     return output

@@ -207,7 +207,6 @@ def person():
     s3.postp = postp
 
     output = s3_rest_controller("pr", resourcename,
-                                native=False,
                                 rheader=s3db.member_rheader,
                                 replace_option=T("Remove existing data before import"))
     return output
