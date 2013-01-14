@@ -73,6 +73,7 @@ class S3LocationModel(S3Model):
              "gis_country_id",
              "gis_countries_id",
              "gis_country_requires",
+             "gis_country_code_represent",
              "gis_location_onvalidation",
              ]
 
@@ -345,8 +346,20 @@ class S3LocationModel(S3Model):
                     gis_country_id = country_id,
                     gis_countries_id = countries_id,
                     gis_country_requires = country_requires,
+                    gis_country_code_represent = self.gis_country_code_represent,
                     gis_location_onvalidation = self.gis_location_onvalidation,
                 )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def gis_country_code_represent(code):
+        """ FK representation """
+
+        if not code:
+            return current.messages["NONE"]
+
+        return current.gis.get_country(code, key_type="code") or \
+               current.messages.UNKNOWN_OPT
 
     # ---------------------------------------------------------------------
     @staticmethod

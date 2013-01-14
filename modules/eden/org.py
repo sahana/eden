@@ -82,6 +82,7 @@ class S3OrganisationModel(S3Model):
              "org_organisation_branch",
              "org_organisation_user",
              "org_organisation_represent",
+             "org_organisation_address_virtual_field",
              ]
 
     def model(self):
@@ -357,8 +358,8 @@ class S3OrganisationModel(S3Model):
                                    requires=IS_NULL_OR(IS_IN_SET_LAZY(
                                         lambda: gis.get_countries(key_type="code"),
                                                                   zero=messages.SELECT_LOCATION)),
-                                   represent=lambda code: \
-                                        gis.get_country(code, key_type="code") or messages.UNKNOWN_OPT),
+                                   represent=self.gis_country_code_represent,
+                                   ),
                              Field("phone",
                                    label=T("Phone #"),
                                    #readable = False,
@@ -412,7 +413,8 @@ class S3OrganisationModel(S3Model):
                              #document_id(), # Better to have multiple Documents on a Tab
                              * s3_meta_fields())
 
-        table.virtualfields.append(S3OrganisationVirtualFields())
+        # Best not to have this globally
+        #table.virtualfields.append(S3OrganisationVirtualFields())
 
         # CRUD strings
         ADD_ORGANIZATION = T("Add Organization")
@@ -719,7 +721,8 @@ class S3OrganisationModel(S3Model):
                     org_sector_opts=self.org_sector_opts,
                     org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
-                    org_organisation_represent=org_organisation_represent
+                    org_organisation_represent=org_organisation_represent,
+                    org_organisation_address_virtual_field = S3OrganisationVirtualFields,
                 )
 
     # -------------------------------------------------------------------------
@@ -1059,32 +1062,31 @@ class S3OrganisationModel(S3Model):
         if record:
             current.s3db.pr_update_affiliations(table, record)
         return
+
 # =============================================================================
 class S3OrganisationVirtualFields:
-    """ Virtual fields for the org_organisation table """
+    """
+        Virtual fields for the org_organisation table
+        - used by DRRPP Committees/Mechanisms/Forums
+    """
 
     def address(self):
-        """ Fetch the address of an office """
+        """ Return the address of the first office """
 
         db = current.db
         s3db = current.s3db
         otable = s3db.org_office
         gtable = db.gis_location
-        if hasattr(self, "org_organisation") and \
-           "id" in self.org_organisation:
-            query = (otable.deleted != True) & \
-                    (otable.organisation_id == self.org_organisation.id) & \
-                    (otable.location_id == gtable.id)
-            row = db(query).select(gtable.id,
-                                   limitby=(0, 1)).first()
-        else:
-            row = None
+        query = (otable.deleted != True) & \
+                (otable.organisation_id == self.org_organisation.id) & \
+                (otable.location_id == gtable.id)
+        row = db(query).select(gtable.id,
+                               limitby=(0, 1)).first()
 
         if row:
             return s3db.gis_location_represent(row.id)
         else:
-            return None
-
+            return current.messages["NONE"]
 
 # =============================================================================
 class S3OrganisationSummaryModel(S3Model):

@@ -37,8 +37,9 @@ settings.auth.record_approval_required_for = ["org_organisation", "project_proje
 
 # L10n settings
 settings.L10n.languages = OrderedDict([
-    ("en", "English"),
+    ("en-gb", "English"),
 ])
+settings.L10n.default_language = "en-gb"
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0700"
 # Number formats (defaults to ISO 31-0)
@@ -80,7 +81,7 @@ settings.ui.cluster = True
 
 # Organisations
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
-settings.org.summary = True
+#settings.org.summary = True # Doesn't work with DRRPP formstyle
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -113,21 +114,20 @@ def formstyle_row(id, label, widget, comment, hidden=False):
         hide = "hide"
     else:
         hide = ""
-    row = DIV(
-           DIV(comment,label,
-                _id=id + "1",
-                _class="w2p_fl %s" % hide),
-          DIV(widget,
-                _id=id,
-                _class="w2p_fw %s" % hide),
-          _class = "w2p_r",
-             
-            )
+    row = DIV(DIV(comment, label,
+                  _id=id + "1",
+                  _class="w2p_fl %s" % hide),
+              DIV(widget,
+                  _id=id,
+                  _class="w2p_fw %s" % hide),
+              _class = "w2p_r",
+              )
     return row
+
 def form_style(self, xfields):
     """
         @ToDo: Requires further changes to code to use
-        - Adding a formstyle_row setting to use for indivdual rows
+        - Adding a formstyle_row setting to use for individual rows
         Use new Web2Py formstyle to generate form using DIVs & CSS
         CSS can then be used to create MUCH more flexible form designs:
         - Labels above vs. labels to left
@@ -139,8 +139,10 @@ def form_style(self, xfields):
         form.append(formstyle_row(id, a, b, c))
 
     return form
+
 settings.ui.formstyle_row = formstyle_row
-settings.ui.formstyle = form_style
+#settings.ui.formstyle = form_style # Breaks e.g. org/organisation/create
+settings.ui.formstyle = formstyle_row
 
 def customize_project_project(**attr):
     s3db = current.s3db
