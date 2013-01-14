@@ -453,13 +453,13 @@ S3OptionsFilter({
                                         field = ["name",
                                                  "code",
                                                  "description",
-                                                ]
+                                                 ]
                                        ),
                   S3SearchOptionsWidget(
                         name = "project_search_status",
                         label = T("Status"),
                         field = "status_id",
-                        cols = 3,
+                        cols = 4,
                     )
                   ]
         advanced = list(simple)
@@ -522,6 +522,7 @@ S3OptionsFilter({
                         field = "hfa",
                         options = options,
                         help_field = project_hfa_opts,
+                        cols = 5
                     ))
 
         if settings.get_template() == "DRRPP":
@@ -531,10 +532,11 @@ S3OptionsFilter({
                 options[key] = "RFA %s" % key
             append(S3SearchOptionsWidget(
                         name = "project_search_rfa",
-                        label = T("HFA"),
+                        label = T("RFA"),
                         field = "rfa",
                         options = options,
                         help_field = project_rfa_opts(),
+                        cols = 6
                     ))
 
         def project_organisation_opts(role = None):
