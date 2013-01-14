@@ -8113,6 +8113,7 @@ class S3ImportPOI(S3Method):
                 define_resource = s3db.resource
                 response.error = ""
                 import_count = 0
+                sync = {}
                 for tablename in current.deployment_settings.get_gis_poi_resources():
                     try:
                         table = s3db[tablename]
@@ -8126,6 +8127,8 @@ class S3ImportPOI(S3Method):
                         success = resource.import_xml(s3xml,
                                                       ignore_errors=ignore_errors)
                         import_count += resource.import_count
+                        sync[tablename] = resource.import_updated + \
+                                          resource.import_created
                     except:
                         import sys
                         response.error += str(sys.exc_info()[1])
@@ -8133,6 +8136,8 @@ class S3ImportPOI(S3Method):
                     response.confirmation = "%s %s" % \
                         (import_count,
                          T("PoIs successfully imported."))
+                    current.s3task.async("osm_sync_uuids",
+                        args=[str(sync), vars.user, vars.password])
                 else:
                     response.information = T("No PoIs available.")
 
