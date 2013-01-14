@@ -306,7 +306,7 @@ class S3XML(S3Codec):
             obj = etree.SubElement(root, self.TAG.object)
             if contentDescription:
                 desc = etree.SubElement(obj, self.TAG.description)
-                desc.text = self.xml_encode(contentDescription)
+                desc.text = contentDescription
             from copy import deepcopy
             obj.append(deepcopy(contentObject))
         return self.transform(root, stylesheet_path, **args)
@@ -451,8 +451,7 @@ class S3XML(S3Codec):
         else:
             represent = current.manager.represent(table[f],
                                                   value=v,
-                                                  strip_markup=True,
-                                                  xml_escape=True)
+                                                  strip_markup=True)
         return represent
 
     # -------------------------------------------------------------------------
@@ -511,7 +510,6 @@ class S3XML(S3Codec):
         DELETED = self.DELETED
 
         export_uid = self.export_uid
-        xml_encode = self.xml_encode
         represent = self.represent
         filter_mci = self.filter_mci
         tablename = table._tablename
@@ -611,7 +609,7 @@ class S3XML(S3Codec):
                 else:
                     text = represent(table, f, val)
             else:
-                text = xml_encode(value)
+                text = value
 
             entry = {"field":f,
                      "table":ktablename,
@@ -910,7 +908,7 @@ class S3XML(S3Codec):
                     tooltip = tooltips[tablename][id]
                     try:
                         # encode suitable for use as XML attribute
-                        tooltip = self.xml_encode(tooltip).decode("utf-8")
+                        tooltip = tooltip.decode("utf-8")
                     except:
                         pass
                     else:
@@ -1016,7 +1014,6 @@ class S3XML(S3Codec):
         # Fields
         FIELDS_TO_ATTRIBUTES = self.FIELDS_TO_ATTRIBUTES
 
-        xml_encode = self.xml_encode
         encode_iso_datetime = self.encode_iso_datetime
 
         table_fields = table.fields
@@ -1062,9 +1059,9 @@ class S3XML(S3Codec):
                         text = _repr(table, f, v)
 
                 elif value is not None:
-                    text = xml_encode(value)
+                    text = value
                 else:
-                    text = xml_encode(s3_unicode(formatter(v)))
+                    text = s3_unicode(formatter(v))
             else:
                 text = None
 
@@ -1475,7 +1472,7 @@ class S3XML(S3Codec):
                     uid = uids[str(value)]
                 else:
                     uid = None
-                value = cls.xml_encode(s3_unicode(value))
+                value = s3_unicode(value)
                 try:
                     markup = etree.XML(s3_unicode(text))
                     text = markup.xpath(".//text()")
@@ -1485,7 +1482,7 @@ class S3XML(S3Codec):
                         text = ""
                 except:
                     pass
-                text = cls.xml_encode(s3_unicode(text))
+                text = s3_unicode(text)
                 option = etree.SubElement(select, cls.TAG.option)
                 option.set(cls.ATTRIBUTE.value, value)
                 if uid:
@@ -1687,7 +1684,7 @@ class S3XML(S3Codec):
                 element = etree.Element(key)
             if not isinstance(value, (str, unicode)):
                 value = str(value)
-            element.text = cls.xml_encode(value)
+            element.text = value
             return element
 
     # -------------------------------------------------------------------------
@@ -1743,10 +1740,10 @@ class S3XML(S3Codec):
                     element.append(child)
             else:
                 if k == cls.PREFIX.text:
-                    element.text = cls.xml_encode(m)
+                    element.text = m
                 elif k.startswith(cls.PREFIX.attribute):
                     a = k[len(cls.PREFIX.attribute):]
-                    element.set(a, cls.xml_encode(m))
+                    element.set(a, m)
                 else:
                     child = cls.__json2element(k, m, native=native)
                     element.append(child)
@@ -1999,7 +1996,6 @@ class S3XML(S3Codec):
             if value:
                 text = s3_unicode(value).strip()
                 if text.lower() not in ("null", "<null>"):
-                    text = cls.xml_encode(text)
                     col.text = text
             else:
                 col.text = ""
