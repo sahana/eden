@@ -7,6 +7,85 @@
 tasks = {}
 
 # -----------------------------------------------------------------------------
+def osm_sync_uuids(to_sync, username="", password=""):
+    """
+        Synchronises UUIDs for POIs with OSM.
+
+        @param to_sync: (string repr of) a dict with resource names as keys,
+            and lists of PKs
+        of records to be synced
+    """
+
+    # Required because of s3task's funky call mechanism
+    to_sync = eval(to_sync)
+
+    from modules import OsmApi
+
+    api = OsmApi.OsmApi(changesetauto=True,
+        appid="Sahana Eden",
+        debug=True,
+        username=username,
+        password=password)
+
+    gis_poi_res = current.deployment_settings.get_gis_poi_resources()
+    for resource, pks in to_sync.iteritems():
+        if resource not in gis_poi_res:
+            continue
+
+        table = s3db[resource]
+        db = current.db
+        query = (table.id.belongs(pks))
+        rows = db(query).select(table.ALL, db.gis_location.ALL, db.gis_location_tag.ALL,
+            join=[db.gis_location_tag.on(
+            table.location_id == db.gis_location_tag.location_id),
+            db.gis_location.on(table.location_id == db.gis_location.id)])
+
+        # Fetch existing OSM node data (to avoid omitting data)
+        if len(rows) > 0:
+            old_data = api.NodesGet([row.gis_location_tag.value.split(";")[0] for row in rows])
+        else:
+            old_data = {}
+
+        # These updates are automatically batched together by OsmApi
+        # TODO: Determine optimal upload count and set it as default?
+        for row in rows:
+            res = getattr(row, resource)
+            tag = row.gis_location_tag
+            loc = row.gis_location
+            lat, lon = loc.lat, loc.lon
+            uuid = res.uuid
+            osm_id, osm_version = tag.value.split(";")
+
+            d = {
+                "id": osm_id,
+                "lat": lat,
+                "lon": lon,
+                "version": osm_version,
+                "tag": {
+                    "sahana:uuid": uuid
+                }
+            }
+
+            osm_id = int(osm_id)
+
+            if osm_id in old_data:
+                old_data[osm_id].update(d)
+            else:
+                old_data[osm_id] = d
+
+            api.NodeUpdate(old_data[osm_id])
+
+
+tasks["osm_sync_uuids"] = osm_sync_uuids
+
+#    resources = current.deployment_settings.get_gis_poi_resources()
+#    for resource in resources:
+#        table = s3db[resource]
+#        db = current.db
+#        query = (table.)
+#        db(query).select()
+
+# -----------------------------------------------------------------------------
 def crop_image(path, x1, y1, x2, y2, width):
     from PIL import Image
     image = Image.open(path)

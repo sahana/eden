@@ -363,8 +363,14 @@
                     <xsl:text>openstreetmap</xsl:text>
                 </data>
                 <data field="value">
-                    <xsl:value-of select="@id"/>
+                    <xsl:value-of select="concat(@id, ';', @version)"/>
                 </data>
+                <reference field="location_id"
+                           resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('urn:osm:id:', @id)" />
+                    </xsl:attribute>
+                </reference>
             </resource>
 
             <!-- @ToDo: Is there a way of combining housenumber with street
