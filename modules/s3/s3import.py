@@ -2913,7 +2913,7 @@ class S3ImportJob():
                                     ATTRIBUTE.name,
                                     tablename,
                                     attr,
-                                    uid)
+                                    xml.xml_encode(uid))
                         e = root.xpath(expr)
                         if e:
                             # Element in the source => append to relements
