@@ -68,7 +68,7 @@
             <xsl:when test="//reference[@resource='gis_location' and @uuid=$uid]">
                 <!-- If the Location is an FK, then process the template for the primary resource -->
                 <xsl:for-each select="//reference[@resource='gis_location' and @uuid=$uid]">
-                    <xsl:if test="not(../@name='gis_location')">
+                    <xsl:if test="not(../@name='gis_location') and not(../@ref)">
                         <xsl:apply-templates select=".."/>
                     </xsl:if>
                 </xsl:for-each>
