@@ -144,19 +144,14 @@ class S3Report(S3CRUD):
                 session_options = s3.report_options
                 if session_options and tablename in session_options:
                     if clear_opts:
-                        # Clear all filter options (but not report options)
-                        opts = Storage([(o, v)
-                                    for o, v in session_options[tablename].items()
-                                    if o in ("rows", "cols", "fact", "aggregate", "show_totals")])
-                        session_options[tablename] = opts
-                        session_options = opts
+                        session_options = Storage()
                     else:
                         session_options = session_options[tablename]
                 else:
                     session_options = Storage()
+
                 if session_options:
                     form_values = session_options
-
                 # otherwise, fallback to report_options (table config)
                 else:
                     report_options = self._config("report_options", Storage())
@@ -183,7 +178,7 @@ class S3Report(S3CRUD):
             # Build the form and prepopulate with values we've got
             opts = Storage(r.get_vars)
             opts["clear_opts"] = "1"
-            clear_opts = A(T("Reset all filters"),
+            clear_opts = A(T("Reset all filters and options"),
                            _href=r.url(vars=opts),
                            _class="action-lnk")
             form = self._create_form(form_values, clear_opts=clear_opts)
@@ -474,13 +469,14 @@ class S3Report(S3CRUD):
                     LEGEND(T("Filter Options"),
                         BUTTON(self.SHOW,
                                _type="button",
-                               _class="toggle-text",
-                               _style="display:none"),
+                               _class="toggle-text"),
                         BUTTON(self.HIDE,
                                _type="button",
-                               _class="toggle-text")
+                               _class="toggle-text",
+                               _style="display:none" ) #Hide by default
                     ),
-                    TABLE(trows),
+                    TABLE(trows,
+                          _style="display:none" ), #Hide by default
                     _id="filter_options"
                 )
 
@@ -544,11 +540,10 @@ class S3Report(S3CRUD):
                     BUTTON(self.SHOW,
                            _type="button",
                            _class="toggle-text",
-                           _style="display:none" if not hidden else ""),
+                           _style="display:none" ), #Show by default
                     BUTTON(self.HIDE,
                            _type="button",
-                           _class="toggle-text",
-                           _style="display:none" if hidden else "")
+                           _class="toggle-text")
                 ),
                 selectors, _id="report_options")
 
@@ -848,7 +843,7 @@ class S3ContingencyTable(TABLE):
             layer_opts = report_options["fact"]
             for item in layer_opts:
                 if isinstance(item, (tuple, list)) and len(item) == 3:
-                    if not "." in item[0].split("$")[0]:
+                    if not isinstance(item[0], tuple) and not "." in item[0].split("$")[0]:
                         item = ("%s.%s" % (resource.alias, item[0]),
                                 item[1],
                                 item[2])

@@ -3,7 +3,6 @@
    <resource name="org_organisation" uuid="%(org)s">
      <data field="name">%(org)s</data>
      
-     
      <!-- Office-A -->
      <resource name="org_office" uuid="%(org)s Office-A">
        <data field="name">%(org)s Office-A</data>

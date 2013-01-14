@@ -135,6 +135,7 @@ def user():
         title_list = T("Users"),
         title_update = T("Edit User"),
         title_search = T("Search Users"),
+        title_upload = T("Import Users"),
         subtitle_create = T("Add New User"),
         label_list_button = T("List Users"),
         label_create_button = ADD_USER,
@@ -274,7 +275,11 @@ def user():
     s3.postp = postp
 
     output = s3_rest_controller("auth", "user",
-                                rheader=rheader)
+                                rheader=rheader,
+                                #@ToDo: Doesn't Import Roles
+                                csv_template=("auth", "user"),
+                                csv_stylesheet=("auth", "user.xsl"),
+                                )
     return output
 
 # =============================================================================

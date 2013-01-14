@@ -138,7 +138,7 @@ img#matrix_img {
     width: 165px;
 }
 
-#register-btn {
+#login_div #register-btn {
     float: left;
     font-size: 12px;
 }

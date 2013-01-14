@@ -1295,6 +1295,7 @@ def item_um_from_name(name):
             # Remove trailing , & wh sp
             name = re.sub("(,)$", "", name).strip()
             return (name, um)
+    return (name, None)
 
 # =============================================================================
 def supply_item_rheader(r):
