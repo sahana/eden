@@ -1,0 +1,141 @@
+/* dataTables Styling */
+div .dataTable_table {
+    /* Scroll the table not the wrapper */
+    overflow: auto;
+    clear: both;
+}
+table.dataTable {
+    width: 100%;
+}
+table.dataTable tr td {
+    vertical-align: top;
+}
+table.dataTable.group {
+	background-color: #ddd;
+	border: 1px solid #aaa;
+}
+table.dataTable tr.level_1{
+	background-color: #999;
+    color: #DDEEFF;
+}
+table.dataTable tr.level_1 a{
+    color: #DDEEFF;
+}
+table.dataTable tr.activeRow.level_1 {
+	background-color: #1D70CF;
+}
+table.dataTable tr.level_2{
+	background-color: #ddd;
+    color: #248;
+}
+table.dataTable tr.level_2 a{
+    color: #248;
+}
+table.dataTable tr.activeRow.level_2{
+	background-color: #528DD1;
+}
+
+div.dataTables_filter {
+    width: auto;
+    float: left;
+    margin-bottom: 4px;
+}
+div.dataTables_processing {
+	float: left;
+	margin-left: 10px;
+}
+div.dataTables_info  {
+	width: auto;
+    float: right;
+    clear: none;
+    margin: 7px 0 4px 10px;
+}
+div.dataTables_length {
+    float: right;
+    margin-bottom:4px;
+}
+div.dataTables_paginate {
+	float: left;
+    margin: 4px 0 4px 0;
+}
+/* datatables fixed headers must not be transparent */
+table.dataTable th {
+    background: no-repeat scroll right center #F0F3F4;
+}
+table.dataTable .row_selected td {
+	background-color: #ddd;
+	border: 1px solid #aaa;
+}
+
+table.dataTable tr.dtalert .action-btn,
+table.dataTable tr.dtalert .delete-btn {
+	background-color: #D0D004;
+	color: #444420;
+}
+table.dataTable tr.dtalert .action-btn:hover,
+table.dataTable tr.dtalert .delete-btn:hover {
+    text-decoration: none;
+    color: #222;
+    background-color: #EEED04;
+    border-right: 1px solid #4589ce;
+    border-bottom: 1px solid #4589ce;
+    border-left: 1px solid #000;
+    border-top: 1px solid #000;
+    padding: 2px 4px 2px 4px;
+}
+table.dataTable tr.dtdisable {
+    text-shadow: #CCC 1px 1px 1px;
+	color: #888;
+}
+table.dataTable tr.even.row_selected td { background-color: #60F6AD; }
+table.dataTable tr.even.row_selected td.sorting_1 { background-color: #40FA8D; }
+table.display tr.odd.row_selected td { background-color: #40FA8D; }
+table.display tr.odd.row_selected td.sorting_1 { background-color: #20F0AD; }
+
+table.dataTable tr.odd.dtalert { background-color: #FFFFC0; }
+table.dataTable tr.odd.dtalert td.sorting_1 { background-color: #FFFFB0; }
+table.dataTable tr.odd.dtalert td.sorting_2 { background-color: #FFFFA0; }
+table.dataTable tr.odd.dtalert td.sorting_3 { background-color: #FFFF90; }
+table.dataTable tr.even.dtalert { background-color: #FFFFA0; }
+table.dataTable tr.even.dtalert td.sorting_1 { background-color: #FFFF90; }
+table.dataTable tr.even.dtalert td.sorting_2 { background-color: #FFFF80; }
+table.dataTable tr.even.dtalert td.sorting_3 { background-color: #FFFF70; }
+
+table.dataTable tr.odd.dtwarning { background-color: #FFD9D9; }
+table.dataTable tr.odd.dtwarning td.sorting_1 { background-color: #FFB6B6; }
+table.dataTable tr.odd.dtwarning td.sorting_2 {	background-color: #FFA6A6; }
+table.dataTable tr.odd.dtwarning td.sorting_3 { background-color: #FF9696; }
+table.dataTable tr.even.dtwarning { background-color: #FFA6A6; }
+table.dataTable tr.even.dtwarning td.sorting_1 { background-color: #FF8383; }
+table.dataTable tr.even.dtwarning td.sorting_2 { background-color: #FF7373; }
+table.dataTable tr.even.dtwarning td.sorting_3 { background-color: #FF6363; }
+table.dataTable tr.dtwarning .action-btn,
+table.dataTable tr.dtwarning .delete-btn{
+	background-color: #D07060;
+	color: #431;
+    text-shadow: #FFF 0px 0px 0px;
+}
+table.dataTable tr.dtwarning .action-btn:hover,
+table.dataTable tr.dtwarning .delete-btn:hover {
+    text-decoration: none;
+    color: #fff;
+    background-color: #bb3377;
+    border-right: 1px solid #4589ce;
+    border-bottom: 1px solid #4589ce;
+    border-left: 1px solid #000;
+    border-top: 1px solid #000;
+    padding: 2px 4px 2px 4px;
+}
+
+span.dataTable-btn {
+	background-color: #ddd;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+	padding: 2px 5px;
+	margin: 0 3px;
+	cursor: pointer;
+	*cursor: hand;
+}
+span.dataTable-btn:hover {
+	background-color: #EFEFEF;
+}
