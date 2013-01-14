@@ -53,23 +53,7 @@ from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 from s3export import S3Exporter
 
-from s3resource import S3FieldSelector, S3Resource
-
-__all__ = ["S3SearchWidget",
-           "S3SearchSimpleWidget",
-           "S3SearchMinMaxWidget",
-           "S3SearchOptionsWidget",
-           "S3SearchLocationWidget",
-           "S3SearchSkillsWidget",
-           "S3SearchOrgHierarchyWidget",
-           "S3Search",
-           "S3LocationSearch",
-           "S3OrganisationSearch",
-           "S3PersonSearch",
-           "S3HRSearch",
-           "S3PentitySearch",
-           "S3SiteAddressSearch",
-           ]
+from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
 
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
@@ -2825,5 +2809,247 @@ class S3SiteAddressSearch(S3Search):
 
         response.headers["Content-Type"] = "application/json"
         return output
+
+# =============================================================================
+# New framework classes
+# =============================================================================
+class S3FilterWidget(object):
+    """ Filter widget for interactive search forms (base class) """
+
+    #: the HTML class for the widget type
+    _class = "generic-filter"
+
+    #: the query operator(s) for the widget type
+    operator = None
+    
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Prototype method to render this widget as an instance of
+            a web2py HTML helper class, to be implemented by subclasses.
+
+            @param resource: the S3Resource to render with widget for
+            @param values: the values for this widget from the URL query
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def variable(self, resource):
+        """
+            Prototype method to generate the name for the URL query variable
+            for this widget, can be overwritten in subclasses.
+
+            @param resource: the resource
+            @return: the URL query variable name (or list of
+                     variable names if there are multiple operators)
+        """
+
+        selector = self._selector(resource, self.field)
+        if not selector:
+            return None
+        return self._variable(selector, self.operator)
+
+    # -------------------------------------------------------------------------
+    # Helper methods
+    #
+    def __init__(self, field=None, **attr):
+        """
+            Constructor to configure the widget
+
+            @param selector: the selector(s) for the field(s) to filter by
+            @param attr: configuration options for this widget
+        """
+
+        self.field = field
+
+        attributes = Storage()
+        options = Storage()
+        for k, v in attr.iteritems():
+            if k[0] == "_":
+                attributes[k] = v
+            else:
+                options[k] = v
+        self.attr = attributes
+        self.opts = options
+
+    # -------------------------------------------------------------------------
+    def __call__(self, resource, get_vars=None):
+        """
+            Entry point for the form builder
+
+            @param resource: the S3Resource to render with widget for
+            @param get_vars: the GET vars (URL query vars) to prepopulate
+                             the widget
+        """
+
+        _class = self._class
+
+        # Construct name and id for the widget
+        attr = self.attr
+        if "_name" not in attr:
+            attr["_name"] = "%s-%s" % (resource.alias, _class)
+        if "_id" not in attr:
+            attr["_id"] = attr["_name"]
+        self.attr = attr
+
+        # Construct the hidden data element
+        variable = self.variable(resource)
+        if type(variable) is list:
+            values = Storage()
+            for k in variable:
+                values[k] = self._values(get_vars, k)
+            variable = "&".join(variable)
+        else:
+            values = self._values(get_vars, variable)
+        data = INPUT(_type="hidden",
+                     _id="%s-data" % attr["_id"],
+                     _class="filter-widget-data %s-data" % _class,
+                     _value=variable)
+
+        # Construct the widget
+        widget = self.widget(resource, values)
+
+        return TAG[""](data, widget)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _selector(cls, resource, fields):
+        """
+            Helper method to generate a filter query selector for the
+            given field(s) in the given resource.
+
+            @param resource: the S3Resource
+            @param fields: the field selectors (as strings)
+
+            @return: the filter query selector, or None if none of the
+                     field selectors could be resolved
+        """
+
+        alias = resource.alias
+        prefix = cls._prefix
+
+        if not fields:
+            return None
+        if not isinstance(fields, (list, tuple)):
+            fields = [fields]
+        selectors = []
+        for field in fields:
+            try:
+                rfield = S3ResourceField(resource, field)
+            except (AttributeError, TypeError):
+                continue
+            selectors.append(prefix(alias, rfield.selector))
+        if selectors:
+            return "|".join(selectors)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _prefix(alias, selector):
+        """
+            Helper method to prefix an unprefixed field selector
+
+            @param alias: the resource alias to use as prefix
+            @param selector: the field selector
+
+            @return: the prefixed selector
+        """
+
+        if "." not in selector.split("$", 1)[0]:
+            return "%s.%s" % (alias, selector)
+        else:
+            return selector
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _variable(cls, selector, operator):
+        """
+            Construct URL query variable(s) name from a filter query
+            selector and the given operator(s)
+
+            @param selector: the selector
+            @param operator: the operator (or tuple/list of operators)
+
+            @return: the URL query variable name (or list of variable names)
+        """
+
+        if isinstance(operator, (tuple, list)):
+            return [cls._variable(selector, o) for o in operator]
+        elif operator:
+            return "%s__%s" % (selector, operator)
+        else:
+            return selector
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _values(get_vars, variable):
+        """
+            Helper method to get all values of a URL query variable
+
+            @param get_vars: the GET vars (a dict)
+            @param variable: the name of the query variable
+
+            @return: a list of values
+        """
+
+        if not variable:
+            return []
+        elif variable in get_vars:
+            values = S3URLQuery.parse_value(get_vars[variable])
+            if type(values) is not list:
+                values = [values]
+            return values
+        else:
+            return []
+
+# =============================================================================
+class S3TextFilter(S3FilterWidget):
+
+    _class = "text-filter"
+
+    operator = "like"
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param get_vars: the GET variables
+        """
+        
+        attr = self.attr
+        
+        if "_size" not in attr:
+            attr.update(_size="40")
+        attr.update(_type="text")
+
+        values = [v.strip("*") for v in values]
+        if values:
+            attr["_value"] = " ".join(values)
+
+        return INPUT(**attr)
+
+# =============================================================================
+class S3OptionsFilter(S3FilterWidget):
+
+    _class = "options-filter"
+
+# =============================================================================
+class S3RangeFilter(S3FilterWidget):
+
+    _class = "range-filter"
+
+# =============================================================================
+class S3DateFilter(S3FilterWidget):
+
+    _class = "date-filter"
+
+# =============================================================================
+class S3LocationFilter(S3FilterWidget):
+
+    _class = "location-filter"
 
 # END =========================================================================

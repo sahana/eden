@@ -220,9 +220,15 @@ class S3NavigationItem(object):
         self.override_url = url
 
         # Layout attributes and options
-        attr = attributes.items()
-        self.attr = Storage((k, v) for k, v in attr if k[0] == "_")
-        self.opts = Storage((k, v) for k, v in attr if k[0] != "_")
+        attr = Storage()
+        opts = Storage()
+        for k, v in attributes.iteritems():
+            if k[0] == "_":
+                attr[k] = v
+            else:
+                opts[k] = v
+        self.attr = attr
+        self.opts = opts
 
         # Initialize parent and components
         self.parent = parent
