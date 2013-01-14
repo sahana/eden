@@ -1943,7 +1943,7 @@ class S3CRUD(S3Method):
                     if field.type == "upload":
                         data.set(xml.ATTRIBUTE.filename, value)
                     else:
-                        data.text = xml.xml_encode(value)
+                        data.text = value
                     element.append(data)
         tree = xml.tree([element], domain=manager.domain)
 

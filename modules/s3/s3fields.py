@@ -721,7 +721,6 @@ class S3RepresentLazy(object):
                 text = stripper.stripped()
             except:
                 pass
-        text = current.xml.xml_encode(text)
 
         # Add to node
         if element is not None:
