@@ -1299,6 +1299,8 @@ def item_um_from_name(name):
             name = re.sub("(,)$", "", name).strip()
             return (name, um)
 
+    return (name, None)
+
 # =============================================================================
 def supply_item_rheader(r):
     """ Resource Header for Items """

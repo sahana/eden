@@ -399,6 +399,7 @@ $(document).ready(function() {
     // d - Compact report data (see S3PivotTable.compact())
     // u - URL of the resource
     // f - URL query variables of the report filter widgets
+    // h - whether to hide the Options widgets by default
 
     $('#pie_chart_rows').click(function() {
         emptyChart();
@@ -473,7 +474,7 @@ $(document).ready(function() {
         }
     });
     if (json_data.h) {
-        // Hide the report options when the page loads
+        // deployment_setting set to hide the report options by default
         $('#report_options legend').siblings().toggle();
         $('#report_options legend').children().toggle();
     }

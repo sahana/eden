@@ -8,11 +8,11 @@
     </p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname),
-           _href=URL(c="project", f="project", args=["matrix"]),
+           _href=URL(c="project", f="project", args=["report"]),
            _title="Project Matrix Report")}}
     </p>
     <p>
-      {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["matrix"]))}}
+      {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["report"]))}}
     </p>
 </div>
 <div id="project_analysis_graph" class="page_column">
@@ -22,7 +22,8 @@
     </p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname),
-           _href=URL(c="project", f="project", args=["graphs"] ),
+           _href=URL(c="project", f="project", args=["report"],
+                     vars=dict(chart="breakdown:rows")),
           _title="Project Graphs")}}
     </p>
     <p>

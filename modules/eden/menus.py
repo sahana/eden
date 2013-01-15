@@ -370,7 +370,8 @@ class S3OptionsMenu(object):
                     ),
                     M("User Management", c="admin", f="user")(
                         M("New User", m="create"),
-                        M("List All Users", f="user"),
+                        M("List All Users"),
+                        M("Import Users", m="import"),
                         M("List All Roles", f="role"),
                         M("List All Organization Approvers & Whitelists", f="organisation"),
                         #M("Roles", f="group"),

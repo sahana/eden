@@ -55,12 +55,12 @@ class index():
 
         list_img = A(IMG(_src="/%s/static/themes/DRRPP/img/list_img.png" % appname,
                          _id="list_img"),
-                     _href=URL(c="project", f="project", args=["list"]),
+                     _href=URL(c="project", f="project", args=["search"]),
                      _title="Project List")
 
         matrix_img = A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname,
                            _id="matrix_img"),
-                       _href=URL(c="project", f="project", args=["matrix"]),
+                       _href=URL(c="project", f="project", args=["report"]),
                        _title="Project Matrix Report")
 
         map_img = A(IMG(_src="/%s/static/themes/DRRPP/img/map_img.png" % appname,
@@ -70,7 +70,8 @@ class index():
 
         graph_img = A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname,
                           _id="graph_img"),
-                      _href=URL(c="project", f="project", args=["graphs"]),
+                      _href=URL(c="project", f="project", args=["report"],
+                                vars=dict(chart="breakdown:rows")),
                       _title="Project Graph")
 
         add_pipeline_project_link = URL(c="project",
@@ -180,13 +181,13 @@ class index():
                     TABLE(TR(projects,
                              A("Projects",
                                _href=URL(c="project", f="project",
-                                         args=["list"]))
+                                         args=["search"]))
                              ),
                           TR(TD(),
                              TABLE(TR(projects,
                                       A("Current Projects",
                                         _href=URL(c="project", f="project",
-                                                  args=["list"],
+                                                  args=["search"],
                                                   vars={"status_id":2}))
                                      )
                                    )
@@ -195,7 +196,7 @@ class index():
                              TABLE(TR(projects,
                                       A("Proposed Projects",
                                         _href=URL(c="project", f="project",
-                                                  args=["list"],
+                                                  args=["search"],
                                                   vars={"status_id":1}))
                                      )
                                     )
@@ -204,7 +205,7 @@ class index():
                              TABLE(TR(projects,
                                       A("Completed Projects",
                                         _href=URL(c="project", f="project",
-                                                  args=["list"],
+                                                  args=["search"],
                                                   vars={"status_id":3}))
                                      )
                                     )
