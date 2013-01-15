@@ -193,7 +193,7 @@ class S3FilterWidgetTests(unittest.TestCase):
         self.assertEqual(i, "%s-%s-data" % (resource.alias, widget._class))
 
         v = attr["_value"]
-        self.assertEqual(v, "office.name|office.organisation_id$name")
+        self.assertEqual(v, "~.name|~.organisation_id$name")
             
     def testSelector(self):
         """ Test construction of the URL query selector for a filter widget """
@@ -203,7 +203,7 @@ class S3FilterWidgetTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation")
         selector = S3FilterWidget._selector(resource, fields)
-        self.assertEqual(selector, "organisation.name")
+        self.assertEqual(selector, "~.name")
 
         fields = "nonexistent_component.name"
 
@@ -215,7 +215,7 @@ class S3FilterWidgetTests(unittest.TestCase):
 
         resource = s3db.resource("org_office")
         selector = S3FilterWidget._selector(resource, fields)
-        self.assertEqual(selector, "office.name|office.organisation_id$name")
+        self.assertEqual(selector, "~.name|~.organisation_id$name")
 
         fields = []
 
