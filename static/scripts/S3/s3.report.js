@@ -472,11 +472,6 @@ $(document).ready(function() {
             }
         }
     });
-    if (json_data.h) {
-        // Hide the report options when the page loads
-        $('#report_options legend').siblings().toggle();
-        $('#report_options legend').children().toggle();
-    }
 
     // Render default chart
     if (undefined !== chart_opts) {

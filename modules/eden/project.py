@@ -600,13 +600,24 @@ S3OptionsFilter({
             list_fields = ["id",
                            "name",
                            "start_date",
-                           "countries_id",
+                           ("location.location_id", T("Countries")),
                            "multi_hazard_id",
                            (T("Lead Organization"), "organisation_id"),
                            # @ToDo: Replace Virtual Field with Component lookup
                            #(T("Donor(s)"), "drrpp.donors"),
-                           (T("Donor(s)"), "donors"),
+                           (T("Donors"), "donors"),
                            ]
+            report_fields = ["countries_id",
+                             "multi_hazard_id",
+                             "multi_theme_id",
+                             "hfa",
+                             (T("RFA Priorities"), "rfa"),
+                             (T("Lead Organization"), "organisation_id"),
+                             (T("Partners Organization"), "partners"),
+                             # @ToDo: Replace Virtual Field with Component lookup
+                             #(T("Donor(s)"), "drrpp.donors"),
+                             (T("Donors"), "donors"),
+                             ]
         else:
             list_fields = ["id"]
             append = list_fields.append
@@ -631,8 +642,7 @@ S3OptionsFilter({
                 append((T("Total Annual Budget"), "total_annual_budget"))
             append("start_date")
             append("end_date")
-
-        report_fields = list_fields
+            report_fields = list_fields
 
         configure(tablename,
                   super_entity="doc_entity",
@@ -646,7 +656,7 @@ S3OptionsFilter({
                     search=advanced,
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=[(field, "count") for field in report_fields],
                     defaults=Storage(
                         rows="project.multi_hazard_id",
                         cols="project.countries_id",
