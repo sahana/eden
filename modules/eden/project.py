@@ -538,46 +538,52 @@ S3OptionsFilter({
             append(S3SearchOptionsWidget(
                         name = "project_search_rfa",
                         label = T("RFA"),
-                        field = "rfa",
+                        field = "drrpp.rfa",
                         options = options,
                         help_field = project_rfa_opts(),
                         cols = 6
                     ))
 
-        def project_organisation_opts(role = None):
-            db = current.db
-            s3db = current.s3db
-            potable = s3db.project_organisation
-            otable = s3db.org_organisation
+            def project_organisation_opts(role=None):
+                """
+                    provide the options for the Search Filters
+                """
 
-            query = (potable.deleted == False) & \
+                db = current.db
+                s3db = current.s3db
+                potable = s3db.project_organisation
+                otable = s3db.org_organisation
+
+                query = (potable.deleted == False) & \
                         (potable.organisation_id == otable.id)
-            if role:
-                query = query & (potable.role == role)
+                if role:
+                    query = query & (potable.role == role)
 
-            rows = db(query).select(otable.name,
-                                    orderby=otable.name)
-            opts = {}
-            for row in rows:
-                opts[row.name] = row.name
+                rows = db(query).select(otable.name,
+                                        orderby=otable.name)
+                opts = {}
+                for row in rows:
+                    opts[row.name] = row.name
 
-            return opts
+                return opts
 
-        append(S3SearchOptionsWidget(
-                    name = "project_search_partners",
-                    field = "partners",
-                    label = T("Partners"),
-                    cols = 3,
-                    options = lambda role = 2:project_organisation_opts(role)
-                ))
+            append(S3SearchOptionsWidget(
+                        name = "project_search_partners",
+                        field = "drrpp.partners",
+                        label = T("Partners"),
+                        cols = 3,
+                        options = lambda role=2: \
+                            project_organisation_opts(role)
+                    ))
 
-        append(S3SearchOptionsWidget(
-                    name = "project_search_donors",
-                    field = "donors",
-                    label = T("Donor"),
-                    cols = 3,
-                    options = lambda role = 3:project_organisation_opts(role)
-                ))
+            append(S3SearchOptionsWidget(
+                        name = "project_search_donors",
+                        field = "drrpp.donors",
+                        label = T("Donor"),
+                        cols = 3,
+                        options = lambda role=3:
+                            project_organisation_opts(role)
+                    ))
 
         project_search = S3Search(simple = simple,
                                   advanced = advanced)
@@ -595,8 +601,7 @@ S3OptionsFilter({
 
         if settings.get_template() == "DRRPP":
             table.name.label = T("Project Title")
-            table.virtualfields.append(S3ProjectDRRPPVirtualFields())
-            table.virtualfields.append(S3ProjectOrganisationVirtualFields())
+            #table.virtualfields.append(S3ProjectOrganisationVirtualFields())
             list_fields = ["id",
                            "name",
                            "start_date",
@@ -605,20 +610,21 @@ S3OptionsFilter({
                            "multi_hazard_id",
                            (T("Lead Organization"), "organisation_id"),
                            # @ToDo: Replace Virtual Field with Component lookup
-                           #(T("Donor(s)"), "drrpp.donors"),
-                           (T("Donors"), "donors"),
+                           (T("Donors"), "drrpp.donors"),
+                           #(T("Donors"), "donors"),
                            ]
             report_fields = [#"countries_id",
                              (T("Countries"), "location.location_id"),
                              "multi_hazard_id",
                              "multi_theme_id",
                              "hfa",
-                             (T("RFA Priorities"), "rfa"),
+                             (T("RFA Priorities"), "drrpp.rfa"),
                              (T("Lead Organization"), "organisation_id"),
-                             (T("Partners Organization"), "partners"),
-                             # @ToDo: Replace Virtual Field with Component lookup
-                             #(T("Donor(s)"), "drrpp.donors"),
-                             (T("Donors"), "donors"),
+                             # @ToDo: Replace Virtual Fields with Component lookups
+                             (T("Partner Organizations"), "drrpp.partners"),
+                             (T("Donors"), "drrpp.donors"),
+                             #(T("Partners Organization"), "partners"),
+                             #(T("Donors"), "donors"),
                              ]
             report_col_default = "location.location_id"
         else:
@@ -1458,7 +1464,7 @@ class S3Project3WModel(S3Model):
                          (ORGANISATION, "organisation"),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
-                        ]
+                         ]
         list_fields = ["location_id",
                        (COUNTRY, "location_id$L0"),
                        "location_id$L1",
@@ -2117,10 +2123,10 @@ class S3Project3WModel(S3Model):
             project.organisation to point to the same organisation
             & update the realm_entity.
 
-            #In DRRPP, update the donors field
+            In DRRPP, update the donors & partners fields
         """
+
         db = current.db
-        s3db = current.s3db
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars
@@ -2130,25 +2136,28 @@ class S3Project3WModel(S3Model):
                                                      limitby=(0, 1)
                                                      ).first().project_id
 
-        #if current.deployment_settings.get_template() == "DRRPP":
-        #    dtable = db.project_drrpp
+        if current.deployment_settings.get_template() == "DRRPP":
+            dtable = db.project_drrpp
 
             # Get all the Donors for this Project
-        #    query = (otable.deleted == False) & \
-        #            (otable.role == 3) & \
-        #            (otable.project_id == project_id)
-        #    rows = db(query).select(otable.organisation_id)
-        #    if rows:
-        #        db(dtable.project_id == project_id).update(
-        #                # @ToDo: Remove if row.organisation_id once we have the DRRPP import working
-        #                donors=[row.organisation_id for row in rows if row.organisation_id]
-        #            )
+            query = (otable.deleted == False) & \
+                    (otable.project_id == project_id)
+            rows = db(query).select(otable.organisation_id,
+                                    otable.role)
+            if rows:
+                db(dtable.project_id == project_id).update(
+                        # @ToDo: Remove if row.organisation_id once we have the DRRPP import working
+                        #donors=[row.organisation_id for row in rows if row.organisation_id]
+                        donors=[row.organisation_id for row in rows if row.role == 3],
+                        partners=[row.organisation_id for row in rows if row.role == 2],
+                    )
 
         if str(vars.role) == \
              str(current.response.s3.project_organisation_lead_role):
 
             # Set the Project's organisation_id to the new lead organisation
             organisation_id = vars.organisation_id
+            s3db = current.s3db
             db(ptable.id == project_id).update(
                                         organisation_id = organisation_id,
                                         realm_entity = s3db.pr_get_pe_id("org_organisation",
@@ -2770,6 +2779,7 @@ class S3ProjectThemeModel(S3Model):
 
 # =============================================================================
 # RFA - Needed in Project Class to define search widgets
+# - applicable to projects in Pacific countries only
 def project_rfa_opts():
     T = current.T
     return {
@@ -2818,10 +2828,13 @@ class S3ProjectDRRPPModel(S3Model):
                            label = T("Activities"),
                            ),
                      # Populated onaccept from project_organisation
-                     # Is this field needed? Donors should be saved under project_organisation
-                     #Field("donors", "list:reference org_organisation",
-                     #      label = T("Donor(s)"),
-                     #      ),
+                     # - avoids use of expensive Virtual Fields in reporting
+                     Field("donors", "list:reference org_organisation",
+                           label = T("Donors"),
+                           ),
+                     Field("partners", "list:reference org_organisation",
+                           label = T("Partners"),
+                           ),
                      Field("rfa", "list:integer",
                            label = T("RFA Priorities"),
                            requires = IS_NULL_OR(IS_IN_SET(project_rfa_opts().keys(),
@@ -4324,29 +4337,6 @@ def task_notify(form):
     return
 
 # =============================================================================
-class S3ProjectDRRPPVirtualFields:
-    """ Virtual fields for the project_project table for DRRPP """
-
-    # -------------------------------------------------------------------------
-    def rfa(self):
-        """
-            RFAs for Project
-
-            @ToDo: Replace this with component lookup
-                   - or make role configurable
-        """
-
-        s3db = current.s3db
-        drrpptable = s3db.project_drrpp
-        query = (drrpptable.project_id == self.project_project.id) & \
-                (drrpptable.deleted != True)
-        row = current.db(query).select(drrpptable.rfa).first()
-        if row:
-            return row.rfa
-        else:
-            return current.messages["NONE"]
-
-# =============================================================================
 class S3ProjectOrganisationVirtualFields:
     """ Virtual fields for the project_project table for DRRPP """
 
@@ -4391,8 +4381,8 @@ class S3ProjectOrganisationVirtualFields:
                 (potable.organisation_id == otable.id)
         rows = current.db(query).select(otable.name)
         if rows:
-            donors = [row.name for row in rows]
-            return ", ".join(donors)
+            partners = [row.name for row in rows]
+            return ", ".join(partners)
         else:
             return current.messages["NONE"]
 
