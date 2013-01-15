@@ -3061,16 +3061,17 @@ def org_organisation_controller():
                 type_crud_strings = {
                     "Red Cross / Red Crescent" :
                         # @ToDo: IFRC isn't an NS?
+                        ADD_NS = T("Add National Society")
                         Storage(
-                            title_create=T("Add National Society"),
+                            title_create=ADD_NS,
                             title_display=T("National Society Details"),
                             title_list=T("Red Cross & Red Crescent National Societies"),
                             title_update=T("Edit National Society"),
                             title_search=T("Search Red Cross & Red Crescent National Societies"),
                             title_upload=T("Import Red Cross & Red Crescent National Societies"),
-                            subtitle_create=T("Add National Society"),
+                            subtitle_create=ADD_NS,
                             label_list_button=T("List Red Cross & Red Crescent National Societies"),
-                            label_create_button=T("Add National Society"),
+                            label_create_button=ADD_NS,
                             label_delete_button=T("Delete National Society"),
                             msg_record_created=T("National Society added"),
                             msg_record_modified=T("National Society updated"),
@@ -3078,14 +3079,15 @@ def org_organisation_controller():
                             msg_list_empty=T("No Red Cross & Red Crescent National Societies currently registered")
                             ),
                     "Supplier" :
+                        ADD_SUPPLIER = T("Add Supplier")
                         Storage(
-                            title_create=T("Add Supplier"),
+                            title_create=ADD_SUPPLIER,
                             title_display=T("Supplier Details"),
                             title_list=T("Suppliers"),
                             title_update=T("Edit Supplier"),
                             title_search=T("Search Suppliers"),
                             title_upload=T("Import Suppliers"),
-                            subtitle_create=T("Add Supplier"),
+                            subtitle_create=ADD_SUPPLIER,
                             label_list_button=T("List Suppliers"),
                             label_create_button=T("Add Suppliers"),
                             label_delete_button=T("Delete Supplier"),
@@ -3095,21 +3097,22 @@ def org_organisation_controller():
                             msg_list_empty=T("No Suppliers currently registered")
                             ),
                     "Bilateral,Government,Intergovernmental,NGO,UN agency" :
+                        ADD_PARTNER = T("Add Partner Organization")
                         Storage(
-                            title_create=T("Add Partner Organisation"),
-                            title_display=T("Partner Organisation Details"),
-                            title_list=T("Partner Organisations"),
-                            title_update=T("Edit Partner Organisation"),
-                            title_search=T("Search Partner Organisations"),
-                            title_upload=T("Import Partner Organisations"),
-                            subtitle_create=T("Add Partner Organisation"),
-                            label_list_button=T("List Partner Organisations"),
-                            label_create_button=T("Add Partner Organisations"),
-                            label_delete_button=T("Delete Partner Organisation"),
-                            msg_record_created=T("Partner Organisation added"),
-                            msg_record_modified=T("Partner Organisation updated"),
-                            msg_record_deleted=T("Partner Organisation deleted"),
-                            msg_list_empty=T("No Partner Organisations currently registered")
+                            title_create=ADD_PARTNER,
+                            title_display=T("Partner Organization Details"),
+                            title_list=T("Partner Organizations"),
+                            title_update=T("Edit Partner Organization"),
+                            title_search=T("Search Partner Organizations"),
+                            title_upload=T("Import Partner Organizations"),
+                            subtitle_create=ADD_PARTNER,
+                            label_list_button=T("List Partner Organizations"),
+                            label_create_button=T("Add Partner Organizations"),
+                            label_delete_button=T("Delete Partner Organization"),
+                            msg_record_created=T("Partner Organization added"),
+                            msg_record_modified=T("Partner Organization updated"),
+                            msg_record_deleted=T("Partner Organization deleted"),
+                            msg_list_empty=T("No Partner Organizations currently registered")
                             ),
                     }
 
@@ -3238,7 +3241,11 @@ def org_organisation_controller():
     output = current.rest_controller("org", "organisation",
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
-                                     rheader=org_rheader)
+                                     rheader=org_rheader,
+                                     # Need to be explicit since can also come from Project controller
+                                     csv_template=("org", "organisation"),
+                                     csv_stylesheet=("org", "organisation.xsl"),
+                                     )
     return output
 
 # =============================================================================

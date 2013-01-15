@@ -2146,10 +2146,9 @@ class S3Project3WModel(S3Model):
                                     otable.role)
             if rows:
                 db(dtable.project_id == project_id).update(
-                        # @ToDo: Remove if row.organisation_id once we have the DRRPP import working
-                        #donors=[row.organisation_id for row in rows if row.organisation_id]
-                        donors=[row.organisation_id for row in rows if row.role == 3],
-                        partners=[row.organisation_id for row in rows if row.role == 2],
+                        # @ToDo: Remove 'if row.organisation_id' once we have the DRRPP import working
+                        donors=[row.organisation_id for row in rows if (row.organisation_id and row.role == 3)],
+                        partners=[row.organisation_id for row in rows if (row.organisation_id and row.role == 2)],
                     )
 
         if str(vars.role) == \
