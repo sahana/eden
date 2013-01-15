@@ -21,6 +21,12 @@
 {{try:}}{{=form}}{{except:}}{{pass}}
 </div>
 </div>
+<div id='list-filter'>
+{{try:}}
+{{=list_filter_form}}
+{{except:}}
+{{pass}}
+</div>
 {{try:}}{{items = items}}
 <div id='table-container'>
 {{=items}}

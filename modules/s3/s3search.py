@@ -2926,7 +2926,6 @@ class S3FilterWidget(object):
                      field selectors could be resolved
         """
 
-        alias = resource.alias
         prefix = cls._prefix
 
         if not fields:
@@ -2939,7 +2938,7 @@ class S3FilterWidget(object):
                 rfield = S3ResourceField(resource, field)
             except (AttributeError, TypeError):
                 continue
-            selectors.append(prefix(alias, rfield.selector))
+            selectors.append(prefix(rfield.selector))
         if selectors:
             return "|".join(selectors)
         else:
@@ -2947,7 +2946,7 @@ class S3FilterWidget(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _prefix(alias, selector):
+    def _prefix(selector):
         """
             Helper method to prefix an unprefixed field selector
 
@@ -2958,7 +2957,7 @@ class S3FilterWidget(object):
         """
 
         if "." not in selector.split("$", 1)[0]:
-            return "%s.%s" % (alias, selector)
+            return "~.%s" % selector
         else:
             return selector
 
@@ -3024,7 +3023,12 @@ class S3TextFilter(S3FilterWidget):
         
         if "_size" not in attr:
             attr.update(_size="40")
-        attr.update(_type="text")
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], self._class)
+        else:
+            _class = self._class
+        attr["_class"] = _class
+        attr["_type"] = "text"
 
         values = [v.strip("*") for v in values]
         if values:

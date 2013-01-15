@@ -313,3 +313,57 @@ S3.search.toggleMapClearButton = function(event) {
         clearButton.hide();
     }
 }
+
+// ============================================================================
+// New search framework
+
+/*
+ * filterURL: add all current filters to a URL
+ */
+S3.search.filterURL = function(url) {
+
+    var queries = [];
+
+    // Text widgets
+    $('.text-filter:visible').each(function() {
+
+        var id = $(this).attr('id');
+
+        var url_var = $('#' + id + '-data').val(),
+            value = $(this).val();
+        if (value) {
+            var values = value.split(' ');
+            for (var i=0; i<values.length; i++) {
+                queries.push(url_var + '=*' + values[i] + '*');
+            }
+        }
+    });
+
+    // Other widgets go here...
+
+    // Construct the URL
+    var url_parts = url.split('?'), url_query = queries.join('&');
+    if (url_parts.length > 1) {
+        if (url_query) {
+            url_query = url_query + '&' + url_parts[1];
+        } else {
+            url_query = url_parts[1];
+        }
+    }
+    var filtered_url = url_parts[0];
+    if (url_query) {
+        filtered_url = filtered_url + '?' + url_query;
+    }
+    return filtered_url;
+}
+
+// Test code: to be removed after implementation is complete
+// $(document).ready(function() {
+// 
+//     $('#filter-submit-button').click(function() {
+//         var url = $(this).next('input[type="hidden"]').val();
+//         url = S3.search.filterURL(url);
+//         window.location.href = url;
+//     });
+// 
+// });
