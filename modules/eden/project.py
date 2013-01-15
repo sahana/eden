@@ -543,46 +543,19 @@ S3OptionsFilter({
                         help_field = project_rfa_opts(),
                         cols = 6
                     ))
-
-            def project_organisation_opts(role=None):
-                """
-                    provide the options for the Search Filters
-                """
-
-                db = current.db
-                s3db = current.s3db
-                potable = s3db.project_organisation
-                otable = s3db.org_organisation
-
-                query = (potable.deleted == False) & \
-                        (potable.organisation_id == otable.id)
-                if role:
-                    query = query & (potable.role == role)
-
-                rows = db(query).select(otable.name,
-                                        orderby=otable.name)
-                opts = {}
-                for row in rows:
-                    opts[row.name] = row.name
-
-                return opts
-
+        if multi_orgs:
             append(S3SearchOptionsWidget(
                         name = "project_search_partners",
-                        field = "drrpp.partners",
+                        field = "partner.organisation_id",
                         label = T("Partners"),
                         cols = 3,
-                        options = lambda role=2: \
-                            project_organisation_opts(role)
                     ))
 
             append(S3SearchOptionsWidget(
                         name = "project_search_donors",
-                        field = "drrpp.donors",
-                        label = T("Donor"),
+                        field = "donor.organisation_id",
+                        label = T("Donors"),
                         cols = 3,
-                        options = lambda role=3:
-                            project_organisation_opts(role)
                     ))
 
         project_search = S3Search(simple = simple,
@@ -609,9 +582,7 @@ S3OptionsFilter({
                            (T("Countries"), "location.location_id"),
                            "multi_hazard_id",
                            (T("Lead Organization"), "organisation_id"),
-                           # @ToDo: Replace Virtual Field with Component lookup
-                           (T("Donors"), "drrpp.donors"),
-                           #(T("Donors"), "donors"),
+                           (T("Donors"), "donor.organisation_id"),
                            ]
             report_fields = [#"countries_id",
                              (T("Countries"), "location.location_id"),
@@ -621,10 +592,8 @@ S3OptionsFilter({
                              (T("RFA Priorities"), "drrpp.rfa"),
                              (T("Lead Organization"), "organisation_id"),
                              # @ToDo: Replace Virtual Fields with Component lookups
-                             (T("Partner Organizations"), "drrpp.partners"),
-                             (T("Donors"), "drrpp.donors"),
-                             #(T("Partners Organization"), "partners"),
-                             #(T("Donors"), "donors"),
+                             (T("Partner Organizations"), "partner.organisation_id"),
+                             (T("Donors"), "donor.organisation_id"),
                              ]
             report_col_default = "location.location_id"
         else:
@@ -718,8 +687,25 @@ S3OptionsFilter({
                    action=self.project_map)
 
         # Components
-        # Organisations
-        add_component("project_organisation", project_project="project_id")
+        if multi_orgs:
+            # Organisations
+            add_component("project_organisation", project_project="project_id")
+            # Donors
+            add_component("project_organisation",
+                          project_project=dict(
+                            name="donor",
+                            joinby="project_id",
+                            filterby="role",
+                            filterfor="3",
+                          ))
+            # Partners
+            add_component("project_organisation",
+                          project_project=dict(
+                            name="partner",
+                            joinby="project_id",
+                            filterby="role",
+                            filterfor="2",
+                          ))
 
         # Sites
         #add_component("project_site", project_project="project_id")
@@ -1887,7 +1873,10 @@ class S3Project3WModel(S3Model):
                                                           tooltip=organisation_help)
                                 ),
                              Field("role", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
+                                   label = T("Role"),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(project_organisation_roles)
+                                                ),
                                    represent = lambda opt: \
                                     project_organisation_roles.get(opt, NONE)),
                              Field("amount", "double",
@@ -2122,37 +2111,20 @@ class S3Project3WModel(S3Model):
             If the added organisation is the lead role, set the
             project.organisation to point to the same organisation
             & update the realm_entity.
-
-            In DRRPP, update the donors & partners fields
         """
 
-        db = current.db
-        ptable = db.project_project
-        otable = db.project_organisation
         vars = form.vars
-
-        # Get the project ID from the new project organisation record
-        project_id = db(otable.id == vars.id).select(otable.project_id,
-                                                     limitby=(0, 1)
-                                                     ).first().project_id
-
-        if current.deployment_settings.get_template() == "DRRPP":
-            dtable = db.project_drrpp
-
-            # Get all the Donors for this Project
-            query = (otable.deleted == False) & \
-                    (otable.project_id == project_id)
-            rows = db(query).select(otable.organisation_id,
-                                    otable.role)
-            if rows:
-                db(dtable.project_id == project_id).update(
-                        # @ToDo: Remove 'if row.organisation_id' once we have the DRRPP import working
-                        donors=[row.organisation_id for row in rows if (row.organisation_id and row.role == 3)],
-                        partners=[row.organisation_id for row in rows if (row.organisation_id and row.role == 2)],
-                    )
 
         if str(vars.role) == \
              str(current.response.s3.project_organisation_lead_role):
+
+            # Get the project ID from the new project organisation record
+            db = current.db
+            ptable = db.project_project
+            otable = db.project_organisation
+            project_id = db(otable.id == vars.id).select(otable.project_id,
+                                                         limitby=(0, 1)
+                                                         ).first().project_id
 
             # Set the Project's organisation_id to the new lead organisation
             organisation_id = vars.organisation_id
@@ -2162,8 +2134,6 @@ class S3Project3WModel(S3Model):
                                         realm_entity = s3db.pr_get_pe_id("org_organisation",
                                                                          organisation_id)
                                         )
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2825,14 +2795,6 @@ class S3ProjectDRRPPModel(S3Model):
                            ),
                      Field("activities", "text",
                            label = T("Activities"),
-                           ),
-                     # Populated onaccept from project_organisation
-                     # - avoids use of expensive Virtual Fields in reporting
-                     Field("donors", "list:reference org_organisation",
-                           label = T("Donors"),
-                           ),
-                     Field("partners", "list:reference org_organisation",
-                           label = T("Partners"),
                            ),
                      Field("rfa", "list:integer",
                            label = T("RFA Priorities"),
@@ -4244,9 +4206,7 @@ def project_project_represent(id, row=None, show_link=True):
             repr = row.name
         if not show_link:
             return repr
-        return A(repr, _href = URL(c="project",
-                                   f="project",
-                                   args=[id]))
+        return A(repr, _href = URL(c="project", f="project", args=[id]))
     except:
         return current.messages.UNKNOWN_OPT
 
@@ -4334,56 +4294,6 @@ def task_notify(form):
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
     return
-
-# =============================================================================
-class S3ProjectOrganisationVirtualFields:
-    """ Virtual fields for the project_project table for DRRPP """
-
-    # -------------------------------------------------------------------------
-    def donors(self):
-        """
-            Donors for Project
-
-            @ToDo: Replace this with component lookup
-                   - or make role configurable
-        """
-
-        s3db = current.s3db
-        potable = s3db.project_organisation
-        otable = s3db.org_organisation
-        query = (potable.deleted != True) & \
-                (potable.role == 3) & \
-                (potable.project_id == self.project_project.id) & \
-                (potable.organisation_id == otable.id)
-        rows = current.db(query).select(otable.name)
-        if rows:
-            donors = [row.name for row in rows]
-            return ", ".join(donors)
-        else:
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def partners(self):
-        """
-            Partners for Project
-
-            @ToDo: Replace this with component lookup
-                   - or make role configurable
-        """
-
-        s3db = current.s3db
-        potable = s3db.project_organisation
-        otable = s3db.org_organisation
-        query = (potable.deleted != True) & \
-                (potable.role == 2) & \
-                (potable.project_id == self.project_project.id) & \
-                (potable.organisation_id == otable.id)
-        rows = current.db(query).select(otable.name)
-        if rows:
-            partners = [row.name for row in rows]
-            return ", ".join(partners)
-        else:
-            return current.messages["NONE"]
 
 # =============================================================================
 class S3ProjectOrganisationFundingVirtualFields:
@@ -4814,7 +4724,7 @@ function comment_reply(id){
     s3.js_global.append(js)
 
 # =============================================================================
-def project_rheader(r, tabs=[]):
+def project_rheader(r):
     """ Project Resource Headers - used in Project & Budget modules """
 
     if r.representation != "html":
@@ -4876,7 +4786,10 @@ def project_rheader(r, tabs=[]):
         if settings.has_module("vol"):
             append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
-        rheader_fields = [["code", "name"], ["organisation_id", "countries_id"], ["start_date", "end_date"]]
+        rheader_fields = [["code", "name"],
+                          ["organisation_id", "countries_id"],
+                          ["start_date", "end_date"]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename in ["location","demographic_data"]:
@@ -4940,11 +4853,10 @@ def project_rheader(r, tabs=[]):
                                    ptable.name,
                                    limitby=(0, 1)).first()
         if project:
-            project = TR(
-                            TH("%s: " % T("Project")),
-                            project_project_represent(id=None,
-                                                      row=project)
-                        )
+            project = TR(TH("%s: " % T("Project")),
+                         project_project_represent(id=None,
+                                                   row=project)
+                         )
         else:
             project = ""
 

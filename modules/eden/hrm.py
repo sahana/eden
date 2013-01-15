@@ -347,7 +347,7 @@ class S3HRModel(S3Model):
                                             )
 
         # Components
-        # Email & Phone
+        # Email
         add_component("pr_contact",
                       hrm_human_resource=dict(
                         name="email",
@@ -359,7 +359,7 @@ class S3HRModel(S3Model):
                         filterby="contact_method",
                         filterfor="EMAIL",
                       ))
-
+        # Mobile Phone
         add_component("pr_contact",
                       hrm_human_resource=dict(
                         name="phone",
@@ -528,7 +528,7 @@ class S3HRModel(S3Model):
                        crud_form = crud_form,
                        super_entity = "sit_trackable",
                        mark_required = mark_required,
-                       deletable = current.deployment_settings.get_hrm_deletable(),
+                       deletable = settings.get_hrm_deletable(),
                        search_method = human_resource_search,
                        onaccept = hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,

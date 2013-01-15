@@ -210,7 +210,11 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             "organisation",
             name = "partner",
             label=T("Partner Organizations"),
-            fields=["organisation_id", "comments"],
+            fields=["organisation_id",
+                    # Explicit label as otherwise label from filter comes in!
+                    #(T("Comments"), "comments"),
+                    "comments",
+                    ],
             filterby = dict(field = "role",
                             options = "2"
                             )
