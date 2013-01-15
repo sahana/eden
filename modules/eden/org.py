@@ -3058,10 +3058,12 @@ def org_organisation_controller():
             # If a filter is being applied to the Organisations, change the CRUD Strings accordingly
             type_filter = request.get_vars["organisation.organisation_type_id$name"]
             if type_filter:
+                ADD_NS = T("Add National Society")
+                ADD_PARTNER = T("Add Partner Organization")
+                ADD_SUPPLIER = T("Add Supplier")
                 type_crud_strings = {
                     "Red Cross / Red Crescent" :
                         # @ToDo: IFRC isn't an NS?
-                        ADD_NS = T("Add National Society")
                         Storage(
                             title_create=ADD_NS,
                             title_display=T("National Society Details"),
@@ -3079,7 +3081,6 @@ def org_organisation_controller():
                             msg_list_empty=T("No Red Cross & Red Crescent National Societies currently registered")
                             ),
                     "Supplier" :
-                        ADD_SUPPLIER = T("Add Supplier")
                         Storage(
                             title_create=ADD_SUPPLIER,
                             title_display=T("Supplier Details"),
@@ -3097,7 +3098,6 @@ def org_organisation_controller():
                             msg_list_empty=T("No Suppliers currently registered")
                             ),
                     "Bilateral,Government,Intergovernmental,NGO,UN agency" :
-                        ADD_PARTNER = T("Add Partner Organization")
                         Storage(
                             title_create=ADD_PARTNER,
                             title_display=T("Partner Organization Details"),
