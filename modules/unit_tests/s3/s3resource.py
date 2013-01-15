@@ -632,7 +632,9 @@ class URLQuerySerializerTests(unittest.TestCase):
 
         resource = current.s3db.resource("pr_person")
         u = q.serialize_url(resource=resource)
-        k = "person.first_name__like"
+        # Field selector does not use a prefix, but master resource
+        # is known, so should be using ~ wildcard here
+        k = "~.first_name__like"
         self.assertNotEqual(u, None)
         self.assertTrue(isinstance(u, Storage))
         self.assertTrue(k in u)
@@ -687,7 +689,9 @@ class URLFilterSerializerTests(unittest.TestCase):
         rfilter = resource.rfilter
         u = rfilter.serialize_url()
 
-        k = "person.first_name__like"
+        # Field selector does not use a prefix, but master resource
+        # is known (from rfilter), so should be using ~ wildcard here
+        k = "~.first_name__like"
         self.assertNotEqual(u, None)
         self.assertTrue(isinstance(u, Storage))
         self.assertTrue(k in u)
@@ -715,6 +719,31 @@ class ResourceFieldTests(unittest.TestCase):
         self.assertEqual(str(f.tname), "project_project")
         self.assertEqual(str(f.fname), "name")
         self.assertEqual(str(f.colname), "project_project.name")
+
+        # Check join (no join)
+        self.assertEqual(f.join, Storage())
+        self.assertEqual(f.left, Storage())
+
+        # Check distinct (no join - no distinct)
+        self.assertFalse(f.distinct)
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
+    def testResolveMasterWildcard(self):
+        """ Resolution of a selector with a master wildcard """
+
+        resource = current.s3db.resource("org_organisation")
+        selector = "~.name"
+
+        f = S3ResourceField(resource, selector)
+        self.assertNotEqual(f, None)
+
+        # Check field
+        self.assertEqual(f.selector, selector)
+        self.assertEqual(str(f.field), "org_organisation.name")
+        self.assertEqual(str(f.tname), "org_organisation")
+        self.assertEqual(str(f.fname), "name")
+        self.assertEqual(str(f.colname), "org_organisation.name")
 
         # Check join (no join)
         self.assertEqual(f.join, Storage())
