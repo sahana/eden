@@ -165,10 +165,11 @@ class S3OrganisationModel(S3Model):
                 msg_record_deleted=T("Sector deleted"),
                 msg_list_empty=T("No Sectors currently registered"))
 
-        configure("org_sector", deduplicate=self.org_sector_duplicate)
+        configure("org_sector",
+                  deduplicate=self.org_sector_duplicate)
 
         sector_comment = lambda child: S3AddResourceLink(c="org", f="sector",
-                                                         vars={"child":child},
+                                                         vars={"child": child},
                                                          label=ADD_SECTOR,
                                                          title=SECTOR,
                                                          tooltip=help)
@@ -182,8 +183,7 @@ class S3OrganisationModel(S3Model):
                                                           sort=True,
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
-                                                          )
-                                                        ),
+                                                          )),
                                     represent=represent,
                                     comment=sector_comment("sector_id"),
                                     label=SECTOR,
@@ -198,13 +198,26 @@ class S3OrganisationModel(S3Model):
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
                                                           multiple=True
-                                                          )
-                                                        ),
+                                                          )),
                                     represent=S3Represent(lookup="org_sector",
                                                           multiple=True),
                                     comment=sector_comment("multi_sector_id"),
                                     label=SECTOR,
                                     ondelete="SET NULL")
+
+        # Components
+        #add_component("project_activity_type",
+        #              org_sector=Storage(
+        #                        link="project_activity_type_sector",
+        #                        joinby="sector_id",
+        #                        key="activity_type_id",
+        #                        actuate="hide"))
+        #add_component("project_theme",
+        #              org_sector=Storage(
+        #                        link="project_theme_sector",
+        #                        joinby="sector_id",
+        #                        key="theme_id",
+        #                        actuate="hide"))
 
         # =====================================================================
         # (Cluster) Subsector

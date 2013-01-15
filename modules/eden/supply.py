@@ -951,12 +951,15 @@ S3OptionsFilter({
             # Feed the loop
             item_category_id = r.parent_item_category_id
 
-        catalog = s3_get_db_field_value(tablename = "supply_catalog",
-                                        fieldname = "name",
-                                        look_up_value = r.catalog_id)
-
-        if catalog:
-            return "%s > %s" % (catalog, represent)
+        if r.catalog_id:
+            table = db.supply_catalog
+            catalog = db(table.id == r.catalog_id).select(table.name,
+                                                          limitby=(0, 1)
+                                                          ).first()
+            try:
+                return "%s > %s" % (catalog.name, represent)
+            except:
+                return represent
         else:
             return represent
 

@@ -238,6 +238,7 @@ class S3RequestManager(object):
             @param value: value to check
 
             @status: deprecated, use S3Resource.validate instead
+                     (still used by validate.json in Inline Forms)
         """
 
         try:

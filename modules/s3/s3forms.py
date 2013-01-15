@@ -1538,8 +1538,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         formname = self._formname()
 
         # Add the header row
-        labels = self._render_headers(data,
-                                      _class="label-row")
+        thead = self._render_headers(data,
+                                     _class="label-row")
 
         fields = data["fields"]
         items = data["data"]
@@ -1636,12 +1636,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
         attr["_id"] = real_input
 
         if has_rows:
-            widget = TABLE(
-                        THEAD(labels),
-                        TBODY(item_rows),
-                        TFOOT(action_rows),
-                        _class="embeddedComponent",
-                     )
+            widget = TABLE(thead,
+                           TBODY(item_rows),
+                           TFOOT(action_rows),
+                           _class="embeddedComponent",
+                           )
         else:
             widget = current.T("No entries currently available")
 
@@ -1680,8 +1679,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             data = value
 
-        labels = self._render_headers(data,
-                                      _class="label-row")
+        thead = self._render_headers(data,
+                                     _class="label-row")
 
         trs = []
 
@@ -1703,7 +1702,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             columns = [TD(item[f["name"]]["text"]) for f in fields]
             trs.append(TR(columns, _class="read-row"))
 
-        return TABLE(THEAD(labels),
+        return TABLE(thead,
                      TBODY(trs),
                      TFOOT(),
                      _class="embeddedComponent")
@@ -1886,21 +1885,33 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
-    def _render_headers(self, data, extra_columns=0, **attributes):
+    def _render_headers(self, data, **attributes):
         """
             Render the header row with field labels
 
             @param data: the input field data as Python object
-            @param extra_columns: number of (empty) extra columns to add
             @param attributes: HTML attributes for the header row
         """
 
         fields = data["fields"]
-        labels = [TD(LABEL(f["label"])) for f in fields]
-        # @ToDo: Is this required? Header Row doesn't have to be the same number of columns
-        for i in range(extra_columns):
-            labels.append(TD())
-        return TR(labels, **attributes)
+        # Don't render a header row if there are no labels
+        render_header = False
+        header_row = TR(**attributes)
+        happend = header_row.append
+        for f in fields:
+            label = f["label"]
+            if label:
+                render_header = True
+            label = TD(LABEL(label))
+            happend(label)
+
+        if render_header:
+            # Add columns for the Controls
+            happend(TD())
+            happend(TD())
+            return THEAD(header_row)
+        else:
+            return THEAD(_class="hide")
 
     # -------------------------------------------------------------------------
     def _action_icon(self, title, image, name, index, throbber=False):

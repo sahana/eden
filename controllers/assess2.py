@@ -53,7 +53,7 @@ def s3_assess_severity_represent(value):
         return NONE
 
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
-s3_get_db_field_value = s3base.s3_get_db_field_value
+s3_represent_id = s3base.s3_represent_id
 
 location_id = s3db.gis_location_id
 person_id = s3db.pr_person_id
@@ -128,8 +128,7 @@ def assess_tables():
     # =========================================================================
     # Baseline Type
     #
-    resourcename = "baseline_type"
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "assess_baseline_type"
     table = db.define_table(tablename,
                             Field("name", length=128, notnull=True, unique=True),
                             *s3_meta_fields())
@@ -162,15 +161,14 @@ def assess_tables():
         else:
             return None
 
+    represent = s3_represent_id(table)
     baseline_type_id = S3ReusableField("baseline_type_id", table,
        sortby="name",
        requires = IS_NULL_OR(IS_ONE_OF(db,
                                        "assess_baseline_type.id",
-                                       "%(name)s",
+                                       represent,
                                        sort=True)),
-       represent = lambda id: s3_get_db_field_value(tablename = "assess_baseline_type",
-                                                    fieldname = "name",
-                                                    look_up_value = id),
+       represent = represent,
        label = T("Baseline Type"),
        comment = baseline_type_comment(),
        ondelete = "RESTRICT"
@@ -179,8 +177,7 @@ def assess_tables():
     # =========================================================================
     # Baseline
     #
-    resourcename = "baseline"
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "assess_baseline"
     table = db.define_table(tablename,
                             # Hide FK fields in forms
                             assess_id(readable = False, writable = False),
@@ -214,8 +211,7 @@ def assess_tables():
     # =========================================================================
     # Summary
     #
-    resourcename = "summary"
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "assess_summary"
 
     table = db.define_table(
         tablename,
@@ -255,7 +251,7 @@ def assess_tables():
 
     # Pass variables back to global scope (response.s3.*)
     return dict(
-        assess_id = assess_id
+            assess_id = assess_id
         )
 
 # =========================================================================
@@ -1903,12 +1899,15 @@ def impact_tables():
         else:
             return None
 
+    represent = s3_represent_id(table)
     impact_type_id = S3ReusableField("impact_type_id", table,
                                      sortby="name",
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "impact_type.id","%(name)s", sort=True)),
-                                     represent = lambda id: s3_get_db_field_value(tablename = "impact_type",
-                                                                                  fieldname = "name",
-                                                                                  look_up_value = id),
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "impact_type.id",
+                                                              represent,
+                                                              sort=True)),
+                                     represent = represent,
                                      label = T("Impact Type"),
                                      comment = impact_type_comment(),
                                      ondelete = "RESTRICT")
@@ -2278,10 +2277,15 @@ def basic_assess():
     ireport_id = request.vars.get("ireport_id")
     if ireport_id:
         # Location is the same as the calling Incident
-        irs_location_id = s3_get_db_field_value(tablename = "irs_ireport",
-                                                fieldname = "location_id",
-                                                look_up_value = ireport_id)
-        location = gis_location_represent(irs_location_id)
+        table = db.irs_ireport
+        row = db(table.id == ireport_id).select(table.location_id,
+                                                limitby=(0, 1)).first()
+        if row:
+            irs_location_id = row.location_id
+            location = gis_location_represent(irs_location_id)
+        else:
+            irs_location_id = None
+            location = None
         custom_assess_fields = (
                                 ("impact", 1),
                                 ("impact", 2),
@@ -2415,18 +2419,17 @@ def custom_assess(custom_assess_fields, location_id=None):
                                                                  value="")
 
         elif field[0] == "baseline":
-            label = s3_get_db_field_value(tablename = "assess_baseline_type",
-                                          fieldname = "name",
-                                          look_up_value = field[1])
-            label = T(label)
+            table = db.assess_baseline_type
+            label = s3_represent_id(table)(field[1])
+            label = "%s:" % T(label)
             widget = INPUT(_name = name,
                            _class = "double",
                            _type = "text")
 
         elif field[0] == "impact":
-            label = "%s:" % T(s3_get_db_field_value(tablename = "impact_type",
-                                                    fieldname = "name",
-                                                    look_up_value = field[1]))
+            table = db.assess_impact_type
+            label = s3_represent_id(table)(field[1])
+            label = "%s:" % T(label)
             value_widget = INPUT(_name = name,
                                  _class = "double",
                                  _type = "text")
@@ -2526,10 +2529,11 @@ def custom_assess(custom_assess_fields, location_id=None):
                         continue
 
                     # Record the Severity per sector
-                    sector_id = \
-                        s3_get_db_field_value(tablename = "impact_type",
-                                              fieldname = "sector_id",
-                                              look_up_value = field[1])
+                    table = db.impact_type
+                    row = db(table.id == field[1]).select(table.sector_id,
+                                                          limitby=(0, 1)
+                                                          ).first()
+                    sector_id = row.sector_id
                     if sector_id in sector_summary.keys():
                         sector_summary[sector_id].append(severity)
                     elif sector_id:

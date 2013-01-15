@@ -101,6 +101,7 @@ class S3ProjectModel(S3Model):
         T = current.T
         db = current.db
 
+        # Shortcuts
         location_id = self.gis_location_id
         countries_id = self.gis_countries_id
         organisation_id = self.org_organisation_id
@@ -121,7 +122,6 @@ class S3ProjectModel(S3Model):
         multi_orgs = settings.get_project_multiple_organisations()
         theme_percentages = settings.get_project_theme_percentages()
 
-        # Shortcuts
         add_component = self.add_component
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -231,21 +231,28 @@ class S3ProjectModel(S3Model):
                                                                           **attr)
                                         )
 
-        # Projects
+        # Components
         add_component("project_theme_percentage", project_theme="theme_id")
+
+        add_component("project_theme_sector", project_theme="theme_id")
 
         crud_form = s3forms.S3SQLCustomForm(
                         "name",
                         # Project Sectors
                         s3forms.S3SQLInlineComponent(
                             "theme_sector",
-                            label=T("Theme Sectors"),
+                            label=T("Sectors to which this Theme can apply"),
                             fields=["sector_id"],
                         ),
                     )
 
         configure(tablename,
-                  crud_form=crud_form)
+                  crud_form=crud_form,
+                  list_fields=["id",
+                               "name",
+                               (T("Sectors"), "theme_sector.sector_id"),
+                               "comments",
+                               ])
 
         # ---------------------------------------------------------------------
         # Theme - Sector Link Table
@@ -253,11 +260,9 @@ class S3ProjectModel(S3Model):
         tablename = "project_theme_sector"
         table = define_table(tablename,
                              theme_id(),
-                             sector_id(label = ""),
+                             sector_id(label="",
+                                       empty=False),
                              *s3_meta_fields())
-
-        add_component(tablename, project_theme="theme_id")
-        add_component(tablename, org_sector="sector_id")
 
         # ---------------------------------------------------------------------
         # Hazard
@@ -306,7 +311,7 @@ class S3ProjectModel(S3Model):
                                           )
 
         # ---------------------------------------------------------------------
-        # Project
+        # Projects
         #
 
         LEAD_ROLE = settings.get_project_organisation_lead_role()
@@ -682,7 +687,6 @@ S3OptionsFilter({
             ondelete = "CASCADE"
             )
 
-        # ---------------------------------------------------------------------
         # Custom Methods
         set_method("project", "project",
                    method="timeline",
@@ -766,8 +770,6 @@ S3OptionsFilter({
                              s3_comments(),
                              *s3_meta_fields())
 
-        # Field configuration?
-
         # CRUD Strings
         ADD_ACTIVITY_TYPE = T("Add Activity Type")
         crud_strings[tablename] = Storage(
@@ -785,10 +787,6 @@ S3OptionsFilter({
             msg_list_empty = T("No Activity Types Found")
         )
 
-        # Search Method?
-
-        # Resource Configuration?
-
         # Reusable Fields
         represent = s3_represent_id(table)
         activity_type_id = S3ReusableField("activity_type_id", table,
@@ -797,16 +795,13 @@ S3OptionsFilter({
                                                         IS_ONE_OF(db, "project_activity_type.id",
                                                                   represent,
                                                                   sort=True)),
-                                           represent = lambda id: \
-                                            s3_get_db_field_value(tablename = "project_activity_type",
-                                                                  fieldname = "name",
-                                                                  look_up_value = id),
+                                           represent = represent,
                                            label = T("Activity Type"),
                                            comment = S3AddResourceLink(title=ADD_ACTIVITY_TYPE,
                                                                        c="project",
                                                                        f="activity_type",
                                                                        tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Activity Type'.")),
-                                           ondelete = "RESTRICT")
+                                           ondelete = "SET NULL")
 
         multi_activity_type_id = S3ReusableField("multi_activity_type_id",
                                                  "list:reference project_activity_type",
@@ -819,21 +814,32 @@ S3OptionsFilter({
                                                                           multiple=True)),
                                                  represent = s3_represent_multi_id(table),
                                                  widget = lambda f, v, **attr: \
-                                                    s3_grouped_checkboxes_widget(f, v, cols=3, **attr),
-                                                 ondelete = "RESTRICT")
+                                                    s3_grouped_checkboxes_widget(f, v,
+                                                                                 cols=3,
+                                                                                 **attr),
+                                                 ondelete = "SET NULL")
+
+        # Component (for Custom Form)
+        add_component("project_activity_type_sector",
+                      project_activity_type="activity_type_id")
 
         crud_form = s3forms.S3SQLCustomForm(
                         "name",
-                        # Project Sectors
+                        # Sectors
                         s3forms.S3SQLInlineComponent(
                             "activity_type_sector",
-                            label=T("Activity Type Sectors"),
+                            label=T("Sectors to which this Activity Type can apply"),
                             fields=["sector_id"],
                         ),
                     )
 
         configure(tablename,
-                  crud_form=crud_form)
+                  crud_form=crud_form,
+                  list_fields=["id",
+                               "name",
+                               (T("Sectors"), "activity_type_sector.sector_id"),
+                               "comments",
+                               ])
 
         # ---------------------------------------------------------------------
         # Activity Type - Sector Link Table
@@ -841,11 +847,9 @@ S3OptionsFilter({
         tablename = "project_activity_type_sector"
         table = define_table(tablename,
                              activity_type_id(),
-                             sector_id(label = ""),
+                             sector_id(label="",
+                                       empty=False),
                              *s3_meta_fields())
-
-        add_component(tablename, project_activity_type="activity_type_id")
-        add_component(tablename, org_sector="sector_id") # Doesn't Work???
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)

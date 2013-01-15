@@ -364,6 +364,22 @@ def theme():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def theme_sector():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def hazard():
     """ RESTful CRUD controller """
 
@@ -432,6 +448,22 @@ def beneficiary():
 # =============================================================================
 def activity_type():
     """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def activity_type_sector():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 

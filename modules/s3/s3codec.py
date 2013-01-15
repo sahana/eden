@@ -53,7 +53,6 @@ from gluon import current
 from gluon.storage import Storage
 
 # =============================================================================
-
 class S3Codec(object):
     """
         Base class for converting S3Resources into/from external
