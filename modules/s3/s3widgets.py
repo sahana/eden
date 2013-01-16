@@ -2552,8 +2552,9 @@ class S3CheckboxesWidget(OptionsWidget):
         lookup_table_name = self.lookup_table_name
         lookup_field_name = self.lookup_field_name
         if lookup_table_name and lookup_field_name:
+            table = db[lookup_table_name]
             requires = IS_NULL_OR(IS_IN_DB(db,
-                                   db[lookup_table_name].id,
+                                   table.id,
                                    "%(" + lookup_field_name + ")s",
                                    multiple = multiple))
         else:
@@ -2576,8 +2577,8 @@ class S3CheckboxesWidget(OptionsWidget):
         if len(options) % num_column > 0:
              num_row = num_row +1
 
-        table = TABLE(_id = str(field).replace(".", "_"))
-        append = table.append
+        t = TABLE(_id = str(field).replace(".", "_"))
+        append = t.append
         for i in range(0, num_row):
             table_row = TR()
             for j in range(0, num_column):
@@ -2595,10 +2596,11 @@ class S3CheckboxesWidget(OptionsWidget):
                     tip_attr = {}
                     help_text = ""
                     if self.help_lookup_field_name:
-                        help_text = str(P(s3_get_db_field_value(tablename = lookup_table_name,
-                                                                fieldname = self.help_lookup_field_name,
-                                                                look_up_value = options[index][0],
-                                                                look_up_field = "id")))
+                        help_lookup_field_name = self.help_lookup_field_name
+                        row = db(table.id == options[index][0]).select(table[help_lookup_field_name],
+                                                                       limitby=(0, 1)).first()
+                        if row:
+                            help_text = str(P(row[help_lookup_field_name]))
                     if self.help_footer:
                         help_text = help_text + str(self.help_footer)
                     if help_text:
@@ -2615,17 +2617,23 @@ class S3CheckboxesWidget(OptionsWidget):
             append(table_row)
         if self.multiple:
             append(TR(I("(Multiple selections allowed)")))
-        return table
+        return t
 
     # -------------------------------------------------------------------------
-    def represent(self,
-                  value):
+    def represent(self, value):
 
-        list = [s3_get_db_field_value(tablename = lookup_table_name,
-                                      fieldname = lookup_field_name,
-                                      look_up_value = id,
-                                      look_up_field = "id")
-                   for id in s3_split_multi_value(value) if id]
+        db = current.db
+        table = db[self.lookup_table_name]
+        lookup_field_name = self.lookup_field_name
+        list = []
+        lappend = list.append
+        # @ToDo: Optimise if widget ever used! Use belongs
+        for id in s3_split_multi_value(value):
+            if id:
+                row = db(table.id == id).select(table[lookup_field_name],
+                                                limitby=(0, 1)).first()
+                if row:
+                    lappend(row[lookup_field_name])
         if list and not None in list:
             return ", ".join(list)
         else:

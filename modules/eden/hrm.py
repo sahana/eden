@@ -346,38 +346,32 @@ class S3HRModel(S3Model):
                                             ondelete = "RESTRICT"
                                             )
 
-        # Email & Phone
-        # @ToDo: Replace with Filterable Components
-        #table.virtualfields.append(HRMVirtualFields())
-        add_component("pr_contact",
-                       hrm_human_resource=dict(
-                            name="email",
-                            link="pr_person",
-                            joinby="id",
-                            key="pe_id",
-                            fkey="pe_id",
-                            pkey="person_id",
-                            filterby="contact_method",
-                            filterfor="EMAIL",
-                            #multiple=False,
-                        )
-                      )
-
-        add_component("pr_contact",
-                        hrm_human_resource=dict(
-                            name="phone",
-                            link="pr_person",
-                            joinby="id",
-                            key="pe_id",
-                            fkey="pe_id",
-                            pkey="person_id",
-                            filterby="contact_method",
-                            filterfor="SMS",
-                            #multiple=False,
-                        )
-                      )
-
         # Components
+        # Email
+        add_component("pr_contact",
+                      hrm_human_resource=dict(
+                        name="email",
+                        link="pr_person",
+                        joinby="id",
+                        key="pe_id",
+                        fkey="pe_id",
+                        pkey="person_id",
+                        filterby="contact_method",
+                        filterfor="EMAIL",
+                      ))
+        # Mobile Phone
+        add_component("pr_contact",
+                      hrm_human_resource=dict(
+                        name="phone",
+                        link="pr_person",
+                        joinby="id",
+                        key="pe_id",
+                        fkey="pe_id",
+                        pkey="person_id",
+                        filterby="contact_method",
+                        filterfor="SMS",
+                      ))
+
         # Availability
         #add_component("hrm_availability",
         #              hrm_human_resource="human_resource_id")
@@ -534,7 +528,7 @@ class S3HRModel(S3Model):
                        crud_form = crud_form,
                        super_entity = "sit_trackable",
                        mark_required = mark_required,
-                       deletable = current.deployment_settings.get_hrm_deletable(),
+                       deletable = settings.get_hrm_deletable(),
                        search_method = human_resource_search,
                        onaccept = hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,

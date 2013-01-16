@@ -233,46 +233,6 @@ def s3_split_multi_value(value):
         return [str(value)]
 
 # =============================================================================
-def s3_get_db_field_value(tablename=None,
-                          fieldname=None,
-                          look_up_value=None,
-                          look_up_field="id",
-                          match_case=True):
-    """
-        Returns the value of <field> from the first record in <table_name>
-        with <look_up_field> = <look_up>
-
-        @param table: The name of the table
-        @param field: the field to find the value from
-        @param look_up: the value to find
-        @param look_up_field: the field to find <look_up> in
-        @type match_case: boolean
-
-        @returns:
-            - Field Value if there is a record
-            - None - if there is no matching record
-
-        Example::
-            s3_get_db_field_value("or_organisation", "id",
-                                   look_up = "UNDP",
-                                   look_up_field = "name" )
-
-        @todo: update parameter description
-    """
-
-    db = current.db
-    lt = db[tablename]
-    lf = lt[look_up_field]
-    if match_case or str(lf.type) != "string":
-        query = (lf == look_up_value)
-    else:
-        query = (lf.lower() == str.lower(look_up_value))
-    if "deleted" in lt:
-        query = (lt.deleted == False) & query
-    row = db(query).select(lt[fieldname], limitby=(0, 1)).first()
-    return row and row[fieldname] or None
-
-# =============================================================================
 def s3_filter_staff(r):
     """
         Filter out people which are already staff for this facility

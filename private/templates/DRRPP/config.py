@@ -146,8 +146,9 @@ settings.ui.formstyle = formstyle_row
 
 def customize_project_project(**attr):
     s3db = current.s3db
+    s3 = current.response.s3
     
-    current.response.s3.crud_strings.project_project.title_search = T("Project List")
+    s3.crud_strings.project_project.title_search = T("Project List")
     table = s3db.project_project
     table.budget.label = T("Total Funding")
 
@@ -169,9 +170,9 @@ def customize_project_project(**attr):
     #table.file.widget = SQLFORM.widgets.upload.widget
     table.comments.widget = SQLFORM.widgets.string.widget
     
-    current.response.s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+    s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
     
-    current.response.s3.formats = Storage(xls= None, xml = None)
+    s3.formats = Storage(xls= None, xml = None)
     
     return attr
 
@@ -197,7 +198,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         # Outputs
         s3forms.S3SQLInlineComponent(
             "output",
-            label=T("Outputs:"),
+            label=T("Outputs"),
             #comment = "Bob",
             fields=["output", "status"],
         ),
@@ -208,8 +209,12 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         s3forms.S3SQLInlineComponent(
             "organisation",
             name = "partner",
-            label=T("Partner Organizations:"),
-            fields=["organisation_id", "comments"],
+            label=T("Partner Organizations"),
+            fields=["organisation_id",
+                    # Explicit label as otherwise label from filter comes in!
+                    #(T("Comments"), "comments"),
+                    "comments",
+                    ],
             filterby = dict(field = "role",
                             options = "2"
                             )
@@ -218,7 +223,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         s3forms.S3SQLInlineComponent(
             "organisation",
             name = "donor",
-            label=T("Donor(s):"),
+            label=T("Donor(s)"),
             fields=["organisation_id", "amount", "currency"],
             filterby = dict(field = "role",
                             options = "3"

@@ -733,8 +733,11 @@ class S3SQLCustomForm(S3SQLForm):
         # Apply permissions for subtables
         fields = [f for f in fields if f[0] not in forbidden]
         for a, n, f in fields:
-            if a and a in noupdate:
-                f.writable = False
+            if a:
+                if a in noupdate:
+                    f.writable = False
+                if not labels is None and f.name not in labels:
+                    labels[f.name] = "%s:" % f.label
         self.subtables = [s for s in self.subtables if s not in forbidden]
 
         # Aggregate the form fields
@@ -742,8 +745,8 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Render the form
         form = SQLFORM.factory(*formfields,
-                               record=data,
-                               showid=False,
+                               record = data,
+                               showid = False,
                                labels = labels,
                                formstyle = formstyle,
                                table_name = self.tablename,
@@ -1273,9 +1276,9 @@ class SKIP_POST_VALIDATION(Validator):
             other = other[0]
         self.other = other
         if other:
-            if hasattr(other, 'multiple'):
+            if hasattr(other, "multiple"):
                 self.multiple = other.multiple
-            if hasattr(other, 'options'):
+            if hasattr(other, "options"):
                 self.options = other.options
 
     def __call__(self, value):
@@ -1538,8 +1541,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         formname = self._formname()
 
         # Add the header row
-        labels = self._render_headers(data,
-                                      _class="label-row")
+        thead = self._render_headers(data,
+                                     readonly=False,
+                                     _class="label-row")
 
         fields = data["fields"]
         items = data["data"]
@@ -1636,12 +1640,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
         attr["_id"] = real_input
 
         if has_rows:
-            widget = TABLE(
-                        THEAD(labels),
-                        TBODY(item_rows),
-                        TFOOT(action_rows),
-                        _class="embeddedComponent",
-                     )
+            widget = TABLE(thead,
+                           TBODY(item_rows),
+                           TFOOT(action_rows),
+                           _class="embeddedComponent",
+                           )
         else:
             widget = current.T("No entries currently available")
 
@@ -1657,13 +1660,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
             hidden = ""
 
         # Render output HTML
-        output = DIV(
-                    INPUT(**attr),
-                    hidden,
-                    widget,
-                    _id=self._formname(separator="-"),
-                    _field=real_input
-                )
+        output = DIV(INPUT(**attr),
+                     hidden,
+                     widget,
+                     _id=self._formname(separator="-"),
+                     _field=real_input
+                     )
 
         return output
 
@@ -1680,8 +1682,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             data = value
 
-        labels = self._render_headers(data,
-                                      _class="label-row")
+        if data["data"] == []:
+            # Don't render a subform for NONE
+            return current.messages["NONE"]
+
+        thead = self._render_headers(data,
+                                     readonly=True,
+                                     _class="label-row")
 
         trs = []
 
@@ -1703,7 +1710,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             columns = [TD(item[f["name"]]["text"]) for f in fields]
             trs.append(TR(columns, _class="read-row"))
 
-        return TABLE(THEAD(labels),
+        return TABLE(thead,
                      TBODY(trs),
                      TFOOT(),
                      _class="embeddedComponent")
@@ -1719,17 +1726,17 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param format: the data format extension (for audit)
         """
 
-        db = current.db
-        s3db = current.s3db
-        auth = current.auth
-        manager = current.manager
-
-        resource = self.resource
-
         # Name of the real input field
         fname = self._formname(separator="_")
 
         if fname in form.vars:
+
+            db = current.db
+            s3db = current.s3db
+            auth = current.auth
+            manager = current.manager
+
+            resource = self.resource
 
             # Retrieve the data
             try:
@@ -1861,11 +1868,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         auth.s3_set_record_owner(table, record_id)
                         # onaccept
                         onaccept(table, Storage(vars=values), method="create")
+
+            # Success
+            return True
         else:
             return False
-
-        # Success
-        return True
 
     # -------------------------------------------------------------------------
     # Utility methods
@@ -1886,21 +1893,35 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
-    def _render_headers(self, data, extra_columns=0, **attributes):
+    def _render_headers(self, data, readonly=False, **attributes):
         """
             Render the header row with field labels
 
             @param data: the input field data as Python object
-            @param extra_columns: number of (empty) extra columns to add
+            @param readonly: whether the form is read-only
             @param attributes: HTML attributes for the header row
         """
 
         fields = data["fields"]
-        labels = [TD(LABEL(f["label"])) for f in fields]
-        # @ToDo: Is this required? Header Row doesn't have to be the same number of columns
-        for i in range(extra_columns):
-            labels.append(TD())
-        return TR(labels, **attributes)
+        # Don't render a header row if there are no labels
+        render_header = False
+        header_row = TR(**attributes)
+        happend = header_row.append
+        for f in fields:
+            label = f["label"]
+            if label:
+                render_header = True
+            label = TD(LABEL(label))
+            happend(label)
+
+        if render_header:
+            if not readonly:
+                # Add columns for the Controls
+                happend(TD())
+                happend(TD())
+            return THEAD(header_row)
+        else:
+            return THEAD(_class="hide")
 
     # -------------------------------------------------------------------------
     def _action_icon(self, title, image, name, index, throbber=False):

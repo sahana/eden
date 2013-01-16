@@ -165,10 +165,11 @@ class S3OrganisationModel(S3Model):
                 msg_record_deleted=T("Sector deleted"),
                 msg_list_empty=T("No Sectors currently registered"))
 
-        configure("org_sector", deduplicate=self.org_sector_duplicate)
+        configure("org_sector",
+                  deduplicate=self.org_sector_duplicate)
 
         sector_comment = lambda child: S3AddResourceLink(c="org", f="sector",
-                                                         vars={"child":child},
+                                                         vars={"child": child},
                                                          label=ADD_SECTOR,
                                                          title=SECTOR,
                                                          tooltip=help)
@@ -182,8 +183,7 @@ class S3OrganisationModel(S3Model):
                                                           sort=True,
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
-                                                          )
-                                                        ),
+                                                          )),
                                     represent=represent,
                                     comment=sector_comment("sector_id"),
                                     label=SECTOR,
@@ -198,13 +198,26 @@ class S3OrganisationModel(S3Model):
                                                           filterby=filterby,
                                                           filter_opts=filter_opts,
                                                           multiple=True
-                                                          )
-                                                        ),
+                                                          )),
                                     represent=S3Represent(lookup="org_sector",
                                                           multiple=True),
                                     comment=sector_comment("multi_sector_id"),
                                     label=SECTOR,
                                     ondelete="SET NULL")
+
+        # Components
+        #add_component("project_activity_type",
+        #              org_sector=Storage(
+        #                        link="project_activity_type_sector",
+        #                        joinby="sector_id",
+        #                        key="activity_type_id",
+        #                        actuate="hide"))
+        #add_component("project_theme",
+        #              org_sector=Storage(
+        #                        link="project_theme_sector",
+        #                        joinby="sector_id",
+        #                        key="theme_id",
+        #                        actuate="hide"))
 
         # =====================================================================
         # (Cluster) Subsector
@@ -3045,19 +3058,22 @@ def org_organisation_controller():
             # If a filter is being applied to the Organisations, change the CRUD Strings accordingly
             type_filter = request.get_vars["organisation.organisation_type_id$name"]
             if type_filter:
+                ADD_NS = T("Add National Society")
+                ADD_PARTNER = T("Add Partner Organization")
+                ADD_SUPPLIER = T("Add Supplier")
                 type_crud_strings = {
                     "Red Cross / Red Crescent" :
                         # @ToDo: IFRC isn't an NS?
                         Storage(
-                            title_create=T("Add National Society"),
+                            title_create=ADD_NS,
                             title_display=T("National Society Details"),
                             title_list=T("Red Cross & Red Crescent National Societies"),
                             title_update=T("Edit National Society"),
                             title_search=T("Search Red Cross & Red Crescent National Societies"),
                             title_upload=T("Import Red Cross & Red Crescent National Societies"),
-                            subtitle_create=T("Add National Society"),
+                            subtitle_create=ADD_NS,
                             label_list_button=T("List Red Cross & Red Crescent National Societies"),
-                            label_create_button=T("Add National Society"),
+                            label_create_button=ADD_NS,
                             label_delete_button=T("Delete National Society"),
                             msg_record_created=T("National Society added"),
                             msg_record_modified=T("National Society updated"),
@@ -3066,13 +3082,13 @@ def org_organisation_controller():
                             ),
                     "Supplier" :
                         Storage(
-                            title_create=T("Add Supplier"),
+                            title_create=ADD_SUPPLIER,
                             title_display=T("Supplier Details"),
                             title_list=T("Suppliers"),
                             title_update=T("Edit Supplier"),
                             title_search=T("Search Suppliers"),
                             title_upload=T("Import Suppliers"),
-                            subtitle_create=T("Add Supplier"),
+                            subtitle_create=ADD_SUPPLIER,
                             label_list_button=T("List Suppliers"),
                             label_create_button=T("Add Suppliers"),
                             label_delete_button=T("Delete Supplier"),
@@ -3083,20 +3099,20 @@ def org_organisation_controller():
                             ),
                     "Bilateral,Government,Intergovernmental,NGO,UN agency" :
                         Storage(
-                            title_create=T("Add Partner Organisation"),
-                            title_display=T("Partner Organisation Details"),
-                            title_list=T("Partner Organisations"),
-                            title_update=T("Edit Partner Organisation"),
-                            title_search=T("Search Partner Organisations"),
-                            title_upload=T("Import Partner Organisations"),
-                            subtitle_create=T("Add Partner Organisation"),
-                            label_list_button=T("List Partner Organisations"),
-                            label_create_button=T("Add Partner Organisations"),
-                            label_delete_button=T("Delete Partner Organisation"),
-                            msg_record_created=T("Partner Organisation added"),
-                            msg_record_modified=T("Partner Organisation updated"),
-                            msg_record_deleted=T("Partner Organisation deleted"),
-                            msg_list_empty=T("No Partner Organisations currently registered")
+                            title_create=ADD_PARTNER,
+                            title_display=T("Partner Organization Details"),
+                            title_list=T("Partner Organizations"),
+                            title_update=T("Edit Partner Organization"),
+                            title_search=T("Search Partner Organizations"),
+                            title_upload=T("Import Partner Organizations"),
+                            subtitle_create=ADD_PARTNER,
+                            label_list_button=T("List Partner Organizations"),
+                            label_create_button=T("Add Partner Organizations"),
+                            label_delete_button=T("Delete Partner Organization"),
+                            msg_record_created=T("Partner Organization added"),
+                            msg_record_modified=T("Partner Organization updated"),
+                            msg_record_deleted=T("Partner Organization deleted"),
+                            msg_list_empty=T("No Partner Organizations currently registered")
                             ),
                     }
 
@@ -3225,7 +3241,11 @@ def org_organisation_controller():
     output = current.rest_controller("org", "organisation",
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
-                                     rheader=org_rheader)
+                                     rheader=org_rheader,
+                                     # Need to be explicit since can also come from Project controller
+                                     csv_template=("org", "organisation"),
+                                     csv_stylesheet=("org", "organisation.xsl"),
+                                     )
     return output
 
 # =============================================================================

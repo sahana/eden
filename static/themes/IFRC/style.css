@@ -69,7 +69,7 @@ tfoot {
     font-style: italic;
 }
 caption {
-    background:#eee;
+    background: #eee;
 }
 
 table td,table th {
@@ -82,11 +82,25 @@ table td {
     padding: 10px;
     vertical-align: top;
 }
-table td:first-child{background:#fff;}
-table tr td:last-child, table tr th:last-child{border-right:0px #9C9C9C dashed;}
-table tr.odd td{background:#f1e8cb;}
-table tr.even td{background:#fff;}
-table tr td.white-cell,table tr th.white-cell{background:#fff;border-right:0px #9C9C9C dashed;}
+table td:first-child {
+    background: #fff;
+}
+/*
+table tr td:last-child,
+table tr th:last-child {
+    border-right: 1px #9C9C9C dashed;
+}*/
+table tr.odd td {
+    background: #f1e8cb;
+}
+table tr.even td {
+    background: #fff;
+}
+table tr td.white-cell,
+table tr th.white-cell {
+    background: #fff;
+    /*border-right: 1px #9C9C9C dashed;*/
+}
 table tr th.edit-delete-col {
     width: 50px;
     background: url(img/edit_delete.png) no-repeat bottom;
@@ -97,7 +111,7 @@ table td input[type="text"],
 table td select,
 table td textarea {
     background: #fff;
-/*    font-size: 0.9em;*/
+    /*font-size: 0.9em;*/
     border: 1px solid #ccc;
 }
 .edit-button {
@@ -231,6 +245,10 @@ form table td,
 form table td:first-child {
 	border-style: none;
 	background-color: transparent;
+}
+form table.embeddedComponent td,
+form table.embeddedComponent td:first-child {
+	border-style: solid;
 }
 
 /* Form Layout styles */

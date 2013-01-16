@@ -198,15 +198,6 @@ div.form-container form fieldset { margin:0 0 10px 0;
 div.form-container form legend { font-weight: bold;
                                  color: #666; }
 div.form-container form fieldset div.brake { padding: 0.3em; }
-div.form-container form fieldset label{ position:relative;
-                                        margin-right: 10px;
-                                        padding-right: 10px;
-                                        width: 15em;
-                                        display: block;
-                                        float: left;
-                                        text-align: right;
-                                        min-height:1em;
-                                        top:0.25em;}
 div.form-container form fieldset label.errorfield,
 div.form-container form fieldset span.errorfield { color: #c00; }
 div.form-container form fieldset label.value{display:block;
@@ -311,14 +302,16 @@ div.form-container form input[type=submit] {
 }
 
 /* Search */
-div.form-container div.search_form>form>table>tbody>tr>td {
+div.form-container div.search_form>form>table>tbody>tr>td,
+div.form-container div#reportform>form>fieldset>table>tbody>tr>td {
     padding: 5px 0;
 }
 
 .s3-checkboxes-widget-filter {
     font-style:italic;
 }
-div.search_form .w2p_fl {
+div.search_form .w2p_fl,
+div#reportform .w2p_fl {
     color: grey;
     text-transform: uppercase;
 }
@@ -346,4 +339,19 @@ div.dataTables_length {
 }
 div.dataTables_filter {
     clear: left;
+}
+
+/* Report */
+div.chart-contents {
+    background-color: white;
+}
+/* Hide Report Options not needed in DRRPP */
+div#chart-opts {
+    display: none;
+}
+div.pivot-table-control {
+    display: none;
+}
+div.hide-chart {
+    display: none;
 }
