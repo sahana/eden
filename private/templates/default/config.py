@@ -473,6 +473,7 @@ settings.L10n.decimal_separator = "."
 # Uncomment this to use multiple Organisations per project
 #settings.project.multiple_organisations = True
 # Uncomment this to customise
+# Links to Filtered Components for Donors & Partners
 #settings.project.organisation_roles = {
 #    1: T("Lead Implementer"), # T("Host National Society")
 #    2: T("Partner"), # T("Partner National Society")

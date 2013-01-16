@@ -2897,6 +2897,12 @@ class S3DataTable(object):
                             _alt=T("Export in RSS format"),
                             _title=T("Export in RSS format"),
                             ))
+        url = s3.formats.xml if s3.formats.xml else default_url
+        iconList.append(IMG(_src="/%s/static/img/icon-xml.png" % application,
+                            _onclick="s3FormatRequest('xml','%s','%s');" % (id, url),
+                            _alt=T("Export in XML format"),
+                            _title=T("Export in XML format"),
+                            ))
 
         div = DIV(_class='list_formats')
         if permalink is not None:

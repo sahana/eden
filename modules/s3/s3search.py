@@ -770,6 +770,7 @@ class S3SearchLocationWidget(S3SearchWidget):
         - allows the user to select a BBOX & have only results from within
           that BBOX returned
 
+        @ToDo: Get this working within a Report (no map currently available there)
         @ToDo: Have an option to use a Circular Radius
                http://openlayers.org/dev/examples/regular-polygons.html
         @ToDo: Have an option to use a full Polygon

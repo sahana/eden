@@ -59,11 +59,21 @@ class S3MembersModel(S3Model):
 
         NONE = current.messages["NONE"]
 
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
+
+        add_component = self.add_component
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
         root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
 
         # ---------------------------------------------------------------------
         # Membership Types
@@ -76,8 +86,8 @@ class S3MembersModel(S3Model):
                              # realm_entity to filter appropriately
                              organisation_id(
                                              default = root_org,
-                                             readable = False,
-                                             writable = False,
+                                             readable = is_admin,
+                                             writable = is_admin,
                                              ),
                              s3_comments(label=T("Description"), comment=None),
                              *s3_meta_fields())
@@ -100,11 +110,6 @@ class S3MembersModel(S3Model):
 
         label_create = crud_strings[tablename].label_create_button
 
-        if root_org:
-            filter_opts = (root_org, None)
-        else:
-            filter_opts = (None,)
-
         represent = s3_represent_id(table)
 
         membership_type_id = S3ReusableField("membership_type_id", table,
@@ -125,14 +130,10 @@ class S3MembersModel(S3Model):
         configure(tablename,
                   deduplicate = self.member_type_duplicate,
                   )
+
         # ---------------------------------------------------------------------
         # Members
         #
-
-        start_year = 2010 # @ToDo: deployment_setting
-        end_year = current.request.now.year + 2
-        year_opts = [x for x in range (start_year, end_year)]
-
         tablename = "member_membership"
         table = define_table(tablename,
                              organisation_id(#widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
@@ -183,6 +184,32 @@ class S3MembersModel(S3Model):
 
         table.virtualfields.append(MemberVirtualFields())
 
+        # Components
+        # Email
+        add_component("pr_contact",
+                      member_membership=dict(
+                        name="email",
+                        link="pr_person",
+                        joinby="id",
+                        key="pe_id",
+                        fkey="pe_id",
+                        pkey="person_id",
+                        filterby="contact_method",
+                        filterfor=["EMAIL"],
+                      ))
+        # Phone
+        add_component("pr_contact",
+                      member_membership=dict(
+                        name="phone",
+                        link="pr_person",
+                        joinby="id",
+                        key="pe_id",
+                        fkey="pe_id",
+                        pkey="person_id",
+                        filterby="contact_method",
+                        filterfor=["SMS", "HOME_PHONE", "WORK_PHONE"],
+                      ))
+
         def member_type_opts():
             """
                 Provide the options for the Membership Type search filter
@@ -204,75 +231,76 @@ class S3MembersModel(S3Model):
                 _dict[opt.id] = opt.name
             return _dict
 
-        advanced_member_search = [
-                      S3SearchOptionsWidget(
-                        name="member_search_type",
-                        label=T("Type"),
-                        field="membership_type_id",
-                        cols = 3,
-                        options = member_type_opts,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_paid",
-                        label=T("Paid"),
-                        field="paid",
-                        cols = 3,
-                        options = {
-                                T("paid"):T("paid"),
-                                T("overdue"):T("overdue"),
-                                T("expired"):T("expired"),
-                            },
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_organisation_id",
-                        field="organisation_id",
-                        label=T("Organisation"),
-                        represent ="%(name)s",
-                        cols = 3
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_L0",
-                        field="location_id$L0",
-                        location_level="L0",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_L1",
-                        field="location_id$L1",
-                        location_level="L1",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_L2",
-                        field="location_id$L2",
-                        location_level="L2",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_L3",
-                        field="location_id$L3",
-                        location_level="L3",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="member_search_L4",
-                        field="location_id$L4",
-                        location_level="L4",
-                        cols = 3,
-                      ),
-                      S3SearchLocationWidget(
-                        name="member_search_map",
-                        label=T("Map"),
-                      )
+        report_search = [
+            S3SearchOptionsWidget(
+                name="member_search_type",
+                label=T("Type"),
+                field="membership_type_id",
+                cols = 3,
+                options = member_type_opts,
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_paid",
+                label=T("Paid"),
+                field="paid",
+                cols = 3,
+                options = {
+                        T("paid"):    T("paid"),
+                        T("overdue"): T("overdue"),
+                        T("expired"): T("expired"),
+                    },
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_organisation_id",
+                field="organisation_id",
+                label=T("Organisation"),
+                represent ="%(name)s",
+                cols = 3
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_L0",
+                field="location_id$L0",
+                location_level="L0",
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_L1",
+                field="location_id$L1",
+                location_level="L1",
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_L2",
+                field="location_id$L2",
+                location_level="L2",
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_L3",
+                field="location_id$L3",
+                location_level="L3",
+                cols = 3,
+            ),
+            S3SearchOptionsWidget(
+                name="member_search_L4",
+                field="location_id$L4",
+                location_level="L4",
+                cols = 3,
+            ),
             ]
+        # Map filter not working on Reports page
+        advanced_member_search = report_search + [S3SearchLocationWidget(
+                                                    name="member_search_map",
+                                                    label=T("Map"),
+                                                    )
+                                                  ]
 
         member_search = S3Search(
             simple=(self.member_search_simple_widget("simple")),
             advanced=[self.member_search_simple_widget("advanced")] + advanced_member_search
         )
 
-        report_fields = [
-                         "person_id",
+        report_fields = ["person_id",
                          "membership_type_id",
                          "paid",
                          "organisation_id",
@@ -305,8 +333,8 @@ class S3MembersModel(S3Model):
                                # useful for testing the paid virtual field
                                #"membership_paid",
                                (T("Paid"), "paid"),
-                               (T("Email"), "email"),
-                               (T("Phone"), "phone"),
+                               (T("Email"), "email.value"),
+                               (T("Phone"), "phone.value"),
                                "location_id$L1",
                                "location_id$L2",
                                "location_id$L3",
@@ -328,14 +356,14 @@ class S3MembersModel(S3Model):
         T = current.T
 
         return S3SearchSimpleWidget(
-                    name = "member_search_simple_%s" % type,
-                    label = T("Name"),
-                    comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-                    field = ["person_id$first_name",
-                             "person_id$middle_name",
-                             "person_id$last_name",
-                            ]
-                  )
+            name = "member_search_simple_%s" % type,
+            label = T("Name"),
+            comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+            field = ["person_id$first_name",
+                     "person_id$middle_name",
+                     "person_id$last_name",
+                     ]
+            )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -478,7 +506,7 @@ def member_rheader(r, tabs=[]):
             (T("Addresses"), "address"),
             #(T("Contacts"), "contact"),
             (T("Contacts"), "contacts"),
-           ]
+            ]
     rheader_tabs = s3_rheader_tabs(r, tabs)
 
     if resourcename == "membership":
@@ -515,8 +543,7 @@ def member_rheader(r, tabs=[]):
 class MemberVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["person_id",
-                    "start_date",
+    extra_fields = ["start_date",
                     "membership_paid",
                     ]
 
@@ -528,10 +555,11 @@ class MemberVirtualFields:
 
             @ToDo: Formula should come from the deployment_template
         """
+
         try:
             start_date = self.member_membership.start_date
         except AttributeError:
-            # not available
+            # Not available
             start_date = None
         try:
             paid_date = self.member_membership.membership_paid
@@ -573,54 +601,6 @@ class MemberVirtualFields:
                 return LAPSED
             else:
                 return OVERDUE
-
-        return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def email(self):
-        """ Email addresses """
-        try:
-            person_id = self.member_membership.person_id
-        except AttributeError:
-            # not available
-            person_id = None
-        if person_id:
-            s3db = current.s3db
-            ptable = s3db.pr_person
-            ctable = s3db.pr_contact
-            query = (ctable.deleted == False) & \
-                    (ctable.pe_id == ptable.pe_id) & \
-                    (ptable.id == person_id) & \
-                    (ctable.contact_method == "EMAIL")
-            contacts = current.db(query).select(ctable.value,
-                                                orderby=ctable.priority)
-            if contacts:
-                values = [contact.value for contact in contacts]
-                return ",".join(values)
-
-        return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def phone(self):
-        """ Phone numbers """
-        try:
-            person_id = self.member_membership.person_id
-        except AttributeError:
-            # not available
-            person_id = None
-        if person_id:
-            s3db = current.s3db
-            ptable = s3db.pr_person
-            ctable = s3db.pr_contact
-            query = (ctable.deleted == False) & \
-                    (ctable.pe_id == ptable.pe_id) & \
-                    (ptable.id == person_id) & \
-                    (ctable.contact_method.belongs(["SMS", "HOME_PHONE", "WORK_PHONE"]))
-            contacts = current.db(query).select(ctable.value,
-                                                orderby=ctable.priority)
-            if contacts:
-                values = [contact.value for contact in contacts]
-                return ",".join(values)
 
         return current.messages["NONE"]
 

@@ -102,6 +102,7 @@ settings.project.multiple_organisations = True
 # Uncomment this to disable Sectors in projects
 settings.project.sectors = False
 # Uncomment this to customise
+# Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {
     1: T("Lead Organization"),
     2: T("Partner Organization"),

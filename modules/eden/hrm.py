@@ -357,7 +357,7 @@ class S3HRModel(S3Model):
                         fkey="pe_id",
                         pkey="person_id",
                         filterby="contact_method",
-                        filterfor="EMAIL",
+                        filterfor=["EMAIL"],
                       ))
         # Mobile Phone
         add_component("pr_contact",
@@ -369,7 +369,7 @@ class S3HRModel(S3Model):
                         fkey="pe_id",
                         pkey="person_id",
                         filterby="contact_method",
-                        filterfor="SMS",
+                        filterfor=["SMS"],
                       ))
 
         # Availability

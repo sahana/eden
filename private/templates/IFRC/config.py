@@ -273,6 +273,7 @@ settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 # Uncomment this to customise
+# Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {
     1: T("Host National Society"),
     2: T("Partner National Society"),

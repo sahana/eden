@@ -696,7 +696,7 @@ S3OptionsFilter({
                             name="donor",
                             joinby="project_id",
                             filterby="role",
-                            filterfor="3",
+                            filterfor=["3"], # Works for IFRC & DRRPP
                           ))
             # Partners
             add_component("project_organisation",
@@ -704,7 +704,7 @@ S3OptionsFilter({
                             name="partner",
                             joinby="project_id",
                             filterby="role",
-                            filterfor="2",
+                            filterfor=["2"], # Works for IFRC & DRRPP
                           ))
 
         # Sites
