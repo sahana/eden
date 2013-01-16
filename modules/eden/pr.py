@@ -2351,7 +2351,7 @@ class S3SavedSearch(S3Model):
         import urlparse
 
         represent = current.manager.represent
-        resource = S3Resource(prefix, resource_name)
+        resource = S3Resource(resource_name, prefix=prefix)
 
         parsed_url = urlparse.urlparse(url)
         filters = urlparse.parse_qs(parsed_url.query)
