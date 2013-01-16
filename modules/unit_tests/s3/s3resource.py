@@ -2414,7 +2414,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        # Define a filtered component
+        # Define a filtered component with single value
         s3db.add_component("org_office",
                            org_organisation = dict(name="test",
                                                    joinby="organisation_id",
@@ -2431,6 +2431,38 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         self.assertEqual(component.table._tablename, "org_test_office")
         self.assertEqual(str(component.filter),
                          "(org_test_office.office_type_id = 5)")
+
+        # Define a filtered component with single value in list
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=[5]))
+        resource = s3db.resource("org_organisation", components=["test"])
+        component = resource.components["test"]
+        self.assertEqual(str(component.filter),
+                         "(org_test_office.office_type_id = 5)")
+
+        # Define a filtered component with value list
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=[4, 5]))
+        resource = s3db.resource("org_organisation", components=["test"])
+        component = resource.components["test"]
+        self.assertEqual(str(component.filter),
+                         "(org_test_office.office_type_id IN (4,5))")
+
+        # Define a filtered component with empty filter value list
+        s3db.add_component("org_office",
+                           org_organisation = dict(name="test",
+                                                   joinby="organisation_id",
+                                                   filterby="office_type_id",
+                                                   filterfor=[]))
+        resource = s3db.resource("org_organisation", components=["test"])
+        component = resource.components["test"]
+        self.assertEqual(component.filter, None)
 
         # Remove the component hook
         del current.model.components["org_organisation"]["test"]

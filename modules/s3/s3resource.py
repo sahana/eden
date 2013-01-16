@@ -387,7 +387,17 @@ class S3Resource(object):
         component.values = hook.values
 
         if hook.filterby is not None:
-            component.filter = (hook.table[hook.filterby].belongs(hook.filterfor))
+            filterfor = hook.filterfor
+            is_list = isinstance(filterfor, (tuple, list))
+            if is_list and len(filterfor) == 1:
+                is_list = False
+                filterfor = filterfor[0]
+            if not is_list:
+                component.filter = (hook.table[hook.filterby] == filterfor)
+            elif filterfor:
+                component.filter = (hook.table[hook.filterby].belongs(filterfor))
+            else:
+                component.filter = None
         else:
             component.filter = None    
 
