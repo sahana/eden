@@ -1110,6 +1110,7 @@ class S3TrackingModel(S3Model):
                 simple=(S3SearchSimpleWidget(
                           name="send_search_text_simple",
                           label=T("Search"),
+                          comment=T("Search for an item by text."),
                           field=["sender_id$first_name",
                                  "sender_id$middle_name",
                                  "sender_id$last_name",
@@ -1125,6 +1126,7 @@ class S3TrackingModel(S3Model):
                 advanced=(S3SearchSimpleWidget(
                             name="send_search_text_advanced",
                             label=T("Search"),
+                            comment=T("Search for an item by text."),
                             field=["sender_id$first_name",
                                    "sender_id$middle_name",
                                    "sender_id$last_name",
@@ -1141,6 +1143,7 @@ class S3TrackingModel(S3Model):
                          S3SearchOptionsWidget(
                            name="send_search_org",
                            label=T("To Organization"),
+                           comment=T("If none are selected, then all are searched."),
                            field="to_site_id",
                            cols=2
                          ),
@@ -1158,12 +1161,14 @@ class S3TrackingModel(S3Model):
                            name="recv_search_date",
                            method="range",
                            label=T("Date Sent"),
+                           comment=T("Search for a shipment sent between these dates."),
                            field="date"
                          ),
                          S3SearchMinMaxWidget(
                            name="recv_search_delivery_date",
                            method="range",
                            label=T("Estimated Delivery Date"),
+                           comment=T("Search for a shipment which has an estimated delivery between these dates."),
                            field="delivery_date"
                    )
            ))
