@@ -7969,6 +7969,15 @@ class S3ImportPOI(S3Method):
 
             title = T("Import from OpenStreetMap")
 
+            res_select = [TR(TD(B(T("Select resources to import:"))),
+                _colspan=3)]
+            for resource in current.deployment_settings.get_gis_poi_resources():
+                id = "res_"+resource
+                res_select.append(TR(
+                    TD(LABEL(resource, _for=id)),
+                    TD(INPUT(_type="checkbox", _name=id, _id = id,
+                        _checked=True)), TD()))
+
             form = FORM(
                     TABLE(
                         TR(
@@ -8016,6 +8025,7 @@ class S3ImportPOI(S3Method):
                                      _id="ignore_errors")),
                             TD(),
                             ),
+                        res_select,
                         TR(TD(),
                            TD(INPUT(_type="submit", _value=T("Import"))),
                            TD(),
@@ -8113,7 +8123,13 @@ class S3ImportPOI(S3Method):
                 define_resource = s3db.resource
                 response.error = ""
                 import_count = 0
-                for tablename in current.deployment_settings.get_gis_poi_resources():
+
+                import_res = []
+                for resource in current.deployment_settings.get_gis_poi_resources():
+                    if getattr(form.vars, "res_" + resource):
+                        import_res.append(resource)
+
+                for tablename in import_res:
                     try:
                         table = s3db[tablename]
                     except:
