@@ -1527,7 +1527,7 @@ $('#%(dummy_input)s').blur(function(){
     return TAG[""](
                     INPUT(_id=dummy_input,
                           _class="string",
-                          value=represent),
+                          value=represent.encode("utf-8")),
                     IMG(_src="/%s/static/img/ajax-loader.gif" % \
                              current.request.application,
                         _height=32, _width=32,
