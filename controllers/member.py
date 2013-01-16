@@ -58,6 +58,9 @@ def membership_type():
         REST Controller
     """
 
+    if not auth.s3_has_role(ADMIN):
+        s3.filter = auth.filter_by_root_org(s3db.member_membership_type)
+
     output = s3_rest_controller()
     return output
 

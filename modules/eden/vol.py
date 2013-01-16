@@ -63,7 +63,7 @@ class S3VolClusterDataModel(S3Model):
         table = self.define_table(tablename,
                                   hrm_human_resource_id(ondelete = "CASCADE"),
                                   Field("active", "boolean",
-                                        represent = self.vol_active,
+                                        represent = self.vol_active_represent,
                                         label = T("Active")),
                                   *s3_meta_fields())
 
@@ -239,7 +239,7 @@ S3OptionsFilter({
 
     # =====================================================================
     @staticmethod
-    def vol_active(opt):
+    def vol_active_represent(opt):
         """
             Represent the Active status of a Volunteer
         """
