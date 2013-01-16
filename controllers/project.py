@@ -554,8 +554,6 @@ def location():
                     doc_table.organisation_id.writable = False
                     doc_table.person_id.writable = False
                     doc_table.location_id.writable = False
-        elif r.representation == "geojson":
-            r.table.virtualfields.append(s3db.project_location_virtualfields())
 
         return True
     s3.prep = prep

@@ -1276,6 +1276,10 @@ class S3Project3WModel(S3Model):
         tablename = "project_location"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
+                             # Populated onaccept - used for map popups
+                             Field("name",
+                                   readable=False,
+                                   writable=False),
                              project_id(),
                              self.gis_location_id(
                                 widget = S3LocationAutocompleteWidget(),
@@ -1475,8 +1479,9 @@ class S3Project3WModel(S3Model):
                   super_entity="doc_entity",
                   create_next=URL(c="project", f="location",
                                   args=["[id]", "beneficiary"]),
-                  search_method=project_location_search,
                   deduplicate=self.project_location_deduplicate,
+                  onaccept=self.project_location_onaccept,
+                  search_method=project_location_search,
                   report_options=Storage(search = advanced_search,
                                          rows=report_fields,
                                          cols=report_fields,
@@ -1977,7 +1982,6 @@ class S3Project3WModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return dict(
-            project_location_virtualfields = S3ProjectLocationVirtualFields,
             project_organisation_roles = project_organisation_roles,
             project_organisation_lead_role = project_organisation_lead_role,
         )
@@ -2082,6 +2086,24 @@ class S3Project3WModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_location_onaccept(form):
+        """
+            Calculate the 'name' field used by Map popups
+        """
+
+        vars = form.vars
+        id = vars.id
+        if vars.location_id and vars.project_id:
+            name = project_location_represent(None, vars)
+        elif id:
+            name = project_location_represent(id)
+        else:
+            return None
+        db = current.db
+        db(db.project_location.id == id).update(name=name)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4287,11 +4309,20 @@ def project_location_represent(id, row=None):
         db = current.db
         table = db.project_location
         row = db(table.id == id).select(table.location_id,
+                                        table.project_id,
                                         limitby=(0, 1)).first()
     try:
-        return current.s3db.gis_location_lx_represent(row.location_id)
+        location = current.s3db.gis_location_lx_represent(row.location_id)
     except:
         return current.messages.UNKNOWN_OPT
+
+    if current.deployment_settings.get_project_community():
+        # Community is the primary resource
+        return location
+    else:
+        # Location is just a way to display Projects
+        project = project_project_represent(row.project_id, show_link=False)
+        return "%s (%s)" % (project, location)
 
 # =============================================================================
 def task_notify(form):
@@ -4355,60 +4386,6 @@ class S3ProjectBudgetVirtualFields:
                 (table.project_id == self.project_project.id)
         sum_field = table.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
-
-# =============================================================================
-class S3ProjectLocationVirtualFields:
-    """ Virtual fields for the project_location table """
-
-    extra_fields = ["project_id$code",
-                    "project_id$name",
-                    "location_id$name",
-                    "location_id$L0",
-                    "location_id$L1",
-                    "location_id$L2",
-                    "location_id$L3",
-                    "location_id$L4",
-                    "location_id$L5",
-                    ]
-
-    # -------------------------------------------------------------------------
-    def name(self):
-        """
-            Name for Map onHover popups
-        """
-
-        row = self.gis_location
-        name = row.name
-        loc_list = [name]
-        lappend = loc_list.append
-        L5 = row.L5
-        if L5 and L5 != name:
-            lappend(L5)
-        L4 = row.L4
-        if L4 and L4 != name:
-            lappend(L4)
-        L3 = row.L3
-        if L3 and L3 != name:
-            lappend(L3)
-        L2 = row.L2
-        if L2 and L2 != name:
-            lappend(L2)
-        L1 = row.L1
-        if L1 and L1 != name:
-            lappend(L1)
-        L0 = row.L0
-        if L0 and L0 != name:
-            lappend(L0)
-        location = ", ".join(loc_list)
-
-        if current.deployment_settings.get_project_community():
-            # Community is the primary resource
-            return location
-        else:
-            # Location is just a way to display Projects
-            row = self.project_project
-            project = project_project_represent(None, row, show_link=False)
-            return "%s (%s)" % (project, location)
 
 # =============================================================================
 class S3ProjectBeneficiaryVirtualFields:
