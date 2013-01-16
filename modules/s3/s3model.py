@@ -341,10 +341,14 @@ class S3Model(object):
     # -------------------------------------------------------------------------
     # Resource configuration
     # -------------------------------------------------------------------------
-    @classmethod
-    def resource(cls, prefix, name=None, **attr):
+    @staticmethod
+    def resource(tablename, *args, **kwargs):
+        """
+            Wrapper for the S3Resource constructor to realize
+            the global s3db.resource() method
+        """
 
-        return S3Resource(prefix, name=name, **attr)
+        return S3Resource(tablename, *args, **kwargs)
 
    # -------------------------------------------------------------------------
     @classmethod

@@ -106,9 +106,9 @@ class S3Resource(object):
         S3 framework rules.
     """
 
-    def __init__(self, table,
-                 name=None,
+    def __init__(self, tablename,
                  id=None,
+                 prefix=None,
                  uid=None,
                  filter=None,
                  vars=None,
@@ -123,10 +123,8 @@ class S3Resource(object):
         """
             Constructor
 
-            @param table: The table, tablename, a resource
-                          or the prefix of the table name (=module name)
-            @param name: name of the resource (without prefix),
-                         required if "table" is a table name prefix
+            @param tablename: tablename, Table, or an S3Resource instance
+            @param prefix: prefix to use for the tablename
 
             @param id: record ID (or list of record IDs)
             @param uid: record UID (or list of record UIDs)
@@ -147,13 +145,6 @@ class S3Resource(object):
 
             @param approved: include approved records
             @param unapproved: include unapproved records
-
-            @note: instead of prefix/name it is also possible to specify
-                   the tablename, i.e. S3Resource("prefix_name") instead
-                   of S3Resource("prefix", "name").
-
-            @note: instead of prefix/name it is also possible to specify
-                   a table or a resource as first parameter.
         """
 
         s3db = current.s3db
@@ -163,25 +154,26 @@ class S3Resource(object):
         # Names ---------------------------------------------------------------
 
         self.table = None
-        if id is None and \
-           (isinstance(name, (int, long, list, tuple)) or \
-            isinstance(name, str) and name.isdigit()):
-            id, name = name, id
-        if name is None:
-            if isinstance(table, Table):
-                self.table = table
-                tablename = table._tablename
-            elif isinstance(table, S3Resource):
-                self.table = table.table
-                tablename = table.tablename
-            else:
-                tablename = table
+        self._alias = None
+
+        if prefix is None:
+            if not isinstance(tablename, basestring):
+                if isinstance(tablename, Table):
+                    self.table = tablename
+                    self._alias = self.table._tablename
+                    tablename = self._alias
+                elif isinstance(tablename, S3Resource):
+                    self.table = tablename.table
+                    self._alias = self.table._tablename
+                    tablename = tablename.tablename
+                else:
+                    raise SyntaxError("illegal argument")
             if "_" in tablename:
                 prefix, name = tablename.split("_", 1)
             else:
-                prefix, name = None, tablename
+                raise SyntaxError("invalid tablename: %s" % tablename)
         else:
-            prefix = table
+            name = tablename
             tablename = "%s_%s" % (prefix, name)
 
         self.prefix = prefix
@@ -209,8 +201,9 @@ class S3Resource(object):
         # Set default approver
         auth.permission.set_default_approver(table)
 
-        self._alias = tablename
-        """ Table alias (the tablename used in joins/queries) """
+        if not self._alias:
+            self._alias = tablename
+            """ Table alias (the tablename used in joins/queries) """
 
         if parent is not None:
             if parent.tablename == self.tablename:
@@ -246,6 +239,9 @@ class S3Resource(object):
         self.include_deleted = include_deleted
         self._approved = approved
         self._unapproved = unapproved
+
+        # Component Filter
+        self.filter = None
 
         # Resource Filter
         self.rfilter = None
