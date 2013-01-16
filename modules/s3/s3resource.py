@@ -6145,7 +6145,12 @@ class S3Pivottable(object):
         def prefix(s):
             if isinstance(s, (tuple, list)):
                 return prefix(s[-1])
-            return "~.%s" % s if "." not in s.split("$", 1)[0] else s
+            if "." not in s.split("$", 1)[0]:
+                return "%s.%s" % (alias, s)
+            elif s[:2] == "~.":
+                return "%s.%s" % (alias, s[2:])
+            else:
+                return s
 
         self.pkey = pkey = prefix(table._id.name)
         self.rows = rows = self.rows and prefix(self.rows) or None
