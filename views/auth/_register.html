@@ -1,6 +1,6 @@
 {{register_form.attributes["_id"] = "regform"}}
 {{if settings.get_terms_of_service():}}
-  {{register_form[0][-2].append(TR(TD(LABEL(T("Terms of Service:"), _id="terms_of_service__label"), _class="w2p_fl"), TD(LABEL(TEXTAREA(deployment_settings.get_terms_of_service(), _onfocus="this.rows=10", _readonly="readonly", _style="width:100%;text-align:", _cols="80", _rows="10"), _id="terms_of_service"), _class="w2p_fw", _colspan="2"), _id="terms_of_service__row"))}}
+  {{register_form[0][-2].append(TR(TD(LABEL(":%s" % T("Terms of Service"), _id="terms_of_service__label"), _class="w2p_fl"), TD(LABEL(TEXTAREA(deployment_settings.get_terms_of_service(), _onfocus="this.rows=10", _readonly="readonly", _style="width:100%;text-align:", _cols="80", _rows="10"), _id="terms_of_service"), _class="w2p_fw", _colspan="2"), _id="terms_of_service__row"))}}
 {{pass}}
 {{register_form[0][-1][1].append(A(T("Login"), _href=URL(f="user", args="login"), _id="login-btn", _class="action-lnk"))}}
 {{include "key.html"}}

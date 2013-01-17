@@ -199,7 +199,7 @@ def setting():
 
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
-    table.outgoing_sms_handler.label = T("Outgoing SMS handler")
+    table.outgoing_sms_handler.label = T("Outgoing SMS Handler")
     table.outgoing_sms_handler.comment = DIV(DIV(_class="tooltip",
         _title="%s|%s" % (T("Outgoing SMS Handler"),
                           T("Selects what type of gateway to use for outbound SMS"))))
@@ -1238,7 +1238,7 @@ def twilio_inbox():
         title_search = T("Search Twilio SMS Inbox"),
         label_list_button = T("View Twilio SMS"),
         msg_record_deleted = T("Twilio SMS deleted"),
-        msg_list_empty = T("Twilio SMS Inbox empty. "),
+        msg_list_empty = T("Twilio SMS Inbox empty"),
         msg_record_modified = T("Twilio SMS updated")
         )
 
@@ -1488,7 +1488,7 @@ def twitter_settings():
         if r.interactive and isinstance(output, dict):
             if r.http == "GET" and r.method in ("create", "update"):
                 rheader = A(T("Collect PIN from Twitter"),
-                            _href=T(session.s3.twitter_oauth_url),
+                            _href=session.s3.twitter_oauth_url,
                             _target="_blank")
                 output["rheader"] = rheader
         return output

@@ -492,7 +492,7 @@ def mailing_list():
                                                       ])
     # Components
     _rheader = s3db.pr_rheader
-    _tabs = [(T("Organisation"), "organisation/"),
+    _tabs = [(T("Organization"), "organisation/"),
             (T("Mailing List Details"), None),
            ]
     if len(request.args) > 0:

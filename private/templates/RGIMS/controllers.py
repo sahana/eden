@@ -179,8 +179,8 @@ $('#login-btn').click(function(){
             auth.messages.submit_button = T("Login")
             login_form = auth()
             login_div = DIV(H3(T("Login")),
-                            P(XML(T("Registered users can %(login)s to access the system" % \
-                                    dict(login=B(T("login")))))))
+                            P(XML(T("Registered users can %(login)s to access the system") % \
+                                  dict(login=B(T("login"))))))
 
         return dict(title = title,
                     sit_dec_res_box = sit_dec_res_box,

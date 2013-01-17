@@ -610,7 +610,7 @@ S3OptionsFilter({
                 ),
                 S3SearchOptionsWidget(
                     name="owner_org_seach",
-                    label=T("Owning Organisation"),
+                    label=T("Owning Organization"),
                     field="owner_org_id",
                     represent="%(name)s",
                     comment=T("If none are selected, then all are searched."),
@@ -618,7 +618,7 @@ S3OptionsFilter({
                 ),
                 S3SearchOptionsWidget(
                     name="supply_org_seach",
-                    label=T("Donating Organisation"),
+                    label=T("Donating Organization"),
                     field="supply_org_id",
                     represent="%(name)s",
                     comment=T("If none are selected, then all are searched."),
@@ -1041,7 +1041,7 @@ class S3TrackingModel(S3Model):
                                    represent =  org_site_represent
                                    ),
                              organisation_id(
-                                label = T("To Organisation"),
+                                label = T("To Organization"),
                                 readable = show_org,
                                 writable = show_org,
                                 ),
@@ -1292,7 +1292,7 @@ class S3TrackingModel(S3Model):
                                    label = T("Shipment Type"),
                                    default = 0,
                                    ),
-                             organisation_id( label = T("Organisation/Supplier")
+                             organisation_id( label = T("Organization/Supplier")
                                     ),
                              # This is a reference, not a super-link, so we can override
                              Field("from_site_id", "reference org_site",
@@ -2442,7 +2442,7 @@ S3OptionsFilter({
 
         vars = form.vars
         if not vars.to_site_id and not vars.organisation_id:
-            error = T("Please enter a %(site)s OR an Organisation") % dict(site=current.deployment_settings.get_org_site_label())
+            error = T("Please enter a %(site)s OR an Organization") % dict(site=current.deployment_settings.get_org_site_label())
             errors = form.errors
             errors.to_site_id = error
             errors.organisation_id = error
@@ -2461,7 +2461,7 @@ S3OptionsFilter({
             form.errors.from_site_id = T("Please enter a %(site)s") % dict(site=current.deployment_settings.get_org_site_label())
         if type >= 32 and not form.vars.organisation_id:
             # Internal Shipment needs from_site_id
-            form.errors.organisation_id = T("Please enter an Organisation/Supplier")
+            form.errors.organisation_id = T("Please enter an Organization/Supplier")
 
     # ---------------------------------------------------------------------
     @staticmethod

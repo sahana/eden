@@ -4320,7 +4320,7 @@ def project_location_represent(id, row=None):
         # Community is the primary resource
         return location
     else:
-        # Location is just a way to display Projects
+        # Location is just a way to display Projects on a map
         project = project_project_represent(row.project_id, show_link=False)
         return "%s (%s)" % (project, location)
 

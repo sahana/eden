@@ -167,7 +167,7 @@ class S3StatsModel(S3Model):
                                    label = T("The number of aggregated records")
                                    ),
                              Field("ward_count", "integer",
-                                   label = T("The number geographical units that may be part of the aggregation")
+                                   label = T("The number of geographical units that may be part of the aggregation")
                                    ),
                              Field("date", "date",
                                    label = T("Start Date"),

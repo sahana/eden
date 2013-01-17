@@ -2031,7 +2031,7 @@ def rat():
         subheadings = {
             "%s / %s" % (T("Sources of income"),
                          T("Major expenses")): "income_sources_pre_disaster",
-            T("business_damaged"): "Access to cash",
+            T("Business Damaged"): "Access to cash",
             T("Current community priorities"): "rank_reconstruction_assistance",
             T("Comments"): "comments"})
     s3db.configure("assess_section8",

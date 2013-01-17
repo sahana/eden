@@ -253,7 +253,7 @@ class S3MembersModel(S3Model):
             S3SearchOptionsWidget(
                 name="member_search_organisation_id",
                 field="organisation_id",
-                label=T("Organisation"),
+                label=T("Organization"),
                 represent ="%(name)s",
                 cols = 3
             ),

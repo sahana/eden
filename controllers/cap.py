@@ -362,7 +362,7 @@ def alert_fields_comments():
           _class="tooltip",
           _title="%s|%s" % (
               T("A list of incident(s) referenced by the alert message"),
-              T("Used to collate multiple messages referring to different aspects of the same incident. If multie incident identifiers are referenced, they SHALL be separated by whitespace.  Incident names including whitespace SHALL be surrounded by double-quotes.")))
+              T("Used to collate multiple messages referring to different aspects of the same incident. If multiple incident identifiers are referenced, they SHALL be separated by whitespace.  Incident names including whitespace SHALL be surrounded by double-quotes.")))
 
 # -----------------------------------------------------------------------------
 def area_fields_comments():

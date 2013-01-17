@@ -252,7 +252,7 @@ S3OptionsFilter({
                       ),
                       S3SearchOptionsWidget(
                         name="asset_search_organisation_id",
-                        label=T("Organisation"),
+                        label=T("Organization"),
                         field="organisation_id",
                         represent ="%(name)s",
                         cols = 3

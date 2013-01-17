@@ -1022,7 +1022,7 @@ class S3OrganisationModel(S3Model):
         if vars and \
            vars.branch_id and \
            int(vars.branch_id) == int(vars.organisation_id):
-            error = current.T("Cannot make an Organisation a branch of itself!")
+            error = current.T("Cannot make an Organization a branch of itself!")
             form.errors["branch_id"] = error
             current.response.error = error
 

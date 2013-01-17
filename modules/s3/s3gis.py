@@ -2063,9 +2063,12 @@ class GIS(object):
                 #    end = datetime.datetime.now()
                 #    duration = end - start
                 #    duration = "{:.2f}".format(duration.total_seconds())
-                #    query = (ftable.id == layer_id)
-                #    layer_name = db(query).select(ftable.name,
-                #                                  limitby=(0, 1)).first().name
+                #    if layer_id:
+                #        query = (ftable.id == layer_id)
+                #        layer_name = db(query).select(ftable.name,
+                #                                      limitby=(0, 1)).first().name
+                #    else:
+                #        layer_name = "Unknown"
                 #    _debug("tooltip lookup of layer %s completed in %s seconds" % \
                 #            (layer_name, duration))
 
@@ -2212,8 +2215,8 @@ class GIS(object):
 
         if resource:
             # We can lookup the representations in bulk rather than 1/record
-            if DEBUG:
-                start = datetime.datetime.now()
+            #if DEBUG:
+            #    start = datetime.datetime.now()
             represents = {}
             values = [r[fieldname] for r in resource if r[fieldname]]
             if not values:
@@ -2254,12 +2257,12 @@ class GIS(object):
                 for value in values:
                     represents[value] = value
 
-            if DEBUG:
-                end = datetime.datetime.now()
-                duration = end - start
-                duration = '{:.2f}'.format(duration.total_seconds())
-                _debug("representation of %s completed in %s seconds" % \
-                        (fieldname, duration))
+            #if DEBUG:
+            #    end = datetime.datetime.now()
+            #    duration = end - start
+            #    duration = '{:.2f}'.format(duration.total_seconds())
+            #    _debug("representation of %s completed in %s seconds" % \
+            #            (fieldname, duration))
             return represents
 
         else:

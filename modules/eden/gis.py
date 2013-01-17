@@ -3907,33 +3907,75 @@ def gis_location_lx_represent(id):
     """
         Represent a location as a hierarchical string
 
+        Assumes that the Location Hierarchy has been updated
+
         @param id: location_id
-        @return: string
+        @returns: string
     """
 
     if not id:
         return current.messages["NONE"]
 
-    s3db = current.s3db
-    table = s3db.gis_location
+    table = current.s3db.gis_location
     location = current.db(table.id == id).select(table.name,
-                                                 cache=s3db.cache,
+                                                 table.L0,
+                                                 table.L1,
+                                                 table.L2,
+                                                 table.L3,
+                                                 table.L4,
+                                                 table.L5,
                                                  limitby=(0, 1)).first()
 
-    parents = Storage()
-    parents = current.gis.get_parent_per_level(parents,
-                                               id,
-                                               ids=False,
-                                               names=True)
-
-    location_list = []
-    if location.name:
-        location_list.append(location.name)
-    if parents:
-        fields = ["L%s" % (i) for i in xrange(0, 5)]
-        for field in reversed(fields):
-            if field in parents and parents[field]:
-                location_list.append(parents[field])
+    name = location.name
+    location_list = [name]
+    lappend = location_list.append
+    matched = False
+    L5 = location.L5
+    if L5:
+        if L5 == name:
+            matched = True
+        else:
+            lappend(L5)
+    L4 = location.L4
+    if L4:
+        if L4 == name:
+            if matched:
+                lappend(L4)
+            matched = True
+        else:
+            lappend(L4)
+    L3 = location.L3
+    if L3:
+        if L3 == name:
+            if matched:
+                lappend(L3)
+            matched = True
+        else:
+            lappend(L3)
+    L2 = location.L2
+    if L2:
+        if L2 == name:
+            if matched:
+                lappend(L2)
+            matched = True
+        else:
+            lappend(L2)
+    L1 = location.L1
+    if L1:
+        if L1 == name:
+            if matched:
+                lappend(L1)
+            matched = True
+        else:
+            lappend(L1)
+    L0 = location.L0
+    if L0:
+        if L0 == name:
+            if matched:
+                lappend(L0)
+            matched = True
+        else:
+            lappend(L0)
 
     return ", ".join(location_list)
 
