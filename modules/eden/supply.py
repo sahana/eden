@@ -851,7 +851,7 @@ S3OptionsFilter({
                   search_method = item_entity_search)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 supply_item_id = supply_item_id,

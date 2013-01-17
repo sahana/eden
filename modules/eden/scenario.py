@@ -179,7 +179,7 @@ class S3ScenarioModel(S3Model):
                                     )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 scenario_scenario_id = scenario_id,
@@ -281,7 +281,7 @@ class S3ScenarioAssetModel(S3Model):
             msg_list_empty = T("No assets currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -323,7 +323,7 @@ class S3ScenarioHRModel(S3Model):
             msg_list_empty = T("No Human Resources currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -366,7 +366,7 @@ class S3ScenarioMapModel(S3Model):
             msg_list_empty = T("No Map Configurations currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -410,7 +410,7 @@ class S3ScenarioOrganisationModel(S3Model):
             msg_list_empty = T("No organizations currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -452,7 +452,7 @@ class S3ScenarioSiteModel(S3Model):
             msg_list_empty = T("No facilities currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -497,7 +497,7 @@ class S3ScenarioTaskModel(S3Model):
             msg_list_empty = T("No tasks currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

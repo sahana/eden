@@ -313,7 +313,7 @@ class S3WarehouseModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -704,7 +704,7 @@ S3OptionsFilter({
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     inv_item_id = inv_item_id,
@@ -1797,7 +1797,7 @@ S3OptionsFilter({
                   )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(inv_get_shipping_code = self.inv_get_shipping_code,
                        inv_send_controller = self.inv_send_controller,

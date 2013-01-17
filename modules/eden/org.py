@@ -726,7 +726,7 @@ class S3OrganisationModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     org_sector_id=sector_id,
@@ -1128,7 +1128,7 @@ class S3OrganisationSummaryModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 )
@@ -1165,7 +1165,7 @@ class S3OrganisationTypeTagModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 )
@@ -1303,7 +1303,7 @@ class S3SiteModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     org_site_id=site_id
@@ -1744,7 +1744,7 @@ class S3FacilityModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     org_facility_geojson = self.org_facility_geojson
@@ -2065,7 +2065,7 @@ class S3RoomModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     org_room_id=room_id,
@@ -2325,7 +2325,7 @@ class S3OfficeModel(S3Model):
                                           joinby="office_id"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     org_office_type_id=office_type_id,
@@ -2496,7 +2496,7 @@ class S3OfficeSummaryModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 )
@@ -2530,7 +2530,7 @@ class S3OfficeTypeTagModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 )

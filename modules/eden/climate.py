@@ -443,7 +443,7 @@ class S3ClimateModel(S3Model):
                   listadd = False)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

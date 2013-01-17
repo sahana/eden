@@ -32,12 +32,12 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3TemplateModel",
-           "S3QuestionModel",
-           "S3FormatterModel",
-           "S3SeriesModel",
-           "S3CompleteModel",
-           "S3TranslateModel",
+__all__ = ["S3SurveyTemplateModel",
+           "S3SurveyQuestionModel",
+           "S3SurveyFormatterModel",
+           "S3SurveySeriesModel",
+           "S3SurveyCompleteModel",
+           "S3SurveyTranslateModel",
            "survey_template_represent",
            "survey_series_represent",
            "survey_answer_list_represent",
@@ -65,7 +65,6 @@ __all__ = ["S3TemplateModel",
            "survey_getSeries",
            "survey_getSeriesName",
            "survey_getAllSeries",
-           "survey_getTranslation",
            "survey_getAllTranslationsForTemplate",
            "survey_getAllTranslationsForSeries",
            "survey_build_template_summary",
@@ -134,17 +133,18 @@ def json2list(jsonstr):
 survey_json2list = json2list
 
 # =============================================================================
-class S3TemplateModel(S3Model):
+class S3SurveyTemplateModel(S3Model):
     """
         Template model
 
         The template model is a container for the question model
     """
+
     names = ["survey_template",
              "survey_template_id",
              "survey_section",
              "survey_template_status",
-            ]
+             ]
 
     def model(self):
 
@@ -251,7 +251,7 @@ class S3TemplateModel(S3Model):
                   onvalidation = self.template_onvalidate,
                   onaccept = self.template_onaccept,
                   deduplicate = self.survey_template_duplicate,
-                 )
+                  )
 
         # ---------------------------------------------------------------------
         # survey_sections
@@ -295,10 +295,9 @@ class S3TemplateModel(S3Model):
 
         configure(tablename, orderby = tablename+".posn",
                   deduplicate=self.survey_section_duplicate
-                 )
+                  )
 
-
-        # Return names to s3db
+        # Pass names back to global scope (s3.*)
         return Storage(
             survey_template_id = template_id,
             survey_template_status = template_status,
@@ -370,7 +369,7 @@ class S3TemplateModel(S3Model):
                                    template_id = template_id,
                                    section_id = section_id,
                                    posn = posn
-                                  )
+                                   )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -394,7 +393,7 @@ class S3TemplateModel(S3Model):
         else:
             return
 
-        addQuestion = S3TemplateModel.addQuestion
+        addQuestion = S3SurveyTemplateModel.addQuestion
         if vars.competion_qstn != None:
             name = vars.competion_qstn
             code = "STD-WHO"
@@ -838,7 +837,7 @@ def survey_build_template_summary(template_id):
     return form
 
 # =============================================================================
-class S3QuestionModel(S3Model):
+class S3SurveyQuestionModel(S3Model):
     """
         Question Model
     """
@@ -847,7 +846,7 @@ class S3QuestionModel(S3Model):
              "survey_question_metadata",
              "survey_question_list",
              "survey_qstn_name_represent"
-            ]
+             ]
 
     def model(self):
 
@@ -1004,6 +1003,8 @@ class S3QuestionModel(S3Model):
                   onaccept = self.question_list_onaccept,
                   deduplicate = self.survey_question_list_duplicate,
                   )
+
+        # Pass names back to global scope (s3.*)
         # ---------------------------------------------------------------------
         return Storage(
                 survey_qstn_name_represent = self.qstn_name_represent
@@ -1354,7 +1355,7 @@ def survey_updateMetaData (record, type, metadata):
         widgetObj.insertChildren(record, metadataList)
 
 # =============================================================================
-class S3FormatterModel(S3Model):
+class S3SurveyFormatterModel(S3Model):
     """
         The survey_formatter table defines the order in which the questions
         will be laid out when a formatted presentation is used.
@@ -1393,7 +1394,6 @@ class S3FormatterModel(S3Model):
         single quotes to double quotes. This can be done as follows:
 
         rowList = json2py(rules)
-
     """
 
     names = ["survey_formatter"]
@@ -1401,9 +1401,7 @@ class S3FormatterModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
-        template_id = self.survey_template_id
         survey_formatter_methods = {
             1: T("Default"),
             2: T("Web Form"),
@@ -1414,28 +1412,27 @@ class S3FormatterModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "survey_formatter"
         table = self.define_table(tablename,
-                                template_id(),
-                                Field("section_id",
-                                       "reference survey_section",
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                Field("method",
-                                      "integer",
-                                      requires = IS_IN_SET(survey_formatter_methods,
-                                                           zero=None),
-                                      default=1,
-                                      represent = lambda index: survey_formatter_methods[index],
-                                      readable=True,
-                                      writable=False),
-                                Field("rules", "text", default=""),
-                                 *s3_meta_fields()
-                               )
+                                  self.survey_template_id(),
+                                  Field("section_id", "reference survey_section",
+                                        readable=False,
+                                        writable=False
+                                        ),
+                                  Field("method", "integer",
+                                        requires = IS_IN_SET(survey_formatter_methods,
+                                                             zero=None),
+                                        default=1,
+                                        represent = lambda index: \
+                                            survey_formatter_methods[index],
+                                        readable=True,
+                                        writable=False),
+                                  Field("rules", "text", default=""),
+                                  *s3_meta_fields()
+                                  )
 
         self.configure(tablename,
-                        onaccept = self.formatter_onaccept,
-                        deduplicate=self.survey_formatter_duplicate
-                        )
+                       onaccept = self.formatter_onaccept,
+                       deduplicate=self.survey_formatter_duplicate
+                       )
 
         # ---------------------------------------------------------------------
         return Storage()
@@ -1496,9 +1493,9 @@ class S3FormatterModel(S3Model):
 
 # =============================================================================
 def survey_getQstnLayoutRules(template_id,
-                       section_id,
-                       method = 1
-                      ):
+                              section_id,
+                              method = 1
+                              ):
     """
         This will return the rules for laying out the questions for
         the given section within the template.
@@ -1553,14 +1550,14 @@ def survey_getQstnLayoutRules(template_id,
     return rowList
 
 # =============================================================================
-class S3SeriesModel(S3Model):
+class S3SurveySeriesModel(S3Model):
     """
         Series Model
     """
 
     names = ["survey_series",
              "survey_series_status",
-            ]
+             ]
 
     def model(self):
 
@@ -1576,7 +1573,6 @@ class S3SeriesModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
 
-        add_component = self.add_component
         set_method = self.set_method
 
         # ---------------------------------------------------------------------
@@ -1645,7 +1641,7 @@ class S3SeriesModel(S3Model):
             subtitle_analysis_chart = T("Select a label question and at least one numeric question to display the chart."),
             subtitle_map = T("Disaster Assessment Map"),
             label_list_button = T("List Disaster Assessments"),
-            label_create_button = T("Add a new Disaster Assessments"),
+            label_create_button = T("Add a new Disaster Assessment"),
             label_delete_button = T("Delete this Disaster Assessment"),
             msg_record_created = T("Disaster Assessment added"),
             msg_record_modified = T("Disaster Assessment updated"),
@@ -1660,9 +1656,8 @@ class S3SeriesModel(S3Model):
                         )
 
         # Components
-        add_component("survey_complete",
-                      survey_series = "series_id"
-                      )
+        self.add_component("survey_complete", survey_series="series_id")
+
         # Custom Methods
         set_method("survey", "series", method="summary", action=self.seriesSummary)
         set_method("survey", "series", method="graph", action=self.seriesGraph)
@@ -1673,7 +1668,7 @@ class S3SeriesModel(S3Model):
                    )
 
         # ---------------------------------------------------------------------
-        # Return names to response.s3
+        # Pass names back to global scope (s3.*)
         return Storage(
             survey_series_status = series_status,
         )
@@ -1832,28 +1827,31 @@ class S3SeriesModel(S3Model):
         from gluon.contenttype import contenttype
 
         request = current.request
-        response = current.response
         series_id = request.args[0]
         seriesName = survey_getSeriesName(series_id)
-        response.headers["Content-Type"] = contenttype(".png")
         filename = "%s_chart.png" % seriesName
+
+        response = current.response
+        response.headers["Content-Type"] = contenttype(".png")
         response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
 
-        chartFile = S3SeriesModel.getChartName()
+        chartFile = S3SurveySeriesModel.getChartName()
         cached = S3Chart.getCachedFile(chartFile)
         if cached:
             return cached
 
         # The cached version doesn't exist so regenerate it
         output = dict()
-        if "labelQuestion" in request.get_vars:
-            labelQuestion = request.get_vars.labelQuestion
-        if "numericQuestion" in request.get_vars:
-            numQstnList = request.get_vars.numericQuestion
-            if not isinstance(numQstnList,(list,tuple)):
+        vars = request.get_vars
+        if "labelQuestion" in vars:
+            labelQuestion = vars.labelQuestion
+        if "numericQuestion" in vars:
+            numQstnList = vars.numericQuestion
+            if not isinstance(numQstnList, (list, tuple)):
                 numQstnList = [numQstnList]
         if (numQstnList != None) and (labelQuestion != None):
-            S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion, outputFormat="png")
+            S3SurveySeriesModel.drawChart(output, series_id, numQstnList,
+                                          labelQuestion, outputFormat="png")
         return output["chart"]
 
     # -------------------------------------------------------------------------
@@ -1877,28 +1875,31 @@ class S3SeriesModel(S3Model):
         output = dict()
 
         # Draw the chart
-        if "viewing" in request.vars:
-            dummy, series_id = request.vars.viewing.split(".")
-        elif "series" in request.vars:
-            series_id = request.vars.series
+        vars = request.vars
+        if "viewing" in vars:
+            dummy, series_id = vars.viewing.split(".")
+        elif "series" in vars:
+            series_id = vars.series
         else:
             series_id = r.id
-        chartFile = S3SeriesModel.getChartName()
+        chartFile = S3SurveySeriesModel.getChartName()
         cachePath = S3Chart.getCachedPath(chartFile)
         if cachePath and request.ajax:
             return IMG(_src=cachePath)
         else:
             numQstnList = None
             labelQuestion = None
-            if "post_vars" in request and len(request.post_vars) > 0:
-                if "labelQuestion" in request.post_vars:
-                    labelQuestion = request.post_vars.labelQuestion
-                if "numericQuestion" in request.post_vars:
-                    numQstnList = request.post_vars.numericQuestion
-                    if not isinstance(numQstnList,(list,tuple)):
+            post_vars = request.post_vars
+            if post_vars is not None:
+                if "labelQuestion" in post_vars:
+                    labelQuestion = post_vars.labelQuestion
+                if "numericQuestion" in post_vars:
+                    numQstnList = post_vars.numericQuestion
+                    if not isinstance(numQstnList, (list, tuple)):
                         numQstnList = [numQstnList]
                 if (numQstnList != None) and (labelQuestion != None):
-                    S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion)
+                    S3SurveySeriesModel.drawChart(output, series_id, numQstnList,
+                                                  labelQuestion)
         if request.ajax == True and "chart" in output:
             return output["chart"]
 
@@ -1920,13 +1921,13 @@ class S3SeriesModel(S3Model):
                                 _name="numericQuestion",
                                 _value=qstn["code"],
                                 value=True,
-                               )
+                                )
                           )
             else:
                 tr.append(INPUT(_type="checkbox",
                                 _name="numericQuestion",
                                 _value=qstn["code"],
-                               )
+                                )
                           )
             tr.append(LABEL(qstn["name"]))
             return tr
@@ -2041,7 +2042,7 @@ $('#chart_btn').click(function(){
         if dataList == []:
             output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
         else:
-            chartFile = S3SeriesModel.getChartName()
+            chartFile = S3SurveySeriesModel.getChartName()
             chart = S3Chart(path=chartFile, width=7.2)
             chart.asInt = True
             chart.survey_bar(labelQuestion,
@@ -2054,13 +2055,13 @@ $('#chart_btn').click(function(){
                 image = chart.draw(output=outputFormat)
             output["chart"] = image
             request = current.request
-            chartLink = A("Download",
-                         _href=URL(c="survey",
-                                   f="series",
-                                   args=request.args,
-                                   vars=request.vars
-                                  )
-                         )
+            chartLink = A(T("Download"),
+                          _href=URL(c="survey",
+                                    f="series",
+                                    args=request.args,
+                                    vars=request.vars
+                                    )
+                          )
             output["chartDownload"] = chartLink
 
     # -------------------------------------------------------------------------
@@ -2475,12 +2476,12 @@ def saveAnswers(questions, series_id, complete_id, vars):
     if complete_id == None:
         # Insert into database
         id = table.insert(series_id = series_id, answer_list = text)
-        S3CompleteModel.completeOnAccept(id)
+        S3SurveyCompleteModel.completeOnAccept(id)
         return id
     else:
         # Update the complete_id record
         current.db(table.id == complete_id).update(answer_list = text)
-        S3CompleteModel.completeOnAccept(complete_id)
+        S3SurveyCompleteModel.completeOnAccept(complete_id)
         return complete_id
 
 # =============================================================================
@@ -2570,21 +2571,22 @@ def buildSeriesSummary(series_id, posn_offset):
     return form
 
 # =============================================================================
-class S3CompleteModel(S3Model):
+class S3SurveyCompleteModel(S3Model):
     """
-        Complete Model
+        Completed Surveys Model
     """
 
     names = ["survey_complete",
              "survey_answer",
-            ]
+             ]
 
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
-        crud_strings = s3.crud_strings
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         #    The survey_complete table holds all of the answers for a completed
@@ -2597,24 +2599,21 @@ class S3CompleteModel(S3Model):
         #    for a given question across all responses.
 
         tablename = "survey_complete"
-        table = self.define_table(tablename,
-                                Field("series_id",
-                                       "reference survey_series",
-                                       represent = survey_series_represent,
-                                       label = T("Series"),
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                Field("answer_list",
-                                      "text",
-                                      represent = survey_answer_list_represent
-                                     ),
-                                Field("location",
-                                       "text",
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                 *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("series_id", "reference survey_series",
+                                   represent = survey_series_represent,
+                                   label = T("Series"),
+                                   readable=False,
+                                   writable=False
+                                   ),
+                             Field("answer_list", "text",
+                                   represent = survey_answer_list_represent
+                                   ),
+                             Field("location", "text",
+                                   readable=False,
+                                   writable=False
+                                   ),
+                             *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -2635,14 +2634,15 @@ class S3CompleteModel(S3Model):
             title_upload = T("Upload the Completed Assessment Form")
             )
 
-        self.configure(tablename,
-                       onvalidation = self.complete_onvalidate,
-                       onaccept = self.complete_onaccept,
-                       deduplicate=self.survey_complete_duplicate,
-                      )
+        configure(tablename,
+                  onvalidation = self.complete_onvalidate,
+                  onaccept = self.complete_onaccept,
+                  deduplicate=self.survey_complete_duplicate,
+                  )
+
         self.add_component("survey_complete",
-                            survey_series = dict(joinby="series_id",
-                                                 multiple=True)
+                           survey_series = dict(joinby="series_id",
+                                                multiple=True)
                            )
 
         # ---------------------------------------------------------------------
@@ -2650,23 +2650,20 @@ class S3CompleteModel(S3Model):
         #    of a given question.
 
         tablename = "survey_answer"
-        table = self.define_table(tablename,
-                                Field("complete_id",
-                                       "reference survey_complete",
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                Field("question_id",
-                                       "reference survey_question",
-                                       readable=True,
-                                       writable=False
-                                       ),
-                                Field("value",
-                                       "text",
-                                       readable=True,
-                                       writable=True
-                                       ),
-                                *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("complete_id", "reference survey_complete",
+                                   readable=False,
+                                   writable=False
+                                   ),
+                             Field("question_id", "reference survey_question",
+                                   readable=True,
+                                   writable=False
+                                   ),
+                             Field("value", "text",
+                                   readable=True,
+                                   writable=True
+                                   ),
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Assessment Answer"),
@@ -2682,13 +2679,13 @@ class S3CompleteModel(S3Model):
             msg_record_deleted = T("Assessment Answer deleted"),
             msg_list_empty = T("No Assessment Answers"))
 
-        self.configure(tablename,
-                       onaccept = self.answer_onaccept,
-                       deduplicate = self.survey_answer_duplicate
-                      )
+        configure(tablename,
+                  onaccept = self.answer_onaccept,
+                  deduplicate = self.survey_answer_duplicate
+                  )
+
         # ---------------------------------------------------------------------
         return Storage()
-
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2752,7 +2749,7 @@ class S3CompleteModel(S3Model):
         """
 
         if form.vars.id:
-            S3CompleteModel.completeOnAccept(form.vars.id)
+            S3SurveyCompleteModel.completeOnAccept(form.vars.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2772,7 +2769,7 @@ class S3CompleteModel(S3Model):
             return
         # Save all the answers from answerList in the survey_answer table
         answerList = record.answer_list
-        S3CompleteModel.importAnswers(complete_id, answerList)
+        S3SurveyCompleteModel.importAnswers(complete_id, answerList)
         # Extract the default template location question and save the
         # answer in the location field
         templateRec = survey_getTemplateFromSeries(series_id)
@@ -2782,7 +2779,7 @@ class S3CompleteModel(S3Model):
         widgetObj = get_default_location(complete_id)
         current.db(rtable.id == complete_id).update(location = widgetObj.repr())
         locations = get_location_details(complete_id)
-        S3CompleteModel.importLocations(locations)
+        S3SurveyCompleteModel.importLocations(locations)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3221,9 +3218,9 @@ def getLocationList(series_id):
     return response_locations
 
 # =============================================================================
-class S3TranslateModel(S3Model):
+class S3SurveyTranslateModel(S3Model):
     """
-        Translate Model
+        Translations Model
     """
 
     from gluon.languages import read_dict, write_dict
@@ -3233,18 +3230,16 @@ class S3TranslateModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
         # ---------------------------------------------------------------------
         # The survey_translate table holds the details of the language
         #    for which the template has been translated into.
 
-        template_id = self.survey_template_id
         LANG_HELP = T("This is the full name of the language and will be displayed to the user when selecting the template language.")
         CODE_HELP = T("This is the short code of the language and will be used as the name of the file. This should be the ISO 639 code.")
         tablename = "survey_translate"
         table = self.define_table(tablename,
-                                  template_id(),
+                                  self.survey_template_id(),
                                   Field("language",
                                         readable=True,
                                         writable=True,
@@ -3259,15 +3254,14 @@ class S3TranslateModel(S3Model):
                                                       _title="%s|%s" % (T("Language Code"),
                                                                         CODE_HELP))
                                         ),
-                                  Field("file",
-                                        "upload",
+                                  Field("file", "upload",
                                         autodelete=True),
                                   Field("filename",
                                         readable=False,
                                         writable=False),
                                   *s3_meta_fields())
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add new translation language"),
         )
 
@@ -3346,16 +3340,6 @@ class S3TranslateModel(S3Model):
             else:
                 response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % \
                     dict(count_of=count, language=lang)
-
-# =============================================================================
-def survey_getTranslation(translation_id):
-    """
-        Return the template translation record for the id passed in
-    """
-
-    table = current.s3db.survey_translate
-    record = current.db(table.id == translation_id).select(limitby=(0, 1)).first()
-    return record
 
 # =============================================================================
 def survey_getAllTranslationsForTemplate(template_id):

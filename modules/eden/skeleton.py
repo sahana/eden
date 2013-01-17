@@ -118,7 +118,7 @@ class S3SkeletonDataModel(S3Model):
                                                requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                      "skeleton_example.id")))
 
-        # Return names to response.s3
+        # Pass names back to global scope (s3.*)
         return Storage(
             skeleton_example_id=skeleton_example_id,
         )

@@ -533,7 +533,7 @@ class S3RequestModel(S3Model):
                                    actuate="replace"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 req_create_form_mods = self.req_create_form_mods,
@@ -1523,7 +1523,7 @@ S3OptionsFilter({
                              )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 req_item_id = req_item_id,
@@ -1803,7 +1803,7 @@ class S3RequestSkillModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 req_skill_represent = self.req_skill_represent,
@@ -1867,7 +1867,7 @@ class S3RequestSummaryModel(S3Model):
             msg_record_deleted=T("Site Needs deleted"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             )
@@ -1926,7 +1926,7 @@ class S3RequestRecurringModel(S3Model):
                         action=req_job_run)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             )
@@ -2054,7 +2054,7 @@ class S3CommitModel(S3Model):
                       req_commit="commit_id")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     req_commit_id = commit_id,
@@ -2432,7 +2432,7 @@ class S3CommitItemModel(S3Model):
                        onaccept = self.commit_item_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 # Used by commit_req() controller
@@ -2652,7 +2652,7 @@ class S3CommitPersonModel(S3Model):
         #                onaccept = self.commit_person_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -2737,7 +2737,7 @@ class S3CommitSkillModel(S3Model):
                        onaccept = self.commit_skill_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

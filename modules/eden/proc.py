@@ -252,7 +252,7 @@ class S3ProcurementModel(S3Model):
                   report_hide_comments = True)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             )

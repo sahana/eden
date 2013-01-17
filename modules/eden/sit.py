@@ -111,7 +111,7 @@ class S3SituationModel(S3Model):
                             sit_trackable=self.super_key(sit_trackable))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

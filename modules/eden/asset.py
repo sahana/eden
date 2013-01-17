@@ -514,7 +514,7 @@ S3OptionsFilter({
                    )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     asset_asset_id = asset_id,

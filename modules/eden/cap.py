@@ -585,7 +585,7 @@ class S3CAPModel(S3Model):
                   onaccept=update_alert_id(table))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return Storage()
 
     # -------------------------------------------------------------------------

@@ -93,7 +93,7 @@ class S3TranslateModel(S3Model):
                              *s3_meta_fields())
 
         #----------------------------------------------------------------------
-        # Return names to response.s3
+        # Pass names back to global scope (s3.*)
         return Storage()
 
     # ---------------------------------------------------------------------

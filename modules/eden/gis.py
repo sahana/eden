@@ -339,7 +339,7 @@ class S3LocationModel(S3Model):
                              # *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     gis_location_id = location_id,
@@ -704,7 +704,7 @@ class S3LocationNameModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 )
@@ -753,7 +753,7 @@ class S3LocationTagModel(S3Model):
                        deduplicate=self.gis_location_tag_deduplicate)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     gis_country_opts = self.gis_country_opts,
@@ -856,7 +856,7 @@ class S3LocationGroupModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 )
@@ -930,7 +930,7 @@ class S3LocationHierarchyModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
@@ -1465,7 +1465,7 @@ class S3GISConfigModel(S3Model):
             # msg_list_empty = T("No Menu Entries currently defined"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 gis_config_form_setup = self.gis_config_form_setup,
@@ -3561,7 +3561,7 @@ class S3GISThemeModel(S3Model):
         )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     gis_layer_theme_id = layer_theme_id,

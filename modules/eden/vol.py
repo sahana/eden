@@ -216,7 +216,7 @@ S3OptionsFilter({
                                                           writable=False),
                                   *s3_meta_fields())
 
-        # Return names to response.s3
+        # Pass names back to global scope (s3.*)
         return Storage(
                 vol_cluster_type_id = vol_cluster_type_id,
                 vol_cluster_id = vol_cluster_id,

@@ -345,7 +345,7 @@ class S3MembersModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

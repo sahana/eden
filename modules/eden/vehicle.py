@@ -181,7 +181,7 @@ class S3VehicleModel(S3Model):
             msg_list_empty = T("No GPS data currently registered"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                     vehicle_vehicle_id = vehicle_id,

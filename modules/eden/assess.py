@@ -720,7 +720,7 @@ class S3AssessBuildingModel(S3Model):
                         action=self.assess_building_form)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 assess_building_rheader = self.assess_building_rheader
@@ -1025,7 +1025,7 @@ class S3AssessCanvassModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3.*)
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

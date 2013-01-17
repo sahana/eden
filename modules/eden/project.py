@@ -859,7 +859,7 @@ S3OptionsFilter({
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return dict(
             project_project_id = project_id,
@@ -1979,7 +1979,7 @@ class S3Project3WModel(S3Model):
         # Components
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return dict(
             project_organisation_roles = project_organisation_roles,
@@ -2403,7 +2403,7 @@ class S3ProjectActivityModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return dict(
             project_activity_id = activity_id,
             project_multi_activity_id = multi_activity_id,
@@ -2553,7 +2553,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
                             ]
                         )
 
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return dict(
         )
 
@@ -2669,7 +2669,7 @@ class S3ProjectFrameworkModel(S3Model):
             msg_list_empty = T("No Organizations found for this Framework")
         )
 
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return dict(
         )
 
@@ -2765,7 +2765,7 @@ class S3ProjectThemeModel(S3Model):
                             ondelete = "SET NULL",
                             )
 
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return dict(
             project_multi_theme_percentage_id = multi_theme_percentage_id,
         )
@@ -2922,7 +2922,7 @@ class S3ProjectDRRPPModel(S3Model):
             msg_list_empty = T("No outputs found")
         )
 
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return dict()
 
     # -------------------------------------------------------------------------
@@ -3610,7 +3610,7 @@ class S3ProjectTaskModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return dict(
             project_task_id = task_id,
@@ -4164,7 +4164,7 @@ class S3ProjectTaskHRMModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return dict(
         )
@@ -4195,7 +4195,7 @@ class S3ProjectTaskIReportModel(S3Model):
                        onaccept=self.task_ireport_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         #
         return dict(
             )

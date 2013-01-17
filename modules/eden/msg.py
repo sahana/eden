@@ -249,7 +249,7 @@ class S3MessagingModel(S3Model):
         #                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
+        # Pass names back to global scope (s3.*)
         return Storage(
                 msg_message_id=message_id,
             )

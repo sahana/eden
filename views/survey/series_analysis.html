@@ -1,13 +1,5 @@
 {{extend "layout.html"}}
-
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
-{{try:}}
-{{=s3db.ocr_buttons(r)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}
  {{=XML(rheader)}}
@@ -16,12 +8,8 @@
 {{except:}}
 <div>
  {{pass}}
-    {{include "key.html"}}
-    {{try:}}
-     {{=H3(subtitle)}}
-    {{except:}}
-    {{pass}}
-
+  {{include "key.html"}}
+  {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
 {{try:}}
   <DIV id="survey_chart_download"/>
   {{=chartDownload}}
@@ -34,17 +22,8 @@
 {{except:}}
   {{pass}}
   </DIV>
-
-
-    <div class='form-container'>
-    {{try:}}
-     {{=form}}
-    {{except:}}
-    {{pass}}
-    </div>
+ <div class='form-container'>
+ {{try:}}{{=form}}{{except:}}{{pass}}
+ </div>
 </div>
-
-{{try:}}
-  {{=XML(debug)}}
-{{except:}}
-  {{pass}}
+{{try:}}{{=XML(debug)}}{{except:}}{{pass}}
