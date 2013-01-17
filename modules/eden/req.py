@@ -418,8 +418,14 @@ class S3RequestModel(S3Model):
                 name = "req_search_site",
                 field = "site_id",
                 label = T("Facility"),
-                cols = 3,
-            )]
+           	cols = 3,
+        	),
+            S3SearchMinMaxWidget(
+        	name="req_search_date_required",
+        	method="range",
+        	label=T("Date Needed By"),
+        	field="date_required",
+         	),]
 
         report_fields = ["priority",
                          "site_id$organisation_id",
