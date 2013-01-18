@@ -86,6 +86,8 @@ else:
 
 ogetattr = object.__getattribute__
 
+TEXTTYPES = ("string", "text")
+
 # =============================================================================
 class S3Resource(object):
     """
@@ -3944,14 +3946,15 @@ class S3FieldSelector(object):
 
     # -------------------------------------------------------------------------
     def expr(self, val):
-        if not self.op:
-            return val
-        elif val is not None:
+
+        if self.op and val is not None:
             if self.op == self.LOWER and \
-               hasattr(val, "lower") and callable(val.lower):
+               hasattr(val, "lower") and callable(val.lower) and \
+               (not isinstance(val, Field) or val.type in TEXTTYPES):
                 return val.lower()
             elif self.op == self.UPPER and \
-                 hasattr(val, "upper") and callable(val.upper):
+                 hasattr(val, "upper") and callable(val.upper) and \
+                 (not isinstance(val, Field) or val.type in TEXTTYPES):
                 return val.upper()
         return val
 
@@ -4698,7 +4701,11 @@ class S3ResourceQuery(object):
             else:
                 q = l.belongs(r)
         elif op == self.LIKE:
-            q = l.like(str(r))
+            #if isinstance(l, Field) and l.type not in TEXTTYPES:
+                #q = (l == s3_unicode(r).replace("%", ""))
+            #else:
+                #q = l.like(s3_unicode(r))
+            q = l.like(s3_unicode(r))
         elif op == self.LT:
             q = l < r
         elif op == self.LE:
