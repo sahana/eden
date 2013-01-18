@@ -195,8 +195,8 @@ function tableIdReverse(id) {
 /* @param index, @param array are unused, but allow calling this from filter().
 /****************************************************************************/
 function isNonDefaultData(element, index, array) {
-    name = element.name;
-    value = element.value;
+    var name = element.name;
+    var value = element.value;
     if ((name == 'sSearch' && value == '') ||
         (name.startsWith('sSearch_') && value == '') ||
         (name.startsWith('bRegex_') && !value) ||
@@ -208,7 +208,7 @@ function isNonDefaultData(element, index, array) {
         // Here, we're looking for elements of the form:
         // name: 'mDataProp_N', value: N
         // where N is an integer, and is the same in both places.
-        index = parseInt(name.substr('mDataProp_'.length), 10)
+        var index = parseInt(name.substr('mDataProp_'.length), 10)
         if (!isNaN(index) && typeof value == 'number' && index == value) {
             return false;
         }
@@ -449,7 +449,7 @@ $(document).ready(function() {
                         fnSetKey( aoData, 'iDisplayStart', iRequestStart );
                         fnSetKey( aoData, 'iDisplayLength', iRequestLength * iPipe );
                     }
-                    nonDefaultData = aoData.filter(isNonDefaultData);
+                    var nonDefaultData = aoData.filter(isNonDefaultData);
                     $.getJSON(sSource, nonDefaultData, function (json) {
                         // Callback processing
                         oCache.lastJson = jQuery.extend(true, {}, json);
@@ -478,7 +478,7 @@ $(document).ready(function() {
             var bProcessing = false;
             aoTableConfig[t]['ajaxUrl'] = null;
             function fnDataTablesPipeline ( url, data, callback ) {
-                nonDefaultData = data.filter(isNonDefaultData);
+                var nonDefaultData = data.filter(isNonDefaultData);
                 $.ajax( {
                     'url': url,
                     'data': nonDefaultData,
