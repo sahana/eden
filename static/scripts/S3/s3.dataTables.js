@@ -194,7 +194,7 @@ function tableIdReverse(id) {
 /* @param element is an object with fields name and value.
 /* @param index, @param array are unused, but allow calling this from filter().
 /****************************************************************************/
-function isNonDefaultData(element, index = 0, array = null) {
+function isNonDefaultData(element, index, array) {
     name = element.name;
     value = element.value;
     if ((name == 'sSearch' && value == '') ||
