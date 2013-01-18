@@ -32,6 +32,7 @@ __all__ = ["S3SupplyModel",
            "SupplyItemPackVirtualFields",
            "supply_item_controller",
            "supply_item_entity_controller",
+           "supply_catalog_rheader",
           ]
 
 import re
@@ -291,9 +292,10 @@ S3OptionsFilter({
             """
                 Checks that either a Code OR a Name are entered
             """
-            # If their is a tracking number check that it is unique within the org
+            # If there is a tracking number check that it is unique within the org
             if not (form.vars.code or form.vars.name):
-                form.errors.code = form.errors.name = T("An Item Category must have a Code OR a Name.")
+                error = form.errors
+                errors.code = errors.name = T("An Item Category must have a Code OR a Name.")
 
         configure(tablename,
                   onvalidation = supply_item_category_onvalidate,
@@ -450,12 +452,10 @@ S3OptionsFilter({
                       ),
                    ],
 
-            defaults=Storage(
-                             rows="name",
-                             cols="item_category_id",
-                             fact="brand_id",
-                             aggregate="count",
-                            ),
+            defaults=Storage(rows="item.name",
+                             cols="item.item_category_id",
+                             fact="count:item.brand_id",
+                             ),
             hide_comments=True,
         )
         item_search = S3Search(advanced=report_options.get("search"))
@@ -502,7 +502,7 @@ S3OptionsFilter({
         # Catalog Item
         #
         # This resource is used to link Items with Catalogs (n-to-n)
-        # Item Categories will also be catalog specific
+        # Item Categories are also Catalog specific
         #
         tablename = "supply_catalog_item"
         table = define_table(tablename,
@@ -510,20 +510,20 @@ S3OptionsFilter({
                              item_category_id(
                                 script = item_category_script
                                 ),
-                             supply_item_id(script = None), # No Item Pack Filter
+                             supply_item_id(script=None), # No Item Pack Filter
                              s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              *s3_meta_fields())
 
         # CRUD strings
-        ADD_ITEM = T("Add Catalog Item")
+        ADD_ITEM = T("Add Item to Catalog")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ITEM,
+            title_create = T("Add Catalog Item"),
             title_display = T("Item Catalog Details"),
             title_list = T("Catalog Items"),
             title_update = T("Edit Catalog Item"),
             title_upload = T("Import Catalog Items"),
             title_search = T("Search Catalog Items"),
-            subtitle_create = T("Add Item to Catalog"),
+            subtitle_create = ADD_ITEM,
             label_list_button = T("List Catalog Items"),
             label_create_button = ADD_ITEM,
             label_delete_button = T("Delete Catalog Item"),
@@ -535,10 +535,7 @@ S3OptionsFilter({
             msg_no_match = T("No Matching Catalog Items")
             )
 
-        # ---------------------------------------------------------------------
-        # Catalog Item Search Method
-        #
-
+        # Search Method
         def catalog_item_search_simple_widget(type):
             return S3SearchSimpleWidget(
                 name="catalog_item_search_simple_%s" % type,
@@ -558,7 +555,7 @@ S3OptionsFilter({
                 )
 
         catalog_item_search = S3Search(
-            simple=(catalog_item_search_simple_widget("simple") ),
+            simple=(catalog_item_search_simple_widget("simple")),
             advanced=(catalog_item_search_simple_widget("advanced"),
                       S3SearchOptionsWidget(
                          name="catalog_item_search_catalog",
@@ -585,8 +582,8 @@ S3OptionsFilter({
                          represent ="%(name)s",
                          cols = 3
                        ),
+                     )
             )
-        )
 
         configure(tablename,
                   deduplicate = self.supply_catalog_item_duplicate,
@@ -614,8 +611,6 @@ S3OptionsFilter({
                                    ),
                              s3_comments(),
                              *s3_meta_fields())
-
-
 
         # CRUD strings
         ADD_ITEM_PACK = T("Add Item Pack")
@@ -1302,6 +1297,34 @@ def item_um_from_name(name):
     return (name, None)
 
 # =============================================================================
+def supply_catalog_rheader(r):
+    """ Resource Header for Catalogs """
+
+    if r.representation == "html":
+        catalog = r.record
+        if catalog:
+            T = current.T
+            tabs = [(T("Edit Details"), None),
+                    (T("Categories"), "item_category"),
+                    (T("Items"), "catalog_item"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   catalog.name,
+                                   ),
+                                TR(TH("%s: " % table.organisation_id.label),
+                                   table.organisation_id.represent(catalog.organisation_id),
+                                   ),
+                                ),
+                          rheader_tabs
+                          )
+            return rheader
+    return None
+
+# =============================================================================
 def supply_item_rheader(r):
     """ Resource Header for Items """
 
@@ -1645,24 +1668,31 @@ class item_entity_virtualfields:
 def supply_item_controller():
     """ RESTful CRUD controller """
 
+    s3 = current.response.s3
     s3db = current.s3db
 
-    # Inventory Items need proper accountability so are edited through inv_adj
-    s3db.configure("inv_inv_item",
-                   listadd=False,
-                   deletable=False)
-
     def prep(r):
-        if r.component and r.component.name == "inv_item":
-            # Filter to just item packs for this Item
-            inv_item_pack_requires = IS_ONE_OF(current.db,
-                                               "supply_item_pack.id",
-                                               s3db.supply_item_pack_represent,
-                                               sort=True,
-                                               filterby = "item_id",
-                                               filter_opts = [r.record.id],
-                                               )
-            s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
+        if r.component:
+            if r.component_name == "inv_item":
+                # Inventory Items need proper accountability so are edited through inv_adj
+                s3db.configure("inv_inv_item",
+                               listadd=False,
+                               deletable=False)
+                # Filter to just item packs for this Item
+                inv_item_pack_requires = IS_ONE_OF(current.db,
+                                                   "supply_item_pack.id",
+                                                   s3db.supply_item_pack_represent,
+                                                   sort=True,
+                                                   filterby = "item_id",
+                                                   filter_opts = [r.record.id],
+                                                   )
+                s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
+            elif r.component_name == "req_item":
+                # This is a report not a workflow
+                s3db.configure("req_req_item",
+                               listadd=False,
+                               deletable=False)
+
         # Needs better workflow as no way to add the Kit Items
         # else:
             # caller = current.request.get_vars.get("caller", None)
@@ -1672,9 +1702,12 @@ def supply_item_controller():
                 # field.readable = field.writable = False
 
         return True
-    current.response.s3.prep = prep
+    s3.prep = prep
 
     return current.rest_controller("supply", "item",
+                                   # Need to be explicit since can also come from Asset controller
+                                   csv_template=("supply", "item"),
+                                   csv_stylesheet=("supply", "item.xsl"),
                                    rheader=s3db.supply_item_rheader)
 
 # =============================================================================

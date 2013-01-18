@@ -2196,8 +2196,8 @@ class S3OfficeModel(S3Model):
                                    ),
                              self.org_organisation_id(
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                                 requires = self.org_organisation_requires(updateable=True,
-                                                                           required=True),
+                                 requires = org_organisation_requires(updateable=True,
+                                                                      required=True),
                                  ),
                              office_type_id(
                                             #readable = False,
@@ -2849,12 +2849,29 @@ def org_rheader(r, tabs=[]):
                     (T("Warehouses"), "warehouse"),
                     (T("Facilities"), "facility"),
                     (T("Staff & Volunteers"), "human_resource"),
+                    (T("Assets"), "asset"),
                     (T("Projects"), "project"),
                     (T("User Roles"), "roles"),
                     #(T("Tasks"), "task"),
                     ]
-            if settings.has_module("asset"):
-                tabs.insert(6,(T("Assets"), "asset"))
+            # If a filter is being applied to the Organisations, amend the tabs accordingly
+            type_filter = current.request.get_vars.get("organisation.organisation_type_id$name", None)
+            if type_filter:
+                if type_filter == "Supplier":
+                    tabs = [(T("Basic Details"), None),
+                            (T("Offices"), "office"),
+                            (T("Warehouses"), "warehouse"),
+                            (T("Contacts"), "human_resource"),
+                            ]
+                elif type_filter == "Bilateral,Government,Intergovernmental,NGO,UN agency":
+                    tabs = [(T("Basic Details"), None),
+                            (T("Branches"), "branch"),
+                            (T("Offices"), "office"),
+                            (T("Warehouses"), "warehouse"),
+                            (T("Contacts"), "human_resource"),
+                            (T("Projects"), "project"),
+                            ]
+
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         if table.multi_sector_id.readable and record.multi_sector_id:
@@ -3056,7 +3073,7 @@ def org_organisation_controller():
             s3db.configure("project_project", create_next=None)
 
             # If a filter is being applied to the Organisations, change the CRUD Strings accordingly
-            type_filter = request.get_vars["organisation.organisation_type_id$name"]
+            type_filter = request.get_vars.get("organisation.organisation_type_id$name", None)
             if type_filter:
                 ADD_NS = T("Add National Society")
                 ADD_PARTNER = T("Add Partner Organization")

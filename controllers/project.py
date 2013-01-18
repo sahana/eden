@@ -339,6 +339,7 @@ def project_multi_theme_id_widget():
         Used by the project controller to return dynamically generated 
         multi_theme_id widget based on sector_id
     """
+
     ptable = s3db.project_project
     sector_ids = [int(id) for id in request.vars.sector_ids.split(",") if id]
     if "value" in request.vars:
@@ -412,8 +413,7 @@ def organisation():
 
     else:
         # e.g. DRRPP
-        tabs = [
-                (T("Basic Details"), None),
+        tabs = [(T("Basic Details"), None),
                 (T("Projects"), "project"),
                 (T("Contacts"), "human_resource"),
                 ]

@@ -40,45 +40,50 @@ def asset():
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()
 
-# =============================================================================
-def supplier():
-    """
-        REST controller
-    """
+# -----------------------------------------------------------------------------
+def brand():
+    """ RESTful CRUD controller """
 
-    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
-    return s3db.org_organisation_controller()
+    return s3_rest_controller("supply", "brand")
 
-# =============================================================================
+# -----------------------------------------------------------------------------
+def catalog():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("supply", "catalog",
+                              rheader=s3db.supply_catalog_rheader)
+
+# -----------------------------------------------------------------------------
 def item():
     """ RESTful CRUD controller """
 
-    # Filter to just Assets
-    table = s3db.supply_item
-    ctable = s3db.supply_item_category
-    s3.filter = (table.item_category_id == ctable.id) & \
-                (ctable.can_be_asset == True)
+    if "catalog_item" not in request.args:
+        # Filter to just Assets
+        table = s3db.supply_item
+        ctable = s3db.supply_item_category
+        s3.filter = (table.item_category_id == ctable.id) & \
+                    (ctable.can_be_asset == True)
 
-    # Limit the Categories to just those with vehicles in
-    # - make category mandatory so that filter works
-    field = s3db.supply_item.item_category_id
-    field.requires = IS_ONE_OF(db,
-                               "supply_item_category.id",
-                               s3db.supply_item_category_represent,
-                               sort=True,
-                               filterby = "can_be_asset",
-                               filter_opts = [True]
-                               )
-                
-    field.comment = S3AddResourceLink(f="item_category",
-                                      label=T("Add Item Category"),
-                                      title=T("Item Category"),
-                                      tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
+        # Limit the Categories to just those which can be Assets
+        # - make category mandatory so that filter works
+        field = s3db.supply_item.item_category_id
+        field.requires = IS_ONE_OF(db,
+                                   "supply_item_category.id",
+                                   s3db.supply_item_category_represent,
+                                   sort=True,
+                                   filterby = "can_be_asset",
+                                   filter_opts = [True]
+                                   )
+                    
+        field.comment = S3AddResourceLink(f="item_category",
+                                          label=T("Add Item Category"),
+                                          title=T("Item Category"),
+                                          tooltip=T("Only Categories of type 'Asset' will be seen in the dropdown."))
 
     # Defined in the Model for use from Multiple Controllers for unified menus
     return s3db.supply_item_controller()
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def item_category():
     """ RESTful CRUD controller """
 
@@ -93,5 +98,12 @@ def item_category():
     field.default = True
     
     return s3_rest_controller("supply", "item_category")
+
+# -----------------------------------------------------------------------------
+def supplier():
+    """ RESTful CRUD controller """
+
+    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    return s3db.org_organisation_controller()
 
 # END =========================================================================
