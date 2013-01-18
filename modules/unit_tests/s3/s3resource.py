@@ -349,36 +349,36 @@ class ResourceFilterQueryTests(unittest.TestCase):
         resource = current.s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
 
-        self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
-                                     "(org_organisation.id > 0)) AND "
-                                     "(org_organisation.id LIKE '%123%'))")
-
         #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
                                      #"(org_organisation.id > 0)) AND "
-                                     #"(org_organisation.id = 123))")
+                                     #"(org_organisation.id LIKE '%123%'))")
+
+        self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
+                                     "(org_organisation.id > 0)) AND "
+                                     "(org_organisation.id = 123))")
 
         q = (S3FieldSelector("id").lower().like("%12%3%"))
         resource = current.s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
 
-        self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
-                                     "(org_organisation.id > 0)) AND "
-                                     "(org_organisation.id LIKE '%12%3%'))")
-
         #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
                                      #"(org_organisation.id > 0)) AND "
-                                     #"(org_organisation.id = 123))")
+                                     #"(org_organisation.id LIKE '%12%3%'))")
+
+        self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
+                                     "(org_organisation.id > 0)) AND "
+                                     "(org_organisation.id = 123))")
 
         q = (S3FieldSelector("id").lower().like("%abc%"))
         resource = current.s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
 
-        self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
-                                     "(org_organisation.id > 0)) AND "
-                                     "(org_organisation.id LIKE '%abc%'))")
+        #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
+                                     #"(org_organisation.id > 0)) AND "
+                                     #"(org_organisation.id LIKE '%abc%'))")
 
-        #self.assertEqual(str(query), "((org_organisation.deleted <> 'T') AND "
-                                     #"(org_organisation.id > 0))")
+        self.assertEqual(str(query), "((org_organisation.deleted <> 'T') AND "
+                                     "(org_organisation.id > 0))")
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")

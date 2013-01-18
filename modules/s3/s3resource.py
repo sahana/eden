@@ -4701,11 +4701,11 @@ class S3ResourceQuery(object):
             else:
                 q = l.belongs(r)
         elif op == self.LIKE:
-            #if isinstance(l, Field) and l.type not in TEXTTYPES:
-                #q = (l == s3_unicode(r).replace("%", ""))
-            #else:
-                #q = l.like(s3_unicode(r))
-            q = l.like(s3_unicode(r))
+            if isinstance(l, Field) and l.type not in TEXTTYPES:
+                q = (l == s3_unicode(r).replace("%", ""))
+            else:
+                q = l.like(s3_unicode(r))
+            #q = l.like(s3_unicode(r))
         elif op == self.LT:
             q = l < r
         elif op == self.LE:
