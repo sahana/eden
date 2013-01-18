@@ -9,6 +9,12 @@
 <div>
 {{pass}}
 <div id='map'></div>
+<div id='list-filter'>
+{{try:}}
+{{=list_filter_form}}
+{{except:}}
+{{pass}}
+</div>
 <div id='list-btn-add'>
 {{try:}}{{=showadd_btn}}{{hide_listadd=True}}
 {{except:}}{{hide_listadd=False}}{{pass}}
@@ -20,12 +26,6 @@
 <div class='form-container'>
 {{try:}}{{=form}}{{except:}}{{pass}}
 </div>
-</div>
-<div id='list-filter'>
-{{try:}}
-{{=list_filter_form}}
-{{except:}}
-{{pass}}
 </div>
 {{try:}}{{items = items}}
 <div id='table-container'>

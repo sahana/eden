@@ -4,6 +4,18 @@
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  */
 
+/****************************************************************************/
+/* The startsWith string function is introduced in JS 1.8.6 -- it's not even
+/* accepted in ECMAScript yet, so don't expect all browsers to have it.
+/* Thx to http://www.moreofless.co.uk/javascript-string-startswith-endswith/
+/* for showing how to add it to string if not present.
+/****************************************************************************/
+if (typeof String.prototype.startsWith != 'function') {
+    String.prototype.startsWith = function(str) {
+        return this.substring(0, str.length) === str;
+    }
+}
+
 var oDataTable = new Array();
 var fnInitDataTable;
 
@@ -173,6 +185,37 @@ function tableIdReverse(id) {
     }
     return -1;
 }
+
+/****************************************************************************/
+/* Determine if this data element's value is the default for its key, and
+/* return false if so. Used to remove data elements that have default values,
+/* to reduce size of the URL in Ajax calls. We'll call this from filter() so
+/* want it to return true for non-default elements.
+/* @param element is an object with fields name and value.
+/* @param index, @param array are unused, but allow calling this from filter().
+/****************************************************************************/
+function isNonDefaultData(element, index, array) {
+    var name = element.name;
+    var value = element.value;
+    if ((name == 'sSearch' && value == '') ||
+        (name.startsWith('sSearch_') && value == '') ||
+        (name.startsWith('bRegex_') && !value) ||
+        (name.startsWith('bSearchable_') && value) ||
+        (name.startsWith('bSortable_') && value)) {
+        return false;
+    }
+    if (name.startsWith('mDataProp_')) {
+        // Here, we're looking for elements of the form:
+        // name: 'mDataProp_N', value: N
+        // where N is an integer, and is the same in both places.
+        var index = parseInt(name.substr('mDataProp_'.length), 10)
+        if (!isNaN(index) && typeof value == 'number' && index == value) {
+            return false;
+        }
+    }
+    return true;
+}
+
 $(document).ready(function() {
     /* dataTables handling */
     // Create an array for the column settings (this is required, otherwise the column widths don't autosize)
@@ -406,7 +449,8 @@ $(document).ready(function() {
                         fnSetKey( aoData, 'iDisplayStart', iRequestStart );
                         fnSetKey( aoData, 'iDisplayLength', iRequestLength * iPipe );
                     }
-                    $.getJSON(sSource, aoData, function (json) {
+                    var nonDefaultData = aoData.filter(isNonDefaultData);
+                    $.getJSON(sSource, nonDefaultData, function (json) {
                         // Callback processing
                         oCache.lastJson = jQuery.extend(true, {}, json);
                         if ( oCache.iCacheLower != oCache.iDisplayStart ) {
@@ -434,9 +478,10 @@ $(document).ready(function() {
             var bProcessing = false;
             aoTableConfig[t]['ajaxUrl'] = null;
             function fnDataTablesPipeline ( url, data, callback ) {
+                var nonDefaultData = data.filter(isNonDefaultData);
                 $.ajax( {
                     'url': url,
-                    'data': data,
+                    'data': nonDefaultData,
                     'success': callback,
 
                     'dataType': 'json',

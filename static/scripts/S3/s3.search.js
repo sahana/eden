@@ -360,7 +360,7 @@ S3.search.filterURL = function(url) {
 // Test code: to be removed after implementation is complete
 // $(document).ready(function() {
 // 
-//     $('#filter-submit-button').click(function() {
+//     $('.filter-submit').click(function() {
 //         var url = $(this).next('input[type="hidden"]').val();
 //         url = S3.search.filterURL(url);
 //         window.location.href = url;

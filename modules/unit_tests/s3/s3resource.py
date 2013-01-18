@@ -2393,6 +2393,29 @@ class URLQueryParserTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testParseURLQueryWithMultipleValues(self):
+        """ Test URL query parsing with multiple values (AND) """
+
+        url_query = {"project.organisation_id$name__like": ["Test*", "Other*"]}
+
+        resource = current.s3db.resource("project_project", vars=url_query)
+        rfilter = resource.rfilter
+
+        # Check joins
+        joins = rfilter.get_left_joins()
+        self.assertTrue(isinstance(joins, list))
+        self.assertEqual(joins[0], "org_organisation ON "
+                                   "(project_project.organisation_id = org_organisation.id)")
+
+        # Check query
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "((LOWER(org_organisation.name) LIKE 'other%') AND "
+                                     "(LOWER(org_organisation.name) LIKE 'test%')))")
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testParseURLQueryWithAlternativeSelectors(self):
         """ Test alternative selectors (OR) in a URL query """
 
