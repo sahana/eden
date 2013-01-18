@@ -2846,9 +2846,11 @@ class S3FilterWidget(object):
                      variable names if there are multiple operators)
         """
 
-        selector = self._selector(resource, self.field)
+        label, selector = self._selector(resource, self.field)
         if not selector:
             return None
+        if "label" not in self.opts:
+            self.opts["label"] = label
         return self._variable(selector, self.operator)
 
     # -------------------------------------------------------------------------
@@ -2928,9 +2930,10 @@ class S3FilterWidget(object):
         """
 
         prefix = cls._prefix
+        label = None
 
         if not fields:
-            return None
+            return label, None
         if not isinstance(fields, (list, tuple)):
             fields = [fields]
         selectors = []
@@ -2939,11 +2942,13 @@ class S3FilterWidget(object):
                 rfield = S3ResourceField(resource, field)
             except (AttributeError, TypeError):
                 continue
+            if not label:
+                label = rfield.label
             selectors.append(prefix(rfield.selector))
         if selectors:
-            return "|".join(selectors)
+            return label, "|".join(selectors)
         else:
-            return None
+            return label, None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2998,7 +3003,7 @@ class S3FilterWidget(object):
             return []
         elif variable in get_vars:
             values = S3URLQuery.parse_value(get_vars[variable])
-            if type(values) is not list:
+            if not isinstance(values, (list, tuple)):
                 values = [values]
             return values
         else:
@@ -3017,7 +3022,7 @@ class S3TextFilter(S3FilterWidget):
             Render this widget as HTML helper object(s)
 
             @param resource: the resource
-            @param get_vars: the GET variables
+            @param values: the search values from the URL query
         """
         
         attr = self.attr
@@ -3056,5 +3061,107 @@ class S3DateFilter(S3FilterWidget):
 class S3LocationFilter(S3FilterWidget):
 
     _class = "location-filter"
+
+# =============================================================================
+class S3FilterForm(object):
+    """ Helper class to construct and render a filter form for a resource """
+
+    def __init__(self, widgets, **attr):
+        """
+            Constructor
+
+            @param widgets: the widgets (as list)
+            @param attr: HTML attributes for this form
+        """
+
+        self.widgets = widgets
+
+        attributes = Storage()
+        options = Storage()
+        for k, v in attr.iteritems():
+            if k[0] == "_":
+                attributes[k] = v
+            else:
+                options[k] = v
+        self.attr = attributes
+        self.opts = options
+
+    # -------------------------------------------------------------------------
+    def html(self, resource, get_vars=None):
+        """
+            Render this filter form as HTML
+
+            @param resource: the S3Resource
+            @param get_vars: the request GET vars (URL query dict)
+        """
+
+        formstyle = self.opts.get("formstyle", self._formstyle)
+
+        rows = []
+        rappend = rows.append
+        for f in self.widgets:
+            widget = f(resource, get_vars)
+            label = f.opts["label"]
+            comment = f.opts["comment"]
+            widget_id = f.attr["_id"]
+            if widget_id:
+                row_id = "%s__row" % widget_id
+                label_id = "%s__label" % widget_id
+            else:
+                row_id = None
+                label_id = None
+            if label:
+                label = LABEL("%s :" % label, _id=label_id, _for=widget_id)
+            else:
+                label = ""
+            if not comment:
+                comment = ""
+            rappend(formstyle(row_id, label, widget, comment))
+
+        submit = self.opts.get("submit", False)
+        if submit:
+            if submit is True:
+                label = current.T("Search")
+            else:
+                label = submit
+            url = self.opts.get("url", URL(vars={}))
+            submit = TAG[""](
+                        INPUT(_type="button",
+                              _value=label,
+                              _class="filter-submit"),
+                        INPUT(_type="hidden",
+                              _value=url))
+            rappend(formstyle(None, "", submit, ""))
+
+        form = FORM(TABLE(TBODY(rows)), **self.attr)
+        return form
+
+    # -------------------------------------------------------------------------
+    def json(self, resource, get_vars=None):
+        """
+            Render this filter form as JSON (for Ajax requests)
+
+            @param resource: the S3Resource
+            @param get_vars: the request GET vars (URL query dict)
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _formstyle(row_id, label, widget, comment):
+        """
+            Default formstyle for search forms
+
+            @param row_id: HTML id for the row
+            @param label: the label
+            @param widget: the form widget
+            @param comment: the comment
+        """
+
+        return TR(TD(label, _class="w2p_fl"),
+                  TD(widget),
+                  TD(comment, _class="w2p_fc"),
+                  _id=row_id)
 
 # END =========================================================================

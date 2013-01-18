@@ -5083,47 +5083,23 @@ class S3URLQuery(object):
         if not vars:
             return query
 
+        subquery = cls._subquery
+        allof = lambda l, r: l if r is None else r if l is None else r & l
+            
         for key, value in vars.iteritems():
 
             if not key.find(".") > 0:
                 continue
 
             selectors, op, invert = cls.parse_expression(key)
-            v = cls.parse_value(value)
 
-            q = None
-            for fs in selectors:
-
-                if op == S3ResourceQuery.LIKE:
-                    # Auto-lowercase and replace wildcard
-                    f = S3FieldSelector(fs).lower()
-                    if isinstance(v, basestring):
-                        v = v.replace("*", "%").lower()
-                    elif isinstance(v, list):
-                        v = [x.replace("*", "%").lower() for x in v]
-                else:
-                    f = S3FieldSelector(fs)
-
-                rquery = None
-                try:
-                    rquery = S3ResourceQuery(op, f, v)
-                except SyntaxError:
-                    if current.response.s3.debug:
-                        from s3utils import s3_debug
-                        s3_debug("Invalid URL query operator: %s "
-                                 "(sub-query ignored)" % op)
-                    q = None
-                    break
-
-                # Invert operation
-                if invert:
-                    rquery = ~rquery
-
-                # Add to subquery
-                if q is None:
-                    q = rquery
-                else:
-                    q |= rquery
+            if type(value) is list:
+                # Multiple queries with the same selector (AND)
+                q = reduce(allof,
+                           [subquery(selectors, op, invert, v) for v in value],
+                           None)
+            else:
+                q = subquery(selectors, op, invert, value)
 
             if q is None:
                 continue
@@ -5240,6 +5216,55 @@ class S3URLQuery(object):
             return vlist[0]
         return vlist
         
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _subquery(cls, selectors, op, invert, value):
+        """
+            Construct a sub-query from URL selectors, operator and value
+
+            @param selectors: the selector(s)
+            @param op: the operator
+            @param invert: invert the query
+            @param value: the value
+        """
+
+        v = cls.parse_value(value)
+
+        q = None
+        for fs in selectors:
+
+            if op == S3ResourceQuery.LIKE:
+                # Auto-lowercase and replace wildcard
+                f = S3FieldSelector(fs).lower()
+                if isinstance(v, basestring):
+                    v = v.replace("*", "%").lower()
+                elif isinstance(v, list):
+                    v = [x.replace("*", "%").lower() for x in v]
+            else:
+                f = S3FieldSelector(fs)
+
+            rquery = None
+            try:
+                rquery = S3ResourceQuery(op, f, v)
+            except SyntaxError:
+                if current.response.s3.debug:
+                    from s3utils import s3_debug
+                    s3_debug("Invalid URL query operator: %s (sub-query ignored)" % op)
+                q = None
+                break
+
+            # Invert operation
+            if invert:
+                rquery = ~rquery
+
+            # Add to subquery
+            if q is None:
+                q = rquery
+            else:
+                q |= rquery
+
+        return q
+
 # =============================================================================
 class S3ResourceFilter(object):
     """ Class representing a resource filter """

@@ -396,24 +396,17 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % resourcename
 
     # Test code - to be removed after implementation is complete
-    #search_widget = s3base.S3TextFilter(["name", "organisation_id$name"])
-    #search_submit = DIV(
-                        #INPUT(_type="button", _value="Search", _id="filter-submit-button"),
-                        #INPUT(_type="hidden", _value="/vita/inv/warehouse")
-                    #)
+    #filter_widgets = [
+        #s3base.S3TextFilter(["name", "organisation_id$name"])
+    #]
+
+    #filter_form = s3base.S3FilterForm(filter_widgets,
+                                      #_id="simple-filter-form",
+                                      #submit=True)
+
     #resource = s3db.resource("inv_warehouse")
-    #search_form = FORM(
-                    #TABLE(
-                        #TR(
-                            #TD("Search: "),
-                            #TD(search_widget(resource, request.get_vars))
-                          #),
-                        #TR(
-                            #TD(),
-                            #TD(search_submit)
-                          #)
-                    #),
-                #)
+    #list_filter_form = DIV(filter_form.html(resource, request.get_vars),
+                           #_class="form-container")
 
     output = s3_rest_controller(module, resourcename,
                                 rheader=s3db.inv_rheader,
@@ -424,7 +417,7 @@ def warehouse():
                                 #         dict(label="Organisation",
                                 #         field=s3db.org_organisation_id(comment=None))
                                 #]
-                                #list_filter_form=search_form
+                                #list_filter_form=list_filter_form
                                 )
     if "add_btn" in output:
         del output["add_btn"]
