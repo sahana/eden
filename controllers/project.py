@@ -141,16 +141,7 @@ def project():
                             del project_organisation_roles[host_role]
                             otable.role.requires = \
                                 IS_NULL_OR(IS_IN_SET(project_organisation_roles))
-                elif r.component_name in ("activity", "location"):
-                    # Default the Location Selector list of countries to those found in the project
-                    countries = r.record.countries_id
-                    if countries:
-                        ttable = s3db.gis_location_tag
-                        query = (ttable.location_id.belongs(countries)) & \
-                                (ttable.tag == "ISO2")
-                        countries = db(query).select(ttable.value)
-                        settings.gis.countries = [c.value for c in countries]
-                        
+                elif r.component_name == "activity":
                     # Filter Activity Type based on Sector
                     set_project_multi_activity_type_id_requires(sector_ids)
                     #@ToDo: Do this for project_activity too.
