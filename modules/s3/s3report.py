@@ -574,7 +574,8 @@ class S3Report(S3CRUD):
             fields = [f.name for f in resource.readable_fields()]
 
         prefix = lambda v: "%s.%s" % (resource.alias, v) \
-                           if "." not in v.split("$", 1)[0] else v
+                           if "." not in v.split("$", 1)[0] \
+                           else v.replace("~", resource.alias)
 
         attr = Storage(attr)
         if "_name" not in attr:
@@ -591,7 +592,7 @@ class S3Report(S3CRUD):
 
         table = self.table
         rfields, j, l, d = resource.resolve_selectors(fields)
-        opts = [(f.selector, f.label) for f in rfields
+        opts = [(prefix(f.selector), f.label) for f in rfields
                 if f.show and
                    (f.field is None or f.field.name != table._id.name)]
         dummy_field = Storage(name=name, requires=IS_IN_SET(opts))
@@ -624,7 +625,8 @@ class S3Report(S3CRUD):
             methods = [f.name for f in resource.readable_fields()]
 
         prefix = lambda v: "%s.%s" % (resource.alias, v) \
-                           if "." not in v.split("$", 1)[0] else v
+                           if "." not in v.split("$", 1)[0] \
+                           else v.replace("~", resource.alias)
 
         attr = Storage(attr)
         if "_name" not in attr:
