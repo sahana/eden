@@ -50,23 +50,25 @@ def template():
     #table = s3db.survey_template
 
     def prep(r):
-        if r.component and r.component_name == "translate":
-            table = s3db.survey_translate
-            if r.component_id == None:
-                # list existing translations and allow the addition of a new translation
-                table.file.readable = False
-                table.file.writable = False
-            else:
-                # edit the selected translation
-                table.language.writable = False
-                table.code.writable = False
-            # remove CRUD generated buttons in the tabs
-            s3db.configure(table,
-                            deletable=False)
+        if r.component:
+            if r.component_name == "translate":
+                table = s3db.survey_translate
+                if r.component_id == None:
+                    # list existing translations and allow the addition of a new translation
+                    table.file.readable = False
+                    table.file.writable = False
+                else:
+                    # edit the selected translation
+                    table.language.writable = False
+                    table.code.writable = False
+                # remove CRUD generated buttons in the tabs
+                s3db.configure("survey_translate",
+                               deletable=False)
         else:
+            table = r.table
             s3_action_buttons(r)
-            query = (r.table.status == 1) # Status of Pending
-            rows = db(query).select(r.table.id)
+            # Status of Pending
+            rows = db(table.status == 1).select(table.id)
             try:
                 s3.actions[1]["restrict"].extend(str(row.id) for row in rows)
             except KeyError: # the restrict key doesn't exist
@@ -74,42 +76,34 @@ def template():
             except IndexError: # the delete buttons doesn't exist
                 pass
             # Add some highlighting to the rows
-            query = (r.table.status == 3) # Status of closed
-            rows = db(query).select(r.table.id)
+            # Status of Pending
+            s3.dataTableStyleAlert = [str(row.id) for row in rows]
+            # Status of closed
+            rows = db(table.status == 3).select(table.id)
             s3.dataTableStyleDisabled = [str(row.id) for row in rows]
             s3.dataTableStyleWarning = [str(row.id) for row in rows]
-            query = (r.table.status == 1) # Status of Pending
-            rows = db(query).select(r.table.id)
-            s3.dataTableStyleAlert = [str(row.id) for row in rows]
-            query = (r.table.status == 4) # Status of Master
-            rows = db(query).select(r.table.id)
+            # Status of Master
+            rows = db(table.status == 4).select(table.id)
             s3.dataTableStyleWarning.extend(str(row.id) for row in rows)
-            s3db.configure(r.tablename,
-                            orderby = "%s.status" % r.tablename,
-                            create_next = URL(c="survey", f="template"),
-                            update_next = URL(c="survey", f="template"),
-                            )
+            s3db.configure("survey_template",
+                           orderby = "survey_template.status",
+                           create_next = URL(c="survey", f="template"),
+                           update_next = URL(c="survey", f="template"),
+                           )
         return True
     s3.prep = prep
 
     # Post-processor
     def postp(r, output):
         if r.component:
-            template_id = request.args[0]
-            if r.component_name == "section":
-                # Add the section select widget to the form
-                # Where is this defined?
-                sectionSelect = s3.survey_section_select_widget(template_id)
-                output.update(form = sectionSelect)
-                return output
-            elif r.component_name == "translate":
+            template_id = r.id
+            if r.component_name == "translate":
                 s3_action_buttons(r)
-                s3.actions.append(
-                                   dict(label=str(T("Download")),
-                                        _class="action-btn",
-                                        url=URL(c=module,
-                                                f="templateTranslateDownload",
-                                                args=["[id]"])
+                s3.actions.append(dict(label=str(T("Download")),
+                                       _class="action-btn",
+                                       url=URL(c=module,
+                                               f="templateTranslateDownload",
+                                               args=["[id]"])
                                        ),
                                   )
                 s3.actions.append(
@@ -117,11 +111,14 @@ def template():
                                 _class="action-btn",
                                 url=URL(c=module,
                                         f="template",
-                                        args=[template_id,"translate","[id]"])
+                                        args=[template_id, "translate", "[id]"])
                                ),
                           )
-                return output
-
+            #elif r.component_name == "section":
+            #    # Add the section select widget to the form
+            #    # undefined
+            #    sectionSelect = s3.survey_section_select_widget(template_id)
+            #    output.update(form = sectionSelect)
 
         # Add a button to show what the questionnaire looks like
         #s3_action_buttons(r)
@@ -147,14 +144,14 @@ def template():
             id = db.survey_section.insert(name=section_text,
                                           template_id=template_id,
                                           cloned_section_id=section_id)
-            if id == None:
+            if id is None:
                 print "Failed to insert record"
             return
 
-    # remove CRUD generated buttons in the tabs
+    # Remove CRUD generated buttons in the tabs
     s3db.configure("survey_template",
                    listadd=False,
-                   deletable=False,
+                   #deletable=False,
                    )
 
     output = s3_rest_controller(rheader=s3db.survey_template_rheader)

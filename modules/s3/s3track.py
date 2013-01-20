@@ -279,7 +279,8 @@ class S3Trackable(object):
                            record[TRACK_ID] not in exclude:
                             location = trackable.get_location(timestmp=timestmp,
                                                               exclude=exclude,
-                                                              _fields=_fields).first()
+                                                              _fields=_fields,
+                                                              as_rows=True).first()
                     elif presence.location_id:
                         query = (ltable.id == presence.location_id)
                         if _filter is not None:
@@ -476,7 +477,8 @@ class S3Trackable(object):
                     continue
                 tablename, record_id = presence.interlock.split(",", 1)
                 trackable = S3Trackable(tablename=tablename, record_id=record_id)
-                location = trackable.get_location(timestmp=timestmp).first()
+                location = trackable.get_location(timestmp=timestmp,
+                                                  as_rows=True).first()
                 if timestmp - presence.timestmp < timedelta(seconds=1):
                     timestmp = timestmp + timedelta(seconds=1)
                 data = dict(location_id=location,

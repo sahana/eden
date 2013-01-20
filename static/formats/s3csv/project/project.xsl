@@ -127,21 +127,12 @@
 
             <!-- Countries -->
             <xsl:if test="$Countries!=''">
-                <reference field="countries_id" resource="gis_location">
-                    <xsl:attribute name="uuid">
-                        <xsl:variable name="CountryCodes">
-                            <xsl:call-template name="splitList">
-                                <xsl:with-param name="arg">countrycode</xsl:with-param>
-                                <xsl:with-param name="list">
-                                    <xsl:value-of select="$Countries"/>
-                                </xsl:with-param>
-                            </xsl:call-template>
-                        </xsl:variable>
-                        <xsl:if test="starts-with($CountryCodes, ',&quot;')">
-                            <xsl:value-of select="concat('[', substring-after($CountryCodes, ','), ']')"/>
-                        </xsl:if>
-                    </xsl:attribute>
-                </reference>
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="arg">countrycode</xsl:with-param>
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$Countries"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:if>
 
             <!-- Project Sectors -->
@@ -296,7 +287,13 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <xsl:value-of select="concat(',&quot;', 'urn:iso:std:iso:3166:-1:code:', $CountryCode, '&quot;')"/>
+                <resource name="project_location">
+                    <reference field="location_id" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="concat(',&quot;', 'urn:iso:std:iso:3166:-1:code:', $CountryCode, '&quot;')"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
             </xsl:when>
             <!-- Sector list -->
             <xsl:when test="$arg='sector'">

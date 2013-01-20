@@ -2011,16 +2011,13 @@ class S3DateTime(object):
             @param utc: the datetime is given in UTC
         """
 
-        session = current.session
-        xml = current.xml
-
         if dt and utc:
-            offset = cls.get_offset_value(session.s3.utc_offset)
+            offset = cls.get_offset_value(current.session.s3.utc_offset)
             if offset:
                 dt = dt + datetime.timedelta(seconds=offset)
 
         if dt:
-            return xml.encode_local_datetime(dt)
+            return current.xml.encode_local_datetime(dt)
         else:
             return current.messages["NONE"]
 
@@ -2533,15 +2530,17 @@ class Traceback(object):
 
         self.text = text
 
-
+    # -------------------------------------------------------------------------
     def xml(self):
         """ Returns the xml """
 
         output = self.make_links(CODE(self.text).xml())
         return output
 
+    # -------------------------------------------------------------------------
     def make_link(self, path):
         """ Create a link from a path """
+
         tryFile = path.replace("\\", "/")
 
         if os.path.isabs(tryFile) and os.path.isfile(tryFile):
@@ -2550,14 +2549,17 @@ class Traceback(object):
             app = current.request.args[0]
 
             editable = {"controllers": ".py", "models": ".py", "views": ".html"}
+            l_ext = ext.lower()
+            f_endswith = folder.endswith
             for key in editable.keys():
-                check_extension = folder.endswith("%s/%s" % (app, key))
-                if ext.lower() == editable[key] and check_extension:
+                check_extension = f_endswith("%s/%s" % (app, key))
+                if l_ext == editable[key] and check_extension:
                     return A('"' + tryFile + '"',
                              _href=URL("edit/%s/%s/%s" % \
                                            (app, key, filename))).xml()
         return ""
 
+    # -------------------------------------------------------------------------
     def make_links(self, traceback):
         """ Make links using the given traceback """
 
@@ -2715,25 +2717,32 @@ class S3DataTable(object):
 
         def extractField(field):
             cnt = 0
+            append = self.orderby.append
+            s_field = str(field)
             for rfield in rfields:
-                if str(field) == rfield.colname:
-                    self.orderby.append([cnt, "asc"])
+                if s_field == rfield.colname:
+                    append([cnt, "asc"])
                     break
                 cnt += 1
 
         def extractExpression(exp):
             cnt = 0
-            if isinstance(exp.first, Field):
+            first = exp.first
+            if isinstance(first, Field):
+                s_first = str(first)
+                op = exp.op
+                INVERT = exp.db._adapter.INVERT
+                append = self.orderby.append
                 for rfield in rfields:
-                    if str(exp.first) == rfield.colname:
-                        if exp.op == exp.db._adapter.INVERT:
-                            self.orderby.append([cnt, "desc"])
+                    if s_first == rfield.colname:
+                        if op == INVERT:
+                            append([cnt, "desc"])
                         else:
-                            self.orderby.append([cnt, "asc"])
+                            append([cnt, "asc"])
                         break
                     cnt += 1
             else:
-                extractExpression(exp.first)
+                extractExpression(first)
             if exp.second:
                 selectAction(exp.second)
 
@@ -2771,7 +2780,6 @@ class S3DataTable(object):
                                "alert" : [2,10,13]}
         """
 
-        request = current.request
         s3 = current.response.s3
 
         attr = Storage()
@@ -2879,25 +2887,26 @@ class S3DataTable(object):
                 default_url = "%s%s=%s&" % (default_url, var, vars[var])
 
         iconList = []
-        url = s3.formats.pdf if s3.formats.pdf else default_url
+        formats = s3.formats
+        url = formats.pdf if formats.pdf else default_url
         iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
                             _onclick="s3FormatRequest('pdf','%s','%s');" % (id, url),
                             _alt=T("Export in PDF format"),
                             _title=T("Export in PDF format"),
                             ))
-        url = s3.formats.xls if s3.formats.xls else default_url
+        url = formats.xls if formats.xls else default_url
         iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % application,
                             _onclick="s3FormatRequest('xls','%s','%s');" % (id, url),
                             _alt=T("Export in XLS format"),
                             _title=T("Export in XLS format"),
                             ))
-        url = s3.formats.rss if s3.formats.rss else default_url
+        url = formats.rss if formats.rss else default_url
         iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % application,
                             _onclick="s3FormatRequest('rss','%s','%s');" % (id, url),
                             _alt=T("Export in RSS format"),
                             _title=T("Export in RSS format"),
                             ))
-        url = s3.formats.xml if s3.formats.xml else default_url
+        url = formats.xml if formats.xml else default_url
         iconList.append(IMG(_src="/%s/static/img/icon-xml.png" % application,
                             _onclick="s3FormatRequest('xml','%s','%s');" % (id, url),
                             _alt=T("Export in XML format"),
@@ -2913,23 +2922,17 @@ class S3DataTable(object):
             div.append(" | ")
 
         div.append(current.T("Export to:"))
-        if "have" in s3.formats:
+        if "have" in formats:
             iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
-                                _onclick="s3FormatRequest('have','%s','%s');" % (id, s3.formats.have),
+                                _onclick="s3FormatRequest('have','%s','%s');" % (id, formats.have),
                                 _alt=T("Export in HAVE format"),
                                 _title=T("Export in HAVE format"),
                                 ))
-        if "kml" in s3.formats:
+        if "kml" in formats:
             iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
-                                _onclick="s3FormatRequest('kml','%s','%s');" % (id, s3.formats.kml),
+                                _onclick="s3FormatRequest('kml','%s','%s');" % (id, formats.kml),
                                 _alt=T("Export in KML format"),
                                 _title=T("Export in KML format"),
-                                ))
-        if "xml" in s3.formats:
-            iconList.append(IMG(_src="/%s/static/img/icon-xml.png" % application,
-                                _onclick="s3FormatRequest('xml','%s','%s');" % (id, url),
-                                _alt=T("Export in XML format"),
-                                _title=T("Export in XML format"),
                                 ))
         elif rfields:
             kml_list = ["location_id",
@@ -2943,9 +2946,9 @@ class S3DataTable(object):
                                         _title=T("Export in KML format"),
                                         ))
                     break
-        if "map" in s3.formats:
+        if "map" in formats:
             iconList.append(IMG(_src="/%s/static/img/map_icon.png" % application,
-                                _onclick="s3FormatRequest('map','%s','%s');" % (id, s3.formats.map),
+                                _onclick="s3FormatRequest('map','%s','%s');" % (id, formats.map),
                                 _alt=T("Show on map"),
                                 _title=T("Show on map"),
                                 ))
@@ -2975,10 +2978,10 @@ class S3DataTable(object):
         from s3crud import S3CRUD
 
         auth = current.auth
-        s3 = current.response.s3
+        actions = current.response.s3.actions
 
         table = resource.table
-        s3.actions = None
+        actions = None
         has_permission = auth.s3_has_permission
         ownership_required = auth.permission.ownership_required
 
@@ -3016,7 +3019,7 @@ class S3DataTable(object):
 
         # Append custom actions
         if custom_actions:
-            s3.actions = s3.actions + custom_actions
+            actions = actions + custom_actions
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -3076,15 +3079,15 @@ class S3DataTable(object):
         """
 
         from gluon.serializers import json
-        from gluon.storage import Storage
 
         request = current.request
         s3 = current.response.s3
 
-        if not s3.dataTableID or not isinstance(s3.dataTableID, list):
-            s3.dataTableID = [id]
-        elif id not in s3.dataTableID:
-            s3.dataTableID.append(id)
+        dataTableID = s3.dataTableID
+        if not dataTableID or not isinstance(dataTableID, list):
+            dataTableID = [id]
+        elif id not in dataTableID:
+            dataTableID.append(id)
         # The configuration parameter from the server to the client will be
         # sent in a json object stored in an hidden input field. This object
         # will then be parsed by s3.dataTable.js and the values used.
@@ -3117,9 +3120,9 @@ class S3DataTable(object):
         if bulkActions and not isinstance(bulkActions, list):
             bulkActions = [bulkActions]
         config.bulkActions = bulkActions
-        config.bulkCol = attr.get("dt_bulk_col", 0)
+        config.bulkCol = bulkCol = attr.get("dt_bulk_col", 0)
         action_col = attr.get("dt_action_col", 0)
-        if bulkActions and config.bulkCol <= action_col:
+        if bulkActions and bulkCol <= action_col:
             action_col += 1
         config.actionCol = action_col
         group_list = attr.get("dt_group", [])
@@ -3127,7 +3130,7 @@ class S3DataTable(object):
             group_list = [group_list]
         dt_group = []
         for group in group_list:
-            if bulkActions and config.bulkCol <= group:
+            if bulkActions and bulkCol <= group:
                 group += 1
             if action_col >= group:
                 group -= 1
@@ -3138,7 +3141,7 @@ class S3DataTable(object):
         config.groupSpacing = attr.get("dt_group_space", "false")
         for order in orderby:
             if bulkActions:
-                if config.bulkCol <= order[0]:
+                if bulkCol <= order[0]:
                     order[0] += 1
             if action_col >= order[0]:
                 order[0] -= 1
@@ -3291,7 +3294,6 @@ class S3DataTable(object):
         table = self.table(id, flist, action_col)
         cache = None
         if pagination:
-            s3 = current.response.s3
             self.end = real_end
             aadata = self.aadata(totalrows,
                                  filteredrows,
@@ -3347,8 +3349,6 @@ class S3DataTable(object):
                                     after the group title.
         """
 
-        from gluon.serializers import json
-
         data = self.data
         if not flist:
             flist = self.lfields
@@ -3377,6 +3377,7 @@ class S3DataTable(object):
         structure["iTotalDisplayRecords"] = displayrows
         structure["sEcho"] = sEcho
         if stringify:
+            from gluon.serializers import json
             return json(structure)
         else:
             return structure
@@ -3409,6 +3410,7 @@ class S3DataTable(object):
                                     This will be displayed in parenthesis
                                     after the group title.
         """
+
         flist = self.lfields
         action_col = attr.get("dt_action_col", 0)
         if action_col != 0:
@@ -3435,8 +3437,5 @@ class S3DataTable(object):
                            action_col=action_col,
                            stringify=stringify,
                            **attr)
-
-
-
 
 # END =========================================================================

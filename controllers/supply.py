@@ -23,45 +23,42 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
+def brand():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def catalog():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(rheader=catalog_rheader)
+    return s3_rest_controller(rheader=s3db.supply_catalog_rheader)
 
 # -----------------------------------------------------------------------------
-def catalog_rheader(r):
-    """ Resource Header for Catalogs """
+def catalog_item():
+    """ RESTful CRUD controller """
 
-    if r.representation == "html":
-        catalog = r.record
-        if catalog:
-            tabs = [
-                    (T("Edit Details"), None),
-                    (T("Categories"), "item_category"),
-                    (T("Items"), "catalog_item"),
-                   ]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+    return s3_rest_controller()
 
-            table = r.table
+# -----------------------------------------------------------------------------
+def item():
+    """ RESTful CRUD controller """
 
-            rheader = DIV(TABLE(TR( TH("%s: " % table.name.label),
-                                    catalog.name,
-                                  ),
-                                TR( TH("%s: " % table.organisation_id.label),
-                                    table.organisation_id.represent(catalog.organisation_id),
-                                  ),
-                               ),
-                          rheader_tabs
-                         )
-            return rheader
-    return None
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return s3db.supply_item_controller()
 
-
-# =============================================================================
+# -----------------------------------------------------------------------------
 def item_category():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def item_entity():
+    """ RESTful CRUD controller """
+
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return s3db.supply_item_entity_controller()
 
 # -----------------------------------------------------------------------------
 def item_pack():
@@ -73,35 +70,9 @@ def item_pack():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def brand():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# =============================================================================
-def item():
-    """ RESTful CRUD controller """
-
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return s3db.supply_item_controller()
-
-# -----------------------------------------------------------------------------
 def kit_item():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
-
-# =============================================================================
-def catalog_item():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# =============================================================================
-def item_entity():
-    """ RESTful CRUD controller """
-
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return s3db.supply_item_entity_controller()
 
 # END =========================================================================

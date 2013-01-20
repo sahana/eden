@@ -241,9 +241,8 @@ class S3SurveyTemplateModel(S3Model):
                                                            self.survey_template_represent,
                                                            ),
                                       represent = self.survey_template_represent,
-                                      ondelete = "RESTRICT")
+                                      ondelete = "CASCADE")
         # Components
-        #add_component("survey_template", survey_template="template_id")
         add_component("survey_series", survey_template="template_id")
         add_component("survey_translate", survey_template = "template_id")
 
@@ -358,7 +357,7 @@ class S3SurveyTemplateModel(S3Model):
             section_id = sectable.insert(name = section_name,
                                          template_id = template_id,
                                          posn = 0 # special section with no position
-                                        )
+                                         )
         # Add the question to the list of questions in the template
         qstn_list_table = s3db.survey_question_list
         query = (qstn_list_table.question_id == qstn_id) & \
@@ -974,13 +973,12 @@ class S3SurveyQuestionModel(S3Model):
         #    it will have the position that the question will appear in the template
 
         tablename = "survey_question_list"
-        template_id = self.survey_template_id
         table = define_table(tablename,
                              Field("posn",
                                    "integer",
                                    notnull=True,
                                    ),
-                             template_id(),
+                             self.survey_template_id(),
                              Field("question_id",
                                    "reference survey_question",
                                    readable=False,
@@ -1126,14 +1124,14 @@ class S3SurveyQuestionModel(S3Model):
                                            template_id,
                                            section_id,
                                            posn,
-                                          )
+                                           )
         if type == "Location":
             widgetObj = survey_question_type["Location"]()
             widgetObj.insertChildrenToList(question_id,
                                            template_id,
                                            section_id,
                                            posn,
-                                          )
+                                           )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1566,7 +1564,6 @@ class S3SurveySeriesModel(S3Model):
         person_id = self.pr_person_id
         pr_person_comment = self.pr_person_comment
         organisation_id = self.org_organisation_id
-        template_id = self.survey_template_id
 
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = current.deployment_settings.get_L10n_date_format()
@@ -1595,20 +1592,19 @@ class S3SurveySeriesModel(S3Model):
 
         tablename = "survey_series"
         table = self.define_table(tablename,
-                                 Field("name", "string",
+                                 Field("name", "string", length=120,
                                        default="",
-                                       length=120,
                                        requires = IS_NOT_EMPTY()),
                                  Field("description", "text", default="", length=500),
-                                 Field("status",
-                                       "integer",
+                                 Field("status", "integer",
                                        requires = IS_IN_SET(series_status,
                                                             zero=None),
                                        default=1,
                                        represent = lambda index: series_status[index],
                                        readable=True,
                                        writable=False),
-                                 template_id(empty=False),
+                                 self.survey_template_id(empty=False,
+                                                         ondelete="RESTRICT"),
                                  person_id(),
                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
                                  Field("logo", "string", default="", length=512),
@@ -1649,11 +1645,11 @@ class S3SurveySeriesModel(S3Model):
             msg_list_empty = T("No Disaster Assessments"))
 
         self.configure(tablename,
-                        create_next = URL(f="newAssessment",
-                                          vars={"viewing":"survey_series.[id]"}),
-                        onaccept = self.series_onaccept,
-                        deduplicate = self.survey_series_duplicate,
-                        )
+                       create_next = URL(f="newAssessment",
+                                         vars={"viewing":"survey_series.[id]"}),
+                       onaccept = self.series_onaccept,
+                       deduplicate = self.survey_series_duplicate,
+                       )
 
         # Components
         self.add_component("survey_complete", survey_series="series_id")
@@ -2139,7 +2135,7 @@ $('#chart_btn').click(function(){
                                                    0:0.6,
                                                    1:0.7,
                                                    2:0.8,
-                                                },
+                                                  },
                                          image={-1:"grey",
                                                  0:"green",
                                                  1:"yellow",
@@ -2149,7 +2145,7 @@ $('#chart_btn').click(function(){
                                                 0:"Low",
                                                 1:"Average",
                                                 2:"High",
-                                                },
+                                               },
                                           zero = True)
         for series_id in seriesList:
             series_name = survey_getSeriesName(series_id)
@@ -2271,9 +2267,9 @@ def survey_serieslist_dataTable_post(r):
     url = URL(c="survey",
               f="series",
               args=["[id]", "summary"]
-             )
+              )
     current.response.s3.actions = [
-                   dict(label=current.messages["UPDATE"],
+                   dict(label=current.messages.UPDATE,
                         _class="action-btn",
                         url=url
                        ),
@@ -2321,7 +2317,7 @@ def survey_series_rheader(r, tabs=[]):
                         (T("Summary"), "summary"),
                         (T("Chart"), "graph"),
                         (T("Map"), "map"),
-                       ]
+                        ]
 
             completeTable = s3db["survey_complete"]
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -2449,6 +2445,7 @@ def survey_buildQuestionnaireFromSeries(series_id, complete_id=None):
         If the complete_id is also provided then the responses to each
         completed question will also be displayed
     """
+
     questions = survey_getAllQuestionsForSeries(series_id)
     return buildQuestionsForm(questions, complete_id)
 
@@ -2512,7 +2509,7 @@ def buildSeriesSummary(series_id, posn_offset):
             TH(T("Question")),
             TH(T("Type")),
             TH(T("Summary"))
-           )
+            )
     header = THEAD(hr)
 
     questions = survey_getAllQuestionsForSeries(series_id)

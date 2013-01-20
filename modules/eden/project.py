@@ -103,7 +103,6 @@ class S3ProjectModel(S3Model):
 
         # Shortcuts
         location_id = self.gis_location_id
-        countries_id = self.gis_countries_id
         organisation_id = self.org_organisation_id
         sector_id = self.org_sector_id
         multi_sector_id = self.org_multi_sector_id
@@ -378,10 +377,6 @@ class S3ProjectModel(S3Model):
                                          readable = False if multi_budgets else True,
                                          writable = False if multi_budgets else True,
                                          ),
-                             countries_id(
-                                          readable = mode_3w,
-                                          writable = mode_3w
-                                         ),
                              multi_hazard_id(
                                             readable = mode_drr,
                                             writable = mode_drr
@@ -470,22 +465,6 @@ S3OptionsFilter({
         advanced = list(simple)
         append = advanced.append
 
-        if mode_3w:
-            # An insignificant speedup currently
-            #countries = settings.get_gis_countries()
-            #if countries:
-            #    append(S3SearchOptionsWidget(
-            #                name = "project_search_country",
-            #                label = T("Countries"),
-            #                field = "countries_id",
-            #                options = self.gis_country_opts(countries),
-            #           ))
-            #else:
-            append(S3SearchOptionsWidget(
-                        name = "project_search_country",
-                        label = T("Countries"),
-                        field = "countries_id",
-                    ))
         if use_sectors:
             if settings.get_ui_cluster():
                 sector = T("Cluster")
@@ -578,14 +557,12 @@ S3OptionsFilter({
             list_fields = ["id",
                            "name",
                            "start_date",
-                           #"countries_id",
                            (T("Countries"), "location.location_id"),
                            "multi_hazard_id",
                            (T("Lead Organization"), "organisation_id"),
                            (T("Donors"), "donor.organisation_id"),
                            ]
-            report_fields = [#"countries_id",
-                             (T("Countries"), "location.location_id"),
+            report_fields = [(T("Countries"), "location.location_id"),
                              "multi_hazard_id",
                              "multi_theme_id",
                              "hfa",
@@ -603,10 +580,10 @@ S3OptionsFilter({
                 append("code")
             append("name")
             append("organisation_id")
+            if mode_3w:
+                append("location.location_id")
             if use_sectors:
                 append("multi_sector_id")
-            if mode_3w:
-                append("countries_id")
             if mode_drr:
                 append("multi_hazard_id")
                 #append("hfa")
@@ -622,7 +599,7 @@ S3OptionsFilter({
             append("end_date")
 
             report_fields = list_fields
-            report_col_default = "project.countries_id"
+            report_col_default = "location.location_id"
 
         configure(tablename,
                   super_entity="doc_entity",
@@ -926,15 +903,6 @@ S3OptionsFilter({
                               role = lead_role,
                               )
 
-        # Done via Custom Form instead
-        #if settings.get_project_locations_from_countries():
-        #    # Create project_location records from the countries_id
-        #    countries_id = form.vars.countries_id
-        #    if record and record.countries_id == countries_id:
-        #        # No need to make changes
-        #        return
-            
-
     # -------------------------------------------------------------------------
     @staticmethod
     def project_project_deduplicate(item):
@@ -1040,7 +1008,7 @@ S3OptionsFilter({
     @staticmethod
     def project_polygons(r, **attr):
         """
-            Export Projects as Country-level GeoJSON Polygons to view on the map
+            Export Projects as GeoJSON Polygons to view on the map
             - currently assumes that theme_percentages=True
         """
 
@@ -1049,6 +1017,7 @@ S3OptionsFilter({
         ptable = s3db.project_project
         ttable = s3db.project_theme
         tptable = s3db.project_theme_percentage
+        pltable = s3db.project_location
         ltable = s3db.gis_location
 
         vars = current.request.get_vars
@@ -1060,13 +1029,17 @@ S3OptionsFilter({
         # Total the Budget spent by Theme for each country
         countries = {}
         query = (ptable.deleted == False) & \
-                (tptable.project_id == ptable.id)
+                (tptable.project_id == ptable.id) & \
+                (ptable.id == pltable.project_id) & \
+                (ltable.id == pltable.location_id)
+
         #if "theme_id" in vars:
         #    query = query & (tptable.id.belongs(vars.theme_id))
         projects = db(query).select()
         for project in projects:
             # Only show those projects which are only within 1 country
-            _countries = project.project_project.countries_id
+            # @ToDo
+            _countries = project.location_id
             if len(_countries) == 1:
                 country = _countries[0]
                 if country in countries:
@@ -4749,7 +4722,7 @@ def project_rheader(r):
             append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
         rheader_fields = [["code", "name"],
-                          ["organisation_id", "countries_id"],
+                          ["organisation_id"],
                           ["start_date", "end_date"]
                           ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)

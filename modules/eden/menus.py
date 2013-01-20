@@ -447,6 +447,8 @@ class S3OptionsMenu(object):
     def asset(self):
         """ ASSET Controller """
 
+        ADMIN = current.session.s3.system_roles.ADMIN
+
         return M(c="asset")(
                     M("Assets", f="asset")(
                         M("New", m="create"),
@@ -455,6 +457,11 @@ class S3OptionsMenu(object):
                         M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
+                    #M("Brands", f="brand",
+                    #  restrict=[ADMIN])(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
                     M("Items", f="item")(
                         M("New", m="create"),
                         M("List All"),
@@ -462,9 +469,16 @@ class S3OptionsMenu(object):
                         M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Item Categories", f="item_category")(
+                    M("Item Categories", f="item_category",
+                      restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
+                    ),
+                    M("Catalogs", f="catalog",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
                     ),
                     M("Suppliers", f="supplier")(
                         M("New", m="create"),
@@ -1102,6 +1116,11 @@ class S3OptionsMenu(object):
                        #M("New", m="create"),
                        #M("List All"),
                        #M("Search", m="search"),
+                    #),
+                    #M("Brands", c="supply", f="brand",
+                    #  restrict=[ADMIN])(
+                    #    M("New", m="create"),
+                    #    M("List All"),
                     #),
                     M("Catalogs", c="supply", f="catalog")(
                         M("New", m="create"),

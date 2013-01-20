@@ -6,6 +6,7 @@
 'Ability to customize the list of important facilities needed at a Shelter': 'Ability to customise the list of important facilities needed at a Shelter',
 "Acronym of the organization's name, eg. IFRC.": "Acronym of the organisation's name, eg. IFRC.",
 'Add all organizations which are involved in different roles in this project': 'Add all organisations which are involved in different roles in this project',
+'Add Item to Catalog': 'Add Item to Catalogue',
 'Add New Branch Organization': 'Add New Branch Organisation',
 'Add New Organization': 'Add New Organisation',
 'Add New Organization Domain': 'Add New Organisation Domain',

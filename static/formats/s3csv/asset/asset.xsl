@@ -5,20 +5,6 @@
     <!-- **********************************************************************
          Assets - CSV Import Stylesheet
 
-         2011-06-20 / Michael Howden <michael AT aidiq DOT com>
-
-         - use for import to asset/asset resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be asset/asset/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          Organisation....................organisation_id.name & asset_log.organisation_id.name
          Acronym.........................organisation_id.acronym & asset_log.organisation_id.acronym
@@ -31,7 +17,7 @@
          Name............................supply_item.name
          Room............................asset_log.room_id
          Assigned To.....................pr_person.first_name
-         Brand...........................supply_brand.brand_id
+         Brand...........................supply_brand.name
          Model...........................supply_item.model
          SN..............................sn
          Supplier........................supplier
@@ -48,12 +34,10 @@
             supply_item_category.........
             supply_item..................
             supply_catalog_item..........
-            asset_log....................
             pr_person....................
             org_room.....................
 
         @todo:
-
             - remove id column
             - make in-line references explicit
 
@@ -189,7 +173,20 @@
                 <data field="sn"><xsl:value-of select="col[@field='SN']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Type'] != ''">
-                <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
+                <xsl:choose>
+                    <xsl:when test="col[@field='Type']=1">
+                        <data field="type">1</data>
+                    </xsl:when>
+                    <xsl:when test="col[@field='Type']='VEHICLE'">
+                        <data field="type">1</data>
+                    </xsl:when>
+                    <xsl:when test="col[@field='Type']='Vehicle'">
+                        <data field="type">1</data>
+                    </xsl:when>
+                    <xsl:when test="col[@field='Type']='vehicle'">
+                        <data field="type">1</data>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:if>
             <!-- Link to Supplier/Donor org -->
             <reference field="supply_org_id" resource="org_organisation">
@@ -222,45 +219,6 @@
                     <xsl:value-of select="$OfficeID"/>
                 </xsl:attribute>
             </reference>
-            <resource name="asset_log">
-                <!-- Set Base -->
-                <data field="status" value="1"/>
-                <xsl:choose>
-                    <xsl:when test="$Date!=''">
-                        <data field="datetime"><xsl:value-of select="concat(col[@field='Date'], 'T00:00:00')"/></data>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <data field="datetime">2000-01-01T00:00:00</data>
-                    </xsl:otherwise>
-                </xsl:choose>
-                <!-- Good Condition -->
-                <data field="cond" value="1"/>
-                <!-- Site -->
-                <reference field="organisation_id" resource="org_organisation">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
-                </reference>
-                <reference field="site_id" resource="org_office">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OfficeID"/>
-                    </xsl:attribute>
-                </reference>
-                <xsl:if test="$RoomName!=''">
-                    <reference field="room_id" resource="org_room">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$RoomID"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:if>
-                <xsl:if test="$PersonName!=''">
-                    <reference field="person_id" resource="pr_person">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$PersonName"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:if>
-            </resource>
         </resource>
 
     </xsl:template>
