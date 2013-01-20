@@ -346,12 +346,10 @@ div.chart-contents {
     background-color: white;
 }
 /* Hide Report Options not needed in DRRPP */
-div#chart-opts {
-    display: none;
-}
-div.pivot-table-control {
-    display: none;
-}
-div.hide-chart {
+div#chart-opts,
+div.pivot-table-control,
+div.hide-chart,
+tr.report-fact-single-option,
+tr.report-show-totals-option {
     display: none;
 }
