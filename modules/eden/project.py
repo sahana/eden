@@ -627,7 +627,7 @@ S3OptionsFilter({
                     cols=report_fields,
                     fact=report_fact_fields,
                     defaults=Storage(
-                        rows="~.multi_hazard_id",
+                        rows="project.multi_hazard_id",
                         cols=report_col_default,
                         fact=report_fact_default,
                         aggregate="count",
