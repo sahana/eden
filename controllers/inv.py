@@ -396,17 +396,25 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % resourcename
 
     # Test code - to be removed after implementation is complete
-    #filter_widgets = [
-        #s3base.S3TextFilter(["name", "organisation_id$name"])
-    #]
-
-    #filter_form = s3base.S3FilterForm(filter_widgets,
-                                      #_id="simple-filter-form",
-                                      #submit=True)
-
-    #resource = s3db.resource("inv_warehouse")
-    #list_filter_form = DIV(filter_form.html(resource, request.get_vars),
-                           #_class="form-container")
+#    filter_widgets = [
+#        s3base.S3TextFilter(["name", "organisation_id$name"]),
+#        s3base.S3OptionsFilter("organisation_id",
+#                               cols=3,
+#                               represent="%(name)s",
+#                               comment=T("Search for warehouse by organization.")),
+#        s3base.S3OptionsFilter("location_id$L1",
+#                               location_level="L1",
+#                               cols=3,
+#                               comment=T("Search for warehouse by district."))
+#    ]
+#
+#    filter_form = s3base.S3FilterForm(filter_widgets,
+#                                      _id="simple-filter-form",
+#                                      submit=True)
+#
+#    resource = s3db.resource("inv_warehouse")
+#    list_filter_form = DIV(filter_form.html(resource, request.get_vars),
+#                           _class="form-container")
 
     output = s3_rest_controller(module, resourcename,
                                 rheader=s3db.inv_rheader,

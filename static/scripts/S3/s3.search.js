@@ -339,6 +339,31 @@ S3.search.filterURL = function(url) {
         }
     });
 
+    // Options widgets
+    $('.options-filter:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var operator = $("input:radio[name='" + id + "_filter']:checked").val()
+        var contains=/__contains$/
+        var anyof=/__anyof$/
+		if (operator == 'any' && url_var.match(contains)) {
+		  url_var = url_var.replace(contains,'__anyof') 
+		} else if (operator == 'all' && url_var.match(anyof)) {
+		  url_var = url_var.replace(anyof,'__contains') 
+		}        
+        var value = '';
+        $("input[name='" + id + "']:checked").each(function() {
+            if (value == '') { 
+        		value = $(this).val();
+        	} else {
+        		value = value + ',' + $(this).val();
+        	}	
+        });
+        if (value != '') {
+        	queries.push(url_var + '=' + value);
+        }	
+    });
+
     // Other widgets go here...
 
     // Construct the URL
@@ -358,12 +383,14 @@ S3.search.filterURL = function(url) {
 }
 
 // Test code: to be removed after implementation is complete
-// $(document).ready(function() {
-// 
-//     $('.filter-submit').click(function() {
-//         var url = $(this).next('input[type="hidden"]').val();
-//         url = S3.search.filterURL(url);
-//         window.location.href = url;
-//     });
-// 
-// });
+/*
+$(document).ready(function() {
+
+    $('.filter-submit').click(function() {
+        var url = $(this).next('input[type="hidden"]').val();
+        url = S3.search.filterURL(url);
+        window.location.href = url;
+    });
+
+});
+*/
