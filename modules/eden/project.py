@@ -436,6 +436,7 @@ S3OptionsFilter({
             title_list = T("Projects"),
             title_update = T("Edit Project"),
             title_search = T("Search Projects"),
+            title_report = T("Project Report"),
             title_upload = T("Import Projects"),
             subtitle_create = T("Add New Project"),
             label_list_button = T("List Projects"),
@@ -553,6 +554,7 @@ S3OptionsFilter({
 
         if settings.get_template() == "DRRPP":
             table.name.label = T("Project Title")
+            
             #table.virtualfields.append(S3ProjectOrganisationVirtualFields())
             list_fields = ["id",
                            "name",
@@ -573,6 +575,16 @@ S3OptionsFilter({
                              (T("Donors"), "donor.organisation_id"),
                              ]
             report_col_default = "location.location_id"
+
+            if "chart" in current.request.vars:
+                crud_strings[tablename].title_report  = T("Project Graph")
+                report_fact_fields = [("project.id","count")]
+                report_fact_default = "project.id"
+            else:
+                crud_strings[tablename].title_report  = T("Project Matrix")
+                report_fact_fields = [(field, "count") for field in report_fields]
+                report_fact_default = "project.multi_theme_id"
+
         else:
             list_fields = ["id"]
             append = list_fields.append
@@ -613,11 +625,11 @@ S3OptionsFilter({
                     search=advanced,
                     rows=report_fields,
                     cols=report_fields,
-                    fact=[(field, "count") for field in report_fields],
+                    fact=report_fact_fields,
                     defaults=Storage(
-                        rows="project.multi_hazard_id",
+                        rows="~.multi_hazard_id",
                         cols=report_col_default,
-                        fact="project.multi_theme_id",
+                        fact=report_fact_default,
                         aggregate="count",
                         totals=True
                     )
