@@ -79,6 +79,9 @@ settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK",
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 
+settings.ui.hide_report_options = False
+settings.ui.hide_report_filter_options = True
+
 # Organisations
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True # Doesn't work with DRRPP formstyle
@@ -174,6 +177,8 @@ def customize_project_project(**attr):
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
     
     s3.formats = Storage(xls= None, xml = None)
+    
+    attr["rheader"] = None
     
     return attr
 

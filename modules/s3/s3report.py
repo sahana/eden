@@ -469,18 +469,22 @@ class S3Report(S3CRUD):
                     TD(widget.widget(resource, vars)),
                     TD(comment))
             tappend(tr)
+            
+        hide = current.deployment_settings.get_ui_hide_report_filter_options()
 
         return FIELDSET(
                     LEGEND(T("Filter Options"),
                         BUTTON(self.SHOW,
                                _type="button",
                                _class="toggle-text",
-                               _style="display:none"),
+                               _style="display:none" if not hide else ""),
                         BUTTON(self.HIDE,
                                _type="button",
-                               _class="toggle-text")
+                               _class="toggle-text",
+                               _style="display:none" if hide else "")
                     ),
-                    TABLE(trows),
+                    TABLE(trows,
+                          _style="display:none" if hide else ""),
                     _id="filter_options"
                 )
 
@@ -536,7 +540,9 @@ class S3Report(S3CRUD):
                             TD(INPUT(_type="checkbox",
                                      _id="report-totals",
                                      _name="totals",
-                                     value=show_totals))))
+                                     value=show_totals)),
+                         _class = "report-show-totals-option")
+                         )
 
         # Render field set
         form_report_options = FIELDSET(

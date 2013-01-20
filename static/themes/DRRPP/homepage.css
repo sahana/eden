@@ -184,10 +184,11 @@ img#matrix_img {
     text-transform: none;
 }
 
-/* Project Details */
+/* Project Details - Broken on read page 
 .item-container>form>table>tbody>tr:nth-child(odd) {
     background: #E8E8E8;
 }
+*/
 
 /* Search Projects */
 h2#search_label {
