@@ -2009,31 +2009,6 @@ class MergeLocationsTests(unittest.TestCase):
         self.assertEqual(site.location_id, self.id1)
 
     # -------------------------------------------------------------------------
-    def testMergeReferenceLists(self):
-        """ Test merge of a list of references """
-
-        db = current.db
-        auth = current.auth
-        s3db = current.s3db
-        deployment_settings = current.deployment_settings
-
-        ptable = s3db.project_project
-        project = Storage(name="Test Project",
-                          countries_id=[self.id1, self.id2])
-        project_id = ptable.insert(**project)
-        project.update(id=project_id)
-        s3db.update_super(ptable, project)
-
-        # Merge location 2 into 1
-        success = self.resource.merge(self.id1, self.id2)
-        self.assertTrue(success)
-
-        project = db(ptable.id == project_id).select(limitby=(0, 1)).first()
-        self.assertNotEqual(project, None)
-
-        self.assertEqual(project.countries_id, [self.id1])
-
-    # -------------------------------------------------------------------------
     #def testMergeLocationHierarchy(self):
         #""" Test update of the location hierarchy when merging locations """
         #pass
@@ -2058,6 +2033,59 @@ class MergeLocationsTests(unittest.TestCase):
             elif row_id == self.id2:
                 row2 = row
         return (row1, row2)
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.db.rollback()
+        current.auth.override = False
+
+# =============================================================================
+class MergeReferenceListsTest(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+        
+        xmlstr = """
+<s3xml>
+    <resource name="org_sector" uuid="TESTMERGESECTOR1">
+        <data field="name">TestMergeSector1</data>
+    </resource>
+    <resource name="org_sector" uuid="TESTMERGESECTOR2">
+        <data field="name">TestMergeSector2</data>
+    </resource>
+    <resource name="org_organisation" uuid="TESTMERGEMULTISECTORORG">
+        <data field="name">TestMergeMultiSectorOrg</data>
+        <reference field="multi_sector_id" resource="org_sector"
+                   uuid="[&quot;TESTMERGESECTOR1&quot;, &quot;TESTMERGESECTOR2&quot;]"/>
+    </resource>
+</s3xml>"""
+
+        current.auth.override = True
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+
+    # -------------------------------------------------------------------------
+    def testMergeListReference(self):
+
+        s3db = current.s3db
+    
+        resource = s3db.resource("org_sector",
+                                 uid=["TESTMERGESECTOR1", "TESTMERGESECTOR2"])
+
+        rows = resource.select(["id"])
+        self.assertEqual(len(rows), 2)
+        
+        original = rows[0].id
+        duplicate = rows[1].id
+        resource.merge(original, duplicate)
+
+        resource = s3db.resource("org_organisation",
+                                 uid="TESTMERGEMULTISECTORORG")
+        rows = resource.select(["id", "multi_sector_id"])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].multi_sector_id, [original])
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -2854,6 +2882,7 @@ if __name__ == "__main__":
         MergeOrganisationsTests,
         MergePersonsTests,
         MergeLocationsTests,
+        MergeReferenceListsTest,
 
         ResourceExportTests,
         ResourceImportTests,
