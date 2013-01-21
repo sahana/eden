@@ -1407,9 +1407,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, \
-                          Cell, \
-                          B
+        from PyRTF import Paragraph, Cell, B
         line = []
         p = Paragraph(ss.ParagraphStyles.Normal)
         p.append(B(str(self.fullName())))
@@ -1510,9 +1508,7 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, \
-                          Cell, \
-                          B
+        from PyRTF import Paragraph, Cell, B
         line = []
         p = Paragraph(ss.ParagraphStyles.Normal)
         p.append(B(str(self.fullName())))

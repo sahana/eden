@@ -601,6 +601,9 @@ S3OptionsFilter({
                 #append("hfa")
             if not theme_percentages:
                 append("multi_theme_id")
+                report_fact_default = "project.multi_theme_id"
+            else:
+                report_fact_default = "project.organisation_id"
             if multi_orgs:
                 table.virtualfields.append(S3ProjectOrganisationFundingVirtualFields())
                 append((T("Total Funding Amount"), "total_organisation_amount"))
@@ -611,11 +614,8 @@ S3OptionsFilter({
             append("end_date")
 
             report_fields = list_fields
-            report_fact_fields = [(field, "count") for field in report_fields]
-            report_fact_default = "project.id"
             report_col_default = "location.location_id"
             report_fact_fields = [(field, "count") for field in report_fields]
-            report_fact_default = "project.multi_theme_id"
 
         configure(tablename,
                   super_entity="doc_entity",

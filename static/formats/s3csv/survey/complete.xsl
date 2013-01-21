@@ -50,14 +50,14 @@
             <data field="answer_list">
                 <xsl:for-each select="col">
                     <xsl:choose>
-                        <xsl:when test="@field = 'Template'">
-                            <xsl:variable name="Template" select="col[@field='Template']"/>
+                        <xsl:when test="@field='Template'">
+                            <!--<xsl:variable name="Template" select="col[@field='Template']"/>-->
                         </xsl:when>
-                        <xsl:when test="@field = 'Series'">
-                            <xsl:variable name="Series" select="col[@field='Series']"/>
+                        <xsl:when test="@field='Series'">
+                            <!--<xsl:variable name="Series" select="col[@field='Series']"/>-->
                         </xsl:when>
-                        <xsl:when test="@field = 'Organisation'">
-                            <xsl:variable name="Series" select="col[@field='Series']"/>
+                        <xsl:when test="@field='Organisation'">
+                            <!--<xsl:variable name="OrgName" select="col[@field='Organisation']"/>-->
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:if test=".!=''">
