@@ -705,19 +705,26 @@ class S3Resource(object):
         ids = None
         if limitby is not None:
             # No vfilter present
-            if getids:
+            if getids or left_joins:
                 if virtual:
                     vf = table.virtualfields
                     osetattr(table, "virtualfields", [])
                 rows = db(query).select(self._id,
                                         distinct=distinct,
                                         left=attributes.get("left", None),
-                                        orderby=self._id,
+                                        orderby=attributes.get("orderby", None),
+                                        groupby=self._id,
                                         cacheable=True)
                 if virtual:
                     osetattr(table, "virtualfields", vf)
                 numrows = len(rows)
-                ids = list(set([row[table._id] for row in rows]))
+                row_ids = [row[table._id] for row in rows]
+                if left_joins:
+                    page = row_ids[limitby[0]:limitby[0]+limitby[1]]
+                    query = table._id.belongs(page)
+                    del attributes["limitby"]
+                if getids:
+                    ids = list(set(row_ids))
             elif count:
                 c = self._id.count()
                 row = db(query).select(c,
@@ -5995,6 +6002,7 @@ class S3Pivottable(object):
             hpkey = tfields[self.pkey]
             hrows = self.rows and [tfields[self.rows]] or []
             hcols = self.cols and [tfields[self.cols]] or []
+
             pt = df.pivot(hpkey, hrows, hcols, aggregate="tolist")
 
             # Initialize columns and rows -------------------------------------
