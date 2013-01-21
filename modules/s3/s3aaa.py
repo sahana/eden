@@ -5060,9 +5060,13 @@ class S3Permission(object):
         # Don't filter out unapproved records owned by the user
         if requires_approval and not unapproved and \
            "owned_by_user" in table.fields:
-            user_id = user.id if user is not None else None
-            ALL_RECORDS = ((table.approved_by != None) | \
-                           (table.owned_by_user == user_id))
+            ALL_RECORDS = (table.approved_by != None)
+            if user:
+                owner_query = (table.owned_by_user == user.id)
+            else:
+                owner_query = self.owner_query(table, None)
+            if owner_query is not None:
+                ALL_RECORDS |= owner_query
 
         # Administrators have all permissions
         if sr.ADMIN in realms:
