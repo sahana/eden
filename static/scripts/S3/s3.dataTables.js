@@ -4,12 +4,12 @@
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  */
 
-/****************************************************************************/
-/* The startsWith string function is introduced in JS 1.8.6 -- it's not even
-/* accepted in ECMAScript yet, so don't expect all browsers to have it.
-/* Thx to http://www.moreofless.co.uk/javascript-string-startswith-endswith/
-/* for showing how to add it to string if not present.
-/****************************************************************************/
+/**
+ * The startsWith string function is introduced in JS 1.8.6 -- it's not even
+ * accepted in ECMAScript yet, so don't expect all browsers to have it.
+ * Thx to http://www.moreofless.co.uk/javascript-string-startswith-endswith/
+ * for showing how to add it to string if not present.
+ */
 if (typeof String.prototype.startsWith != 'function') {
     String.prototype.startsWith = function(str) {
         return this.substring(0, str.length) === str;
@@ -48,10 +48,7 @@ function hideSubRows(groupid) {
     $('.' + groupid).removeClass('activeRow');
 }
 
-/************************************************************************/
-/* Function to return the class name of the tag from the class name
-/* prefix that is passed in.
-/************************************************************************/
+/* Function to return the class name of the tag from the class name prefix that is passed in. */
 function getElementClass(tagObj, prefix) {
     // Calculate the sublevel which can be used for the next new group
     var pLen = prefix.length;
@@ -113,13 +110,12 @@ function toggleRow(groupid) {
     }
 }
 
-/********************************************************************/
-/* This function can be called by other scripts to attach the
-/* accordion functionality to the row, not just the icon, as follows:
-/*
-/* $('.collapsable').click(function(){thisAccordionRow(0,this);});
-/*
-/********************************************************************/
+/**
+ * This function can be called by other scripts to attach the
+ * accordion functionality to the row, not just the icon, as follows:
+ *
+ * $('.collapsable').click(function(){thisAccordionRow(0,this);});
+ **/
 function thisAccordionRow(t, obj) {
     var level = '';
     var groupid = '';
@@ -136,9 +132,7 @@ function thisAccordionRow(t, obj) {
 }
 
 function accordionRow(t, level, groupid) {
-    /******************************************************************/
-    /* Close all rows with a level higher than then level passed in   */
-    /******************************************************************/
+    /* Close all rows with a level higher than then level passed in */
     // Get the level being opened
     var lvlOpened = level.substr(6);
     // Get a list of levels from the table
@@ -161,9 +155,7 @@ function accordionRow(t, level, groupid) {
             }
         }
     }); // close looping through the tables levels
-    /******************************************************************/
-    /* Open the items that are members of the clicked group           */
-    /******************************************************************/
+    /* Open the items that are members of the clicked group */
     showSubRows(groupid);
     // Display the spacer of open groups
     $('.spacer.alwaysOpen').show();
@@ -186,14 +178,14 @@ function tableIdReverse(id) {
     return -1;
 }
 
-/****************************************************************************/
-/* Determine if this data element's value is the default for its key, and
-/* return false if so. Used to remove data elements that have default values,
-/* to reduce size of the URL in Ajax calls. We'll call this from filter() so
-/* want it to return true for non-default elements.
-/* @param element is an object with fields name and value.
-/* @param index, @param array are unused, but allow calling this from filter().
-/****************************************************************************/
+/**
+ * Determine if this data element's value is the default for its key, and
+ * return false if so. Used to remove data elements that have default values,
+ * to reduce size of the URL in Ajax calls. We'll call this from filter() so
+ * want it to return true for non-default elements.
+ * @param element is an object with fields name and value.
+ * @param index, @param array are unused, but allow calling this from filter().
+ **/
 function isNonDefaultData(element, index, array) {
     var name = element.name;
     var value = element.value;
@@ -499,9 +491,7 @@ $(document).ready(function() {
         } // end of no pagination code
     } // end of loop for each dataTable
 
-    /*********************************************************************/
-    /* Helper functions                                                  */
-    /*********************************************************************/
+    /* Helper functions */
     function createSubmitBtn(t) {
         if (aoTableConfig[t]['bulkActions']) {
             // Make sure that the details of the selected records are stored in the hidden fields
@@ -609,9 +599,7 @@ $(document).ready(function() {
         oDataTable[t].fnDraw(false);
     }
 
-    /****************************************************************/
-    /* Helper function to add the new group row                     */
-    /****************************************************************/
+    /* Helper function to add the new group row */
     function addNewGroup(t,
                          sGroup,
                          level,
@@ -628,8 +616,7 @@ $(document).ready(function() {
                          groupCnt,
                          row,
                          before
-                         )
-    {
+                         ) {
         var levelClass = 'level_' + level;
         var groupClass = 'group_' + t + level + groupCnt;
         // Add an indentation of the grouping depth

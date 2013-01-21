@@ -701,7 +701,13 @@ class S3Config(Storage):
             Hide report options form by default
         """
         return self.ui.get("hide_report_options", True)
-            
+
+    def get_ui_hide_report_filter_options(self):
+        """
+            Show report filter options form by default
+        """
+        return self.ui.get("hide_report_filter_options", False)
+
     # =========================================================================
     # Messaging
     # -------------------------------------------------------------------------

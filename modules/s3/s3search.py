@@ -317,6 +317,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param vars: the URL GET variables as dict
        	"""
+
         T = current.T
         settings = current.deployment_settings
 
