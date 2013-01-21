@@ -3085,7 +3085,7 @@ class S3DataTable(object):
 
         dataTableID = s3.dataTableID
         if not dataTableID or not isinstance(dataTableID, list):
-            dataTableID = [id]
+            dataTableID = s3.dataTableID = [id]
         elif id not in dataTableID:
             dataTableID.append(id)
         # The configuration parameter from the server to the client will be
