@@ -3133,6 +3133,7 @@ def buildCompletedList(series_id, question_id_list):
     qtable = current.s3db.survey_question
 
     headers = []
+    happend = headers.append
     types = []
     items = []
     qstn_posn = 0
@@ -3140,12 +3141,12 @@ def buildCompletedList(series_id, question_id_list):
     complete_lookup = {}
     for question_id in question_id_list:
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
-                                                   series_id)
+                                                          series_id)
         widgetObj = survey_getWidgetFromQuestion(question_id)
 
         question = db(qtable.id == question_id).select(qtable.name,
                                                        limitby=(0, 1)).first()
-        headers.append(question.name)
+        happend(question.name)
         types.append(widgetObj.db_type())
 
         for answer in answers:
@@ -3158,47 +3159,67 @@ def buildCompletedList(series_id, question_id_list):
                 items.append([''] * rowLen)
             items[row][qstn_posn] = widgetObj.repr(answer["value"])
         qstn_posn += 1
+
     return [headers] + [types] + items
 
 # =============================================================================
 def getLocationList(series_id):
     """
+        Get a list of the LatLons for each Response in a Series
     """
 
-    comtable = current.s3db.survey_complete
-    rows = current.db(comtable.series_id == series_id).select()
     response_locations = []
+    rappend = response_locations.append
+    codeList = ["STD-L4", "STD-L3", "STD-L2", "STD-L1", "STD-L0"]
+
+    table = current.s3db.survey_complete
+    rows = current.db(table.series_id == series_id).select(table.id,
+                                                           table.answer_list)
     for row in rows:
         lat = None
         lon = None
         name = None
-        # get location rewrite to use the data in the answer_list
         answer_list = row.answer_list.splitlines()
         answer_dict = {}
         for line in answer_list:
-            (question,answer) = line.split(",")
-            answer_dict[question.strip('"')] = answer.strip('"')
+            (question, answer) = line.split(",", 1)
+            question = question.strip('"')
+            if question in codeList:
+                # Store to get the name
+                answer_dict[question] = answer.strip('"')
+            elif question == "STD-Lat":
+                try:
+                    lat = float(answer.strip('"'))
+                except:
+                    pass
+                else:
+                    if lat < -90.0 or lat > 90.0:
+                        lat = None
+            elif question == "STD-Lon":
+                try:
+                    lon = float(answer.strip('"'))
+                except:
+                    pass
+                else:
+                    if lon < -180.0 or lon > 180.0:
+                        lon = None
+            else:
+                # Not relevant here
+                continue
 
-        if "STD-Lat" in  answer_dict:
-            lat = float(answer_dict["STD-Lat"])
-            if lat < -90.0 or lat > 90.0:
-                lat = None
-        if "STD-Lon" in  answer_dict:
-            lon = float(answer_dict["STD-Lon"])
-            if lon < -180.0 or lon > 180.0:
-                lon = None
-        codeList = ["STD-L4","STD-L3","STD-L2","STD-L1","STD-L0"]
         for locCode in codeList:
+            # Retrieve the name of the lowest Lx 
             if locCode in answer_dict:
                 name = answer_dict[locCode]
                 break
-        if lat and lon: # only need lat and lon to display on a map
+        if lat and lon:
+            # We have sufficient data to display on the map
             location = Row()
             location.lat = lat
             location.lon = lon
             location.name = name
             location.complete_id = row.id
-            response_locations.append(location)
+            rappend(location)
         else:
             # The lat & lon were not added to the assessment so try and get one
             locWidget = get_default_location(row.id)
@@ -3211,7 +3232,8 @@ def getLocationList(series_id):
                 if len(record.records) == 1:
                     location = record.records[0].gis_location
                     location.complete_id = complete_id
-                    response_locations.append(location)
+                    rappend(location)
+
     return response_locations
 
 # =============================================================================

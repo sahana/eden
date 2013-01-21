@@ -578,7 +578,7 @@ S3OptionsFilter({
 
             if "chart" in current.request.vars:
                 crud_strings[tablename].title_report  = T("Project Graph")
-                report_fact_fields = [("project.id","count")]
+                report_fact_fields = [("project.id", "count")]
                 report_fact_default = "project.id"
             else:
                 crud_strings[tablename].title_report  = T("Project Matrix")
@@ -612,6 +612,8 @@ S3OptionsFilter({
 
             report_fields = list_fields
             report_col_default = "location.location_id"
+            report_fact_fields = [(field, "count") for field in report_fields]
+            report_fact_default = "project.multi_theme_id"
 
         configure(tablename,
                   super_entity="doc_entity",
