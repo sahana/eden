@@ -2091,6 +2091,9 @@ class S3Project3WModel(S3Model):
             name = project_location_represent(id)
         else:
             return None
+        if len(name) > 512:
+            # Ensure we don't break limits of SQL field
+            name = name[:509] + "..."
         db = current.db
         db(db.project_location.id == id).update(name=name)
 
