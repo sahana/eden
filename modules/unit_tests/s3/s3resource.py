@@ -349,36 +349,36 @@ class ResourceFilterQueryTests(unittest.TestCase):
         resource = current.s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
 
-        #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
-                                     #"(org_organisation.id > 0)) AND "
-                                     #"(org_organisation.id LIKE '%123%'))")
-
         self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
                                      "(org_organisation.id > 0)) AND "
-                                     "(org_organisation.id = 123))")
+                                     "(org_organisation.id LIKE '%123%'))")
+
+        #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
+                                     #"(org_organisation.id > 0)) AND "
+                                     #"(org_organisation.id = 123))")
 
         q = (S3FieldSelector("id").lower().like("%12%3%"))
         resource = current.s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
 
-        #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
-                                     #"(org_organisation.id > 0)) AND "
-                                     #"(org_organisation.id LIKE '%12%3%'))")
-
         self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
                                      "(org_organisation.id > 0)) AND "
-                                     "(org_organisation.id = 123))")
+                                     "(org_organisation.id LIKE '%12%3%'))")
+
+        #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
+                                     #"(org_organisation.id > 0)) AND "
+                                     #"(org_organisation.id = 123))")
 
         q = (S3FieldSelector("id").lower().like("%abc%"))
         resource = current.s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
 
-        #self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
-                                     #"(org_organisation.id > 0)) AND "
-                                     #"(org_organisation.id LIKE '%abc%'))")
+        self.assertEqual(str(query), "(((org_organisation.deleted <> 'T') AND "
+                                     "(org_organisation.id > 0)) AND "
+                                     "(org_organisation.id LIKE '%abc%'))")
 
-        self.assertEqual(str(query), "((org_organisation.deleted <> 'T') AND "
-                                     "(org_organisation.id > 0))")
+        #self.assertEqual(str(query), "((org_organisation.deleted <> 'T') AND "
+                                     #"(org_organisation.id > 0))")
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -2183,6 +2183,7 @@ class ResourceGetTests(unittest.TestCase):
 class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
     """ Test support for lazy virtual fields """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         current.auth.override = True
@@ -2191,6 +2192,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
             table.name = Field.Lazy(self.lazy_name)
         self.record_id = None
 
+    # -------------------------------------------------------------------------
     def lazy_name(self, row):
         """ Dummy lazy field """
 
@@ -2198,6 +2200,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         return "%s %s" % (row.pr_person.first_name,
                           row.pr_person.last_name)
 
+    # -------------------------------------------------------------------------
     def testLazyVirtualFieldsResolve(self):
         """
             Test whether field selectors for lazy virtual fields
@@ -2211,6 +2214,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         self.assertEqual(rfield.field, None)
         self.assertEqual(rfield.ftype, "virtual")
 
+    # -------------------------------------------------------------------------
     def testLazyVirtualFieldsExtract(self):
         """
             Test whether values for lazy virtual fields can be extracted
@@ -2241,6 +2245,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         self.assertTrue("pr_person.name" in item)
         self.assertEqual(item["pr_person.name"], "%s %s" % (row.first_name, row.last_name))
 
+    # -------------------------------------------------------------------------
     def testLazyVirtualFieldsFilter(self):
         """
             Test whether S3ResourceQueries work with lazy virtual fields
@@ -2261,6 +2266,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
                              item["pr_person.first_name"],
                              item["pr_person.last_name"]))
 
+    # -------------------------------------------------------------------------
     def testLazyVirtualFieldsURLFilter(self):
         """
             Test whether URL filters work with lazy virtual fields
@@ -2278,6 +2284,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
                              item["pr_person.first_name"],
                              item["pr_person.last_name"]))
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.auth.override = False
