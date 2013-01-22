@@ -453,7 +453,7 @@ $(document).ready(function() {
             zoom.removeClass('opened');
         }
         else {
-            layers = cell.data('records');
+            var layers = cell.data('records');
 
             if (layers) {
                 lists = $('<div/>').addClass('report-cell-records');

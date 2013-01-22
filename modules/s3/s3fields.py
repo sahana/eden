@@ -32,6 +32,7 @@
 import sys
 import datetime
 from uuid import uuid4
+from itertools import chain
 
 from gluon import *
 # Here are dependencies listed for reference:
@@ -395,7 +396,6 @@ class S3Represent(object):
             key = self.key
             values = [row[key] for row in rows]
         elif self.list_type and list_type:
-            from itertools import chain
             try:
                 hasnone = None in values
                 if hasnone:
@@ -418,7 +418,6 @@ class S3Represent(object):
                           if v in items else [default, ", "]
                           for v in values]
                 if labels:
-                    from itertools import chain
                     return TAG[""](list(chain.from_iterable(labels))[:-1])
                 else:
                     return ""
@@ -454,7 +453,6 @@ class S3Represent(object):
             key = self.key
             values = [row[key] for row in rows]
         elif self.list_type and list_type:
-            from itertools import chain
             try:
                 hasnone = None in values
                 if hasnone:
@@ -499,7 +497,6 @@ class S3Represent(object):
                       if v in labels else (self.default, ", ")
                       for v in value]
             if labels:
-                from itertools import chain
                 return TAG[""](list(chain.from_iterable(labels))[:-1])
             else:
                 return ""
@@ -692,6 +689,8 @@ class S3RepresentLazy(object):
             if not value:
                 value = []
             if self.multiple:
+                if len(value) and type(value[0]) is not list:
+                    value = [value]
                 return renderer.multiple(value)
             else:
                 return renderer.render_list(value, labels)

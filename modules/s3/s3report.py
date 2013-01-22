@@ -991,16 +991,16 @@ class S3ContingencyTable(TABLE):
 
                             if fvalue is not None:
                                 if has_fk:
-                                    if not isinstance(fvalue, list):
+                                    if type(fvalue) is not list:
                                         fvalue = [fvalue]
                                     # list of foreign keys
                                     for fk in fvalue:
-                                        if fk not in layer_ids:
-                                            layer_ids.append(fk)
+                                        if fk is not None and fk not in layer_ids:
+                                            layer_ids.append(int(fk))
                                             layer_values[fk] = s3_unicode(field.represent(fk))
                                 else:
-                                    if id not in layer_ids:
-                                        layer_ids.append(id)
+                                    if id is not None and id not in layer_ids:
+                                        layer_ids.append(int(id))
                                         layer_values[id] = s3_unicode(represent(f, fvalue))
 
                     cell_ids.append(layer_ids)
@@ -1013,9 +1013,7 @@ class S3ContingencyTable(TABLE):
                 vals = DIV([DIV(v) for v in vals])
 
                 if any(cell_ids):
-                    cell_attr = {
-                        "_data-records": cell_ids
-                    }
+                    cell_attr = {"_data-records": cell_ids}
                     vals = (A(_class="report-cell-zoom"), vals)
                 else:
                     cell_attr = {}

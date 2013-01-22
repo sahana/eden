@@ -955,7 +955,7 @@ class ResourceDataAccessTests(unittest.TestCase):
                                  uid="DATESTORG")
 
         rows = resource.select(["name", "office.name"], start=0, limit=1)
-        self.assertEqual(len(rows), 1)
+        self.assertEqual(len(rows), 2)
         row = rows[0]
 
         rf = S3ResourceField(resource, "name")
