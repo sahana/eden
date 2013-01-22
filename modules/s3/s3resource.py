@@ -4765,11 +4765,14 @@ class S3ResourceQuery(object):
             else:
                 q = l.belongs(r)
         elif op == self.LIKE:
-            if isinstance(l, Field) and l.type not in TEXTTYPES:
-                q = (l == s3_unicode(r).replace("%", ""))
-            else:
-                q = l.like(s3_unicode(r))
-            #q = l.like(s3_unicode(r))
+            # Fixed in web2py trunk by:
+            # https://github.com/web2py/web2py/commit/7b4a0515becf3a6b7ffd145d7a1e00c11ede9b91
+            # for earlier versions, use this instead as a workaround:
+            #if isinstance(l, Field) and l.type not in TEXTTYPES:
+                #q = (l == s3_unicode(r).replace("%", ""))
+            #else:
+                #q = l.like(s3_unicode(r))
+            q = l.like(s3_unicode(r))
         elif op == self.LT:
             q = l < r
         elif op == self.LE:
