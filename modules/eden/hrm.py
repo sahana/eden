@@ -576,7 +576,7 @@ class S3HRModel(S3Model):
                                              aggregate="count")
                        ),
                        create_next = hrm_url,
-                       update_next = hrm_url,
+                       #update_next = hrm_url,
                        realm_components = ["presence"],
                        update_realm = True,
                        )
@@ -1138,9 +1138,9 @@ class S3HRJobModel(S3Model):
         #                                                        vars=dict(format="popup")),
         #                                              _target="top",
         #                                              _title=label_create),
-        #                                            DIV(DIV(_class="tooltip",
-        #                                                    _title="%s|%s" % (label_create,
-        #                                                                      T("Add a new job role to the catalog."))))),
+        #                                            DIV(_class="tooltip",
+        #                                                _title="%s|%s" % (label_create,
+        #                                                                  T("Add a new job role to the catalog.")))),
         #                              ondelete = "SET NULL")
 
         # =========================================================================
@@ -1642,9 +1642,9 @@ class S3HRSkillModel(S3Model):
         #                                                     vars=dict(format="popup")),
         #                                           _target="top",
         #                                           _title=label_create),
-        #                                         DIV(DIV(_class="tooltip",
-        #                                                 _title="%s|%s" % (label_create,
-        #                                                                   T("Add a new skill provision to the catalog."))))),
+        #                                         DIV(_class="tooltip",
+        #                                             _title="%s|%s" % (label_create,
+        #                                                               T("Add a new skill provision to the catalog.")))),
         #                           ondelete = "SET NULL")
 
 

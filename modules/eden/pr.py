@@ -619,16 +619,16 @@ class S3PersonModel(S3Model):
                                    label = T("Initials")),
                              Field("preferred_name", length=64, # Mayon Compatibility
                                    label = T("Preferred Name"),
-                                   comment = DIV(DIV(_class="tooltip",
-                                                     _title="%s|%s" % (T("Preferred Name"),
-                                                                       T("The name to be used when calling for or directly addressing the person (optional).")))),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Preferred Name"),
+                                                                   T("The name to be used when calling for or directly addressing the person (optional)."))),
                                    ),
                              # @ToDo: Move these fields to a component to keep the main heavily-used table as clean as possible
                              Field("local_name",
                                    label = T("Local Name"),
-                                    comment = DIV(DIV(_class="tooltip",
-                                                        _title="%s|%s" % (T("Local Name"),
-                                                                        T("Name of the person in local language and script (optional)."))))),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Local Name"),
+                                                                   T("Name of the person in local language and script (optional).")))),
                              pr_gender(label = T("Sex")),
                              s3_date("date_of_birth",
                                      label = T("Date of Birth"),
@@ -641,9 +641,9 @@ class S3PersonModel(S3Model):
                              Field("opt_in", "string", # list of mailing lists which link to teams
                                    default=False,
                                    label = T("Receive updates"),
-                                   comment = DIV(DIV(_class="tooltip",
-                                                     _title="%s|%s" % (T("Mailing list"),
-                                                                       T("By selecting this you agree that we may contact you.")))),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Mailing list"),
+                                                                   T("By selecting this you agree that we may contact you."))),
                                    ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -1605,7 +1605,8 @@ class S3PersonImageModel(S3Model):
                                                       _title="%s|%s" % (T("URL"),
                                                                        T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
                                   Field("type", "integer",
-                                        requires = IS_IN_SET(pr_image_type_opts, zero=None),
+                                        requires = IS_IN_SET(pr_image_type_opts,
+                                                             zero=None),
                                         default = 1,
                                         label = T("Image Type"),
                                         represent = lambda opt: \
@@ -1708,7 +1709,6 @@ class S3PersonImageModel(S3Model):
                             _image.filename,
                             (None, 60)
                             )
-
             pr_image_resize(_image.file,
                             newfilename,
                             _image.filename,
@@ -1807,7 +1807,7 @@ class S3ImageLibraryModel(S3Model):
                                   # New actual file dimensions
                                   Field("actual_width", "integer"),
                                   Field("actual_height", "integer")
-                                )
+                                  )
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
@@ -1889,7 +1889,8 @@ class S3PersonIdentityModel(S3Model):
                                                     ondelete="CASCADE"),
                                   Field("type", "integer",
                                         label = T("ID type"),
-                                        requires = IS_IN_SET(pr_id_type_opts, zero=None),
+                                        requires = IS_IN_SET(pr_id_type_opts,
+                                                             zero=None),
                                         default = 1,
                                         represent = lambda opt: \
                                              pr_id_type_opts.get(opt,
@@ -2025,7 +2026,7 @@ class S3PersonEducationModel(S3Model):
                                     "major",
                                     "grade",
                                     "institute",
-                                   ],
+                                    ],
                        orderby = ~table.year,
                        sortby = [[1, "desc"]]
                        )
@@ -2101,7 +2102,7 @@ class S3PersonDetailsModel(S3Model):
                                         ),
                                   Field("occupation", length=128, # Mayon Compatibility
                                         label = T("Profession"),
-                                       ),
+                                        ),
                                   Field("company",
                                         label = T("Company"),
                                         # @ToDo: Autofill from hrm_human_resource Staff Organisation
@@ -2256,7 +2257,8 @@ class S3SavedSearch(S3Model):
                                                     _title="%s|%s" % (T("Send batch"),
                                                                       T("If checked, the notification will contain all modified records. If not checked, a notification will be send for each modified record."))),
                                         default=True,
-                                        represent=lambda v: T("Yes") if v else T("No"),
+                                        represent=lambda v: \
+                                            T("Yes") if v else T("No"),
                                         ),
                                   Field("last_checked", "datetime",
                                         default=current.request.utcnow,
@@ -2267,7 +2269,8 @@ class S3SavedSearch(S3Model):
                                         ),
                                   Field("public", "boolean",
                                         default=False,
-                                        represent=lambda v: T("Yes") if v else T("No"),
+                                        represent=lambda v: \
+                                            T("Yes") if v else T("No"),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Public"),
                                                                       T("Check this to make your search viewable by others."))),
@@ -2531,9 +2534,9 @@ class S3PersonPresence(S3Model):
                                                     pr_presence_conditions.get(opt, UNKNOWN_OPT)),
                                    Field("proc_desc",
                                          label = T("Procedure"),
-                                         comment = DIV(DIV(_class="tooltip",
-                                                           _title="%s|%s" % (T("Procedure"),
-                                                                             T('Describe the procedure which this record relates to (e.g. "medical examination")'))))),
+                                         comment = DIV(_class="tooltip",
+                                                       _title="%s|%s" % (T("Procedure"),
+                                                                         T('Describe the procedure which this record relates to (e.g. "medical examination")')))),
                                    location_id("orig_id",
                                                label=T("Origin"),
                                                widget = S3LocationAutocompleteWidget(),
@@ -2590,7 +2593,7 @@ class S3PersonPresence(S3Model):
                                       "presence_condition",
                                       "orig_id",
                                       "dest_id"
-                                     ],
+                                      ],
                        main="time",
                        extra="location_details")
 

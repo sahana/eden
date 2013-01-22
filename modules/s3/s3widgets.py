@@ -2930,7 +2930,8 @@ class S3AddPersonWidget(FormWidget):
         if self.select_existing:
             # Autocomplete
             select = '''select_person($('#%s').val())''' % real_input
-            widget = S3PersonAutocompleteWidget(post_process=select, hideerror=True)
+            widget = S3PersonAutocompleteWidget(post_process=select,
+                                                hideerror=True)
             ac_row = TR(TD(LABEL("%s: " % T("Name"),
                                  _class="hide",
                                  _id="person_autocomplete_label"),

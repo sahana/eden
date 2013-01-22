@@ -448,21 +448,22 @@ S3OptionsFilter({
             msg_list_empty = T("No Projects currently registered"))
 
         # Search Method
-        simple = [S3SearchSimpleWidget( name = "project_search_text_advanced",
-                                        label = T("Description"),
-                                        comment = T("Search for a Project by name, code, or description."),
-                                        field = ["name",
-                                                 "code",
-                                                 "description",
-                                                 ]
-                                       ),
-                  S3SearchOptionsWidget(
-                        name = "project_search_status",
-                        label = T("Status"),
-                        field = "status_id",
-                        cols = 4,
-                    )
-                  ]
+        simple = [
+            S3SearchSimpleWidget(name = "project_search_text_advanced",
+                                 label = T("Description"),
+                                 comment = T("Search for a Project by name, code, or description."),
+                                 field = ["name",
+                                          "code",
+                                          "description",
+                                          ]
+                                 ),
+            S3SearchOptionsWidget(
+                name = "project_search_status",
+                label = T("Status"),
+                field = "status_id",
+                cols = 4,
+                )
+            ]
         advanced = list(simple)
         append = advanced.append
 
