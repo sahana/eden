@@ -681,7 +681,7 @@ class S3Resource(object):
                         fn = orderby_field.strip().split()[0].split(".", 1)
                         tn, fn = ([table._tablename] + fn)[-2:]
                         try:
-                            t = db[tn][fn]
+                            f = db[tn][fn]
                         except (AttributeError, KeyError):
                             # Field does not exist
                             continue
