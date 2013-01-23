@@ -645,11 +645,14 @@ class S3Resource(object):
                 # Make sure the primary key of the table this field
                 # belongs to is included in the SELECT
                 qtables.append(tname)
+
+                # @todo: is this really needed?
                 # if tname is an alias, get primary key from id instead of _id
                 if hasattr(qtable, "_ot") and qtable._ot != tname:
                     pkey = qtable.id
                 else:    
                     pkey = qtable._id
+                    
                 if not groupby:
                     qfields.append(pkey)
                 if str(field) == str(pkey):
@@ -657,15 +660,11 @@ class S3Resource(object):
             if not groupby or str(field) in gfields:
                 qfields.append(field)
 
-        # Add orderby fields which are not in qfields
-        aggregates = []
-
         if distinct or left_joins:
-
-            if orderby is not None:
-                # postgresql requires all ORDERBY fields
-                # to appear in the SELECT
-
+            if orderby:
+                # For GROUPBY id (which we need here for left joins), we need
+                # all ORDERBY-fields to appear in an aggregation function, or
+                # otherwise the ORDERBY can be ambiguous.
                 qfield_names = [str(f) for f in qfields]
 
                 if isinstance(orderby, str):
@@ -675,42 +674,47 @@ class S3Resource(object):
                 else:
                     orderby_fields = orderby
 
+                orderby = []
                 for orderby_field in orderby_fields:
+
                     if isinstance(orderby_field, str):
-                        # Get the Field
-                        fn = orderby_field.strip().split()[0].split(".", 1)
-                        tn, fn = ([table._tablename] + fn)[-2:]
+                        fn, direction = (orderby_field.strip().split() + ["asc"])[:2]
+                        tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
                         try:
                             f = db[tn][fn]
                         except (AttributeError, KeyError):
-                            # Field does not exist
                             continue
                     elif isinstance(orderby_field, Field):
-                        # Is already a field
+                        direction = "asc"
                         f = orderby_field
                     else:
-                        # Invalid field specifier
                         continue
 
-                    if str(f) not in qfield_names:
-                        qfields.append(f)
-                        qfield_names.append(str(f))
+                    direction = direction.strip().lower()[:3]
+                    if str(f) == str(self._id):
+                        expression = f if direction == "asc" else ~f
+                    else:
+                        expression = f.min() if direction == "asc" else ~(f.max())
+                    orderby.append(expression)
 
-                    # With left joins, we will need aggregations of all
-                    # non-ID values for postgresql (can't group by ID
-                    # otherwise) - collect here
-                    if str(f) != str(self._id):
-                        aggregates.append(f.count())
-
+                    # If the ORDERBY-field is not in SELECT, then add it.
+                    # According to SQL documentation, this is /not/ required - you
+                    # can have fields in the ORDERBY which are not in the SELECT,
+                    # hence commented
+                    #if str(f) not in qf:
+                        #qfields.append(f)
+                        #qf.append(str(e))
             else:
-                # in DISTINCT without ORDERBY, the DAL adapter for postgresql
+                # In DISTINCT without ORDERBY, the DAL adapter for postgresql
                 # would automatically add all primary keys as ORDERBY, which
-                # would though make DISTINCT pointless here: add default ORDERBY
+                # would though make DISTINCT pointless here - adding a default
+                # ORDERBY id will prevent this.
                 if str(self._id) not in [str(f) for f in qfields]:
                     qfields.insert(0, self._id)
                 attributes["orderby"] = self._id
 
         if groupby:
+            attributes["orderby"] = orderby
             attributes["groupby"] = groupby
 
         # Temporarily deactivate virtual fields
@@ -736,22 +740,12 @@ class S3Resource(object):
                     vf = table.virtualfields
                     osetattr(table, "virtualfields", [])
 
-                # We don't retrieve all data here, as that would be
-                # too much for the whole table. Ideally only the
-                # master record ID, but...
-                if aggregates and db._dbname == "postgres":
-                    # postgresql needs ORDERBY fields in aggregation
-                    # functions if they don't appear in GROUPBY:
-                    cfields = [self._id] + aggregates
-                else:
-                    cfields = [self._id]
-
-                rows = db(query).select(left=attributes.get("left", None),
-                                        orderby=attributes.get("orderby", None),
+                rows = db(query).select(self._id,
+                                        left=attributes.get("left", None),
+                                        orderby=orderby,
                                         groupby=self._id,
-                                        cacheable=True,
-                                        *cfields)
-
+                                        cacheable=True)
+                                        
                 # Restore the virtual fields
                 if virtual:
                     osetattr(table, "virtualfields", vf)
