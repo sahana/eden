@@ -709,10 +709,10 @@ class S3Resource(object):
                     # If the ORDERBY-field is not in SELECT, then add it.
                     # According to SQL documentation, this is /not/ required - you
                     # can have fields in the ORDERBY which are not in the SELECT,
-                    # hence commented
-                    #if str(f) not in qf:
-                        #qfields.append(f)
-                        #qf.append(str(e))
+                    # however postgresql does seem to need it
+                    if str(f) not in qfield_names:
+                        qfields.append(f)
+                        qfield_names.append(str(f))
             else:
                 # In DISTINCT without ORDERBY, the DAL adapter for postgresql
                 # would automatically add all primary keys as ORDERBY, which
