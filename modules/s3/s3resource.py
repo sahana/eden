@@ -666,6 +666,12 @@ class S3Resource(object):
                 # all ORDERBY-fields to appear in an aggregation function, or
                 # otherwise the ORDERBY can be ambiguous.
                 qfield_names = [str(f) for f in qfields]
+                if isinstance(groupby, (list, tuple)):
+                    groups = ",".join([str(f) for f in groupby])
+                elif not groupby:
+                    groups = ""
+                else:
+                    groups = groupby
 
                 if isinstance(orderby, str):
                     orderby_fields = orderby.split(",")
@@ -690,8 +696,11 @@ class S3Resource(object):
                     else:
                         continue
 
+                    fname = str(f)
+                    kname = str(self._id)
                     direction = direction.strip().lower()[:3]
-                    if str(f) == str(self._id):
+                    if kname in qfield_names and fname == kname or \
+                       kname in groups:
                         expression = f if direction == "asc" else ~f
                     else:
                         expression = f.min() if direction == "asc" else ~(f.max())
@@ -714,8 +723,9 @@ class S3Resource(object):
                 attributes["orderby"] = self._id
 
         if groupby:
-            attributes["orderby"] = orderby
+            attributes["distinct"] = False
             attributes["groupby"] = groupby
+            attributes["orderby"] = orderby
 
         # Temporarily deactivate virtual fields
         osetattr = object.__setattr__
@@ -745,7 +755,7 @@ class S3Resource(object):
                                         orderby=orderby,
                                         groupby=self._id,
                                         cacheable=True)
-                                        
+
                 # Restore the virtual fields
                 if virtual:
                     osetattr(table, "virtualfields", vf)
