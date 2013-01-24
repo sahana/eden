@@ -3026,7 +3026,9 @@ class S3AddPersonWidget(FormWidget):
                              requires=validator,
                              label=T("Email Address")),
                        Field("mobile_phone",
-                             label=T("Mobile Phone Number"))
+                             label=T("Mobile Phone Number"),
+                             # requires=None to work around a web2py bug
+                             requires=None)
                        ])
 
         labels, required = s3_mark_required(fields)
@@ -3034,10 +3036,30 @@ class S3AddPersonWidget(FormWidget):
             s3.has_required = True
 
         if current.request.env.request_method == "POST" and not value:
+            # Read the POST vars:
             post_vars = current.request.post_vars
-            data = Storage(ptable._filter_fields(post_vars))
-            data["email"] = post_vars["email"]
-            data["mobile_phone"] = post_vars["mobile_phone"]
+            values = Storage(ptable._filter_fields(post_vars))
+            values["email"] = post_vars["email"]
+            values["mobile_phone"] = post_vars["mobile_phone"]
+
+            # Use the validators to convert the POST vars into
+            # internal format (not validating here):
+            data = Storage()
+            for f in fields:
+                fname = f.name
+                if fname in values:
+                    v, error = values[fname], None
+                    requires = f.requires
+                    if requires:
+                        if not isinstance(requires, (list, tuple)):
+                            requires = [requires]
+                        for validator in requires:
+                            v, error = validator(v)
+                            if error:
+                                break
+                    if not error:
+                        data[fname] = v
+
             record_id = 0
         else:
             data = None
