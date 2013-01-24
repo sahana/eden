@@ -2930,7 +2930,7 @@ class S3FilterWidget(object):
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
-    def variable(self, resource):
+    def variable(self, resource, get_vars=None):
         """
             Prototype method to generate the name for the URL query variable
             for this widget, can be overwritten in subclasses.
@@ -2940,12 +2940,21 @@ class S3FilterWidget(object):
                      variable names if there are multiple operators)
         """
 
-        label, selector = self._selector(resource, self.field)
-        if not selector:
+        label, self.selector = self._selector(resource, self.field)
+        
+        if not self.selector:
             return None
+        
+        if get_vars is not None:
+            # get operator from get_vars
+            operator = self._operator(get_vars, self.selector)
+            if operator is not None:
+                self.operator = operator
+        
         if "label" not in self.opts:
             self.opts["label"] = label
-        return self._variable(selector, self.operator)
+            
+        return self._variable(self.selector, self.operator)
 
     # -------------------------------------------------------------------------
     # Helper methods
@@ -2991,7 +3000,7 @@ class S3FilterWidget(object):
         self.attr = attr
 
         # Construct the hidden data element
-        variable = self.variable(resource)
+        variable = self.variable(resource, get_vars)
         if type(variable) is list:
             values = Storage()
             for k in variable:
@@ -2999,13 +3008,18 @@ class S3FilterWidget(object):
             variable = "&".join(variable)
         else:
             values = self._values(get_vars, variable)
+
+        # Construct the widget
+        widget = self.widget(resource, values)
+        
+        # recompute variable in case operator got changed in the widget
+        if self.selector:
+            variable = self._variable(self.selector, self.operator)
+
         data = INPUT(_type="hidden",
                      _id="%s-data" % attr["_id"],
                      _class="filter-widget-data %s-data" % _class,
                      _value=variable)
-
-        # Construct the widget
-        widget = self.widget(resource, values)
 
         return TAG[""](data, widget)
 
@@ -3019,7 +3033,7 @@ class S3FilterWidget(object):
             @param resource: the S3Resource
             @param fields: the field selectors (as strings)
 
-            @return: the filter query selector, or None if none of the
+            @return: the field label and the filter query selector, or None if none of the
                      field selectors could be resolved
         """
 
@@ -3103,6 +3117,30 @@ class S3FilterWidget(object):
         else:
             return []
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _operator(get_vars, selector):
+        """
+            Helper method to get operator from URL query variable
+
+            @param get_vars: the GET vars (a dict)
+            @param selector: field selector
+
+            @return: query operator - None, str or list 
+        """
+        
+        selector__ = "%s__" % selector
+        len_selector__ = len(selector__)
+        operator = []
+        for k, v in get_vars.iteritems():
+            if k.startswith(selector__):
+                operator.append(k[len_selector__:])
+        if len(operator) == 0:
+            operator = None
+        elif len(operator) == 1:
+            operator = operator[0]             
+        return operator
+
 # =============================================================================
 class S3TextFilter(S3FilterWidget):
 
@@ -3140,6 +3178,202 @@ class S3TextFilter(S3FilterWidget):
 class S3OptionsFilter(S3FilterWidget):
 
     _class = "options-filter"
+
+    operator = "belongs"
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+        T = current.T
+        attr = self.attr
+        opts = self.opts
+        if "location_level" in opts:
+            # This is searching a Location Hierarchy, so lookup the label now
+            level = opts["location_level"]
+            hierarchy = current.gis.get_location_hierarchy()
+            if level in hierarchy:
+                label = hierarchy[level]
+            else:
+                label = level
+            attr["label"] = label
+        
+        field_name = self.field
+        if (isinstance(field_name, (list, tuple))):
+            field_name = field_name[0]
+        fs = S3FieldSelector(field_name)
+        fl = fs.resolve(resource)
+        field = fl.field
+
+        # Check the field type
+        if field is not None:
+            field_type = str(field.type)
+        else:
+            field_type = "virtual"
+
+        if opts.options is not None:
+            # Custom dict of options {value: label} or callable
+            if isinstance(opts.options, dict):
+                options = opts.options
+            elif callable(opts.options):
+                options = opts.options()
+            opt_values = options.keys()
+        else:
+            options = None
+            if field_type == "boolean":
+                opt_values = (True, False)
+            else:
+                multiple = field_type[:5] == "list:"
+                groupby = field if field and not multiple else None
+                virtual = field is None
+                rows = resource.select(fields=[field_name],
+                                       start=None,
+                                       limit=None,
+                                       orderby=field,
+                                       groupby=groupby,
+                                       virtual=virtual)
+                opt_values = []
+                if rows:
+                    opt_extend = opt_values.extend
+                    opt_append = opt_values.append
+                    if multiple:
+                        for row in rows:
+                            vals = row[field]
+                            if vals:
+                                opt_extend([v for v in vals
+                                            if v not in opt_values])
+                    else:
+                        for row in rows:
+                            v = row[field]
+                            if v not in opt_values:
+                                opt_append(v)
+
+        # Translate empty-option
+        EMPTY = T("None")
+
+        if len(opt_values) < 1 or \
+           len(opt_values) == 1 and not opt_values[0]:
+            msg = attr.get("_no_opts", T("No options available"))
+            return SPAN(msg, _class="no-options-available")
+
+        opt_list = []
+        # Always use the represent of the widget, if present
+        represent = opts.represent
+        # Fallback to the field's represent
+        if not represent or field_type[:9] != "reference":
+            represent = field.represent
+
+        if callable(represent):
+            if hasattr(represent, "bulk"):
+                # S3Represent => use bulk option
+                opt_dict = represent.bulk(opt_values,
+                                          list_type=False,
+                                          show_link=False)
+                if None in opt_values:
+                    opt_dict[None] = EMPTY
+                elif None in opt_dict:
+                    del opt_dict[None]
+                if "" in opt_values:
+                    opt_dict[""] = EMPTY
+                opt_list = opt_dict.items()
+            else:
+                # Standard represent function
+                args = {"show_link": False} \
+                       if "show_link" in represent.func_code.co_varnames else {}
+                if multiple:
+                    repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
+                                           (opt, represent([opt], **args))
+                else:
+                    repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
+                                           (opt, represent(opt, **args))
+                opt_list = map(repr_opt, opt_values)
+
+        elif isinstance(represent, str) and field_type[:9] == "reference":
+            # Feed the format string
+            # Use the represent string to reduce db calls
+            # Find the fields which are needed to represent:
+            db = current.db
+            ktable = db[field_type[10:]]
+            fieldnames = ["id"]
+            fieldnames += re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
+            represent_fields = [ktable[fieldname] for fieldname in fieldnames]
+            query = (ktable.id.belongs([k for k in opt_values if str(k).isdigit()])) & \
+                    (ktable.deleted == False)
+            represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
+            opt_list = []
+            for opt_value in opt_values:
+                if opt_value not in represent_rows:
+                    continue
+                else:
+                    opt_represent = represent % represent_rows[opt_value]
+                if opt_represent:
+                    opt_list.append([opt_value, opt_represent])
+        else:
+            # Straight string representations of the values
+            opt_list = [(opt_value, s3_unicode(opt_value))
+                        for opt_value in opt_values if opt_value]
+
+        options = OrderedDict([("__NONE__" if o is None else o, v)
+                               for o, v in opt_list])
+
+        name = "%s_%s" % (attr["_name"], field_name.split("$", 1)[0])
+        self.attr["_name"] = name
+        self.attr["_id"] = name
+        attr["_id"] = name
+
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s %s" % (attr["_class"], "s3-checkboxes-widget", self._class)
+        else:
+            _class = "%s %s" % ("s3-checkboxes-widget", self._class)
+        attr["_class"] = _class
+        attr["cols"] = opts["cols"]
+        
+        # Dummy field
+        dummy_field = Storage(name=name,
+                              type=field_type,
+                              requires=IS_IN_SET(options,
+                                                 multiple=True))
+
+        # For many-to-many fields the user can search for records containing
+        # all the options or any of the options.
+        if len(options) > 1 and field_type[:4] == "list":
+            if self.operator=="anyof":
+                filter_type="any"
+            else:
+                filter_type="all"
+                if self.operator=="belongs":
+                    self.operator = "contains"
+
+            any_all = DIV(
+                T("Filter type "),
+                INPUT(_name="%s_filter" % name,
+                      _id="%s_filter_any" % name,
+                      _type="radio",
+                      _value="any",
+                      value=filter_type),
+                LABEL(T("Any"),
+                      _for="%s_filter_any" % name),
+                INPUT(_name="%s_filter" % name,
+                      _id="%s_filter_all" % name,
+                      _type="radio",
+                      _value="all",
+                      value=filter_type),
+                LABEL(T("All"),
+                      _for="%s_filter_all" % name),
+                _class="s3-checkboxes-widget-filter"
+            )
+        else:
+            any_all = ""
+
+        return TAG[""](any_all,
+                       s3_grouped_checkboxes_widget(dummy_field,
+                                                    values,
+                                                    **attr))
 
 # =============================================================================
 class S3RangeFilter(S3FilterWidget):
@@ -3255,7 +3489,9 @@ class S3FilterForm(object):
 
         return TR(TD(label, _class="w2p_fl"),
                   TD(widget),
-                  TD(comment, _class="w2p_fc"),
+                  #TD(comment, _class="w2p_fc"),
+                  TD(DIV(_class="tooltip",
+                         _title="%s|%s" % (label, comment))),
                   _id=row_id)
 
 # END =========================================================================

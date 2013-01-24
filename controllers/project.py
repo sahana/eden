@@ -258,10 +258,25 @@ def project():
         return output
     s3.postp = postp
 
+    # Test code - to be removed after implementation is complete
+#    filter_widgets = [
+#        s3base.S3OptionsFilter("multi_sector_id",
+#                               options = s3db.org_sector_opts,
+#                               cols=4)
+#    ]
+#    filter_form = s3base.S3FilterForm(filter_widgets,
+#                                      _id="simple-filter-form",
+#                                      submit=True)
+#
+#    resource = s3db.resource("project_project")
+#    list_filter_form = DIV(filter_form.html(resource, request.get_vars),
+#                           _class="form-container")
+    
     rheader = s3db.project_rheader
     return s3_rest_controller(module,
                               "project", # Need to specify as sometimes we come via index()
                               rheader=rheader,
+                              #list_filter_form=list_filter_form,
                               csv_template="project")
 
 # -----------------------------------------------------------------------------
