@@ -3191,10 +3191,15 @@ class S3OptionsFilter(S3FilterWidget):
         """
 
         T = current.T
+
+        EMPTY = T("None")
+
         attr = self.attr
         opts = self.opts
+
         if "location_level" in opts:
-            # This is searching a Location Hierarchy, so lookup the label now
+            # This is searching a Location Hierarchy, so lookup
+            # the appropriate label from the GIS configuration:
             level = opts["location_level"]
             hierarchy = current.gis.get_location_hierarchy()
             if level in hierarchy:
@@ -3202,28 +3207,27 @@ class S3OptionsFilter(S3FilterWidget):
             else:
                 label = level
             attr["label"] = label
-        
+
+        # Resolve the field selector
         field_name = self.field
         if (isinstance(field_name, (list, tuple))):
             field_name = field_name[0]
-        fs = S3FieldSelector(field_name)
-        fl = fs.resolve(resource)
-        field = fl.field
+        rfield = S3ResourceField(resource, field_name)
+        field = rfield.field
+        field_type = rfield.ftype
 
-        # Check the field type
-        if field is not None:
-            field_type = str(field.type)
-        else:
-            field_type = "virtual"
-
+        # Find the options ----------------------------------------------------
+            
         if opts.options is not None:
-            # Custom dict of options {value: label} or callable
-            if isinstance(opts.options, dict):
-                options = opts.options
-            elif callable(opts.options):
-                options = opts.options()
+            # Custom dict of options {value: label} or a callable
+            # returning such a dict:
+            options = opts.options
+            if callable(options):
+                options = options()
             opt_values = options.keys()
+
         else:
+            # Determine the options from the field type
             options = None
             if field_type == "boolean":
                 opt_values = (True, False)
@@ -3253,22 +3257,28 @@ class S3OptionsFilter(S3FilterWidget):
                             if v not in opt_values:
                                 opt_append(v)
 
-        # Translate empty-option
-        EMPTY = T("None")
-
+        # No options?
         if len(opt_values) < 1 or \
            len(opt_values) == 1 and not opt_values[0]:
             msg = attr.get("_no_opts", T("No options available"))
             return SPAN(msg, _class="no-options-available")
 
+        # Represent the options -----------------------------------------------
+
         opt_list = []
-        # Always use the represent of the widget, if present
+
+        # Custom represent? (otherwise fall back to field represent)
         represent = opts.represent
-        # Fallback to the field's represent
         if not represent or field_type[:9] != "reference":
             represent = field.represent
 
-        if callable(represent):
+        if options is not None:
+            # Custom dict of {value:label} => use this label
+            opt_list = options.items()
+
+        elif callable(represent):
+            # Callable representation function:
+
             if hasattr(represent, "bulk"):
                 # S3Represent => use bulk option
                 opt_dict = represent.bulk(opt_values,
@@ -3281,6 +3291,7 @@ class S3OptionsFilter(S3FilterWidget):
                 if "" in opt_values:
                     opt_dict[""] = EMPTY
                 opt_list = opt_dict.items()
+
             else:
                 # Standard represent function
                 args = {"show_link": False} \
@@ -3294,53 +3305,66 @@ class S3OptionsFilter(S3FilterWidget):
                 opt_list = map(repr_opt, opt_values)
 
         elif isinstance(represent, str) and field_type[:9] == "reference":
-            # Feed the format string
-            # Use the represent string to reduce db calls
-            # Find the fields which are needed to represent:
+            # Represent is a string template to be fed from the
+            # referenced record
+    
+            # Get the referenced table
             db = current.db
             ktable = db[field_type[10:]]
-            fieldnames = ["id"]
+
+            k_id = ktable._id.name
+
+            # Get the fields referenced by the string template
+            fieldnames = [k_id]
             fieldnames += re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
             represent_fields = [ktable[fieldname] for fieldname in fieldnames]
-            query = (ktable.id.belongs([k for k in opt_values if str(k).isdigit()])) & \
+
+            # Get the referenced records
+            query = (ktable.id.belongs([k for k in opt_values
+                                              if str(k).isdigit()])) & \
                     (ktable.deleted == False)
-            represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
+            rows = db(query).select(*represent_fields).as_dict(key=k_id)
+
+            # Run all referenced records against the format string
             opt_list = []
             for opt_value in opt_values:
-                if opt_value not in represent_rows:
-                    continue
-                else:
-                    opt_represent = represent % represent_rows[opt_value]
-                if opt_represent:
-                    opt_list.append([opt_value, opt_represent])
+                if opt_value in rows:
+                    opt_represent = represent % rows[opt_value]
+                    if opt_represent:
+                        opt_list.append((opt_value, opt_represent))
+
         else:
-            # Straight string representations of the values
+            # Straight string representations of the values (fallback)
             opt_list = [(opt_value, s3_unicode(opt_value))
                         for opt_value in opt_values if opt_value]
 
-        options = OrderedDict([("__NONE__" if o is None else o, v)
+        # Sort the options
+        options = OrderedDict([("NONE" if o is None else o, v)
                                for o, v in opt_list])
 
+        # Construct HTML names, classes and ids for the widget
         name = "%s_%s" % (attr["_name"], field_name.split("$", 1)[0])
         self.attr["_name"] = name
         self.attr["_id"] = name
-        attr["_id"] = name
 
+        attr["_id"] = name
         if "_class" in attr and attr["_class"]:
-            _class = "%s %s %s" % (attr["_class"], "s3-checkboxes-widget", self._class)
+            _class = "%s %s %s" % (attr["_class"],
+                                   "s3-checkboxes-widget",
+                                   self._class)
         else:
             _class = "%s %s" % ("s3-checkboxes-widget", self._class)
+
         attr["_class"] = _class
         attr["cols"] = opts["cols"]
         
         # Dummy field
         dummy_field = Storage(name=name,
                               type=field_type,
-                              requires=IS_IN_SET(options,
-                                                 multiple=True))
+                              requires=IS_IN_SET(options, multiple=True))
 
-        # For many-to-many fields the user can search for records containing
-        # all the options or any of the options.
+        # Any-All-Option : for many-to-many fields the user can search for
+        # records containing all the options or any of the options:
         if len(options) > 1 and field_type[:4] == "list":
             if self.operator=="anyof":
                 filter_type="any"
@@ -3370,6 +3394,7 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             any_all = ""
 
+        # Render the filter widget (grouped checkboxes)
         return TAG[""](any_all,
                        s3_grouped_checkboxes_widget(dummy_field,
                                                     values,
@@ -3487,11 +3512,12 @@ class S3FilterForm(object):
             @param comment: the comment
         """
 
-        return TR(TD(label, _class="w2p_fl"),
-                  TD(widget),
-                  #TD(comment, _class="w2p_fc"),
-                  TD(DIV(_class="tooltip",
-                         _title="%s|%s" % (label, comment))),
-                  _id=row_id)
+        row = TR(TD(label, _class="w2p_fl"), TD(widget), _id=row_id)
+
+        if comment:
+            row.append(TD(DIV(_class="tooltip",
+                              _title="%s|%s" % (label, comment)),
+                          _class="w2p_fc"))
+        return row
 
 # END =========================================================================

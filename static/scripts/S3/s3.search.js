@@ -383,7 +383,6 @@ S3.search.filterURL = function(url) {
 }
 
 // Test code: to be removed after implementation is complete
-/*
 $(document).ready(function() {
 
     $('.filter-submit').click(function() {
@@ -393,4 +392,3 @@ $(document).ready(function() {
     });
 
 });
-*/
