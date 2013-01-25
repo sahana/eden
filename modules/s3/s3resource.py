@@ -41,6 +41,7 @@ import re
 import sys
 import datetime
 import time
+import collections
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -87,6 +88,17 @@ else:
 ogetattr = object.__getattribute__
 
 TEXTTYPES = ("string", "text")
+
+# =============================================================================
+def flatlist(l):
+    """ Iterator to flatten mixed iterables of arbitrary depth """
+    for item in l:
+        if isinstance(item, collections.Iterable) and \
+           not isinstance(item, basestring):
+            for sub in flatlist(item):
+                yield sub
+        else:
+            yield item
 
 # =============================================================================
 class S3Resource(object):
@@ -6023,9 +6035,9 @@ class S3Pivottable(object):
 
         # We also want to include all rows/cols options which are
         # defined for this resource
-        options = get_config(resource.tablename, "report_options")
-        if options is not None:
-            fields += options.get("rows", []) + options.get("cols", [])
+        #options = get_config(resource.tablename, "report_options")
+        #if options is not None:
+            #fields += options.get("rows", []) + options.get("cols", [])
 
         self._get_fields(fields=fields)
 
@@ -6062,8 +6074,8 @@ class S3Pivottable(object):
             for row in records:
                 item = expand(flatten(row))
                 for i in item:
-                    if i not in item_list:
-                        seen(i)
+                    if str(i) not in item_list:
+                        seen(str(i))
                         insert(i)
 
             # Group the records -----------------------------------------------
@@ -6507,9 +6519,7 @@ class S3Pivottable(object):
                         if value is None:
                             continue
                         append(value)
-                    if len(values) and type(values[0]) is list:
-                        from itertools import chain
-                        values = chain.from_iterable(values)
+                    values = flatlist(values)
                     if method in ("list", "count"):
                         values =  list(set(values))
                     row_values.extend(values)
@@ -6554,7 +6564,7 @@ class S3Pivottable(object):
                 return None
 
         elif method == "count":
-            return len(values)
+            return len([v for v in values if v is not None])
 
         elif method == "min":
             try:

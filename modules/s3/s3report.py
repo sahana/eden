@@ -284,7 +284,7 @@ class S3Report(S3CRUD):
                 else:
                     e = str(e)
                 msg = "%s: %s" % (msg, e)
-                r.error(400, msg, next=r.url(vars=[]))
+                r.error(400, msg, next=r.url(vars={"clear":1}))
             except:
                 raise
                 msg = T("Could not generate report")
@@ -295,7 +295,7 @@ class S3Report(S3CRUD):
                 else:
                     e = str(e)
                 msg = "%s: %s" % (msg, e)
-                r.error(400, msg, next=r.url(vars=[]))
+                r.error(400, msg, next=r.url(vars={"clear":1}))
 
             # Convert the pivot table into a S3ContingencyTable
             if representation in ("html", "iframe"):
@@ -975,6 +975,8 @@ class S3ContingencyTable(TABLE):
                     # get previous lookup values for this layer
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
+                    cell_vals = Storage()
+
                     if m == "count":
                         rfield = rfields[f]
                         field = rfield.field
@@ -999,9 +1001,18 @@ class S3ContingencyTable(TABLE):
                                             layer_ids.append(int(fk))
                                             layer_values[fk] = s3_unicode(field.represent(fk))
                                 else:
-                                    if id is not None and id not in layer_ids:
-                                        layer_ids.append(int(id))
-                                        layer_values[id] = s3_unicode(represent(f, fvalue))
+                                    if type(fvalue) is not list:
+                                        fvalue = [fvalue]
+                                    for val in fvalue:
+                                        if val is not None and val not in cell_vals:
+                                            next_id = len(cell_vals)
+                                            cell_vals[val] = next_id
+                                            layer_ids.append(next_id)
+                                            layer_values[next_id] = s3_unicode(represent(f, val))
+
+                                    #if id is not None and id not in layer_ids:
+                                        #layer_ids.append(int(id))
+                                        #layer_values[id] = s3_unicode(represent(f, fvalue))
 
                     cell_ids.append(layer_ids)
                     cell_lookup_table[layer_idx] = layer_values
