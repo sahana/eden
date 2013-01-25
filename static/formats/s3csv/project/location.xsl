@@ -14,7 +14,7 @@
          Donor Organisations..
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
-         Activities...........comma-sep list..List of Activity Types
+         Activity Types.......comma-sep list..List of Activity Types
          Country..............string..........Country code/name (L0)
          L1...................string..........L1 location name (State/Province)
          L2...................string..........L1 location name (District)
@@ -105,23 +105,12 @@
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
 
-            <xsl:variable name="ActivityTypeRef">
-                <xsl:call-template name="quoteList">
-                    <xsl:with-param name="list">
-                        <xsl:value-of select="col[@field='Activities']"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="prefix">
-                        <xsl:value-of select="$ActivityTypePrefix"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:if test="$ActivityTypeRef!=''">
-                <reference field="multi_activity_type_id" resource="project_activity_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('[', $ActivityTypeRef, ']')"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="col[@field='Activity Types']"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">activity_type_ref</xsl:with-param>
+            </xsl:call-template>
 
             <xsl:call-template name="ContactPersonReference"/>
 
@@ -133,9 +122,9 @@
 
         <xsl:call-template name="splitList">
             <xsl:with-param name="list">
-                <xsl:value-of select="col[@field='Activities']"/>
+                <xsl:value-of select="col[@field='Activity Types']"/>
             </xsl:with-param>
-            <xsl:with-param name="arg">activity_type</xsl:with-param>
+            <xsl:with-param name="arg">activity_type_res</xsl:with-param>
         </xsl:call-template>
 
         <xsl:call-template name="ContactPerson"/>
@@ -225,7 +214,16 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
-            <xsl:when test="$arg='activity_type'">
+            <xsl:when test="$arg='activity_type_ref'">
+                <resource name="project_activity_activity_type">
+                    <reference field="activity_type_id" resource="project_activity_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='activity_type_res'">
                 <resource name="project_activity_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>

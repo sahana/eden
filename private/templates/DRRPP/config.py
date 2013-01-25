@@ -151,7 +151,7 @@ settings.ui.formstyle = formstyle_row
 def customize_project_project(**attr):
     s3db = current.s3db
     s3 = current.response.s3
-    
+
     s3.crud_strings.project_project.title_search = T("Project List")
     table = s3db.project_project
     table.budget.label = T("Total Funding")
@@ -171,15 +171,14 @@ def customize_project_project(**attr):
     table = s3db.doc_document
     table.file.widget = lambda field, value, download_url: \
         SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
-    #table.file.widget = SQLFORM.widgets.upload.widget
     table.comments.widget = SQLFORM.widgets.string.widget
-    
+
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
-    
-    s3.formats = Storage(xls= None, xml = None)
-    
+
+    s3.formats = Storage(xls=None, xml=None)
+
     attr["rheader"] = None
-    
+
     return attr
 
 settings.ui.customize_project_project = customize_project_project
@@ -194,43 +193,57 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "drrpp.duration",
         s3forms.S3SQLInlineComponent(
             "location",
-            label=T("Countries"),
-            fields=["location_id"],
+            label = T("Countries"),
+            fields = ["location_id"],
         ),
-        "multi_hazard_id",
-        "multi_theme_id",
+        s3forms.S3SQLInlineComponentCheckbox(
+            "hazard",
+            label = T("Hazards"),
+            field = "hazard_id",
+            cols = 4,
+        ),
+        #s3forms.S3SQLInlineComponentCheckbox(
+        #    "sector",
+        #    label = T("Sectors"),
+        #    field = "sector_id",
+        #    cols = 4,
+        #),
+        s3forms.S3SQLInlineComponentCheckbox(
+            "theme",
+            label = T("Themes"),
+            field = "theme_id",
+            cols = 4,
+        ),
         "objectives",
         "drrpp.activities",
         # Outputs
         s3forms.S3SQLInlineComponent(
             "output",
-            label=T("Outputs"),
+            label = T("Outputs"),
             #comment = "Bob",
-            fields=["output", "status"],
+            fields = ["output", "status"],
         ),
-        "hfa",
+        "drr.hfa",
         "drrpp.rfa",
         "organisation_id",
-        # Partner Org
+        # Partner Orgs
         s3forms.S3SQLInlineComponent(
             "organisation",
             name = "partner",
-            label=T("Partner Organizations"),
-            fields=["organisation_id",
-                    # Explicit label as otherwise label from filter comes in!
-                    #(T("Comments"), "comments"),
-                    "comments",
-                    ],
+            label = T("Partner Organizations"),
+            fields = ["organisation_id",
+                      "comments", # NB This is labelled 'Role' in DRRPP
+                      ],
             filterby = dict(field = "role",
                             options = "2"
                             )
         ),
-        # Donor
+        # Donors
         s3forms.S3SQLInlineComponent(
             "organisation",
             name = "donor",
-            label=T("Donor(s)"),
-            fields=["organisation_id", "amount", "currency"],
+            label = T("Donor(s)"),
+            fields = ["organisation_id", "amount", "currency"],
             filterby = dict(field = "role",
                             options = "3"
                             )
@@ -244,8 +257,8 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         s3forms.S3SQLInlineComponent(
             "document",
             name = "file",
-            label=T("Files"),
-            fields=["file", "comments"],
+            label = T("Files"),
+            fields = ["file", "comments"],
             filterby = dict(field = "file",
                             options = "",
                             invert = True,
@@ -255,8 +268,8 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         s3forms.S3SQLInlineComponent(
             "document",
             name = "url",
-            label=T("Links"),
-            fields=["url", "comments"],
+            label = T("Links"),
+            fields = ["url", "comments"],
             filterby = dict(field = "url",
                             options = None,
                             invert = True,
@@ -264,7 +277,6 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         ),
         "drrpp.parent_project",
         "comments",
-        
     )
 
 # Comment/uncomment modules here to disable/enable them

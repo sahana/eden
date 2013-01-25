@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          Project Beneficiary Types - CSV Import Stylesheet
 
-         2011-12-16 / Dominic König <dominic[AT]aidiq[DOT]com>
-
          CSV column...........Format..........Content
 
          Name.................string..........Type Name

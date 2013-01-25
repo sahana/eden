@@ -340,7 +340,7 @@ class S3PersonEntity(S3Model):
                   ondelete=self.pr_affiliation_ondelete)
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             pr_pe_types=pe_types,
@@ -780,7 +780,7 @@ class S3PersonModel(S3Model):
         add_component("asset_asset", pr_person="assigned_to_id")
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             pr_gender = pr_gender,
@@ -1160,7 +1160,7 @@ class S3GroupModel(S3Model):
                                ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             pr_group_id = group_id,
@@ -1344,7 +1344,7 @@ class S3ContactModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
         )
@@ -1472,7 +1472,7 @@ class S3PersonAddressModel(S3Model):
                                       ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
                 pr_address_type_opts = pr_address_type_opts
@@ -1662,7 +1662,7 @@ class S3PersonImageModel(S3Model):
                                     ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -1810,7 +1810,7 @@ class S3ImageLibraryModel(S3Model):
                                   )
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage(
             pr_image_size = self.pr_image_size,
@@ -1942,7 +1942,7 @@ class S3PersonIdentityModel(S3Model):
                                     ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -2134,7 +2134,7 @@ class S3PersonDetailsModel(S3Model):
         #               )
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 
@@ -2313,7 +2313,7 @@ class S3SavedSearch(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Pass names back to global scope (s3.*)
         #
         return Storage()
 

@@ -17,6 +17,7 @@ def index():
     """ Module's Home Page """
 
     if mode_task:
+        # Bypass home page & go direct to browsing Tasks for a Project
         redirect(URL(f="project", vars={"tasks":1}))
     elif settings.get_project_mode_drr():
         # Bypass home page & go direct to searching for Projects
@@ -29,30 +30,6 @@ def index():
     #module_name = settings.modules[module].name_nice
     #response.title = module_name
     #return dict(module_name=module_name)
-
-# =============================================================================
-def inline():
-    """ Test controller for inline link tables """
-
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-
-    crud_form = S3SQLCustomForm(
-                    "name",
-                    # Project Organisations
-                    S3SQLInlineComponent(
-                        "organisation",
-                        label=T("Participating Organizations"),
-                        fields=["organisation_id",
-                                "role",
-                                "amount"
-                                ],
-                    ),
-                )
-
-    s3db.configure("project_project", crud_form=crud_form)
-
-    return s3_rest_controller("project", "project")
-
 
 # =============================================================================
 def create():
@@ -89,27 +66,30 @@ def project():
         s3.postp = postp
         return s3_rest_controller()
 
-    table = s3db.hrm_human_resource
-    table.person_id.comment = DIV(_class="tooltip",
-                                  _title="%s|%s" % (T("Person"),
-                                                    T("Select the person assigned to this role for this project.")))
+    htable = s3db.hrm_human_resource
+    htable.person_id.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % (T("Person"),
+                                                     T("Select the person assigned to this role for this project.")))
 
     # Pre-process
     def prep(r):
-        table = s3db.project_project 
         
         # Location Filter
         s3db.gis_location_filter(r)
         
-        # Filter Themes based on Sector
-        if r.record:
-            sector_ids = r.record.multi_sector_id
-        else:
-            sector_ids = []
-        set_project_multi_theme_id_requires(sector_ids)
-
         if r.interactive:
             if not r.component:
+                # Filter Themes/Activity Types based on Sector
+                if r.record:
+                    table = s3db.project_sector_project
+                    query = (table.project_id == r.id) & \
+                            (table.deleted == False)
+                    rows = db(query).select(table.sector_id)
+                    sector_ids = [row.sector_id for row in rows]
+                else:
+                    sector_ids = []
+                set_theme_requires(sector_ids)
+
                 if r.id:
                     r.table.human_resource_id.represent = lambda id: \
                         s3db.hrm_human_resource_represent(id, show_link=True)
@@ -123,8 +103,8 @@ def project():
                     row = db(stable.name == status).select(stable.id,
                                                            limitby=(0, 1)).first()
                     if row:
-                        table.status_id.default = row.id
-                        table.status_id.writable = False
+                        r.table.status_id.default = row.id
+                        r.table.status_id.writable = False
             else:
                 if r.component_name == "organisation":
                     if r.method != "update":
@@ -136,15 +116,13 @@ def project():
                         row = db(query).select(otable.id,
                                                limitby=(0, 1)).first()
                         if row:
-                            project_organisation_roles = \
-                                dict(s3.project_organisation_roles)
+                            project_organisation_roles = settings.get_project_organisation_roles()
                             del project_organisation_roles[host_role]
                             otable.role.requires = \
                                 IS_NULL_OR(IS_IN_SET(project_organisation_roles))
                 elif r.component_name == "activity":
                     # Filter Activity Type based on Sector
-                    set_project_multi_activity_type_id_requires(sector_ids)
-                    #@ToDo: Do this for project_activity too.
+                    set_activity_type_requires("project_activity_activity_type", sector_ids)
                 elif r.component_name == "task":
                     table = r.component.table
                     if not auth.s3_has_role("STAFF"):
@@ -280,16 +258,15 @@ def project():
                               csv_template="project")
 
 # -----------------------------------------------------------------------------
-def set_project_multi_theme_id_requires(sector_ids):
+def set_theme_requires(sector_ids):
     """
-        Filters the multi_theme_id based on the sector_id
+        Filters the theme_id based on the sector_id
     """
 
-    table = s3db.project_project
     ttable = s3db.project_theme
     tstable = s3db.project_theme_sector
 
-    # All themes linked to the projects sectors or to no sectors 
+    # All themes linked to the project's sectors or to no sectors 
     rows = db().select(ttable.id,
                        tstable.sector_id,
                        left=tstable.on(ttable.id == tstable.theme_id))
@@ -297,26 +274,24 @@ def set_project_multi_theme_id_requires(sector_ids):
     theme_ids = [row.project_theme.id for row in rows 
                  if not row.project_theme_sector.sector_id or 
                     row.project_theme_sector.sector_id in sector_ids]
-    table.multi_theme_id.requires = IS_NULL_OR(
-                                        IS_ONE_OF(db, 
-                                                  "project_theme.id",
-                                                  s3base.s3_represent_id(s3db.project_theme),
-                                                  filterby="id",
-                                                  filter_opts=theme_ids,
-                                                  sort=True,
-                                                  multiple=True
-                                                  )
-                                               )
+    table = s3db.project_theme_project
+    table.theme_id.requires = IS_NULL_OR(
+                                IS_ONE_OF(db, "project_theme.id",
+                                          s3base.s3_represent_id(ttable),
+                                          filterby="id",
+                                          filter_opts=theme_ids,
+                                          sort=True,
+                                          )
+                                )
 
 # -----------------------------------------------------------------------------
-def set_project_multi_activity_type_id_requires(sector_ids):
+def set_activity_type_requires(tablename, sector_ids):
     """
-        Filters the multi_activity_type_id based on the sector_id
+        Filters the activity_type_id based on the sector_id
     """
 
+    attable = s3db.project_activity_type
     if sector_ids:
-        # @ToDo: merge with set_project_multi_theme_id_requires?
-        attable = s3db.project_activity_type
         atstable = s3db.project_activity_type_sector
 
         # All activity_types linked to the projects sectors or to no sectors 
@@ -328,34 +303,32 @@ def set_project_multi_activity_type_id_requires(sector_ids):
                         row.project_activity_type_sector.sector_id in sector_ids]
     else:
         activity_type_ids = []
-    s3db.project_location.multi_activity_type_id.requires = IS_NULL_OR(
-                                        IS_ONE_OF(db, 
-                                                  "project_activity_type.id",
-                                                  s3base.s3_represent_id(s3db.project_activity_type),
-                                                  filterby="id",
-                                                  filter_opts=activity_type_ids,
-                                                  sort=True,
-                                                  multiple=True
-                                                  )
-                                               )
+    s3db[tablename].activity_type_id.requires = IS_NULL_OR(
+                                    IS_ONE_OF(db, "project_activity_type.id",
+                                              s3base.s3_represent_id(attable),
+                                              filterby="id",
+                                              filter_opts=activity_type_ids,
+                                              sort=True,
+                                              )
+                                    )
 
 # -----------------------------------------------------------------------------
-def project_multi_theme_id_widget():
+def project_theme_id_widget():
     """
         Used by the project controller to return dynamically generated 
-        multi_theme_id widget based on sector_id
+        theme_id widget based on sector_id
     """
 
-    ptable = s3db.project_project
+    table = s3db.project_theme_project
     sector_ids = [int(id) for id in request.vars.sector_ids.split(",") if id]
     if "value" in request.vars:
         value = [int(id) for id in request.vars.value.split(",") if id]
     else:
         value = []
     
-    set_project_multi_theme_id_requires(sector_ids)
-    widget = ptable.multi_theme_id.widget(ptable.multi_theme_id,
-                                          value)
+    set_theme_requires(sector_ids)
+    widget = table.theme_id.widget(table.theme_id,
+                                   value)
     return widget
 
 # =============================================================================
@@ -542,14 +515,15 @@ def location():
     # Pre-process
     def prep(r):
         if r.interactive:
-            if r.record and r.record.project_id:
-                table = s3db.project_project
-                sector_ids = db(table.id == r.record.project_id).select(table.multi_sector_id,
-                                                                        limitby=(0, 1)
-                                                                        ).first().multi_sector_id
+            if r.record:
+                table = s3db.project_sector_project
+                query = (table.project_id == r.record.project_id) & \
+                        (table.deleted == False)
+                rows = db(query).select(table.sector_id)
+                sector_ids = [row.sector_id for row in rows]
             else:
                 sector_ids = []
-            set_project_multi_activity_type_id_requires(sector_ids)
+            set_activity_type_requires("project_activity_type_location", sector_ids)
                     
             if r.component:
                 if r.component_name == "document":

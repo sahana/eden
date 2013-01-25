@@ -6,14 +6,12 @@
     <!-- **********************************************************************
          Project Organisations - CSV Import Stylesheet
 
-         2011-12-16 / Dominic König <dominic[AT]aidiq[DOT]com>
-
          CSV column...........Format..........Content
 
          Project..............string..........Project Name
          Organisation.........string..........Organisation Name
          Role.................code............Organisation Role
-         Funding Amount.......float...........Funding Amount
+         Amount...............float...........Funding Amount
          Currency.............code............Currency of the Funding Amount
 
     *********************************************************************** -->

@@ -206,6 +206,12 @@ class S3OrganisationModel(S3Model):
                                     ondelete="SET NULL")
 
         # Components
+        add_component("project_project",
+                      org_sector=Storage(
+                                link="project_sector_project",
+                                joinby="sector_id",
+                                key="project_id",
+                                actuate="hide"))
         #add_component("project_activity_type",
         #              org_sector=Storage(
         #                        link="project_activity_type_sector",
@@ -646,11 +652,11 @@ class S3OrganisationModel(S3Model):
         # Assets
         # @ToDo
         #add_component("asset_asset",
-                      #org_organisation = "donated_by_id")
+        #              org_organisation = "donated_by_id")
 
         # Requests
         #add_component("req_req",
-                       #org_organisation = "donated_by_id")
+        #              org_organisation = "donated_by_id")
 
         # -----------------------------------------------------------------------------
         # Enable this to allow migration of users between instances
