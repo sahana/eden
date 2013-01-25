@@ -3914,7 +3914,7 @@ class S3Resource(object):
             except AttributeError:
                 tn = str(join.first)
             for j in xrange(len(s)):
-                if tn in str(s[j].second):
+                if "%s." % tn in str(s[j].second):
                     insert(j, join)
                     join = None
                     break
