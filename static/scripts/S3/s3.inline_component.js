@@ -1,5 +1,5 @@
 /**
- * Used by S3SQLInlineComponentField (modules/s3forms.py)
+ * Used by S3SQLInlineComponent (modules/s3forms.py)
  */
 
 $(function() {
@@ -19,8 +19,8 @@ $(function() {
     // Read JSON from real_input, decode and store as data object
     var inline_deserialize = function(formname) {
         var real_input = '#' + inline_get_field(formname);
-        data_json = $(real_input).val();
-        data = JSON.parse(data_json);
+        var data_json = $(real_input).val();
+        var data = JSON.parse(data_json);
         $(real_input).data('data', data);
         return data;
     };
@@ -28,14 +28,15 @@ $(function() {
     // Serialize the data object as JSON and store into real_input
     var inline_serialize = function(formname) {
         var real_input = '#' + inline_get_field(formname);
-        data = $(real_input).data('data');
-        data_json = JSON.stringify(data);
+        var data = $(real_input).data('data');
+        var data_json = JSON.stringify(data);
         $(real_input).val(data_json);
         return data_json;
     };
 
     // Append an error to a form field or row
     var inline_append_error = function(formname, rowindex, fieldname, message) {
+        var field_id, msg;
         if (null === fieldname) {
             if ('none' == rowindex) {
                 field_id = '#add-row-' + formname;
@@ -49,12 +50,8 @@ $(function() {
                         message +
                       '</div></td></tr>';
         } else {
-            field_id = '#sub_' +
-                       formname + '_' + formname + '_i_' +
-                       fieldname + '_edit_' + rowindex;
-            msg = '<div class="' + formname + '_error error">' +
-                    message +
-                  '</div>';
+            field_id = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
+            msg = '<div class="' + formname + '_error error">' + message + '</div>';
         }
         $(field_id).after(msg);
         $('.' + formname + '_error').hide();
@@ -66,12 +63,12 @@ $(function() {
 
     // Display all errors
     var inline_display_errors = function(formname) {
-        $('.'+formname+'_error').slideDown();
+        $('.' + formname + '_error').slideDown();
     };
 
     // Remove all error messages from the form
     var inline_remove_errors = function(formname) {
-        $('.'+formname+'_error').remove();
+        $('.' + formname + '_error').remove();
     };
 
     // Disable the add-row
@@ -204,7 +201,7 @@ $(function() {
             }
         }
 
-        // Return the validated+represented row
+        // Return the validated + represented row
         // (or null if there was an error)
         if (has_errors) {
             inline_display_errors(formname);
@@ -225,12 +222,15 @@ $(function() {
 
         // Hide the current read row, show all other read rows
         $('.read-row').removeClass('hide');
-        $('#read-row-'+rowname).addClass('hide');
+        $('#read-row-' + rowname).addClass('hide');
 
         // Populate the edit row with the data for this rowindex
-        data = inline_deserialize(formname);
-        fields = data['fields'];
-        row = data['data'][rowindex];
+        var data = inline_deserialize(formname);
+        var fields = data['fields'];
+        var row = data['data'][rowindex];
+        var element;
+        var fieldname;
+        var value;
         for (i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             value = row[fieldname]['value'];
@@ -250,7 +250,7 @@ $(function() {
                 $(element).val(value);
             } else {
                 // Update the existing upload item, if there is one
-                upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
+                var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
                 if (upload.length) {
                     var id = $(element).attr('id');
                     var name = $(element).attr('name');
@@ -261,7 +261,7 @@ $(function() {
                 }
             }
             // Populate text in autocompletes
-            text =  row[fieldname]['text'];
+            var text = row[fieldname]['text'];
             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
             $(element).val(text);
         }
@@ -325,20 +325,21 @@ $(function() {
             success = true;
             // Add a new row to the real_input JSON
             new_row['_changed'] = true; // mark as changed
-            newindex = data['data'].push(new_row) - 1;
+            var newindex = data['data'].push(new_row) - 1;
             new_row['_index'] = newindex;
             inline_serialize(formname, data);
 
             // Create a new read-row, clear add-row
-            read_row = '<tr id="read-row-' + formname + '-' + newindex + '" class="read-row">';
-            fields = data['fields'];
+            var read_row = '<tr id="read-row-' + formname + '-' + newindex + '" class="read-row">';
+            var fields = data['fields'];
+            var default_value;
             for (i=0; i < fields.length; i++) {
-                field = fields[i]['name'];
+                var field = fields[i]['name'];
                 // Update all uploads to the new index
-                upload = $('#upload_' + formname + '_' + field + '_none');
+                var upload = $('#upload_' + formname + '_' + field + '_none');
                 if (upload.length) {
-                    upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
-                    $('#'+upload_id).remove();
+                    var upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
+                    $('#' + upload_id).remove();
                     upload.attr('id', upload_id);
                     upload.attr('name', upload_id);
                 }
@@ -359,7 +360,7 @@ $(function() {
                 $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
             }
             // Add edit-button
-            edit = '#edt-' + formname + '-none';
+            var edit = '#edt-' + formname + '-none';
             if ($(edit).length != 0) {
                 read_row += '<td><a id="edt-' +
                             formname + '-' +
@@ -372,8 +373,7 @@ $(function() {
             // Add remove-button
             remove = '#rmv-' + formname + '-none';
             if ($(remove).length != 0) {
-                read_row += '<td><a id="rmv-' +
-                            formname + '-' +
+                read_row += '<td><a id="rmv-' + formname + '-' +
                             newindex + '" class="inline-rmv" href="#">' +
                             $(remove).html() +
                             '</a></td>';
@@ -382,7 +382,7 @@ $(function() {
             }
             read_row += '</tr>';
             // Append the new read-row to the table
-            $('#sub-'+formname+' > table.embeddedComponent > tbody').append(read_row);
+            $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
             inline_button_events();
         }
 
@@ -422,10 +422,11 @@ $(function() {
             inline_serialize(formname, data);
 
             // Update read-row in the table, clear edit-row
-            read_row = '';
-            fields = data['fields'];
+            var read_row = '';
+            var fields = data['fields'];
+            var default_value;
             for (i=0; i < fields.length; i++) {
-                field = fields[i]['name'];
+                var field = fields[i]['name'];
                 read_row += '<td>' + new_row[field]['text'] + '</td>';
                 // Reset edit-field to default value
                 var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
@@ -443,7 +444,7 @@ $(function() {
                 $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
             }
             // Add edit-button
-            edit = '#edt-' + formname + '-none';
+            var edit = '#edt-' + formname + '-none';
             if ($(edit).length != 0) {
                 read_row += '<td><a id="edt-' +
                             formname + '-' +
@@ -454,7 +455,7 @@ $(function() {
                 read_row += '<td></td>';
             }
             // Add remove-button
-            remove = '#rmv-' + formname + '-none';
+            var remove = '#rmv-' + formname + '-none';
             if ($(remove).length != 0) {
                 read_row += '<td><a id="rmv-' +
                             formname + '-' +
@@ -498,7 +499,7 @@ $(function() {
         }
 
         // Update the real_input JSON with deletion of this row
-        data = inline_deserialize(formname);
+        var data = inline_deserialize(formname);
         data['data'][rowindex]['_delete'] = true;
         inline_serialize(formname, data);
 
@@ -550,7 +551,7 @@ $(function() {
 
     // Events -----------------------------------------------------------------
 
-    var inline_form_events = function(id) {
+    var inline_form_events = function() {
 
         // Enforce submission of the inline-row if changed
         var enforce_inline_submit = function(i, add) {
@@ -665,4 +666,42 @@ $(function() {
         });
     };
     inline_button_events();
+
+    // Used by S3SQLInlineComponentCheckbox
+    var inline_checkbox_events = function() {
+        // Listen for changes on all Inline Checkboxes
+        $('.inline-checkbox :checkbox').click(function() {
+            var value = $(this).val();
+            var names = $(this).attr('id').split('-');
+            var formname = names[1];
+            var fieldname = names[2];
+            // Read current data from real input
+            var data = inline_deserialize(formname);
+            var _data = data['data'];
+            var item;
+            for (var prop in _data) {
+                var i = _data[prop];
+                if (i.hasOwnProperty(fieldname) && i[fieldname]['value'] == value) {
+                    item = i;
+                    break;
+                }
+            }
+            // Modify data
+            if ($(this).prop('checked')) {
+                if (!item) {
+                    // Not yet found, so initialise
+                    var label = $(this).next().html(); // May be fragile to different formstyles :/
+                    item = {};
+                    item[fieldname] = {'text': label, 'value': value}
+                    _data.push(item);
+                }
+                item['_changed'] = true;
+            } else if (item && item.hasOwnProperty('_id')) {
+                item['_delete'] = true;
+            }
+            // Write data back to real input
+            inline_serialize(formname);
+        });
+    };
+    inline_checkbox_events();
 });

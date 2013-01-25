@@ -3,15 +3,13 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Project Activities (Communities) - CSV Import Stylesheet
-
-         2011-12-15 / Dominic König <dominic[AT]aidiq[DOT]com>
+         Project Activities - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
-         Name.................string..........Activity (Community) short description
+         Name.................string..........Activity short description
          Project..............string..........Project Name
-         Activities...........comma-sep list..List of Activity Types
+         Activity Types.......comma-sep list..List of Activity Types
          Country..............string..........Country code/name (L0)
          State................string..........State/Province name (L1)
          District.............string..........District name (L2)
@@ -71,23 +69,12 @@
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
 
-            <xsl:variable name="ActivityTypeRef">
-                <xsl:call-template name="quoteList">
-                    <xsl:with-param name="list">
-                        <xsl:value-of select="col[@field='Activities']"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="prefix">
-                        <xsl:value-of select="$ActivityTypePrefix"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:if test="$ActivityTypeRef">
-                <reference field="multi_activity_type_id" resource="project_activity_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('[', $ActivityTypeRef, ']')"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="col[@field='Activity Types']"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">activity_type_ref</xsl:with-param>
+            </xsl:call-template>
 
             <xsl:call-template name="ContactPersonReference"/>
 
@@ -99,8 +86,9 @@
 
         <xsl:call-template name="splitList">
             <xsl:with-param name="list">
-                <xsl:value-of select="col[@field='Activities']"/>
+                <xsl:value-of select="col[@field='Activity Types']"/>
             </xsl:with-param>
+            <xsl:with-param name="arg">activity_type_res</xsl:with-param>
         </xsl:call-template>
 
         <xsl:call-template name="ContactPerson"/>
@@ -125,13 +113,27 @@
     <!-- ****************************************************************** -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
+        <xsl:param name="arg"/>
 
-        <resource name="project_activity_type">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$item"/></data>
-        </resource>
+        <xsl:choose>
+            <xsl:when test="$arg='activity_type_ref'">
+                <resource name="project_activity_activity_type">
+                    <reference field="activity_type_id" resource="project_activity_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='activity_type_res'">
+                <resource name="project_activity_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->

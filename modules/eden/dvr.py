@@ -48,12 +48,7 @@ class S3DVRModel(S3Model):
 
         T = current.T
 
-        person_id = self.pr_person_id
-        location_id = self.gis_location_id
-        multi_activity_id = self.project_multi_activity_id
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
-        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Case
@@ -74,13 +69,15 @@ class S3DVRModel(S3Model):
         tablename = "dvr_case"
         table = self.define_table(tablename,
                                   # @ToDo: Option to autogenerate these, like Waybills, et al
-                                  Field("reference", label = T("Case Number")),
-                                  person_id(widget=S3AddPersonWidget(controller="pr"),
-                                            # @ToDo: Modify this to update location_id if the selected person has a Home Address already
-                                            requires=IS_ADD_PERSON_WIDGET(),
-                                            comment=None
-                                            ),
-                                  location_id(label = T("Home Address")),
+                                  Field("reference",
+                                        label = T("Case Number")),
+                                  self.pr_person_id(
+                                    widget=S3AddPersonWidget(controller="pr"),
+                                    # @ToDo: Modify this to update location_id if the selected person has a Home Address already
+                                    requires=IS_ADD_PERSON_WIDGET(),
+                                    comment=None
+                                    ),
+                                  self.gis_location_id(label = T("Home Address")),
                                   Field("damage", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
                                         represent = lambda opt: \
@@ -95,13 +92,12 @@ class S3DVRModel(S3Model):
                                         represent = lambda opt: \
                                             dvr_status_opts.get(opt, UNKNOWN_OPT),
                                         label= T("Status")),
-                                  multi_activity_id(),
                                   s3_comments(),
                                   *s3_meta_fields())
 
         # CRUD Strings
         ADD_CASE = T("Add Case")
-        crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_CASE,
             title_display = T("Case Details"),
             title_list = T("Cases"),

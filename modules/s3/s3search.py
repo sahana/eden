@@ -661,17 +661,18 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                        virtual=virtual)
                 opt_values = []
                 if rows:
+                    colname = fl.colname
                     opt_extend = opt_values.extend
                     opt_append = opt_values.append
                     if multiple:
                         for row in rows:
-                            values = row[field]
+                            values = row[colname]
                             if values:
                                 opt_extend([v for v in values
                                             if v not in opt_values])
                     else:
                         for row in rows:
-                            v = row[field]
+                            v = row[colname]
                             if v not in opt_values:
                                 opt_append(v)
 
