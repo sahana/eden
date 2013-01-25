@@ -2235,14 +2235,14 @@ class S3ProjectLocationModel(S3Model):
         ]
 
         # Not supported yet: need to fix S3SearchOptionsWidget
-        #if settings.get_project_sectors():
-        #    sectors = S3SearchOptionsWidget(
-        #        name = "project_location_search_sector",
-        #        label = T("Sector"),
-        #        field = "project_id$sector.sector_id",
-        #        cols = 3
-        #    )
-        #    advanced_search.insert(1, sectors)
+        if settings.get_project_sectors():
+           sectors = S3SearchOptionsWidget(
+               name = "project_location_search_sector",
+               label = T("Sector"),
+               field = "project_id$sector.name",
+               cols = 3
+           )
+           advanced_search.insert(1, sectors)
 
         project_location_search = S3Search(
             simple = (simple),
