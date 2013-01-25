@@ -3214,6 +3214,7 @@ class S3OptionsFilter(S3FilterWidget):
             field_name = field_name[0]
         rfield = S3ResourceField(resource, field_name)
         field = rfield.field
+        colname = rfield.colname
         field_type = rfield.ftype
 
         # Find the options ----------------------------------------------------
@@ -3247,13 +3248,13 @@ class S3OptionsFilter(S3FilterWidget):
                     opt_append = opt_values.append
                     if multiple:
                         for row in rows:
-                            vals = row[field]
+                            vals = row[colname]
                             if vals:
                                 opt_extend([v for v in vals
                                             if v not in opt_values])
                     else:
                         for row in rows:
-                            v = row[field]
+                            v = row[colname]
                             if v not in opt_values:
                                 opt_append(v)
 
