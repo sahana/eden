@@ -3552,7 +3552,7 @@ class S3Resource(object):
         DELETED = current.manager.DELETED
 
         if self.linked:
-            return self.linked.get_join()
+            return self.linked.get_left_join()
 
         elif self.linktable:
             linktable = self.linktable
@@ -3914,7 +3914,7 @@ class S3Resource(object):
             except AttributeError:
                 tn = str(join.first)
             for j in xrange(len(s)):
-                if tn in str(s[j].second):
+                if "%s." % tn in str(s[j].second):
                     insert(j, join)
                     join = None
                     break
@@ -4235,16 +4235,18 @@ class S3ResourceField(object):
                     resource._attach(tn, hook)
             if tn in resource.components:
                 c = resource.components[tn]
-                distinct = True # c.link is not None or c.multiple
-                j = c.get_join()
-                l = c.get_left_join()
-                tn = c._alias
-                join[tn] = j
-                left[tn] = l
-                table = c.table
-                multiple = c.multiple
+            elif tn in resource.links:
+                c = resource.links[tn]
             else:
                 raise AttributeError("%s is not a component of %s" % (tn, tablename))
+            distinct = True
+            j = c.get_join()
+            l = c.get_left_join()
+            tn = c._alias
+            join[tn] = j
+            left[tn] = l
+            table = c.table
+            multiple = c.multiple
         else:
             # Field in the master table
             tn = tablename
