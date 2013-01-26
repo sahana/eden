@@ -929,6 +929,8 @@ class S3ContingencyTable(TABLE):
         cells = report.cell
         rvals = report.row
 
+        cell_vals = Storage()
+
         for i in xrange(numrows):
 
             # Initialize row
@@ -975,8 +977,6 @@ class S3ContingencyTable(TABLE):
                     # get previous lookup values for this layer
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
-                    cell_vals = Storage()
-
                     if m == "count":
                         rfield = rfields[f]
                         field = rfield.field
@@ -1004,11 +1004,16 @@ class S3ContingencyTable(TABLE):
                                     if type(fvalue) is not list:
                                         fvalue = [fvalue]
                                     for val in fvalue:
-                                        if val is not None and val not in cell_vals:
-                                            next_id = len(cell_vals)
-                                            cell_vals[val] = next_id
-                                            layer_ids.append(next_id)
-                                            layer_values[next_id] = s3_unicode(represent(f, val))
+                                        if val is not None:
+                                            if val not in cell_vals:
+                                                next_id = len(cell_vals)
+                                                cell_vals[val] = next_id
+                                                layer_ids.append(next_id)
+                                                layer_values[next_id] = s3_unicode(represent(f, val))
+                                            else:
+                                                prev_id = cell_vals[val]
+                                                if prev_id not in layer_ids:
+                                                    layer_ids.append(prev_id)
 
                                     #if id is not None and id not in layer_ids:
                                         #layer_ids.append(int(id))
@@ -1021,11 +1026,11 @@ class S3ContingencyTable(TABLE):
                 #        + render layer selector in the layer title corner to
                 #        + switch between layers
                 #        OR: give every layer a title row (probably better method)
-                vals = DIV([DIV(v) for v in vals])
+                vals = [DIV(v, _class="report-cell-value") for v in vals]
 
                 if any(cell_ids):
                     cell_attr = {"_data-records": cell_ids}
-                    vals = (A(_class="report-cell-zoom"), vals)
+                    vals.append(DIV(_class="report-cell-zoom"))
                 else:
                     cell_attr = {}
 

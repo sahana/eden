@@ -377,7 +377,8 @@ class S3ProjectModel(S3Model):
                            (T("Lead Organization"), "organisation_id"),
                            (T("Donors"), "donor.organisation_id"),
                            ]
-            report_fields = [(T("Countries"), "location.location_id"),
+            report_fields = [#(T("Projects"), "name"),
+                             (T("Countries"), "location.location_id"),
                              (T("Hazards"), "hazard.name"),
                              (T("Themes"), "theme.name"),
                              (T("HFA Priorities"), "drr.hfa"),
@@ -435,7 +436,6 @@ class S3ProjectModel(S3Model):
                   create_next=create_next,
                   search_method=project_search,
                   list_fields=list_fields,
-                  report_fields=["name"],
                   report_options=Storage(
                     search=advanced,
                     rows=report_fields,
@@ -2205,7 +2205,7 @@ class S3ProjectLocationModel(S3Model):
             S3SearchOptionsWidget(
                 name = "project_location_search_theme",
                 label = T("Theme"),
-                field = "theme.theme_id",
+                field = "project_id$theme_project.theme_id",
                 options = self.project_theme_opts,
                 cols = 1,
             ),
@@ -2272,7 +2272,7 @@ class S3ProjectLocationModel(S3Model):
                        "project_id",
                        ]
         if settings.get_project_theme_percentages():
-            list_fields.append((T("Themes"), "theme.theme_id"))
+            list_fields.append((T("Themes"), "project_id$theme_project.theme_id"))
         else:
             list_fields.append((T("Activity Types"), "activity_type.activity_type_id"))
         list_fields.append("comments")

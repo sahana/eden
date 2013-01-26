@@ -42,8 +42,11 @@ import sys
 import datetime
 import time
 import collections
+
+from itertools import product
+
 try:
-    from cStringIO import StringIO    # Faster, where available
+    from cStringIO import StringIO # Faster, where available
 except:
     from StringIO import StringIO
 
@@ -90,9 +93,9 @@ ogetattr = object.__getattribute__
 TEXTTYPES = ("string", "text")
 
 # =============================================================================
-def flatlist(l):
+def flatlist(nested):
     """ Iterator to flatten mixed iterables of arbitrary depth """
-    for item in l:
+    for item in nested:
         if isinstance(item, collections.Iterable) and \
            not isinstance(item, basestring):
             for sub in flatlist(item):
@@ -238,11 +241,6 @@ class S3Resource(object):
         # Authorization hooks
         self.permit = auth.s3_has_permission
         self.accessible_query = auth.s3_accessible_query
-
-        #self.has_permission = lambda m, r=None, c=None, f=None: \
-                              #auth.s3_has_permission(m, table, record_id=r, c=c, f=f)
-        #self.accessible_query = lambda m, c=None, f=None: \
-                                #auth.s3_accessible_query(m, table, c=c, f=f)
 
         # Audit hook
         self.audit = current.s3_audit
@@ -3192,32 +3190,45 @@ class S3Resource(object):
                 result.extend([item for item in new if item not in result])
             return result
 
-        records = []
+        records = Storage()
         record_ids = []
+        seen = record_ids.append
+
+        # Get renderer attributes
+        attr = []
         for rfield in rfields:
-
-            renderer = rfield.represent
-            lazy = represent and \
-                   renderer is not None and hasattr(renderer, "bulk")
-
-            if show_links is False and hasattr(renderer, "linkto"):
-                linkto = renderer.linkto
-                renderer.linkto = None
-
             key = rfield.colname
             joined = rfield.tname != self.tablename and rfield.multiple
-
-            duplicates = []
-            for row in rows:
-
-                record_id = row[pkey]
-
-                if record_id in record_ids:
-                    record = records[record_ids.index(record_id)]
+            if represent:
+                renderer = rfield.represent
+                lazy = renderer is not None and hasattr(renderer, "bulk")
+                if show_links is False and hasattr(renderer, "linkto"):
+                    linkto = renderer.linkto
+                    renderer.linkto = None
                 else:
-                    record = Storage()
-                    records.append(record)
-                    record_ids.append(record_id)
+                    linkto = None
+                attr.append((renderer, lazy, linkto, key, joined))
+            else:
+                attr.append((None, False, None, key, joined))
+
+        # Extract data
+        duplicates = {}
+        for row in rows:
+
+            record_id = row[pkey]
+            if record_id not in records:
+                record = records[record_id] = Storage()
+                seen(record_id)
+            else:
+                record = records[record_id]
+
+            duplicate = record_id in duplicates
+
+            for i in xrange(len(rfields)):
+
+                rfield = rfields[i]
+                renderer, lazy, linkto, key, joined = attr[i]
+
                 try:
                     value = rfield.extract(row,
                                            represent=represent,
@@ -3233,7 +3244,6 @@ class S3Resource(object):
                 else:
                     this = record[key]
 
-                duplicate = record_id in duplicates
                 if duplicate or joined:
                     if lazy:
                         this.value = concat(this.value, lazy_value)
@@ -3241,20 +3251,23 @@ class S3Resource(object):
                     else:
                         record[key] = concat(this, value)
                 if not duplicate:
-                    duplicates.append(record_id)
+                    duplicates[record_id] = True
 
-            if represent:
-                for record in records:
+        # Represent
+        if represent:
+            for i in xrange(len(rfields)):
+                rfield = rfields[i]
+                renderer, lazy, linkto, key, joined = attr[i]
+                for record in records.values():
                     if lazy:
                         record[key] = record[key].render()
                     elif joined and type(record[key]) is list:
                         record[key] = ", ".join([s3_unicode(s)
                                                  for s in record[key]])
-
-            if show_links is False and hasattr(renderer, "linkto"):
-                renderer.linkto = linkto
-
-        return records
+                if linkto is not None:
+                    renderer.linkto = linkto
+                
+        return [records[record_id] for record_id in record_ids]
 
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):
@@ -6033,13 +6046,11 @@ class S3Pivottable(object):
         fields = get_config(tablename, "report_fields",
                  get_config(tablename, "list_fields", []))
 
-        # We also want to include all rows/cols options which are
-        # defined for this resource
-        #options = get_config(resource.tablename, "report_options")
-        #if options is not None:
-            #fields += options.get("rows", []) + options.get("cols", [])
-
         self._get_fields(fields=fields)
+
+        if DEBUG:
+            _start = datetime.datetime.now()
+            _debug("S3Pivottable %s starting" % tablename)
 
         # Retrieve the records ------------------------------------------------
         #
@@ -6061,45 +6072,42 @@ class S3Pivottable(object):
 
             # Generate the data frame -----------------------------------------
             #
-            from pyvttbl import DataFrame
-            df = DataFrame()
-            insert = df.insert
+            df = []
+            insert = df.append
 
             item_list = []
             seen = item_list.append
 
-            flatten = self._flatten
             expand = self._expand
 
-            for row in records:
-                item = expand(flatten(row))
+            for row in e:
+                item = expand(row)
                 for i in item:
-                    if str(i) not in item_list:
-                        seen(str(i))
+                    tag = str(i)
+                    if tag not in item_list:
+                        seen(tag)
                         insert(i)
 
             # Group the records -----------------------------------------------
             #
             tfields = self.tfields
             hpkey = tfields[self.pkey]
-            hrows = self.rows and [tfields[self.rows]] or []
-            hcols = self.cols and [tfields[self.cols]] or []
+            hrows = self.rows and tfields[self.rows] or None
+            hcols = self.cols and tfields[self.cols] or None
 
-            pt = df.pivot(hpkey, hrows, hcols, aggregate="tolist")
+            matrix, rnames, cnames = self.pivot(df, hpkey, hrows, hcols)
 
             # Initialize columns and rows -------------------------------------
             #
             if cols:
-                self.col = [Storage({"value": v != "__NONE__" and v or None})
-                            for v in [n[0][1] for n in pt.cnames]]
+                self.col = [Storage({"value": v}) for v in cnames]
                 self.numcols = len(self.col)
             else:
                 self.col = [Storage({"value": None})]
                 self.numcols = 1
 
             if rows:
-                self.row = [Storage({"value": v != "__NONE__" and v or None})
-                            for v in [n[0][1] for n in pt.rnames]]
+                self.row = [Storage({"value": v}) for v in rnames]
                 self.numrows = len(self.row)
             else:
                 self.row = [Storage({"value": None})]
@@ -6110,12 +6118,65 @@ class S3Pivottable(object):
             add_layer = self._add_layer
             layers = list(self.layers)
             for f, m in self.layers:
-                add_layer(pt, f, m)
+                add_layer(matrix, f, m)
 
         else:
             # No items to report on -------------------------------------------
             #
             self.empty = True
+
+        if DEBUG:
+            duration = datetime.datetime.now() - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("S3Pivottable completed in %s seconds" % duration)
+
+    # -------------------------------------------------------------------------
+    def pivot(self, items, hpkey, hrows, hcols):
+
+        rvalues = Storage()
+        cvalues = Storage()
+        cells = Storage()
+
+        # All unique rows values
+        rindex = 0
+        cindex = 0
+        for item in items:
+
+            rvalue = item[hrows] if hrows else None
+            cvalue = item[hcols] if hcols else None
+
+            if rvalue not in rvalues:
+                r = rvalues[rvalue] = rindex
+                rindex += 1
+            else:
+                r = rvalues[rvalue]
+            if cvalue not in cvalues:
+                c = cvalues[cvalue] = cindex
+                cindex += 1
+            else:
+                c = cvalues[cvalue]
+
+            if (r, c) not in cells:
+                cells[(r, c)] = [item[hpkey]]
+            else:
+                cells[(r, c)].append(item[hpkey])
+
+        matrix = []
+        for r in xrange(len(rvalues)):
+            row = []
+            for c in xrange(len(cvalues)):
+                row.append(cells[(r, c)])
+            matrix.append(row)
+
+        rnames = [None] * len(rvalues)
+        for k, v in rvalues.items():
+            rnames[v] = k
+
+        cnames = [None] * len(cvalues)
+        for k, v in cvalues.items():
+            cnames[v] = k
+
+        return matrix, rnames, cnames
 
     # -------------------------------------------------------------------------
     # API methods
@@ -6305,7 +6366,7 @@ class S3Pivottable(object):
 
         # rfields (resource-fields): dfields resolved into a ResourceFields map
         rfields, joins, left, distinct = resource.resolve_selectors(dfields)
-        rfields = Storage([(f.selector, f) for f in rfields])
+        rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
         self.rfields = rfields
 
         # tfields (transposition-fields): fields to group the records by
@@ -6349,31 +6410,6 @@ class S3Pivottable(object):
         return repr_method
 
     # -------------------------------------------------------------------------
-    def _flatten(self, row):
-        """
-            Prepare a DAL Row for the data frame
-
-            The item must consist of
-            the primary key of the table, rows-value, cols-value
-
-            @param row: the row
-        """
-
-        item = {}
-        rfields = self.rfields
-        tfields = self.tfields
-
-        for f in tfields:
-            rfield = rfields[f]
-            value = rfield.extract(row)
-            if value is None and f != self.pkey:
-                value = "__NONE__"
-            if type(value) is str:
-                value = s3_unicode(value)
-            item[tfields[f]] = value
-        return item
-
-    # -------------------------------------------------------------------------
     def _extract(self, row, field):
         """
             Extract a field value from a DAL row
@@ -6392,7 +6428,7 @@ class S3Pivottable(object):
             return None
 
     # -------------------------------------------------------------------------
-    def _expand(self, row, field=None):
+    def _expand(self, row): #, field=None):
         """
             Expand a data frame row into a list of rows for list:type values
 
@@ -6400,31 +6436,22 @@ class S3Pivottable(object):
             @param field: the field to expand (None for all fields)
         """
 
-        if field is None:
-            rows = [row]
-            for field in row:
-                rows = self._expand(rows, field=field)
-            return rows
-        else:
-            results = []
-            append = results.append
-            rows = row
-            for r in rows:
-                value = r[field]
-                if type(value) is list:
-                    if not len(value):
-                        # Always have at least a None-entry
-                        value.append(None)
-                    for v in value:
-                        result = Storage(r)
-                        result[field] = v
-                        append(result)
-                else:
-                    append(r)
-            return results
+        rfields = self.rfields
+        tfields = self.tfields
+
+        item = [(k, row[rfields[f].colname]) for f, k in tfields.items()]
+
+        pairs = []
+        append = pairs.append
+        for k, v in item:
+            if type(v) is list:
+                append([(k, value) for value in v])
+            else:
+                append([(k, v)])
+        return [dict(i) for i in product(*pairs)]
 
     # -------------------------------------------------------------------------
-    def _add_layer(self, pt, fact, method):
+    def _add_layer(self, matrix, fact, method):
         """
             Compute a new layer from the base layer (pt+items)
 
@@ -6455,8 +6482,8 @@ class S3Pivottable(object):
             method = "list"
         layer = (fact, method)
 
-        numcols = len(pt.cnames)
-        numrows = len(pt.rnames)
+        numcols = len(self.col)
+        numrows = len(self.row)
 
         # Initialize cells
         if self.cell is None:
@@ -6492,7 +6519,7 @@ class S3Pivottable(object):
                 if RECORDS in cell and cell[RECORDS] is not None:
                     ids = cell[RECORDS]
                 else:
-                    data = pt[r][c]
+                    data = matrix[r][c]
                     if data:
                         remove = data.remove
                         while None in data:
@@ -6510,7 +6537,7 @@ class S3Pivottable(object):
                     values = ids
                     row_values = row_records
                     col_values = row_records
-                    all_values = self.records.keys()
+                    all_values = records.keys()
                 else:
                     values = []
                     append = values.append
@@ -6519,7 +6546,7 @@ class S3Pivottable(object):
                         if value is None:
                             continue
                         append(value)
-                    values = flatlist(values)
+                    values = list(flatlist(values))
                     if method in ("list", "count"):
                         values =  list(set(values))
                     row_values.extend(values)
