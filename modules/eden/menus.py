@@ -1156,7 +1156,8 @@ class S3OptionsMenu(object):
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
                     M("Commitments", c="req", f="commit", check=use_commit)(
-                        M("List All")
+                        M("List All"),
+                        M("Search", m="search"),
                     ),
                 )
 
@@ -1664,7 +1665,8 @@ class S3OptionsMenu(object):
                           m="search", check=req_skills),
                     ),
                     M("Commitments", f="commit", check=use_commit)(
-                        M("List All")
+                        M("List All"),
+                        M("Search", m="search"),
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),

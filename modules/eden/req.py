@@ -2009,6 +2009,51 @@ class S3CommitModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        # Search Method
+        commit_search = S3Search(
+                  simple=(S3SearchSimpleWidget(
+                            name="commit_search_text_simple",
+                            label=T("Search"),
+                            field=["committer_id$first_name",
+                                   "committer_id$middle_name",
+                                   "committer_id$last_name",
+                                   "site_id$name",
+                                   "comments",
+                                   "req_id$name",
+                                   "organisation_id$name"
+                                   ]
+                           )),  
+                  advanced=(S3SearchSimpleWidget(
+                              name="commit_search_text_advanced",
+                              label=T("Search"),
+                              field=["committer_id$first_name",
+                                   "committer_id$middle_name",
+                                   "committer_id$last_name",
+                                   "site_id$name",
+                                   "comments",
+                                   "req_id$name",
+                                   "organisation_id$name"
+                                   ]
+                           ),
+                           S3SearchSimpleWidget(
+                             name="commit_search_type",
+                             label=T("Type"),
+                             field="type"
+                           ),
+                           S3SearchMinMaxWidget(
+                             name="commit_search_date",
+                             method="range",
+                             label=T("Date"),
+                             field="date"
+                           ),
+                           S3SearchMinMaxWidget(
+                             name="commit_search_date_available",
+                             method="range",
+                             label=T("Date Available"),
+                             field="date_available"
+                           )
+                 ))
+                           
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2042,6 +2087,7 @@ class S3CommitModel(S3Model):
                        # Commitments should only be made to a specific request
                        listadd = False,
                        onvalidation = self.commit_onvalidation,
+                       search_method = commit_search,
                        onaccept = self.commit_onaccept,
                        ondelete = self.commit_ondelete,
                        )
