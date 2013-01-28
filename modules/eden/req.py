@@ -2014,6 +2014,7 @@ class S3CommitModel(S3Model):
                   simple=(S3SearchSimpleWidget(
                             name="commit_search_text_simple",
                             label=T("Search"),
+                            comment=T("Search for the commitment by text."),
                             field=["committer_id$first_name",
                                    "committer_id$middle_name",
                                    "committer_id$last_name",
@@ -2026,6 +2027,7 @@ class S3CommitModel(S3Model):
                   advanced=(S3SearchSimpleWidget(
                               name="commit_search_text_advanced",
                               label=T("Search"),
+                              comment=T("Search for the commitment by text."),
                               field=["committer_id$first_name",
                                    "committer_id$middle_name",
                                    "committer_id$last_name",
@@ -2044,12 +2046,14 @@ class S3CommitModel(S3Model):
                              name="commit_search_date",
                              method="range",
                              label=T("Date"),
+                             comment=T("Search for the commitment made between these dates."),
                              field="date"
                            ),
                            S3SearchMinMaxWidget(
                              name="commit_search_date_available",
                              method="range",
                              label=T("Date Available"),
+                             comment=T("Search for the commitment available between these dates."),
                              field="date_available"
                            )
                  ))
