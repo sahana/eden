@@ -153,12 +153,12 @@ def customize_project_project(**attr):
     s3 = current.response.s3
 
     s3.crud_strings.project_project.title_search = T("Project List")
-    table = s3db.project_project
-    table.budget.label = T("Total Funding")
+    s3db.project_project.budget.label = T("Total Funding")
 
-    # For Inline Forms
     location_id = s3db.project_location.location_id
+    # Limit to just Countries
     location_id.requires = s3db.gis_country_requires
+    # Use dropdown, not AC
     location_id.widget = None
 
     # In DRRPP this is a free field
@@ -175,6 +175,7 @@ def customize_project_project(**attr):
 
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
 
+    # Don't show export buttons for XLS/XML
     s3.formats = Storage(xls=None, xml=None)
 
     attr["rheader"] = None

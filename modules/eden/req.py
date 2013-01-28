@@ -32,7 +32,7 @@ __all__ = ["S3RequestModel",
            "S3RequestSkillModel",
            "S3RequestRecurringModel",
            "S3RequestSummaryModel",
-           #"S3RequestTaskModel",
+           "S3RequestTaskModel",
            "S3CommitModel",
            "S3CommitItemModel",
            "S3CommitPersonModel",
@@ -1951,34 +1951,34 @@ class S3RequestSummaryModel(S3Model):
             )
 
 # =============================================================================
-#class S3RequestTaskModel(S3Model):
-#    """
-#        Link Requests for Skills to Tasks
-#    """
+class S3RequestTaskModel(S3Model):
+    """
+        Link Requests for Skills to Tasks
+    """
 
-#    names = ["req_task",
-#             ]
+    names = ["req_task",
+             ]
 
-#    def model(self):
+    def model(self):
 
         #T = current.T
 
         # -----------------------------------------------------------------
         # Link Skill Requests to Tasks
         #
-#        tablename = "req_task_req"
-#        table = define_table(tablename,
-#                             self.project_task_id(),
-#                             self.req_req_id(),
-#                             #self.req_req_person_id(),
-#                             #self.req_req_skill_id(),
-#                             *s3_meta_fields())
+        tablename = "req_task_req"
+        table = self.define_table(tablename,
+                                  self.project_task_id(),
+                                  self.req_req_id(),
+                                  #self.req_req_person_id(),
+                                  #self.req_req_skill_id(),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-#        return Storage(
-#            )
+        return Storage(
+            )
 
 # =============================================================================
 class S3CommitModel(S3Model):
@@ -3099,7 +3099,7 @@ def req_skill_onaccept(form):
                             site_id=record.req_req.site_id)
 
         # Add the Request as a Component to the Task
-        table = s3db.project_task_req
+        table = s3db.req_task_req
         table.insert(task_id = task,
                      req_id = req_id)
 

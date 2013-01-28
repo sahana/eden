@@ -763,6 +763,8 @@ class IS_ONE_OF_EMPTY(Validator):
     def __call__(self, value):
 
         try:
+            # Convert any integers to str
+            value = str(value)
             dbset = self.dbset
             table = dbset._db[self.ktable]
             deleted_q = ("deleted" in table) and (table["deleted"] == False) or False
