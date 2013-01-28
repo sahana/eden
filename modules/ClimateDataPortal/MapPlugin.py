@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from gluon.dal import Expression
 
 from Cache import *

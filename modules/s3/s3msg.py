@@ -9,7 +9,7 @@
     Messages get sent to the Outbox (& Log)
     From there, Cron tasks collect them & send them
 
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

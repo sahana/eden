@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -345,10 +345,12 @@ $('#%s').click(function(){
             click_end = "}})"
             if click_to_show:
                 # Hide by default
-                script = "%s\n%s\n%s\n%s\n%s\n%s" % (hide, click_start, show, middle, hide, click_end)
+                script = '''%s\n%s\n%s\n%s\n%s\n%s''' % \
+                    (hide, click_start, show, middle, hide, click_end)
             else:
                 # Show by default
-                script = "%s\n%s\n%s\n%s\n%s\n%s" % (show, click_start, hide, middle, show, click_end)
+                script = '''%s\n%s\n%s\n%s\n%s\n%s''' % \
+                    (show, click_start, hide, middle, show, click_end)
             response.s3.jquery_ready.append(script)
 
         return TAG[""](
@@ -395,18 +397,14 @@ class S3ColorPickerWidget(FormWidget):
         if style not in s3.stylesheets:
             s3.stylesheets.append(style)
 
-        s3.jquery_ready.append("""
-        var sp_options = %s;
-        sp_options.change = function (color) {
-            this.value = color.toHex();
-        };
-        $('.color').spectrum(sp_options);
-        """ % json.dumps(self.options) if self.options else "")
+        s3.jquery_ready.append('''
+var sp_options=%s
+sp_options.change=function(color){this.value=color.toHex()}
+$('.color').spectrum(sp_options)''' % json.dumps(self.options) if self.options else "")
 
-        attr = self._attributes(field, {
-            "_class": "color",
-            "_value": value
-        }, **attributes)
+        attr = self._attributes(field, {"_class": "color",
+                                        "_value": value
+                                        }, **attributes)
 
         return INPUT(**attr)
 
@@ -2674,10 +2672,9 @@ $('#%s').addClass('multiselect')
 $('#%s').multiselect({
  dividerLocation:0.5,
  sortable:false
-})
-''' % (selector,
-       selector,
-       selector))
+})''' % (selector,
+         selector,
+         selector))
 
         return TAG[""](MultipleOptionsWidget.widget(field, value, **attributes),
                        requires = field.requires

@@ -6,7 +6,7 @@
    and links them with the respective parsing tasks defined in msg_workflow.
 
    @author: Ashwyn Sharma <ashwyn1092[at]gmail.com>
-   @copyright: 2012 (c) Sahana Software Foundation
+   @copyright: 2012-13 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person

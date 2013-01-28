@@ -2,7 +2,7 @@
 
 """ S3 Navigation Module
 
-    @copyright: 2011-12 (c) Sahana Software Foundation
+    @copyright: 2011-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,7 +38,8 @@ __all__ = ["S3NavigationItem",
            "S3ScriptItem",
            "S3ResourceHeader",
            "s3_rheader_tabs",
-           "s3_rheader_resource"]
+           "s3_rheader_resource",
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -1482,7 +1483,8 @@ class S3ScriptItem(S3NavigationItem):
             Injects associated script into jquery_ready.
         """
 
-        current.response.s3.jquery_ready.append(self.script)
+        if self.script:
+            current.response.s3.jquery_ready.append(self.script)
         return ""
 
     # -------------------------------------------------------------------------

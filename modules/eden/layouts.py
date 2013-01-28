@@ -2,7 +2,7 @@
 
 """ Sahana Eden GUI Layouts (HTML Renderers)
 
-    @copyright: 2012 (c) Sahana Software Foundation
+    @copyright: 2012-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,7 +38,8 @@ __all__ = ["S3MainMenuDefaultLayout",
            "S3MenuSeparatorLayout", "SEP",
            "S3BreadcrumbsLayout",
            "S3AddResourceLink",
-           "homepage"]
+           "homepage",
+           ]
 
 from gluon import *
 from gluon.storage import Storage

@@ -3,7 +3,6 @@ import os
 from os.path import join, exists
 from os import stat, makedirs
 
-
 # create folder for cache:
 # mkdir -p /tmp/climate_data_portal/images/recent/
 # mkdir -p /tmp/climate_data_portal/images/older/

@@ -10,7 +10,7 @@
     Imported by private/templates/<template>
     where <template> is the "default" template by default.
 
-    @copyright: 2012 (c) Sahana Software Foundation
+    @copyright: 2012-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -53,7 +53,7 @@ except:
 from gluon import current
 from gluon.tools import fetch
 
-from s3.s3utils import s3_debug, soundex
+from s3.s3utils import s3_debug, s3_represent_id, soundex
                 
 # =============================================================================
 class S3Parsing(object):
@@ -212,6 +212,7 @@ class S3Parsing(object):
                 # Check for Location
                 for loc in locs:
                     name = loc.name.lower()
+                    # @ToDo: Do a Unicode comparison
                     if word == name:
                         if not loc_matches:
                             location_id = loc.id

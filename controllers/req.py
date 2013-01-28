@@ -1235,19 +1235,19 @@ def commit_rheader(r):
                                 )
             else:
                 # Other (& Assets/Shelter)
-                rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),
-                                          table.req_id.represent(record.req_id),
-                                         ),
-                                      TR( TH( "%s: " % T("Committing Person")),
-                                          table.committer_id.represent(record.committer_id),
-                                          TH( "%s: " % T("Commit Date")),
-                                          s3_date_represent(record.date),
-                                          ),
-                                      TR( TH( "%s: " % table.comments.label),
-                                          TD(record.comments or "", _colspan=3)
-                                          ),
-                                         ),
-                                        )
+                rheader = DIV(TABLE(TR(TH("%s: " % table.req_id.label),
+                                       table.req_id.represent(record.req_id),
+                                       ),
+                                    TR(TH("%s: " % T("Committing Person")),
+                                       table.committer_id.represent(record.committer_id),
+                                       TH("%s: " % T("Commit Date")),
+                                       s3_date_represent(record.date),
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       TD(record.comments or "", _colspan=3)
+                                       ),
+                                    ),
+                              )
 
             rheader_tabs = s3_rheader_tabs(r,
                                            tabs)

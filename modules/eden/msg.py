@@ -2,7 +2,7 @@
 
 """ Sahana Eden Messaging Model
 
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -707,7 +707,7 @@ class S3TwitterModel(S3Model):
         #self.add_component(table, msg_twitter_search="twitter_search")
 
         configure(tablename,
-                  orderby=table.priority,
+                  orderby=~table.priority,
                   list_fields=["id",
                                "priority",
                                "category",
