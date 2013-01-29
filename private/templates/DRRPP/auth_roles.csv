@@ -13,6 +13,7 @@ ANONYMOUS,Anonymous,pr,pentity,,,READ,,
 ANONYMOUS,Anonymous,pr,person_search,,,READ,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,pr,saved_search,,,READ|CREATE,READ|CREATE|UPDATE,
 AUTHENTICATED,Authenticated,project,project,,,READ|CREATE,READ|CREATE|UPDATE,
+AUTHENTICATED,Authenticated,pr,person,,,,READ|UPDATE,
 ORG_ADMIN,Organisation Admin,org,,,,READ|CREATE,READ|CREATE|UPDATE,
 ORG_ADMIN,Organisation Admin,,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE,
 ORG_ADMIN,Organisation Admin,project,project,,,READ|CREATE,READ|CREATE|UPDATE|REVIEW|APPROVE,
