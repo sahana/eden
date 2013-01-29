@@ -42,19 +42,18 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
+from gluon.html import BUTTON
 from gluon.serializers import json as jsons
 from gluon.storage import Storage
-from gluon.html import BUTTON
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3crud import S3CRUD
+from s3export import S3Exporter
 from s3navigation import s3_search_tabs
+from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
-from s3export import S3Exporter
-
-from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
 
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
@@ -411,7 +410,6 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         w = TABLE(trl, tri, _class="s3searchminmaxwidget")
 
         return w
-
 
     # -------------------------------------------------------------------------
     def getDateTimeCalendar(self):

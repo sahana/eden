@@ -668,11 +668,6 @@ function s3_showMap(feature_id) {
 
 function S3OptionsFilter(settings) {
     /**
-     * New version of S3FilterFieldChange that works both with regular
-     * as well as with inline forms.
-     *
-     * @todo: migrate all use-cases to this version
-     *
      * Settings:
      *          triggerName: the trigger field name (not the HTML element name)
      *          targetName: the target field name (not the HTML element name)
@@ -693,8 +688,8 @@ function S3OptionsFilter(settings) {
      *          fncRepresent: function to represent the target options
      */
 
-    var triggerName = settings.triggerName
-    var targetName = settings.targetName
+    var triggerName = settings.triggerName;
+    var targetName = settings.targetName;
 
     // Selector for regular form fields: prefix_field
     var triggerSelector = '[name="' + triggerName + '"]';
@@ -763,7 +758,6 @@ function S3OptionsFilter(settings) {
             triggerField.find('input:checked').each(function() {
                 lookupValue.push($(this).val());
             });
-            
         }
 
         // Disable the target field if no value selected
@@ -931,10 +925,15 @@ function S3OptionsFilter(settings) {
                         }
                     }
 
-                    // Set the current field value
                     var targetField = $('[name = "' + this.targetSelector + '"]');
+                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
+                    var html = targetField.parent().html().replace('<input', '<select');
+                    targetField.parent().html(html);
+                    // reselect since it may have changed
+                    targetField = $('[name = "' + this.targetSelector + '"]');
                     if (options != '') {
                         targetField.html(options)
+                                   // Set the current field value
                                    .val(currentValue)
                                    .change()
                                    .removeAttr('disabled')

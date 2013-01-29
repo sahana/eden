@@ -1301,11 +1301,19 @@ Thank you
                 site_id.writable = True
                 site_id.readable = True
                 if req_org:
-                    from s3validators import IS_ONE_OF_EMPTY_SELECT
-                    site_id.requires = IS_ONE_OF_EMPTY_SELECT(db, "org_site.site_id",
-                                                              s3db.org_site_represent,
-                                                              orderby="org_site.name",
-                                                              sort=True)
+                    from s3validators import IS_ONE_OF_EMPTY
+                    site_id.requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
+                                                       s3db.org_site_represent,
+                                                       orderby="org_site.name",
+                                                       sort=True)
+                    current.response.s3.jquery_ready.append('''
+S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupField':'site_id',
+ 'lookupResource':'site',
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org/')
+})''')
                 else:
                     from s3validators import IS_ONE_OF
                     site_id.requires = IS_ONE_OF(db, "org_site.site_id",
@@ -1314,20 +1322,12 @@ Thank you
                                                  sort=True)
                 site_id.represent = s3db.org_site_represent
                 #site_id.default = deployment_settings.get_auth_registration_site_id_default()
+                # No permissions for autocomplete on registration page
                 #from s3widgets import S3SiteAutocompleteWidget
                 #site_id.widget = S3SiteAutocompleteWidget()
-                # no permissions for autocomplete on registration page
                 site_id.comment = DIV(_class="tooltip",
                                       _title="%s|%s" % (T("Facility"),
                                                         T("Select the default site.")))
-                current.response.s3.jquery_ready.append(
-'''S3OptionsFilter({
- 'triggerName':'organisation_id',
- 'targetName':'site_id',
- 'lookupField':'site_id',
- 'lookupResource':'site',
- 'lookupURL':S3.Ap.concat('/org/sites_for_org/')
-})''')
                 if not deployment_settings.get_auth_registration_site_required():
                     site_id.requires = IS_NULL_OR(site_id.requires)
 

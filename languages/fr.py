@@ -2215,7 +2215,7 @@
 'History': 'Historique',
 'Hit the back button on your browser to try again.': 'Touché le bouton Précédent de votre navigateur pour essayer à nouveau.',
 'Holiday Address': 'Adresse Vacances',
-'Home': 'Valeur par défaut',
+'Home': 'Accueil',
 'Home added': 'Home added',
 'Home Address': 'Adresse personnelle',
 'Home City': 'Home City',
