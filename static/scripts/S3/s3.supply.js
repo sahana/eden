@@ -1,10 +1,6 @@
 /**
     Supply Static JS Code
-
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2011-01-27
 */
-// ============================================================================
 
 // Filter Item Packs based on Items
 function fncPrepItem(data) {
@@ -14,7 +10,7 @@ function fncPrepItem(data) {
         }
     }
 };
-// ============================================================================
+
 function fncRepresentItem(record, PrepResult) {
     if (record.quantity == 1) {
         return record.name 
@@ -22,7 +18,7 @@ function fncRepresentItem(record, PrepResult) {
         return record.name + ' (' + record.quantity + ' x ' + PrepResult + ')'
     }
 }
-// ============================================================================
+
 // Displays the number of items available in an inventory
 function InvItemPackIDChange() {     
     // Cancel previous request
@@ -71,7 +67,7 @@ function InvItemPackIDChange() {
         $('[name="quantity"]').after(TotalQuantity);
     });
 };
-//============================================================================
+
 //Displays the number of items available in an inventory
 function InvRecvTypeChange() {
 	var RecvType = $("#inv_recv_type").val()
@@ -92,13 +88,11 @@ function InvRecvTypeChange() {
 		
 	}
 };
-//=============================================================================
+
 $(document).ready(function() {
-    // ========================================================================
     $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
     InvRecvTypeChange();
     $('#inv_recv_type').change(InvRecvTypeChange);
-    // ========================================================================
 /**
     // Item ID Field
     // Assets don't use Packs, so skip
