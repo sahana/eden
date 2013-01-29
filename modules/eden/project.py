@@ -91,9 +91,9 @@ class S3ProjectModel(S3Model):
              "project_project_id",
              "project_human_resource",
              "project_hfa_opts",
-             "project_rfa_opts",
-             "project_pifacc_opts",
              "project_jnap_opts",
+             "project_pifacc_opts",
+             "project_rfa_opts",
              "project_theme_opts",
              ]
 
@@ -150,10 +150,11 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Statuses currently registered"))
 
         # Reusable Field
-        def project_status_represent(id):
-            if id:
-                return s3_represent_id(self.project_status)(id)
+        def project_status_represent(id, row=None):
+            if id or row:
+                return s3_represent_id(self.project_status)(id, row)
             else:
+                # Why?
                 return T("No Status")
 
         status_id = S3ReusableField("status_id", table,
@@ -285,16 +286,33 @@ class S3ProjectModel(S3Model):
                     field = "organisation_id",
                     cols = 3
                 ))
-        if settings.get_template() != "DRRPP":
-            location_label = T("Locations")
-        else:
-            location_label = T("Countries")
-        append(S3SearchOptionsWidget(
-                        name = "project_search_location",
-                        label = location_label,
-                        field = "location.location_id",
-                        cols = 3
+        if settings.get_template() == "DRRPP":
+            append(S3SearchOptionsWidget(
+                    name = "project_search_location",
+                    label = T("Country"),
+                    field = "location.location_id",
+                    cols = 3
                     ))
+        else:
+            append(S3SearchOptionsWidget(
+                    name = "project_search_L0",
+                    field = "location.location_id$L0",
+                    location_level="L0",
+                    cols = 3
+                    ))
+            append(S3SearchOptionsWidget(
+                    name = "project_search_L1",
+                    field = "location.location_id$L1",
+                    location_level="L1",
+                    cols = 3
+                    ))
+            #append(S3SearchOptionsWidget(
+            #        name = "project_search_L2",
+            #        label = T("Countries"),
+            #        field = "location.location_id$L2",
+            #        location_level="L2",
+            #        cols = 3
+            #        ))
 
         if use_sectors:
             if settings.get_ui_cluster():
@@ -626,9 +644,9 @@ class S3ProjectModel(S3Model):
         return dict(
             project_project_id = project_id,
             project_hfa_opts = self.project_hfa_opts,
-            project_rfa_opts = self.project_rfa_opts,
-            project_pifacc_opts = self.project_pifacc_opts,
             project_jnap_opts = self.project_jnap_opts,
+            project_pifacc_opts = self.project_pifacc_opts,
+            project_rfa_opts = self.project_rfa_opts,
             project_theme_opts = self.project_theme_opts,
         )
 
@@ -969,22 +987,21 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_rfa_opts():
+    def project_jnap_opts():
         """
-            Provide the options for the RFA search filter
+            Provide the options for the PIFACC search filter (currently unused)
             - defined in the model used to ensure a good load order
 
-            RFA: applies to Pacific countries only
+            JNAP (Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation):
+             applies to Cook Islands only
         """
 
         T = current.T
         return {
-            1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
-            2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
-            3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
-            4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
-            5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
-            6: T("RFA6: Reduction of Underlying Risk Factors"),
+            1: T("JNAP-1: Strategic Area 1: Governance"),
+            2: T("JNAP-2: Strategic Area 2: Monitoring"),
+            3: T("JNAP-3: Strategic Area 3: Disaster Management"),
+            4: T("JNAP-4: Strategic Area 4: Risk Reduction and Climate Change Adaptation"),
         }
 
     # -------------------------------------------------------------------------
@@ -1010,21 +1027,22 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_jnap_opts():
+    def project_rfa_opts():
         """
-            Provide the options for the PIFACC search filter (currently unused)
+            Provide the options for the RFA search filter
             - defined in the model used to ensure a good load order
 
-            JNAP (Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation):
-             applies to Cook Islands only
+            RFA: applies to Pacific countries only
         """
 
         T = current.T
         return {
-            1: T("JNAP-1: Strategic Area 1: Governance"),
-            2: T("JNAP-2: Strategic Area 2: Monitoring"),
-            3: T("JNAP-3: Strategic Area 3: Disaster Management"),
-            4: T("JNAP-4: Strategic Area 4: Risk Reduction and Climate Change Adaptation"),
+            1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
+            2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
+            3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
+            4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
+            5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
+            6: T("RFA6: Reduction of Underlying Risk Factors"),
         }
 
     # -------------------------------------------------------------------------
@@ -3066,11 +3084,11 @@ class S3ProjectDRRPPModel(S3Model):
     def model(self):
 
         T = current.T
-        s3db = current.s3db
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        ltable = self.gis_location
         project_id = self.project_project_id
 
         project_rfa_opts = self.project_rfa_opts()
@@ -3096,58 +3114,64 @@ class S3ProjectDRRPPModel(S3Model):
                            label = T("RFA Priorities"),
                            requires = IS_NULL_OR(
                                         IS_IN_SET(project_rfa_opts.keys(),
-                                                  labels = ["RFA %s" % rfa for rfa in project_rfa_opts.keys()],
+                                                  labels = ["RFA %s" % \
+                                                            rfa for rfa in project_rfa_opts.keys()],
                                                   multiple = True)),
-                           represent = lambda opt: self.opts_represent(opt, "RFA"),
+                           represent = lambda opt: \
+                            self.opts_represent(opt, "RFA"),
                            widget = lambda f, v, **attr: \
-                                      s3_grouped_checkboxes_widget(f, v,
-                                                                   help_field=project_rfa_opts,
-                                                                   **attr),
+                            s3_grouped_checkboxes_widget(f, v,
+                                                         help_field=project_rfa_opts,
+                                                         **attr),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("RFA Priorities"),
                                                            T("Applicable to projects in Pacific countries only")))),
-                   Field("pifacc", "list:integer",
+                     Field("pifacc", "list:integer",
                            label = T("PIFACC Priorities"),
                            requires = IS_NULL_OR(
                                         IS_IN_SET(project_pifacc_opts.keys(),
-                                                  labels = ["PIFACC %s" % pifacc for pifacc in project_pifacc_opts.keys()],
+                                                  labels = ["PIFACC %s" % \
+                                                            pifacc for pifacc in project_pifacc_opts.keys()],
                                                   multiple = True)),
-                           represent = lambda opt: self.opts_represent(opt, "PIFACC"),
+                           represent = lambda opt: \
+                            self.opts_represent(opt, "PIFACC"),
                            widget = lambda f, v, **attr: \
-                                      s3_grouped_checkboxes_widget(f, v,
-                                                                   help_field=project_pifacc_opts,
-                                                                   **attr),
+                            s3_grouped_checkboxes_widget(f, v,
+                                                         help_field=project_pifacc_opts,
+                                                         **attr),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("PIFACC Priorities"),
                                                            T("Pacific Islands Framework for Action on Climate Change. Applicable to projects in Pacific countries only")))),
-                   Field("jnap", "list:integer",
+                     Field("jnap", "list:integer",
                            label = T("JNAP Priorities"),
                            requires = IS_NULL_OR(
                                         IS_IN_SET(project_jnap_opts.keys(),
-                                                  labels = ["JNAP %s" % jnap for jnap in project_jnap_opts.keys()],
+                                                  labels = ["JNAP %s" % \
+                                                            jnap for jnap in project_jnap_opts.keys()],
                                                   multiple = True)),
-                           represent = lambda opt: self.opts_represent(opt, "JNAP"),
+                           represent = lambda opt: \
+                            self.opts_represent(opt, "JNAP"),
                            widget = lambda f, v, **attr: \
-                                      s3_grouped_checkboxes_widget(f, v,
-                                                                   help_field=project_jnap_opts,
-                                                                   **attr),
+                            s3_grouped_checkboxes_widget(f, v,
+                                                         help_field=project_jnap_opts,
+                                                         **attr),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("JNAP Priorities"),
                                                            T("Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation. Applicable to Cook Islands only")))),
-                   Field("L1", "list:integer",
+                     Field("L1", "list:integer",
                            label = T("Cook Islands"),
-                           requires = IS_ONE_OF( db, "gis_location.id",
-                                                 s3_represent_multi_id(s3db.gis_location),
-                                                 filterby = "L0",
-                                                 filter_opts = ["Cook Islands"],
-                                                 multiple=True),
-                           represent = s3_represent_multi_id(s3db.gis_location),
-                           widget = s3_grouped_checkboxes_widget,
-                           #comment = DIV(_class="tooltip",
-                           #              _title="%s|%s" % (T("JNAP Priorities"),
-                           #                                T("Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation. Applicable to Cook Islands only")))
-                         ),
-
+                           requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "gis_location.id",
+                                                  s3_represent_id(ltable),
+                                                  filterby = "L0",
+                                                  filter_opts = ["Cook Islands"],
+                                                  not_filterby = "name",
+                                                  not_filter_opts = ["Cook Islands"],
+                                                  multiple=True)),
+                           represent = s3_represent_multi_id(ltable),
+                           widget = lambda f, v, **attr: \
+                            s3_checkboxes_widget(f, v, cols=4, **attr),
+                           ),
                      Field("outputs", "text",
                            label = "%s (Old - do NOT use)" % T("Outputs"),
                            readable = False,

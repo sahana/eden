@@ -60,7 +60,7 @@ settings.fin.currencies = {
     #"PHP" : T("Philippine Pesos"),
     #"CHF" : T("Swiss Francs"),
     "USD" : T("United States Dollars"),
-    "USD" : T("New Zealand Dollars"),
+    "NZD" : T("New Zealand Dollars"),
 }
 
 # Security Policy
@@ -154,13 +154,10 @@ def customize_project_project(**attr):
     s3 = current.response.s3
 
     tablename = "project_project"
-
     s3.crud_strings.project_project.title_search = T("Project List")
+
     s3db.project_project.budget.label = T("Total Funding")
     
-    table = s3db.project_project
-    table.budget.label = T("Total Funding")
-
     location_id = s3db.project_location.location_id
     # Limit to just Countries
     location_id.requires = s3db.gis_country_requires
@@ -195,13 +192,14 @@ def customize_project_project(**attr):
         # Call standard prep
         output = standard_prep(r)
         if r.interactive:
-            #Is Cook Islands in the Locations?
+            # Is Cook Islands in the Locations?
             pltable = s3db.project_location
             ltable = s3db.gis_location
             query = (pltable.project_id == r.id) & \
-                    (pltable.location_id == ltable.id ) & \
+                    (pltable.location_id == ltable.id) & \
                     (ltable.name =="Cook Islands")
-            if current.db(query).count() == 0:
+            if current.db(query).select(pltable.id,
+                                        limitby=(0, 1)).first() is None:
                 drrpptable = s3db.project_drrpp
                 drrpptable.pifacc.readable = False
                 drrpptable.pifacc.writable = False
@@ -209,16 +207,11 @@ def customize_project_project(**attr):
                 drrpptable.jnap.writable = False
                 drrpptable.L1.readable = False
                 drrpptable.L1.writable = False
-                #s3.scripts.append("/%s/static/themes/DRRPP/drrpp.js" % current.request.application)
-                #s3.jquery_ready.append("fncHideCookIslandFields();")
             else:
-                script = """
-// If no Cook Islands are checked
-if ($('[name=sub_drrpp_L1]').is(':checked') == false) {
-    // Check them all
-    $('[name=sub_drrpp_L1]').attr('checked','checked');
-} 
-                """
+                # If no Cook Islands are checked, then check them all
+                script = '''
+if($('[name=sub_drrpp_L1]').is(':checked')==false){
+ $('[name=sub_drrpp_L1]').attr('checked','checked')}'''
                 s3.jquery_ready.append(script)
         return True
     
@@ -331,8 +324,6 @@ if ($('[name=sub_drrpp_L1]').is(':checked') == false) {
     return attr
 
 settings.ui.customize_project_project = customize_project_project
-
-#settings.ui.crud_form_project_project = 
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
