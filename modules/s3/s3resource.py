@@ -77,7 +77,8 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3fields import S3Represent, S3RepresentLazy
-from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable, S3MarkupStripper
+from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper
+from s3data import S3DataTable
 from s3validators import IS_ONE_OF
 
 DEBUG = False

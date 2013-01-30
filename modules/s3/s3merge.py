@@ -40,7 +40,8 @@ from s3rest import S3Method
 from s3resource import S3FieldSelector
 from s3widgets import *
 from s3validators import *
-from s3utils import S3DataTable, s3_unicode
+from s3utils import s3_unicode
+from s3data import S3DataTable
 
 # =============================================================================
 class S3Merge(S3Method):

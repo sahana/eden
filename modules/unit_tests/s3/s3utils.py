@@ -8,6 +8,7 @@
 import unittest
 from gluon.dal import Query
 from s3.s3utils import *
+from s3.s3data import S3DataTable
 
 # =============================================================================
 class S3FKWrappersTests(unittest.TestCase):

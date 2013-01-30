@@ -343,7 +343,7 @@ def organisation():
         Function to handle pagination for the org list on the homepage
     """
 
-    from s3.s3utils import S3DataTable
+    from s3.s3data import S3DataTable
 
     resource = s3db.resource("org_organisation")
     totalrows = resource.count()

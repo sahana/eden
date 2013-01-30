@@ -67,10 +67,11 @@ def index2():
 
     module_name = settings.modules[module].name_nice
     response.title = module_name
+    response.view = "inv/index.html"
     if s3.debug:
         # Start of TEST CODE for multiple dataTables,
         #this also required views/inv/index.html to be modified
-        from s3.s3utils import S3DataTable
+        from s3.s3data import S3DataTable
         vars = request.get_vars
         if request.extension == "html" or request.vars.id == "warehouse_list_1":
             resource = s3db.resource("inv_warehouse")

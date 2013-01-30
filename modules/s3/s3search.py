@@ -1371,7 +1371,7 @@ i18n.edit_saved_search="%s"
             @param attr: request parameters
         """
 
-        from s3.s3utils import S3DataTable
+        from s3.s3data import S3DataTable
 
         T = current.T
         session = current.session

@@ -798,7 +798,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
-        from s3.s3utils import S3DataTable
+        from s3.s3data import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -1104,7 +1104,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
-        from s3.s3utils import S3DataTable
+        from s3.s3data import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -1604,7 +1604,7 @@ class S3CRUD(S3Method):
             rows = resource.select(list_fields)
             records = resource.extract(rows, list_fields, represent=True)
 
-            from s3utils import S3DataList
+            from s3data import S3DataList
             datalist = S3DataList(resource, list_fields, records, listid="dl")
             output["items"] = datalist.html()
 

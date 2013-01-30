@@ -11,7 +11,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
 
-from s3.s3utils import S3DataTable
+from s3.s3data import S3DataTable
 
 # =============================================================================
 class S3DataTableTests(unittest.TestCase):

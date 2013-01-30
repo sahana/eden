@@ -147,6 +147,7 @@ S3ResourceHeader = s3base.S3ResourceHeader
 from s3.s3navigation import s3_rheader_tabs
 from s3.s3validators import *
 from s3.s3widgets import *
+from s3.s3data import *
 
 # GIS Module
 gis = s3base.GIS()

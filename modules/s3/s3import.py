@@ -1243,7 +1243,7 @@ class S3Importer(S3CRUD):
                NOTE: limit - totalDisplayRecords = total cached
         """
 
-        from s3.s3utils import S3DataTable
+        from s3.s3data import S3DataTable
         request = self.request
         resource = self.resource
         s3 = current.response.s3
