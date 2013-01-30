@@ -193,7 +193,7 @@ def customize_project_project(**attr):
         if callable(standard_prep):
             output = standard_prep(r)
         else:
-            output = {}
+            output = True
         if r.interactive:
             # Is Cook Islands in the Locations?
             pltable = s3db.project_location
@@ -216,7 +216,7 @@ def customize_project_project(**attr):
 if($('[name=sub_drrpp_L1]').is(':checked')==false){
  $('[name=sub_drrpp_L1]').attr('checked','checked')}'''
                 s3.jquery_ready.append(script)
-        return True
+        return output
     
     s3.prep = drrpp_prep
 
