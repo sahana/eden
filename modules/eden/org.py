@@ -1694,21 +1694,20 @@ class S3FacilityModel(S3Model):
             #report_fields.append((T("High Priority Open Requests"), "reqs"))
 
         # Custom Form
-        crud_form = s3forms.S3SQLCustomForm("name",
-                                            "code",
-                                            "facility_type_id",
-                                            "organisation_id",
-                                            "location_id",
-                                            "opening_times",
-                                            "contact",
-                                            "phone1",
-                                            "phone2",
-                                            "email",
-                                            "website",
-                                            "site_details.last_contacted",
-                                            "obsolete",
-                                            "comments",
-                                            )
+        crud_form = S3SQLCustomForm("name",
+                                    "code",
+                                    "facility_type_id",
+                                    "organisation_id",
+                                    "location_id",
+                                    "opening_times",
+                                    "contact",
+                                    "phone1",
+                                    "phone2",
+                                    "email",
+                                    "website",
+                                    "site_details.last_contacted",
+                                    "obsolete",
+                                    "comments")
 
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),

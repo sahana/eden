@@ -1380,7 +1380,7 @@ class S3ProjectActivityTypeModel(S3Model):
         )
 
         # Reusable Fields
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup="project_activity_type")
         activity_type_id = S3ReusableField("activity_type_id", table,
                                            sortby = "name",
                                            requires = IS_NULL_OR(
@@ -1399,10 +1399,10 @@ class S3ProjectActivityTypeModel(S3Model):
         self.add_component("project_activity_type_sector",
                            project_activity_type="activity_type_id")
 
-        crud_form = s3forms.S3SQLCustomForm(
+        crud_form = S3SQLCustomForm(
                         "name",
                         # Sectors
-                        s3forms.S3SQLInlineComponent(
+                        S3SQLInlineComponent(
                             "activity_type_sector",
                             label=T("Sectors to which this Activity Type can apply"),
                             fields=["sector_id"],
@@ -1939,16 +1939,16 @@ class S3ProjectFrameworkModel(S3Model):
             msg_list_empty = T("No Frameworks found")
         )
 
-        crud_form = s3forms.S3SQLCustomForm(
+        crud_form = S3SQLCustomForm(
             "name",
-            s3forms.S3SQLInlineComponent(
+            S3SQLInlineComponent(
                 "framework_organisation",
                 label = ORGANISATIONS,
                 fields = ["organisation_id"],
             ),
             "description",
             "time_frame",
-            s3forms.S3SQLInlineComponent(
+            S3SQLInlineComponent(
                 "document",
                 label = T("Files"),
                 fields = ["file"],
@@ -2078,7 +2078,7 @@ class S3ProjectHazardModel(S3Model):
             msg_list_empty = T("No Hazards currently registered"))
 
         # Reusable Field
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup="project_hazard")
         hazard_id = S3ReusableField("hazard_id", table,
                                     sortby = "name",
                                     label = T("Hazards"),
@@ -2863,7 +2863,7 @@ class S3ProjectThemeModel(S3Model):
             msg_list_empty = T("No Themes currently registered"))
 
         # Reusable Field
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup="project_theme")
         theme_id = S3ReusableField("theme_id", table,
                                    label = T("Theme"),
                                    sortby = "name",
@@ -2879,10 +2879,10 @@ class S3ProjectThemeModel(S3Model):
 
         add_component("project_theme_sector", project_theme="theme_id")
 
-        crud_form = s3forms.S3SQLCustomForm(
+        crud_form = S3SQLCustomForm(
                         "name",
                         # Project Sectors
-                        s3forms.S3SQLInlineComponent(
+                        S3SQLInlineComponent(
                             "theme_sector",
                             label=T("Sectors to which this Theme can apply"),
                             fields=["sector_id"],
@@ -3359,12 +3359,13 @@ class S3ProjectTaskModel(S3Model):
         )
 
         # Reusable Field
+        represent = S3Represent(lookup="project_milestone")
         milestone_id = S3ReusableField("milestone_id", table,
                                        sortby="name",
                                        requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "project_milestone.id",
-                                                              s3_represent_id(table))),
-                                       represent = s3_represent_id(table),
+                                                              represent)),
+                                       represent = represent,
                                        comment = S3AddResourceLink(c="project",
                                                                    f="milestone",
                                                                    title=ADD_MILESTONE,
@@ -3619,7 +3620,7 @@ class S3ProjectTaskModel(S3Model):
                               )
 
         # Custom Form
-        crud_form = s3forms.S3SQLCustomForm(
+        crud_form = S3SQLCustomForm(
                         "name",
                         "description",
                         "source",
@@ -3628,7 +3629,7 @@ class S3ProjectTaskModel(S3Model):
                         "date_due",
                         "time_estimated",
                         "status",
-                        s3forms.S3SQLInlineComponent(
+                        S3SQLInlineComponent(
                             "time",
                             label = T("Time Log"),
                             fields = ["date",

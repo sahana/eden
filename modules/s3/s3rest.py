@@ -2105,6 +2105,7 @@ class S3Method(object):
                         # Propagate all other errors to the caller
                         raise
                 else:
+                    resolve = False
                     display = handler
                 if isinstance(display, dict) and resolve:
                     output.update(**display)

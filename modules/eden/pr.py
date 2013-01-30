@@ -687,25 +687,24 @@ class S3PersonModel(S3Model):
                                       ])
 
         # Custom Form
-        crud_form = s3forms.S3SQLCustomForm("first_name",
-                                            "last_name",
-                                            "age_group",
-                                            "date_of_birth",
-                                            "initials",
-                                            "preferred_name",
-                                            "local_name",
-                                            "gender",
-                                            "person_details.marital_status",
-                                            "age_group",
-                                            "person_details.nationality",
-                                            "person_details.religion",
-                                            "person_details.mother_name",
-                                            "person_details.father_name",
-                                            "person_details.occupation",
-                                            "person_details.company",
-                                            "person_details.affiliations",
-                                            "comments",
-                                            )
+        crud_form = S3SQLCustomForm("first_name",
+                                    "last_name",
+                                    "age_group",
+                                    "date_of_birth",
+                                    "initials",
+                                    "preferred_name",
+                                    "local_name",
+                                    "gender",
+                                    "person_details.marital_status",
+                                    "age_group",
+                                    "person_details.nationality",
+                                    "person_details.religion",
+                                    "person_details.mother_name",
+                                    "person_details.father_name",
+                                    "person_details.occupation",
+                                    "person_details.company",
+                                    "person_details.affiliations",
+                                    "comments")
 
         # Resource configuration
         self.configure(tablename,

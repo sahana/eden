@@ -876,6 +876,8 @@ class S3CRUD(S3Method):
         left = []
         distinct = self.method == "search"
 
+        dtargs = attr.get("dtargs", {})
+
         if r.interactive:
 
             # View
@@ -971,10 +973,12 @@ class S3CRUD(S3Method):
                     del output["showadd_btn"]
                     datatable = ""
             else:
-                datatable = dt.html(totalrows, displayrows, "list",
-                                    dt_pagination=dt_pagination,
-                                    dt_displayLength=display_length,
-                                    **attr)
+                dtargs["dt_pagination"] = dt_pagination
+                dtargs["dt_displayLength"] = display_length
+                datatable = dt.html(totalrows,
+                                    displayrows,
+                                    id="list",
+                                    **dtargs)
 
             # Add items to output
             output["items"] = datatable
@@ -1024,7 +1028,8 @@ class S3CRUD(S3Method):
                 output = dt.json(totalrows,
                                  displayrows,
                                  "list",
-                                 sEcho)
+                                 sEcho,
+                                 **dtargs)
             else:
                 output = '{"iTotalRecords": %s, ' \
                          '"iTotalDisplayRecords": 0,' \

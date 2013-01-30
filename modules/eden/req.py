@@ -689,7 +689,7 @@ S3OptionsFilter({
                       "date",
                       "priority",
                       "date_required",
-                      s3forms.S3SQLInlineComponent(
+                      S3SQLInlineComponent(
                         "req_item",
                         label = T("Items"),
                         fields = ["item_id",
@@ -736,7 +736,7 @@ S3OptionsFilter({
             if settings.get_req_use_req_number() and \
                not settings.get_req_generate_req_number():
                 fields.insert(0, "req_ref")
-            crud_form = s3forms.S3SQLCustomForm(*fields)
+            crud_form = S3SQLCustomForm(*fields)
             s3db.configure("req_req", crud_form=crud_form)
 
         elif type == 3:
@@ -753,7 +753,7 @@ S3OptionsFilter({
                       "date_required",
                       "date_required_until",
                       "purpose",
-                      s3forms.S3SQLInlineComponent(
+                      S3SQLInlineComponent(
                         "req_skill",
                         label = T("Skills"),
                         fields = ["quantity",
@@ -797,7 +797,7 @@ S3OptionsFilter({
             if settings.get_req_use_req_number() and \
                not settings.get_req_generate_req_number():
                 fields.insert(0, "req_ref")
-            crud_form = s3forms.S3SQLCustomForm(*fields)
+            crud_form = S3SQLCustomForm(*fields)
             s3db.configure("req_req", crud_form=crud_form)
 
     # -------------------------------------------------------------------------

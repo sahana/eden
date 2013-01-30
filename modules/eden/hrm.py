@@ -518,7 +518,7 @@ class S3HRModel(S3Model):
                       "status",
                       ]
         # Custom Form
-        crud_form = s3forms.S3SQLCustomForm(*fields)
+        crud_form = S3SQLCustomForm(*fields)
 
         if settings.get_hrm_org_required():
             mark_required = ["organisation_id"]

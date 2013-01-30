@@ -81,6 +81,7 @@ from s3rest import *
 
 # CRUD
 from s3crud import *
+from s3forms import *
 
 # Search
 from s3search import *

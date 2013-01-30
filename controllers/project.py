@@ -354,7 +354,7 @@ def hazard():
 def framework():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(dt_text_maximum_len = 160)
+    return s3_rest_controller(dtargs={"dt_text_maximum_len": 160})
 
 # =============================================================================
 def organisation():

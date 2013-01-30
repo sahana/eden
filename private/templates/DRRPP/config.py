@@ -190,7 +190,10 @@ def customize_project_project(**attr):
     # custom Post-process
     def drrpp_prep(r):
         # Call standard prep
-        output = standard_prep(r)
+        if callable(standard_prep):
+            output = standard_prep(r)
+        else:
+            output = {}
         if r.interactive:
             # Is Cook Islands in the Locations?
             pltable = s3db.project_location
