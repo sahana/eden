@@ -76,6 +76,7 @@ class S3DocumentLibrary(S3Model):
                                irs_ireport=T("Incident Report"),
                                project_project=T("Project"),
                                project_activity=T("Project Activity"),
+                               project_framework=T("Project Framework"),
                                project_task=T("Task"),
                                hms_hospital=T("Hospital"),
                                org_office=T("Office"),

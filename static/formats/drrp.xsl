@@ -32,6 +32,9 @@
         <xsl:for-each select="//resource[@name='drrpp_framework']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
+        <xsl:for-each select="//resource[@name='drrpp_framework_organisation']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
         <xsl:for-each select="//resource[@name='drrpp_group']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
@@ -113,7 +116,8 @@
 
             <xsl:if test="data[@field='approved']='True'">
                 <xsl:attribute name="approved_by">
-                    <xsl:value-of select="@modified_by"/>
+                    <!--<xsl:value-of select="@modified_by"/>-->
+                    <xsl:text>1</xsl:text>
                 </xsl:attribute>
             </xsl:if>
 
@@ -362,7 +366,7 @@
             </data>
             <reference field="doc_id" resource="project_project">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[field='project_id']/@uuid"/>
+                    <xsl:value-of select="reference[@field='project_id']/@uuid"/>
                 </xsl:attribute>
                 <data field="file">
                     <xsl:attribute name="filename">
@@ -399,7 +403,7 @@
             </data>
             <reference field="doc_id" resource="project_framework">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[field='framework_id']/@uuid"/>
+                    <xsl:value-of select="reference[@field='framework_id']/@uuid"/>
                 </xsl:attribute>
                 <data field="file">
                     <xsl:attribute name="filename">
@@ -428,16 +432,21 @@
             <xsl:attribute name="modified_on">
                 <xsl:value-of select="@modified_on"/>
             </xsl:attribute>
-            <xsl:attribute name="created_by">
-                <xsl:value-of select="@created_by"/>
-            </xsl:attribute>
-            <xsl:attribute name="modified_by">
-                <xsl:value-of select="@modified_by"/>
-            </xsl:attribute>
+            <xsl:if test="@created_by!=''">
+                <xsl:attribute name="created_by">
+                    <xsl:value-of select="@created_by"/>
+                </xsl:attribute>
+            </xsl:if>
+            <xsl:if test="@modified_by!=''">
+                <xsl:attribute name="modified_by">
+                    <xsl:value-of select="@modified_by"/>
+                </xsl:attribute>
+            </xsl:if>
 
             <xsl:if test="data[@field='approved']='True'">
                 <xsl:attribute name="approved_by">
-                    <xsl:value-of select="@modified_by"/>
+                    <!--<xsl:value-of select="@modified_by"/>-->
+                    <xsl:text>1</xsl:text>
                 </xsl:attribute>
             </xsl:if>
 
@@ -450,6 +459,43 @@
                 <xsl:with-param name="arg">file</xsl:with-param>
             </xsl:call-template>
 
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_framework_organisation']">
+
+        <resource name="project_framework_organisation">
+
+            <!--<xsl:attribute name="tuid">
+                <xsl:value-of select="@uuid"/>
+            </xsl:attribute>-->
+            <xsl:attribute name="created_on">
+                <xsl:value-of select="@created_on"/>
+            </xsl:attribute>
+            <xsl:attribute name="modified_on">
+                <xsl:value-of select="@modified_on"/>
+            </xsl:attribute>
+            <!-- Not in source XML
+            <xsl:attribute name="created_by">
+                <xsl:value-of select="@created_by"/>
+            </xsl:attribute>
+            <xsl:attribute name="modified_by">
+                <xsl:value-of select="@modified_by"/>
+            </xsl:attribute>-->
+
+            <reference field="framework_id" resource="project_framework">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="reference[@field='framework_id']/@uuid"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <!--<xsl:value-of select="reference[@field='organisation_id']/@uuid"/>-->
+                    <xsl:value-of select="reference[@field='organisation_id']"/>
+                </xsl:attribute>
+            </reference>
         </resource>
 
     </xsl:template>
@@ -502,7 +548,7 @@
         <resource name="doc_document">
             <reference field="doc_id" resource="project_project">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[field='project_id']/@uuid"/>
+                    <xsl:value-of select="reference[@field='project_id']/@uuid"/>
                 </xsl:attribute>
             </reference>
             <xsl:choose>
@@ -591,6 +637,8 @@
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
+                <!--<xsl:value-of select="@uuid"/>-->
+                <!-- Need this format for Dummy fields -->
                 <xsl:value-of select="data[@field='name']"/>
             </xsl:attribute>
             <xsl:attribute name="created_on">
@@ -599,16 +647,21 @@
             <xsl:attribute name="modified_on">
                 <xsl:value-of select="@modified_on"/>
             </xsl:attribute>
-            <xsl:attribute name="created_by">
-                <xsl:value-of select="@created_by"/>
-            </xsl:attribute>
-            <xsl:attribute name="modified_by">
-                <xsl:value-of select="@modified_by"/>
-            </xsl:attribute>
+            <xsl:if test="@created_by!=''">
+                <xsl:attribute name="created_by">
+                    <xsl:value-of select="@created_by"/>
+                </xsl:attribute>
+            </xsl:if>
+            <xsl:if test="@modified_by!=''">
+                <xsl:attribute name="modified_by">
+                    <xsl:value-of select="@modified_by"/>
+                </xsl:attribute>
+            </xsl:if>
 
             <xsl:if test="data[@field='approved']='True'">
                 <xsl:attribute name="approved_by">
-                    <xsl:value-of select="@modified_by"/>
+                    <!--<xsl:value-of select="@modified_by"/>-->
+                    <xsl:text>1</xsl:text>
                 </xsl:attribute>
             </xsl:if>
 

@@ -650,10 +650,12 @@ class S3RepresentLazy(object):
         self.multiple = False
         renderer.lazy.append(value)
 
+    # -------------------------------------------------------------------------
     def __repr__(self):
 
         return s3_unicode(self.represent())
 
+    # -------------------------------------------------------------------------
     def represent(self):
         """ Represent as string """
 
@@ -675,6 +677,7 @@ class S3RepresentLazy(object):
             else:
                 return renderer(value, show_link=False)
 
+    # -------------------------------------------------------------------------
     def render(self):
         """ Render as HTML """
 
@@ -700,6 +703,7 @@ class S3RepresentLazy(object):
             else:
                 return renderer(value)
 
+    # -------------------------------------------------------------------------
     def render_node(self, element, attributes, name):
         """
             Render as text or attribute of an XML element
