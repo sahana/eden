@@ -107,31 +107,20 @@ def sites_for_org():
     except:
         result = current.xml.json_message(False, 400, "No Org provided!")
     else:
-        table = s3db.org_site
-        query = (table.organisation_id == org)
-        records = db(query).select(table.site_id,
-                                   table.name,
-                                   orderby=table.name)
-        result = records.json()
+        # Find all branches for this Organisation
+        btable = s3db.org_organisation_branch
+        query = (btable.organisation_id == org)
+        rows = db(query).select(btable.branch_id)
+        org_ids = [row.branch_id for row in rows] + [org]
+        stable = s3db.org_site
+        query = (stable.organisation_id.belongs(org_ids))
+        rows = db(query).select(stable.site_id,
+                                stable.name,
+                                orderby=stable.name)
+        result = rows.json()
     finally:
         response.headers["Content-Type"] = "application/json"
         return result
-
-# -----------------------------------------------------------------------------
-def site_org_json():
-    """
-        Provide the Org(s) belonging to a Site
-        - unused?
-    """
-
-    table = s3db.org_site
-    otable = s3db.org_organisation
-    query = (table.site_id == request.args[0]) & \
-            (table.organisation_id == otable.id)
-    records = db(query).select(otable.id,
-                               otable.name)
-    response.headers["Content-Type"] = "application/json"
-    return records.json()
 
 # -----------------------------------------------------------------------------
 def facility_marker_fn(record):

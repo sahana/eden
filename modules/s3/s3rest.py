@@ -864,6 +864,10 @@ class S3Request(object):
                         current.session.error = self.ERROR.BAD_RECORD
                         redirect(URL(r=self, c=self.prefix, f=self.name))
 
+        if self.interactive and self.representation == "html":
+            settings = current.deployment_settings
+            attr = settings.ui_customize(self.tablename, **attr)
+
         # Pre-process
         if hooks is not None:
             preprocess = hooks.get("prep", None)
@@ -1915,10 +1919,6 @@ class S3Method(object):
 
         if self.method == "_init":
             return None
-
-        if r.interactive and r.representation == "html":
-            settings = current.deployment_settings
-            attr = settings.ui_customize(self.tablename, **attr)
 
         # Apply method
         output = self.apply_method(r, **attr)

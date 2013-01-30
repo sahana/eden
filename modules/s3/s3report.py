@@ -477,14 +477,14 @@ class S3Report(S3CRUD):
                         BUTTON(self.SHOW,
                                _type="button",
                                _class="toggle-text",
-                               _style="display:none" if not hide else ""),
+                               _style="display:none" if not hide else None),
                         BUTTON(self.HIDE,
                                _type="button",
                                _class="toggle-text",
-                               _style="display:none" if hide else "")
+                               _style="display:none" if hide else None)
                     ),
                     TABLE(trows,
-                          _style="display:none" if hide else ""),
+                          _style="display:none" if hide else None),
                     _id="filter_options"
                 )
 
@@ -550,11 +550,11 @@ class S3Report(S3CRUD):
                     BUTTON(self.SHOW,
                            _type="button",
                            _class="toggle-text",
-                           _style="display:none" if not hidden else ""),
+                           _style="display:none" if not hidden else None),
                     BUTTON(self.HIDE,
                            _type="button",
                            _class="toggle-text",
-                           _style="display:none" if hidden else "")
+                           _style="display:none" if hidden else None)
                 ),
                 selectors, _id="report_options")
 

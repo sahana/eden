@@ -148,15 +148,14 @@ def user():
         msg_record_deleted = T("User deleted"),
         msg_list_empty = T("No Users currently registered"))
 
-    def rheader(r, tabs = []):
+    def rheader(r):
         if r.representation != "html":
             return None
-
-        id = r.id
 
         rheader = DIV()
 
         if r.record:
+            id = r.id
             registration_key = r.record.registration_key
             if not registration_key:
                 btn = A(T("Disable"),
@@ -220,62 +219,65 @@ def user():
     s3.prep = prep
 
     def postp(r, output):
-        # Only show the disable button if the user is not currently disabled
-        table = r.table
-        query = (table.registration_key == None) | \
-                (table.registration_key == "")
-        rows = db(query).select(table.id)
-        restrict = [str(row.id) for row in rows]
-        s3.actions = [
-                        dict(label=str(UPDATE), _class="action-btn",
-                             url=URL(c="admin", f="user",
-                                     args=["[id]", "update"])),
-                        dict(label=str(T("Link")),
-                             _class="action-btn",
-                             _title = str(T("Link (or refresh link) between User, Person & HR Record")),
-                             url=URL(c="admin", f="user",
-                                     args=["[id]", "link"]),
-                             restrict = restrict),
-                        dict(label=str(T("Roles")), _class="action-btn",
-                             url=URL(c="admin", f="user",
-                                     args=["[id]", "roles"])),
-                        dict(label=str(T("Disable")), _class="action-btn",
-                             url=URL(c="admin", f="user",
-                                     args=["[id]", "disable"]),
-                             restrict = restrict)
+        if r.interactive:
+            # Only show the disable button if the user is not currently disabled
+            table = r.table
+            query = (table.registration_key == None) | \
+                    (table.registration_key == "")
+            rows = db(query).select(table.id)
+            restrict = [str(row.id) for row in rows]
+            s3.actions = [
+                            dict(label=str(UPDATE), _class="action-btn",
+                                 url=URL(c="admin", f="user",
+                                         args=["[id]", "update"])),
+                            dict(label=str(T("Link")),
+                                 _class="action-btn",
+                                 _title = str(T("Link (or refresh link) between User, Person & HR Record")),
+                                 url=URL(c="admin", f="user",
+                                         args=["[id]", "link"]),
+                                 restrict = restrict),
+                            dict(label=str(T("Roles")), _class="action-btn",
+                                 url=URL(c="admin", f="user",
+                                         args=["[id]", "roles"])),
+                            dict(label=str(T("Disable")), _class="action-btn",
+                                 url=URL(c="admin", f="user",
+                                         args=["[id]", "disable"]),
+                                 restrict = restrict)
+                          ]
+            # Only show the approve button if the user is currently pending
+            query = (table.registration_key != "disabled") & \
+                    (table.registration_key != None) & \
+                    (table.registration_key != "")
+            rows = db(query).select(table.id)
+            restrict = [str(row.id) for row in rows]
+            s3.actions.append(
+                    dict(label=str(T("Approve")), _class="action-btn",
+                         url=URL(c="admin", f="user",
+                                 args=["[id]", "approve"]),
+                         restrict = restrict)
+                )
+            # Add some highlighting to the rows
+            query = (table.registration_key.belongs(["disabled", "pending"]))
+            rows = db(query).select(table.id,
+                                    table.registration_key)
+            s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
+            s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
+
+            # Translate the status values
+            values = [dict(col=6, key="", display=str(T("Active"))),
+                      dict(col=6, key="None", display=str(T("Active"))),
+                      dict(col=6, key="pending", display=str(T("Pending"))),
+                      dict(col=6, key="disabled", display=str(T("Disabled")))
                       ]
-        # Only show the approve button if the user is currently pending
-        query = (table.registration_key != "disabled") & \
-                (table.registration_key != None) & \
-                (table.registration_key != "")
-        rows = db(query).select(table.id)
-        restrict = [str(row.id) for row in rows]
-        s3.actions.append(
-                dict(label=str(T("Approve")), _class="action-btn",
-                     url=URL(c="admin", f="user",
-                             args=["[id]", "approve"]),
-                     restrict = restrict)
-            )
-        # Add some highlighting to the rows
-        query = (table.registration_key.belongs(["disabled", "pending"]))
-        rows = db(query).select(table.id,
-                                table.registration_key)
-        s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
-        s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
+            s3.dataTableDisplay = values
 
-        # Translate the status values
-        values = [dict(col=6, key="", display=str(T("Active"))),
-                  dict(col=6, key="None", display=str(T("Active"))),
-                  dict(col=6, key="pending", display=str(T("Pending"))),
-                  dict(col=6, key="disabled", display=str(T("Disabled")))
-                  ]
-        s3.dataTableDisplay = values
-
-        # Add client-side validation
-        s3base.s3_register_validation()
+            # Add client-side validation
+            s3base.s3_register_validation()
 
         return output
     s3.postp = postp
+
+    s3mgr.import_prep = auth.s3_membership_import_prep
 
     output = s3_rest_controller("auth", "user",
                                 rheader=rheader,

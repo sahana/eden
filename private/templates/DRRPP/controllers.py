@@ -169,10 +169,11 @@ class index():
         table = s3db.project_project
         query = (table.deleted == False)
         #approved = & (table.approved == True)
-        #current = & (table.status_id == 2)
-        #proposed = & (table.status_id == 1)
-        #completed = & (table.status_id == 1)
         projects = db(query).count()
+        current_projects = db(query & (table.status_id == 2)).count()
+        proposed_projects = db(query & (table.status_id == 1)).count()
+        completed_projects = db(query & (table.status_id == 3)).count()
+        
         ftable = s3db.project_framework
         query = (ftable.deleted == False)
         #approved = & (table.approved == True)
@@ -184,29 +185,29 @@ class index():
                                          args=["search"]))
                              ),
                           TR(TD(),
-                             TABLE(TR(projects,
+                             TABLE(TR(current_projects,
                                       A("Current Projects",
                                         _href=URL(c="project", f="project",
                                                   args=["search"],
-                                                  vars={"status_id":2}))
+                                                  vars={"project.status_id":2}))
                                      )
                                    )
                              ),
                           TR(TD(),
-                             TABLE(TR(projects,
+                             TABLE(TR(proposed_projects,
                                       A("Proposed Projects",
                                         _href=URL(c="project", f="project",
                                                   args=["search"],
-                                                  vars={"status_id":1}))
+                                                  vars={"project.status_id":1}))
                                      )
                                     )
                              ),
                           TR(TD(),
-                             TABLE(TR(projects,
+                             TABLE(TR(completed_projects,
                                       A("Completed Projects",
                                         _href=URL(c="project", f="project",
                                                   args=["search"],
-                                                  vars={"status_id":3}))
+                                                  vars={"project.status_id":3}))
                                      )
                                     )
                              ),

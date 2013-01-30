@@ -29,7 +29,7 @@
 
 __all__ = ["S3ContentModel",
            "cms_rheader",
-          ]
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -161,8 +161,7 @@ class S3ContentModel(S3Model):
                              #      label=T("Published")),
                              s3_comments(),
                              # Multiple Roles (@ToDo: Implement the restriction)
-                             s3_roles_permitted(
-                                                readable = False,
+                             s3_roles_permitted(readable = False,
                                                 writable = False
                                                 ),
                              *s3_meta_fields())
