@@ -203,7 +203,12 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser = self.browser
 
-        browser.find_element_by_xpath("//a[text()='Clear']").click()
+        clear_button = browser.find_elements_by_xpath("//a[text()='Clear']")
+        if clear_button[0].is_displayed() :
+           clear_button[0].click()
+        else:
+           clear_button[1].click()
+
 
         try:
             if form_type == self.search.advanced_form:
