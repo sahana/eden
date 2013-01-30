@@ -67,6 +67,11 @@ div.form-container form .embeddedComponent  textarea  {
 }
 
 /* Styling for specific fields */
+
+#project_project_sub_drrpp_organisation_id,
+#project_project_organisation_id {
+    width: 500px;
+}
 [name*="partnerorganisation_i_organisation_id"],
 [name*="donororganisation_i_organisation_id"] {
     width: 300px;

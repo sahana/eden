@@ -277,6 +277,9 @@ def user():
         return output
     s3.postp = postp
 
+    #Need for CSV Import
+    s3mgr.import_prep = auth.s3_membership_import_prep
+
     output = s3_rest_controller("auth", "user",
                                 rheader=rheader,
                                 csv_template=("auth", "user"),
