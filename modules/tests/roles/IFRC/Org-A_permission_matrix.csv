@@ -1,6 +1,4 @@
-
-<!-- saved from url=(0135)https://raw.github.com/michaelhowden/eden/31fc1cc9b84df6ab4f8a591efb67dd7ed8adf613/modules/tests/roles/IFRC/Org-A_permission_matrix.csv -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">,table,c,f,method,uuid,org_admin@org-a.com,reader@org-a.com,asset_reader@org-a.com,asset_data_entry@org-a.com,asset_editor@org-a.com,asset_super@org-a.com,inv_reader@org-a.com,inv_data_entry@org-a.com,inv_editor@org-a.com,inv_super@org-a.com,irs_reader@org-a.com,irs_data_entry@org-a.com,irs_editor@org-a.com,irs_super@org-a.com,member_reader@org-a.com,member_data_entry@org-a.com,member_editor@org-a.com,member_super@org-a.com,project_reader@org-a.com,project_data_entry@org-a.com,project_editor@org-a.com,project_super@org-a.com,staff_reader@org-a.com,staff_data_entry@org-a.com,staff_editor@org-a.com,staff_super@org-a.com,vol_reader@org-a.com,vol_data_entry@org-a.com,vol_editor@org-a.com,vol_super@org-a.com,survey_reader@org-a.com,survey_data_entry@org-a.com,survey_editor@org-a.com,survey_super@org-a.com,
+,table,c,f,method,uuid,org_admin@org-a.com,reader@org-a.com,asset_reader@org-a.com,asset_data_entry@org-a.com,asset_editor@org-a.com,asset_super@org-a.com,inv_reader@org-a.com,inv_data_entry@org-a.com,inv_editor@org-a.com,inv_super@org-a.com,irs_reader@org-a.com,irs_data_entry@org-a.com,irs_editor@org-a.com,irs_super@org-a.com,member_reader@org-a.com,member_data_entry@org-a.com,member_editor@org-a.com,member_super@org-a.com,project_reader@org-a.com,project_data_entry@org-a.com,project_editor@org-a.com,project_super@org-a.com,staff_reader@org-a.com,staff_data_entry@org-a.com,staff_editor@org-a.com,staff_super@org-a.com,vol_reader@org-a.com,vol_data_entry@org-a.com,vol_editor@org-a.com,vol_super@org-a.com,survey_reader@org-a.com,survey_data_entry@org-a.com,survey_editor@org-a.com,survey_super@org-a.com,
 1,,default,person,read,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
 2,,default,person,update,,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
 3,org_organisation,org,organisation,create,,Yes,,,,,Yes,,,,Yes,,,,Yes,,,,Yes,,,,Yes,,,,Yes,,,,Yes,,,,Yes,
@@ -149,14 +147,3 @@
 146,inv_inv_item,inv,inv_item,read,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 147,inv_inv_item,inv,inv_item,update,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 148,inv_inv_item,inv,inv_item,delete,Org-B InvItem-A,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,</pre></body></html>

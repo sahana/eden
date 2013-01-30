@@ -971,7 +971,8 @@ class S3CRUD(S3Method):
             else:
                 datatable = dt.html(totalrows, displayrows, "list",
                                     dt_pagination=dt_pagination,
-                                    dt_displayLength=display_length)
+                                    dt_displayLength=display_length,
+                                    **attr)
 
             # Add items to output
             output["items"] = datatable

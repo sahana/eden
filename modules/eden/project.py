@@ -1938,10 +1938,33 @@ class S3ProjectFrameworkModel(S3Model):
             msg_list_empty = T("No Frameworks found")
         )
 
+        from s3 import s3forms
+        
+        crud_form = s3forms.S3SQLCustomForm(
+            "name",
+            s3forms.S3SQLInlineComponent(
+                "framework_organisation",
+                label = T("Organisation(s)"),
+                fields = ["organisation_id"],
+            ),
+            "description",
+            "time_frame",
+            s3forms.S3SQLInlineComponent(
+                "document",
+                label = T("Files"),
+                fields = ["file"],
+                filterby = dict(field = "url",
+                                options = None,
+                                invert = True,
+                                )
+            ),
+        )
+
         self.configure(tablename,
                        super_entity="doc_entity",
-                       create_next=URL(f="framework",
-                                       args=["[id]", "organisation"]),
+                       crud_form = crud_form,
+                       #create_next=URL(f="framework",
+                       #                args=["[id]", "organisation"]),
                        )
 
         framework_id = S3ReusableField("framework_id", table,
@@ -1954,14 +1977,15 @@ class S3ProjectFrameworkModel(S3Model):
                         ondelete = "CASCADE",
                         )
 
-        self.add_component("org_organisation",
-                           project_framework=Storage(
-                                link="project_framework_organisation",
-                                joinby="framework_id",
-                                key="organisation_id",
-                                actuate="embed",
-                                autocomplete="name",
-                                autodelete=False))
+        self.add_component("project_framework_organisation", project_framework="framework_id")
+        #self.add_component("org_organisation",
+        #                   project_framework=Storage(
+        #                        link="project_framework_organisation",
+        #                        joinby="framework_id",
+        #                        key="organisation_id",
+        #                        actuate="embed",
+        #                        autocomplete="name",
+        #                        autodelete=False))
 
         # ---------------------------------------------------------------------
         # Project Framework Organisations

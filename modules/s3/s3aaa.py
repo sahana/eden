@@ -1385,7 +1385,7 @@ S3OptionsFilter({
         for element in elements:
             pe_string = element.text
 
-            if pe_string:
+            if pe_string and "=" in pe_string:
                 pe_type, pe_value =  pe_string.split("=")
                 pe_tablename, pe_field =  pe_type.split(".")
 
