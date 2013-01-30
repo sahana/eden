@@ -1898,6 +1898,7 @@ class S3ProjectFrameworkModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         ORGANISATION = current.messages.ORGANISATION
+        ORGANISATIONS = T("Organization(s)")
 
         # ---------------------------------------------------------------------
         # Project Frameworks
@@ -1942,7 +1943,7 @@ class S3ProjectFrameworkModel(S3Model):
             "name",
             s3forms.S3SQLInlineComponent(
                 "framework_organisation",
-                label = T("Organization(s)"),
+                label = ORGANISATIONS,
                 fields = ["organisation_id"],
             ),
             "description",
@@ -1961,6 +1962,12 @@ class S3ProjectFrameworkModel(S3Model):
         self.configure(tablename,
                        super_entity="doc_entity",
                        crud_form = crud_form,
+                       list_fields = ["name",
+                                      (ORGANISATIONS, "framework_organisation.organisation_id"),
+                                      "description",
+                                      "time_frame",
+                                      (T("Files"), "document.file"),
+                                      ]
                        )
 
         framework_id = S3ReusableField("framework_id", table,
