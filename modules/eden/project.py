@@ -5336,7 +5336,7 @@ def project_task_form_inject(r, output, project=True):
         vars = current.request.get_vars
         if "project" in vars:
             widget = INPUT(value=vars.project, _name="project_id")
-            project = s3_formstyle("project_task_project__row", "",
+            row = s3_formstyle("project_task_project__row", "",
                                    widget, "", hidden=True)
         else:
             table = s3db.project_task_project

@@ -111,6 +111,8 @@ class S3CRUD(S3Method):
             output = self.update(r, **attr)
         elif method == "list":
             output = self.select(r, **attr)
+        elif method == "list_div":
+            output = self.list_div(r, **attr)
         elif method == "validate":
             output = self.validate(r, **attr)
         elif method == "review":
@@ -1587,6 +1589,34 @@ class S3CRUD(S3Method):
             output = output[0]
 
         return json.dumps(output)
+
+    # -------------------------------------------------------------------------
+    def list_div(self, r, **attr):
+
+        resource = self.resource
+
+        if r.representation == "html":
+
+            output = {}
+
+            list_fields = resource.get_config("list_fields")
+
+            rows = resource.select(list_fields)
+            records = resource.extract(rows, list_fields, represent=True)
+
+            from s3utils import S3DataList
+            datalist = S3DataList(resource, list_fields, records, listid="dl")
+            output["items"] = datalist.html()
+
+            current.response.view = "list_create.html"
+            return output
+
+        elif r.representation == "json":
+            # Not implemented yet
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        else:
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     # Utility functions

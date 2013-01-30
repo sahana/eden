@@ -127,6 +127,12 @@ class SeleniumUnitTest(Web2UnitTest):
             this can be modified by the callback function
         """
 
+        # Commit to start a new transaction: if MySQL gets straight the
+        # same query straight within the same transaction, it wouldn't
+        # even look at the table, but just return the cached response, so
+        # the actual test condition (e.g. in create) gets optimized away...
+        current.db.commit()
+
         query = (table.deleted != True)
         for details in data:
             query = query & (table[details[0]] == details[1])

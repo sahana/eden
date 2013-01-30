@@ -3438,4 +3438,76 @@ class S3DataTable(object):
                            stringify=stringify,
                            **attr)
 
+# =============================================================================
+class S3DataList(object):
+    """ Class representing a data list """
+
+    def __init__(self, resource, list_fields, records, listid=None):
+        """
+            Constructor
+
+            @param resource: the S3Resource
+            @param list_fields: the list fields (list of field selector strings)
+            @param records: the records
+            @param listid: the HTML ID for this list
+        """
+
+        self.resource = resource
+        self.list_fields = list_fields
+        self.records = records
+
+        if listid is None:
+            self.listid = "datalist"
+        else:
+            self.listid = listid
+
+    # ---------------------------------------------------------------------
+    def html(self):
+        """ Render list data as HTML (nested DIVs) """
+
+        items = []
+
+        records = self.records
+        resource = self.resource
+        list_fields = self.list_fields
+
+        listid = self.listid
+
+        rfields = resource.resolve_selectors(list_fields)[0]
+        pkey = str(resource._id)
+        
+        for record in records:
+
+            if pkey in record:
+                item_id = "%s-%s" % (listid, record[pkey])
+            else:
+                raise SyntaxError("no record ID available")
+
+            item = DIV(_class="dl-item", _id=item_id)
+            for rfield in rfields:
+                if rfield.colname == pkey or rfield.colname not in record:
+                    continue
+                field_id = "%s-%s" % (item_id, rfield.colname.replace(".", "_"))
+                value_id = "%s-value" % field_id
+                value = record[rfield.colname]
+                label = LABEL(rfield.label,
+                              _for = value_id,
+                              _class = "dl-item-label",
+                              _id = "%s-label" % field_id)
+                item.append(DIV(label,
+                                DIV(value,
+                                    _class="dl-item-value",
+                                    _id=value_id),
+                                _class = "dl-field",
+                                _id=field_id))
+            items.append(item)
+
+        return DIV(items, _class = "dl", _id = self.listid)
+
+    # ---------------------------------------------------------------------
+    def json(self):
+        """ Render list data as JSON (for Ajax pagination) """
+        
+        raise NotImplementedError
+
 # END =========================================================================
