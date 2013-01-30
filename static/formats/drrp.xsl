@@ -405,15 +405,15 @@
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="reference[@field='framework_id']/@uuid"/>
                 </xsl:attribute>
-                <data field="file">
-                    <xsl:attribute name="filename">
-                        <xsl:value-of select="concat('doc_document', $Filename)"/>
-                    </xsl:attribute>
-                    <xsl:attribute name="url">
-                        <xsl:text>local</xsl:text>
-                    </xsl:attribute>
-                </data>
             </reference>
+            <data field="file">
+                <xsl:attribute name="filename">
+                    <xsl:value-of select="concat('doc_document', $Filename)"/>
+                </xsl:attribute>
+                <xsl:attribute name="url">
+                    <xsl:text>local</xsl:text>
+                </xsl:attribute>
+            </data>
         </resource>
 
     </xsl:template>
