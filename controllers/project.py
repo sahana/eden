@@ -78,7 +78,7 @@ def project():
         s3db.gis_location_filter(r)
         
         if r.interactive:
-            if not r.component:
+            if not r.component or r.component_name == "activity":
                 # Filter Themes/Activity Types based on Sector
                 if r.record:
                     table = s3db.project_sector_project
@@ -88,6 +88,9 @@ def project():
                     sector_ids = [row.sector_id for row in rows]
                 else:
                     sector_ids = []
+                set_theme_requires(sector_ids)
+
+            if not r.component:
                 set_theme_requires(sector_ids)
 
                 if r.id:
