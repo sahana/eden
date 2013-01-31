@@ -6197,7 +6197,7 @@ class S3RoleManager(S3Method):
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
             # Prepare ACL forms -----------------------------------------------
-            any = "ANY"
+            ANY = "ANY"
             controllers = [c for c in self.controllers.keys()
                              if c not in self.HIDE_CONTROLLER]
             ptables = []
@@ -6214,7 +6214,7 @@ class S3RoleManager(S3Method):
                     if acl.controller not in acls:
                         acls[acl.controller] = Storage()
                     if not acl.function:
-                        f = any
+                        f = ANY
                     else:
                         if permission.use_facls:
                             f = acl.function
@@ -6236,17 +6236,17 @@ class S3RoleManager(S3Method):
             for c in controllers:
                 default = Storage(id = None,
                                   controller = c,
-                                  function = any,
+                                  function = ANY,
                                   tablename = None,
                                   uacl = NONE,
                                   oacl = NONE)
                 if c in acls:
                     acl_list = acls[c]
-                    if any not in acl_list:
-                        acl_list[any] = default
+                    if ANY not in acl_list:
+                        acl_list[ANY] = default
                 else:
                     acl_list = Storage(ANY=default)
-                acl = acl_list[any]
+                acl = acl_list[ANY]
                 _class = i % 2 and "even" or "odd"
                 i += 1
                 uacl = NONE
@@ -6257,7 +6257,7 @@ class S3RoleManager(S3Method):
                     uacl = acl.uacl
                 _id = acl.id
                 delete_btn = delete_acl(_id)
-                n = "%s_%s_ANY_ANY" % (_id, c)
+                n = "%s-%s-ANY-ANY" % (_id, c)
                 uacl = acl_widget("uacl", "acl_u_%s" % n, uacl)
                 oacl = acl_widget("oacl", "acl_o_%s" % n, oacl)
                 cn = self.controllers[c].name_nice
@@ -6302,7 +6302,7 @@ class S3RoleManager(S3Method):
                     keys = acl_list.keys()
                     keys.sort()
                     for f in keys:
-                        if f == any:
+                        if f == ANY:
                             continue
                         acl = acl_list[f]
                         _class = i % 2 and "even" or "odd"
@@ -6315,7 +6315,7 @@ class S3RoleManager(S3Method):
                             uacl = acl.uacl
                         _id = acl.id
                         delete_btn = delete_acl(_id)
-                        n = "%s_%s_%s_ANY" % (_id, c, f)
+                        n = "%s-%s-%s-ANY" % (_id, c, f)
                         uacl = acl_widget("uacl", "acl_u_%s" % n, uacl)
                         oacl = acl_widget("oacl", "acl_o_%s" % n, oacl)
                         cn = self.controllers[c].name_nice
@@ -6387,7 +6387,7 @@ class S3RoleManager(S3Method):
                             oacl = acl.oacl
                         _id = acl.id
                     delete_btn = delete_acl(_id)
-                    n = "%s_ANY_ANY_%s" % (_id, t)
+                    n = "%s-ANY-ANY-%s" % (_id, t)
                     uacl = acl_widget("uacl", "acl_u_%s" % n, uacl)
                     oacl = acl_widget("oacl", "acl_o_%s" % n, oacl)
                     form_rows.append(TR(TD(t),
@@ -6468,14 +6468,14 @@ class S3RoleManager(S3Method):
                     for v in vars:
                         if v[:4] == "acl_":
                             acl_type, name = v[4:].split("_", 1)
-                            n = name.split("_", 3)
+                            n = name.split("-", 3)
                             i, c, f, t = map(lambda item: \
-                                             item != any and item or None, n)
+                                             item != ANY and item or None, n)
                             if i.isdigit():
                                 i = int(i)
                             else:
                                 i = None
-                            name = "%s_%s_%s" % (c, f, t)
+                            name = "%s-%s-%s" % (c, f, t)
                             if name not in acls:
                                 acls[name] = Storage()
                             acls[name].update({"id": i,
@@ -6491,7 +6491,7 @@ class S3RoleManager(S3Method):
                             f = v == "new_controller" and \
                                      vars.new_function or None
                             t = v == "new_table" and vars.new_table or None
-                            name = "%s_%s_%s" % (c, f, t)
+                            name = "%s-%s-%s" % (c, f, t)
                             x = v == "new_table" and "t" or "c"
                             uacl = vars["new_%s_uacl" % x]
                             oacl = vars["new_%s_oacl" % x]
