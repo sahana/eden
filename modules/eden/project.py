@@ -1380,7 +1380,7 @@ class S3ProjectActivityTypeModel(S3Model):
         )
 
         # Reusable Fields
-        represent = S3Represent(lookup="project_activity_type")
+        represent = S3Represent(lookup=tablename)
         activity_type_id = S3ReusableField("activity_type_id", table,
                                            sortby = "name",
                                            requires = IS_NULL_OR(
@@ -2078,7 +2078,7 @@ class S3ProjectHazardModel(S3Model):
             msg_list_empty = T("No Hazards currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup="project_hazard")
+        represent = S3Represent(lookup=tablename)
         hazard_id = S3ReusableField("hazard_id", table,
                                     sortby = "name",
                                     label = T("Hazards"),
@@ -2863,7 +2863,7 @@ class S3ProjectThemeModel(S3Model):
             msg_list_empty = T("No Themes currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup="project_theme")
+        represent = S3Represent(lookup=tablename)
         theme_id = S3ReusableField("theme_id", table,
                                    label = T("Theme"),
                                    sortby = "name",
@@ -3359,7 +3359,7 @@ class S3ProjectTaskModel(S3Model):
         )
 
         # Reusable Field
-        represent = S3Represent(lookup="project_milestone")
+        represent = S3Represent(lookup=tablename)
         milestone_id = S3ReusableField("milestone_id", table,
                                        sortby="name",
                                        requires = IS_NULL_OR(

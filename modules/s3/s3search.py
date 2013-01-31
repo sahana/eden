@@ -48,6 +48,7 @@ from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3crud import S3CRUD
+from s3data import S3DataTable
 from s3export import S3Exporter
 from s3navigation import s3_search_tabs
 from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
@@ -1371,8 +1372,6 @@ i18n.edit_saved_search="%s"
             @param attr: request parameters
         """
 
-        from s3.s3data import S3DataTable
-
         T = current.T
         session = current.session
         request = self.request
@@ -1490,11 +1489,15 @@ i18n.edit_saved_search="%s"
             form.append(advanced_form)
         output["form"] = form
 
-        # Store format URLs - @todo: this is currently broken
+        # Store format URLs
         formats = s3.formats
         format_url = r.url(method="", vars=search_url_vars)
         for f in ("pdf", "xls", "rss", "xml"):
             formats[f] = format_url
+        for f in table.fields:
+            if f in ["location_id", "site_id"]:
+                formats["kml"] = format_url
+                break
 
         # List fields
         if not list_fields:

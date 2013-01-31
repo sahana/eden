@@ -584,7 +584,7 @@ def item():
         msg_record_deleted = T("Item deleted"),
         msg_list_empty = T("No Items currently registered"))
 
-    response.s3.formats.pdf = URL(f="item_export_pdf")
+    s3.formats.pdf = URL(f="item_export_pdf")
 
     s3db.configure(tablename,
                     main="code",
@@ -718,8 +718,8 @@ def kit():
         msg_record_deleted = T("Kit deleted"),
         msg_list_empty = T("No Kits currently registered"))
 
-    response.s3.formats.pdf = URL(f="kit_export_pdf")
-    response.s3.formats.xls = URL(f="kit_export_xls")
+    s3.formats.pdf = URL(f="kit_export_pdf")
+    s3.formats.xls = URL(f="kit_export_xls")
     if len(request.args) == 2:
         s3db.configure(tablename,
             update_next=URL(f="kit_item", args=request.args[1]))
@@ -1506,7 +1506,7 @@ def project():
            #(T("Donors"), "organisation"),
            #(T("Facilities"), "site"),   # Ticket 195
            ]
-    rheader = lambda r: response.s3.project_rheader(r, tabs=tabs)
+    rheader = lambda r: s3db.project_rheader(r, tabs=tabs)
 
     output = s3_rest_controller("project", resourcename,
                                 rheader=rheader)
