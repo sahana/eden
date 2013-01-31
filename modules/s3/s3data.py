@@ -837,7 +837,7 @@ class S3DataList(object):
     # -------------------------------------------------------------------------
     # Standard API
     # -------------------------------------------------------------------------
-    def __init__(self, resource, list_fields, records, listid=None):
+    def __init__(self, resource, list_fields, records, listid=None, layout=None):
         """
             Constructor
 
@@ -856,53 +856,74 @@ class S3DataList(object):
         else:
             self.listid = listid
 
+        if layout is not None:
+            self.layout = layout
+        else:
+            self.layout = self.render
+
     # ---------------------------------------------------------------------
     def html(self):
         """ Render list data as HTML (nested DIVs) """
 
-        items = []
-
-        records = self.records
         resource = self.resource
         list_fields = self.list_fields
+        rfields = resource.resolve_selectors(list_fields)[0]
+
+        render = self.layout
+        
+        records = self.records
+        if records is not None:
+            items = [render(rfields, record) for record in records]
+        else:
+            # template
+            raise NotImplementedError
 
         listid = self.listid
-
-        rfields = resource.resolve_selectors(list_fields)[0]
-        pkey = str(resource._id)
-
-        for record in records:
-
-            if pkey in record:
-                item_id = "%s-%s" % (listid, record[pkey])
-            else:
-                raise SyntaxError("no record ID available")
-
-            item = DIV(_class="dl-item", _id=item_id)
-            for rfield in rfields:
-                if rfield.colname == pkey or rfield.colname not in record:
-                    continue
-                field_id = "%s-%s" % (item_id, rfield.colname.replace(".", "_"))
-                value_id = "%s-value" % field_id
-                value = record[rfield.colname]
-                label = LABEL(rfield.label,
-                              _for = value_id,
-                              _class = "dl-item-label",
-                              _id = "%s-label" % field_id)
-                item.append(DIV(label,
-                                DIV(value,
-                                    _class="dl-item-value",
-                                    _id=value_id),
-                                _class = "dl-field",
-                                _id=field_id))
-            items.append(item)
-
-        return DIV(items, _class = "dl", _id = self.listid)
+        return DIV(items, _class = "dl", _id = listid)
 
     # ---------------------------------------------------------------------
     def json(self):
         """ Render list data as JSON (for Ajax pagination) """
 
         raise NotImplementedError
+
+    # ---------------------------------------------------------------------
+    def render(self, rfields, record):
+        """ Default item renderer """
+        
+        pkey = str(self.resource._id)
+
+        listid = self.listid
+        if pkey in record:
+            item_id = "%s-%s" % (listid, record[pkey])
+        else:
+            # template
+            item_id = "%s-[id]" % list_id
+
+        item = DIV(_class="dl-item", _id=item_id)
+        for rfield in rfields:
+
+            colname = rfield.colname
+            if colname == pkey or colname not in record:
+                continue
+
+            value = record[colname]
+
+            field_id = "%s-%s" % (item_id, colname.replace(".", "_"))
+            value_id = "%s-value" % field_id
+
+            label = LABEL(rfield.label,
+                          _for = value_id,
+                          _class = "dl-item-label",
+                          _id = "%s-label" % field_id)
+
+            item.append(DIV(label,
+                            DIV(value,
+                                _class="dl-item-value",
+                                _id=value_id),
+                            _class = "dl-field",
+                            _id=field_id))
+
+        return item
 
 # END =========================================================================
