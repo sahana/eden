@@ -313,6 +313,73 @@ S3.search.toggleMapClearButton = function(event) {
         clearButton.hide();
     }
 }
+// ============================================================================
+// New search framework
+
+/*
+ * filterURL: add all current filters to a URL
+ */
+S3.search.filterURL = function(url) {
+
+    var queries = [];
+
+    // Text widgets
+    $('.text-filter:visible').each(function() {
+
+        var id = $(this).attr('id');
+
+        var url_var = $('#' + id + '-data').val(),
+            value = $(this).val();
+        if (value) {
+            var values = value.split(' ');
+            for (var i=0; i<values.length; i++) {
+                queries.push(url_var + '=*' + values[i] + '*');
+            }
+        }
+    });
+
+    // Options widgets
+    $('.options-filter:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var operator = $("input:radio[name='" + id + "_filter']:checked").val()
+        var contains=/__contains$/
+        var anyof=/__anyof$/
+                if (operator == 'any' && url_var.match(contains)) {
+                  url_var = url_var.replace(contains,'__anyof')
+                } else if (operator == 'all' && url_var.match(anyof)) {
+                  url_var = url_var.replace(anyof,'__contains')
+                }
+        var value = '';
+        $("input[name='" + id + "']:checked").each(function() {
+            if (value == '') {
+                        value = $(this).val();
+                } else {
+                        value = value + ',' + $(this).val();
+                }
+        });
+        if (value != '') {
+                queries.push(url_var + '=' + value);
+        }
+    });
+
+    // Other widgets go here...
+
+    // Construct the URL
+    var url_parts = url.split('?'), url_query = queries.join('&');
+    if (url_parts.length > 1) {
+        if (url_query) {
+            url_query = url_query + '&' + url_parts[1];
+        } else {
+            url_query = url_parts[1];
+        }
+    }
+    var filtered_url = url_parts[0];
+    if (url_query) {
+        filtered_url = filtered_url + '?' + url_query;
+    }
+    return filtered_url;
+}
 
 // To be completed: New Search Framework
 $(document).ready(function() {
