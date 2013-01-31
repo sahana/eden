@@ -1,7 +1,7 @@
 ﻿// Static code to support GIS Feature CRUD
 
 s3_gis_feature_crud = function(feature_type) {
-    if (feature_type == '') {
+    if (feature_type === '') {
         // Pass
     } else if (feature_type == 1) {
         // Point
@@ -24,25 +24,25 @@ s3_gis_feature_crud = function(feature_type) {
         $('#gis_location_wkt__row1').show();
         if (feature_type == 2) {
             // Line
-            if ($('#gis_location_wkt').val() == ''){
+            if ($('#gis_location_wkt').val() === ''){
                 // Pre-populate the WKT field
-                $('#gis_location_wkt').val('LINESTRING( , , )')
+                $('#gis_location_wkt').val('LINESTRING( , , )');
             }
         } else if (feature_type == 3) {
             // Polygon
-            if ($('#gis_location_wkt').val() == ''){
+            if ($('#gis_location_wkt').val() === ''){
                 // Pre-populate the WKT field
-                $('#gis_location_wkt').val('POLYGON(( , , ))')
+                $('#gis_location_wkt').val('POLYGON(( , , ))');
             }
         } else if (feature_type == 6) {
             // Polygon
-            if ($('#gis_location_wkt').val() == ''){
+            if ($('#gis_location_wkt').val() === ''){
                 // Pre-populate the WKT field
-                $('#gis_location_wkt').val('MULTIPOLYGON(( , , ))')
+                $('#gis_location_wkt').val('MULTIPOLYGON(( , , ))');
             }
         }
     }
-}
+};
 
 $(function() {
     var feature_type = $('#gis_location_gis_feature_type').val();
@@ -52,7 +52,7 @@ $(function() {
         // What is the new type?
         feature_type = $(this).val();
         s3_gis_feature_crud(feature_type);
-    })
+    });
 
     var level = $('#gis_location_level').val();
     if (level) {

@@ -72,21 +72,18 @@ function onPopupClose(evt) {
 // Supports S3.gis.highlightControl for All Vector Layers
 function s3_gis_tooltipSelect(event) {
     var feature = event.feature;
-    if (feature.cluster) {
-        // Cluster
-        // no tooltip
-    } else {
-        // Single Feature
+    if (!feature.cluster) {
+        // Single Feature (no tooltip for cluster)
         //S3.gis.selectedFeature = feature;
         // if there is already an opened details window, don\'t draw the tooltip
-        if (feature.popup != null) {
+        if (feature.popup !== null) {
             return;
         }
         // if there are other tooltips active, destroy them
-        if (S3.gis.tooltipPopup != null) {
+        if (S3.gis.tooltipPopup !== null) {
             map.removePopup(S3.gis.tooltipPopup);
             S3.gis.tooltipPopup.destroy();
-            if (S3.gis.lastFeature != null) {
+            if (S3.gis.lastFeature !== null) {
                 delete S3.gis.lastFeature.popup;
             }
             S3.gis.tooltipPopup = null;
@@ -122,7 +119,7 @@ function s3_gis_tooltipSelect(event) {
                 false
             );
         }
-        if (S3.gis.tooltipPopup != null) {
+        if (S3.gis.tooltipPopup !== null) {
             // should be moved to CSS
             S3.gis.tooltipPopup.contentDiv.style.backgroundColor = 'ffffcb';
             S3.gis.tooltipPopup.contentDiv.style.overflow = 'hidden';
@@ -138,7 +135,7 @@ function s3_gis_tooltipSelect(event) {
 }
 function s3_gis_tooltipUnselect(event) {
     var feature = event.feature;
-    if (feature != null && feature.popup != null) {
+    if (feature !== null && feature.popup !== null) {
         map.removePopup(feature.popup);
         feature.popup.destroy();
         delete feature.popup;
@@ -283,7 +280,7 @@ function s3_gis_pulsate(feature) {
         count++;
     };
     window.resizeInterval = window.setInterval(resize, 50, point, radius);
-};
+}
 
 // Google Earth control
 function addGoogleEarthControl(toolbar) {
@@ -315,11 +312,12 @@ function addGoogleEarthKmlLayers() {
     if (S3.gis.layers_features) {
         for (var i = 0; i < S3.gis.layers_features.length; i++) {
             var layer = S3.gis.layers_features[i];
+            var visibility;
             if (undefined != layer.visibility) {
-                var visibility = layer.visibility;
+                visibility = layer.visibility;
             } else {
                 // Default to visible
-                var visibility = true;
+                visibility = true;
             }
             if (visibility) {
                 // @ToDo: Add Authentication when-required
@@ -653,10 +651,11 @@ function addSaveButton(toolbar) {
             var layersStr = Ext.util.JSON.encode(state.layers);
             var pluginsStr = Ext.util.JSON.encode(state.plugins);
             // Use AJAX to send back
+            var url;
             if (S3.gis.config_id) {
-                var url = S3.Ap.concat('/gis/config/' + S3.gis.config_id + '.url/update');
+                url = S3.Ap.concat('/gis/config/' + S3.gis.config_id + '.url/update');
             } else {
-                var url = S3.Ap.concat('/gis/config.url/create');
+                url = S3.Ap.concat('/gis/config.url/create');
             }
             Ext.Ajax.request({
                 url: url,
@@ -669,7 +668,7 @@ function addSaveButton(toolbar) {
                         // Ensure that future saves are updates, not creates
                         S3.gis.config_id = id;
                         // Change the Menu link
-                        var url = S3.Ap.concat('/gis/config/', id, '/layer_entity')
+                        var url = S3.Ap.concat('/gis/config/', id, '/layer_entity');
                         $('#gis_menu_config').attr('href', url);
                     }
                 },
@@ -717,7 +716,7 @@ function getState() {
         var id = key.s3_layer_id;
         layer_config = {
             id: id
-        }
+        };
         // Only return non-default options
         if (key.visibility) {
             layer_config['visible'] = key.visibility;
@@ -911,8 +910,9 @@ function addLayerPropertiesButton() {
                         if (S3.gis.propertiesWindow) {
                             S3.gis.propertiesWindow.close();
                         }
+                        var tabPanel;
                         if (layer_type == 'feature') {
-                            var tabPanel = new Ext.TabPanel({
+                            tabPanel = new Ext.TabPanel({
                                 activeTab: 0,
                                 items: [
                                     {
@@ -957,7 +957,7 @@ function addLayerPropertiesButton() {
                                 });
                             });
                         } else {
-                            var tabPanel = new Ext.Panel({
+                            tabPanel = new Ext.Panel({
                                 // View/Edit Basic Details
                                 // @ToDo: i18n
                                 title: 'Layer Properties',
@@ -1012,7 +1012,7 @@ function addLayerPropertiesButton() {
                                 });
                             }
                             return false;
-                        })
+                        });
                         // Activate Help Tooltips
                         S3.addTooltips();
                         // Activate RoleRequired autocomplete

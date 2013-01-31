@@ -11,15 +11,15 @@
 		},
 		destroy: function() {
 			return this.each(function() {
-			})
+			});
 		},
 		activateOptions: function(checklist) {
 			// Check the checkboxes according to checklist
-			alert(this)
+			alert(this);
 		},
 		replaceOptions: function(checklist) {
 			// Uncheck all checkboxes before enabling those in checklist
-			console.log(this)
+			console.log(this);
 		}
 	};
 
@@ -30,6 +30,7 @@
 			return methods.init.apply(this, arguments);
 		} else {
 			$.error('Method ' + method + ' does not exist on s3optionsmatrix');
+			return false;
 		}
 	};
 })(jQuery);

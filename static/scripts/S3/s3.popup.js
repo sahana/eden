@@ -16,9 +16,7 @@ function s3_tb_refresh() {
     var $_GET = getQueryParams(document.location.search);
 
     var level = $_GET['level'];
-    if (typeof level === 'undefined') {
-        // pass
-    } else {
+    if (typeof level != 'undefined') {
         // Location Selector
         s3_tb_call_cleanup(level);
         return;
@@ -28,13 +26,9 @@ function s3_tb_refresh() {
     s3_debug('caller', caller);
 
     var person_id = $_GET['person_id'];
-    if (typeof person_id === 'undefined') {
-        // pass
-    } else {
+    if (typeof person_id != 'undefined') {
         // Person Selector
-        if (typeof caller === 'undefined') {
-            // pass
-        } else {
+        if (typeof caller != 'undefined') {
             var field = self.parent.$('#' + caller);
             field.val(person_id).change();
         }
@@ -45,20 +39,26 @@ function s3_tb_refresh() {
     var re = new RegExp('.*\\' + S3.Ap + '\\/');
 
     var child = $_GET['child'];
+    var rel_url;
+    var args;
+    var child_resource;
     if (typeof child === 'undefined') {
         // Use default
         var url = new String(self.location);
-        var rel_url = url.replace(re, '');
-        var args = rel_url.split('?')[0].split('/');
-        var request_function = args[1]
-        var child_resource = request_function + '_id';
+        rel_url = url.replace(re, '');
+        args = rel_url.split('?')[0].split('/');
+        var request_function = args[1];
+        child_resource = request_function + '_id';
     } else {
         // Use manual override
-        var child_resource = child;
+        child_resource = child;
     }
     s3_debug('child_resource', child_resource);
 
     var parent = $_GET['parent'];
+    var parent_resource;
+    var parent_url;
+    var caller_prefix;
     if (typeof parent === 'undefined') {
         // @ToDo: Make this less fragile by passing these fields as separate vars?
         var parent_field = caller.replace('_' + child_resource, '');
@@ -66,15 +66,15 @@ function s3_tb_refresh() {
         var parent_module = parent_field.replace(/_.*/, '');
 
         // Find the parent resource (fixed for components)
-        var parent_resource = parent_field.replace(parent_module + '_', '');
-        var parent_url = new String(self.parent.location);
-        var rel_url = parent_url.replace(re, '');
-        var args = rel_url.split('?')[0].split('/');
+        parent_resource = parent_field.replace(parent_module + '_', '');
+        parent_url = new String(self.parent.location);
+        rel_url = parent_url.replace(re, '');
+        args = rel_url.split('?')[0].split('/');
         var parent_component = null;
-        var caller_prefix = args[0];
+        caller_prefix = args[0];
         var parent_function = args[1];
         if (args.length > 2) {
-            if (args[2].match(/\d*/) != null) {
+            if (args[2].match(/\d*/) !== null) {
                 if (args.length > 3) {
                     parent_component = args[3];
                 }
@@ -82,22 +82,22 @@ function s3_tb_refresh() {
                 parent_component = args[2];
             }
         }
-        if ((parent_component != null) && (parent_resource != parent_function) && (parent_resource == parent_component)) {
+        if ((parent_component !== null) && (parent_resource != parent_function) && (parent_resource == parent_component)) {
             parent_resource = parent_function + '/' + parent_component;
         }
     } else {
         // Use manual override
-        var parent_resource = parent;
-        var parent_url = new String(self.parent.location);
-        var rel_url = parent_url.replace(re, '');
-        var args = rel_url.split('?')[0].split('/');
-        var caller_prefix = args[0];
+        parent_resource = parent;
+        parent_url = new String(self.parent.location);
+        rel_url = parent_url.replace(re, '');
+        args = rel_url.split('?')[0].split('/');
+        caller_prefix = args[0];
     }
     s3_debug('parent_resource', parent_resource);
     s3_debug('caller_prefix', caller_prefix);
 
     // URL to retrieve the Options list for the field of the master resource
-    var url = S3.Ap.concat('/' + caller_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
+    var opt_url = S3.Ap.concat('/' + caller_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
 
     // Dropdown or Autocomplete
     var selector = self.parent.$('#' + caller);
@@ -107,10 +107,11 @@ function s3_tb_refresh() {
     var has_dummy = (dummy.val() != undefined);
     s3_debug('has_dummy', has_dummy);
     var checkboxes = selector.hasClass('checkboxes-widget-s3');
+    var append;
     if (checkboxes) {
         // The number of columns
         var cols = self.parent.$('#' + caller + ' tbody tr:first').children().length;
-        var append = [];
+        append = [];
     } else {
         var options = self.parent.$('#' + caller + ' >option');
         var dropdown = options.length;
@@ -118,15 +119,15 @@ function s3_tb_refresh() {
         //var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
         //var has_dummy = (dummy.val() != undefined);
         if (dropdown) {
-            var append = [];
+            append = [];
         } else {
             // Return only current record if field is autocomplete
-            url += '&only_last=1';
+            opt_url += '&only_last=1';
         }
     }
     var value_high = 1;
     var represent_high = '';
-    $.getJSONS3(url, function (data) {
+    $.getJSONS3(opt_url, function (data) {
         var value, represent, id;
         var count = 0;
 
@@ -144,7 +145,7 @@ function s3_tb_refresh() {
                 count++;
             }
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
-            numeric_value = (+value)
+            numeric_value = (+value);
             if (numeric_value > value_high) {
                 value_high = numeric_value;
                 represent_high = represent;
@@ -155,13 +156,14 @@ function s3_tb_refresh() {
             dummy.val(represent_high);
             selector.val(value_high).change();
         }
+        var i;
         if (dropdown) {
             // We have been called next to a drop-down
             if (inline) {
                 // Update all related selectors with new options list
                 var all_selects = ['_0', '_none', '_default'], suffix;
                 var selector_prefix = caller.split('_').slice(0, -1).join('_');
-                for (var i=0; i < all_selects.length; i++) {
+                for (i=0; i < all_selects.length; i++) {
                     suffix = all_selects[i];
                     var s = self.parent.$('#' + selector_prefix + suffix);
                     s.empty().append(append.join(''));
@@ -185,8 +187,8 @@ function s3_tb_refresh() {
             });
             var output = [];
             count = 0;
-            for ( var i = 0; i < append.length; i++ ) {
-                if (count == 0) {
+            for ( i = 0; i < append.length; i++ ) {
+                if (count === 0) {
                     // Start the row
                     output.push('<tr>');
                     // Add a cell
@@ -209,7 +211,7 @@ function s3_tb_refresh() {
             // Select the value we just added
             values.push(value_high);
             //selector.val(values).change();
-            for ( var i = 0; i < values.length; i++ ) {
+            for ( i = 0; i < values.length; i++ ) {
                 self.parent.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
             }
         }
@@ -228,7 +230,7 @@ function s3_tb_refresh() {
 // Function to get the URL parameters
 function getQueryParams(qs) {
     // We want all the vars, i.e. after the ?
-    qs = qs.split('?')[1]
+    qs = qs.split('?')[1];
     var pairs = qs.split('&');
     var params = {};
     var check = [];

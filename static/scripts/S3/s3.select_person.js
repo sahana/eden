@@ -147,7 +147,7 @@ function select_person(person_id) {
             $('#select_from_registry_row').removeClass('hide');
         }
     }
-};
+}
 
 function enable_person_fields() {
     $('#pr_person_first_name').removeAttr('disabled');
@@ -158,7 +158,7 @@ function enable_person_fields() {
     $('#pr_person_occupation').removeAttr('disabled');
     $('#pr_person_email').removeAttr('disabled');
     $('#pr_person_mobile_phone').removeAttr('disabled');
-};
+}
 
 function disable_person_fields() {
     $('#pr_person_first_name').attr('disabled', true);
@@ -169,4 +169,4 @@ function disable_person_fields() {
     $('#pr_person_occupation').attr('disabled', true);
     $('#pr_person_email').attr('disabled', true);
     $('#pr_person_mobile_phone').attr('disabled', true);
-};
+}

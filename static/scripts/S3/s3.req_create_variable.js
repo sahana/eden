@@ -23,7 +23,7 @@ $(document).ready(function() {
         $('#req_req_recv_by_id__row1 label').html(i18n.req_recv_by_id + ':');
         $('#req_req_purpose__row1').show();
         $('#req_req_purpose__row').show();
-        if (($('#req_req_comments').val() == '') || ($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
+        if (($('#req_req_comments').val() === '') || ($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
             $('#req_req_comments').addClass('default-text')
                                   .attr({ value: i18n.req_other_msg })
                                   .focus(function() {
@@ -47,9 +47,7 @@ $(document).ready(function() {
             $('#req_req_recv_by_id__row1 label').html(i18n.req_items_recv_by_id + ':');
         } else if (type == 3) {
             // People/Skills
-            if ($('#req_req_is_template').is(':checked')) {
-                // pass
-            } else {
+            if (!$('#req_req_is_template').is(':checked')) {
                 $('#req_req_date_required_until__row1').show();
                 $('#req_req_date_required_until__row').show();
             }
@@ -61,7 +59,7 @@ $(document).ready(function() {
         $('.summary_item').remove();
         $('#req_req_purpose__row1').show();
         $('#req_req_purpose__row').show();
-        if (($('#req_req_comments').val() == '') || ($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
+        if (($('#req_req_comments').val() === '') || ($('#req_req_comments').val() == i18n.req_next_msg) || ($('#req_req_comments').val() == i18n.req_other_msg)) {
             $('#req_req_comments').addClass('default-text')
                                   .attr({ value: i18n.req_next_msg })
                                   .focus(function() {

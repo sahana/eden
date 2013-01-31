@@ -21,7 +21,7 @@ function addLayers() {
         // Only load Google layers if GoogleAPI downloaded ok
         // - allow rest of map to work offline
         google & addGoogleLayers();
-    } catch(err) {};
+    } catch(err) {}
     // Bing
     if (S3.gis.Bing) {
         addBingLayers();
@@ -62,7 +62,7 @@ function addLayers() {
     // JS (generated server-side in s3gis.py)
     try {
         addJSLayers();
-    } catch(err) {};
+    } catch(err) {}
 
     /* Overlays */
     // Theme
@@ -105,7 +105,7 @@ function addLayers() {
             extractStyles: true,
             extractAttributes: true,
             maxDepth: 2
-        })
+        });
         for (i = S3.gis.layers_kml.length; i > 0; i--) {
             addKMLLayer(S3.gis.layers_kml[i - 1]);
         }
@@ -166,37 +166,42 @@ result = GET http[s]://hostname/ArcGIS/tokens?request=getToken&username=myuserna
 function addArcRESTLayer(layer) {
     var name = layer.name;
     var url = [layer.url];
+    var layers;
     if (undefined != layer.layers) {
-        var layers = layer.layers;
+        layers = layer.layers;
     } else {
         // Default layer
-        var layers = 0;
+        layers = 0;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var isBaseLayer;
     if (undefined != layer.base) {
-        var isBaseLayer = layer.base;
+        isBaseLayer = layer.base;
     } else {
-        var isBaseLayer = false;
+        isBaseLayer = false;
     }
+    var transparent;
     if (undefined != layer.transparent) {
-        var transparent = layer.transparent;
+        transparent = layer.transparent;
     } else {
-        var transparent = true;
+        transparent = true;
     }
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
         // Default to visible
-        var visibility = true;
+        visibility = true;
     }
 
     var arcRESTLayer = new OpenLayers.Layer.ArcGIS93Rest(
@@ -344,75 +349,85 @@ OpenLayers.Strategy.AttributeCluster = OpenLayers.Class(OpenLayers.Strategy.Clus
 function addGeoJSONLayer(layer) {
     var name = layer.name;
     var url = layer.url;
+    var marker_url;
     if (undefined != layer.marker_image) {
         // per-Layer Marker
-        var marker_url = S3.gis.marker_url + layer.marker_image;
+        marker_url = S3.gis.marker_url + layer.marker_image;
         var marker_height = layer.marker_height;
         var marker_width = layer.marker_width;
     } else {
         // per-Feature Marker or Shape
-        var marker_url = '';
+        marker_url = '';
     }
+    var refresh;
     if (undefined != layer.refresh) {
-        var refresh = layer.refresh;
+        refresh = layer.refresh;
     } else {
-        var refresh = 900; // seconds (so 15 mins)
+        refresh = 900; // seconds (so 15 mins)
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
         // Default to visible
-        var visibility = true;
+        visibility = true;
     }
+    var opacity;
     if (undefined != layer.opacity) {
-        var opacity = layer.opacity;
+        opacity = layer.opacity;
     } else {
         // Default to opaque
-        var opacity = 1;
+        opacity = 1;
     }
+    var cluster_distance;
     if (undefined != layer.cluster_distance) {
-        var cluster_distance = layer.cluster_distance;
+        cluster_distance = layer.cluster_distance;
     } else {
         // Default to global settings
-        var cluster_distance = S3.gis.cluster_distance;
+        cluster_distance = S3.gis.cluster_distance;
     }
+    var cluster_threshold;
     if (undefined != layer.cluster_threshold) {
-        var cluster_threshold = layer.cluster_threshold;
+        cluster_threshold = layer.cluster_threshold;
     } else {
         // Default to global settings
-        var cluster_threshold = S3.gis.cluster_threshold;
+        cluster_threshold = S3.gis.cluster_threshold;
     }
+    var projection;
     if (undefined != layer.projection) {
-        var projection = layer.projection;
+        projection = layer.projection;
     } else {
         // Feature Layers, GeoRSS & KML are always in 4326
-        var projection = 4326;
+        projection = 4326;
     }
     if (4326 == projection) {
         projection = S3.gis.proj4326;
     } else {
         projection = new OpenLayers.Projection('EPSG:' + projection);
     }
+    var layer_type;
     if (undefined != layer.type) {
-        var layer_type = layer.type;
+        layer_type = layer.type;
     } else {
         // Feature Layers
-        var layer_type = 'feature';
+        layer_type = 'feature';
     }
+    var style;
     if (undefined != layer.style) {
-        var style = layer.style;
+        style = layer.style;
     } else {
-        var style = [];
+        style = [];
     }
 
     // Style Rule For Clusters
@@ -436,112 +451,119 @@ function addGeoJSONLayer(layer) {
     var cluster_options = {
         context: {
             graphicWidth: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else if (feature.attributes.marker_width) {
                     // Use marker_width from feature
-                    var pix = feature.attributes.marker_width;
+                    pix = feature.attributes.marker_width;
                 } else {
                     // per-Layer Marker for Unclustered Point
-                    var pix = marker_width;
+                    pix = marker_width;
                 }
                 return pix;
             },
             graphicHeight: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else if (feature.attributes.marker_height) {
                     // Use marker_height from feature
-                    var pix = feature.attributes.marker_height;
+                    pix = feature.attributes.marker_height;
                 } else {
                     // per-Layer Marker for Unclustered Point
-                    var pix = marker_height;
+                    pix = marker_height;
                 }
                 return pix;
             },
             graphicXOffset: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else if (feature.attributes.marker_width) {
                     // Use marker_width from feature
-                    var pix = -(feature.attributes.marker_width / 2);
+                    pix = -(feature.attributes.marker_width / 2);
                 } else {
                     // per-Layer Marker for Unclustered Point
-                    var pix = -(marker_width / 2);
+                    pix = -(marker_width / 2);
                 }
                 return pix;
             },
             graphicYOffset: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else if (feature.attributes.marker_height) {
                     // Use marker_height from feature
-                    var pix = -feature.attributes.marker_height;
+                    pix = -feature.attributes.marker_height;
                 } else {
                     // per-Layer Marker for Unclustered Point
-                    var pix = -marker_height;
+                    pix = -marker_height;
                 }
                 return pix;
             },
             graphicName: function(feature) {
+            	var shape;
                 if (feature.cluster) {
                     // Clustered Point
-                    var shape = 'circle';
+                    shape = 'circle';
                 } else if (feature.attributes.shape) {
                     // Use shape from feature
-                    var shape = feature.attributes.shape;
+                    shape = feature.attributes.shape;
                 } else {
                     // default to a Circle
-                    var shape = 'circle';
+                    shape = 'circle';
                 }
                 return shape;
             },
             externalGraphic: function(feature) {
+            	var url;
                 if (feature.cluster) {
                     // Clustered Point
-                    var url = '';
+                    url = '';
                 } else if (feature.attributes.marker_url) {
                     // Use marker from feature
-                    var url = feature.attributes.marker_url;
+                    url = feature.attributes.marker_url;
                 } else {
                     // per-Layer Marker for Unclustered Point
-                    var url = marker_url;
+                    url = marker_url;
                 }
                 return url;
             },
             radius: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Size for Clustered Point
-                    var pix = Math.min(feature.attributes.count/2, 8) + 10;
+                    pix = Math.min(feature.attributes.count/2, 8) + 10;
                 } else if (feature.attributes.size) {
                     // Use size from feature
-                    var pix = feature.attributes.size;
+                    pix = feature.attributes.size;
                 } else {
                     // default Size for Unclustered Point
-                    var pix = 10;
+                    pix = 10;
                 }
                 return pix;
             },
             fill: function(feature) {
+            	var color;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
                         // Use colour from features
-                        var color = feature.cluster[0].attributes.colour;
+                        color = feature.cluster[0].attributes.colour;
                     } else {
                         // default fillColor for Clustered Point
-                        var color = '#8087ff';
+                        color = '#8087ff';
                     }
                 } else if (feature.attributes.colour) {
                     // Feature Query: Use colour from feature
-                    var color = feature.attributes.colour;
+                    color = feature.attributes.colour;
                 } else if (style.length) {
                     // Theme Layer: Lookup colour from style rule
                     var value = feature.attributes.value;
-                    var color;
                     $.each(style, function(index, elem) { 
                         if ((value >= elem.low) && (value < elem.high)) {
                             color = elem.fill;
@@ -556,44 +578,45 @@ function addGeoJSONLayer(layer) {
                     }
                 } else {
                     // default fillColor for Unclustered Point
-                    var color = '#f5902e';
+                    color = '#f5902e';
                 }
                 return color;
             },
             fillOpacity: function(feature) {
+            	var fill_opacity;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.opacity) {
                         // Use opacity from features
-                        var opacity = feature.cluster[0].attributes.opacity;
+                        fill_opacity = feature.cluster[0].attributes.opacity;
                     } else {
                         // default fillOpacity for Clustered Point
-                        var opacity = opacity;
+                        fill_opacity = opacity;
                     }
                 } else if (feature.attributes.opacity) {
                     // Use opacity from feature
-                    var opacity = feature.attributes.opacity;
+                    fill_opacity = feature.attributes.opacity;
                 } else {
                     // default fillOpacity for Unclustered Point
-                    var opacity = opacity;
+                    fill_opacity = opacity;
                 }
-                return opacity;
+                return fill_opacity;
             },
             stroke: function(feature) {
+            	var color;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
                         // Use colour from features
-                        var color = feature.cluster[0].attributes.colour;
+                        color = feature.cluster[0].attributes.colour;
                     } else {
                         // default strokeColor for Clustered Point
-                        var color = '#2b2f76';
+                        color = '#2b2f76';
                     }
                 } else if (feature.attributes.colour) {
                     // Feature Query: Use colour from feature
-                    var color = feature.attributes.colour;
+                    color = feature.attributes.colour;
                 } else if (style.length) {
                     // Theme Layer: Lookup colour from style rule
                     var value = feature.attributes.value;
-                    var color;
                     $.each(style, function(index, elem) { 
                         if ((value >= elem.low) && (value < elem.high)) {
                             color = elem.fill;
@@ -608,7 +631,7 @@ function addGeoJSONLayer(layer) {
                     }
                 } else {
                     // default strokeColor for Unclustered Point
-                    var color = '#f5902e';
+                    color = '#f5902e';
                 }
                 return color;
             },
@@ -891,50 +914,58 @@ function addGPXLayer(layer) {
     var marker_url = S3.gis.marker_url + layer.marker_image;
     var marker_height = layer.marker_height;
     var marker_width = layer.marker_width;
+    var waypoints;
     if (undefined != layer.waypoints) {
-        var waypoints = layer.waypoints;
+        waypoints = layer.waypoints;
     } else {
-        var waypoints = true;
+        waypoints = true;
     }
+    var tracks;
     if (undefined != layer.tracks) {
-        var tracks = layer.tracks;
+        tracks = layer.tracks;
     } else {
-        var tracks = true;
+        tracks = true;
     }
+    var routes;
     if (undefined != layer.routes) {
-        var routes = layer.routes;
+        routes = layer.routes;
     } else {
-        var routes = true;
+        routes = true;
     }
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
-        var visibility = true;
+        visibility = true;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var opacity;
     if (undefined != layer.opacity) {
-        var opacity = layer.opacity;
+        opacity = layer.opacity;
     } else {
-        var opacity = 1;
+        opacity = 1;
     }
+    var cluster_distance;
     if (undefined != layer.cluster_distance) {
-        var cluster_distance = layer.cluster_distance;
+        cluster_distance = layer.cluster_distance;
     } else {
-        var cluster_distance = S3.gis.cluster_distance;
+        cluster_distance = S3.gis.cluster_distance;
     }
+    var cluster_threshold;
     if (undefined != layer.cluster_threshold) {
-        var cluster_threshold = layer.cluster_threshold;
+        cluster_threshold = layer.cluster_threshold;
     } else {
-        var cluster_threshold = S3.gis.cluster_threshold;
+        cluster_threshold = S3.gis.cluster_threshold;
     }
 
     // Needs to be uniquely instantiated
@@ -1005,51 +1036,59 @@ function addKMLLayer(layer) {
     var marker_url = S3.gis.marker_url + layer.marker_image;
     var marker_height = layer.marker_height;
     var marker_width = layer.marker_width;
+    var title;
     if (undefined != layer.title) {
-        var title = layer.title;
+        title = layer.title;
     } else {
-        var title = 'name';
+        title = 'name';
     }
+    var body;
     if (undefined != layer.body) {
-        var body = layer.body;
+        body = layer.body;
     } else {
-        var body = 'description';
+        body = 'description';
     }
+    var refresh;
     if (undefined != layer.refresh) {
-        var refresh = layer.refresh;
+        refresh = layer.refresh;
     } else {
-        var refresh = 900; // seconds (so 15 mins)
+        refresh = 900; // seconds (so 15 mins)
     }
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
         // Default to visible
-        var visibility = true;
+        visibility = true;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var opacity;
     if (undefined != layer.opacity) {
-        var opacity = layer.opacity;
+        opacity = layer.opacity;
     } else {
-        var opacity = 1;
+        opacity = 1;
     }
+    var cluster_distance;
     if (undefined != layer.cluster_distance) {
-        var cluster_distance = layer.cluster_distance;
+        cluster_distance = layer.cluster_distance;
     } else {
-        var cluster_distance = S3.gis.cluster_distance;
+        cluster_distance = S3.gis.cluster_distance;
     }
+    var cluster_threshold;
     if (undefined != layer.cluster_threshold) {
-        var cluster_threshold = layer.cluster_threshold;
+        cluster_threshold = layer.cluster_threshold;
     } else {
-        var cluster_threshold = S3.gis.cluster_threshold;
+        cluster_threshold = S3.gis.cluster_threshold;
     }
 
     // Pre-cache this image
@@ -1079,77 +1118,85 @@ function addKMLLayer(layer) {
     var cluster_options = {
         context: {
             graphicWidth: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else {
-                    var pix = S3.gis.image.width;
+                    pix = S3.gis.image.width;
                 }
                 return pix;
             },
             graphicHeight: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else {
-                    var pix = S3.gis.image.height;
+                    pix = S3.gis.image.height;
                 }
                 return pix;
             },
             graphicXOffset: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else {
-                    var pix = -(S3.gis.image.width / 2);
+                    pix = -(S3.gis.image.width / 2);
                 }
                 return pix;
             },
             graphicYOffset: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    var pix = '';
+                    pix = '';
                 } else {
-                    var pix = -S3.gis.image.height;
+                    pix = -S3.gis.image.height;
                 }
                 return pix;
             },
             externalGraphic: function(feature) {
+            	var url;
                 if (feature.cluster) {
                     // Clustered Point
-                    var url = '';
+                    url = '';
                 } else {
-                    var url = marker_url;
+                    url = marker_url;
                 }
                 return url;
             },
             radius: function(feature) {
+            	var pix;
                 if (feature.cluster) {
                     // Size for Clustered Point
-                    var pix = Math.min(feature.attributes.count/2, 8) + 10;
+                    pix = Math.min(feature.attributes.count/2, 8) + 10;
                 } else {
                     // default Size for Unclustered Point
-                    var pix = 10;
+                    pix = 10;
                 }
                 return pix;
             },
             fill: function(feature) {
+            	var color;
                 if (feature.cluster) {
                     // default fillColor for Clustered Point
-                    var color = '#8087ff';
+                    color = '#8087ff';
                 } else {
                     // default fillColor for Unclustered Point
-                    var color = '#f5902e';
+                    color = '#f5902e';
                 }
                 return color;
             },
             stroke: function(feature) {
+            	var color;
                 if (feature.cluster) {
                     // default strokeColor for Clustered Point
-                    var color = '#2b2f76';
+                    color = '#2b2f76';
                 } else {
                     // default strokeColor for Unclustered Point
-                    var color = '#f5902e';
+                    color = '#f5902e';
                 }
                 return color;
             },
@@ -1238,7 +1285,7 @@ var s3_gis_scaleImage = function() {
     }
     S3.gis.image.height = h;
     S3.gis.image.width = w;
-}
+};
 
 // OpenStreetMap
 function addOSMLayer(layer) {
@@ -1250,31 +1297,35 @@ function addOSMLayer(layer) {
     if (undefined != layer.url3) {
         url.push(layer.url3);
     }
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
         // Default to visible
-        var visibility = true;
+        visibility = true;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var isBaseLayer;
     if (undefined != layer.base) {
-        var isBaseLayer = layer.base;
+        isBaseLayer = layer.base;
     } else {
-        var isBaseLayer = true;
+        isBaseLayer = true;
     }
+    var numZoomLevels;
     if (undefined != layer.zoomLevels) {
-        var numZoomLevels = layer.zoomLevels;
+        numZoomLevels = layer.zoomLevels;
     } else {
-        var numZoomLevels = 19;
+        numZoomLevels = 19;
     }
 
     var osmLayer = new OpenLayers.Layer.TMS(
@@ -1386,25 +1437,28 @@ function addTMSLayer(layer) {
         url.push(layer.url3);
     }
     var layername = layer.layername;
+    var numZoomLevels;
     if (undefined != layer.zoomLevels) {
-        var numZoomLevels = layer.zoomLevels;
+        numZoomLevels = layer.zoomLevels;
     } else {
-        var numZoomLevels = 19;
+        numZoomLevels = 19;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var format;
     if (undefined != layer.format) {
-        var format = layer.format;
+        format = layer.format;
     } else {
-        var format = 'png';
+        format = 'png';
     }
 
     var tmsLayer = new OpenLayers.Layer.TMS(
@@ -1443,64 +1497,74 @@ function addWFSLayer(layer) {
     var featureNS = layer.featureNS;
     var schema = layer.schema;
     //var editable = layer.editable;
+    var version;
     if (undefined != layer.version) {
-        var version = layer.version;
+    	version = layer.version;
     } else {
-        var version = '1.1.0';
+        version = '1.1.0';
     }
+    var geometryName;
     if (undefined != layer.geometryName) {
-        var geometryName = layer.geometryName;
+        geometryName = layer.geometryName;
     } else {
-        var geometryName = 'the_geom';
+        geometryName = 'the_geom';
     }
+    var styleField;
     if (undefined != layer.styleField) {
-        var styleField = layer.styleField;
+        styleField = layer.styleField;
     } else {
-        var styleField = '';
+        styleField = '';
     }
+    var styleValues;
     if (undefined != layer.styleValues) {
-        var styleValues = layer.styleValues;
+        styleValues = layer.styleValues;
     } else {
-        var styleValues = {};
+        styleValues = {};
     }
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
         // Default to visible
-        var visibility = true;
+        visibility = true;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var opacity;
     if (undefined != layer.opacity) {
-        var opacity = layer.opacity;
+        opacity = layer.opacity;
     } else {
-        var opacity = 1;
+        opacity = 1;
     }
+    var cluster_distance;
     if (undefined != layer.cluster_distance) {
-        var cluster_distance = layer.cluster_distance;
+        cluster_distance = layer.cluster_distance;
     } else {
-        var cluster_distance = S3.gis.cluster_distance;
+        cluster_distance = S3.gis.cluster_distance;
     }
+    var cluster_threshold;
     if (undefined != layer.cluster_threshold) {
-        var cluster_threshold = layer.cluster_threshold;
+        cluster_threshold = layer.cluster_threshold;
     } else {
-        var cluster_threshold = S3.gis.cluster_threshold;
+        cluster_threshold = S3.gis.cluster_threshold;
     }
-
+    var projection;
+    var srsName;
     if (undefined != layer.projection) {
-        var projection = layer.projection;
-        var srsName = 'EPSG:' + projection;
+        projection = layer.projection;
+        srsName = 'EPSG:' + projection;
     } else {
-        var projection = '4326';
-        var srsName = 'EPSG:4326';
+        projection = '4326';
+        srsName = 'EPSG:4326';
     }
     var protocol = new OpenLayers.Protocol.WFS({
         version: version,
@@ -1511,7 +1575,7 @@ function addWFSLayer(layer) {
         geometryName: geometryName,
         // Needed for WFS-T
         schema: schema
-    })
+    });
 
     var cluster_options = {
         context: {
@@ -1552,7 +1616,7 @@ function addWFSLayer(layer) {
                 return label;
             }
         }
-    }
+    };
 
     if (styleField && styleValues) {
         // Use the Custom Styling
@@ -1578,7 +1642,7 @@ function addWFSLayer(layer) {
         };
         cluster_options.context.stroke = function(feature) {
             // strokeColor for Unclustered Point
-            var color
+            var color;
             $.each( styleValues, function(i, n){
                 if (i == feature.attributes[styleField]) {
                     color = n;
@@ -1628,10 +1692,10 @@ function addWFSLayer(layer) {
     // Put these in Global Scope & i18n the messages
     //function showSuccessMsg(){
     //    showMsg("Transaction successfully completed");
-    //};
+    //}
     //function showFailureMsg(){
     //    showMsg("An error occured while operating the transaction");
-    //};
+    //}
     // if Editable
     // Set up a save strategy
     //var saveStrategy = new OpenLayers.Strategy.Save();
@@ -1694,80 +1758,92 @@ function addWMSLayer(layer) {
         url = url.replace('://', '://' + username + ':' + password + '@');
     }
     var layers = layer.layers;
+    var visibility;
     if (undefined != layer.visibility) {
-        var visibility = layer.visibility;
+        visibility = layer.visibility;
     } else {
-        var visibility = true;
+        visibility = true;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var isBaseLayer;
     if (undefined != layer.base) {
-        var isBaseLayer = layer.base;
+        isBaseLayer = layer.base;
     } else {
-        var isBaseLayer = false;
+        isBaseLayer = false;
     }
+    var transparent;
     if (undefined != layer.transparent) {
-        var transparent = layer.transparent;
+        transparent = layer.transparent;
     } else {
-        var transparent = true;
+        transparent = true;
     }
+    var format;
     if (undefined != layer.format) {
-        var format = layer.format;
+        format = layer.format;
     } else {
-        var format = 'image/png';
+        format = 'image/png';
     }
+    var version;
     if (undefined != layer.version) {
-        var version = layer.version;
+        version = layer.version;
     } else {
-        var version = '1.1.1';
+        version = '1.1.1';
     }
+    var wms_map;
     if (undefined != layer.map) {
-        var wms_map = layer.map;
+        wms_map = layer.map;
     } else {
-        var wms_map = '';
+        wms_map = '';
     }
+    var style;
     if (undefined != layer.style) {
-        var style = layer.style;
+        style = layer.style;
     } else {
-        var style = '';
+        style = '';
     }
+    var bgcolor;
     if (undefined != layer.bgcolor) {
-        var bgcolor = '0x' + layer.bgcolor;
+        bgcolor = '0x' + layer.bgcolor;
     } else {
-        var bgcolor = '';
+        bgcolor = '';
     }
+    var buffer;
     if (undefined != layer.buffer) {
-        var buffer = layer.buffer;
+        buffer = layer.buffer;
     } else {
-        var buffer = 0;
+        buffer = 0;
     }
+    var tiled;
     if (undefined != layer.tiled) {
-        var tiled = layer.tiled;
+        tiled = layer.tiled;
     } else {
-        var tiled = false;
+        tiled = false;
     }
+    var opacity;
     if (undefined != layer.opacity) {
-        var opacity = layer.opacity;
+        opacity = layer.opacity;
     } else {
-        var opacity = 1;
+        opacity = 1;
     }
+    var queryable;
     if (undefined != layer.queryable) {
-        var queryable = layer.queryable;
+        queryable = layer.queryable;
     } else {
-        var queryable = 1;
+        queryable = 1;
     }
+    var legendURL;
     if (undefined != layer.legendURL) {
-        var legendURL = layer.legendURL;
-    } else {
-        var legendURL;
+        legendURL = layer.legendURL;
     }
 
     var wmsLayer = new OpenLayers.Layer.WMS(
@@ -1835,25 +1911,28 @@ function addXYZLayer(layer) {
         url.push(layer.url3);
     }
     var layername = layer.layername;
+    var numZoomLevels;
     if (undefined != layer.zoomLevels) {
-        var numZoomLevels = layer.zoomLevels;
+        numZoomLevels = layer.zoomLevels;
     } else {
-        var numZoomLevels = 19;
+        numZoomLevels = 19;
     }
+    var dir;
     if (undefined != layer.dir) {
-        var dir = layer.dir;
+        dir = layer.dir;
         if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
     } else {
         // Default folder
-        var dir = '';
+        dir = '';
     }
+    var format;
     if (undefined != layer.format) {
-        var format = layer.format;
+        format = layer.format;
     } else {
-        var format = 'png';
+        format = 'png';
     }
 
     var xyzLayer = new OpenLayers.Layer.XYZ(
@@ -1886,7 +1965,7 @@ function showThrobber(id) {
 
 function hideThrobber(id) {
     S3.gis.layers_loading.pop(id);
-    if (S3.gis.layers_loading.length == 0) {
+    if (S3.gis.layers_loading.length === 0) {
         $('#layer_throbber').hide().addClass('hide');
     }
 }
@@ -1923,10 +2002,12 @@ function onGeojsonFeatureSelect(event) {
     var popup_id = S3.uid();
     var centerPoint = feature.geometry.getBounds().getCenterLonLat();
     var data_link = false;
+    var contents;
+    var name;
     if (feature.cluster) {
         // Cluster
-        var name, uuid, url;
-        var contents = i18n.gis_cluster_multiple + ':<ul>';
+        var uuid, url;
+        contents = i18n.gis_cluster_multiple + ':<ul>';
         for (var i = 0; i < feature.cluster.length; i++) {
             if (undefined != feature.cluster[i].attributes.popup) {
                 // Only display the 1st line of the hover popup
@@ -1948,43 +2029,47 @@ function onGeojsonFeatureSelect(event) {
         // Single Feature
         if (undefined != feature.attributes.url) {
             // Popup contents are pulled via AJAX
-            var contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
+            contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
         } else {
             // Popup contents are built from the attributes
             if (undefined == feature.attributes.name) {
-                var name = '';
+                name = '';
             } else {
-                var name = '<h3>' + feature.attributes.name + '</h3>';
-            };
+                name = '<h3>' + feature.attributes.name + '</h3>';
+            }
+            var description;
             if (undefined == feature.attributes.description) {
-                var description = '';
+                description = '';
             } else {
-                var description = '<p>' + feature.attributes.description + '</p>';
-            };
+                description = '<p>' + feature.attributes.description + '</p>';
+            }
+            var link;
             if (undefined == feature.attributes.link) {
-                var link = '';
+                link = '';
             } else {
-                var link = '<a href="' + feature.attributes.link + '" target="_blank">' + feature.attributes.link + '</a>';
-            };
+                link = '<a href="' + feature.attributes.link + '" target="_blank">' + feature.attributes.link + '</a>';
+            }
+            var data;
             if (undefined == feature.attributes.data) {
-                var data = '';
+                data = '';
             } else if (feature.attributes.data.indexOf('http://') === 0) {
                 data_link = true;
                 var data_id = S3.uid();
-                var data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
+                data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
             } else {
-                var data = '<p>' + feature.attributes.data + '</p>';
-            };
+                data = '<p>' + feature.attributes.data + '</p>';
+            }
+            var image;
             if (undefined == feature.attributes.image) {
-                var image = '';
+                image = '';
             } else if (feature.attributes.image.indexOf('http://') === 0) {
-                var image = '<img src="' + feature.attributes.image + '" height=300 width=300>';
+                image = '<img src="' + feature.attributes.image + '" height=300 width=300>';
             } else {
-                var image = '';
-            };
-            var contents = name + description + link + data + image;
+                image = '';
+            }
+            contents = name + description + link + data + image;
         }
-    };
+    }
     var popup = new OpenLayers.Popup.FramedCloud(
         popup_id,
         centerPoint,
@@ -2024,10 +2109,11 @@ function onKmlFeatureSelect(event) {
     //S3.gis.selectedFeature = feature;
     var popup_id = S3.uid();
     var centerPoint = feature.geometry.getBounds().getCenterLonLat();
+    var contents;
     if (feature.cluster) {
         // Cluster
         var name, uuid, url;
-        var contents = i18n.gis_cluster_multiple + ':<ul>';
+        contents = i18n.gis_cluster_multiple + ':<ul>';
         for (var i = 0; i < feature.cluster.length; i++) {
             name = feature.cluster[i].attributes.name;
             // @ToDo: Provide a way to load popups
@@ -2042,7 +2128,7 @@ function onKmlFeatureSelect(event) {
             // Use the provided BalloonStyle
             var balloonStyle = feature.style.balloonStyle;
             // "<strong>{name}</strong><br /><br />{description}"
-            var contents = balloonStyle.replace(/{([^{}]*)}/g,
+            contents = balloonStyle.replace(/{([^{}]*)}/g,
                 function (a, b) {
                     var r = attributes[b];
                     return typeof r === 'string' || typeof r === 'number' ? r : a;
@@ -2052,30 +2138,31 @@ function onKmlFeatureSelect(event) {
             // Build the Popup contents manually
             var titleField = feature.layer.title;
             var type = typeof attributes[titleField];
+            var title;
             if ('object' == type) {
-                var title = attributes[titleField].value;
+                title = attributes[titleField].value;
             } else {
-                var title = attributes[titleField];
+                title = attributes[titleField];
             }
             var body = feature.layer.body.split(' ');
-            var content = '';
-            for (var i = 0; i < body.length; i++) {
-                type = typeof attributes[body[i]];
+            content = '';
+            for (var j = 0; j < body.length; j++) {
+                type = typeof attributes[body[j]];
                 var row = '';
                 if ('object' == type) {
                     // Geocommons style
-                    var displayName = attributes[body[i]].displayName;
-                    if (displayName == '') {
-                        displayName = body[i];
+                    var displayName = attributes[body[j]].displayName;
+                    if (displayName === '') {
+                        displayName = body[j];
                     }
-                    var value = attributes[body[i]].value;
+                    var value = attributes[body[j]].value;
                     row = '<b>' + displayName + '</b>: ' + value + '<br />';
-                } else if (undefined != attributes[body[i]]) {
-                    row = attributes[body[i]] + '<br />';
+                } else if (undefined != attributes[body[j]]) {
+                    row = attributes[body[j]] + '<br />';
                 }
                 content += row;
             }
-            var contents = '<h3>' + title + '</h3>' + content;
+            contents = '<h3>' + title + '</h3>' + content;
         }
         // Protect the content against JavaScript attacks
         if (contents.search('<script') != -1) {
@@ -2105,10 +2192,11 @@ function onWfsFeatureSelect(event) {
     var popup_id = S3.uid();
     var centerPoint = feature.geometry.getBounds().getCenterLonLat();
     var titleField = feature.layer.title;
+    var contents;
     if (feature.cluster) {
         // Cluster
         var name;
-        var contents = i18n.gis_cluster_multiple + ':<ul>';
+        contents = i18n.gis_cluster_multiple + ':<ul>';
         var length = Math.min(feature.cluster.length, 9);
         for (var i = 0; i < length; i++) {
             name = feature.cluster[i].attributes[titleField];
@@ -2124,7 +2212,7 @@ function onWfsFeatureSelect(event) {
         $.each( attributes, function(i, n){
             content += '<b>' + i + ':</b> ' + n + '<br />';
         });
-        var contents = '<h3>' + title + '</h3>' + content;
+        contents = '<h3>' + title + '</h3>' + content;
     }
     var popup = new OpenLayers.Popup.FramedCloud(
         popup_id,
