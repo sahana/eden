@@ -1670,6 +1670,8 @@ class AccessibleQueryTests(unittest.TestCase):
 
         settings = current.deployment_settings
         self.policy = settings.get_security_policy()
+        self.strict = settings.get_security_strict_ownership()
+        settings.security.strict_ownership = False
 
         # Get the role IDs
         gtable = auth.settings.table_group
@@ -1958,8 +1960,18 @@ class AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", table, c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id = 0)")
 
+
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader, for_pe=self.org1)
+
+        current.deployment_settings.security.strict_ownership = True
+        query = accessible_query("read", "dvi_body", c="dvi", f="body")
+        self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
+                                     "(dvi_body.realm_entity IS NULL)) OR "
+                                     "((dvi_body.owned_by_user = %s) OR "
+                                     "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+
+        current.deployment_settings.security.strict_ownership = False
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
         self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
                                      "(dvi_body.realm_entity IS NULL)) OR "
@@ -2193,6 +2205,7 @@ class AccessibleQueryTests(unittest.TestCase):
         self.role = None
 
         current.deployment_settings.security.policy = self.policy
+        current.deployment_settings.security.strict_ownership = self.strict
         current.auth.s3_impersonate(None)
         current.db.rollback()
 

@@ -1519,6 +1519,20 @@ i18n.edit_saved_search="%s"
         if not s3.no_sspag:
             dt_pagination = "true"
             limit = 2 * display_length
+            if orderby is None:
+                dt_sorting = {
+                    "iSortingCols": "1",
+                    "sSortDir_0": "asc"
+                }
+
+                if len(list_fields) > 1:
+                    dt_sorting["bSortable_0"] = "false"
+                    dt_sorting["iSortCol_0"] = "1"
+                else:
+                    dt_sorting["bSortable_0"] = "true"
+                    dt_sorting["iSortCol_0"] = "0"
+
+                q, orderby, left = resource.datatable_filter(list_fields, dt_sorting)
         else:
             dt_pagination = "false"
             limit = None

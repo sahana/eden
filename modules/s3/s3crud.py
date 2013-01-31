@@ -928,15 +928,19 @@ class S3CRUD(S3Method):
                     limit = 2 * display_length
                 session.s3.filter = vars
                 if orderby is None:
-                    # Default initial sorting
-                    scol = len(list_fields) > 1 and "1" or "0"
-                    vars.update(iSortingCols="1",
-                                iSortCol_0=scol,
-                                sSortDir_0="asc")
-                    q, orderby, left = resource.datatable_filter(list_fields, vars)
-                    del vars["iSortingCols"]
-                    del vars["iSortCol_0"]
-                    del vars["sSortDir_0"]
+                    dt_sorting = {
+                        "iSortingCols": "1",
+                        "sSortDir_0": "asc"
+                    }
+
+                    if len(list_fields) > 1:
+                        dt_sorting["bSortable_0"] = "false"
+                        dt_sorting["iSortCol_0"] = "1"
+                    else:
+                        dt_sorting["bSortable_0"] = "true"
+                        dt_sorting["iSortCol_0"] = "0"
+
+                    q, orderby, left = resource.datatable_filter(list_fields, dt_sorting)
                 if r.method == "search" and not orderby:
                     orderby = fields[0]
             else:

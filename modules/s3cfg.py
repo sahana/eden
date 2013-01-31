@@ -303,6 +303,13 @@ class S3Config(Storage):
     def get_security_policy(self):
         " Default is Simple Security Policy "
         return self.security.get("policy", 1)
+    def get_security_strict_ownership(self):
+        """
+            Ownership-rule for records without owner:
+            True = not owned by any user (strict ownership, default)
+            False = owned by any authenticated user
+        """
+        return self.security.get("strict_ownership", True)
     def get_security_map(self):
         return self.security.get("map", False)
     def get_security_self_registration(self):
