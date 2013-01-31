@@ -9,7 +9,7 @@ $(document).ready(function() {
     $('.clrbutton').filter(':button').click(function() {
 	var buttonid = this.name.split('-')[1];
 	try {
-	    $('.field-' + buttonid).val('')
+	    $('.field-' + buttonid).val('');
 	}
 	catch(err)
 	{
@@ -27,7 +27,7 @@ $(document).ready(function() {
     $('.submit-button').filter(':button').click(function() {
 	var ignore_fields = '';
 	$.each($('.ignore-button-toggle-yes'), function(index, value) {
-	    if (ignore_fields == '')
+	    if (ignore_fields === '')
 	    {
 		ignore_fields = value.name.split('ignore-')[1];
 	    } else {
@@ -35,7 +35,7 @@ $(document).ready(function() {
 	    }
 	});
 	var values = $('#ocr-review-form').serialize();
-	$('.error-span').html('')
+	$('.error-span').html('');
 	//alert(values);
 	var dispatch_data = values + '&ignore-fields-list=' + ignore_fields;
 	$.ajax({
@@ -45,8 +45,8 @@ $(document).ready(function() {
 	    success: function(data) {
 		if (data.success) {
 		    alert('Data Saved');
-		    win_location = window.location.href
-		    window.location = win_location.split("upload.pdf")[0]+"upload.pdf"
+		    win_location = window.location.href;
+		    window.location = win_location.split("upload.pdf")[0]+"upload.pdf";
 		} else {
 		    var size = 0;
 		    for (var key in data.error) {

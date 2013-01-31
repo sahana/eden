@@ -13,8 +13,8 @@
 
         if ($(this).data('kvp-loaded')) return;
         $(this).hide();
-        key_label = ' ' + key_label + ': '
-        value_label = ' ' + value_label + ': '
+        key_label = ' ' + key_label + ': ';
+        value_label = ' ' + value_label + ': ';
         $more = $('<a>+</a>').css('cursor', 'pointer').click(cleanup);
 
         // handler util
@@ -24,8 +24,8 @@
                 var k = $(this).find('.key').eq(0).val(),
                     v = $(this).find('.value').eq(0).val();
 
-                if (k == '' && v == '') $(this).remove();
-                else kvs[kvs.length] = {key: k, value: v}
+                if (k === '' && v === '') $(this).remove();
+                else kvs[kvs.length] = {key: k, value: v};
             });
 
             var $item = $('<li></li>'),
@@ -41,7 +41,7 @@
             $self.html(JSON.stringify(kvs));
         }
 
-        for (var i=0, len=kvs.length; i < len; i++) {
+        for (var i=0, ilen=kvs.length; i < ilen; i++) {
             if (!kvs[i]) continue;
 
             var item = kvs[i],
@@ -62,7 +62,7 @@
 
             if (typeof(ops) == 'object') {
                 $value = $('<select class="value generic-widget"></select>');
-                for (var j=0, len=ops.length; j < len; j++) {
+                for (var j=0, jlen=ops.length; j < jlen; j++) {
                     $value.append($('<option value="' + ops[j][0] + '">' + ops[j][1] + '</options>'));
                 }
             }
@@ -82,5 +82,5 @@
 
         $(this).after($list);
 
-    }
+    };
 })(jQuery);

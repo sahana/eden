@@ -7,10 +7,10 @@
 /* Google Calendar */
 S3.timeline.loadGDataCallback = function(json) {
     var entries = json.feed.entry;
-    var events = new Array()
+    var events = new Array();
     for (var i = 0; i < entries.length; ++i) {
         var entry = entries[i];
-        if ( entry["gd$when"] == null ) continue;
+        if ( entry["gd$when"] === null ) continue;
         var when = entry["gd$when"][0];
         var start = S3.timeline.convertFromGDataDate(when.startTime);
         var end = S3.timeline.convertFromGDataDate(when.endTime);
@@ -22,12 +22,12 @@ S3.timeline.loadGDataCallback = function(json) {
                      'title': title,
                      'description': description,
                      'link': link
-                    }
-        events.push(event)
+                    };
+        events.push(event);
     }
     S3.timeline.data = {'dateTimeFormat': 'iso8601',
                         'events': events
-                        }
+                        };
     var url = '.';
     S3.timeline.eventSource.loadJSON(S3.timeline.data, url);
     S3.timeline.tl.hideLoadingMessage();
@@ -37,18 +37,18 @@ S3.timeline.loadGDataCallback = function(json) {
 S3.timeline.zeroPad = function(n) {
   if (n < 0) throw new Error('n is negative');
   return (n < 10) ? '0' + n : n;
-}
+};
 
 S3.timeline.convertToGDataDate = function(/*Date*/ date) {
   return date.getFullYear() + '-' +
          S3.timeline.zeroPad(date.getMonth() + 1) + '-' +
          S3.timeline.zeroPad(date.getDate());
-}
+};
 
 S3.timeline.convertFromGDataDate = function(/*string<YYYY-MM-DD>*/ date) {
   var match = date.match(/(\d{4})-(\d{2})-(\d{2})/);
   return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
-}
+};
 
 S3.timeline.onLoadCalendar = function() {
     var tl_el = document.getElementById("s3timeline");
@@ -95,7 +95,7 @@ S3.timeline.onLoadCalendar = function() {
     var scriptTag = document.createElement('script');
     scriptTag.src = feedUrl;
     document.body.appendChild(scriptTag);
-}
+};
 
 /* Data provided as JSON: S3.timeline.data */
 S3.timeline.onLoad = function() {
@@ -131,19 +131,19 @@ S3.timeline.onLoad = function() {
     var url = '.';
     S3.timeline.eventSource.loadJSON(S3.timeline.data, url);
     S3.timeline.tl.layout();
-}
+};
 
 /* Common functions */
 S3.timeline.resizeTimerID = null;
 
 S3.timeline.onResize = function() {
-    if (S3.timeline.resizeTimerID == null) {
+    if (S3.timeline.resizeTimerID === null) {
         S3.timeline.resizeTimerID = window.setTimeout(function() {
             S3.timeline.resizeTimerID = null;
             S3.timeline.tl.layout();
         }, 500);
     }
-}
+};
  
 $(document).ready(function() {
     $(window).load(function() {

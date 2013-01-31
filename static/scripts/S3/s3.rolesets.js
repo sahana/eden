@@ -27,12 +27,12 @@ $(function(){
             return name;
         };
         
-        search_results = {}
+        search_results = {};
         for (i=0, ii=data.length; i<ii; i++){
             search_results[data[i].id] = {
                 selected: false,
                 value: this.getName(i)
-            }
+            };
         }
         return search_results;
     }
