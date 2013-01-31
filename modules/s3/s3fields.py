@@ -726,11 +726,12 @@ class S3RepresentLazy(object):
                 pass
 
         # Add to node
-        if element is not None:
-            element.text = text
-        else:
-            attributes[name] = text
-        return
+        if text is not None:
+            if element is not None:
+                element.text = text
+            else:
+                attributes[name] = text
+            return
 
 # =============================================================================
 # Record identity meta-fields
