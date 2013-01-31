@@ -112,6 +112,7 @@ class FieldS3(Field):
                        uploadfolder,
                        compute)
 
+    # -------------------------------------------------------------------------
     def join_via(self, value):
         if self.type.find("reference") == 0:
             return Query(self, "=", value)
@@ -150,6 +151,7 @@ class S3ReusableField(object):
         self.__type = type
         self.attr = Storage(attr)
 
+    # -------------------------------------------------------------------------
     def __call__(self, name=None, **attr):
 
         if not name:

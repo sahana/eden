@@ -104,35 +104,49 @@ def staff():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
+    get_vars = request.get_vars
     _type = table.type
     _type.default = 1
     s3.filter = (_type == 1)
     table.site_id.writable = True
     table.site_id.readable = True
-    list_fields = ["id",
-                   "person_id",
-                   "job_title_id",
-                   "organisation_id",
-                   "department_id",
-                   "site_id",
-                   #"site_contact",
-                   (T("Email"),"email.value"),
-                   (settings.get_ui_label_mobile_phone(),"phone.value")
-                   ]
-    if settings.get_hrm_use_trainings():
-        list_fields.append("person_id$training.course_id")
-    if settings.get_hrm_use_certificates():
-        list_fields.append("person_id$certification.certificate_id")
-    list_fields.append((T("Contract End Date"), "end_date"))
-    list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
-    if "expiring" in request.get_vars:
+    if "expiring" in get_vars:
         s3.filter = s3.filter & \
             (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
         s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
-        # Remove the big Add button
         s3db.configure(tablename,
-                        insertable=False)
+                       # Sort by Expiry
+                       sortby = table.end_date,
+                       # Remove the Add button
+                       insertable=False
+                       )
+        list_fields = ["id",
+                       (T("Contract End Date"), "end_date"),
+                       "person_id",
+                       "job_title_id",
+                       "organisation_id",
+                       "department_id",
+                       "site_id",
+                       #"site_contact",
+                       ]
+    else:
+        list_fields = ["id",
+                       "person_id",
+                       "job_title_id",
+                       "organisation_id",
+                       "department_id",
+                       "site_id",
+                       #"site_contact",
+                       (T("Email"),"email.value"),
+                       (settings.get_ui_label_mobile_phone(),"phone.value"),
+                       ]
+        if settings.get_hrm_use_trainings():
+            list_fields.append("person_id$training.course_id")
+        if settings.get_hrm_use_certificates():
+            list_fields.append("person_id$certification.certificate_id")
+        list_fields.append((T("Contract End Date"), "end_date"))
+        list_fields.append("status")
     # Remove Type filter from the Search widget
     human_resource_search = s3db.get_config(tablename,
                                             "search_method")
@@ -148,7 +162,7 @@ def staff():
                r.method in [None, "create"]:
                 # Don't redirect
                 table = r.table
-                site_id = request.get_vars.get("site_id", None)
+                site_id = get_vars.get("site_id", None)
                 if site_id:
                     table.site_id.default = site_id
                     table.site_id.writable = False
