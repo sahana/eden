@@ -13,7 +13,7 @@
 if (typeof String.prototype.startsWith != 'function') {
     String.prototype.startsWith = function(str) {
         return this.substring(0, str.length) === str;
-    }
+    };
 }
 
 var oDataTable = new Array();
@@ -76,7 +76,7 @@ function showSubRows(groupid) {
     // Display the spacer of open groups
     $(sublevel + '.spacer').show();
     // If this has opened groups then open the first row in the group
-    var firstObj = $(sublevel + ':first')
+    var firstObj = $(sublevel + ':first');
     if (firstObj.hasClass('spacer')) {
         firstObj = firstObj.next();
     }
@@ -189,8 +189,8 @@ function tableIdReverse(id) {
 function isNonDefaultData(element, index, array) {
     var name = element.name;
     var value = element.value;
-    if ((name == 'sSearch' && value == '') ||
-        (name.startsWith('sSearch_') && value == '') ||
+    if ((name == 'sSearch' && value === '') ||
+        (name.startsWith('sSearch_') && value === '') ||
         (name.startsWith('bRegex_') && !value) ||
         (name.startsWith('bSearchable_') && value) ||
         (name.startsWith('bSortable_') && value)) {
@@ -200,8 +200,8 @@ function isNonDefaultData(element, index, array) {
         // Here, we're looking for elements of the form:
         // name: 'mDataProp_N', value: N
         // where N is an integer, and is the same in both places.
-        var index = parseInt(name.substr('mDataProp_'.length), 10)
-        if (!isNaN(index) && typeof value == 'number' && index == value) {
+        var n = parseInt(name.substr('mDataProp_'.length), 10);
+        if (!isNaN(n) && typeof value == 'number' && n == value) {
             return false;
         }
     }
@@ -209,12 +209,13 @@ function isNonDefaultData(element, index, array) {
 }
 
 $(document).ready(function() {
+	var t;  // scratch
     /* dataTables handling */
     // Create an array for the column settings (this is required, otherwise the column widths don't autosize)
     var ColumnSettings = new Array();
     if (S3.dataTables.id) {
         tableCnt = S3.dataTables.id.length;
-        for (var t=0; t < tableCnt; t++) {
+        for (t=0; t < tableCnt; t++) {
             id = '#' + S3.dataTables.id[t];
             tableId[t] = id;
             myList[t] = $(id);
@@ -240,7 +241,10 @@ $(document).ready(function() {
     var textDisplay = new Array();
     var totalRecords = new Array();
 
-    for (var t=0; t < tableCnt; t++) {
+    var bServerSide;
+    var bProcessing;
+
+    for (t=0; t < tableCnt; t++) {
         // First get the config details for each table
         var config_id = tableId[t] + '_configurations';
         if ($(config_id).length > 0) {
@@ -270,14 +274,14 @@ $(document).ready(function() {
             ColumnSettings[t][aoTableConfig[t]['actionCol']] = {
                 'sTitle': ' ',
                 'bSortable': false
-            }
+            };
         }
         if (aoTableConfig[t]['bulkActions']) {
             ColumnSettings[t][aoTableConfig[t]['bulkCol']] = {
                 // @ToDo: i18n
                 'sTitle': '<select id="bulk_select_options"><option></option><option id="modeSelectionAll">Select All</option><option id="modeSelectionNone">Deselect All</option></select>',
                 'bSortable': false
-            }
+            };
         }
         textDisplay[t] = [aoTableConfig[t]['textMaxLength'],
                           aoTableConfig[t]['textShrinkLength']
@@ -332,8 +336,8 @@ $(document).ready(function() {
             // Add hidden fields to the form to record what has been selected
             var bulkSelectionID = tableId[t] + '_dataTable_bulkSelection';
             // global
-            selected =  jQuery.parseJSON($(bulkSelectionID).val())
-            if (selected == null)
+            selected = jQuery.parseJSON($(bulkSelectionID).val());
+            if (selected === null)
                 selected = [];
             selectedRows[t] = selected;
             selectionMode[t] = 'Inclusive';
@@ -346,14 +350,15 @@ $(document).ready(function() {
         }
 
         // The call back used to manage the paganation
+        var fnDataTablesPipeline;
         if (aoTableConfig[t]['pagination'] == 'true') {
             // Cache the pages to reduce server-side calls
-            var bServerSide = true;
-            var bProcessing = true;
+            bServerSide = true;
+            bProcessing = true;
             var iDisplayLength = aoTableConfig[t]['displayLength'];
             var aoData = [{name: 'iDisplayLength', value: iDisplayLength},
                           {name: 'iDisplayStart', value: 0},
-                          {name: 'sEcho', value: 1}]
+                          {name: 'sEcho', value: 1}];
 
             function fnSetKey( aoData, sKey, mValue ) {
                 for (var i=0, iLen=aoData.length; i < iLen; i++) {
@@ -370,18 +375,19 @@ $(document).ready(function() {
                 }
                 return null;
             }
-            function fnDataTablesPipeline(sSource, aoData, fnCallback) {
+            fnDataTablesPipeline = function(sSource, aoData, fnCallback) {
                 var table = '#' + this[0].id;
                 var t = tableIdReverse(table);
                 var iRequestLength = fnGetKey(aoData, 'iDisplayLength');
+                var iPipe;
                 // Adjust the pipe size depending on the page size
                 if (iRequestLength == iDisplayLength) {
-                    var iPipe = 6;
+                    iPipe = 6;
                 } else if (iRequestLength > 49 || iRequestLength == -1) {
-                    var iPipe = 2;
+                    iPipe = 2;
                 } else {
-                    // iRequestLength == 25
-                    var iPipe = 4;
+                    // iRequestLength == 25;
+                    iPipe = 4;
                 }
                 var bNeedServer = false;
                 var sEcho = fnGetKey(aoData, 'sEcho');
@@ -451,7 +457,7 @@ $(document).ready(function() {
                         if (oCache.iDisplayLength !== -1) {
                             json.aaData.splice( oCache.iDisplayLength, json.aaData.length );
                         }
-                        fnCallback(json)
+                        fnCallback(json);
                     } );
                 } else {
                     json = jQuery.extend(true, {}, oCache.lastJson);
@@ -462,14 +468,14 @@ $(document).ready(function() {
                     }
                     fnCallback(json);
                 }
-            }
-            fnAjaxCallback[t] = fnDataTablesPipeline
+            };
+            fnAjaxCallback[t] = fnDataTablesPipeline;
             // end of pagination code
         } else {
-            var bServerSide = false;
-            var bProcessing = false;
+            bServerSide = false;
+            bProcessing = false;
             aoTableConfig[t]['ajaxUrl'] = null;
-            function fnDataTablesPipeline ( url, data, callback ) {
+            fnDataTablesPipeline = function( url, data, callback ) {
                 var nonDefaultData = data.filter(isNonDefaultData);
                 $.ajax( {
                     'url': url,
@@ -485,7 +491,7 @@ $(document).ready(function() {
                         }
                     }
                 } );
-            }
+            };
             fnAjaxCallback[t] = fnDataTablesPipeline;
 
         } // end of no pagination code
@@ -539,16 +545,16 @@ $(document).ready(function() {
         if (aoTableConfig[t]['bulkActions']) {
             $('.bulkcheckbox').unbind('change');
             $('.bulkcheckbox').change( function(event){
-                var id = this.id.substr(6)
-                var posn = inList(id, selectedRows[t])
+                var id = this.id.substr(6);
+                var posn = inList(id, selectedRows[t]);
                 if (posn == -1) {
                     selectedRows[t].push(id);
-                    posn = 0 // force the row to be selected
+                    posn = 0; // force the row to be selected
                 } else {
                     selectedRows[t].splice(posn, 1);
-                    posn = -1 // force the row to be deselected
+                    posn = -1; // force the row to be deselected
                 }
-                var row = $(this).parent().parent()
+                var row = $(this).parent().parent();
                 togglePairActions(t);
                 setSelectionClass(t, row, posn);
             });
@@ -569,7 +575,7 @@ $(document).ready(function() {
             }
         }
         if (selectionMode[t] == 'Exclusive') {
-            $('#totalSelected').text(parseInt($('#totalAvailable').text()) - selected.length);
+            $('#totalSelected').text(parseInt($('#totalAvailable').text(), 10) - selected.length);
             if (index == -1) {
                 $(row).addClass('row_selected');
                 $('.bulkcheckbox', row).attr('checked', true);
@@ -582,7 +588,7 @@ $(document).ready(function() {
     }
 
     function setModeSelectionAll(event) {
-        var wrapper = $(this).parents('.dataTables_wrapper')[0].id
+        var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
         var selector = '#' + wrapper.substr(0, wrapper.length - 8);
         var t = tableIdReverse(selector);
         selectionMode[t] = 'Exclusive';
@@ -630,11 +636,11 @@ $(document).ready(function() {
         }
         // Add the subtotal counts (if provided)
         var groupCount = '';
-        if (groupTotals[sGroup] != null) {
+        if (groupTotals[sGroup] !== null) {
             groupCount = ' (' + groupTotals[sGroup] + ')';
         } else {
             var index = groupPrefix + sGroup;
-            if (groupTotals[index] != null) {
+            if (groupTotals[index] !== null) {
                 groupCount = ' (' + groupTotals[index] + ')';
             }
         }
@@ -642,6 +648,7 @@ $(document).ready(function() {
         var nGroup = document.createElement('tr');
         nGroup.className = 'group';
         var nCell = document.createElement('td');
+        var htmlText;
         if (shrink || accordion) {
             $(nGroup).addClass('headerRow');
             $(nGroup).addClass(groupClass);
@@ -657,6 +664,8 @@ $(document).ready(function() {
             var iconClassClose = '';
             var iconTextOpen = '';
             var iconTextClose = '';
+            var iconin;
+            var iconout;
             if (iconGroupType == 'text') {
                 iconTextOpen = '→';
                 iconTextClose = '↓';
@@ -666,8 +675,8 @@ $(document).ready(function() {
                     iconClassOpen = 'class="ui-icon ui-icon-arrowthick-1-e" ';
                     iconClassClose = 'class="ui-icon ui-icon-arrowthick-1-s" ';
                 }
-                var iconin = '<a id="' + groupClass + '_in" href="javascript:toggleRow(\'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
-                var iconout = '<a id="' + groupClass + '_out" href="javascript:toggleRow(\'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
+                iconin = '<a id="' + groupClass + '_in" href="javascript:toggleRow(\'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
+                iconout = '<a id="' + groupClass + '_out" href="javascript:toggleRow(\'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
             } else {
                 if (iconGroupType == 'icon') {
                     iconClassOpen = 'class="ui-icon ui-icon-arrowthick-1-e arrow_e' + groupClass + '" ';
@@ -676,12 +685,12 @@ $(document).ready(function() {
                     iconClassOpen = 'class="arrow_e' + groupClass + '" ';
                     iconClassClose = 'class="arrow_s' + groupClass + '" ';
                 }
-                var iconin = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
-                var iconout = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
+                iconin = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
+                iconout = '<a href="javascript:accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
             }
-            var htmlText = groupTitle + groupCount+ iconin + iconout;
+            htmlText = groupTitle + groupCount+ iconin + iconout;
         } else {
-            var htmlText = groupTitle + groupCount;
+            htmlText = groupTitle + groupCount;
         }
         nCell.colSpan = iColspan;
         nCell.innerHTML = levelDisplay + htmlText;
@@ -700,7 +709,7 @@ $(document).ready(function() {
             } else {
                 $(nSpace).addClass('alwaysOpen');
             }
-            var nCell = document.createElement('td');
+            nCell = document.createElement('td');
             nCell.colSpan = iColspan;
             nSpace.appendChild( nCell );
             $(nSpace).insertAfter(nGroup);
@@ -721,7 +730,7 @@ $(document).ready(function() {
         var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
         var insertSpace = aoTableConfig[t]['groupSpacing'];
         var iconGroupTypeList = aoTableConfig[t]['groupIcon'];
-        var iconGroupType
+        var iconGroupType;
         if (iconGroupTypeList.length >= level) {
             iconGroupType = iconGroupTypeList[level-1];
         } else {
@@ -751,20 +760,20 @@ $(document).ready(function() {
                 for (var gpCnt = 0; gpCnt < prefixID.length; gpCnt++) {
                     try {
                         groupPrefix += oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[prefixID[gpCnt]] + "_";
-                    } catch(err) {};
+                    } catch(err) {}
                 }
                 continue;
             }
             var sGroup = oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[group];
             if (sGroup != sLastGroup) {  // New group
                 while (groupTitles.length > groupTitleCnt && sGroup != groupTitles[groupTitleCnt][0]) {
-                    title = groupTitles[groupTitleCnt][1]
+                    title = groupTitles[groupTitleCnt][1];
                     addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                     groupTitleCnt++;
                     groupCnt++;
                 }
                 if (groupTitles.length > groupTitleCnt){
-                    title = groupTitles[groupTitleCnt][1]
+                    title = groupTitles[groupTitleCnt][1];
                     addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                     groupTitleCnt++;
                 } else {
@@ -781,12 +790,11 @@ $(document).ready(function() {
         } // end of loop for each row
         // add any empty groups not yet added to at the end of the table
         while (groupTitles.length > groupTitleCnt) {
-            title = groupTitles[groupTitleCnt][1]
+            title = groupTitles[groupTitleCnt][1];
             addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[nTrs.length-1],false);
             groupTitleCnt++;
             groupCnt++;
         }
-
     }
 
     for (var tcnt=0; tcnt < tableCnt; tcnt++) {
@@ -857,10 +865,11 @@ $(document).ready(function() {
                 var actionCol = aoTableConfig[t]['actionCol'];
                 var re = />(.*)</i;
                 var result = re.exec(aData[actionCol]);
-                if (result == null) {
-                    var id = aData[actionCol];
+                var id;
+                if (result === null) {
+                    id = aData[actionCol];
                 } else {
-                    var id = result[1];
+                    id = result[1];
                 }
                 // Set the action buttons in the id column for each row
                 if (aoTableConfig[t]['rowActions'].length > 0 || aoTableConfig[t]['bulkActions']) {
@@ -925,20 +934,20 @@ $(document).ready(function() {
                         gList.push(groupList[gCnt][0]);
                     }
                 }
-                for (var i=0; i < aData.length; i++) {
+                for (var j=0; j < aData.length; j++) {
                     // Ignore any columns used for groups
-                    if ($.inArray(i, gList) != -1) { continue; }
+                    if ($.inArray(j, gList) != -1) { continue; }
                     // Ignore if the data starts with an html open tag
-                    if (aData[i][0] == '<') {
+                    if (aData[j][0] == '<') {
                         tdposn++;
                         continue;
                     }
-                    if (aData[i].length > textDisplay[t][0]) {
-                        var uniqueid = '_' + t + iDisplayIndex + i;
+                    if (aData[j].length > textDisplay[t][0]) {
+                        var uniqueid = '_' + t + iDisplayIndex + j;
                         var icon = '<a href="javascript:toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
-                        var display = '<div id="display' + uniqueid + '">' + icon + aData[i].substr(0,textDisplay[t][1]) + "&hellip;</div>";
+                        var display = '<div id="display' + uniqueid + '">' + icon + aData[j].substr(0,textDisplay[t][1]) + "&hellip;</div>";
                         icon = '<a href="javascript:toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
-                        display += '<div  style="display:none" id="full' + uniqueid + '">' + icon + aData[i] + "</div>";
+                        display += '<div  style="display:none" id="full' + uniqueid + '">' + icon + aData[j] + "</div>";
                         $('td:eq(' + tdposn + ')', nRow).html( display );
                     }
                     tdposn++; // increment the count of the td tags (don't do this for groups)
@@ -949,7 +958,7 @@ $(document).ready(function() {
                 var table = '#' + oSettings.nTable.id;
                 var t = tableIdReverse(table);
                 bindButtons(t);
-                if (oSettings.aiDisplay.length == 0) {
+                if (oSettings.aiDisplay.length === 0) {
                     return;
                 }
                 if (aoTableConfig[t]['group'].length > 0) {
@@ -1060,7 +1069,7 @@ function s3FormatRequest(representation, tableid, url) {
     if (oSetting) {
         var argData = 'id=' + tableid;
         var serverFilterArgs = $('#' + tableid + '_dataTable_filter');
-        if (serverFilterArgs.val() != '') {
+        if (serverFilterArgs.val() !== '') {
             argData += '&sFilter=' + serverFilterArgs.val();
         }
         argData += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];

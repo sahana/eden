@@ -4622,25 +4622,27 @@ class S3Permission(object):
                 user_id = user.id
                 query = (table[OUSR] == user_id)
 
-            # Public record query
-            public = None
-            if OUSR in table.fields:
-                public = (table[OUSR] == None)
-            if OGRP in table.fields:
-                q = (table[OGRP] == None)
-                if public:
-                    public &= q
-                else:
-                    public = q
-            if use_realm:
-                q = (table[OENT] == None)
-                if public:
-                    public &= q
-                else:
-                    public = q
+            if not current.deployment_settings.get_security_strict_ownership():
 
-            if query is not None and public is not None:
-                query |= public
+                # Any authenticated user owns all records with no owner
+                public = None
+                if OUSR in table.fields:
+                    public = (table[OUSR] == None)
+                if OGRP in table.fields:
+                    q = (table[OGRP] == None)
+                    if public:
+                        public &= q
+                    else:
+                        public = q
+                if use_realm:
+                    q = (table[OENT] == None)
+                    if public:
+                        public &= q
+                    else:
+                        public = q
+
+                if query is not None and public is not None:
+                    query |= public
 
             # Group ownerships
             if OGRP in table.fields:
@@ -4811,7 +4813,7 @@ class S3Permission(object):
             @param t: the table or tablename
             @param record: the record or record ID (None for any record)
         """
-
+        
         # Multiple methods?
         if isinstance(method, (list, tuple)):
             query = None

@@ -78,7 +78,7 @@ $(function() {
         $('#add-row-' + formname + ' > td textarea').attr('disabled', true);
         $('#add-row-' + formname + ' > td .inline-add').addClass('hide');
         $('#add-row-' + formname + ' > td .action-lnk').addClass('hide');
-    }
+    };
 
     // Enable the add-row
     var enable_inline_add = function(formname) {
@@ -87,7 +87,7 @@ $(function() {
         $('#add-row-' + formname + ' > td textarea').removeAttr('disabled');
         $('#add-row-' + formname + ' > td .inline-add').removeClass('hide');
         $('#add-row-' + formname + ' > td .action-lnk').removeClass('hide');
-    }
+    };
 
     // Collect the data from the form
     var inline_collect_data = function(formname, data, rowindex) {
@@ -133,7 +133,7 @@ $(function() {
             //} else {
             if (cssclass == 'generic-widget') {
                 // Reference values need to be ints for S3Represent to find a match in theset
-                intvalue = parseInt(value);
+                intvalue = parseInt(value, 10);
                 if (!isNaN(intvalue)) {
                     value = intvalue;
                 }
@@ -152,7 +152,7 @@ $(function() {
 
         // Return the row object
         return row;
-    }
+    };
 
     // Validate a new/updated row
     var inline_validate = function(formname, rowindex, data, row) {
@@ -210,7 +210,7 @@ $(function() {
             return response;
         }
 
-    }
+    };
 
     // Form actions -----------------------------------------------------------
 
@@ -237,9 +237,9 @@ $(function() {
             element = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
             // If the element is a select then we may need to add the option we're choosing
             var select = $('select' + element);
-            if (select.length != 0) {
+            if (select.length !== 0) {
                 var option = $('select' + element + ' option[value="' + value + '"]');
-                if (option.length == 0) {
+                if (option.length === 0) {
                     // This option does not exist in the select, so add it
                     // because otherwise val() won't work. Maybe the option
                     // gets added later by a script (e.g. FilterFieldChange)
@@ -361,7 +361,7 @@ $(function() {
             }
             // Add edit-button
             var edit = '#edt-' + formname + '-none';
-            if ($(edit).length != 0) {
+            if ($(edit).length !== 0) {
                 read_row += '<td><a id="edt-' +
                             formname + '-' +
                             newindex + '" class="inline-edt" href="#">' +
@@ -371,8 +371,8 @@ $(function() {
                 read_row += '<td></td>';
             }
             // Add remove-button
-            remove = '#rmv-' + formname + '-none';
-            if ($(remove).length != 0) {
+            var remove = '#rmv-' + formname + '-none';
+            if ($(remove).length !== 0) {
                 read_row += '<td><a id="rmv-' + formname + '-' +
                             newindex + '" class="inline-rmv" href="#">' +
                             $(remove).html() +
@@ -411,7 +411,7 @@ $(function() {
         var new_row = inline_validate(formname, '0', data, edit_row);
 
         var success = false;
-        if (null != new_row) {
+        if (null !== new_row) {
             success = true;
 
             // Update the row in the real_input JSON
@@ -445,7 +445,7 @@ $(function() {
             }
             // Add edit-button
             var edit = '#edt-' + formname + '-none';
-            if ($(edit).length != 0) {
+            if ($(edit).length !== 0) {
                 read_row += '<td><a id="edt-' +
                             formname + '-' +
                             rowindex + '" class="inline-edt" href="#">' +
@@ -456,7 +456,7 @@ $(function() {
             }
             // Add remove-button
             var remove = '#rmv-' + formname + '-none';
-            if ($(remove).length != 0) {
+            if ($(remove).length !== 0) {
                 read_row += '<td><a id="rmv-' +
                             formname + '-' +
                             rowindex + '" class="inline-rmv" href="#">' +
@@ -692,7 +692,7 @@ $(function() {
                     // Not yet found, so initialise
                     var label = $(this).next().html(); // May be fragile to different formstyles :/
                     item = {};
-                    item[fieldname] = {'text': label, 'value': value}
+                    item[fieldname] = {'text': label, 'value': value};
                     _data.push(item);
                 }
                 item['_changed'] = true;

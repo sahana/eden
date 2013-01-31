@@ -15,7 +15,7 @@ S3.uid = function () {
     // Used by GIS
     // http://jsperf.com/random-uuid/2
     return (((+(new Date())) / 1000 * 0x10000 + Math.random() * 0xffff) >> 0).toString(16);
-}
+};
 
 S3.Utf8 = {
     // Used by dataTables
@@ -61,7 +61,7 @@ S3.Utf8 = {
         }
         return string;
     }
-}
+};
 
 // Used by Scenario module currently, but may be deprecated as not great UI
 var popupWin = null;
@@ -73,7 +73,7 @@ var popupWin = null;
 function openPopup(url, center) {
     if ( !popupWin || popupWin.closed ) {
         var params = 'width=640, height=480';
-        if (center == true) {
+        if (center === true) {
             params += ',left=' + (screen.width - 640)/2 +
                 ',top=' + (screen.height - 480)/2;
         }
@@ -108,17 +108,17 @@ S3.addTooltips = function() {
     	closeText: tipCloseText,
     	width: 380
     });
-}
+};
 
 $(document).ready(function() {
     // Web2Py Layer
     $('.error').hide().slideDown('slow');
     $('.error').click(function() { $(this).fadeOut('slow'); return false; });
-    $('.warning').hide().slideDown('slow')
+    $('.warning').hide().slideDown('slow');
     $('.warning').click(function() { $(this).fadeOut('slow'); return false; });
-    $('.information').hide().slideDown('slow')
+    $('.information').hide().slideDown('slow');
     $('.information').click(function() { $(this).fadeOut('slow'); return false; });
-    $('.confirmation').hide().slideDown('slow')
+    $('.confirmation').hide().slideDown('slow');
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() {
         if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
@@ -133,7 +133,7 @@ $(document).ready(function() {
         inputName = inputErrorId.replace('__error', '');
         inputId = $('[name=' + inputName + ']').attr('id');
         inputLabel = $('[for=' + inputId + ']');
-        window.scrollTo(0, inputLabel.offset().top)
+        window.scrollTo(0, inputLabel.offset().top);
     }
 
     // T2 Layer
@@ -141,7 +141,7 @@ $(document).ready(function() {
     //    scaleImg: true,
     //    closeOnClick: true,
     //    directory: S3.Ap.concat('/static/media')
-    //}); } catch(e) {};
+    //}); } catch(e) {}
 
     // S3 Layer
     // dataTables' delete button
@@ -162,7 +162,7 @@ $(document).ready(function() {
     $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
     $('input.float_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g,'').reverse();});
     // Auto-capitalize first names
-    $('input[name="first_name"]').focusout(function() {this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);})
+    $('input[name="first_name"]').focusout(function() {this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);});
     // Hide password verification field in admin/user until changed
     $('input[name="password"]').keyup(function() {
         $('.verify-password').removeClass('hide');
@@ -197,6 +197,7 @@ $(document).ready(function() {
             $(document).unbind('mousemove', performDrag).unbind('mouseup', endDrag);
             textarea.css('opacity', 1);
         }
+        return true;
     });
 
     // IE6 non anchor hover hack
@@ -210,7 +211,7 @@ $(document).ready(function() {
         function() {
                 var header_width = $(this).width();
                 var popup_width = $('ul', this).width();
-                if (popup_width != null){
+                if (popup_width !== null){
                   if (popup_width < header_width){
                     $('ul', this).css({
                         'width': header_width.toString() + 'px'
@@ -362,7 +363,7 @@ S3.deduplication = function() {
         duplicate.attr('name', original_name);
         $('#dummy_swap_duplicate').attr('id', 'dummy' + original_id);
     });
-}
+};
 
 // ============================================================================
 function S3ConfirmClick(ElementID, Message) {
@@ -378,7 +379,7 @@ function S3ConfirmClick(ElementID, Message) {
             }
         });
     }
-};
+}
 
 // ============================================================================
 // Code to warn on exit without saving
@@ -386,11 +387,11 @@ function S3SetNavigateAwayConfirm() {
     window.onbeforeunload = function() {
         return i18n.unsaved_changes;
     };
-};
+}
 
 function S3ClearNavigateAwayConfirm() {
     window.onbeforeunload = function() {};
-};
+}
 
 function S3EnableNavigateAwayConfirm() {
     $(document).ready(function() {
@@ -402,7 +403,7 @@ function S3EnableNavigateAwayConfirm() {
         $(':input:not(input[id=gis_location_advanced_checkbox])').change( S3SetNavigateAwayConfirm );
         $('form').submit( S3ClearNavigateAwayConfirm );
     });
-};
+}
 
 // ============================================================================
 /**
@@ -421,7 +422,7 @@ function S3EnableNavigateAwayConfirm() {
             s3_hideStatus();
             if (s.success)
                 s.success(data, status);
-        }
+        };
         options.error = function(xhr, textStatus, errorThrown ) {
             if (textStatus == 'timeout') {
                 this.tryCount++;
@@ -487,7 +488,7 @@ function S3EnableNavigateAwayConfirm() {
             data = null;
         }
         if (!sync) {
-            var sync = false;
+            sync = false;
         }
         return $.getS3(url, data, callback, 'json', message, sync);
     };
@@ -583,13 +584,13 @@ function S3StatusBar(sel, options) {
                 },
                 timeout);
         }
-    }
+    };
     this.release = function() {
         if (_statusbar) {
             $('#_statusbar').remove();
             _statusbar = undefined;
         }
-    }
+    };
 }
 // Use this as a global instance to customize constructor
 // or do nothing and get a default status bar
@@ -734,7 +735,7 @@ function S3OptionsFilter(settings) {
         // Cancel previous Ajax request
         try {
             S3.JSONRequest[targetField.attr('id')].abort();
-        } catch(err) {};
+        } catch(err) {}
 
         // Get the lookup value from the trigger field
         var lookupValue = '';
@@ -761,7 +762,7 @@ function S3OptionsFilter(settings) {
         }
 
         // Disable the target field if no value selected
-        if (lookupValue == '' || lookupValue === undefined) {
+        if (lookupValue === '' || lookupValue === undefined) {
             targetField.attr('disabled', 'disabled');
             return;
         }
@@ -785,14 +786,15 @@ function S3OptionsFilter(settings) {
 
         // Construct the URL for the Ajax request
         var lookupResource = settings.lookupResource;
+        var url;
         if (settings.lookupURL) {
-            var url = settings.lookupURL;
+            url = settings.lookupURL;
             if (lookupValue) {
                 url = url.concat(lookupValue);
             }
         } else {
             var lookupPrefix = settings.lookupPrefix;
-            var url = S3.Ap.concat('/', lookupPrefix, '/', lookupResource, '.json');
+            url = S3.Ap.concat('/', lookupPrefix, '/', lookupResource, '.json');
             // Append lookup key to the URL
             var q;
             if (lookupValue) {
@@ -856,19 +858,20 @@ function S3OptionsFilter(settings) {
         if (settings.fncPrep) {
             context['fncPrep'] = settings.fncPrep;
         } else {
-            context['fncPrep'] = function(data) { return null };
+            context['fncPrep'] = function(data) { return null; };
         }
         if (settings.fncRepresent) {
             context['fncRepresent'] = settings.fncRepresent;
         } else {
-            context['fncRepresent'] = function(record) { return record.name };
+            context['fncRepresent'] = function(record) { return record.name; };
         }
 
         // Find the target widget and replace it by a throbber
+        var targetWidget;
         if (settings.targetWidget != undefined) {
-            var targetWidget = settings.targetWidget;
+            targetWidget = settings.targetWidget;
         } else {
-            var targetWidget = targetSelector;
+            targetWidget = targetSelector;
         }
         context['targetWidget'] = targetWidget;
         var widget = $('[name = "' + targetWidget + '"]');
@@ -887,11 +890,12 @@ function S3OptionsFilter(settings) {
 
                     // Pre-process the data
                     var fncPrep = this.fncPrep;
+                    var prepResult;
                     try {
-                        var prepResult = fncPrep(data);
+                        prepResult = fncPrep(data);
                     } catch (e) {
-                        var prepResult = null;
-                    };
+                        prepResult = null;
+                    }
 
                     // Render options list
                     var fncRepresent = this.fncRepresent;
@@ -899,18 +903,19 @@ function S3OptionsFilter(settings) {
                     var FieldResource = this.FieldResource;
                     var triggerField = $('[name = "' + FilterField + '"]');
                     var options = '';
+                    var currentValue;
                     if (data.length === 0) {
                         // No options available
                         if (this.showEmptyField) {
-                            var currentValue = 0;
+                            currentValue = 0;
                             options += '<option value="">' + this.msgNoRecords + '</options>';
                         }
                     } else {
                         // Render the options
-                        var lookupField = this.lookupField
+                        var lookupField = this.lookupField;
                         for (var i = 0; i < data.length; i++) {
-                            if (i == 0) {
-                                var currentValue = data[i][lookupField];
+                            if (i === 0) {
+                                currentValue = data[i][lookupField];
                             }
                             options += '<option value="' + data[i][lookupField] + '">';
                             options += fncRepresent(data[i], prepResult);
@@ -931,7 +936,7 @@ function S3OptionsFilter(settings) {
                     targetField.parent().html(html);
                     // reselect since it may have changed
                     targetField = $('[name = "' + this.targetSelector + '"]');
-                    if (options != '') {
+                    if (options !== '') {
                         targetField.html(options)
                                    // Set the current field value
                                    .val(currentValue)
@@ -949,7 +954,7 @@ function S3OptionsFilter(settings) {
                     var targetFieldAdd = $('#' + lookupResource + '_add');
                     if (targetFieldAdd.length !== 0) {
                         var href = targetFieldAdd.attr('href');
-                        var triggerField = $('[name = "' + this.triggerSelector + '"]');
+                        triggerField = $('[name = "' + this.triggerSelector + '"]');
                         var triggerName = this.triggerName;
                         if (href.indexOf(triggerName) == -1) {
                             // Add to URL
@@ -979,7 +984,7 @@ function S3OptionsFilter(settings) {
                 context: context,
                 success: function(data) {
                     var targetWidget = $('[name = "' + this.targetWidget + '"]');
-                    if (data != '') {
+                    if (data !== '') {
                         // Replace the target field with the HTML returned
                         targetWidget.html(data)
                                     .change()
@@ -1004,7 +1009,7 @@ function S3OptionsFilter(settings) {
 
     // If the field value is empty - disable - but keep initial value
     triggerField.change();
-};
+}
 
 // ============================================================================
 /**
@@ -1017,28 +1022,26 @@ S3.autocomplete = function(fieldname, module, resourcename, input, filter, link,
     var dummy_input = '#' + dummy;
 
     if ($(dummy_input) == 'undefined') {
-        return true;
+        return;
     }
 
     var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
     if (filter != 'undefined') {
         url += '&' + filter;
     }
-    if ((link == 'undefined') || (link == '')) {
-        // pass
-    } else {
+    if ((link != 'undefined') && (link !== '')) {
         url += '&link=' + link;
     }
 
     // Optional args
     if (postprocess == 'undefined') {
-        var postprocess = '';
+        postprocess = '';
     }
     if (delay == 'undefined') {
-        var delay = 450;
+        delay = 450;
     }
     if (min_length == 'undefined') {
-        var min_length = 2;
+        min_length = 2;
     }
     var data = {
         val: $(dummy_input).val(),

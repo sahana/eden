@@ -11,9 +11,8 @@ $(function() {
 });
 
 function s3_gis_locationselector_jQuery_onReady() {
-    if (typeof(S3.gis.location_id) == 'undefined') {
-        // This page doesn't include the Location Selector Widget
-    } else {
+    if (typeof(S3.gis.location_id) != 'undefined') {
+        // This page includes the Location Selector Widget
         // Hide the Label row
         // (we add the label inside the widget boundary)
         $('#' + S3.gis.location_id + '__row1').hide();
@@ -147,7 +146,7 @@ function s3_gis_locationselector_Ext_onReady() {
                     // Enable the crosshair on the Map Selector
                     $('.olMapViewport').addClass('crosshair');
                     // Enable the Control
-                    S3.gis.polygonButton.control.activate()
+                    S3.gis.polygonButton.control.activate();
                 }
             } else {
                 var lat = $('#gis_location_lat').val();
@@ -156,7 +155,7 @@ function s3_gis_locationselector_Ext_onReady() {
                     // Enable the crosshair on the Map Selector
                     $('.olMapViewport').addClass('crosshair');
                     // Enable the Control
-                    S3.gis.pointButton.control.activate()
+                    S3.gis.pointButton.control.activate();
                 }
             }
         });
@@ -202,14 +201,14 @@ function s3_gis_autocomplete(level) {
             select: function( event, ui ) {
                 $('#gis_location_L' + level + '_ac').val( ui.item.name );
                 $('#gis_location_L' + level).val( ui.item.id );
-                if ((ui.item.level == 'L1') && (ui.item.parent) && ($('#gis_location_L0').val() == '')) {
+                if ((ui.item.level == 'L1') && (ui.item.parent) && ($('#gis_location_L0').val() === '')) {
                     // If no L0 set & we've just added an L1 with a parent then set the country accordingly
                     $('#gis_location_L0').val(ui.item.parent);
                 }
                 // Hide the search results
                 $('ul.ui-autocomplete').hide();
                 // Update autocompletes
-                s3_gis_autocomplete(parseInt(ui.item.level.replace('L', '')) + 1);
+                s3_gis_autocomplete(parseInt(ui.item.level.replace('L', ''), 10) + 1);
                 return false;
             }
         }).data('autocomplete')._renderItem = function(ul, item) {
@@ -257,12 +256,13 @@ function s3_gis_autocomplete_search() {
                 return false;
             }
         }).data( 'autocomplete' )._renderItem = function( ul, item ) {
+        	var represent;
             if (item.name && item.addr_street) {
-                var represent = '<a>' + item.name + ',  ' + item.addr_street.split(',')[0].split('\n')[0] + '</a>';
+                represent = '<a>' + item.name + ',  ' + item.addr_street.split(',')[0].split('\n')[0] + '</a>';
             } else if (item.name) {
-                var represent = '<a>' + item.name + '</a>';
+                represent = '<a>' + item.name + '</a>';
             } else {
-                var represent = '<a>' + item.addr_street.split(',')[0].split('\n')[0] + '</a>';
+                represent = '<a>' + item.addr_street.split(',')[0].split('\n')[0] + '</a>';
             }
             return $('<li></li>')
                 .data('item.autocomplete', item)
@@ -279,16 +279,16 @@ function s3_gis_ac_set_source(level) {
     var parent = $('#gis_location_L' + (level - 1)).val();
 
     var grandparent;
-    if (('' == parent) && (level > 1)) {
+    if (('' === parent) && (level > 1)) {
         // Lookup a grandparent
         grandparent = $('#gis_location_L' + (level - 2)).val();
-        if (('' == grandparent) && (level > 2)) {
+        if (('' === grandparent) && (level > 2)) {
             grandparent = $('#gis_location_L' + (level - 2)).val();
-            if (('' == grandparent) && (level > 3)) {
+            if (('' === grandparent) && (level > 3)) {
                 grandparent = $('#gis_location_L' + (level - 3)).val();
-                if (('' == grandparent) && (level > 4)) {
+                if (('' === grandparent) && (level > 4)) {
                     grandparent = $('#gis_location_L' + (level - 4)).val();
-                    if (('' == grandparent) && (level > 5)) {
+                    if (('' === grandparent) && (level > 5)) {
                         grandparent = $('#gis_location_L' + (level - 5)).val();
                     }
                 }
@@ -296,15 +296,16 @@ function s3_gis_ac_set_source(level) {
         }
     }
 
+    var source;
     if (parent) {
         // Filter on parent
-        var source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level + '&parent=' + parent;
+        source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level + '&parent=' + parent;
     } else if (grandparent) {
         // Filter on children (slower)
-        var source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level + '&children=' + grandparent;
+        source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level + '&children=' + grandparent;
     } else {
         // No Filter possible beyond Level
-        var source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level;
+        source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level;
     }
     return source;
 }
@@ -338,8 +339,8 @@ function s3_gis_ac_search_selected(location) {
         // Lookup the hierarchies
         var suffix = path.toString().length + 1;
         var ancestors = path.slice(0, suffix).split('/');
-        var queries = ancestors.length - 1
-        if (queries == 0) {
+        var queries = ancestors.length - 1;
+        if (queries === 0) {
             $('#gis_location_search_throbber').hide();
             // Display the Select Button
             $( '#gis_location_search_select-btn' ).removeClass('hide').show();
@@ -430,31 +431,31 @@ function s3_gis_lat_lon_converter() {
     function set($e) {
         return function (v) {
             // clear and focus or set a field
-            $e.val(v||'')
+            $e.val(v||'');
             if (typeof(v) == 'undefined') $e.focus();
-        }
+        };
     }
 
     function get_dms(dec) {
         var d = Math.abs(dec),
-            m = (d - parseInt(d)) * 60;
+            m = (d - parseInt(d, 10)) * 60;
 
         // Stop integer values of m from being approximated
         if (Math.abs(m - Math.round(m)) < 1e-10) {
             m = Math.round(m);
             s = 0;
         } else {
-            var s = (m - parseInt(m)) * 60;
+            var s = (m - parseInt(m, 10)) * 60;
 
             // Stop integer values of s from being approximated
             if (Math.abs(s - Math.round(s)) < 1e-10)
-                s = Math.round(s)
+                s = Math.round(s);
         }
 
-        return { d: parseInt(dec),
-                 m: parseInt(m),
+        return { d: parseInt(dec, 10),
+                 m: parseInt(m, 10),
                  s: s
-               }
+               };
     }
 
     function get_float(d, m, s) {
@@ -546,7 +547,7 @@ function s3_gis_lat_lon_converter() {
         var field = $('.decimal', wrap),
             dec = field.val(),
             isLat = $('.decimal', wrap).attr('id') == 'gis_location_lat';
-        if (dec == '') return;
+        if (dec === '') return;
         if (!isNum(dec)) {
             alert(nanError.decimal);
             field.val('').focus();
@@ -795,10 +796,8 @@ function s3_gis_show_tab(tab) {
         s3_gis_edit_tab();
     } else if (tab == 'view') {
         s3_gis_view_tab();
-    } else {
-        // Unknown Tab
-        return false;
     }
+    // Unknown Tab
 }
 
 function s3_gis_search_tab() {
@@ -1012,7 +1011,7 @@ function s3_gis_view_tab() {
     // Hide the fields without data
     // Add the Disabled Status to the fields with data
     var L0 = $('#gis_location_L0').val();
-    if (L0 == '') {
+    if (L0 === '') {
         $('#gis_location_L0_label__row').hide();
         $('#gis_location_L0__row').hide();
     } else {
@@ -1020,7 +1019,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L0__row').show();
     }
     var name = $('#gis_location_name').val();
-    if (name == '') {
+    if (name === '') {
         $('#gis_location_name_label__row').hide();
         $('#gis_location_name__row').hide();
     } else {
@@ -1028,7 +1027,7 @@ function s3_gis_view_tab() {
         $('#gis_location_name__row').show();
     }
     var street = $('#gis_location_street').val();
-    if (street == '') {
+    if (street === '') {
         $('#gis_location_street_label__row').hide();
         $('#gis_location_street__row').hide();
     } else {
@@ -1036,7 +1035,7 @@ function s3_gis_view_tab() {
         $('#gis_location_street__row').show();
     }
     var postcode = $('#gis_location_postcode').val();
-    if (postcode == '') {
+    if (postcode === '') {
         $('#gis_location_postcode_label__row').hide();
         $('#gis_location_postcode__row').hide();
     } else {
@@ -1045,7 +1044,7 @@ function s3_gis_view_tab() {
     }
     if ( !S3.gis.no_latlon ) {
         var lat = $('#gis_location_lat').val();
-        if (lat == '') {
+        if (lat === '') {
             $('#gis_location_lat_label__row').hide();
             $('#gis_location_lat__row').hide();
         } else {
@@ -1053,7 +1052,7 @@ function s3_gis_view_tab() {
             $('#gis_location_lat__row').show();
         }
         var lon = $('#gis_location_lon').val();
-        if (lon == '') {
+        if (lon === '') {
             $('#gis_location_lon_label__row').hide();
             $('#gis_location_lon__row').hide();
         } else {
@@ -1062,7 +1061,7 @@ function s3_gis_view_tab() {
         }
     }
     var wkt = $('#gis_location_wkt').val();
-    if (wkt == '') {
+    if (wkt === '') {
         $('#gis_location_wkt_label__row').hide();
         $('#gis_location_wkt__row').hide();
     } else {
@@ -1071,7 +1070,7 @@ function s3_gis_view_tab() {
         $('#gis_location_wkt__row').show();
     }
     var L5 = $('#gis_location_L5_ac').val();
-    if (L5 == '') {
+    if (L5 === '') {
         $('#gis_location_L5_label__row').hide();
         $('#gis_location_L5__row').hide();
     } else if ( !$('#gis_location_L5_ac').hasClass('hide') ) {
@@ -1079,7 +1078,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L5__row').show();
     }
     var L4 = $('#gis_location_L4_ac').val();
-    if (L4 == '') {
+    if (L4 === '') {
         $('#gis_location_L4_label__row').hide();
         $('#gis_location_L4__row').hide();
     } else if ( !$('#gis_location_L4_ac').hasClass('hide') ) {
@@ -1087,7 +1086,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L4__row').show();
     }
     var L3 = $('#gis_location_L3_ac').val();
-    if (L3 == '') {
+    if (L3 === '') {
         $('#gis_location_L3_label__row').hide();
         $('#gis_location_L3__row').hide();
     } else if ( !$('#gis_location_L3_ac').hasClass('hide') ) {
@@ -1095,7 +1094,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L3__row').show();
     }
     var L2 = $('#gis_location_L2_ac').val();
-    if (L2 == '') {
+    if (L2 === '') {
         $('#gis_location_L2_label__row').hide();
         $('#gis_location_L2__row').hide();
     } else if ( !$('#gis_location_L2_ac').hasClass('hide') ) {
@@ -1103,7 +1102,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L2__row').show();
     }
     var L1 = $('#gis_location_L1_ac').val();
-    if (L1 == '') {
+    if (L1 === '') {
         $('#gis_location_L1_label__row').hide();
         $('#gis_location_L1__row').hide();
     } else if ( !$('#gis_location_L1_ac').hasClass('hide') ) {
@@ -1123,11 +1122,11 @@ function s3_gis_view_tab() {
     $('#gis_loc_edit_tab').removeClass('tab_here').addClass('tab_last');
 }
 
-function s3_gis_select_search_result(id, uuid) {
+function s3_gis_select_search_result() {
     // 'Select This Location' button has been pressed
 
     // Set the real location_id
-    var id = $('body').data('id');
+    id = $('body').data('id');
     $('#' + S3.gis.location_id).val(id);
 
     // Set the global var
@@ -1287,7 +1286,7 @@ function s3_gis_geocode(active) {
         address += ', ' + L1;
     }
     // Build the Query
-    var query = { 'address': address }
+    var query = { 'address': address };
     // Restrict results to the country if we have it available.
     if (S3.gis.country) {
         query['region'] = S3.gis.country.toLowerCase();
@@ -1370,12 +1369,13 @@ function s3_gis_save_locations() {
     var id = $( '#' + S3.gis.location_id ).val();
     if (!id) {
         // Create form: we need to populate the location_id field in order to trigger validation
-        $( '#' + S3.gis.location_id ).val('dummy')
+        $( '#' + S3.gis.location_id ).val('dummy');
     }
+    var name;
     if (S3.gis.site) {
         // For Sites, we default the Building Name to the same as the Site
         var namefield = '#' + S3.gis.site + '_name';
-        var name = $( namefield ).val();
+        name = $( namefield ).val();
         if (!name) {
             // Site Name is required
             if (undefined == $('#name__error').val()) {
@@ -1386,7 +1386,7 @@ function s3_gis_save_locations() {
             $(namefield).focus();
             if (S3.navigate_away_confirm) {
                 // Reset the Navigation protection
-                S3SetNavigateAwayConfirm()
+                S3SetNavigateAwayConfirm();
             }
             // Prevent the Form's save from continuing
             return false;
@@ -1402,15 +1402,13 @@ function s3_gis_save_locations() {
     var L3 = $('#gis_location_L3').val();
     var L4 = $('#gis_location_L4').val();
     var L5 = $('#gis_location_L5').val();
-    if ($('#gis_location_L0').val()) {
-        // pass
-    } else {
+    if (!$('#gis_location_L0').val()) {
         // Check if there is other data to save
         if (S3.gis.site) {
             // Don't include the name in the check for sites, since these have the name auto-populated
-            var name = '';
+            name = '';
         } else {
-            var name = $('#gis_location_name').val();
+            name = $('#gis_location_name').val();
         }
         var street = $('#gis_location_street').val();
         var postcode = $('#gis_location_postcode').val();
@@ -1425,7 +1423,7 @@ function s3_gis_save_locations() {
             $('#gis_location_L0').focus();
             if (S3.navigate_away_confirm) {
                 // Reset the Navigation protection
-                S3SetNavigateAwayConfirm()
+                S3SetNavigateAwayConfirm();
             }
             // Prevent the Form's save from continuing
             return false;
@@ -1436,48 +1434,38 @@ function s3_gis_save_locations() {
     // If there is no value in the ID field but there is text in the AC then
     // copy the text to the ID field to have it visible to the Validator
     // L1
-    if (L1) {
-        // pass
-    } else {
+    if (!L1) {
          L1 = $('#gis_location_L1_ac').val();
          if (L1) {
-            $('#gis_location_L1').val(L1)
+            $('#gis_location_L1').val(L1);
          }
     }
     // L2
-    if (L2) {
-        // pass
-    } else {
+    if (!L2) {
          L2 = $('#gis_location_L2_ac').val();
          if (L2) {
-            $('#gis_location_L2').val(L2)
+            $('#gis_location_L2').val(L2);
          }
     }
     // L3
-    if (L3) {
-        // pass
-    } else {
+    if (!L3) {
          L3 = $('#gis_location_L3_ac').val();
          if (L3) {
-            $('#gis_location_L3').val(L3)
+            $('#gis_location_L3').val(L3);
          }
     }
     // L4
-    if (L4) {
-        // pass
-    } else {
+    if (!L4) {
          L4 = $('#gis_location_L4_ac').val();
          if (L4) {
-            $('#gis_location_L4').val(L4)
+            $('#gis_location_L4').val(L4);
          }
     }
     // L5
-    if (L5) {
-        // pass
-    } else {
+    if (!L5) {
          L5 = $('#gis_location_L5_ac').val();
          if (L5) {
-            $('#gis_location_L5').val(L5)
+            $('#gis_location_L5').val(L5);
          }
     }
 

@@ -9,27 +9,28 @@ function fncPrepItem(data) {
             return data[i].name;
         }
     }
-};
+    return '';
+}
 
 function fncRepresentItem(record, PrepResult) {
     if (record.quantity == 1) {
-        return record.name 
+        return record.name;
     } else {
-        return record.name + ' (' + record.quantity + ' x ' + PrepResult + ')'
+        return record.name + ' (' + record.quantity + ' x ' + PrepResult + ')';
     }
 }
 
 // Displays the number of items available in an inventory
 function InvItemPackIDChange() {     
     // Cancel previous request
-    try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
+    try {S3.JSONRequest[$(this).attr('id')].abort();} catch(err) {}
 
     $('#TotalQuantity').remove();   
     if ($('[name="inv_item_id"]').length > 0) {
-        id = $('[name="inv_item_id"]').val()
+        id = $('[name="inv_item_id"]').val();
     }
     else if  ($('[name="send_inv_item_id"]').length > 0) {
-        id = $('[name="send_inv_item_id"]').val()
+        id = $('[name="send_inv_item_id"]').val();
     }
 //Following condition removed since it doesn't appear to be correct
 //the ajax call is looking for the number of items in stock, but
@@ -41,7 +42,7 @@ function InvItemPackIDChange() {
         return;
 
     var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
-    if ($('#inv_quantity_ajax_throbber').length == 0) {
+    if ($('#inv_quantity_ajax_throbber').length === 0) {
         $('[name="quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
     }
     
@@ -54,10 +55,11 @@ function InvItemPackIDChange() {
         var PackName = $('[name="item_pack_id"] option:selected').text();
         var re = /\(([0-9]*)\sx/;
         var RegExpResult = re.exec(PackName);
-        if (RegExpResult == null) {
-            var PackQuantity = 1
+        var PackQuantity;
+        if (RegExpResult === null) {
+            PackQuantity = 1;
         } else {
-            var PackQuantity = RegExpResult[1]
+            PackQuantity = RegExpResult[1];
         }
 
         var Quantity = (InvQuantity * InvPackQuantity) / PackQuantity;
@@ -66,11 +68,11 @@ function InvItemPackIDChange() {
         $('#inv_quantity_ajax_throbber').remove();
         $('[name="quantity"]').after(TotalQuantity);
     });
-};
+}
 
 //Displays the number of items available in an inventory
 function InvRecvTypeChange() {
-	var RecvType = $("#inv_recv_type").val()
+	var RecvType = $("#inv_recv_type").val();
 	if (RecvType != undefined) {
 		if ( RecvType == 11) { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
 			// Internal Shipment 
@@ -87,7 +89,7 @@ function InvRecvTypeChange() {
 		}
 		
 	}
-};
+}
 
 $(document).ready(function() {
     $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
@@ -170,16 +172,16 @@ $(document).ready(function() {
 				dataType: 'json',
 				context: DIV,
 				success: function(data) {
-					RecvTable = '<table class="recv_table">'
+					RecvTable = '<table class="recv_table">';
 					for (i=0; i<data.length; i++) {
 						RecvTable += '<tr><td>';
-						if (i==0) {
+						if (i===0) {
 							// Header Row
 							RecvTable += data[0].id;
 						} else {
 							RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
 							RecvTable += "<a href='" + RecvURL + "'>";
-							if (data[i].date != null) {
+							if (data[i].date !== null) {
 								RecvTable += data[i].date.substring(0, 10) + ' - ';
 								RecvTable += data[i].name + '</a>';
 							} else {

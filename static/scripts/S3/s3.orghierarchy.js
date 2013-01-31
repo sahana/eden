@@ -58,7 +58,7 @@ function parseAffiliates(json) {
 	if (json_affiliates != undefined) {
 		for (var i=0; i < json_affiliates.length; i++) {
 			var affiliate = json_affiliates[i]["$k_pe_id"];
-			var pe_id = parseInt(affiliate["@id"]);
+			var pe_id = parseInt(affiliate["@id"], 10);
 			var name = affiliate["$"];
 			var resource = affiliate["@resource"];
 
@@ -92,7 +92,7 @@ function parseRoles(json) {
 	if (json_roles != undefined) {
 		for (var i=0; i < json_roles.length; i++) {
 			var role = json_roles[i];
-			var id = parseInt(role["@id"]);
+			var id = parseInt(role["@id"], 10);
 			var name = role["role"];
 			var resource = role["role_type"]["$"];
 
@@ -147,17 +147,18 @@ function loadNode(event) {
 		// fetch roles or affiliates
 		// populate entity (org_hierarchy)
 		// populate node (dom tree)
+		var id, fn, parser;
 		if (entity.type == "entity") {
 			// this is an organisation or office
-			var id = entity.pe_id;
-			var fn = getRoles;
-			var parser = parseRoles;
+			id = entity.pe_id;
+			fn = getRoles;
+			parser = parseRoles;
 		}
 		else {
 			// this is a role
-			var id = entity.id;
-			var fn = getAffiliates;
-			var parser = parseAffiliates;
+			id = entity.id;
+			fn = getAffiliates;
+			parser = parseAffiliates;
 		}
 
 
@@ -176,12 +177,12 @@ function loadNode(event) {
 	}
 
 	new_menu.animate({
-		left: parseInt(new_menu.css('left'),10) == 0 ?
+		left: parseInt(new_menu.css('left'),10) === 0 ?
 			-new_menu.outerWidth() :
 			0
 	});
 	menu.animate({
-		left: parseInt(menu.css('left'),10) == 0 ?
+		left: parseInt(menu.css('left'),10) === 0 ?
 			-menu.outerWidth() :
 			0
 	});
@@ -218,11 +219,12 @@ function updateOrgHierarchy(entity, items) {
 	for (var i=0; i < items.length; i++) {
 		var item = items[i];
 
+		var idx;
 		if (item.pe_id != undefined) {
-			var idx = item.pe_id;
+			idx = item.pe_id;
 		}
 		else {
-			var idx = item.id;
+			idx = item.id;
 		}
 
 		entity.children[idx] = item;

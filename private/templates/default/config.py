@@ -224,6 +224,11 @@ settings.L10n.decimal_separator = "."
 #
 #settings.security.policy = 7 # Organisation-ACLs
 
+# Ownership-rule for records without owner:
+# True = not owned by any user (strict ownership, default)
+# False = owned by any authenticated user
+#settings.security.strict_ownership = False
+
 # Lock-down access to Map Editing
 #settings.security.map = True
 # Allow non-MapAdmins to edit hierarchy locations? Defaults to True if not set.

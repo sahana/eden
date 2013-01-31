@@ -55,7 +55,7 @@ S3.search.saveCurrentSearch = function(event) {
 	});
 	//event.preventDefault();
 	return false;
-}
+};
 
 // ============================================================================
 
@@ -63,7 +63,7 @@ S3.search.AutocompleteTimer = function() {
 	// Cancel previous timer
 	try {
 		clearTimeout(S3.TimeoutVar[$(this).attr('id')]);
-	} catch(err) {};
+	} catch(err) {}
 	var selSearchDiv = $(this);
 	var fncSearchAutocompleteAjaxArg = function() {
         S3.search.AutocompleteAjax(selSearchDiv);
@@ -76,7 +76,7 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
     // Cancel previous request
     try {
         S3.JSONRequest[selSearchDiv.attr('id')].abort();
-    } catch(err) {};
+    } catch(err) {}
 
     var selSearchForm = selSearchDiv.parent();
     var selHiddenInput = selSearchForm.parent().find('.hidden_input');
@@ -95,19 +95,19 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
     var selThrobber = $('#' + Fieldname + '_ajax_throbber');
 
     // Check if there is enough input to filter
-    var FormValues = selSearchDiv.find(':input[value]').serialize()
+    var FormValues = selSearchDiv.find(':input[value]').serialize();
     if (!FormValues) {
     	// Do nothing
     	selThrobber.remove();
     	$('#' + Fieldname + '_result_list').remove();
-    	return
+    	return;
     }
 
     // @ToDo: Add a time delay before making an AJAX call
 
     /* Show Throbber */
     selResultList.remove();
-    if (selThrobber.length == 0 ) {
+    if (selThrobber.length === 0 ) {
         selSearchForm.append('<div id="' + Fieldname + '_ajax_throbber" class="ajax_throbber"/>');
         selThrobber = $('#' + Fieldname + '_ajax_throbber'); // Refresh selector
     }
@@ -144,7 +144,7 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
 	                        'class = "search_autocomplete_result_list" ' +
 	                        'style = "display:inline;">';
 
-	            if (data.length == 0) {
+	            if (data.length === 0) {
 	                table += '<LI class = "search_autocomplete_result_item" ' +
                              'style = "border:1px solid;list-style-type:none;">' +
                              i18n.no_match + '</LI>';
@@ -153,7 +153,7 @@ S3.search.AutocompleteAjax = function(selSearchDiv) {
 	                    table += '<LI id="' +  data[i].id + '"' +
 	                            'class = "search_autocomplete_result_item" ' +
 	                            'style = "border:1px solid;list-style-type:none;">';
-	                    var selRepresent = $(data[i].represent)
+	                    var selRepresent = $(data[i].represent);
 	                    table += '<SPAN style = "cursor:pointer;">' + selRepresent.text() + '</SPAN>' +
 	                    		 '<A href="' + selRepresent.attr("href") + '" ' +
 	                    		 'target = "blank" ' +
@@ -197,8 +197,8 @@ $(document).ready(function() {
     } else {
         $('.advanced-lnk').click(function(e) {
         	e.preventDefault();
-            var selSearchForm = $('.search_form[fieldname="' + $(this).attr('fieldname') + '"]')
-            if (selSearchForm.length == 0) {
+            var selSearchForm = $('.search_form[fieldname="' + $(this).attr('fieldname') + '"]');
+            if (selSearchForm.length === 0) {
                 // Not an Search Form embedded into a Big form, but a normal search page with a single form.
                 selSearchForm = $('.search_form');
             }
@@ -208,8 +208,8 @@ $(document).ready(function() {
         });
         $('.simple-lnk').click(function(e) {
         	e.preventDefault();
-        	var selSearchForm = $('.search_form[fieldname="' + $(this).attr('fieldname') + '"]')
-            if (selSearchForm.length == 0) {
+        	var selSearchForm = $('.search_form[fieldname="' + $(this).attr('fieldname') + '"]');
+            if (selSearchForm.length === 0) {
                 // Not an Search Form embedded into a Big form, but a normal search page with a single form.
                 selSearchForm = $('.search_form');
             }
@@ -228,7 +228,7 @@ $(document).ready(function() {
         /*
             Listen for click events on the expanding/collapsing letter widgets
         */
-        var div = $(this)
+        var div = $(this);
         div.next('table').toggleClass('hide');
         div.toggleClass('expanded');
     })
@@ -257,7 +257,7 @@ $(document).ready(function() {
         var selSearchForm = selResultList.parent();
         var selHiddenInput = selSearchForm.parent().find('.hidden_input');
 
-        var Fieldname = selSearchForm.attr('fieldname')
+        var Fieldname = selSearchForm.attr('fieldname');
 
         var id = selResultLI.attr('id');
         if (id != undefined) {
@@ -296,7 +296,7 @@ S3.search.clearMapPolygon = function() {
         S3.gis.lastDraftFeature.destroy();
     }
     $('input#gis_search_polygon_input').val('').trigger('change');
-}
+};
 
 /*
  * S3SearchLocationWidget
@@ -312,7 +312,75 @@ S3.search.toggleMapClearButton = function(event) {
     } else {
         clearButton.hide();
     }
-}
+};
+
+// ============================================================================
+// New search framework
+
+/*
+ * filterURL: add all current filters to a URL
+ */
+S3.search.filterURL = function(url) {
+
+    var queries = [];
+
+    // Text widgets
+    $('.text-filter:visible').each(function() {
+
+        var id = $(this).attr('id');
+
+        var url_var = $('#' + id + '-data').val(),
+            value = $(this).val();
+        if (value) {
+            var values = value.split(' ');
+            for (var i=0; i<values.length; i++) {
+                queries.push(url_var + '=*' + values[i] + '*');
+            }
+        }
+    });
+
+    // Options widgets
+    $('.options-filter:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var operator = $("input:radio[name='" + id + "_filter']:checked").val();
+        var contains=/__contains$/;
+        var anyof=/__anyof$/;
+        if (operator == 'any' && url_var.match(contains)) {
+            url_var = url_var.replace(contains,'__anyof');
+        } else if (operator == 'all' && url_var.match(anyof)) {
+            url_var = url_var.replace(anyof,'__contains');
+        }
+        var value = '';
+        $("input[name='" + id + "']:checked").each(function() {
+            if (value === '') {
+                value = $(this).val();
+            } else {
+                value = value + ',' + $(this).val();
+            }
+        });
+        if (value !== '') {
+            queries.push(url_var + '=' + value);
+        }
+    });
+
+    // Other widgets go here...
+
+    // Construct the URL
+    var url_parts = url.split('?'), url_query = queries.join('&');
+    if (url_parts.length > 1) {
+        if (url_query) {
+            url_query = url_query + '&' + url_parts[1];
+        } else {
+            url_query = url_parts[1];
+        }
+    }
+    var filtered_url = url_parts[0];
+    if (url_query) {
+        filtered_url = filtered_url + '?' + url_query;
+    }
+    return filtered_url;
+};
 
 // To be completed: New Search Framework
 $(document).ready(function() {

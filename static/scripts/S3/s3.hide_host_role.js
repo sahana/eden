@@ -3,7 +3,7 @@
 // @todo: parametrize!
 $(function() {
     hide_host_role =  function(component_id) {
-        if (component_id != '') {
+        if (component_id !== '') {
             var json_url = S3.Ap.concat('/project/project/' + component_id + '/organisation.s3json?organisation.role=1');
             $.getJSONS3(json_url, function (data) {
                 try {

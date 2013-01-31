@@ -58,9 +58,9 @@ $('#contact-add').click(function() {
     $('#contact-add_throbber').removeClass('hide').show();
     var button = $(this);
     // Remove any existing form
-    $('#popup').remove()
+    $('#popup').remove();
     // Download the form
-    var url = S3.Ap.concat('/pr/contact/create.iframe')
+    var url = S3.Ap.concat('/pr/contact/create.iframe');
     $.get(url, function(data) {
         // Hide the Add button
         button.hide();
@@ -118,7 +118,7 @@ $('.contact').each(function() {
                 function(data) {
                     if (data.status == 'failed') {
                         try {
-                            error_message = data.tree.$_pr_contact[0].value['@error']
+                            error_message = data.tree.$_pr_contact[0].value['@error'];
                         } catch (e) {
                             error_message = data.message;
                         }
@@ -149,9 +149,9 @@ $('#emergency-add').click(function() {
     $('#emergency-add_throbber').removeClass('hide').show();
     var button = $(this);
     // Remove any existing form
-    $('#popup').remove()
+    $('#popup').remove();
     // Download the form
-    var url = S3.Ap.concat('/pr/contact_emergency/create.iframe')
+    var url = S3.Ap.concat('/pr/contact_emergency/create.iframe');
     $.get(url, function(data) {
         // Hide the Add button
         button.hide();
@@ -182,10 +182,10 @@ $('.emergency').each(function() {
         // Show a Spinner
         $('#emergency-add_throbber').removeClass('hide').show();
         // Download the form
-        var url = S3.Ap.concat('/pr/contact_emergency/' + id + '.iframe/update')
+        var url = S3.Ap.concat('/pr/contact_emergency/' + id + '.iframe/update');
         $.get(url, function(data) {
             // Remove any existing form
-            $('#popup').remove()
+            $('#popup').remove();
             // Hide the Read row
             emergency.hide();
             // Add a DIV to show the iframe in

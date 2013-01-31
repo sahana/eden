@@ -77,7 +77,7 @@ S3.gis.show_map = function() {
         // Toolbar Tooltips
         Ext.QuickTips.init();
     //}
-}
+};
 
 // Configure the Viewport
 function s3_gis_setCenter(bottom_left, top_right) {
@@ -175,9 +175,9 @@ function addMapUI() {
     }
 
     // Plugins
-    for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
-        S3.gis.plugins[i].setup(map);
-        S3.gis.plugins[i].addToMapWindow(items);
+    for ( var j = 0; j < S3.gis.plugins.length; ++j ) {
+        S3.gis.plugins[j].setup(map);
+        S3.gis.plugins[j].addToMapWindow(items);
     }
 
     // West Panel
@@ -205,7 +205,7 @@ function addMapUI() {
                 this.on('checkchange', function(event, checked) {
                     if (!checked) {
                         // Cancel any associated throbber
-                        hideThrobber(this.layer.s3_layer_id)
+                        hideThrobber(this.layer.s3_layer_id);
                     }
                 });
             } else {
@@ -215,7 +215,7 @@ function addMapUI() {
                         this.on('checkchange', function(event, checked) {
                             if (!checked) {
                                 // Cancel any associated throbber
-                                hideThrobber(this.layer.s3_layer_id)
+                                hideThrobber(this.layer.s3_layer_id);
                             }
                         });
                     }
@@ -244,7 +244,7 @@ function addWestPanel() {
             S3.gis.mapWestPanel
         ]
     });
-};
+}
 
 // Put into a Container to allow going fullscreen from a BorderLayout
 // We need to put the mapPanel inside a 'card' container for the Google Earth Panel
@@ -276,7 +276,7 @@ function addMapPanelContainer() {
         // Add now rather than when button pressed as otherwise 1st press doesn't do anything
         S3.gis.mapPanelContainer.items.items.push(S3.gis.googleEarthPanel);
     }
-};
+}
 
 // Create an embedded Map Panel
 function addMapPanel() {
@@ -353,7 +353,7 @@ function addLayerTree() {
                 var layer = record.getLayer();
                 return layer.displayInLayerSwitcher === true &&
                        layer.isBaseLayer === true &&
-                       (layer.dir === undefined || layer.dir == '');
+                       (layer.dir === undefined || layer.dir === '');
             }
         },
         leaf: false,
@@ -370,7 +370,7 @@ function addLayerTree() {
                 var layer = record.getLayer();
                 return layer.displayInLayerSwitcher === true &&
                        layer.isBaseLayer === false &&
-                       (layer.dir === undefined || layer.dir == '');
+                       (layer.dir === undefined || layer.dir === '');
             }
         },
         leaf: false,
@@ -392,12 +392,12 @@ function addLayerTree() {
                     return function(read) {
                         if (read.data.layer.dir !== 'undefined')
                             return read.data.layer.dir === folder;
-                    }
+                    };
                 })(folder)
             },
             leaf: false,
            expanded: true
-        }
+        };
         nodesArr.push(child);
     }
 
@@ -406,10 +406,11 @@ function addLayerTree() {
         children: nodesArr
     });
 
+    var tbar;
     if (i18n.gis_uploadlayer || i18n.gis_properties) {
-        var tbar = new Ext.Toolbar();
+        tbar = new Ext.Toolbar();
     } else {
-        var tbar = null;
+        tbar = null;
     }
 
     S3.gis.layerTree = new Ext.tree.TreePanel({
@@ -514,18 +515,21 @@ function addToolbar() {
         toggleGroup: 'controls'
     });
 
+    var polygon_pressed;
+    var pan_pressed;
+    var point_pressed;
     if (S3.gis.draw_polygon == "active") {
-        var polygon_pressed = true;
-        var pan_pressed = false;
-        var point_pressed = false;
+        polygon_pressed = true;
+        pan_pressed = false;
+        point_pressed = false;
     } else if (S3.gis.draw_feature == "active") {
-        var point_pressed = true;
-        var pan_pressed = false;
-        var polygon_pressed = false;
+        point_pressed = true;
+        pan_pressed = false;
+        polygon_pressed = false;
     } else {
-        var pan_pressed = true;
-        var point_pressed = false;
-        var polygon_pressed = false;
+        pan_pressed = true;
+        point_pressed = false;
+        polygon_pressed = false;
     }
 
     S3.gis.panButton = new GeoExt.Action({
@@ -551,7 +555,7 @@ function addToolbar() {
 
     //var removeControl = new OpenLayers.Control.RemoveFeature(S3.gis.draftLayer, {
     //    onDone: function(feature) {
-    //        console.log(feature)
+    //        console.log(feature);
     //    }
     //});
 
@@ -619,7 +623,7 @@ function addToolbar() {
 
     if (navigator.geolocation) {
         // HTML5 geolocation is available :)
-        addGeolocateControl(toolbar)
+        addGeolocateControl(toolbar);
     }
 
     // Don't include the Nav controls in the Location Selector
@@ -693,7 +697,7 @@ function addToolbar() {
         if (S3.gis.Google.Earth) {
             google & addGoogleEarthControl(toolbar);
         }
-    } catch(err) {};
+    } catch(err) {}
     
     // Search box
     if (i18n.gis_search) {

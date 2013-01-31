@@ -31,7 +31,7 @@ $(function() {
         $(dummy_input).focus();
     });
     $(dummy_input).focusout(function() {
-        component_id = $(real_input).val()
+        component_id = $(real_input).val();
         $(dummy_input).addClass('hide');
         $('#component_autocomplete_label').addClass('hide');
         $('#select_from_registry_row').removeClass('hide');
@@ -47,42 +47,44 @@ $(function() {
         $('.embedded > td > textarea').val('');
         $('#clear_form_link').addClass('hide');
         $('#edit_selected_link').addClass('hide');
-    }
+    };
     edit_selected_form = function() {
         enable_embedded();
         $('#edit_selected_link').addClass('hide');
-    }
+    };
     // Called on post-process by the Autocomplete Widget
     select_component = function(component_id) {
         $('#select_from_registry').addClass('hide');
         $('#clear_form_link').addClass('hide');
         $('#load_throbber').removeClass('hide');
-        clear_component_form()
+        clear_component_form();
         var json_url = url + component_id + '.s3json?show_ids=true';
         $.getJSONS3(json_url, function (data) {
             try {
-                var record = data['$_'+component][0]
+                var record = data['$_'+component][0];
                 disable_embedded();
                 $(real_input).val(record['@id']);
                 var re = new RegExp("^[\$|\@].*");
                 var fk = new RegExp("^[\$]k_.*");
+                var field_id;
                 for (j in record) {
                     if (j.match(re)) {
                         if (j.match(fk)) {
-                            var field_id = '#' + component + "_" + j.slice(3);
+                            field_id = '#' + component + "_" + j.slice(3);
                         } else {
                             continue;
                         }
                     } else {
-                        var field_id = '#' + component + "_" + j;
+                        field_id = '#' + component + "_" + j;
                     }
                     try {
-                        data = record[j]
+                        data = record[j];
                         if (data.hasOwnProperty('@id')) {
                             var id = eval(data['@id']);
                             $(field_id).val(id);
                         } else
                         if (data.hasOwnProperty('@value')) {
+                        	var val;
                             try {
                                 val = JSON.parse(data['@value']);
                             }
@@ -98,7 +100,7 @@ $(function() {
                     catch(e) {
                         // continue
                     }
-                };
+                }
             }
             catch(e) {
                 $(real_input).val('');
@@ -133,21 +135,21 @@ $(function() {
     function hide_embedded()
     {
         $('.embedded').addClass('hide');
-    };
+    }
     function show_embedded()
     {
         $('.embedded').removeClass('hide');
-    };
+    }
     function enable_embedded()
     {
         $('.embedded > td > input').removeAttr('disabled');
         $('.embedded > td > select').removeAttr('disabled');
         $('.embedded > td > textarea').removeAttr('disabled');
-    };
+    }
     function disable_embedded()
     {
         $('.embedded > td > input').attr('disabled', true);
         $('.embedded > td > select').attr('disabled', true);
         $('.embedded > td > textarea').attr('disabled', true);
-    };
+    }
 });

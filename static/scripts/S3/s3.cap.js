@@ -50,7 +50,7 @@
 
                 disable = function (item) {
                             item.parents('tr').eq(0).hide().prev().hide();
-                          } // @ToDo: hide or disable?
+                          }, // @ToDo: hide or disable?
                 enable  = function (item) {
                             item.parents('tr').eq(0).show().prev().show();
                           };
@@ -130,7 +130,7 @@
 
             $.each(fields, function (i, f) {
                 try {
-                    var $f = $form.find('[name=' + f +']')
+                    var $f = $form.find('[name=' + f +']');
                     var locked = settings.locked && settings.locked[f];
 
                     switch(typeof(values[f])) {
@@ -192,7 +192,7 @@
         });
 
         if (get_table($form) == 'cap_alert' && !is_cap_template()) {
-            apply_alert_template($form.find('[name=template_id]').val())
+            apply_alert_template($form.find('[name=template_id]').val());
         }
 
         if (get_table($form) == 'cap_info' && !is_cap_info_template()) {
@@ -264,7 +264,7 @@
 
     $(document).ready(function() {
         $('form').each(function() {
-            if (get_table($(this)) != '') {
+            if (get_table($(this)) !== '') {
                 init_cap_form($(this));
                 if (is_cap_template() || is_cap_info_template()) {
                     init_template_form($(this));
