@@ -438,8 +438,7 @@ def activity_type_sector():
 def activity():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
+    table = s3db.project_activity
 
     if "project_id" in request.get_vars:
         field = table.project_id
@@ -497,8 +496,7 @@ def location():
         RESTful CRUD controller to display project location information
     """
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
+    table = s3db.project_location
 
     # Pre-process
     def prep(r):
@@ -718,8 +716,8 @@ def time():
         list_fields = ["id",
                        "date",
                        "hours",
-                       (T("Project"), "project"),
-                       (T("Activity"), "activity"),
+                       (T("Project"), "task_id$task_project.project_id"),
+                       (T("Activity"), "task_id$task_activity.activity_id"),
                        "task_id",
                        "comments",
                        ]

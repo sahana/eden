@@ -3539,14 +3539,14 @@ class S3ProjectTaskModel(S3Model):
                     S3SearchOptionsWidget(
                         name = "task_search_project",
                         label = T("Project"),
-                        field = "project",
+                        field = "task_project.project_id",
                         options = self.task_project_opts,
                         cols = 3
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_activity",
                         label = T("Activity"),
-                        field = "activity",
+                        field = "task_activity.activity_id",
                         options = self.task_activity_opts,
                         cols = 3
                     ),
@@ -3596,11 +3596,11 @@ class S3ProjectTaskModel(S3Model):
                     ]
 
         if settings.get_project_milestones():
-            list_fields.insert(5, (T("Milestone"), "milestone"))
+            list_fields.insert(5, (T("Milestone"), "task_milestone.milestone_id"))
             advanced_task_search.insert(4, S3SearchOptionsWidget(
                                                 name = "task_search_milestone",
                                                 label = T("Milestone"),
-                                                field = "milestone",
+                                                field = "task_milestone.milestone_id",
                                                 options = self.task_milestone_opts,
                                                 cols = 3
                                             ))
@@ -3648,7 +3648,7 @@ class S3ProjectTaskModel(S3Model):
                   orderby="project_task.priority",
                   realm_entity=self.task_realm_entity,
                   onvalidation=self.task_onvalidation,
-                  create_next=URL(f="task", args=["[id]"]),
+                  #create_next=URL(f="task", args=["[id]"]),
                   create_onaccept=self.task_create_onaccept,
                   update_onaccept=self.task_update_onaccept,
                   search_method=task_search,
@@ -3862,12 +3862,9 @@ class S3ProjectTaskModel(S3Model):
         if "rows" in request.get_vars and request.get_vars.rows == "project":
             crud_strings[tablename].title_report = T("Project Time Report")
 
-        # Virtual Fields
-        table.virtualfields.append(S3ProjectTimeVirtualFields())
-
         list_fields = ["id",
-                       (T("Project"), "project"),
-                       (T("Activity"), "activity"),
+                       (T("Project"), "task_id$task_project.project_id"),
+                       (T("Activity"), "task_id$task_activity.activity_id"),
                        "task_id",
                        "person_id",
                        "date",
@@ -3875,9 +3872,13 @@ class S3ProjectTaskModel(S3Model):
                        "comments",
                        ]
 
-        report_fields = list_fields + [(T("Day"), "day"),
-                                       (T("Week"), "week")
-                                       ]
+        # Virtual Fields
+        #table.virtualfields.append(S3ProjectTimeVirtualFields())
+
+        report_fields = list_fields
+        #                           + [(T("Day"), "day"),
+        #                              (T("Week"), "week")
+        #                              ]
 
         task_time_search = [S3SearchOptionsWidget(name="person_id",
                                                   label = T("Person"),
@@ -3885,12 +3886,12 @@ class S3ProjectTaskModel(S3Model):
                                                   cols = 3),
                             S3SearchOptionsWidget(name="project",
                                                   label = T("Project"),
-                                                  field = "project",
+                                                  field = "task_id$task_project.project_id",
                                                   options = self.task_project_opts,
                                                   cols = 3),
                             S3SearchOptionsWidget(name="activity",
                                                   label = T("Activity"),
-                                                  field = "activity",
+                                                  field = "task_id$task_activity.activity_id",
                                                   options = self.task_activity_opts,
                                                   cols = 3),
                             S3SearchMinMaxWidget(name="date",
@@ -3899,7 +3900,8 @@ class S3ProjectTaskModel(S3Model):
                             ]
 
         if settings.get_project_sectors():
-            report_fields.insert(3, (T("Sectors"), "sectors"))
+            report_fields.insert(3, (T("Sector"),
+                                     "task_id$task_project.project_id$sector"))
             def get_sector_opts():
                 stable = self.org_sector
                 rows = db(stable.deleted == False).select(stable.name)
@@ -3910,7 +3912,7 @@ class S3ProjectTaskModel(S3Model):
                 return sector_opts
             task_time_search.insert(2, S3SearchOptionsWidget(name="sectors",
                                                              label = T("Sector"),
-                                                             field = "sectors",
+                                                             field = "task_id$task_project.project_id$sector",
                                                              options = get_sector_opts,
                                                              cols = 3),
                                     )
@@ -3923,9 +3925,9 @@ class S3ProjectTaskModel(S3Model):
                         cols = report_fields,
                         fact = report_fields,
                         defaults = Storage(
-                            rows = "time.project",
-                            cols = "time.person_id",
-                            fact = "time.hours",
+                            rows = "task_id$task_project.project_id",
+                            cols = "person_id",
+                            fact = "hours",
                             aggregate = "sum",
                             totals = True
                         ),
@@ -4803,44 +4805,7 @@ class S3ProjectThemeVirtualFields:
 class S3ProjectTaskVirtualFields:
     """ Virtual fields for the project_task table """
 
-    extra_fields = ["id",
-                    "project_task_project:project_id$name",
-                    "project_task_activity:activity_id$name",
-                    "project_task_milestone:milestone_id$name",
-                    ]
-
-    # -------------------------------------------------------------------------
-    def project(self):
-        """
-            Project associated with this task
-        """
-
-        try:
-            return self.project_project.name
-        except AttributeError:
-            return None
-
-    # -------------------------------------------------------------------------
-    def activity(self):
-        """
-            Activity associated with this task
-        """
-
-        try:
-            return self.project_activity.name
-        except AttributeError:
-            return None
-
-    # -------------------------------------------------------------------------
-    def milestone(self):
-        """
-            Milestone associated with this task
-        """
-
-        try:
-            return self.project_milestone.name
-        except AttributeError:
-            return None
+    extra_fields = ["id"]
 
     # -------------------------------------------------------------------------
     def task_id(self):
@@ -4852,94 +4817,12 @@ class S3ProjectTaskVirtualFields:
 
 # =============================================================================
 class S3ProjectTimeVirtualFields:
-    """ Virtual fields for the project_time table """
+    """
+        Virtual fields for the project_time table
+        - deprecated
+    """
 
-    extra_fields = ["task_id",
-                    "date",
-                    ]
-
-    # -------------------------------------------------------------------------
-    def project(self):
-        """
-            Project associated with this time entry
-            - used by the 'Project Time' report
-        """
-
-        try:
-            task_id = self.project_time.task_id
-        except AttributeError:
-            return None
-
-        s3db = current.s3db
-        ptable = s3db.project_project
-        ltable = s3db.project_task_project
-        query = (ltable.deleted != True) & \
-                (ltable.task_id == task_id) & \
-                (ltable.project_id == ptable.id)
-        project = current.db(query).select(ptable.name,
-                                           limitby=(0, 1)).first()
-        if project:
-            return project.name
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def activity(self):
-        """
-            Activity associated with this time entry
-            - used by the 'Project Time' report
-        """
-
-        try:
-            task_id = self.project_time.task_id
-        except AttributeError:
-            return current.messages["NONE"]
-
-        db = current.db
-        s3db = current.s3db
-
-        task_activities = s3db.project_task_activity
-        activities = s3db.project_activity
-
-        query = (task_activities.deleted != True) & \
-                (task_activities.task_id == task_id) & \
-                (task_activities.activity_id == activities.id)
-        activity = db(query).select(activities.name,
-                                    limitby=(0, 1)).first()
-
-        if activity:
-            return activity.name
-        else:
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def sectors(self):
-        """
-            Sectors of the project associated with this time entry
-            - used by the 'Project Time' report
-        """
-
-        try:
-            task_id = self.project_time.task_id
-        except AttributeError:
-            return None
-
-        db = current.db
-        s3db = current.s3db
-        ptable = s3db.project_project
-        ltable = s3db.project_task_project
-        query = (ltable.deleted != True) & \
-                (ltable.task_id == task_id) & \
-                (ltable.project_id == ptable.id)
-        row = db(query).select(ptable.multi_sector_id,
-                               limitby=(0, 1)).first()
-        if row and row.multi_sector_id:
-            stable = s3db.org_sector
-            query = (stable.id.belongs(row.multi_sector_id))
-            rows = db(query).select(stable.name)
-            return [row.name for row in rows]
-        else:
-            return None
+    extra_fields = ["date"]
 
     # -------------------------------------------------------------------------
     def day(self):
@@ -4969,7 +4852,7 @@ class S3ProjectTimeVirtualFields:
     # -------------------------------------------------------------------------
     def week(self):
         """
-            Rturns the date of the Monday previous to this time entry
+            Returns the date of the Monday previous to this time entry
         """
 
         # Convert the datetime to a date
@@ -5410,10 +5293,10 @@ def project_task_controller():
                            copyable=False,
                            listadd=False)
             try:
-                # Add Virtual Fields
+                # Add Project
                 list_fields = s3db.get_config(tablename,
                                               "list_fields")
-                list_fields.insert(4, (T("Project"), "project"))
+                list_fields.insert(4, (T("Project"), "task_project.project_id"))
                 # Hide the Assignee column (always us)
                 list_fields.remove("pe_id")
                 # Hide the Status column (always 'assigned' or 'reopened')
@@ -5446,10 +5329,10 @@ def project_task_controller():
             crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
             crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
             crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
-            # Add Virtual Fields
+            # Add Activity
             list_fields = s3db.get_config(tablename,
                                           "list_fields")
-            list_fields.insert(2, (T("Activity"), "activity"))
+            list_fields.insert(2, (T("Activity"), "task_activity.activity_id"))
             s3db.configure(tablename,
                            # Block Add until we get the injectable component lookups
                            insertable=False,
@@ -5466,8 +5349,8 @@ def project_task_controller():
             crud_strings.title_search = T("All Tasks")
             list_fields = s3db.get_config(tablename,
                                           "list_fields")
-            list_fields.insert(3, (T("Project"), "project"))
-            list_fields.insert(4, (T("Activity"), "activity"))
+            list_fields.insert(3, (T("Project"), "task_project.project_id"))
+            list_fields.insert(4, (T("Activity"), "task_activity.activity_id"))
 
         if r.component:
             if r.component_name == "req":
