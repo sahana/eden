@@ -807,10 +807,11 @@ class S3OrganisationModel(S3Model):
 
         db = current.db
         table = db.org_organisation
-        query = (table.id == row.get("id"))
-        deleted_row = db(query).select(table.logo,
-                                       limitby=(0, 1)).first()
-        current.s3db.pr_image_delete_all(deleted_row.logo)
+        deleted_row = db(table.id == row.id).select(table.logo,
+                                                    limitby=(0, 1)
+                                                    ).first()
+        if deleted_row and deleted_row.logo:
+            current.s3db.pr_image_delete_all(deleted_row.logo)
 
     # -------------------------------------------------------------------------
     @staticmethod

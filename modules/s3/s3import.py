@@ -28,7 +28,10 @@
 """
 
 # @todo: remove all interactive error reporting out of the _private methods, and raise exceptions instead.
-__all__ = ["S3Importer", "S3ImportJob", "S3ImportItem"]
+__all__ = ["S3Importer",
+           "S3ImportJob",
+           "S3ImportItem",
+           ]
 
 import os
 import sys
@@ -261,7 +264,6 @@ class S3Importer(S3CRUD):
             self.job_id = self.upload_job.job_id
         else:
             self.job_id = None
-
 
         # Experimental uploading via ajax - added for vulnerability
         # Part of the problem with this is that it works directly with the
@@ -784,7 +786,8 @@ class S3Importer(S3CRUD):
                   "created_on",
                   "user_id",
                   "replace_option",
-                  "status"]
+                  "status",
+                  ]
 
         self._use_upload_table()
 

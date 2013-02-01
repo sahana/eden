@@ -47,13 +47,14 @@ def role():
                                         for m in modules
                                         if modules[m].restricted])
         # Configure REST methods
-        r.set_handler("users", handler)
-        r.set_handler("read", handler)
-        r.set_handler("list", handler)
-        r.set_handler("copy", handler)
-        r.set_handler("create", handler)
-        r.set_handler("update", handler)
-        r.set_handler("delete", handler)
+        set_handler = r.set_handler
+        set_handler("users", handler)
+        set_handler("read", handler)
+        set_handler("list", handler)
+        set_handler("copy", handler)
+        set_handler("create", handler)
+        set_handler("update", handler)
+        set_handler("delete", handler)
         return True
     s3.prep = prep
 

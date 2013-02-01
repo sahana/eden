@@ -114,11 +114,8 @@
                 <xsl:value-of select="@modified_by"/>
             </xsl:attribute>
 
-            <xsl:if test="data[@field='approved']='True'">
-                <xsl:attribute name="approved_by">
-                    <!--<xsl:value-of select="@modified_by"/>-->
-                    <xsl:text>1</xsl:text>
-                </xsl:attribute>
+            <xsl:if test="data[@field='approved']='False'">
+                <xsl:attribute name="approved">false</xsl:attribute>
             </xsl:if>
 
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
@@ -443,11 +440,8 @@
                 </xsl:attribute>
             </xsl:if>
 
-            <xsl:if test="data[@field='approved']='True'">
-                <xsl:attribute name="approved_by">
-                    <!--<xsl:value-of select="@modified_by"/>-->
-                    <xsl:text>1</xsl:text>
-                </xsl:attribute>
+            <xsl:if test="data[@field='approved']='False'">
+                <xsl:attribute name="approved">false</xsl:attribute>
             </xsl:if>
 
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
@@ -658,11 +652,8 @@
                 </xsl:attribute>
             </xsl:if>
 
-            <xsl:if test="data[@field='approved']='True'">
-                <xsl:attribute name="approved_by">
-                    <!--<xsl:value-of select="@modified_by"/>-->
-                    <xsl:text>1</xsl:text>
-                </xsl:attribute>
+            <xsl:if test="data[@field='approved']='False'">
+                <xsl:attribute name="approved">false</xsl:attribute>
             </xsl:if>
 
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
