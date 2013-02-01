@@ -9,10 +9,12 @@
 <div>
 {{pass}}
 <div id='map'></div>
+
 <div id='list-btn-add'>
 {{try:}}{{=showadd_btn}}{{hide_listadd=True}}
 {{except:}}{{hide_listadd=False}}{{pass}}
 </div>
+
 <div id='list-add'>
 {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
 {{try:}}{{=addheader}}{{except:}}{{pass}}
@@ -21,14 +23,21 @@
 {{try:}}{{=form}}{{except:}}{{pass}}
 </div>
 </div>
+
+<div id='list-filter' class='form-container'>
+{{try:}}
+{{=list_filter_form}}
+{{except:}}
+{{pass}}
+</div>
+
 {{try:}}{{items = items}}
-<div id='table-container'>
+<div id='dl-container'>
 {{=items}}
 </div>
 {{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
-{{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
 {{if r.http == "POST" or not hide_listadd:}}

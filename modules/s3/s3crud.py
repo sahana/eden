@@ -309,10 +309,11 @@ class S3CRUD(S3Method):
                     create_next = _config("create_next")
 
                 if not create_next:
+                    next_vars = self._remove_filters(r.get_vars)
                     if r.component:
-                        self.next = r.url(method="")
+                        self.next = r.url(method="", vars=next_vars)
                     else:
-                        self.next = r.url(id="[id]", method="read")
+                        self.next = r.url(id="[id]", method="read", vars=next_vars)
                 else:
                     #try:
                     #    self.next = create_next(self)
@@ -683,10 +684,11 @@ class S3CRUD(S3Method):
             if representation in ("popup", "iframe", "plain"):
                 self.next = None
             elif not update_next:
+                next_vars = self._remove_filters(r.get_vars)
                 if r.component:
-                    self.next = r.url(method="")
+                    self.next = r.url(method="", vars=next_vars)
                 else:
-                    self.next = r.url(id="[id]", method="read")
+                    self.next = r.url(id="[id]", method="read", vars=next_vars)
             else:
                 try:
                     self.next = update_next(self)
@@ -1098,6 +1100,120 @@ class S3CRUD(S3Method):
                             limit=limit,
                             fields=fields,
                             orderby=orderby)
+
+        else:
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def list_div(self, r, **attr):
+        """
+            Experimental: Get a data list
+            
+            @param r: the S3Request
+            @param attr: parameters for the method handler
+        """
+
+        resource = self.resource
+        tablename = resource.tablename
+
+        get_config = resource.get_config
+
+        insertable = get_config("insertable", True)
+        listadd = get_config("listadd", True)
+        addbtn = get_config("addbtn", False)
+
+        list_fields = get_config("list_fields", None)
+
+        if r.representation == "html":
+
+            output = {}
+
+            # Page title
+            crud_string = self.crud_string
+            if r.component:
+                title = crud_string(r.tablename, "title_display")
+            else:
+                title = crud_string(self.tablename, "title_list")
+            output["title"] = title
+
+            # Filter form
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets:
+                from s3search import S3FilterForm
+                filter_form = S3FilterForm(filter_widgets,
+                                           submit=True,
+                                           url=r.url(vars={}),
+                                           _class="filter-form")
+
+                fresource = current.s3db.resource(tablename)
+                output["list_filter_form"] = filter_form.html(fresource, r.get_vars)
+            else:
+                output["list_filter_form"] = ""
+
+            # Add button and form
+            if insertable:
+                if listadd:
+                    # Add a hidden add-form and a button to activate it
+                    form = self.create(r, **attr).get("form", None)
+                    if form is not None:
+                        output["form"] = form
+                        addtitle = crud_string(tablename, "subtitle_create")
+                        output["addtitle"] = addtitle
+                        showadd_btn = self.crud_button(
+                                            None,
+                                            tablename=tablename,
+                                            name="label_create_button",
+                                            _id="show-add-btn")
+                        output["showadd_btn"] = showadd_btn
+
+                elif addbtn:
+                    # Add an action-button linked to the create view
+                    buttons = self.insert_buttons(r, "add")
+                    if buttons:
+                        output["buttons"] = buttons
+
+            # Retrieve data
+            rows = resource.select(list_fields)
+            records = resource.extract(rows, list_fields, represent=True)
+
+            if len(records) == 0:
+
+                table = resource.table
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
+                else:
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
+                                            limitby=(0, 1)).first():
+                    msg = DIV(crud_string(tablename, "msg_no_match"),
+                              _class="empty")
+                else:
+                    msg = DIV(crud_string(tablename, "msg_list_empty"),
+                              _class="empty")
+
+                #s3.no_formats = True
+
+                if r.component and "showadd_btn" in output:
+                    # Hide the list and show the form by default
+                    del output["showadd_btn"]
+                    msg = ""
+
+                output["items"] = msg
+
+            else:
+                # Render list
+                from s3data import S3DataList
+                datalist = S3DataList(resource, list_fields, records, listid="dl")
+                output["items"] = datalist.html()
+
+            # View
+            current.response.view = "list_div.html"
+
+        elif r.representation == "json":
+            # Not implemented yet
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         else:
             r.error(501, current.manager.ERROR.BAD_FORMAT)
@@ -1598,34 +1714,6 @@ class S3CRUD(S3Method):
             output = output[0]
 
         return json.dumps(output)
-
-    # -------------------------------------------------------------------------
-    def list_div(self, r, **attr):
-
-        resource = self.resource
-
-        if r.representation == "html":
-
-            output = {}
-
-            list_fields = resource.get_config("list_fields")
-
-            rows = resource.select(list_fields)
-            records = resource.extract(rows, list_fields, represent=True)
-
-            from s3data import S3DataList
-            datalist = S3DataList(resource, list_fields, records, listid="dl")
-            output["items"] = datalist.html()
-
-            current.response.view = "list_create.html"
-            return output
-
-        elif r.representation == "json":
-            # Not implemented yet
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
-
-        else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     # Utility functions
