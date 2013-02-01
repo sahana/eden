@@ -71,7 +71,7 @@ from gluon import *
 #from gluon.html import A, DIV, URL
 #from gluon.http import HTTP, redirect
 #from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
-from gluon.dal import Row, Rows, Table
+from gluon.dal import Row, Rows, Table, Field, Expression
 from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -694,16 +694,28 @@ class S3Resource(object):
                 orderby = []
                 for orderby_field in orderby_fields:
 
-                    if isinstance(orderby_field, str):
+                    if type(orderby_field) is Expression:
+                        f = orderby_field.first
+                        op = orderby_field.op
+                        if op == db._adapter.AGGREGATE:
+                            # Already an aggregation
+                            orderby.append(orderby_field)
+                            continue
+                        elif type(f) is Field and op == db._adapter.INVERT:
+                            direction = "desc"
+                        else:
+                            # Other expression - not supported
+                            continue
+                    elif type(orderby_field) is Field:
+                        direction = "asc"
+                        f = orderby_field
+                    elif isinstance(orderby_field, str):
                         fn, direction = (orderby_field.strip().split() + ["asc"])[:2]
                         tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
                         try:
                             f = db[tn][fn]
                         except (AttributeError, KeyError):
                             continue
-                    elif isinstance(orderby_field, Field):
-                        direction = "asc"
-                        f = orderby_field
                     else:
                         continue
 

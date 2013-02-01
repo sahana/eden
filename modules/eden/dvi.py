@@ -131,6 +131,7 @@ class S3DVIModel(S3Model):
 
         # Resource configuration
         configure(tablename,
+                  orderby=~table.date,
                   list_fields = ["id",
                                  "date",
                                  "marker",
