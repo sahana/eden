@@ -926,21 +926,21 @@ class S3DataList(object):
             colname = rfield.colname
             if colname == pkey or colname not in record:
                 continue
-            column = colname.replace(".", "_")
-
             value = record[colname]
-            value_id = "%s-%s-value" % (item_id, column)
+            value_id = "%s-%s" % (item_id, rfield.colname.replace(".", "_"))
 
-            field_class = "%s-%s" % (listid, column)
+            table_class = "%s-tbl-%s" % (listid, rfield.tname)
+            field_class = "%s-fld-%s" % (listid, rfield.fname)
 
             label = LABEL("%s:" % rfield.label,
                           _for = value_id,
-                          _class = "dl-field-label %s" % field_class)
+                          _class = "dl-field-label")
             item.append(DIV(label,
                             DIV(value,
-                                _class = "dl-field-value %s" % field_class,
+                                _class = "dl-field-value",
                                 _id = value_id),
-                            _class = "dl-field %s" % field_class))
+                            _class = "dl-field %s %s" % (table_class,
+                                                         field_class)))
 
         return item
 
