@@ -2116,6 +2116,17 @@ class S3Method(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def _remove_filters(vars):
+        """
+            Remove all filters from URL vars
+
+            @param vars: the URL vars as dict
+        """
+
+        return dict([(k, v) for k, v in vars.items() if "." not in k])
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def crud_string(tablename, name):
         """
             Get a CRUD info string for interactive pages

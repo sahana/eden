@@ -832,7 +832,7 @@ class S3DataTable(object):
 
 # =============================================================================
 class S3DataList(object):
-    """ Class representing a data list """
+    """ Class representing a data list (experimental) """
 
     # -------------------------------------------------------------------------
     # Standard API
@@ -873,7 +873,10 @@ class S3DataList(object):
         
         records = self.records
         if records is not None:
-            items = [render(rfields, record) for record in records]
+            items = []
+            for i in xrange(len(records)):
+                _class = i % 2 and "even" or "odd"
+                items.append(render(rfields, records[i], _class=_class))
         else:
             # template
             raise NotImplementedError
@@ -888,11 +891,18 @@ class S3DataList(object):
         raise NotImplementedError
 
     # ---------------------------------------------------------------------
-    def render(self, rfields, record):
-        """ Default item renderer """
+    def render(self, rfields, record, **attr):
+        """
+            Default item renderer
+
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+            @param attr: additional HTML attributes for the item
+        """
         
         pkey = str(self.resource._id)
 
+        # Construct the item ID
         listid = self.listid
         if pkey in record:
             item_id = "%s-%s" % (listid, record[pkey])
@@ -900,29 +910,37 @@ class S3DataList(object):
             # template
             item_id = "%s-[id]" % list_id
 
-        item = DIV(_class="dl-item", _id=item_id)
+        # Add classes passed from caller (e.g. even/odd)
+        item_class = "dl-item"
+        caller_class = attr.get("_class", None)
+        if caller_class:
+            item_class = "%s %s" % (item_class, caller_class)
+
+        # Render the item
+        item = DIV(_class=item_class, _id=item_id)
         for rfield in rfields:
+
+            if not rfield.show:
+                continue
 
             colname = rfield.colname
             if colname == pkey or colname not in record:
                 continue
+            column = colname.replace(".", "_")
 
             value = record[colname]
+            value_id = "%s-%s-value" % (item_id, column)
 
-            field_id = "%s-%s" % (item_id, colname.replace(".", "_"))
-            value_id = "%s-value" % field_id
+            field_class = "%s-%s" % (listid, column)
 
-            label = LABEL(rfield.label,
+            label = LABEL("%s:" % rfield.label,
                           _for = value_id,
-                          _class = "dl-item-label",
-                          _id = "%s-label" % field_id)
-
+                          _class = "dl-field-label %s" % field_class)
             item.append(DIV(label,
                             DIV(value,
-                                _class="dl-item-value",
-                                _id=value_id),
-                            _class = "dl-field",
-                            _id=field_id))
+                                _class = "dl-field-value %s" % field_class,
+                                _id = value_id),
+                            _class = "dl-field %s" % field_class))
 
         return item
 

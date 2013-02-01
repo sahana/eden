@@ -338,6 +338,35 @@ table.importItem {
     display: none;
 }
 
+/* Data Lists */
+div#dl-container {
+    clear: left;
+}
+div.dl {
+    border-bottom: 1px solid #aaa;
+}
+div.dl-item {
+    padding: 3px 5px 3px 5px;
+    border-top: 1px solid #aaa;
+}
+div.dl-item.even {
+    background-color: white;
+}
+
+div.dl-item.odd {
+    background-color: #E2E4FF;
+}
+
+.dl-field {
+    clear: left;
+}
+.dl-field-label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+.dl-field-value {
+}
+
 /* Display view */
 div.item-container {
     width: 100%;
@@ -942,14 +971,17 @@ div.form-container form fieldset  .s3-checkboxes-widget label {
     vertical-align: middle;
 }
 
+.filter-form td,
 .search_form td,
 #filter_options td {
     border-top: 1px solid #D9D9D9;
 }
+.filter-form tr:first-child > td,
 .search_form tr:first-child > td,
 #filter_options tr:first-child > td {
     border-top: 0px;
 }
+.filter-form table.s3-checkboxes-widget td,
 .search_form table.s3-checkboxes-widget td,
 .search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,

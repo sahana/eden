@@ -384,6 +384,30 @@ S3.search.filterURL = function(url) {
 
 // To be completed: New Search Framework
 $(document).ready(function() {
+
+//     $('.filter-request').click(function() {
+//         var url = $(this).next('input[type="hidden"]').val(),
+//             loc = document.location,
+//             queries = [],
+//             url_parts = url.split('?');
+// 
+//         if (url_parts.length > 1) {
+//             queries.push(url_parts[1]);
+//         }
+//         if (loc.search) {
+//             queries.push(loc.search.slice(1));
+//         }
+//         var base_url = url_parts[0];
+// 
+//         if (queries.length > 0) {
+//             var query = queries.join('&');
+//             url = base_url + '?' + query;
+//         } else {
+//             url = base_url;
+//         }
+//         window.location.href = url;
+//     });
+
     $('.filter-submit').click(function() {
         // Update Map results URL
         Ext.iterate(map.layers, function(key, val, obj) {
