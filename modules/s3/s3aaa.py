@@ -5946,6 +5946,7 @@ class S3RoleManager(S3Method):
             table = self.table
 
             # Show permission matrix?
+            # (convert value to a boolean)
             show_matrix = vars.get("matrix", False) and True
 
             # Title and subtitle
@@ -5966,7 +5967,7 @@ class S3RoleManager(S3Method):
             # Filter out hidden roles
             resource.add_filter((~(table.id.belongs(self.HIDE_ROLES))) &
                                 (table.hidden != True))
-            resource.load()
+            resource.load(orderby=table.role)
 
             # Get active controllers
             controllers = [c for c in self.controllers.keys()
@@ -6094,7 +6095,7 @@ class S3RoleManager(S3Method):
 
             # Aggregate list
             items = TABLE(thead, tbody, _id="list", _class="dataTable display")
-            output.update(items=items, sortby=[[1, "asc"]])
+            output.update(items=items)
 
             # Add-button
             add_btn = A(T("Add Role"), _href=URL(c="admin", f="role",
