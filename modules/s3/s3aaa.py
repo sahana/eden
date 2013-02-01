@@ -370,7 +370,7 @@ Thank you
                       label=messages.label_description),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
-                *(s3_timestamp()+s3_deletion_status()))
+                *(s3_timestamp() + s3_deletion_status()))
             settings.table_group = gtable
 
         # Group membership table (user<->role)
@@ -385,10 +385,11 @@ Thank you
                       requires = IS_IN_DB(db, "%s.id" % gname,
                                           "%(id)s: %(role)s"),
                       label=label_group_id),
+                # Realm
                 Field("pe_id", "integer"),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
-                *(s3_uid()+s3_timestamp()+s3_deletion_status()))
+                *(s3_uid() + s3_timestamp() + s3_deletion_status()))
 
         security_policy = deployment_settings.get_security_policy()
         # Define Eden permission table
@@ -443,7 +444,7 @@ Thank you
                       requires = IS_NOT_EMPTY()),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
-                *(s3_uid()+s3_timestamp()+s3_deletion_status()))
+                *(s3_uid() + s3_timestamp() + s3_deletion_status()))
 
     # -------------------------------------------------------------------------
     def login_bare(self, username, password):

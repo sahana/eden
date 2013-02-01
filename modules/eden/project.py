@@ -1906,7 +1906,7 @@ class S3ProjectFrameworkModel(S3Model):
         tablename = "project_framework"
         table = define_table(tablename,
                              self.super_link("doc_id", "doc_entity"),
-                             Field("name",
+                             Field("name", unique=True,
                                    label = T("Name"),
                                    ),
                              s3_comments("description",
