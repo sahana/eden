@@ -59,6 +59,9 @@
         <xsl:for-each select="//resource[@name='auth_user']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
+        <xsl:for-each select="//resource[@name='drrpp_org_contact_user']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
         <resource name="org_organisation_type">
             <xsl:attribute name="tuid">OrgType:Committees/Mechanism/Forum</xsl:attribute>
             <data field="name">Committees/Mechanism/Forum</data>
@@ -706,6 +709,9 @@
 
         <xsl:if test="$first_name!=$last_name and $first_name!='Test' and $last_name!='Test' and $first_name!='test' and $last_name!='test'">
             <resource name="auth_user">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="@url"/>
+                </xsl:attribute>
                 <data field="first_name"><xsl:value-of select="$first_name"/></data>
                 <data field="last_name"><xsl:value-of select="$last_name"/></data>
                 <data field="email"><xsl:value-of select="data[@field='email']"/></data>
@@ -726,6 +732,31 @@
                 </xsl:if>
             </resource>
         </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_org_contact_user']">
+
+        <resource name="auth_membership">
+            <reference field="group_id" resource="auth_group">
+                <xsl:attribute name="uuid">ORG_ADMIN</xsl:attribute>
+            </reference>
+            <reference field="user_id" resource="auth_user">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('http://drrprojects.net/drrp/auth/user/',reference[@field='user_id']/@value)"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Need to add this manually afterwards
+            <data field="pe_id">
+                <xsl:attribute name="tuid">-->
+                    <!--<xsl:value-of select="@uuid"/>-->
+                    <!-- Need this format for Dummy fields --><!--
+                    <xsl:value-of select="reference[@field='organisation_id']"/>
+                </xsl:attribute>
+            </data>
+            -->
+        </resource>
 
     </xsl:template>
 
