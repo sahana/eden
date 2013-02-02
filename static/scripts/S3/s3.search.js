@@ -364,6 +364,26 @@ S3.search.filterURL = function(url) {
         }
     });
 
+    // Numerical range widgets -- each widget has two inputs.
+    $('.range-filter-input:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var value = $(this).val();
+        if (value) {
+            queries.push(url_var + '=' + value);
+        }
+    });
+
+    // Date(time) range widgets -- each widget has two inputs.
+    $('.date-filter-input:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var value = $(this).val();
+        if (value) {
+            queries.push(url_var + '=' + value);
+        }
+    });
+
     // Other widgets go here...
 
     // Construct the URL

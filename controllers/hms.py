@@ -331,10 +331,27 @@ def hospital():
         return True
     s3.prep = prep
 
+    # Test code
+    filter_widgets = [
+        s3base.S3RangeFilter("total_beds",
+                             min=10,
+                             max=9999,
+                             comment=T("Search for hospital by total beds.")),
+        s3base.S3RangeFilter("available_beds",
+                             comment=T("Search for hospital by available beds."))
+    ]
+    filter_form = s3base.S3FilterForm(filter_widgets,
+                                      _id="simple-filter-form",
+                                      submit=True)
+    resource = s3db.resource("hms_hospital")
+    list_filter_form = DIV(filter_form.html(resource, request.get_vars),
+                           _class="form-container")
+
     rheader = s3db.hms_hospital_rheader
 
     output = s3_rest_controller("hms", "hospital",
-                                rheader=rheader)
+                                rheader=rheader,
+                                list_filter_form=list_filter_form)
     return output
 
 # -----------------------------------------------------------------------------
