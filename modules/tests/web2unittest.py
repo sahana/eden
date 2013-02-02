@@ -513,9 +513,11 @@ class SeleniumUnitTest(Web2UnitTest):
             self.fill_fields(fields)
 
         # Open the report options fieldset:
-        report_options = browser.find_element_by_css_selector("#report_options button")
-        if report_options.is_displayed():
-            report_options.click()
+        report_options = browser.find_elements_by_css_selector("#report_options button")
+        if report_options[0].is_displayed():
+            report_options[0].click()
+        else:
+            report_options[1].click()
 
         # Select the item to make a report of:
         rows_select = browser.find_element_by_id("report-rows")
