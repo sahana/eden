@@ -1990,7 +1990,7 @@ class S3Method(object):
 
                 if not master_access:
                     return False
-
+                    
         return has_permission(method, table, record_id=record_id)
 
     # -------------------------------------------------------------------------
