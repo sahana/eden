@@ -4342,7 +4342,7 @@ class S3ResourceField(object):
                 fn = current.xml.UID
             if fn == "id":
                 f = table._id
-            elif fn in table.fields:
+            elif fn in table.fields or fn == "id":
                 f = table[fn]
             else:
                 f = None
@@ -4482,10 +4482,11 @@ class S3ResourceField(object):
 
         else:
             # Done, return the field
+            colname = str(f) if f else "%s.%s" % (tn, fn)
             field = Storage(selector=original,
                             tname = tn,
                             fname = fn,
-                            colname = "%s.%s" % (tn, fn),
+                            colname = colname,
                             field=f,
                             join=join,
                             left=left,
