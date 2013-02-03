@@ -1536,6 +1536,8 @@ i18n.edit_saved_search="%s"
                     dt_sorting["iSortCol_0"] = "0"
 
                 q, orderby, left = resource.datatable_filter(list_fields, dt_sorting)
+	    else:
+                left = None
         else:
             dt_pagination = "false"
             limit = None
