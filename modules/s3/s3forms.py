@@ -2501,20 +2501,25 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     else:
                         found = False
                         if parent:
-                            # Need to load components
+                            # Need to load component
                             hooks = s3db.get_components(_table)
-                            attach = _resource._attach
                             for alias in hooks:
-                                attach(alias, hooks[alias])
-                        components = _resource.components
-                        for c in components:
-                            if components[c].rkey == rkey:
-                                found = True
-                                break
+                                if hooks[alias].rkey == rkey:
+                                    found = True
+                                    _resource._attach(alias, hooks[alias])
+                                    _component = _resource.components[alias]
+                                    break
+                        else:
+                            # Components are already loaded
+                            components = _resource.components
+                            for c in components:
+                                if components[c].rkey == rkey:
+                                    found = True
+                                    _component = components[c]
+                                    break
                         if found:
-                            _component = components[c]
-                            _component.load()
-                            values = _component._ids
+                            _rows = _component.select(fields=["id"])
+                            values = [r.id for r in _rows]
                         else:
                             #raise SyntaxError
                             values = []
