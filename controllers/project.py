@@ -305,6 +305,7 @@ def project_theme_id_widget():
     """
         Used by the project controller to return dynamically generated 
         theme_id widget based on sector_id
+        - deprecated?
     """
 
     table = s3db.project_theme_project
@@ -346,6 +347,38 @@ def theme_sector():
     s3.prep = prep
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def theme_sector_widget():
+    """ Render a Widget with Theme options filtered by Sector """
+
+    try:
+        values = request.get_vars.sector_ids.split(",")
+        values = [int(v) for v in values]
+    except:
+        values = []
+
+    widget = s3base.s3forms.S3SQLInlineComponentCheckbox(
+        "theme",
+        label = T("Themes"),
+        field = "theme_id",
+        cols = 4,
+        # Filter Theme by Sector
+        filter = {"linktable": "project_theme_sector",
+                  "lkey": "theme_id",
+                  "rkey": "sector_id",
+                  "values": values
+                  }
+        )
+
+    resource = s3db.resource("project_project")
+    #(_instance , _nothing, _field) = widget.resolve(resource)
+    widget.resolve(resource)
+    value = widget.extract(resource, record_id=None)
+
+    output = widget(s3db.project_theme_project.theme_id, value)
+
+    return output
 
 # -----------------------------------------------------------------------------
 def hazard():

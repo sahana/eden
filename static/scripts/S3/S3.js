@@ -662,9 +662,10 @@ function s3_showMap(feature_id) {
 // ============================================================================
 /**
  * Re-usable function to filter a select field based on a "filter field", eg:
- * Rooms filtered by Site
- * Item Packs filtered by Item
  * Competency Ratings filtered by Skill Type
+ * Item Packs filtered by Item
+ * Rooms filtered by Site
+ * Themes filtered by Sector
  **/
 
 function S3OptionsFilter(settings) {

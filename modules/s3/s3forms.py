@@ -914,12 +914,14 @@ class S3SQLCustomForm(S3SQLForm):
             return self.table._filter_fields(form.vars)
         else:
             subform = Storage()
-            for k in form.vars:
+            alias_length = len(alias)
+            vars = form.vars
+            for k in vars:
                 if k[:4] == "sub_" and \
-                   form.vars[k] != None and \
-                   k[4:4+len(alias)+1] == "%s_" % alias:
-                    fn = k[4+len(alias)+1:]
-                    subform[fn] = form.vars[k]
+                   vars[k] != None and \
+                   k[4:4 + alias_length + 1] == "%s_" % alias:
+                    fn = k[4 + alias_length + 1:]
+                    subform[fn] = vars[k]
             return subform
 
     # -------------------------------------------------------------------------
@@ -1535,9 +1537,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         component = resource.components[component_name]
         table = component.table
 
-        # Render read-only if self.readonly
+        # @ToDo: Render read-only if self.readonly
 
-        # Hide completely if the user is not permitted to read this
+        # @ToDo: Hide completely if the user is not permitted to read this
         # component
 
         formname = self._formname()
@@ -2324,7 +2326,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         simple many<>many link tables ('tagging'). It does NOT support link
         tables with additional fields.
 
-        The widget uses the s3.inline_component_checkbox.js script for
+        The widget uses the s3.inline_component.js script for
         client-side manipulation of the JSON data.
         During accept(), the component gets updated according to the JSON
         returned.
@@ -2424,7 +2426,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         """
             Widget method for this form element. Renders a table with
             checkboxes for all available options.
-            This widget uses s3.inline_component_checkbox.js to facilitate
+            This widget uses s3.inline_component.js to facilitate
             manipulation of the entries.
 
             @param field: the Field for this form element
@@ -2445,6 +2447,9 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         if data is None:
             raise SyntaxError("No resource structure information")
 
+        if "script" in self.options:
+            current.response.s3.jquery_ready.append(self.options.script)
+
         T = current.T
 
         if "cols" in self.options:
@@ -2459,20 +2464,84 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         component_name = data["component"]
         component = resource.components[component_name]
 
-        # Render read-only if self.readonly
+        # @ToDo: Render read-only if self.readonly
 
-        # Hide completely if the user is not permitted to read this
+        # @ToDo: Hide completely if the user is not permitted to read this
         # component
 
         # Get the list of available options
-        # @ToDo: Filter Themes/Activity Types by Sector
         # @ToDo: Support lookups to tables which don't use 'name' (e.g. 'tag')
         table = component.table
         query = (table.deleted == False) & \
                 current.auth.s3_accessible_query("read", table)
-        rows = current.db(query).select(table.id,
-                                        table.name,
-                                        orderby=table.name)
+
+        if "filter" in self.options:
+            filter = self.options.filter
+            s3db = current.s3db
+            linktable = s3db[filter["linktable"]]
+            lkey = filter["lkey"]
+            rkey = filter["rkey"]
+            if "values" in filter:
+                # Option A - from AJAX request
+                values = filter["values"]
+            else:
+                # Option B - from record
+                parent = resource.parent
+                if parent:
+                    # e.g. Project Community Activity Types filtered by Sector of parent Project
+                    _resource = parent
+                else:
+                    # e.g. Project Themes filtered by Sector
+                    _resource = resource
+                if _resource._ids:
+                    id = _resource._ids[0]
+                    _table = _resource.table
+                    if rkey in _table.fields:
+                        values = [_table[rkey]]
+                    else:
+                        found = False
+                        if parent:
+                            # Need to load components
+                            hooks = s3db.get_components(_table)
+                            attach = _resource._attach
+                            for alias in hooks:
+                                attach(alias, hooks[alias])
+                        components = _resource.components
+                        for c in components:
+                            if components[c].rkey == rkey:
+                                found = True
+                                break
+                        if found:
+                            _component = components[c]
+                            _component.load()
+                            values = _component._ids
+                        else:
+                            #raise SyntaxError
+                            values = []
+                else:
+                    # New record
+                    values = []
+            rows = []
+            rappend = rows.append
+            # All rows, whether or not in the link table
+            srows = current.db(query).select(table.id,
+                                             table.name,
+                                             linktable[rkey],
+                                             left=linktable.on(linktable[lkey] == table.id),
+                                             orderby=table.name)
+            for r in srows:
+                v = r[linktable][rkey]
+                # We want all all rows which have no entry in the linktable (no restrictions)
+                # or else match this restriction
+                if not v or v in values:
+                    _r = r[table]
+                    record = Storage(id = _r.id,
+                                     name = _r.name)
+                    rappend(record)
+        else:
+            rows = current.db(query).select(table.id,
+                                            table.name,
+                                            orderby=table.name)
         if not rows:
             widget = T("No options currently available")
         else:
@@ -2551,7 +2620,8 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     options.pop(opt)
 
             widget = TABLE(TBODY(rows),
-                           _class="s3-checkboxes-widget",
+                           #_class="s3-checkboxes-widget",
+                           _class="checkboxes-widget-s3",
                            )
 
         # Real input: a hidden text field to store the JSON data
@@ -2569,6 +2639,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                      _id=self._formname(separator="-"),
                      _field=real_input,
                      _class="inline-checkbox",
+                     _name="%s_widget" % field_name,
                      )
 
         return output

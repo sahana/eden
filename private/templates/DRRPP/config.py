@@ -294,7 +294,7 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
         "drrpp.focal_person",
         "drrpp.organisation_id",
         "drrpp.email",
-        # Files - Inline Forms don't support Files
+        # Files
         s3forms.S3SQLInlineComponent(
             "document",
             name = "file",

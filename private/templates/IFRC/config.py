@@ -313,6 +313,21 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
             label = T("Themes"),
             field = "theme_id",
             cols = 4,
+            # Filter Theme by Sector
+            filter = {"linktable": "project_theme_sector",
+                      "lkey": "theme_id",
+                      "rkey": "sector_id",
+                      },
+            script = '''
+S3OptionsFilter({
+ 'triggerName':'defaultsector-sector_id',
+ 'targetName':'defaulttheme-theme_id',
+ 'targetWidget':'defaulttheme-theme_id_widget',
+ 'lookupResource':'theme',
+ 'lookupURL':S3.Ap.concat('/project/theme_sector_widget?sector_ids='),
+ 'getWidgetHTML':true,
+ 'showEmptyField':false
+})'''
         ),
         "drr.hfa",
         "objectives",
@@ -354,6 +369,11 @@ settings.ui.crud_form_project_location = s3forms.S3SQLCustomForm(
             label = T("Activity Types"),
             field = "activity_type_id",
             cols = 3,
+            # Filter Activity Type by Sector
+            filter = {"linktable": "project_activity_type_sector",
+                      "lkey": "activity_type_id",
+                      "rkey": "sector_id",
+                      },
         ),
         "comments",
     )

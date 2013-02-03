@@ -242,7 +242,7 @@ $(function() {
                 if (option.length === 0) {
                     // This option does not exist in the select, so add it
                     // because otherwise val() won't work. Maybe the option
-                    // gets added later by a script (e.g. FilterFieldChange)
+                    // gets added later by a script (e.g. S3OptionsFilter)
                     select.append('<option value="' + value + '">-</option>');
                 }
             }
