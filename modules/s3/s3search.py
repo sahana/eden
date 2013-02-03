@@ -1539,6 +1539,7 @@ i18n.edit_saved_search="%s"
         else:
             dt_pagination = "false"
             limit = None
+            left = None
 
         # Truncate long texts
         if r.interactive or representation == "aadata":
@@ -1556,7 +1557,8 @@ i18n.edit_saved_search="%s"
                                                 start=None,
                                                 limit=limit,
                                                 orderby=orderby,
-                                                getids=True)
+                                                getids=True,
+                                                left=left)
         displayrows = totalrows
 
         # Render the datatable and add it to the output
