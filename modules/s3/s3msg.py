@@ -451,7 +451,8 @@ class S3Msg(object):
                 current.session.confirmation = T("Check outbox for the message status")
                 redirect(url)
             else:
-                current.session.error = T("Error in message")
+                current.session.error = T("Error in message:%s")\
+                                            %current.session.error
                 redirect(url)
 
         # Source forms
@@ -594,8 +595,11 @@ class S3Msg(object):
         current.s3task.async("msg_process_outbox",
                              args=[pr_message_method])
 
-        return True
-
+        if current.session.error:
+            return False
+        else:
+            return True
+            
     # -------------------------------------------------------------------------
     def process_outbox(self,
                        contact_method="EMAIL"):
@@ -802,9 +806,13 @@ class S3Msg(object):
                                    #sender=sender,
                                    encoding=encoding
                                    )
+        if not result:
+            current.session.error = current.mail.error           
+        else:
+            current.session.error = None                
 
         return result
-
+        
     # -------------------------------------------------------------------------
     def send_email_by_pe_id(self,
                             pe_id,
