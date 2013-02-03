@@ -792,6 +792,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 _class="s3-checkboxes-widget-filter"
             )
         else:
+            self.filter_type = vars.get("%s_filter" % name, "any")
             any_all = ""
 
         return TAG[""](any_all,
