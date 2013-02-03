@@ -97,7 +97,7 @@ form table.embeddedComponent td {
     padding: 0 5px;
     border: solid #B3B3B3;
     border-width: 0 0 1px 0;
-    text-align: center;
+    text-align: left;
 }
 table.embeddedComponent tr.label-row td {
     color: #B3B3B3;
