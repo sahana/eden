@@ -1469,6 +1469,7 @@ class S3CRUD(S3Method):
                 output["approve_form"] = DIV(TABLE(TR(approve, reject, cancel)),
                                              _id="approve_form")
 
+                reviewing = False
                 if approve.accepts(r.post_vars, session, formname="approve"):
                     resource = current.s3db.resource(r.tablename, r.id,
                                                      approved=False,
@@ -1484,7 +1485,7 @@ class S3CRUD(S3Method):
                         response.warning = T("Record could not be approved.")
 
                     r.http = "GET"
-                    _next = r.url(id=0)
+                    _next = r.url(id=0, method="review")
 
                 elif reject.accepts(r.post_vars, session, formname="reject"):
                     resource = current.s3db.resource(r.tablename, r.id,
@@ -1501,9 +1502,13 @@ class S3CRUD(S3Method):
                         response.warning = T("Record could not be deleted.")
 
                     r.http = "GET"
-                    _next = r.url(id=0)
+                    _next = r.url(id=0, method="review")
 
-            output.update(self.read(r, **attr))
+                else:
+                    reviewing = True
+
+            if reviewing:
+                output.update(self.read(r, **attr))
             self.next = _next
             r.http = r.env.request_method
             current.response.view = "review.html"
