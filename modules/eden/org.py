@@ -1614,11 +1614,12 @@ class S3FacilityModel(S3Model):
         # Search method
         def facility_type_opts():
             table = self.org_facility_type
-            rows = db(table.deleted == False).select(table.name)
+            rows = db(table.deleted == False).select(table.id, table.name)
             opts = {}
             for row in rows:
                 name = row.name
-                opts[name] = name
+                id = row.id
+                opts[id] = name
             return opts
 
         org_facility_search = [

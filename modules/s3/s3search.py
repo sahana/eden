@@ -770,8 +770,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
         # For many-to-many fields the user can search for records containing
         # all the options or any of the options.
+        self.filter_type = vars.get("%s_filter" % name, "any")
         if len(options) > 1 and field_type[:4] == "list":
-            self.filter_type = vars.get("%s_filter" % name, "any")
             any_all = DIV(
                 T("Filter type "),
                 INPUT(_name="%s_filter" % name,
@@ -792,7 +792,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 _class="s3-checkboxes-widget-filter"
             )
         else:
-            self.filter_type = "any"
             any_all = ""
 
         return TAG[""](any_all,
