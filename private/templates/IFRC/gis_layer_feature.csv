@@ -8,3 +8,4 @@
 "Warehouses","All Active Warehouses","inv","warehouse","IFRC","warehouse","Building","Warehouse","name/organisation_id","warehouse.obsolete=False",,,,,"False",
 "Assets",,"asset","asset","IFRC","asset",,"Asset","item_id/number",,,,"True",,"False",
 "Stock Items","Used for Search Results","inv","inv_item","IFRC",,,"Stock Item","item_id/site_id/quantity/item_pack_id/expiry_date",,,,,,"False","False"
+"Training Events","Used for Search Results","hrm","training_event","IFRC",,,"Training Event","course_id/site_id/start_date",,,,,,"False","False"

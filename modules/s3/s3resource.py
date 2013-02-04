@@ -2379,7 +2379,6 @@ class S3Resource(object):
             @param locations: the locations for GIS encoding
         """
 
-        s3db = current.s3db
         manager = current.manager
         xml = current.xml
 
