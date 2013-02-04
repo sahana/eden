@@ -24,6 +24,7 @@ Members,Reader,member_reader@example.com,eden,member_reader/0,International Fede
 Members,Data Entry,member_data_entry@example.com,eden,member_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Members,Editor,member_editor@example.com,eden,member_editor/0,International Federation of Red Cross and Red Crescent Societies
 Members,Super Editor,member_super@example.com,eden,member_super/0,International Federation of Red Cross and Red Crescent Societies
+Org,Admin,org_admin@example.com,eden,ORG_ADMIN/0,International Federation of Red Cross and Red Crescent Societies
 Project,Reader,project_reader@example.com,eden,project_reader/0,International Federation of Red Cross and Red Crescent Societies
 Project,Data Entry,project_data_entry@example.com,eden,project_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Project,Editor,project_editor@example.com,eden,project_editor/0,International Federation of Red Cross and Red Crescent Societies
@@ -32,14 +33,14 @@ Staff,Reader,staff_reader@example.com,eden,staff_reader/0,International Federati
 Staff,Data Entry,staff_data_entry@example.com,eden,staff_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Staff,Editor,staff_editor@example.com,eden,staff_editor/0,International Federation of Red Cross and Red Crescent Societies
 Staff,Super Editor,staff_super@example.com,eden,staff_super/0,International Federation of Red Cross and Red Crescent Societies
-Volunteer,Reader,vol_reader@example.com,eden,vol_reader/0,International Federation of Red Cross and Red Crescent Societies
-Volunteer,Data Entry,vol_data_entry@example.com,eden,vol_data_entry/0,International Federation of Red Cross and Red Crescent Societies
-Volunteer,Editor,vol_editor@example.com,eden,vol_editor/0,International Federation of Red Cross and Red Crescent Societies
-Volunteer,Super Editor,vol_super@example.com,eden,vol_super/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Reader,survey_reader@example.com,eden,survey_reader/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Data Entry,survey_data_entry@example.com,eden,survey_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Editor,survey_editor@example.com,eden,survey_editor/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Super Editor,survey_super@example.com,eden,survey_super/0,International Federation of Red Cross and Red Crescent Societies
+Volunteer,Reader,vol_reader@example.com,eden,vol_reader/0,International Federation of Red Cross and Red Crescent Societies
+Volunteer,Data Entry,vol_data_entry@example.com,eden,vol_data_entry/0,International Federation of Red Cross and Red Crescent Societies
+Volunteer,Editor,vol_editor@example.com,eden,vol_editor/0,International Federation of Red Cross and Red Crescent Societies
+Volunteer,Super Editor,vol_super@example.com,eden,vol_super/0,International Federation of Red Cross and Red Crescent Societies
 Vulnerability,Reader,vul_reader@example.com,eden,vulnerability_reader/0,International Federation of Red Cross and Red Crescent Societies
 Vulnerability,Data Entry,vul_data_entry@example.com,eden,vulnerability_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Vulnerability,Editor,vul_editor@example.com,eden,vulnerability_editor/0,International Federation of Red Cross and Red Crescent Societies

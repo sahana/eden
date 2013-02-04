@@ -3885,7 +3885,7 @@ class S3Resource(object):
                     elif options is not None:
                         opts[fname] = options
                         vlist = [v for v, t in options
-                                   if s3_unicode(t).lower().find(w) != -1]
+                                   if s3_unicode(t).lower().find(s3_unicode(w)) != -1]
                         if vlist:
                             wqueries.append(field.belongs(vlist))
                 if len(wqueries):
