@@ -40,10 +40,13 @@ class StaffReport(SeleniumUnitTest):
         super(StaffReport, self).setUp()
         print "\n"
         self.login(account="admin", nexturl="hrm/staff/report")
+        self.settings = current.deployment_settings 
 
     def test_staff_report_simple(self):
         self.report(None,
-                "Organization", "County / District", "Organization (Count)",
+                self.settings.hrm.organisation_label, 
+                "County / District", 
+                self.settings.hrm.organisation_label + " (Count)",
                 ("Timor-Leste Red Cross Society (CVTL)", "Ainaro", 1),
                 ("Timor-Leste Red Cross Society (CVTL)", "Kuala Lumpur", 0),
             )
@@ -54,7 +57,9 @@ class StaffReport(SeleniumUnitTest):
                 "name": "human_resource_search_select_organisation_id",
                 "label": "Timor-Leste Red Cross Society (CVTL)",
                 "value": True
-            },), "Organization", "County / District", "Organization (Count)",
+            },), self.settings.hrm.organisation_label, 
+                "County / District", 
+                 self.settings.hrm.organisation_label + " (Count)",
             row_count=1)
 
     def test_staff_report_filter_L0_L1(self):
@@ -69,11 +74,16 @@ class StaffReport(SeleniumUnitTest):
                 "label": "Ainaro",
                 "value": True
             }),
-            "County / District", "Organization", "Organization (Count)",
+            "County / District", 
+            self.settings.hrm.organisation_label, 
+            self.settings.hrm.organisation_label + " (Count)",
             row_count=1)
 
     def test_staff_report_person(self):
-        self.report(None, "Organization", "State / Province", "Person (List)",
+        self.report(None, 
+            self.settings.hrm.organisation_label, 
+            "State / Province", 
+            "Person (List)",
             ("Timor-Leste Red Cross Society (CVTL)", "Dili",
                 ("Duarte Botelheiro",
                 "Adriana Macedo",
