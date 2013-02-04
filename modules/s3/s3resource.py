@@ -3189,10 +3189,12 @@ class S3Resource(object):
 
         # Get field attributes
         attr = {}
+        effort = {}
         for rfield in rfields:
-            key = rfield.colname
+            colname = rfield.colname
+            effort[colname] = 0
             joined = rfield.tname != self.tablename
-            attr[key] = ({}, {}, joined, rfield.ftype[:5] == "list:")
+            attr[colname] = ({}, {}, joined, rfield.ftype[:5] == "list:")
 
         # Extract values and merge duplicate rows
         record_ids = []
@@ -3207,7 +3209,8 @@ class S3Resource(object):
             else:
                 duplicate = True
             for rfield in rfields:
-                values, records, joined, list_type = attr[rfield.colname]
+                colname = rfield.colname
+                values, records, joined, list_type = attr[colname]
                 if duplicate and not joined:
                     continue
                 try:
@@ -3225,8 +3228,9 @@ class S3Resource(object):
                         record[value] = None
                     continue
 
-                # @todo: declutter this:
                 if list_type and value is not None:
+                    if represent and value:
+                        effort[colname] += 30 + len(value)
                     for v in value:
                         if v not in record:
                             record[v] = None
@@ -3260,10 +3264,14 @@ class S3Resource(object):
                 else:
                     linkto = None
 
+                per_row_lookup = list_type and \
+                                 effort[colname] < len(values) * 30
+
                 # Render all unique values
-                if hasattr(renderer, "bulk"):
+                if hasattr(renderer, "bulk") and not list_type:
+                    per_row_lookup = False
                     values = renderer.bulk(values.keys(), list_type = False)
-                else:
+                elif not per_row_lookup:
                     for value in values:
                         try:
                             text = renderer(value)
@@ -3277,15 +3285,26 @@ class S3Resource(object):
                     record = records[record_id]
                     result = results[record_id]
 
-                    # Single value
-                    if len(record) == 1 or \
-                       not joined and not list_type:
+                    # List type with per-row lookup?
+                    if per_row_lookup:
+                        value = record.keys()
+                        if None in value and len(value) > 1:
+                            value = [v for v in value if v is not None]
+                        try:
+                            text = renderer(value)
+                        except:
+                            text = s3_unicode(value)
+                        result[colname] = text
+
+                    # Single value (master record)
+                    elif len(record) == 1 or \
+                         not joined and not list_type:
                         value = record.keys()[0]
                         result[colname] = values[value] \
                                           if value in values else NONE
                         continue
 
-                    # Multiple values
+                    # Multiple values (joined or list-type)
                     else:
                         vlist = []
                         for value in record:
@@ -3295,18 +3314,18 @@ class S3Resource(object):
                                     if value in values else NONE
                             vlist.append(value)
 
-                    # Concatenate multiple values
-                    if any([hasattr(v, "xml") for v in vlist]):
-                        data = TAG[""](
-                                list(
-                                    chain.from_iterable(
-                                        [(v, ", ") for v in vlist])
-                                    )[:-1]
-                                )
-                    else:
-                        data = ", ".join([s3_unicode(v) for v in vlist])
+                        # Concatenate multiple values
+                        if any([hasattr(v, "xml") for v in vlist]):
+                            data = TAG[""](
+                                    list(
+                                        chain.from_iterable(
+                                            [(v, ", ") for v in vlist])
+                                        )[:-1]
+                                    )
+                        else:
+                            data = ", ".join([s3_unicode(v) for v in vlist])
 
-                    result[colname] = data
+                        result[colname] = data
 
                 # Restore linkto
                 if linkto is not None:
