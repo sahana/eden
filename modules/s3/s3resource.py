@@ -43,7 +43,7 @@ import datetime
 import time
 import collections
 
-from itertools import product
+from itertools import product, chain
 
 try:
     from cStringIO import StringIO # Faster, where available
@@ -3156,17 +3156,17 @@ class S3Resource(object):
             @return: list of dicts of {"tablename.fieldname":value}
         """
 
-        pkey = self.table._id
-
         if not rows:
             return []
 
+        pkey = S3ResourceField(self, self.table._id.name)
+
         rfields = []
-        for i in fields:
-            if isinstance(i, tuple) and len(i) > 1:
-                f = i[-1]
+        for field in fields:
+            if isinstance(field, tuple) and len(field) > 1:
+                f = field[-1]
             else:
-                f = i
+                f = field
             if isinstance(f, S3ResourceField):
                 rfields.append(f)
             elif isinstance(f, str):
@@ -3187,99 +3187,139 @@ class S3Resource(object):
             else:
                 raise SyntaxError("Invalid field: %s" % str(f))
 
-        def concat(old, new):
-
-            if new is None or old == new:
-                return old
-            elif type(old) is not list:
-                result = [old]
-            else:
-                result = old
-            if type(new) is not list:
-                if new not in result:
-                    result.append(new)
-            else:
-                result.extend([item for item in new if item not in result])
-            return result
-
-        records = Storage()
-        record_ids = []
-        seen = record_ids.append
-
-        # Get renderer attributes
-        attr = []
+        # Get field attributes
+        attr = {}
         for rfield in rfields:
             key = rfield.colname
-            joined = rfield.tname != self.tablename and rfield.multiple
+            joined = rfield.tname != self.tablename
+            attr[key] = ({}, {}, joined, rfield.ftype[:5] == "list:")
+
+        # Extract values and merge duplicate rows
+        record_ids = []
+        seen = record_ids.append
+        results = {}
+        for row in rows:
+            record_id = pkey.extract(row)
+            if record_id not in results:
+                duplicate = False
+                results[record_id] = Storage()
+                seen(record_id)
+            else:
+                duplicate = True
+            for rfield in rfields:
+                values, records, joined, list_type = attr[rfield.colname]
+                if duplicate and not joined:
+                    continue
+                try:
+                    value = rfield.extract(row)
+                except KeyError:
+                    value = None
+                if record_id not in records:
+                    record = records[record_id] = {}
+                else:
+                    record = records[record_id]
+                if value is None:
+                    if not values or list_type:
+                        values[value] = None
+                    if not record or list_type:
+                        record[value] = None
+                    continue
+
+                # @todo: declutter this:
+                if list_type and value is not None:
+                    for v in value:
+                        if v not in record:
+                            record[v] = None
+                        if represent and v not in values:
+                            values[v] = None
+                else:
+                    if value not in record:
+                        record[value] = None
+                    if represent and value not in values:
+                        values[value] = None
+
+        # Represent results
+        NONE = current.messages["NONE"]
+
+        for rfield in rfields:
+
+            colname = rfield.colname
+            values, records, joined, list_type = attr[colname]
+
             if represent:
+
+                # Get the renderer
                 renderer = rfield.represent
-                lazy = renderer is not None and hasattr(renderer, "bulk")
-                if show_links is False and hasattr(renderer, "linkto"):
+                if not callable(renderer):
+                    renderer = lambda v: s3_unicode(v)
+
+                # Deactivate linkto if so requested
+                if not show_links and hasattr(renderer, "linkto"):
                     linkto = renderer.linkto
                     renderer.linkto = None
                 else:
                     linkto = None
-                attr.append((renderer, lazy, linkto, key, joined))
-            else:
-                attr.append((None, False, None, key, joined))
 
-        # Extract data
-        duplicates = {}
-        for row in rows:
-
-            record_id = row[pkey]
-            if record_id not in records:
-                record = records[record_id] = Storage()
-                seen(record_id)
-            else:
-                record = records[record_id]
-
-            duplicate = record_id in duplicates
-
-            for i in xrange(len(rfields)):
-
-                rfield = rfields[i]
-                renderer, lazy, linkto, key, joined = attr[i]
-
-                try:
-                    value = rfield.extract(row,
-                                           represent=represent,
-                                           lazy=lazy)
-                except KeyError:
-                    value = "" if represent else None
-                if lazy:
-                    lazy_value = value.value
-
-                if key not in record:
-                    record[key] = value
-                    continue
+                # Render all unique values
+                if hasattr(renderer, "bulk"):
+                    values = renderer.bulk(values.keys(), list_type = False)
                 else:
-                    this = record[key]
+                    for value in values:
+                        try:
+                            text = renderer(value)
+                        except:
+                            text = s3_unicode(value)
+                        values[value] = text
 
-                if duplicate or joined:
-                    if lazy:
-                        this.value = concat(this.value, lazy_value)
-                        this.multiple = True
+                # Write representations into result
+                for record_id in records:
+
+                    record = records[record_id]
+                    result = results[record_id]
+
+                    # Single value
+                    if len(record) == 1 or \
+                       not joined and not list_type:
+                        value = record.keys()[0]
+                        result[colname] = values[value] \
+                                          if value in values else NONE
+                        continue
+
+                    # Multiple values
                     else:
-                        record[key] = concat(this, value)
-                if not duplicate:
-                    duplicates[record_id] = True
+                        vlist = []
+                        for value in record:
+                            if value is None and not list_type:
+                                continue
+                            value = values[value] \
+                                    if value in values else NONE
+                            vlist.append(value)
 
-        # Represent
-        if represent:
-            for i in xrange(len(rfields)):
-                rfield = rfields[i]
-                renderer, lazy, linkto, key, joined = attr[i]
-                for record in records.values():
-                    if lazy:
-                        record[key] = record[key].render()
-                    elif joined and type(record[key]) is list:
-                        record[key] = ", ".join([s3_unicode(s)
-                                                 for s in record[key]])
+                    # Concatenate multiple values
+                    if any([hasattr(v, "xml") for v in vlist]):
+                        data = TAG[""](
+                                list(
+                                    chain.from_iterable(
+                                        [(v, ", ") for v in vlist])
+                                    )[:-1]
+                                )
+                    else:
+                        data = ", ".join([s3_unicode(v) for v in vlist])
+
+                    result[colname] = data
+
+                # Restore linkto
                 if linkto is not None:
                     renderer.linkto = linkto
-                
-        return [records[record_id] for record_id in record_ids]
+
+            else:
+                for record_id in records:
+                    data = records[record_id].keys()
+                    if len(data) == 1 and not list_type:
+                        data = data[0]
+                    results[record_id][colname] = data
+
+        return [results[record_id] for record_id in record_ids]
 
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):
@@ -4301,7 +4341,7 @@ class S3ResourceField(object):
                 fn = current.xml.UID
             if fn == "id":
                 f = table._id
-            elif fn in table.fields:
+            elif fn in table.fields or fn == "id":
                 f = table[fn]
             else:
                 f = None
@@ -4441,10 +4481,11 @@ class S3ResourceField(object):
 
         else:
             # Done, return the field
+            colname = str(f) if f else "%s.%s" % (tn, fn)
             field = Storage(selector=original,
                             tname = tn,
                             fname = fn,
-                            colname = "%s.%s" % (tn, fn),
+                            colname = colname,
                             field=f,
                             join=join,
                             left=left,
@@ -6055,8 +6096,7 @@ class S3Pivottable(object):
         # fields shall be included in the report base layer. This is
         # useful to provide easy access to the record data behind a
         # pivot table cell.
-        fields = get_config(tablename, "report_fields",
-                 get_config(tablename, "list_fields", []))
+        fields = get_config(tablename, "report_fields", [])
 
         self._get_fields(fields=fields)
 
