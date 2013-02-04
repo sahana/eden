@@ -6,7 +6,7 @@
 
          GeoJSON Export Templates for Sahana-Eden
 
-         Copyright (c) 2012 Sahana Software Foundation
+         Copyright (c) 2012-13 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -241,13 +241,22 @@
         <!-- Feature Layer -->
         <xsl:choose>
             <xsl:when test="./reference[@field='location_id']">
-                <xsl:call-template name="Feature" />
+                <xsl:call-template name="Feature">
+                    <xsl:with-param name="uuid">
+                        <xsl:value-of select="./@uuid"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:when>
             <xsl:when test="./reference[@field='site_id']">
+                <xsl:variable name="uuid" select="./@uuid"/>
                 <!-- Find the Associated Site -->
                 <xsl:variable name="site" select="./reference[@field='site_id']/@uuid"/>
                 <xsl:for-each select="//resource[@uuid=$site]">
-                    <xsl:call-template name="Feature" />
+                    <xsl:call-template name="Feature">
+                        <xsl:with-param name="uuid">
+                            <xsl:value-of select="$uuid"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </xsl:for-each>
             </xsl:when>
         </xsl:choose>
@@ -255,6 +264,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Feature">
+        <xsl:param name="uuid"/>
         <xsl:variable name="geometry" select="./geometry/@value"/>
         <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
         <xsl:choose>
@@ -267,13 +277,20 @@
                     </xsl:attribute>
                 </geometry>
                 <properties>
-                    <xsl:call-template name="Properties" />
+                    <xsl:call-template name="Properties">
+                        <xsl:with-param name="uuid">
+                            <xsl:value-of select="$uuid"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </properties>
             </xsl:when>
             <xsl:when test="$wkt!='null'">
                 <xsl:call-template name="WKT">
                     <xsl:with-param name="wkt">
                         <xsl:value-of select="$wkt"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="uuid">
+                        <xsl:value-of select="$uuid"/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
@@ -291,7 +308,11 @@
                     </coordinates>
                 </geometry>
                 <properties>
-                    <xsl:call-template name="Properties" />
+                    <xsl:call-template name="Properties">
+                        <xsl:with-param name="uuid">
+                            <xsl:value-of select="$uuid"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </properties>
             </xsl:when>
             <!-- xsl:otherwise skip -->
@@ -300,11 +321,12 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
-
+        <xsl:param name="uuid"/>
         <xsl:variable name="attributes" select="./reference[@field='location_id']/@attributes"/>
 
         <id>
-            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
+            <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
+            <xsl:value-of select="$uuid"/>
         </id>
         <!--<xsl:choose>
             <xsl:when test="data[@field='name']!=''">
@@ -397,6 +419,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="WKT">
+        <xsl:param name="uuid"/>
         <xsl:param name="wkt"/>
         <!-- Convert WKT to GeoJSON in XSLT. Note that this can hit the libxslt default recursion limit
              http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
@@ -463,7 +486,11 @@
             </xsl:choose>
         </geometry>
         <properties>
-            <xsl:call-template name="Properties" />
+            <xsl:call-template name="Properties">
+                <xsl:with-param name="uuid">
+                    <xsl:value-of select="$uuid"/>
+                </xsl:with-param>
+            </xsl:call-template>
         </properties>
     </xsl:template>
 

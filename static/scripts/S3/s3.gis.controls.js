@@ -80,7 +80,7 @@ function s3_gis_tooltipSelect(event) {
             return;
         }
         // if there are other tooltips active, destroy them
-        if (S3.gis.tooltipPopup !== null) {
+        if ((S3.gis.tooltipPopup !== null) && (S3.gis.tooltipPopup !== undefined)) {
             map.removePopup(S3.gis.tooltipPopup);
             S3.gis.tooltipPopup.destroy();
             if (S3.gis.lastFeature !== null) {
@@ -98,16 +98,14 @@ function s3_gis_tooltipSelect(event) {
         } else if (undefined != attributes.name) {
             // GeoJSON, GeoRSS or Legacy Features
             tooltip = attributes.name;
-        } else {
+        } else if (undefined != feature.layer.title) {
             // KML or WFS
-            var titleField = feature.layer.title;
-            if (undefined != titleField) {
-                var type = typeof attributes[titleField];
-                if ('object' == type) {
-                    tooltip = attributes[titleField].value;
-                } else {
-                    tooltip = attributes[titleField];
-                }
+            var a = attributes[feature.layer.title];
+            var type = typeof a;
+            if ('object' == type) {
+                tooltip = a.value;
+            } else {
+                tooltip = a;
             }
         }
         if (tooltip) {
@@ -119,7 +117,7 @@ function s3_gis_tooltipSelect(event) {
                 false
             );
         }
-        if (S3.gis.tooltipPopup !== null) {
+        if ((S3.gis.tooltipPopup !== null) && (S3.gis.tooltipPopup !== undefined)) {
             // should be moved to CSS
             S3.gis.tooltipPopup.contentDiv.style.backgroundColor = 'ffffcb';
             S3.gis.tooltipPopup.contentDiv.style.overflow = 'hidden';
