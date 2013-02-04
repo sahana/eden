@@ -1979,6 +1979,7 @@ class S3PersonEducationModel(S3Model):
     def model(self):
 
         T = current.T
+        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         tablename = "pr_education"
@@ -1986,16 +1987,25 @@ class S3PersonEducationModel(S3Model):
                                   self.pr_person_id(label = T("Person"),
                                                     ondelete="CASCADE"),
                                   Field("level",
+                                        represent=lambda v: v or NONE,
                                         label=T("Level of Award")),
                                   Field("award",
+                                        represent=lambda v: v or NONE,
                                         label=T("Name of Award")),
                                   Field("institute",
+                                        represent=lambda v: v or NONE,
                                         label=T("Name of Institute")),
-                                  Field("year",
+                                  Field("year", "integer",
+                                        requires=IS_NULL_OR(
+                                                    IS_INT_IN_RANGE(1900, 2100)
+                                                    ),
+                                        represent=lambda v: v or NONE,
                                         label=T("Year")),
                                   Field("major",
+                                        represent=lambda v: v or NONE,
                                         label=T("Major")),
                                   Field("grade",
+                                        represent=lambda v: v or NONE,
                                         label=T("Grade")),
                                   s3_comments(),
                                   *s3_meta_fields())

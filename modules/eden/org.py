@@ -395,7 +395,8 @@ class S3OrganisationModel(S3Model):
                                    label=T("Year"),
                                    #readable = False,
                                    #writable = False,
-                                   requires=IS_NULL_OR(IS_INT_IN_RANGE(1850, 2100)),
+                                   requires=IS_NULL_OR(
+                                                IS_INT_IN_RANGE(1850, 2100)),
                                    represent=lambda v: v or NONE,
                                    comment=DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Year"),
@@ -2638,9 +2639,10 @@ class org_OrganisationRepresent(S3Represent):
             # Need a custom lookup
             self.parent = True
             self.lookup_rows = self.custom_lookup_rows
-            fields=["org_organisation.name",
-                    "org_organisation.acronym",
-                    "org_parent_organisation.name"]
+            fields = ["org_organisation.name",
+                      "org_organisation.acronym",
+                      "org_parent_organisation.name",
+                      ]
         else:
             # Can use standard lookup of fields
             self.parent = False
@@ -2653,7 +2655,6 @@ class org_OrganisationRepresent(S3Represent):
                        translate=translate,
                        multiple=multiple)
 
-        self.parent = parent
         self.acronym = acronym
 
     # -------------------------------------------------------------------------
@@ -2668,8 +2669,7 @@ class org_OrganisationRepresent(S3Represent):
         """
 
         db = current.db
-        s3db = current.s3db
-        otable = s3db.org_organisation
+        otable = current.s3db.org_organisation
         btable = db.org_organisation_branch
         ptable = db.org_organisation.with_alias("org_parent_organisation")
 
@@ -2700,6 +2700,7 @@ class org_OrganisationRepresent(S3Represent):
             # Custom Row (with the parent left-joined)
             name = row["org_organisation.name"]
             acronym = row["org_organisation.acronym"]
+            parent = row["org_parent_organisation.name"]
         else:
             # Standard row (from fields)
             name = row["name"]
@@ -2709,11 +2710,9 @@ class org_OrganisationRepresent(S3Represent):
             return self.default
         if self.acronym and acronym:
             name = "%s (%s)" % (name, acronym)
-        if self.parent:
-            parent = row["org_parent_organisation.name"]
-            if parent:
-                name = "%s > %s" % (parent, name)
-        return name
+        if self.parent and parent:
+            name = "%s > %s" % (parent, name)
+        return s3_unicode(name)
         
 # =============================================================================
 def org_site_represent(id, row=None, show_link=True):

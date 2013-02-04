@@ -313,7 +313,7 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def tostring(tree, xml_declaration=True, pretty_print=False):
+    def tostring(tree, xml_declaration=True, pretty_print=True):
         """
             Convert an element tree into XML as string
 
@@ -325,7 +325,7 @@ class S3XML(S3Codec):
         return etree.tostring(tree,
                               xml_declaration=xml_declaration,
                               encoding="utf-8",
-                              pretty_print=True)
+                              pretty_print=pretty_print)
 
     # -------------------------------------------------------------------------
     def tree(self, elements,
@@ -783,6 +783,7 @@ class S3XML(S3Codec):
                 # Lookup the right pre-prepared data for mapping by site_id
                 root = element.getparent()
                 if root.tag == self.TAG.root:
+                    #print self.tostring(root)
                     first = root[0]
                     _tablename = first.get(ATTRIBUTE.name, None)
                     if _tablename:
@@ -1039,7 +1040,6 @@ class S3XML(S3Codec):
 
             if f == DELETED:
                 continue
-            
 
             v = record.get(f, None)
 
