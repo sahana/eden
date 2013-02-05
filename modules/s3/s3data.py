@@ -837,7 +837,15 @@ class S3DataList(object):
     # -------------------------------------------------------------------------
     # Standard API
     # -------------------------------------------------------------------------
-    def __init__(self, resource, list_fields, records, listid=None, layout=None):
+    def __init__(self,
+                 resource,
+                 list_fields,
+                 records,
+                 start=None,
+                 limit=None,
+                 total=None,
+                 listid=None,
+                 layout=None):
         """
             Constructor
 
@@ -861,6 +869,10 @@ class S3DataList(object):
         else:
             self.layout = self.render
 
+        self.start = start if start else 0
+        self.limit = limit if limit else 0
+        self.total = total if total else 0
+
     # ---------------------------------------------------------------------
     def html(self):
         """ Render list data as HTML (nested DIVs) """
@@ -873,9 +885,13 @@ class S3DataList(object):
         
         records = self.records
         if records is not None:
-            items = []
+            items = [
+                DIV(current.T("Total Records: %(numrows)s") % {"numrows": self.total},
+                    _class="dl-header",
+                    _id="%s-header" % self.listid)
+            ]
             for i in xrange(len(records)):
-                _class = i % 2 and "even" or "odd"
+                _class = (i + self.start) % 2 and "even" or "odd"
                 items.append(render(rfields, records[i], _class=_class))
         else:
             # template

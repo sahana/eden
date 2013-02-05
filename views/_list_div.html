@@ -38,15 +38,16 @@
 {{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
+{{include "dataLists.html"}}
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
 {{if r.http == "POST" or not hide_listadd:}}
- $('#list-add').show()
- $('#show-add-btn').hide()
+ $('#list-add').show();
+ $('#show-add-btn').hide();
 {{else:}}
  $('#show-add-btn').click(function(){
-  $('#list-add').show()
-  $('#show-add-btn').hide()
+  $('#list-add').show();
+  $('#show-add-btn').hide();
  });
 {{pass}}
 });

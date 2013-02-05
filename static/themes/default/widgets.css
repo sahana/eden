@@ -345,7 +345,12 @@ div#dl-container {
 div.dl {
     border-bottom: 1px solid #aaa;
 }
+div.dl-header {
+    float: right;
+    padding: 3px;
+}
 div.dl-item {
+    clear: both;
     padding: 3px 5px 3px 5px;
     border-top: 1px solid #aaa;
 }

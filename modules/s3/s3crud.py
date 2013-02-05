@@ -1115,23 +1115,108 @@ class S3CRUD(S3Method):
             @param attr: parameters for the method handler
         """
 
+        T = current.T
+        pagelength = 10 # @todo: use central configuration
+        
         resource = self.resource
         tablename = resource.tablename
 
         get_config = resource.get_config
-
         insertable = get_config("insertable", True)
         listadd = get_config("listadd", True)
         addbtn = get_config("addbtn", False)
-
         list_fields = get_config("list_fields", None)
+
+        # Initialize output
+        output = {}
+
+        # Pagination
+        vars = self.request.get_vars
+        start = vars.get("start", None)
+        limit = vars.get("limit", None)
+        if limit is not None:
+            try:
+                start = int(start)
+                limit = int(limit)
+            except ValueError:
+                start = None
+                limit = None # use default
+        else:
+            start = None
+
+        # Prepare data list
+        representation = r.representation
+        if representation in ("html", "plain"):
+
+            listid = "datalist"
+
+            # Retrieve data
+            if limit:
+                initial_limit = min(limit, pagelength)
+            else:
+                initial_limit = pagelength
+            datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                       start=start,
+                                                       limit=initial_limit,
+                                                       listid=listid)
+
+            crud_string = self.crud_string
+
+            if numrows == 0:
+
+                table = resource.table
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
+                else:
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
+                                            limitby=(0, 1)).first():
+                    msg = DIV(crud_string(tablename, "msg_no_match"),
+                              _class="empty")
+                else:
+                    msg = DIV(crud_string(tablename, "msg_list_empty"),
+                              _class="empty")
+
+                #s3.no_formats = True
+                if r.component and "showadd_btn" in output:
+                    # Hide the list and show the form by default
+                    del output["showadd_btn"]
+                    msg = ""
+
+                data = msg
+
+            else:
+                # Render list
+                dl = datalist.html()
+
+                # Pagination data
+                vars = dict([(k,v) for k, v in r.get_vars.iteritems()
+                                   if k not in ("start", "limit")])
+                ajax_url = r.url(representation="plain", vars=vars)
+                dl_data = {
+                    "startindex": start if start else 0,
+                    "maxitems": limit if limit else numrows,
+                    #"totalitems": numrows,
+                    "pagesize": pagelength,
+                    "ajaxurl": ajax_url
+                }
+                from gluon.serializers import json as jsons
+                dl_data = jsons(dl_data)
+                dl.append(DIV(
+                            FORM(
+                                INPUT(_type="hidden",
+                                      _class="dl-pagination",
+                                      _value=dl_data)),
+                            A(T("more..."),
+                              _href=ajax_url,
+                              _class="dl-pagination"),
+                            _class="dl-navigation"))
+
+                data = dl
 
         if r.representation == "html":
 
-            output = {}
-
             # Page title
-            crud_string = self.crud_string
             if r.component:
                 title = crud_string(r.tablename, "title_display")
             else:
@@ -1146,7 +1231,6 @@ class S3CRUD(S3Method):
                                            submit=True,
                                            url=r.url(vars={}),
                                            _class="filter-form")
-
                 fresource = current.s3db.resource(tablename)
                 output["list_filter_form"] = filter_form.html(fresource, r.get_vars)
             else:
@@ -1167,49 +1251,22 @@ class S3CRUD(S3Method):
                                             name="label_create_button",
                                             _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
-
                 elif addbtn:
                     # Add an action-button linked to the create view
                     buttons = self.insert_buttons(r, "add")
                     if buttons:
                         output["buttons"] = buttons
 
-            # Retrieve data
-            rows = resource.select(list_fields)
-            records = resource.extract(rows, list_fields, represent=True)
 
-            if len(records) == 0:
-
-                table = resource.table
-                if "deleted" in table:
-                    available_records = current.db(table.deleted != True)
-                else:
-                    available_records = current.db(table._id > 0)
-                if available_records.select(table._id,
-                                            limitby=(0, 1)).first():
-                    msg = DIV(crud_string(tablename, "msg_no_match"),
-                              _class="empty")
-                else:
-                    msg = DIV(crud_string(tablename, "msg_list_empty"),
-                              _class="empty")
-
-                #s3.no_formats = True
-
-                if r.component and "showadd_btn" in output:
-                    # Hide the list and show the form by default
-                    del output["showadd_btn"]
-                    msg = ""
-
-                output["items"] = msg
-
-            else:
-                # Render list
-                from s3data import S3DataList
-                datalist = S3DataList(resource, list_fields, records, listid="dl")
-                output["items"] = datalist.html()
-
-            # View
+            # View + data
             current.response.view = "list_div.html"
+            output["items"] = data
+
+        elif r.representation == "plain":
+
+            # View + data
+            current.response.view = "plain.html"
+            output["item"] = data
 
         elif r.representation == "json":
             # Not implemented yet

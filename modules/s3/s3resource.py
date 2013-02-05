@@ -78,7 +78,7 @@ from gluon.tools import callback
 
 from s3fields import S3Represent, S3RepresentLazy
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper
-from s3data import S3DataTable
+from s3data import S3DataTable, S3DataList
 from s3validators import IS_ONE_OF
 
 DEBUG = False
@@ -789,7 +789,7 @@ class S3Resource(object):
                 # Create a simplified query for the page
                 # (this will improve performance of the second select):
                 if left_joins:
-                    page = row_ids[limitby[0]:limitby[0]+limitby[1]]
+                    page = row_ids[limitby[0]:limitby[1]]
                     query = table._id.belongs(page)
                     del attributes["limitby"]
 
@@ -1413,6 +1413,71 @@ class S3Resource(object):
         if rows:
             data = self.extract(rows, selectors, represent=True)
             return S3DataTable(rfields, data), numrows, ids
+        else:
+            return None, 0, []
+
+    # -------------------------------------------------------------------------
+    def datalist(self,
+                 fields=None,
+                 start=0,
+                 limit=None,
+                 left=None,
+                 orderby=None,
+                 distinct=False,
+                 getids=False,
+                 listid=None):
+        """
+            Generate a data list of this resource
+
+            @param fields: list of fields to include (field selector strings)
+            @param start: index of the first record to include
+            @param limit: maximum number of records to include
+            @param left: additional left joins for DB query
+            @param orderby: orderby for DB query
+            @param distinct: distinct-flag for DB query
+            @param getids: return the record IDs of all records matching the
+                           query (used in search to create a filter)
+
+            @return: tuple (S3DataList, numrows, ids), where numrows represents
+                     the total number of rows in the table that match the query;
+                     ids is empty unless getids=True
+        """
+
+        # Choose fields
+        if fields is None:
+            fields = [f.name for f in self.readable_fields()]
+        selectors = list(fields)
+
+        # Automatically include the record ID
+        table = self.table
+        if table._id.name not in selectors:
+            fields.insert(0, table._id.name)
+            selectors.insert(0, table._id.name)
+
+        # Resolve the selectors
+        rfields = self.resolve_selectors(fields, extra_fields=False)[0]
+
+        # Retrieve the rows
+        rows, numrows, ids = self.select(fields=selectors,
+                                         start=start,
+                                         limit=limit,
+                                         orderby=orderby,
+                                         left=left,
+                                         distinct=distinct,
+                                         count=True,
+                                         getids=getids,
+                                         cacheable=True)
+
+        # Generate the data table
+        if rows:
+            data = self.extract(rows, selectors, represent=True)
+            return S3DataList(self,
+                              fields,
+                              data,
+                              listid=listid,
+                              start=start,
+                              total=numrows,
+                              limit=limit), numrows, ids
         else:
             return None, 0, []
 
