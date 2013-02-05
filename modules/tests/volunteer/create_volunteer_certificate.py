@@ -25,6 +25,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
 class CreateVolunteerCertificate(SeleniumUnitTest):
@@ -54,13 +55,14 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
                      ]
                      )
 
-        self.create("hrm_certificate_skill", 
-                    [( "skill_id",
-                       "Hazmat",
-                       "option"
-                       ),
-                     ( "competency_id",
-                       "Level 2",
-                       "option"),
-                     ]
-                     )
+        if current.deployment_settings.get_hrm_use_skills():
+            self.create("hrm_certificate_skill",	 
+                        [( "skill_id",
+                           "Hazmat",
+                           "option"
+                           ),
+                         ( "competency_id",
+                           "Level 2",
+                           "option"),
+                         ]
+                         )
