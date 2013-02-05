@@ -42,9 +42,12 @@ class CreateVolunteer(SeleniumUnitTest):
         self.login(account="admin", nexturl="vol/volunteer/create")
 
         self.create("hrm_human_resource", 
-                    [( "organisation_id",
+                   [( "organisation_id",
+                       "International Federation of Red Cross and Red Crescent Societies",
+                       "autocomplete",
+                       0,
                        "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       "autocomplete"),
+                       ),
                      ( "first_name",
                        "John",
                        "pr_person"),
