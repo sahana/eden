@@ -537,7 +537,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser.find_element_by_xpath("//input[@type='submit']").click()
 
-        time.sleep(1)
+        time.sleep(3)
 
         # Now, check the generated report:
         for check in args:
@@ -574,7 +574,7 @@ class SeleniumUnitTest(Web2UnitTest):
                 "Report check failed.")
 
         if 'row_count' in kwargs:
-            self.assertTrue(kwargs['row_count'] == len(browser.find_elements_by_xpath(
+            self.assertEqual(kwargs['row_count'], len(browser.find_elements_by_xpath(
                 "//table[@id='list']/tbody/tr")))
 
     # -------------------------------------------------------------------------
