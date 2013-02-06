@@ -613,29 +613,10 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_represent_id(table):
-    """
-        Returns a represent function for a record id.
-    """
-
-    def represent(id, row=None):
-        if not row:
-            if not id:
-                return current.messages["NONE"]
-            row  = current.db(table._id == id).select(table.name,
-                                                      limitby=(0, 1)
-                                                      ).first()
-        try:
-            return row.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    return represent
-
-# =============================================================================
 def s3_represent_multi_id(table):
     """
-        Returns a represent function for a record id.
+        Returns a represent function for a list:reference field.
+        @param: table - the table within which to lookup the values
     """
 
     def represent(ids):

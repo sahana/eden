@@ -53,7 +53,8 @@ except:
 from gluon import current
 from gluon.tools import fetch
 
-from s3.s3utils import s3_debug, s3_represent_id, soundex
+from s3.s3fields import S3Represent
+from s3.s3utils import s3_debug, soundex
                 
 # =============================================================================
 class S3Parsing(object):
@@ -111,7 +112,7 @@ class S3Parsing(object):
                                                       ktable.keyword,
                                                       ktable.incident_type_id,
                                                       cache=cache)
-        incident_type_represent = s3_represent_id(s3db.event_incident_type)
+        incident_type_represent = S3Represent(lookup="event_incident_type")
         if NLTK:
             # Lookup synonyms
             # @ToDo: Cache

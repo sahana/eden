@@ -587,7 +587,7 @@ class S3IncidentTypeModel(S3Model):
             msg_list_empty = T("No Incident Types currently registered")
             )
 
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         incident_type_id = S3ReusableField("incident_type_id", table,
                                            sortby="name",
                                            requires = IS_NULL_OR(

@@ -110,22 +110,21 @@ class S3MembersModel(S3Model):
 
         label_create = crud_strings[tablename].label_create_button
 
-        represent = s3_represent_id(table)
-
+        represent = S3Represent(lookup=tablename)
         membership_type_id = S3ReusableField("membership_type_id", table,
-            sortby = "name",
-            label = T("Type"),
-            requires = IS_NULL_OR(
-                        IS_ONE_OF(db, "member_membership_type.id",
-                                  represent,
-                                  filterby="organisation_id",
-                                  filter_opts=filter_opts)),
-            represent = represent,
-            comment=S3AddResourceLink(f="membership_type",
-                                      label=label_create,
-                                      title=label_create,
-                                      tooltip=T("Add a new membership type to the catalog.")),
-            ondelete = "SET NULL")
+                                             sortby = "name",
+                                             label = T("Type"),
+                                             requires = IS_NULL_OR(
+                                                            IS_ONE_OF(db, "member_membership_type.id",
+                                                                      represent,
+                                                                      filterby="organisation_id",
+                                                                      filter_opts=filter_opts)),
+                                             represent = represent,
+                                             comment=S3AddResourceLink(f="membership_type",
+                                                                       label=label_create,
+                                                                       title=label_create,
+                                                                       tooltip=T("Add a new membership type to the catalog.")),
+                                             ondelete = "SET NULL")
 
         configure(tablename,
                   deduplicate = self.member_type_duplicate,

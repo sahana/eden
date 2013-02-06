@@ -53,7 +53,7 @@ def s3_assess_severity_represent(value):
         return NONE
 
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
-s3_represent_id = s3base.s3_represent_id
+S3Represent = s3base.S3Represent
 
 location_id = s3db.gis_location_id
 person_id = s3db.pr_person_id
@@ -161,18 +161,18 @@ def assess_tables():
         else:
             return None
 
-    represent = s3_represent_id(table)
+    represent = S3Represent(tablename)
     baseline_type_id = S3ReusableField("baseline_type_id", table,
-       sortby="name",
-       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                       "assess_baseline_type.id",
-                                       represent,
-                                       sort=True)),
-       represent = represent,
-       label = T("Baseline Type"),
-       comment = baseline_type_comment(),
-       ondelete = "RESTRICT"
-       )
+                                       sortby="name",
+                                       requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                       "assess_baseline_type.id",
+                                                                       represent,
+                                                                       sort=True)),
+                                       represent = represent,
+                                       label = T("Baseline Type"),
+                                       comment = baseline_type_comment(),
+                                       ondelete = "RESTRICT"
+                                       )
 
     # =========================================================================
     # Baseline
@@ -1899,7 +1899,7 @@ def impact_tables():
         else:
             return None
 
-    represent = s3_represent_id(table)
+    represent = S3Represent(tablename)
     impact_type_id = S3ReusableField("impact_type_id", table,
                                      sortby="name",
                                      requires = IS_NULL_OR(
@@ -2419,16 +2419,14 @@ def custom_assess(custom_assess_fields, location_id=None):
                                                                  value="")
 
         elif field[0] == "baseline":
-            table = db.assess_baseline_type
-            label = s3_represent_id(table)(field[1])
+            label = S3Represent(lookup="assess_baseline_type")(field[1])
             label = "%s:" % T(label)
             widget = INPUT(_name = name,
                            _class = "double",
                            _type = "text")
 
         elif field[0] == "impact":
-            table = db.assess_impact_type
-            label = s3_represent_id(table)(field[1])
+            label = S3Represent(lookup="assess_impact_type")(field[1])
             label = "%s:" % T(label)
             value_widget = INPUT(_name = name,
                                  _class = "double",

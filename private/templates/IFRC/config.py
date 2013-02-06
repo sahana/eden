@@ -245,6 +245,8 @@ settings.org.dependent_fields = \
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
+# Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
+settings.hrm.filter_certificates = True
 # Uncomment to show the Organisation name in HR represents
 settings.hrm.show_organisation = True
 # Uncomment to disable Staff experience

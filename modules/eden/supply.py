@@ -126,7 +126,7 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Brands currently registered"))
 
         # Reusable Field
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         brand_id = S3ReusableField("brand_id", table, sortby="name",
                     requires = IS_NULL_OR(IS_ONE_OF(db, "supply_brand.id",
                                                     represent,
@@ -170,7 +170,7 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Catalogs currently registered"))
 
         # Reusable Field
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         catalog_id = S3ReusableField("catalog_id", table,
                     sortby="name",
                     requires = IS_NULL_OR(

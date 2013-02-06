@@ -754,6 +754,10 @@ def certificate():
         return True
     s3.prep = prep
 
+    if settings.get_hrm_filter_certificates() and \
+       not auth.s3_has_role(ADMIN):
+        s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
+
     output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 

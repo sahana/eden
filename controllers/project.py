@@ -265,7 +265,7 @@ def set_theme_requires(sector_ids):
     table = s3db.project_theme_project
     table.theme_id.requires = IS_NULL_OR(
                                 IS_ONE_OF(db, "project_theme.id",
-                                          s3base.s3_represent_id(ttable),
+                                          s3base.S3Represent(lookup="project_theme"),
                                           filterby="id",
                                           filter_opts=theme_ids,
                                           sort=True,
@@ -293,7 +293,7 @@ def set_activity_type_requires(tablename, sector_ids):
         activity_type_ids = []
     s3db[tablename].activity_type_id.requires = IS_NULL_OR(
                                     IS_ONE_OF(db, "project_activity_type.id",
-                                              s3base.s3_represent_id(attable),
+                                              s3base.S3Represent(lookup="project_activity_type"),
                                               filterby="id",
                                               filter_opts=activity_type_ids,
                                               sort=True,

@@ -302,6 +302,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.org_required = False
 # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
 #settings.hrm.deletable = True
+# Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
+#settings.hrm.filter_certificates = True
 # Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
 #settings.hrm.job_roles = True
 # Uncomment to hide the Staff resource

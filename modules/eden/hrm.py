@@ -916,7 +916,7 @@ class S3HRJobModel(S3Model):
             msg_record_deleted = T("Department deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         department_id = S3ReusableField("department_id", table,
                                 sortby = "name",
                                 label = T("Department / Unit"),
@@ -978,7 +978,7 @@ class S3HRJobModel(S3Model):
             msg_record_deleted = T("Job Role deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         job_role_id = S3ReusableField("job_role_id", table,
                                 sortby = "name",
                                 label = label,
@@ -1072,15 +1072,16 @@ class S3HRJobModel(S3Model):
                 msg_record_deleted = T("Job Title deleted"),
                 msg_list_empty = T("Currently no entries in the catalog"))
 
+        represent = S3Represent(lookup=tablename)
         job_title_id = S3ReusableField("job_title_id", table,
                                 sortby = "name",
                                 label = label,
                                 requires = IS_NULL_OR(
                                             IS_ONE_OF(db, "hrm_job_title.id",
-                                                      s3_represent_id(table),
+                                                      represent,
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
-                                represent = s3_represent_id(table),
+                                represent = represent,
                                 comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
                                                           f="job_title",
                                                           label=label_create,
@@ -1351,6 +1352,12 @@ class S3HRSkillModel(S3Model):
         super_link = self.super_link
 
         root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
 
         group = current.request.get_vars.get("group", None)
 
@@ -1385,6 +1392,7 @@ class S3HRSkillModel(S3Model):
 
         skill_types = settings.get_hrm_skill_types()
         label_create = crud_strings[tablename].label_create_button
+        represent = S3Represent(lookup=tablename)
         skill_type_id = S3ReusableField("skill_type_id", table,
                             sortby = "name",
                             label = T("Skill Type"),
@@ -1393,9 +1401,9 @@ class S3HRSkillModel(S3Model):
                             writable=skill_types,
                             requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "hrm_skill_type.id",
-                                                  self.hrm_skill_type_represent
+                                                  represent
                                                   )),
-                            represent = self.hrm_skill_type_represent,
+                            represent = represent,
                             comment=S3AddResourceLink(f="skill_type",
                                                       label=label_create,
                                                       title=label_create,
@@ -1448,7 +1456,7 @@ class S3HRSkillModel(S3Model):
                                        label=label_create,
                                        tooltip=tooltip)
 
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         skill_id = S3ReusableField("skill_id", table,
                                    sortby = "name",
                                    label = T("Skill"),
@@ -1526,16 +1534,17 @@ class S3HRSkillModel(S3Model):
             msg_record_deleted = T("Competency Rating deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
+        represent = S3Represent(lookup=tablename)
         competency_id = S3ReusableField("competency_id", table,
                                         sortby = "priority",
                                         label = T("Competency"),
                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
                                                               "hrm_competency_rating.id",
-                                                              self.hrm_competency_rating_represent,
+                                                              represent,
                                                               orderby=~table.priority,
                                                               sort=True)),
-                                        represent = self.hrm_competency_rating_represent,
+                                        represent = represent,
                                         comment = self.competency_rating_comment(),
                                         ondelete = "RESTRICT")
 
@@ -1628,13 +1637,14 @@ class S3HRSkillModel(S3Model):
         #    msg_list_empty = T("Currently no entries in the catalog"))
 
         #label_create = crud_strings[tablename].label_create_button
+        #represent = S3Represent(lookup=tablename)
         #skill_group_id = S3ReusableField("skill_provision_id", table,
         #                           sortby = "name",
         #                           label = T("Skill Provision"),
         #                           requires = IS_NULL_OR(IS_ONE_OF(db,
         #                                                           "hrm_skill_provision.id",
-        #                                                           self.hrm_skill_provision_represent)),
-        #                           represent = self.hrm_skill_provision_represent,
+        #                                                           represent)),
+        #                           represent = represent,
         #                           comment = DIV(A(label_create,
         #                                           _class="colorbox",
         #                                           _href=URL(f="skill_provision",
@@ -1769,21 +1779,16 @@ class S3HRSkillModel(S3Model):
                               _title="%s|%s" % (T("Course"),
                               T("Enter some characters to bring up a list of possible matches")))
 
-        if is_admin:
-            filter_opts = ()
-        elif root_org:
-            filter_opts = (root_org, None)
-        else:
-            filter_opts = (None,)
+        represent = S3Represent(lookup=tablename)
         course_id = S3ReusableField("course_id", table,
                                     sortby = "name",
                                     label = T("Course"),
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "hrm_course.id",
-                                                          self.hrm_course_represent,
+                                                          represent,
                                                           filterby="organisation_id",
                                                           filter_opts=filter_opts)),
-                                    represent = self.hrm_course_represent,
+                                    represent = represent,
                                     comment = course_help,
                                     ondelete = "RESTRICT",
                                     # Comment this to use a Dropdown & not an Autocomplete
@@ -2110,15 +2115,23 @@ class S3HRSkillModel(S3Model):
         # NB Some Orgs will only trust the certificates of some Orgs
         # - we currently make no attempt to manage this trust chain
         #
-
+        filter_certs = settings.get_hrm_filter_certificates()
+        if filter_certs:
+            label = messages.ORGANISATION
+        else:
+            label = T("Certifying Organization")
+        
         tablename = "hrm_certificate"
         table = define_table(tablename,
                              Field("name", notnull=True,
                                    length=128,   # Mayon Compatibility
                                    label=T("Name")),
-                             organisation_id(#widget = S3OrganisationAutocompleteWidget(
-                                             #           default_from_profile=True),
-                                             label=T("Certifying Organization")),
+                             organisation_id(default = root_org if filter_certs else None,
+                                             readable = is_admin or not filter_certs,
+                                             writable = is_admin or not filter_certs,
+                                             label = label,
+                                             #widget = S3OrganisationAutocompleteWidget(),
+                                             ),
                              Field("expiry", "integer",
                                    label = T("Expiry (months)")),
                              *s3_meta_fields())
@@ -2141,14 +2154,18 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no entries in the catalog"))
 
         label_create = crud_strings[tablename].label_create_button
+        represent = S3Represent(lookup=tablename)
         certificate_id = S3ReusableField("certificate_id", table,
                                          sortby = "name",
                                          label = T("Certificate"),
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db,
                                                                   "hrm_certificate.id",
-                                                                  self.hrm_certificate_represent)),
-                                         represent = self.hrm_certificate_represent,
+                                                                  represent,
+                                                                  filterby="organisation_id" if filter_certs else None,
+                                                                  filter_opts=filter_opts
+                                                                  )),
+                                         represent = represent,
                                          comment=S3AddResourceLink(f="certificate",
                                                                    label=label_create,
                                                                    title=label_create,
@@ -2411,25 +2428,6 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_certificate_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.hrm_certificate
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def hrm_certification_onaccept(record):
         """
             Ensure that Skills are Populated from Certifications
@@ -2538,25 +2536,6 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_competency_rating_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.hrm_competency_rating
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def hrm_course_duplicate(job):
         """
           This callback will be called when importing records
@@ -2583,25 +2562,6 @@ class S3HRSkillModel(S3Model):
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_course_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.hrm_course
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2660,25 +2620,6 @@ class S3HRSkillModel(S3Model):
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_skill_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.hrm_skill_type
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3013,7 +2954,7 @@ class S3HRProgrammeModel(S3Model):
         else:
             filter_opts = (None,)
 
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         programme_id = S3ReusableField("programme_id", table,
                                 sortby = "name",
                                 label = T("Programme"),
@@ -3221,9 +3162,9 @@ def hrm_human_resource_represent(id, row=None, show_link=False):
     repr = ""
     if hr.organisation_id and \
        current.deployment_settings.get_hrm_show_organisation():
-        repr = ", %s" % s3db.org_organisation_represent(hr.organisation_id)
+        repr = ", %s" % s3db.org_OrganisationRepresent()(hr.organisation_id)
     if hr.job_title_id:
-        repr = ", %s%s" % (s3_represent_id(s3db.hrm_job_title)(hr.job_title_id), repr)
+        repr = ", %s%s" % (S3Represent(lookup="hrm_job_title")(hr.job_title_id), repr)
     person = row["pr_person"]
     repr = "%s%s" % (s3_fullname(person), repr)
     if show_link:
@@ -4112,7 +4053,7 @@ class HRMTrainingParticipantVirtualFields:
                                             distinct=True)
             if orgs:
                 output = ""
-                represent = s3db.org_organisation_represent
+                represent = s3db.org_OrganisationRepresent()
                 for org in orgs:
                     repr = represent(org.organisation_id)
                     if output:

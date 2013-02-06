@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Charting Toolkit
+""" S3 Charting Toolkit
 
-    @copyright: 2011-12 (c) Sahana Software Foundation
+    @copyright: 2011-13 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{NumPy}} <http://www.numpy.org>}

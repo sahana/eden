@@ -1686,9 +1686,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             data = value
 
+        NONE = current.messages["NONE"]
         if data["data"] == []:
             # Don't render a subform for NONE
-            return current.messages["NONE"]
+            return NONE
 
         thead = self._render_headers(data,
                                      readonly=True,
@@ -1704,6 +1705,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
         audit = component.audit
         prefix, name = component.prefix, component.name
 
+        table = component.table
+        for f in fields:
+            represent = table[f["name"]].represent
+            if not represent:
+                represent = lambda v: v or NONE
+            f["represent"] = represent
         for item in items:
             if "_id" in item:
                 record_id = item["_id"]
@@ -1711,7 +1718,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 continue
             audit("read", prefix, name,
                   record=record_id, representation="html")
-            columns = [TD(item[f["name"]]["text"]) for f in fields]
+            columns = [TD(f["represent"](item[f["name"]]["value"])) for f in fields]
             trs.append(TR(columns, _class="read-row"))
 
         return TABLE(thead,
@@ -1986,19 +1993,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         T = current.T
         settings = current.response.s3.crud
 
-        # Render the action icons for this item
-        action = self._action_icon
-        add = action(T("Add this entry"),
-                     "add.png", "add", index, throbber=True)
-        rmv = action(T("Remove this entry"),
-                     "remove.png", "rmv", index)
-        edt = action(T("Edit this entry"),
-                     "edit.png", "edt", index)
-        cnc = action(T("Cancel editing"),
-                     "cancel.png", "cnc", index)
-        rdy = action(T("Update this entry"),
-                     "apply.png", "rdy", index, throbber=True)
-
         columns = []
         rowtype = readonly and "read" or "edit"
         pkey = table._id.name
@@ -2070,21 +2064,33 @@ class S3SQLInlineComponent(S3SQLSubForm):
             if not tr.attributes["_id"] == "submit_record__row":
                 columns.append(tr[0])
 
+        # Render the action icons for this item
+        action = self._action_icon
         if readonly:
             if editable:
+                edt = action(T("Edit this entry"),
+                             "edit.png", "edt", index)
                 columns.append(edt)
             else:
                 columns.append(TD())
             if deletable:
+                rmv = action(T("Remove this entry"),
+                             "remove.png", "rmv", index)
                 columns.append(rmv)
             else:
                 columns.append(TD())
         else:
             if index != "none" or item:
+                rdy = action(T("Update this entry"),
+                             "apply.png", "rdy", index, throbber=True)
                 columns.append(rdy)
+                cnc = action(T("Cancel editing"),
+                             "cancel.png", "cnc", index)
                 columns.append(cnc)
             else:
                 columns.append(TD())
+                add = action(T("Add this entry"),
+                             "add.png", "add", index, throbber=True)
                 columns.append(add)
 
         return TR(columns, **attributes)

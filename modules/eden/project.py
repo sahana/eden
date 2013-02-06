@@ -152,9 +152,9 @@ class S3ProjectModel(S3Model):
         # Reusable Field
         def project_status_represent(id, row=None):
             if id or row:
-                return s3_represent_id(self.project_status)(id, row)
+                return S3Represent(lookup=tablename)(id, row)
             else:
-                # Why?
+                # Why? Seems more confusing than NONE
                 return T("No Status")
 
         status_id = S3ReusableField("status_id", table,
@@ -3182,7 +3182,7 @@ class S3ProjectDRRPPModel(S3Model):
                            label = T("Cook Islands"),
                            requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "gis_location.id",
-                                                  s3_represent_id(ltable),
+                                                  S3Represent(lookup="gis_location"),
                                                   filterby = "L0",
                                                   filter_opts = ["Cook Islands"],
                                                   not_filterby = "name",

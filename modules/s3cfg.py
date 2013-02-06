@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 """ Deployment Settings
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -881,6 +880,12 @@ class S3Config(Storage):
         """
         return current.T(self.hrm.get("staff_label", "Staff"))
 
+    def get_hrm_organisation_label(self):
+        """
+            Label for Organisations in Human Resources
+        """
+        return current.T(self.hrm.get("organisation_label", "Organization"))
+
     def get_hrm_email_required(self):
         """
             If set to True then Staff & Volunteers require an email address
@@ -898,6 +903,13 @@ class S3Config(Storage):
             If set to True then HRM records are deletable rather than just being able to be marked as obsolete
         """
         return self.hrm.get("deletable", True)
+
+    def get_hrm_filter_certificates(self):
+        """
+            If set to True then Certificates are filtered by (Root) Organisation
+            & hence certificates from other Organisations cannot be added to an HR's profile (except by Admins)
+        """
+        return self.hrm.get("filter_certificates", False)
 
     def get_hrm_job_roles(self):
         """
@@ -961,7 +973,7 @@ class S3Config(Storage):
 
     def get_hrm_use_description(self):
         """
-            Whether Human Resources should use Description
+            Whether Human Resources should use Physical Description
         """
         return self.hrm.get("use_description", True)
 
@@ -973,7 +985,7 @@ class S3Config(Storage):
 
     def get_hrm_use_id(self):
         """
-            Whether Human Resources should use ID
+            Whether Human Resources should use Staff ID
         """
         return self.hrm.get("use_id", True)
 
@@ -988,12 +1000,6 @@ class S3Config(Storage):
             Whether Human Resources should use Trainings
         """
         return self.hrm.get("use_trainings", True)
-
-    def get_hrm_organisation_label(self):
-        """
-            Label for Organisations in Human Resources
-        """
-        return current.T(self.hrm.get("organisation_label", "Organization"))
 
     # -------------------------------------------------------------------------
     # Inventory Management Settings

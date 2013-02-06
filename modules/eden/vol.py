@@ -99,13 +99,14 @@ class S3VolClusterDataModel(S3Model):
                                     title = T("Volunteer Cluster Type"),
                                     )
 
+        represent = S3Represent(lookup=tablename)
         vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", table,
                                               label = T("Volunteer Cluster Type"),
                                               requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_type.id",
-                                                                      s3_represent_id(table))),
-                                              represent = s3_represent_id(table), 
+                                                                      represent)),
+                                              represent = represent, 
                                               comment = comment
                                               )
 
@@ -142,13 +143,14 @@ class S3VolClusterDataModel(S3Model):
                                     title = T("Volunteer Cluster"),
                                     )
 
+        represent = S3Represent(lookup=tablename)
         vol_cluster_id = S3ReusableField("vol_cluster_id", table,
                                          label = T("Volunteer Cluster"),
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db,
                                                                   "vol_cluster.id",
-                                                                  s3_represent_id(table))),
-                                         represent = s3_represent_id(table),
+                                                                  represent)),
+                                         represent = represent,
                                          comment = comment
                                          )
 
@@ -185,13 +187,14 @@ class S3VolClusterDataModel(S3Model):
                                     title = T("Volunteer Cluster Position"),
                                     )
 
+        represent = S3Represent(lookup=tablename)
         vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", table,
                                                 label = T("Volunteer Cluster Postion"),
                                                 requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_position.id",
-                                                                      s3_represent_id(table))),
-                                                represent = s3_represent_id(table),
+                                                                      represent)),
+                                                represent = represent,
                                                 comment = comment
                                                 )
 

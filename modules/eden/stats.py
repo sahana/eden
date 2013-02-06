@@ -942,13 +942,12 @@ class S3StatsGroupModel(S3Model):
                                )
 
         tablename = "stats_source"
-
         table = self.super_entity(tablename, "source_id", source_types,
                                   Field("name",
                                         label=T("Name")),
                                   )
         # Reusable Field
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         source_id = S3ReusableField("source_id", table,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db,
@@ -1013,15 +1012,15 @@ class S3StatsGroupModel(S3Model):
                              *s3_meta_fields()
                              )
         # Reusable Field
-        represent = s3_represent_id(table)
+        represent = S3Represent(lookup=tablename)
         group_type_id = S3ReusableField("group_type_id", table,
-                            requires = IS_NULL_OR(
-                                        IS_ONE_OF(db,
-                                                  "stats_group_type.id",
-                                                  represent)),
-                            represent = represent,
-                            label = T("Source Type"),
-                            ondelete = "CASCADE")
+                                        requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "stats_group_type.id",
+                                                              represent)),
+                                        represent = represent,
+                                        label = T("Source Type"),
+                                        ondelete = "CASCADE")
         # Resource Configuration
         configure("stats_group_type",
                   deduplicate=self.stats_group_type_duplicate,
