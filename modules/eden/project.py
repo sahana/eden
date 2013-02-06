@@ -3199,14 +3199,14 @@ class S3ProjectDRRPPModel(S3Model):
                            ),
                      # @ToDo: Use the project_project.human_resource_id with a better widget.
                      # @ToDo: Becase RMS uses the human_resource_id field, the focal person from RMS won't be visible in DRRPP
-                     Field("focal_person", "string",
+                     Field("focal_person",
                            label = T("Focal Person")),
-                     self.org_organisation_id(label = (T("Organization"))),
-                     Field("email", "string",
+                     self.org_organisation_id(label = T("Organization")),
+                     Field("email",
+                           requires=IS_NULL_OR(IS_EMAIL()),
                            label = T("Email")),
                      Field("duration", "integer",
                            label = T("Duration (months)")),
-                     
                      *s3_meta_fields())
 
         # CRUD Strings

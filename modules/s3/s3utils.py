@@ -1973,7 +1973,13 @@ class S3DateTime(object):
                 date = date + datetime.timedelta(seconds=offset)
 
         if date:
-            return date.strftime(str(format))
+            try:
+                return date.strftime(str(format))
+            except:
+                # e.g. dates < 1900
+                date = date.isoformat()
+                s3_debug("Date cannot be formatted - using isoformat", date)
+                return date
         else:
             return current.messages["NONE"]
 

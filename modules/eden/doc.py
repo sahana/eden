@@ -111,7 +111,7 @@ class S3DocumentLibrary(S3Model):
                              Field("url", label=T("URL"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = lambda url: \
-                                               url and A(url,_href=url) or NONE),
+                                               url and A(url, _href=url) or NONE),
                              person_id(label=T("Author"),
                                        comment=person_comment(T("Author"),
                                                               T("The Author of this Document (optional)"))),

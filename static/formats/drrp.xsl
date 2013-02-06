@@ -154,6 +154,15 @@
                 <data field="rfa">
                     [<xsl:value-of select="translate(substring($RFA, 2, string-length($RFA) - 2), '|', ',')"/>]
                 </data>
+                <xsl:if test="$ContactOrganisation!='' and $ContactName!=''">
+                    <data field="focal_point"><xsl:value-of select="$ContactName"/></data>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$ContactOrganisation"/>
+                        </xsl:attribute>
+                    </reference>
+                    <data field="email"><xsl:value-of select="$ContactEmail"/></data>
+                </xsl:if>
             </resource>
 
             <xsl:if test="$ContactOrganisation!='' and $ContactName!=''">
@@ -239,7 +248,7 @@
                     <!-- Project Locations -->
                     <xsl:call-template name="splitList">
                         <xsl:with-param name="arg">project_location</xsl:with-param>
-                        <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
+                        <xsl:with-param name="listsep">;</xsl:with-param>
                         <xsl:with-param name="list">
                             <xsl:value-of select="$Countries"/>
                         </xsl:with-param>
@@ -277,25 +286,26 @@
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$ContactOrganisation"/>
                 </xsl:attribute>
-
                 <data field="name">
-                    <xsl:value-of select="reference[@field='contact_organisation_id']"/>
+                    <xsl:value-of select="$ContactOrganisation"/>
                 </data>
-
-                <xsl:if test="$ContactName!=''">
-                    <resource name="hrm_human_resource">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('HR:',$ContactOrganisation,$ContactName)"/>
-                        </xsl:attribute>
-                        <reference field="person_id" resource="pr_person">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('PR:',$ContactOrganisation,$ContactName)"/>
-                            </xsl:attribute>
-                        </reference>
-                    </resource>
-                </xsl:if>
             </resource>
             <xsl:if test="$ContactName!=''">
+                <resource name="hrm_human_resource">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('HR:',$ContactOrganisation,$ContactName)"/>
+                    </xsl:attribute>
+                    <reference field="person_id" resource="pr_person">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('PR:',$ContactOrganisation,$ContactName)"/>
+                        </xsl:attribute>
+                    </reference>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$ContactOrganisation"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
                 <resource name="pr_person">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('PR:',$ContactOrganisation,$ContactName)"/>
@@ -530,9 +540,19 @@
                     </xsl:otherwise>
                 </xsl:choose>
                 <reference field="location_id" resource="gis_location">
-                    <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Location:',$OrgName)"/>
+                    </xsl:attribute>
                 </reference>
             </resource>
+        </resource>
+
+        <resource name="gis_location">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Location:',$OrgName)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
+            <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
         </resource>
 
     </xsl:template>
@@ -600,9 +620,19 @@
                     </xsl:otherwise>
                 </xsl:choose>
                 <reference field="location_id" resource="gis_location">
-                    <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Location:',$OrgName)"/>
+                    </xsl:attribute>
                 </reference>
             </resource>
+        </resource>
+
+        <resource name="gis_location">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Location:',$OrgName)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
+            <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
         </resource>
 
     </xsl:template>
@@ -612,7 +642,7 @@
 
         <resource name="project_output">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('OUTPUT',data[@field='name'])"/>
+                <xsl:value-of select="concat('OUTPUT',data[@field='output'])"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="data[@field='output']"/></data>
             <xsl:choose>
