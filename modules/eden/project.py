@@ -1897,7 +1897,8 @@ class S3ProjectFrameworkModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        ORGANISATION = current.messages.ORGANISATION
+        messages = current.messages
+        ORGANISATION = messages.ORGANISATION
         ORGANISATIONS = T("Organization(s)")
 
         # ---------------------------------------------------------------------
@@ -1914,6 +1915,7 @@ class S3ProjectFrameworkModel(S3Model):
                                          comment=None,
                                          ),
                              Field("time_frame",
+                                   represent = lambda v: v or messages.NONE,
                                    label = T("Time Frame"),
                                    ),
                              *s3_meta_fields())
@@ -1952,10 +1954,10 @@ class S3ProjectFrameworkModel(S3Model):
                 "document",
                 label = T("Files"),
                 fields = ["file"],
-                filterby = dict(field = "url",
-                                options = None,
-                                invert = True,
-                                )
+                #filterby = dict(field = "url",
+                #                options = None,
+                #                invert = True,
+                #                )
             ),
         )
 
@@ -1970,15 +1972,16 @@ class S3ProjectFrameworkModel(S3Model):
                                       ]
                        )
 
+        represent = S3Represent(lookup=tablename)
         framework_id = S3ReusableField("framework_id", table,
-                        label = ORGANISATION,
-                        requires = IS_NULL_OR(
-                                    IS_ONE_OF(db, "project_framework.id",
-                                              self.project_framework_represent
-                                              )),
-                        represent = self.project_framework_represent,
-                        ondelete = "CASCADE",
-                        )
+                                       label = ORGANISATION,
+                                       requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "project_framework.id",
+                                                              represent
+                                                              )),
+                                       represent = represent,
+                                       ondelete = "CASCADE",
+                                       )
 
         self.add_component("project_framework_organisation",
                            project_framework="framework_id")
@@ -2013,25 +2016,6 @@ class S3ProjectFrameworkModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(
         )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_framework_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        if not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.project_framework
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 class S3ProjectHazardModel(S3Model):
@@ -3231,8 +3215,10 @@ class S3ProjectDRRPPModel(S3Model):
                                            )
                         ),
                      Field("output",
+                           represent = lambda v: v or NONE,
                            label = T("Output")),
-                     Field("status", "string",
+                     Field("status",
+                           represent = lambda v: v or NONE,
                            label = T("Status")),
                      *s3_meta_fields())
 
