@@ -402,6 +402,17 @@ def req_controller():
                     # Dropdown not Autocomplete
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
+                    req_id = r.id
+                    s3db.req_commit_item.req_item_id.requires = \
+                                    IS_ONE_OF(db,
+                                              "req_req_item.id",
+                                              s3db.req_item_represent,
+                                              orderby = "req_req_item.id",
+                                              filterby = "req_id",
+                                              filter_opts = [req_id],
+                                              sort=True
+                                              )
+                    
                     s3.jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'req_item_id',
