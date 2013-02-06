@@ -3111,6 +3111,8 @@ class S3ProjectDRRPPModel(S3Model):
         ltable = self.gis_location
         project_id = self.project_project_id
 
+        NONE = current.messages["NONE"]
+
         project_rfa_opts = self.project_rfa_opts()
         project_pifacc_opts = self.project_pifacc_opts()
         project_jnap_opts = self.project_jnap_opts()
