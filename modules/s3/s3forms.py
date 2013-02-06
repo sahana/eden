@@ -1443,10 +1443,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         if fname in row:
                             value = row[fname]
                             try:
-                                text = represent(field,
-                                                 value = value,
-                                                 strip_markup = True,
-                                                 xml_escape = True)
+                                text = represent(field, value = value)
                             except:
                                 text = s3_unicode(value)
                         else:
@@ -1705,12 +1702,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         audit = component.audit
         prefix, name = component.prefix, component.name
 
-        table = component.table
-        for f in fields:
-            represent = table[f["name"]].represent
-            if not represent:
-                represent = lambda v: v or NONE
-            f["represent"] = represent
+        xml_decode = current.xml.xml_decode
         for item in items:
             if "_id" in item:
                 record_id = item["_id"]
@@ -1718,8 +1710,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 continue
             audit("read", prefix, name,
                   record=record_id, representation="html")
-            columns = [TD(f["represent"](item[f["name"]]["value"])) for f in fields]
-            trs.append(TR(columns, _class="read-row"))
+            trow = TR(_class="read-row")
+            for f in fields:
+                text = xml_decode(item[f["name"]]["text"])
+                trow.append(XML(xml_decode(text)))
+            trs.append(trow)
 
         return TABLE(thead,
                      TBODY(trs),
