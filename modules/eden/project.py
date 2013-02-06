@@ -3879,12 +3879,11 @@ class S3ProjectTaskModel(S3Model):
                        ]
 
         # Virtual Fields
-        #table.virtualfields.append(S3ProjectTimeVirtualFields())
+        table.day = Field.Lazy(project_time_day)
+        table.week = Field.Lazy(project_time_week)
 
-        report_fields = list_fields
-        #                           + [(T("Day"), "day"),
-        #                              (T("Week"), "week")
-        #                              ]
+        report_fields = list_fields + \
+                        [(T("Day"), "day"), (T("Week"), "week")]
 
         task_time_search = [S3SearchOptionsWidget(name="person_id",
                                                   label = T("Person"),
@@ -3926,6 +3925,7 @@ class S3ProjectTaskModel(S3Model):
         configure(tablename,
                   onaccept=self.time_onaccept,
                   search_method=S3Search(advanced=task_time_search),
+                  report_fields=["date"],
                   report_options=Storage(
                         rows = report_fields,
                         cols = report_fields,
@@ -4822,52 +4822,61 @@ class S3ProjectTaskVirtualFields:
             return None
 
 # =============================================================================
-class S3ProjectTimeVirtualFields:
+# project_time virtual fields
+#
+def project_time_day(row):
     """
-        Virtual fields for the project_time table
-        - deprecated
+        Virtual field for project_time - abbreviated string format for
+        date, allows grouping per day instead of the individual datetime,
+        used for project time report.
+
+        Requires "date" to be in the additional report_fields
+
+        @param row: the Row
     """
 
-    extra_fields = ["date"]
+    default = "-"
 
-    # -------------------------------------------------------------------------
-    def day(self):
-        """
-            Day of the last Week this time entry relates to
-            - used by the 'Last Week's Work' report
-        """
+    try:
+        thisdate = row["project_time.date"]
+    except AttributeError:
+        return default
+    if not thisdate:
+        return default
 
-        default = "-"
+    now = current.request.utcnow
+    week = datetime.timedelta(days=7)
+    if thisdate < (now - week):
+        # Ignore data older than the last week
+        # - should already be filtered in controller anyway
+        return default
 
-        try:
-            thisdate = self.project_time.date
-        except AttributeError:
-            return default
-        if not thisdate:
-            return default
+    return thisdate.date().strftime("%d %B")
 
-        now = current.request.utcnow
-        week = datetime.timedelta(days=7)
-        if thisdate < (now - week):
-            # Ignore data older than the last week
-            # - should already be filtered in controller anyway
-            return default
+# =============================================================================
+def project_time_week(row):
+    """
+        Virtual field for project_time - returns the date of the Monday
+        (=first day of the week) of this entry, used for project time report.
 
-        return thisdate.date().strftime("%d %B")
+        Requires "date" to be in the additional report_fields
 
-    # -------------------------------------------------------------------------
-    def week(self):
-        """
-            Returns the date of the Monday previous to this time entry
-        """
+        @param row: the Row
+    """
 
-        # Convert the datetime to a date
-        day = self.project_time.date.date()
+    default = "-"
 
-        # Count back to monday
-        monday = day - datetime.timedelta(days=day.weekday())
+    try:
+        thisdate = row["project_time.date"]
+    except AttributeError:
+        return default
+    if not thisdate:
+        return default
 
-        return monday
+    day = thisdate.date()
+    monday = day - datetime.timedelta(days=day.weekday())
+
+    return monday
 
 # =============================================================================
 def project_ckeditor():
