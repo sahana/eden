@@ -6432,9 +6432,9 @@ class S3Pivottable(object):
             rdim = irows[rindex]["value"] if rindex != OTHER else None
             if represent:
                 repr_str = row_repr(rdim) if rindex != OTHER else others
-                orows.append((rindex, rdim, repr_str, rtotal))
+                orows.append((rindex, s3_unicode(rdim), repr_str, rtotal))
             else:
-                orows.append((rindex, rdim, rtotal))
+                orows.append((rindex, s3_unicode(rdim), rtotal))
             for cindex, ctotal in cols:
                 value = cells[rindex][cindex]
                 if type(value) is list:
@@ -6444,9 +6444,9 @@ class S3Pivottable(object):
                     cdim = icols[cindex]["value"] if cindex != OTHER else None
                     if represent:
                         repr_str = col_repr(cdim) if cindex != OTHER else others
-                        ocols.append((cindex, cdim, repr_str, ctotal))
+                        ocols.append((cindex, s3_unicode(cdim), repr_str, ctotal))
                     else:
-                        ocols.append((cindex, cdim, ctotal))
+                        ocols.append((cindex, s3_unicode(cdim), ctotal))
             ctotals = False
             ocells.append(orow)
 

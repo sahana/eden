@@ -1737,10 +1737,7 @@ class S3CRUD(S3Method):
                     validated["_error"] = s3_unicode(error)
                 else:
                     try:
-                        text = represent(field,
-                                         value = value,
-                                         strip_markup = True,
-                                         xml_escape = True)
+                        text = represent(field, value = value)
                     except:
                         text = s3_unicode(value)
                     validated["text"] = text
