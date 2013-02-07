@@ -597,6 +597,8 @@ class IS_ONE_OF_EMPTY(Validator):
                 if "deleted" in table:
                     query = ((table["deleted"] == False) & query)
 
+                all_fields = [str(f) for f in fields]
+
                 filterby = self.filterby
                 if filterby and filterby in table:
                     filter_opts = self.filter_opts
@@ -611,7 +613,11 @@ class IS_ONE_OF_EMPTY(Validator):
                         else:
                             query &= (table[filterby].belongs(filter_opts))
                     if not self.orderby:
-                        dd.update(orderby=table[filterby])
+                        filterby_field = table[filterby]
+                        dd.update(orderby=filterby_field)
+                        if str(filterby_field) not in all_fields:
+                            fields.append(filterby_field)
+                            all_fields.append(str(filterby_field))
 
                 not_filterby = self.not_filterby
                 if not_filterby and not_filterby in table:
@@ -619,7 +625,11 @@ class IS_ONE_OF_EMPTY(Validator):
                     if not_filter_opts:
                         query &= (~(table[not_filterby].belongs(not_filter_opts)))
                     if not self.orderby:
-                        dd.update(orderby=table[filterby])
+                        filterby_field = table[filterby]
+                        dd.update(orderby=filterby_field)
+                        if str(filterby_field) not in all_fields:
+                            fields.append(filterby_field)
+                            all_fields.append(str(filterby_field))
 
                 if left is not None:
                     if self.left is not None:

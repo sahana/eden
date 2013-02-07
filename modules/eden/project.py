@@ -3961,14 +3961,11 @@ class S3ProjectTaskModel(S3Model):
         ptable = db.project_project
         ttable = db.project_task
         ltable = db.project_task_project
-        query = (ttable.deleted == False) & \
+        query = (ttable.deleted != True) & \
                 (ltable.task_id == ttable.id) & \
                 (ltable.project_id == ptable.id)
-        opts = db(query).select(ptable.name)
-        _dict = {}
-        for opt in opts:
-            _dict[opt.name] = opt.name
-        return _dict
+        rows = db(query).select(ptable.id, ptable.name)
+        return dict([(row.id, row.name) for row in rows])
 
     # -------------------------------------------------------------------------
     @staticmethod
