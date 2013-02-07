@@ -282,14 +282,12 @@
 
         <xsl:call-template name="splitList">
             <xsl:with-param name="list"><xsl:value-of select="data[@field='impl_org']"/></xsl:with-param>
-            <xsl:with-param name="listsep">;</xsl:with-param>
             <xsl:with-param name="arg">org</xsl:with-param>
         </xsl:call-template>
 
         <!-- Do this in the drrpp_funding instead
         <xsl:call-template name="splitList">
             <xsl:with-param name="list"><xsl:value-of select="data[@field='donor']"/></xsl:with-param>
-            <xsl:with-param name="listsep">;</xsl:with-param>
             <xsl:with-param name="arg">org</xsl:with-param>
         </xsl:call-template> -->
 
@@ -828,7 +826,7 @@
                 </xsl:attribute>
             </reference>
             <data field="pe_id">
-                <xsl:value-of select="concat('org_organisation.name='),reference[@field='organisation_id']"/>
+                <xsl:value-of select="concat('org_organisation.name=',reference[@field='organisation_id'])"/>
             </data>
         </resource>
 
@@ -935,7 +933,7 @@
                 </resource>
             </xsl:when>
 
-            <!-- Donors -->
+            <!-- Donors
             <xsl:when test="$arg='donor'">
                 <resource name="project_organisation">
                     <data field="role">3</data>
@@ -945,17 +943,18 @@
                         </xsl:attribute>
                     </reference>
                 </resource>
-            </xsl:when>
+            </xsl:when> -->
 
             <xsl:when test="$arg='org'">
                 <resource name="org_organisation">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$item"/>
                     </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
 
-            <!-- Outputs -->
+            <!-- Outputs
             <xsl:when test="$arg='output_ref'">
                 <resource name="project_output">
                     <xsl:attribute name="tuid">
@@ -976,7 +975,7 @@
                         </xsl:attribute>
                     </reference>
                 </resource>
-            </xsl:when>
+            </xsl:when> -->
 
             <!-- Files -->
             <xsl:when test="$arg='file'">

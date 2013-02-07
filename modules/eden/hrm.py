@@ -4461,13 +4461,12 @@ def hrm_training_controller():
     """
 
     if current.session.s3.hrm.mode is not None:
-        current.session.error = T("Access denied")
+        current.session.error = current.T("Access denied")
         redirect(URL(f="index"))
 
     def prep(r):
         if r.interactive or \
-           r.extension == "aaData":
-            s3db = current.s3db
+           r.extension.lower() == "aadata":
             # Suitable list_fields
             T = current.T
             list_fields = ["course_id",
@@ -4476,6 +4475,7 @@ def hrm_training_controller():
                            (current.messages.ORGANISATION, "organisation"),
                            "date",
                            ]
+            s3db = current.s3db
             s3db.configure("hrm_training",
                            insertable=False,
                            list_fields=list_fields)
