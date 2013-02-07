@@ -1361,16 +1361,10 @@ S3OptionsFilter({
     # -------------------------------------------------------------------------
     def s3_membership_import_prep(self, data, group=None):
         """
-            S3 framework function
-
-            Designed to be called when a user is imported.
-            Because the auth.membership.pe_id fields is an
-            integer not reference this function is used to lookup
-            the pe_id
-
-            Does the following:
-                - Looks up auth.membership.pe_id
-
+            Called when a user is imported.
+            Because the auth.membership.pe_id fields is an integer not
+            reference, this function is used to lookup the pe_id from
+            e.g.:
             organisation.name=<Org Name>
         """
 
@@ -1391,15 +1385,17 @@ S3OptionsFilter({
                 pe_tablename, pe_field =  pe_type.split(".")
 
                 table = s3db[pe_tablename]
-                query = (table[pe_field] == pe_value)
-                record = db(query).select(table.pe_id).first()
+                record = db(table[pe_field] == pe_value).select(table.pe_id,
+                                                                limitby=(0, 1)
+                                                                ).first()
                 if record:
                     element.text = str(record.pe_id)
                 else:
                     # Add a new record
                     id = table.insert(**{pe_field: pe_value})
-                    s3db.update_super(table, table[id])
-                    element.text = str(table[id].pe_id)
+                    record = db(table._id == id).select(limitby=(0, 1)).first()
+                    s3db.update_super(table, record)
+                    element.text = str(record.pe_id)
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):

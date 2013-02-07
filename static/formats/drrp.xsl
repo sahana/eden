@@ -533,7 +533,7 @@
 
         <resource name="project_organisation">
             <data field="role">3</data>
-            <data field="amount"><xsl:value-of select="data[@field='amount']"/></data>
+            <data field="amount"><xsl:value-of select="data[@field='amount']/@value"/></data>
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="reference[@field='organisation_id']"/>
@@ -827,15 +827,9 @@
                     <xsl:value-of select="concat('http://drrprojects.net/drrp/auth/user/',reference[@field='user_id']/@value)"/>
                 </xsl:attribute>
             </reference>
-            <!-- Need to add this manually afterwards
             <data field="pe_id">
-                <xsl:attribute name="tuid">-->
-                    <!--<xsl:value-of select="@uuid"/>-->
-                    <!-- Need this format for Dummy fields --><!--
-                    <xsl:value-of select="reference[@field='organisation_id']"/>
-                </xsl:attribute>
+                <xsl:value-of select="concat('org_organisation.name='),reference[@field='organisation_id']"/>
             </data>
-            -->
         </resource>
 
     </xsl:template>
