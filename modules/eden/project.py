@@ -1954,10 +1954,10 @@ class S3ProjectFrameworkModel(S3Model):
                 "document",
                 label = T("Files"),
                 fields = ["file"],
-                #filterby = dict(field = "url",
-                #                options = None,
-                #                invert = True,
-                #                )
+                filterby = dict(field = "url",
+                                options = None,
+                                #invert = True,
+                               )
             ),
         )
 
