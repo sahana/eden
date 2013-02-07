@@ -281,7 +281,7 @@
         </xsl:call-template> -->
 
         <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="data[@field='impl_org']"/></xsl:with-param>
+            <xsl:with-param name="list"><xsl:value-of select="data[@field='impl_org_dummy']"/></xsl:with-param>
             <xsl:with-param name="arg">org</xsl:with-param>
         </xsl:call-template>
 

@@ -3079,6 +3079,7 @@ class S3ProjectDRRModel(S3Model):
 class S3ProjectDRRPPModel(S3Model):
     """
         Models for DRR Project Portal extensions
+        - injected into custom Project CRUD forms
     """
 
     names = ["project_drrpp",
@@ -3214,7 +3215,7 @@ class S3ProjectDRRPPModel(S3Model):
                                                                       show_link=False)
                                            )
                         ),
-                     Field("output",
+                     Field("name",
                            represent = lambda v: v or NONE,
                            label = T("Output")),
                      Field("status",
