@@ -35,7 +35,7 @@ from unittest.case import SkipTest, _ExpectedFailure, _UnexpectedSuccess
 
 from dateutil.relativedelta import relativedelta
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.support.ui import Select #, WebDriverWait
+from selenium.webdriver.support.ui import Select
 
 from gluon import current
 
@@ -497,15 +497,6 @@ class SeleniumUnitTest(Web2UnitTest):
                 return False
             else:
                 return True
-            #select_elem.click()
-            #found = False
-            #for option in select_elem.find_elements_by_tag_name("option"):
-                #if option.text == option_label:
-                    #option.click()
-                    #found = True
-                    #return True
-            #if not found:
-                #return False
 
     # -------------------------------------------------------------------------
     class InvalidReportOrGroupException(Exception):
