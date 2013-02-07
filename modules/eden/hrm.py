@@ -1948,7 +1948,7 @@ class S3HRSkillModel(S3Model):
                              Field("training_event_id", db.hrm_training_event,
                                    readable = False,
                                    writable = False),
-                             course_id(),
+                             course_id(empty=False),
                              Field("date", "datetime",
                                    label=T("Date"),
                                    widget = S3DateWidget(),
