@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This script is designed to be run as a Web2Py application:
 # python web2py.py -S eden -M -R applications/eden/modules/tests/suite.py
 # or

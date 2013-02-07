@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """ Sahana Eden Test Framework
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
@@ -33,6 +35,7 @@ from unittest.case import SkipTest, _ExpectedFailure, _UnexpectedSuccess
 
 from dateutil.relativedelta import relativedelta
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import Select #, WebDriverWait
 
 from gluon import current
 
@@ -253,7 +256,6 @@ class SeleniumUnitTest(Web2UnitTest):
                     qfilter = (resource.table[filter[0]] == filter[1])
                     resource.add_filter(qfilter)
 
-            resource.add_filter(query)
             row_count = resource.count()
 
 
@@ -488,15 +490,22 @@ class SeleniumUnitTest(Web2UnitTest):
     # -------------------------------------------------------------------------
     def select_option(self, select_elem, option_label):
         if select_elem:
-            select_elem.click()
-            found = False
-            for option in select_elem.find_elements_by_tag_name("option"):
-                if option.text == option_label:
-                    option.click()
-                    found = True
-                    return True
-            if not found:
+            select = Select(select_elem)
+            try:
+                select.select_by_visible_text(option_label)
+            except NoSuchElementException:
                 return False
+            else:
+                return True
+            #select_elem.click()
+            #found = False
+            #for option in select_elem.find_elements_by_tag_name("option"):
+                #if option.text == option_label:
+                    #option.click()
+                    #found = True
+                    #return True
+            #if not found:
+                #return False
 
     # -------------------------------------------------------------------------
     class InvalidReportOrGroupException(Exception):
@@ -535,9 +544,10 @@ class SeleniumUnitTest(Web2UnitTest):
             if not self.select_option(fact_select, report_fact):
                 raise self.InvalidReportOrGroupException()
 
-        browser.find_element_by_xpath("//input[@type='submit']").click()
+        submit_btn = browser.find_element_by_xpath("//input[@type='submit']")
+        submit_btn.click()
 
-        time.sleep(3)
+        time.sleep(1)
 
         # Now, check the generated report:
         for check in args:

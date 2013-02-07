@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __all__ = ["dt_filter",
            "dt_row_cnt",
            "dt_data",

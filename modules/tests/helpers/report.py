@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
     Tests for the report helper function in web2unittest.
 """

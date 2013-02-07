@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __all__ = ["homepage"]
 
 from gluon import current
