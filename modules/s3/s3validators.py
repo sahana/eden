@@ -625,7 +625,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     if not_filter_opts:
                         query &= (~(table[not_filterby].belongs(not_filter_opts)))
                     if not self.orderby:
-                        filterby_field = table[filterby]
+                        filterby_field = table[not_filterby]
                         dd.update(orderby=filterby_field)
                         if str(filterby_field) not in all_fields:
                             fields.append(filterby_field)
