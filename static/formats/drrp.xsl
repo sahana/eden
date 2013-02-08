@@ -160,7 +160,7 @@
                 <data field="rfa">
                     [<xsl:value-of select="translate(substring($RFA, 2, string-length($RFA) - 2), '|', ',')"/>]
                 </data>
-                <xsl:if test="$ContactOrganisation!='' and $ContactName!=''">
+                <xsl:if test="$ContactOrganisation!=''">
                     <data field="focal_person"><xsl:value-of select="$ContactName"/></data>
                     <reference field="organisation_id" resource="org_organisation">
                         <xsl:attribute name="tuid">

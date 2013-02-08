@@ -1102,11 +1102,11 @@ class S3HRJobModel(S3Model):
 
         #tablename = "hrm_position"
         #table = define_table(tablename,
-        #                          job_role_id(empty=False),
-        #                          organisation_id(empty=False),
-        #                          site_id,
-        #                          group_id(label="Team"),
-        #                          *s3_meta_fields())
+        #                     job_role_id(empty=False),
+        #                     organisation_id(empty=False),
+        #                     site_id,
+        #                     group_id(label="Team"),
+        #                     *s3_meta_fields())
         #table.site_id.readable = table.site_id.writable = True
 
         #crud_strings[tablename] = Storage(
@@ -1606,20 +1606,20 @@ class S3HRSkillModel(S3Model):
         #
         #tablename = "hrm_skill_provision"
         #table = define_table(tablename,
-        #                          Field("name", notnull=True, unique=True,
-        #                                length=32,    # Mayon compatibility
-        #                                label=T("Name")),
-        #                          self.hrm_job_role_id(),
-        #                          skill_id(),
-        #                          competency_id(),
-        #                          Field("priority", "integer",
-        #                                requires = IS_INT_IN_RANGE(1, 9),
-        #                                widget = S3SliderWidget(minval=1, maxval=9, steprange=1, value=1),
-        #                                comment = DIV(_class="tooltip",
-        #                                              _title="%s|%s" % (T("Priority"),
-        #                                                                T("Priority from 1 to 9. 1 is most preferred.")))),
-        #                          s3_comments(),
-        #                          *s3_meta_fields())
+        #                     Field("name", notnull=True, unique=True,
+        #                           length=32,    # Mayon compatibility
+        #                           label=T("Name")),
+        #                     self.hrm_job_role_id(),
+        #                     skill_id(),
+        #                     competency_id(),
+        #                     Field("priority", "integer",
+        #                           requires = IS_INT_IN_RANGE(1, 9),
+        #                           widget = S3SliderWidget(minval=1, maxval=9, steprange=1, value=1),
+        #                           comment = DIV(_class="tooltip",
+        #                                         _title="%s|%s" % (T("Priority"),
+        #                                                           T("Priority from 1 to 9. 1 is most preferred.")))),
+        #                     s3_comments(),
+        #                     *s3_meta_fields())
 
         #crud_strings[tablename] = Storage(
         #    title_create = T("Add Skill Provision"),
@@ -1943,7 +1943,7 @@ class S3HRSkillModel(S3Model):
                              #@ToDo: Create a way to add new people to training as staff/volunteers
                              person_id(empty=False,
                                        comment = participant_id_comment,
-                                ),
+                                       ),
                              # Just used when created from participation in an Event
                              Field("training_event_id", db.hrm_training_event,
                                    readable = False,
@@ -1992,6 +1992,7 @@ class S3HRSkillModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no Trainings registered"))
 
+        # @ToDo: Deprecate VFs
         table.virtualfields.append(HRMTrainingParticipantVirtualFields())
 
         training_search = S3Search(
@@ -2907,6 +2908,7 @@ class S3HRProgrammeModel(S3Model):
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -2970,9 +2972,13 @@ class S3HRProgrammeModel(S3Model):
                                                           tooltip=T("Add a new programme to the catalog.")),
                                 ondelete = "SET NULL")
 
-        self.add_component("hrm_programme_hours", hrm_programme=Storage(
-                                                    name="person",
-                                                    joinby="programme_id"))
+        self.add_component("hrm_programme_hours",
+                           hrm_programme=Storage(name="person",
+                                                 joinby="programme_id"))
+
+        configure(tablename,
+                  deduplicate=self.hrm_programme_duplicate,
+                  )
 
         # =========================================================================
         # Link Table between Programmes & Persons
@@ -3014,24 +3020,47 @@ class S3HRProgrammeModel(S3Model):
             msg_record_deleted = T("Hours deleted"),
             msg_list_empty = T("Currently no hours recorded for this volunteer"))
 
-        self.configure(tablename,
-                       onaccept=hrm_programme_hours_onaccept,
-                       ondelete=hrm_programme_hours_onaccept,
-                       orderby=~table.date,
-                       list_fields=["id",
-                                    "training",
-                                    "programme_id",
-                                    "date",
-                                    "hours",
-                                    ]
-                       )
+        configure(tablename,
+                  onaccept=hrm_programme_hours_onaccept,
+                  ondelete=hrm_programme_hours_onaccept,
+                  orderby=~table.date,
+                  list_fields=["id",
+                               "training",
+                               "programme_id",
+                               "date",
+                               "hours",
+                               ]
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return Storage(
-                    #hrm_active_virtual_field = HRMActiveVirtualField,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_programme_duplicate(item):
+        """
+            HR record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "hrm_programme":
+            data = item.data
+            name = "name" in data and data.name
+            org = data.organisation_id if "organisation_id" in data else None
+
+            table = item.table
+            query = (table.deleted != True) & \
+                    (table.name == name) & \
+                    (table.organisation_id == org)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE  
 
 # =============================================================================
 def hrm_programme_hours_onaccept(form):
@@ -3998,7 +4027,11 @@ class HRMTrainingVirtualFields:
 
 # =============================================================================
 class HRMTrainingParticipantVirtualFields:
-    """ Virtual fields for list_fields """
+    """
+        Virtual fields for list_fields
+
+        @ToDo: Deprecate
+    """
 
     extra_fields = ["person_id"]
 
