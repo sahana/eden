@@ -1276,14 +1276,13 @@ class S3GISConfigModel(S3Model):
         #        according to any active Event or Region config and any OU or
         #        Personal config found
 
-        pe_types = {
-                    1: "person",
+        pe_types = {1: "person",
                     2: "group",
                     4: "facility",
                     6: "branch",
                     7: "organisation",
                     9: "SITE_DEFAULT",
-                }
+                    }
 
         tablename = "gis_config"
         table = define_table(tablename,
@@ -1668,6 +1667,9 @@ class S3GISConfigModel(S3Model):
                             vars.pe_type = 6
                         else:
                             vars.pe_type = 7
+        elif "config" in current.request.args:
+            # Personal Config
+            vars.pe_type = 1
 
         # If there's a region location, set its owned by role to MapAdmin.
         # That makes Authenticated no longer an owner, so they only get whatever
