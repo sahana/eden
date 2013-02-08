@@ -280,8 +280,6 @@ class S3IRSModel(S3Model):
                                          ),
                              s3_datetime("expiry",
                                          label = T("Expiry Date/Time"),
-                                         empty=False,
-                                         default="now",
                                          past=0,
                                          ),
                              self.gis_location_id(),
