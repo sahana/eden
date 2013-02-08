@@ -157,7 +157,7 @@ settings.org.site_autocomplete = True
 # Uncomment to have Site Autocompletes search within Address fields
 settings.org.site_address_autocomplete = True
 # Uncomment to hide inv & req tabs from Sites
-settings.org.site_inv_req_tabs = False
+#settings.org.site_inv_req_tabs = True
 
 # -----------------------------------------------------------------------------
 # Persons
