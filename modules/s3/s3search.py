@@ -1549,9 +1549,6 @@ i18n.edit_saved_search="%s"
                 if str(f.type) == "text" and not f.represent:
                     f.represent = self.truncate
 
-        # Remove the dataTables search box to avoid confusion
-        s3.dataTable_NobFilter = True
-
         # Get the results
         if not orderby:
             orderby = fields[0]
@@ -1562,6 +1559,9 @@ i18n.edit_saved_search="%s"
                                                 getids=True,
                                                 left=left)
         displayrows = totalrows
+
+        # Remove the dataTables search box to avoid confusion
+        dt_bFilter = False
 
         # Render the datatable and add it to the output
         if not s3.no_sspag and ids:
@@ -1579,7 +1579,8 @@ i18n.edit_saved_search="%s"
                                 dt_pagination=dt_pagination,
                                 dt_displayLength=display_length,
                                 dt_permalink=search_url,
-                                dt_sDom = dt_sDom)
+                                dt_sDom = dt_sDom,
+                                dt_bFilter = dt_bFilter)
         output["items"] = datatable
         output["sortby"] = sortby
 

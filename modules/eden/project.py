@@ -3518,10 +3518,10 @@ class S3ProjectTaskModel(S3Model):
                     S3SearchSimpleWidget(
                         name = "task_search_text_advanced",
                         label = T("Description"),
-                        comment = T("Search for a Task by description."),
-                        field = [ "name",
-                                  "description",
-                                ]
+                        comment = T("Search for a Task by name or description."),
+                        field = ["name",
+                                 "description",
+                                 ]
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_priority",
@@ -3586,16 +3586,16 @@ class S3ProjectTaskModel(S3Model):
                      "created_on",
                      "status",
                      #"site_id"
-                    ]
+                     ]
 
         if settings.get_project_milestones():
             list_fields.insert(5, (T("Milestone"), "task_milestone.milestone_id"))
             advanced_task_search.insert(4, S3SearchOptionsWidget(
-                                                name = "task_search_milestone",
-                                                label = T("Milestone"),
-                                                field = "task_milestone.milestone_id",
-                                                options = self.task_milestone_opts,
-                                                cols = 3
+                                            name = "task_search_milestone",
+                                            label = T("Milestone"),
+                                            field = "task_milestone.milestone_id",
+                                            options = self.task_milestone_opts,
+                                            cols = 3
                                             ))
 
         task_search = S3Search(advanced = advanced_task_search)
