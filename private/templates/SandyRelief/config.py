@@ -54,7 +54,7 @@ settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
 
-settings.L10n.languages = OrderedDict([
+settings.L10n.languages = OrderedDict([                     
     ("en", "English"),
     ("es", "Español"),
 ])
@@ -203,9 +203,54 @@ settings.project.mode_task = True
 # Uncomment this to use Activities for projects
 settings.project.activities = True
 # Uncomment this to use Milestones in project/task.
-settings.project.milestones = True
+settings.project.milestones = False
 # Uncomment this to disable Sectors in projects
 settings.project.sectors = False
+# Multiple partner organizations
+settings.project.multiple_organisations = True
+# Attachments -> Media
+settings.project.attachments_label = "Media"
+
+from s3 import s3forms
+settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
+        "organisation_id",
+        "name",
+        #"code",
+        "description",
+        "status_id",
+        "start_date",
+        "end_date",
+        "calendar",
+        #"drr.hfa",
+        #"objectives",
+        "human_resource_id",
+        # Partner Orgs
+        s3forms.S3SQLInlineComponent(
+         "organisation",
+         name = "partner",
+         label = T("Partner Organizations"),
+         fields = ["organisation_id",
+         "comments", # NB This is labelled 'Role' in DRRPP
+         ],
+         filterby = dict(field = "role",
+         options = "2"
+         )
+        ),
+#        s3forms.S3SQLInlineComponentCheckbox(
+#            "activity_type",
+#            label = T("Activity Types"),
+#            field = "activity_type_id",
+#            cols = 3,
+#            # Filter Activity Type by Sector
+#            filter = {"linktable": "project_activity_type_project",
+#                      "lkey": "activity_type_id",
+#                      "rkey": "project_id",
+#                      },
+#        ),
+        #"budget",
+        #"currency",
+        "comments",
+    )
 
 # Uncomment to show created_by/modified_by using Names not Emails
 settings.ui.auth_user_represent = "name"

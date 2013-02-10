@@ -4916,6 +4916,7 @@ def project_rheader(r):
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
+        attachments_label = settings.get_project_attachments_label()
 
         # Tabs
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -4948,7 +4949,7 @@ def project_rheader(r):
         if mode_3w:
             append((T("Documents"), "document"))
         else:
-            append((T("Attachments"), "document"))
+            append((attachments_label, "document"))
         if settings.get_hrm_show_staff():
             append((T("Staff"), "human_resource", dict(group="staff")))
         if settings.has_module("vol"):
@@ -4986,7 +4987,7 @@ def project_rheader(r):
                 (T("Contact Persons"), "contact")]
         if settings.get_project_mode_task():
             tabs.append((T("Tasks"), "task"))
-            tabs.append((T("Attachments"), "document"))
+            tabs.append((attachments_label, "document"))
         else:
             tabs.append((T("Documents"), "document"))
         rheader_fields = []
@@ -5000,7 +5001,7 @@ def project_rheader(r):
         # Tabs
         tabs = [(T("Details"), None)]
         append = tabs.append
-        append((T("Attachments"), "document"))
+        append((attachments_label, "document"))
         if settings.has_module("msg"):
             append((T("Notify"), "dispatch"))
         #(T("Roles"), "job_role"),

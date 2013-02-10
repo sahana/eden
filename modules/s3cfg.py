@@ -1319,6 +1319,12 @@ class S3Config(Storage):
 
     def get_project_organisation_lead_role(self):
         return self.project.get("organisation_lead_role", 1)
+    
+    def get_project_attachments_label(self):
+        """
+            Label for attachments tab
+        """
+        return current.T(self.project.get("attachments_label", "Attachments"))    
 
     # -------------------------------------------------------------------------
     # Request Settings
