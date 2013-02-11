@@ -2935,8 +2935,11 @@ class S3FilterWidget(object):
     #: the HTML class for the widget type
     _class = "generic-filter"
 
-    #: the query operator(s) for the widget type
+    #: the default query operator(s) for the widget type
     operator = None
+
+    #: alternatives for client-side changeable operators
+    alternatives = None
 
     # -------------------------------------------------------------------------
     def widget(self, resource, values):
@@ -2966,10 +2969,10 @@ class S3FilterWidget(object):
         if not self.selector:
             return None
 
-        if get_vars is not None:
-            # get operator from get_vars
+        if self.alternatives and get_vars is not None:
+            # Get the actual operator from get_vars
             operator = self._operator(get_vars, self.selector)
-            if operator is not None:
+            if operator:
                 self.operator = operator
 
         if "label" not in self.opts:
@@ -3033,8 +3036,8 @@ class S3FilterWidget(object):
         # Construct the widget
         widget = self.widget(resource, values)
 
-        # recompute variable in case operator got changed in the widget
-        if self.selector:
+        # Recompute variable in case operator got changed in the widget
+        if self.alternatives:
             variable = self._variable(self.selector, self.operator)
 
         data = INPUT(_type="hidden",
@@ -3139,10 +3142,10 @@ class S3FilterWidget(object):
             return []
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _operator(get_vars, selector):
+    @classmethod
+    def _operator(cls, get_vars, selector):
         """
-            Helper method to get operator from URL query variable
+            Helper method to get the operators from the URL query
 
             @param get_vars: the GET vars (a dict)
             @param selector: field selector
@@ -3150,17 +3153,17 @@ class S3FilterWidget(object):
             @return: query operator - None, str or list
         """
 
-        selector__ = "%s__" % selector
-        len_selector__ = len(selector__)
-        operator = []
-        for k, v in get_vars.iteritems():
-            if k.startswith(selector__):
-                operator.append(k[len_selector__:])
-        if len(operator) == 0:
-            operator = None
-        elif len(operator) == 1:
-            operator = operator[0]
-        return operator
+        variables = ["%s__%s" % (selector, op) for op in cls.alternatives]
+        slen = len(selector) + 2
+
+        operators = [k[slen:] for k, v in get_vars.iteritems()
+                                  if k in variables]
+        if not operators:
+            return None
+        elif len(operators) == 1:
+            return operators[0]
+        else:
+            return operators
 
 # =============================================================================
 class S3TextFilter(S3FilterWidget):
@@ -3201,6 +3204,8 @@ class S3OptionsFilter(S3FilterWidget):
     _class = "options-filter"
 
     operator = "belongs"
+
+    alternatives = ["anyof", "contains"]
 
     # -------------------------------------------------------------------------
     def widget(self, resource, values):

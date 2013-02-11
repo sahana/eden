@@ -45,6 +45,9 @@ function dlInfiniteScroll(datalist) {
     if ( ajaxitems > 0) {
         maxpage += Math.ceil(ajaxitems / pagesize);
     } else {
+        if (pagination.length) {
+            pagination.css({display:'none'});
+        }
         return;
     }
 
