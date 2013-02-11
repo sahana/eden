@@ -167,16 +167,14 @@ class index():
         db = current.db
         s3db = current.s3db
         table = s3db.project_project
-        query = (table.deleted == False)
-        #approved = & (table.approved == True)
+        query = (table.deleted == False) & (table.approved_by != None)
         projects = db(query).count()
         current_projects = db(query & (table.status_id == 2)).count()
         proposed_projects = db(query & (table.status_id == 1)).count()
         completed_projects = db(query & (table.status_id == 3)).count()
         
         ftable = s3db.project_framework
-        query = (ftable.deleted == False)
-        #approved = & (table.approved == True)
+        query = (table.deleted == False) & (table.approved_by != None)
         frameworks = db(query).count()
         stats = DIV(DIV("Currently the DRR Projects Portal has information on:"),
                     TABLE(TR(projects,
@@ -684,6 +682,70 @@ class analysis():
         return dict(
             title=T("Project Analysis"),
         )
+# =============================================================================
+class admin():
+    """
+        Custom Admin Index Page
+    """
+    def __call__(self):
+        auth = current.auth
+        s3_has_role = auth.s3_has_role
+        system_roles = auth.get_system_roles()
+        ADMIN = system_roles.ADMIN
+        ORG_ADMIN = system_roles.ORG_ADMIN
+
+        if s3_has_role(ADMIN) | s3_has_role(ORG_ADMIN):
+            response = current.response
+            request = current.request
+            T = current.T
+
+            view = path.join(request.folder, "private", "templates",
+                             "DRRPP", "views", "admin.html")
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
+            
+            response.title = T("Administration Panel")
+            
+            panel_list = [A(T("Verify Users"),
+                            _href = URL(c="admin", f = "user")
+                            ),
+                          A(T("User List (Excel)"),
+                            _href = URL(c="admin", f = "user.xls")
+                            ),
+                          A(T("Manage Administrators"),
+                            _href = URL(c="admin", f = "role", args = [1,"users"])
+                            ),
+                          A(T("Manage Organisation Contacts"),
+                            _href = URL(c="admin", f = "role", args = [6,"users"])
+                            ),
+                          A(T("Approve Projects"),
+                            _href = URL(c="project", f = "project", args = "review")
+                            ),
+                          A(T("Approve Frameworks"),
+                            _href = URL(c="project", f = "framework", args = "review")
+                            ),
+                          A(T("Approve Organisations"),
+                            _href = URL(c="org", f = "organisation", args = "review")
+                            ),
+                          A(T("Edit Countries and Administrative Areas"),
+                            _href = URL(c="gis", f = "location")
+                            ),
+                          A(T("Edit Hazards"),
+                            _href = URL(c="project", f = "hazard")
+                            ),
+                          A(T("Edit Themes"),
+                            _href = URL(c="project", f = "theme")
+                            ),
+                         ]
+            
+            return dict(item = UL(*panel_list,
+                                  _id = "admin_panel_list") )
+        else:
+            redirect(URL(c="default", f="index"))
 
 # =============================================================================
 class mypage():
@@ -715,7 +777,7 @@ class mypage():
             )
         else:
             person_id = auth.s3_logged_in_person()
-            redirect(URL(c="pr", f="person", args=[person_id]))
+            redirect(URL(c="pr", f="person", args=[person_id, "saved_search"]))
 
 # =============================================================================
 class organisations():
