@@ -71,11 +71,17 @@ class S3MainMenu(default.S3MainMenu):
             # Logged-in
             user = auth.user
             welcome = "Welcome %s %s" % (user.first_name, user.last_name)
+            s3_has_role = auth.s3_has_role
+            system_roles = auth.get_system_roles()
+            ADMIN = system_roles.ADMIN
+            ORG_ADMIN = system_roles.ORG_ADMIN
 
             menu_top = MT()(
                     MT(welcome, c="default", f="user",
                        translate=False, link=False, _id="auth_menu_email",
                        **attr),
+                    MT("Administration", c="default", f="index", args = "admin",
+                       check=s3_has_role(ADMIN) | s3_has_role(ORG_ADMIN)),
                     MT("Logout", c="default", f="user", args="logout", _id="auth_menu_logout"),
                     MT("About", c="default", f="index", args="about"),
                     MT("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),

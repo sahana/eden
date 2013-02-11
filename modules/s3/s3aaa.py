@@ -507,6 +507,8 @@ Thank you
         db = current.db
         T = current.T
 
+        current.response.title = T("Login")
+
         utable = self.settings.table_user
         if self.settings.login_userfield:
             username = self.settings.login_userfield

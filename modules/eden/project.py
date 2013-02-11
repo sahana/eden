@@ -152,7 +152,7 @@ class S3ProjectModel(S3Model):
         # Reusable Field
         def project_status_represent(id, row=None):
             if id or row:
-                return S3Represent(lookup=tablename)(id, row)
+                return S3Represent(lookup="project_status")(id, row)
             else:
                 # Why? Seems more confusing than NONE
                 return T("No Status")
@@ -3113,7 +3113,12 @@ class S3ProjectDRRPPModel(S3Model):
                         ),
                      Field("parent_project",
                            represent = lambda v: v or NONE,
-                           label = T("Parent Project")),
+                           label = T("Parent Project"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Parent Project"),
+                                                           T("The parent project or programme which this project is implemented under"))), 
+                           
+                     ),
                      Field("duration", "integer",
                            represent = lambda v: v or NONE,
                            label = T("Duration (months)")),
