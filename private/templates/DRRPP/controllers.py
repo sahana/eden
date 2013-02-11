@@ -174,7 +174,7 @@ class index():
         completed_projects = db(query & (table.status_id == 3)).count()
         
         ftable = s3db.project_framework
-        query = (table.deleted == False) & (table.approved_by != None)
+        query = (ftable.deleted == False) & (ftable.approved_by != None)
         frameworks = db(query).count()
         stats = DIV(DIV("Currently the DRR Projects Portal has information on:"),
                     TABLE(TR(projects,
@@ -687,6 +687,7 @@ class admin():
     """
         Custom Admin Index Page
     """
+
     def __call__(self):
         auth = current.auth
         s3_has_role = auth.s3_has_role

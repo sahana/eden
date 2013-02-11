@@ -33,7 +33,10 @@ For enquiries contact %s""" % settings.get_mail_approver()
 
 # Record Approval
 settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation", "project_project", "project_framework"]
+settings.auth.record_approval_required_for = ["org_organisation",
+                                              "project_project",
+                                              "project_framework"
+                                              ]
 
 # L10n settings
 settings.L10n.languages = OrderedDict([
@@ -157,9 +160,9 @@ def customize_project_project(**attr):
     s3.crud_strings.project_project.title_search = T("Project List")
 
     s3db.project_project.budget.label = T("Total Funding")
-    s3db.project_location.location_id.label = T("Countries")
     
     location_id = s3db.project_location.location_id
+    location_id.label = T("Countries")
     # Limit to just Countries
     location_id.requires = s3db.gis_country_requires
     # Use dropdown, not AC
