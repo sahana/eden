@@ -25,15 +25,7 @@ settings.auth.registration_link_user_to = {"staff":T("Staff"),
 
 settings.auth.record_approval = True
 
-settings.auth.registration_roles = {"site_id": ["asset_reader",
-                                                "inv_reader",
-                                                "irs_reader",
-                                                "member_reader",
-                                                "project_reader",
-                                                "staff_reader",
-                                                "vol_reader",
-                                                "survey_reader",
-                                                "vulnerability_reader",
+settings.auth.registration_roles = {"site_id": ["reader",
                                                 ],
                                     }
 

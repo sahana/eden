@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, TAG, DIV
+from gluon import current, TAG, DIV, H3
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 settings = current.deployment_settings
@@ -157,6 +157,7 @@ def customize_project_project(**attr):
     s3.crud_strings.project_project.title_search = T("Project List")
 
     s3db.project_project.budget.label = T("Total Funding")
+    s3db.project_location.location_id.label = T("Countries")
     
     location_id = s3db.project_location.location_id
     # Limit to just Countries
@@ -327,6 +328,16 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
     return attr
 
 settings.ui.customize_project_project = customize_project_project
+
+def customize_pr_person(**attr):
+    s3 = current.response.s3
+    t = current.T  
+    
+    s3.crud_strings.pr_person.title_display = T("My Page")
+    attr["rheader"] = H3(T("Saved Searches"))
+    return attr
+
+settings.ui.customize_pr_person = customize_pr_person
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

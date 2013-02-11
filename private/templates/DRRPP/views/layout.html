@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-<title>{{=settings.get_system_name()}} - {{try:}}{{=title}}{{except:}}{{=response.title}}{{pass}}</title>
+<title>{{=settings.get_system_name()}} - {{try:}}{{=title}}{{except:}}{{if response.title:}}{{=response.title}}{{pass}}{{pass}}</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <meta name="application-name" content="{{=appname}}" />
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />

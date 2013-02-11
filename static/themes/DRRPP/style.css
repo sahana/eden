@@ -129,14 +129,17 @@ textarea:focus {
 }
 
 /* Add Projects Form */
-div.w2p_r:nth-child(2n+1) {
+/*div.w2p_r */
+.form-container > form > table > tbody > tr:nth-child(2n+1) {
     background: none repeat scroll 0 0 #E8E8E8;
     overflow: hidden;
     clear: both;
 }
-div.w2p_r:last-child {
+
+.form-container > form > table > tbody > tr:last-child {
     background: white;
 }
+
 
 textarea {
     width: 650px;
