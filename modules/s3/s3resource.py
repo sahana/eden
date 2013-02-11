@@ -810,17 +810,28 @@ class S3Resource(object):
 
         # Retrieve the rows
         attributes["cacheable"] = cacheable
+
+        hasids = False
+
         if numrows != 0:
+            pkey = str(table._id)
+            for qf in qfields:
+                if str(qf) == pkey:
+                    hasids = True
+                    break
+
             rows = db(query).select(*qfields, **attributes)
 
             if vfltr is None:
+                if (getids or left_joins) and ids is None and hasids:
+                    ids = list(set([row[table._id] for row in rows]))
+                    if numrows is None:
+                        numrows = len(ids)
                 if count and numrows is None:
                     numrows = len(rows)
-                if getids and ids is None:
-                    ids = list(set([row[table._id] for row in rows]))
         else:
             rows = [] # None?
-
+           
         # Restore virtual fields
         if not virtual:
             osetattr(table, "virtualfields", vf)
@@ -840,8 +851,9 @@ class S3Resource(object):
             else:
                 rows = rfilter(rows, start=start, limit=limit)
 
-            if getids:
+            if (getids or left_joins) and hasids:
                 ids = list(set([row[table._id] for row in rows]))
+                numrows = len(ids)
 
         if not getids:
             ids = []
