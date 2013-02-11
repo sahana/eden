@@ -27,8 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
 import datetime
+import os
+import sys
 import time
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -1788,7 +1789,6 @@ class S3Request(object):
         if method != "import":
             method = "export"
         filename = "%s.%s" % (method, extension)
-        import os
         stylesheet = os.path.join(folder, path, format, filename)
         if not os.path.exists(stylesheet):
             if not skip_error:
@@ -2038,42 +2038,44 @@ class S3Method(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _view(r, default, format=None):
+    def _view(r, default):
         """
-            Get the path to the view stylesheet file
+            Get the path to the view template
 
             @param r: the S3Request
-            @param default: name of the default view stylesheet file
-            @param format: format string (optional)
+            @param default: name of the default view template
         """
 
         request = r
         folder = request.folder
         prefix = request.controller
 
-        import os
+        exists = os.path.exists
+        join = os.path.join
+
+        theme = current.deployment_settings.get_theme()
+        if theme != "default" and \
+           exists(join(folder, "private", "templates", theme, "views", "_%s" % default)):
+            current.response.s3.view = "../private/templates/%s/views/_%s" % (theme, default)
+        else:
+            current.response.s3.view = "_%s" % default
+
         if r.component:
             view = "%s_%s_%s" % (r.name, r.component_name, default)
-            path = os.path.join(folder, "views", prefix, view)
-            if os.path.exists(path):
+            path = join(folder, "views", prefix, view)
+            if exists(path):
                 return "%s/%s" % (prefix, view)
             else:
                 view = "%s_%s" % (r.name, default)
-                path = os.path.join(folder, "views", prefix, view)
+                path = join(folder, "views", prefix, view)
         else:
-            if format:
-                view = "%s_%s_%s" % (r.name, default, format)
-            else:
-                view = "%s_%s" % (r.name, default)
-            path = os.path.join(folder, "views", prefix, view)
+            view = "%s_%s" % (r.name, default)
+            path = join(folder, "views", prefix, view)
 
-        if os.path.exists(path):
+        if exists(path):
             return "%s/%s" % (prefix, view)
         else:
-            if format:
-                return default.replace(".html", "_%s.html" % format)
-            else:
-                return default
+            return default
 
     # -------------------------------------------------------------------------
     @staticmethod

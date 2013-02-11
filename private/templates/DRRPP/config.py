@@ -162,7 +162,7 @@ def customize_project_project(**attr):
     s3db.project_project.budget.label = T("Total Funding")
     
     location_id = s3db.project_location.location_id
-    location_id.label = T("Countries")
+    location_id.label = ""
     # Limit to just Countries
     location_id.requires = s3db.gis_country_requires
     # Use dropdown, not AC

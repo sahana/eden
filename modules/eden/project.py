@@ -150,21 +150,15 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Statuses currently registered"))
 
         # Reusable Field
-        def project_status_represent(id, row=None):
-            if id or row:
-                return S3Represent(lookup="project_status")(id, row)
-            else:
-                # Why? Seems more confusing than NONE
-                return T("No Status")
-
+        represent = S3Represent(lookup=tablename)
         status_id = S3ReusableField("status_id", table,
                                     label = T("Status"),
                                     sortby = "name",
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "project_status.id",
-                                                          project_status_represent,
+                                                          represent,
                                                           sort=True)),
-                                    represent = project_status_represent,
+                                    represent = represent,
                                     comment = S3AddResourceLink(title=ADD_STATUS,
                                                                 c="project",
                                                                 f="status"),

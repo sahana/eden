@@ -240,10 +240,10 @@ def project():
     s3.postp = postp
 
     rheader = s3db.project_rheader
-    return s3_rest_controller(module,
-                              "project", # Need to specify as sometimes we come via index()
-                              rheader=rheader,
-                              csv_template="project")
+    output = s3_rest_controller(module, "project", # Need to specify as sometimes we come via index()
+                                rheader=rheader,
+                                csv_template="project")
+    return output
 
 # -----------------------------------------------------------------------------
 def set_theme_requires(sector_ids):

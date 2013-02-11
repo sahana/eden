@@ -505,10 +505,6 @@ $('.labeltip').cluetip({activation:'hover',position:'mouse',sticky:false,showTit
 def register_onaccept(form):
     """ Tasks to be performed after a new user registers """
 
-    # Add newly-registered users to Person Registry, add 'Authenticated' role
-    # If Organisation is provided, then add HRM record
-    person_id = current.auth.s3_register(form)
-
     # Process Custom Fields
     vars = form.request_vars
     position = vars.get("position", "")
@@ -968,12 +964,9 @@ class organisations():
             "bProcessing": True,
             #"bServerSide": True,
             #"sAjaxSource": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),
-            "aoColumnDefs": [
-                {
-                    "bVisible": False,
-                    "aTargets": [0]
-                }
-            ],
+            "aoColumnDefs": [{"bVisible": False,
+                              "aTargets": [0]
+                             }],
             "aoColumns": [{"sName": col["name"]} for col in cols],
             "sDom": 'rifpl<"dataTable_table"t>p'
         })
