@@ -27,9 +27,6 @@
 </div>
 {{except:}}{{pass}}
 </div>
-<div>
-  <a class='test'>Reload</a>
-</div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
@@ -43,9 +40,5 @@ $(document).ready(function(){
   $('#show-add-btn').hide()
  });
 {{pass}}
-$('.test').click(function() {
-    dt = $('#list').dataTable();
-    dt.fnReloadAjax();
-});
 });
 //]]></script>
