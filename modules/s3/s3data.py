@@ -618,11 +618,8 @@ class S3DataTable(object):
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
-        displayLength = attr.get("dt_displayLength", current.manager.ROWSPERPAGE)
-        # Make sure that the displayed length is not greater than the number of filtered records
-        if filteredrows and displayLength > filteredrows:
-            displayLength = filteredrows
-        config.displayLength = displayLength
+        config.displayLength = attr.get("dt_displayLength",
+                                        current.manager.ROWSPERPAGE)
         config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
         config.pagination = attr.get("dt_pagination", "true")
         config.paginationType = attr.get("dt_pagination_type", "full_numbers")

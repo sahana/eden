@@ -23,6 +23,39 @@ var tableCnt = 1;
 var tableId = new Array();
 var myList = new Array();
 
+// Simple plugin to Ajax-refresh a datatable. This also allows to
+// change the sAjaxSource URL for that table (e.g. in order to
+// update URL filters). Use e.g. in a onclick-handler like:
+//    dt = $('#<list_id>').dataTable();
+//    dt.fnReloadAjax(<new URL>);
+//
+$.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
+    if ( typeof sNewSource != 'undefined' && sNewSource != null ) {
+        // sNewSource is a string containing the new Ajax-URL for
+        // this instance, so override the previous setting
+        oSettings.sAjaxSource = sNewSource;
+    }
+    // Show the "Processing..." box
+    this.oApi._fnProcessingDisplay( oSettings, true );
+
+    var that = this;
+    // Call fnServerData with empty aoData to trigger the pipeline
+    // script, clear the table cache and run the following callback
+    oSettings.fnServerData( oSettings.sAjaxSource, [], function(json) {
+
+        // Clear the table
+        that.oApi._fnClearTable( oSettings );
+
+        // Trigger the pipeline script again (this time without callback),
+        // in  order to re-load the table data from the server:
+        that.fnDraw();
+
+        // Remove the "Processing..." box
+        that.oApi._fnProcessingDisplay( oSettings, false );
+
+    }, oSettings );
+}
+
 function toggleDiv(divId) {
    $('#display' + divId).toggle();
    $('#full' + divId).toggle();
@@ -376,7 +409,30 @@ $(document).ready(function() {
                 return null;
             }
             fnDataTablesPipeline = function(sSource, aoData, fnCallback) {
-                var table = '#' + this[0].id;
+
+                var bNeedServer = false;
+                var table;
+                if (this.hasOwnProperty('nTable')) {
+                    // Called from fnReloadAjax
+                    table = '#' + this.nTable.id;
+
+                    // Clear cache to enforce reload
+                    var t = tableIdReverse(table);
+                    cache[t] = {
+                            lastRequest: [],
+                            iCacheLower: -1,
+                            iCacheUpper: -1
+                    };
+                    fnCallback({}); // calls the inner function of fnReloadAjax
+
+                    // Can just return here, because fnDraw inside fnCallback
+                    // has already triggered the regular pipeline refresh
+                    return;
+
+                } else {
+                    table = '#' + this[0].id;
+                }
+
                 var t = tableIdReverse(table);
                 var iRequestLength = fnGetKey(aoData, 'iDisplayLength');
                 var iPipe;
@@ -389,7 +445,6 @@ $(document).ready(function() {
                     // iRequestLength == 25;
                     iPipe = 4;
                 }
-                var bNeedServer = false;
                 var sEcho = fnGetKey(aoData, 'sEcho');
                 var iRequestStart = fnGetKey(aoData, 'iDisplayStart');
                 var iRequestEnd = iRequestStart + iRequestLength;
@@ -414,19 +469,24 @@ $(document).ready(function() {
                     ) {
                     bNeedServer = true;
                 }
-
                 // sorting etc changed?
                 if ( oCache.lastRequest && !bNeedServer ) {
-                    for (var i=0, iLen=aoData.length; i < iLen; i++) {
-                        if ( aoData[i].name != 'iDisplayStart' && aoData[i].name != 'iDisplayLength' && aoData[i].name != 'sEcho' ) {
-                            if ( aoData[i].value != oCache.lastRequest[i].value ) {
-                                bNeedServer = true;
-                                break;
+                    if (!oCache.lastRequest.length) {
+                        // no previous request => need server in any case
+                        bNeedServer = true;
+                    } else {
+                        for (var i=0, iLen=aoData.length; i < iLen; i++) {
+                            if ( aoData[i].name != 'iDisplayStart' && aoData[i].name != 'iDisplayLength' && aoData[i].name != 'sEcho' ) {
+                                if ( aoData[i].value != oCache.lastRequest[i].value ) {
+                                    bNeedServer = true;
+                                    break;
 
+                                }
                             }
                         }
                     }
                 }
+                
                 // Store the request for checking next time around
                 oCache.lastRequest = aoData.slice();
                 if ( bNeedServer ) {
