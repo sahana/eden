@@ -91,10 +91,10 @@ class S3MainMenu(default.S3MainMenu):
             homepage("vulnerability")(
                 MM("Map", c="vulnerability", f="index"),
             ),
-            #homepage("event", "irs")(
-            #    MM("Events", c="event", f="event"),
-            #    MM("Incident Reports", c="irs", f="ireport"),
-            #)
+            homepage("event", "irs")(
+                MM("Events", c="event", f="event"),
+                MM("Incident Reports", c="irs", f="ireport"),
+            ),
         ]
 
     # -------------------------------------------------------------------------
@@ -521,17 +521,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Incident Reports", c="irs", f="ireport")(
                         M("New", m="create"),
                         M("List All"),
-                        M("Open Incidents", vars={"open":1}),
+                        M("Open Incidents", vars={"open": 1}),
                         M("Timeline", args="timeline"),
                         M("Search", m="search"),
                     ),
                     M("Incident Categories", c="irs", f="icategory",
-                      check=current.auth.s3_has_role(ADMIN))(
+                      check=current.auth.s3_has_role(current.session.s3.system_roles.ADMIN))(
                         M("New", m="create"),
                         M("List All"),
                     ),
                     M("Reports", c="irs", f="ireport",  m="report")(
-                        M("Incident Reports"),
+                        M("Incidents"),
                     ),
                 )
 

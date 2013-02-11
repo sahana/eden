@@ -945,15 +945,13 @@ class GIS(object):
             @ToDo: Merge configs for Event
         """
 
-        session = current.session
-        s3 = current.response.s3
-        all_meta_field_names = s3_all_meta_field_names()
+        _gis = current.response.s3.gis
 
         # If an id has been supplied, try it first. If it matches what's in
         # response, there's no work to do.
         if config_id and not force_update_cache and \
-           s3.gis.config and \
-           s3.gis.config.id == config_id:
+           _gis.config and \
+           _gis.config.id == config_id:
             return
 
         db = current.db
@@ -963,6 +961,7 @@ class GIS(object):
         ptable = s3db.gis_projection
         stable = s3db.gis_symbology
         ltable = s3db.gis_layer_config
+        all_meta_field_names = s3_all_meta_field_names()
 
         cache = Storage()
         row = None
@@ -975,17 +974,15 @@ class GIS(object):
 
         elif config_id is 0:
             # Use site default.
-            config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
-            if not config:
-                # No configs found at all
-                s3.gis.config = cache
-                return cache
-            query = (ctable.id == config.id) & \
+            query = (ctable.uuid == "SITE_DEFAULT") & \
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
             row = db(query).select(limitby=(0, 1)).first()
-
+            if not row:
+                # No configs found at all
+                _gis.config = cache
+                return cache
 
         # If no id supplied, or the requested config does not exist,
         # fall back to personal or site config.
@@ -1000,7 +997,6 @@ class GIS(object):
                 role_paths = s3db.pr_get_role_paths(pe_id, roles=roles)
                 # Unordered list of PEs
                 pes = []
-                append = pes.append
                 for role in roles:
                     if role in role_paths:
                         # @ToDo: Read the person's gis_config to disambiguate which Path to use, if there are issues
@@ -1012,8 +1008,7 @@ class GIS(object):
                 query = (ctable.pe_id.belongs(pes)) | \
                         (ctable.uuid == "SITE_DEFAULT")
                 # Personal may well not be complete, so Left Join
-                left = [
-                        ptable.on(ptable.id == ctable.projection_id),
+                left = [ptable.on(ptable.id == ctable.projection_id),
                         stable.on(stable.id == ctable.symbology_id),
                         mtable.on(mtable.id == stable.marker_id),
                         ]
@@ -1043,12 +1038,16 @@ class GIS(object):
                             cache[key] = config[key]
                     if "epsg" not in cache or cache["epsg"] is None:
                         projection = row["gis_projection"]
-                        for key in ["epsg", "units", "maxResolution", "maxExtent"]:
-                            cache[key] = projection[key] if key in projection else None
-                    if "image" not in cache or cache["image"] is None:
+                        for key in ["epsg", "units", "maxResolution",
+                                    "maxExtent"]:
+                            cache[key] = projection[key] if key in projection \
+                                                         else None
+                    if "marker_image" not in cache or \
+                       cache["marker_image"] is None:
                         marker = row["gis_marker"]
                         for key in ["image", "height", "width"]:
-                            cache["marker_%s" % key] = marker[key] if key in marker else None
+                            cache["marker_%s" % key] = marker[key] if key in marker \
+                                                                   else None
                     #if "base" not in cache:
                     #    # Default Base Layer?
                     #    query = (ltable.config_id == config.id) & \
@@ -1067,10 +1066,11 @@ class GIS(object):
 
         if not row:
             # No personal config or not logged in. Use site default.
-            config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
+            config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)
+                                                              ).first()
             if not config:
                 # No configs found at all
-                s3.gis.config = cache
+                _gis.config = cache
                 return cache
             query = (ctable.id == config.id) & \
                     (mtable.id == stable.marker_id) & \
@@ -1092,7 +1092,8 @@ class GIS(object):
             for key in ["epsg", "units", "maxResolution", "maxExtent"]:
                 cache[key] = projection[key] if key in projection else None
             for key in ["image", "height", "width"]:
-                cache["marker_%s" % key] = marker[key] if key in marker else None
+                cache["marker_%s" % key] = marker[key] if key in marker \
+                                                       else None
             # Default Base Layer?
             #query = (ltable.config_id == config_id) & \
             #        (ltable.base == True) & \
@@ -1105,7 +1106,7 @@ class GIS(object):
             #    cache["base"] = None
 
         # Store the values
-        s3.gis.config = cache
+        _gis.config = cache
 
         # Let caller know if their id was valid.
         return config_id if row else cache

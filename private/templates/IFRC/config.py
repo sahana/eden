@@ -525,6 +525,12 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 5,
         )),
+    ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Events",
+            restricted = True,
+            module_type = 10
+        )),
     ("irs", Storage(
             name_nice = T("Incidents"),
             #description = "Incident Reporting System",

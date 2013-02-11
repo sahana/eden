@@ -5,7 +5,7 @@
 #news-window{
     overflow: hidden;
     position: absolute;
-    z-index: 999;
+    /*z-index: 999;*/
     background: url(img/news_window_bg.png);
     width: 190px;
     top: 20px;

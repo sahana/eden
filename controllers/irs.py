@@ -12,18 +12,15 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-
     """ Custom View """
 
     module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
-
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def icategory():
-
     """
         Incident Categories, RESTful controller
         Note: This just defines which categories are visible to end-users
@@ -35,7 +32,6 @@ def icategory():
 
 # -----------------------------------------------------------------------------
 def ireport():
-
     """ Incident Reports, RESTful controller """
 
     tablename = "%s_%s" % (module, resourcename)

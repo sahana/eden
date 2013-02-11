@@ -741,6 +741,12 @@ def hierarchy():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def menu():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def symbology():
     """ RESTful CRUD controller """
 

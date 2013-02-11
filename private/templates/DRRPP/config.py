@@ -260,7 +260,7 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
             "output",
             label = T("Outputs"),
             #comment = "Bob",
-            fields = ["output", "status"],
+            fields = ["name", "status"],
         ),
         "drr.hfa",
         "drrpp.rfa",
