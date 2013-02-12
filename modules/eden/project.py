@@ -487,6 +487,7 @@ class S3ProjectModel(S3Model):
                                       "task",
                                       "organisation",
                                       "activity",
+                                      "activity_type",
                                       "annual_budget",
                                       "beneficiary",
                                       "location",
@@ -550,6 +551,14 @@ class S3ProjectModel(S3Model):
 
         # Activities
         add_component("project_activity", project_project="project_id")
+        
+        # Activity Types
+        add_component("project_activity_type",
+                      project_project=Storage(
+                                link="project_activity_type_project",
+                                joinby="project_id",
+                                key="activity_type_id",
+                                actuate="link"))        
 
         # Milestones
         add_component("project_milestone", project_project="project_id")
@@ -1334,6 +1343,7 @@ class S3ProjectActivityTypeModel(S3Model):
 
     names = ["project_activity_type",
              "project_activity_type_location",
+             "project_activity_type_project",
              "project_activity_type_sector",
              "project_activity_type_id",
              ]
@@ -1429,6 +1439,15 @@ class S3ProjectActivityTypeModel(S3Model):
                              activity_type_id(empty=False),
                              self.project_location_id(empty=False),
                              *s3_meta_fields())
+        
+        # ---------------------------------------------------------------------
+        # Activity Type - Project Link Table
+        #
+        tablename = "project_activity_type_project"
+        table = define_table(tablename,
+                             activity_type_id(empty=False),
+                             self.project_project_id(empty=False),
+                             *s3_meta_fields())        
 
         crud_strings[tablename] = Storage(
             title_create = T("New Activity Type"),
