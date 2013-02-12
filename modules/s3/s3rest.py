@@ -2053,12 +2053,11 @@ class S3Method(object):
         exists = os.path.exists
         join = os.path.join
 
+        current.response.s3.views = views = {}
         theme = current.deployment_settings.get_theme()
         if theme != "default" and \
            exists(join(folder, "private", "templates", theme, "views", "_%s" % default)):
-            current.response.s3.view = "../private/templates/%s/views/_%s" % (theme, default)
-        else:
-            current.response.s3.view = "_%s" % default
+            views[default] = "../private/templates/%s/views/_%s" % (theme, default)
 
         if r.component:
             view = "%s_%s_%s" % (r.name, r.component_name, default)

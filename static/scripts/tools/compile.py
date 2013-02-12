@@ -10,6 +10,21 @@ from gluon.compileapp import compile_application, remove_compiled_application
 from gluon.fileutils import up
 
 app = request.application
+join = os.path.join
+
+# Pass View Templates to Compiler
+s3.views = {}
+theme = s3.theme
+if theme != "default":
+    exists = os.path.exists
+    folder = request.folder
+    for view in ["create.html",
+                 "display.html",
+                 "search.html",
+                 "update.html",
+                 ]:
+        if exists(join(folder, "private", "templates", theme, "views", "_%s" % view)):
+            views[view] = "../private/templates/%s/views/_%s" % (theme, view)
 
 def apath(path="", r=None):
     """
@@ -27,7 +42,7 @@ def apath(path="", r=None):
     opath = up(r.folder)
     while path[:3] == "../":
         (opath, path) = (up(opath), path[3:])
-    return os.path.join(opath, path).replace("\\", "/")
+    return join(opath, path).replace("\\", "/")
 
 folder = apath(app, request)
 compile_application(folder)

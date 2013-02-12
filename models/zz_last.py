@@ -42,5 +42,3 @@ if auth.permission.format in ("html"):
 
     # Add breadcrumbs
     menu.breadcrumbs = S3OptionsMenu.breadcrumbs
-
-
