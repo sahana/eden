@@ -6,6 +6,8 @@
 
 # Pass Theme to Compiler
 s3.theme = settings.get_theme()
+# Empty dict to store custom CRUD views
+s3.views = {}
 
 if auth.permission.format in ("html"):
 
