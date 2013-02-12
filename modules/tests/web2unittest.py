@@ -34,8 +34,8 @@ import unittest
 from unittest.case import SkipTest, _ExpectedFailure, _UnexpectedSuccess
 
 from dateutil.relativedelta import relativedelta
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from gluon import current
 
@@ -338,6 +338,7 @@ class SeleniumUnitTest(Web2UnitTest):
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
             elem.click()
+            time.sleep(2) # Give it time to dissolve
         except:
             pass
 
@@ -452,16 +453,21 @@ class SeleniumUnitTest(Web2UnitTest):
                 id_data.append([details[0], raw_value])
 
         result["before"] = self.getRows(table, id_data, dbcallback)
+        
         # Submit the Form
         submit_btn = browser.find_element_by_css_selector("input[type='submit']")
         submit_btn.click()
+
         # Check & Report the results
         confirm = True
         try:
-            elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem = WebDriverWait(browser, 30).until(
+                        lambda driver: \
+                               driver.find_element_by_xpath("//div[@class='confirmation']"))
             self.reporter(elem.text)
-        except NoSuchElementException:
+        except (NoSuchElementException, TimeoutException):
             confirm = False
+
         if (confirm != success):
             # Do we have a validation error?
             try:
@@ -471,9 +477,11 @@ class SeleniumUnitTest(Web2UnitTest):
                     self.reporter(msg)
             except NoSuchElementException:
                 pass
+
         self.assertTrue(confirm == success,
                         "Unexpected %s to create record" %
                         (confirm and "success" or "failure"))
+
         result["after"] = self.getRows(table, id_data, dbcallback)
         successMsg = "Records added to database: %s" %id_data
         failMsg = "Records not added to database %s" %id_data

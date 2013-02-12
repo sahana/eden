@@ -29,18 +29,22 @@
 import time
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
+from selenium.webdriver.support.ui import WebDriverWait
 
 class SearchMember(SeleniumUnitTest):
 
     def start(self):
         print "\n"
         # Login, if not-already done so
-        self.login(account="admin", nexturl="member/membership/search?clear_opts=1")
+        self.login(account="admin",
+                   nexturl="member/membership/search?clear_opts=1")
 
     def advancedSearchTest(self, ids):
         self.clickLabel(ids)
 
-        self.browser.find_element_by_xpath("//form[@class='advanced-form']/table/tbody/tr[12]/td[2]/input[@type='submit']").click()
+        self.browser.find_element_by_xpath("//form[@class='advanced-form']"
+                                           "/table/tbody/tr[12]/td[2]"
+                                           "/input[@type='submit']").click()
         time.sleep(1)
         
         # click label again to reset to original status
@@ -63,9 +67,24 @@ class SearchMember(SeleniumUnitTest):
         """
             Get html table row count and compare against the db row count
         """
-        htmlRowCount = len(self.browser.find_elements_by_xpath("//*[@id='list']/tbody/tr"));
-        successMsg = "DB row count (" + str(dbRowCount) + ") matches the HTML table row count (" + str(htmlRowCount) + ")." 
-        failMsg = "DB row count (" + str(dbRowCount) + ") does not match the HTML table row count (" + str(htmlRowCount) + ")." 
+
+        browser = self.browser
+        
+        # Wait for datatables script to complete
+        elem = WebDriverWait(browser, 30).until(
+                    lambda driver: \
+                           driver.find_element_by_id("list_length"))
+
+        htmlRowCount = len(browser.find_elements_by_xpath("//*[@id='list']/tbody/tr"))
+
+        successMsg = "DB row count (%s)" \
+                     " matches the HTML table row count (%s)." % \
+                     (dbRowCount, htmlRowCount)
+
+        failMsg = "DB row count (%s)" \
+                  " does not match the HTML table row count (%s)." % \
+                   (dbRowCount, htmlRowCount)
+        
         self.assertTrue(dbRowCount == htmlRowCount, failMsg)
         self.reporter(successMsg)
 
@@ -80,11 +99,14 @@ class SearchMember(SeleniumUnitTest):
         self.browser.find_element_by_id("membership_search_simple").clear()
         self.browser.find_element_by_id("membership_search_simple").send_keys("mar")
         self.browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        time.sleep(1)
 
         member = current.s3db["member_membership"]
         person = current.s3db["pr_person"]
-        dbRowCount = current.db((member.deleted != 'T') & (member.person_id == person.id) & ( (person.first_name.like('%mar%')) | (person.middle_name.like('%mar%')) | (person.last_name.like('%mar%')) )).count()
+        dbRowCount = current.db((member.deleted != 'T') & \
+                                (member.person_id == person.id) & \
+                                ((person.first_name.like('%mar%')) | \
+                                 (person.middle_name.like('%mar%')) | \
+                                 (person.last_name.like('%mar%')))).count()
         self.compareRowCount(dbRowCount)
         
         

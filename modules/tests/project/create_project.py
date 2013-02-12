@@ -27,7 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import time
+from gluon import current
 from tests.web2unittest import SeleniumUnitTest
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 class CreateProject(SeleniumUnitTest):
     def test_project001_create_project(self):
@@ -78,59 +82,67 @@ class CreateProject(SeleniumUnitTest):
 #                     ]
 #                     )
 
-        self.browser.find_element_by_id("rheader_tab_location").click()
+        if current.deployment_settings.get_project_mode_3w():
 
-        self.create("project_location", 
-                    [( "location_id",
-                       "Aileu Vila",
-                       "automatic"),
-                     # If using LocationSelector:
-                     #( "L0",
-                     #  "Timor-Leste",
-                     #  "gis_location" ),
-                     #( "L1",
-                     #  "Aileu",
-                     #  "gis_location"),
-                     #( "L2",
-                     #  "Aileu Vila",
-                     #  "gis_location"),
-                     #( "L3",
-                     #  "Saboria", #"Aisirimou"
-                     #  "gis_location"),
-                     #( "L4",
-                     #  "Aileu",
-                     #  "gis_location"),
-                     #( "lat",
-                     #  "0",
-                     #  "gis_location"),
-                     #( "lon",
-                     #  "0",
-                     #  "gis_location")
-                     # @ToDo: Activities - Community Organisation, Contingency Planning, Logistics
-                     ]
-                     )
+            #self.browser.find_element_by_id("rheader_tab_location").click()
+            elem = WebDriverWait(self.browser, 30).until(
+                        lambda driver: \
+                            driver.find_element_by_id("rheader_tab_location"))
+            elem.click()
 
-        self.create("project_beneficiary", 
-                    [( "parameter_id",
-                       "Teachers",
-                       "option"),
-                     ( "value",
-                       "100"),
-                     ( "comments",
-                       "Primary Beneficiary")
-                     ]
-                     )
-        
-        # Show Add Form
-        self.browser.find_element_by_id("show-add-btn").click()
-        
-        self.create("project_beneficiary", 
-                    [( "parameter_id",
-                       "Pupils",
-                       "option"),
-                     ( "value",
-                       "1000"),
-                     ( "comments",
-                       "Secondary Beneficiary")
-                     ]
-                     )
+            self.create("project_location",
+                        [( "location_id",
+                        "Aileu Vila",
+                        "automatic"),
+                        # If using LocationSelector:
+                        #( "L0",
+                        #  "Timor-Leste",
+                        #  "gis_location" ),
+                        #( "L1",
+                        #  "Aileu",
+                        #  "gis_location"),
+                        #( "L2",
+                        #  "Aileu Vila",
+                        #  "gis_location"),
+                        #( "L3",
+                        #  "Saboria", #"Aisirimou"
+                        #  "gis_location"),
+                        #( "L4",
+                        #  "Aileu",
+                        #  "gis_location"),
+                        #( "lat",
+                        #  "0",
+                        #  "gis_location"),
+                        #( "lon",
+                        #  "0",
+                        #  "gis_location")
+                        # @ToDo: Activities - Community Organisation, Contingency Planning, Logistics
+                        ]
+                        )
+
+            time.sleep(2)
+            self.create("project_beneficiary",
+                        [( "parameter_id",
+                        "Teachers",
+                        "option"),
+                        ( "value",
+                        "100"),
+                        ( "comments",
+                        "Primary Beneficiary")
+                        ]
+                        )
+
+            # Show Add Form
+            time.sleep(2)
+            self.browser.find_element_by_id("show-add-btn").click()
+
+            self.create("project_beneficiary",
+                        [( "parameter_id",
+                        "Pupils",
+                        "option"),
+                        ( "value",
+                        "1000"),
+                        ( "comments",
+                        "Secondary Beneficiary")
+                        ]
+                        )

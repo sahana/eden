@@ -13,6 +13,8 @@ __all__ = ["send",
            "dbcallback_getStockLevels",
            ]
 
+import time
+
 from gluon import current
 
 from s3 import s3_debug
@@ -48,6 +50,7 @@ class InvTestFunctions(SeleniumUnitTest):
             given send_id by the given user
         """
 
+        time.sleep(2) # give the browser time to execute all scripts
         try:
             add_btn = self.browser.find_element_by_id("show-add-btn")
             if add_btn.is_displayed():
@@ -100,6 +103,8 @@ class InvTestFunctions(SeleniumUnitTest):
         # Now send the shipment on its way
         self.login(account=user, nexturl="inv/send_process/%s" % send_id)
 
+        db.commit() # Close transaction - otherwise we get a cached response
+
         # Get the current status
         query = (stable.id == send_id)
         record = db(query).select(stable.status,
@@ -143,6 +148,8 @@ class InvTestFunctions(SeleniumUnitTest):
 
         # Now send the shipment on its way
         self.login(account=user, nexturl="inv/send/%s?received=True" % send_id)
+
+        db.commit() # Close transaction - otherwise we get a cached response
 
         # Get the current status
         query = (stable.id == send_id)
@@ -210,6 +217,9 @@ class InvTestFunctions(SeleniumUnitTest):
         query = (iitable.site_id == site_id)
         before = db(query).select(orderby=iitable.id)
         self.login(account=user, nexturl="inv/recv_process/%s" % recv_id)
+
+        db.commit() # Close transaction - otherwise we get a cached response
+
         query = (iitable.site_id == site_id)
         after = db(query).select(orderby=iitable.id)
         # Find the differences between the before and the after
@@ -398,12 +408,14 @@ class InvTestFunctions(SeleniumUnitTest):
         """
 
         table = current.s3db["inv_inv_item"]
+        inv_item_id = None
         for details in data:
             if details[0] == "send_inv_item_id":
                 inv_item_id = details[1]
                 break
-        stock_row = table[inv_item_id]
-        rows.records.append(stock_row)
+        if inv_item_id:
+            stock_row = table[inv_item_id]
+            rows.records.append(stock_row)
         return rows
 
 # END =========================================================================
