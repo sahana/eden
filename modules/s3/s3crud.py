@@ -194,6 +194,7 @@ class S3CRUD(S3Method):
             link = None
             if r.component:
                 if resource.link is None:
+                    # No link table - direct component
                     link = self._embed_component(resource, record=r.id)
                     pkey = resource.pkey
                     fkey = resource.fkey

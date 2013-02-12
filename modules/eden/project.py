@@ -1154,8 +1154,8 @@ class S3ProjectActivityModel(S3Model):
                        "comments"
                        ]
         if mode_task:
-            list_fields.insert(3,"time_estimated")
-            list_fields.insert(4,"time_actual")
+            list_fields.insert(3, "time_estimated")
+            list_fields.insert(4, "time_actual")
             append((T("Time Estimated"), "time_estimated"))
             append((T("Time Actual"), "time_actual"))
             create_next = URL(c="project", f="activity",
@@ -3590,7 +3590,7 @@ class S3ProjectTaskModel(S3Model):
                      ]
 
         if settings.get_project_milestones():
-            list_fields.insert(5, (T("Milestone"), "task_milestone.milestone_id"))
+            list_fields.insert(5, (T("Milestone"), "milestone.name"))
             advanced_task_search.insert(4, S3SearchOptionsWidget(
                                             name = "task_search_milestone",
                                             label = T("Milestone"),
@@ -3681,7 +3681,7 @@ class S3ProjectTaskModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
-        # Activities (for imports)
+        # Activities
         add_component("project_activity",
                       project_task=Storage(
                                 link="project_task_activity",
@@ -3691,7 +3691,7 @@ class S3ProjectTaskModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
-        # Milestones (for imports)
+        # Milestones
         add_component("project_milestone",
                       project_task=Storage(
                                 link="project_task_milestone",
@@ -4142,8 +4142,7 @@ class S3ProjectTaskModel(S3Model):
         """
             When a Task is created:
                 * Process the additional fields: Project/Activity/Milestone
-                * create associated Link Tables
-                * ensure that it is owned by the Project Customer
+                * create associated Link Table records
                 * notify assignee
         """
 
@@ -4151,9 +4150,7 @@ class S3ProjectTaskModel(S3Model):
         s3db = current.s3db
         session = current.session
 
-        vars = form.vars
-        id = vars.id
-        _vars = current.request.post_vars
+        id = form.vars.id
 
         if session.s3.event:
             # Create a link between this Task & the active Event
@@ -4161,46 +4158,43 @@ class S3ProjectTaskModel(S3Model):
             etable.insert(event_id=session.s3.event,
                           task_id=id)
 
+        ltp = db.project_task_project
+
         vars = current.request.post_vars
-        table = db.project_task
-        if "project_id" in vars:
+        project_id = vars.get("project_id", None)
+        if project_id:
             # Create Link to Project
-            ltable = db.project_task_project
-            if vars.project_id:
-                link_id = ltable.insert(task_id = id,
-                                        project_id = _vars.project_id)
+            link_id = ltp.insert(task_id = id,
+                                 project_id = project_id)
 
-        if "activity_id" in vars:
+        activity_id = vars.get("activity_id", None)
+        if activity_id:
             # Create Link to Activity
-            ltable = db.project_task_activity
-            if vars.activity_id:
-                link_id = ltable.insert(task_id = id,
-                                        activity_id = _vars.activity_id)
+            lta = db.project_task_activity
+            link_id = lta.insert(task_id = id,
+                                 activity_id = activity_id)
 
-        if "milestone_id" in vars:
+        milestone_id = vars.get("milestone_id", None)
+        if milestone_id:
             # Create Link to Milestone
             ltable = db.project_task_milestone
-            if vars.milestone_id:
-                link_id = ltable.insert(task_id = id,
-                                        milestone_id = _vars.milestone_id)
+            link_id = ltable.insert(task_id = id,
+                                    milestone_id = milestone_id)
 
         # Make sure the task is also linked to the project
         # when created under an activity
-        if id:
+        row = db(ltp.task_id == id).select(ltp.project_id,
+                                           limitby=(0, 1)).first()
+        if not row:
             lta = db.project_task_activity
-            ltp = db.project_task_project
             ta = db.project_activity
-            query = (ltp.task_id == id)
-            row = db(query).select(ltp.project_id,
+            query = (lta.task_id == id) & \
+                    (lta.activity_id == ta.id)
+            row = db(query).select(ta.project_id,
                                    limitby=(0, 1)).first()
-            if not row:
-                query = (lta.task_id == id) & \
-                        (lta.activity_id == ta.id)
-                row = db(query).select(ta.project_id,
-                                       limitby=(0, 1)).first()
-                if row and row.project_id:
-                    ltp.insert(task_id=id,
-                               project_id=row.project_id)
+            if row and row.project_id:
+                ltp.insert(task_id=id,
+                           project_id=row.project_id)
 
         # Notify Assignee
         task_notify(form)
@@ -4257,12 +4251,12 @@ class S3ProjectTaskModel(S3Model):
 
         vars = current.request.post_vars
         if "project_id" in vars:
-            ptable = db.project_project
             ltable = db.project_task_project
             filter = (ltable.task_id == id)
             project = vars.project_id
             if project:
                 # Create the link to the Project
+                #ptable = db.project_project
                 #master = s3db.resource("project_task", id=id)
                 #record = db(ptable.id == project).select(ptable.id,
                 #                                         limitby=(0, 1)).first()
@@ -4283,12 +4277,12 @@ class S3ProjectTaskModel(S3Model):
             links.delete(ondelete=ondelete)
 
         if "activity_id" in vars:
-            atable = db.project_activity
             ltable = db.project_task_activity
             filter = (ltable.task_id == id)
             activity = vars.activity_id
             if vars.activity_id:
                 # Create the link to the Activity
+                #atable = db.project_activity
                 #master = s3db.resource("project_task", id=id)
                 #record = db(atable.id == activity).select(atable.id,
                 #                                          limitby=(0, 1)).first()
@@ -4309,12 +4303,12 @@ class S3ProjectTaskModel(S3Model):
             links.delete(ondelete=ondelete)
 
         if "milestone_id" in vars:
-            mtable = db.project_milestone
             ltable = db.project_task_milestone
             filter = (ltable.task_id == id)
             milestone = vars.milestone_id
             if milestone:
                 # Create the link to the Milestone
+                #mtable = db.project_milestone
                 #master = s3db.resource("project_task", id=id)
                 #record = db(mtable.id == milestone).select(mtable.id,
                 #                                           limitby=(0, 1)).first()
@@ -5130,16 +5124,28 @@ def project_task_form_inject(r, output, project=True):
 
     table = s3db.project_task_activity
     field = table.activity_id
-    if r.id:
+    if project and r.id:
         query = (table.task_id == r.id)
-        default = db(query).select(table.activity_id,
+        default = db(query).select(field,
                                    limitby=(0, 1)).first()
         if default:
             default = default.activity_id
     else:
         default = field.default
     field_id = "%s_%s" % (table._tablename, field.name)
-    field.requires=IS_IN_SET([default])
+    if project:
+        if default:
+            field.requires = IS_IN_SET([default])
+        else:
+            field.requires = IS_IN_SET([])
+    else:
+        requires = {}
+        table = db.project_activity
+        query = (table.project_id == r.id)
+        rows = db(query).select(table.id, table.name)
+        for row in rows:
+            requires[row.id] = row.name
+        field.requires = IS_IN_SET(requires)
     widget = SQLFORM.widgets.options.widget(field, default)
     label = field.label
     label = LABEL(label, label and sep, _for=field_id,
@@ -5148,14 +5154,15 @@ def project_task_form_inject(r, output, project=True):
                                 c="project",
                                 f="activity",
                                 tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
-    options = {
-        "triggerName": "project_id",
-        "targetName": "activity_id",
-        "lookupPrefix": "project",
-        "lookupResource": "activity",
-        "optional": True,
-    }
-    s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
+    if project:
+        options = {
+            "triggerName": "project_id",
+            "targetName": "activity_id",
+            "lookupPrefix": "project",
+            "lookupResource": "activity",
+            "optional": True,
+        }
+        s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
     row = s3_formstyle(row_id, label, widget, comment)
     try:
@@ -5172,7 +5179,7 @@ def project_task_form_inject(r, output, project=True):
     if settings.get_project_milestones():
         table = s3db.project_task_milestone
         field = table.milestone_id
-        if r.id:
+        if project and r.id:
             query = (table.task_id == r.id)
             default = db(query).select(field,
                                        limitby=(0, 1)).first()
@@ -5271,7 +5278,7 @@ def project_task_controller():
         tablename = "project_task"
         table = s3db.project_task
         statuses = s3.project_task_active_statuses
-        crud_strings = s3.crud_strings["project_task"]
+        crud_strings = s3.crud_strings[tablename]
 
         if r.record:
             if r.interactive:

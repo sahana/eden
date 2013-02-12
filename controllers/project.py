@@ -123,14 +123,17 @@ def project():
                             del project_organisation_roles[host_role]
                             otable.role.requires = \
                                 IS_NULL_OR(IS_IN_SET(project_organisation_roles))
+
                 elif r.component_name == "activity":
                     # Filter Activity Type based on Sector
                     set_activity_type_requires("project_activity_activity_type", sector_ids)
+
                 elif r.component_name == "task":
                     table = r.component.table
-                    list_fields = s3db.get_config(r.component.tablename,
+                    tablename = r.component.tablename
+                    list_fields = s3db.get_config(tablename,
                                                   "list_fields")
-                    list_fields.insert(3, (T("Activity"), "activity.activity_id"))
+                    list_fields.insert(3, (T("Activity"), "activity.name"))
                     if not auth.s3_has_role("STAFF"):
                         # Hide fields to avoid confusion (both of inputters & recipients)
                         field = table.source
@@ -150,6 +153,7 @@ def project():
                         statuses = s3.project_task_active_statuses
                         filter = (table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
+
                 elif r.component_name == "beneficiary":
                     db.project_beneficiary.project_location_id.requires = IS_NULL_OR(
                         IS_ONE_OF(db, "project_location.id",
@@ -158,6 +162,7 @@ def project():
                                   filterby="project_id",
                                   filter_opts=[r.id])
                                   )
+
                 elif r.component_name == "human_resource":
                     # We can pass the human resource type filter in the URL
                     group = r.vars.get("group", None)
@@ -197,6 +202,7 @@ def project():
                             orderby="hrm_human_resource.person_id",
                             sort=True
                         )
+
                 elif r.component_name == "document":
                     doc_table = s3db.doc_document
                     doc_table.organisation_id.readable = doc_table.organisation_id.writable = False

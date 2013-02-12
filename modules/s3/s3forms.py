@@ -767,7 +767,8 @@ class S3SQLCustomForm(S3SQLForm):
                         keepvalues=False,
                         hideerror=False):
 
-            self.accept(form, format=format)
+            link = options.get("link", None)
+            self.accept(form, format=format, link=link)
             response.confirmation = message
 
         return form
@@ -833,12 +834,13 @@ class S3SQLCustomForm(S3SQLForm):
         return
 
     # -------------------------------------------------------------------------
-    def accept(self, form, format=None):
+    def accept(self, form, format=None, link=None):
         """
             Create/update all records from the form.
 
             @param form: the form
             @param format: data format extension (for audit)
+            @param link: resource.link for linktable components
         """
 
         db = current.db
@@ -848,7 +850,8 @@ class S3SQLCustomForm(S3SQLForm):
         main_data = self._extract(form)
         master_id = self._accept(self.record_id,
                                  main_data,
-                                 format=format)
+                                 format=format,
+                                 link=link)
         if not master_id:
             return
         else:
@@ -925,7 +928,7 @@ class S3SQLCustomForm(S3SQLForm):
             return subform
 
     # -------------------------------------------------------------------------
-    def _accept(self, record_id, data, alias=None, format=None):
+    def _accept(self, record_id, data, alias=None, format=None, link=None):
         """
             Create or update a record
 
@@ -933,6 +936,7 @@ class S3SQLCustomForm(S3SQLForm):
             @param data: the data
             @param alias: the component alias
             @param format: the request format (for audit)
+            @param link: resource.link for linktable components
         """
 
         if not data:
@@ -985,6 +989,12 @@ class S3SQLCustomForm(S3SQLForm):
         # Update super entity links
         s3db.update_super(table, form.vars)
 
+        # Update component link
+        if link and link.postprocess is None:
+            resource = link.resource
+            master = link.master
+            resource.update_link(master, form.vars)
+        
         if accept_id:
             if record_id is None:
                 # Set record owner
