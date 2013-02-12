@@ -1154,6 +1154,8 @@ class S3ProjectActivityModel(S3Model):
                        "comments"
                        ]
         if mode_task:
+            list_fields.insert(3,"time_estimated")
+            list_fields.insert(4,"time_actual")
             append((T("Time Estimated"), "time_estimated"))
             append((T("Time Actual"), "time_actual"))
             create_next = URL(c="project", f="activity",

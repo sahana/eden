@@ -128,6 +128,9 @@ def project():
                     set_activity_type_requires("project_activity_activity_type", sector_ids)
                 elif r.component_name == "task":
                     table = r.component.table
+                    list_fields = s3db.get_config(r.component.tablename,
+                                                  "list_fields")
+                    list_fields.insert(3, (T("Activity"), "activity.activity_id"))
                     if not auth.s3_has_role("STAFF"):
                         # Hide fields to avoid confusion (both of inputters & recipients)
                         field = table.source
