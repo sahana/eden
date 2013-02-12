@@ -202,23 +202,7 @@ class S3DateTimeWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
-        settings = current.deployment_settings
-        if self.format:
-            # default: "%Y-%m-%d %T"
-            format = str(self.format)
-        else:
-            format = str(settings.get_L10n_datetime_format())
-        request = current.request
-        s3 = current.response.s3
-
-        if isinstance(value, datetime.datetime):
-            datevalue = value
-            value = value.strftime(format)
-        elif value is None:
-            value = ""
-        else:
-            from dateutil import parser
-            datevalue = parser.parse(value, ignoretz=True)
+        self.injectJS(field, value)
 
         default = dict(_type = "text",
                        # Prevent default "datetime" calendar from showing up:
@@ -227,7 +211,30 @@ class S3DateTimeWidget(FormWidget):
                        old_value = value)
 
         attr = StringWidget._attributes(field, default, **attributes)
+               
+        return TAG[""](
+                        INPUT(**attr),
+                        requires = field.requires
+                      )
 
+    def injectJS(self, field, value):
+	
+        settings = current.deployment_settings
+        if self.format:
+            # default: "%Y-%m-%d %T"
+            format = str(self.format)
+        else:
+            format = str(settings.get_L10n_datetime_format())
+        request = current.request
+        s3 = current.response.s3
+        if isinstance(value, datetime.datetime):
+            datevalue = value
+            value = value.strftime(format)
+        elif value is None:
+            value = ""
+        else:
+            from dateutil import parser
+            datevalue = parser.parse(value, ignoretz=True)
         selector = str(field).replace(".", "_")
 
         now = request.utcnow
@@ -288,10 +295,6 @@ $('#%(selector)s').after(clear_button)
              latest=latest,
              format=format.replace("%M", "%i")))
 
-        return TAG[""](
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
 
 # =============================================================================
 class S3BooleanWidget(BooleanWidget):

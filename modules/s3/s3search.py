@@ -54,7 +54,7 @@ from s3navigation import s3_search_tabs
 from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime
 from s3validators import *
-from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
+from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget, S3DateTimeWidget
 
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
@@ -357,7 +357,10 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             attr.update(_type="text")
             attr.update(_class="anytime")
             requires = IS_EMPTY_OR(IS_DATETIME(format=settings.get_L10n_datetime_format()))
-            self.getDateTimeCalendar()
+            calendar_widget = S3DateTimeWidget()
+            calendar_widget.injectJS("id-" + self.attr["_name"] + "_min", None)
+            calendar_widget.injectJS("id-" + self.attr["_name"] + "_max", None)
+	    
         else:
             raise SyntaxError("Unsupported search field type")
 
@@ -411,69 +414,6 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         w = TABLE(trl, tri, _class="s3searchminmaxwidget")
 
         return w
-
-    # -------------------------------------------------------------------------
-    def getDateTimeCalendar(self):
-        
-        settings = current.deployment_settings
-        format = str(settings.get_L10n_datetime_format())
-        s3 = current.response.s3
-        request = current.request
-        past = 876000     # how many hours into the past the date can be set to
-        future = 876000
-        selectors = [ "id-" + self.attr["_name"] + "_min" , "id-" + self.attr["_name"] + "_max"]
-        firstDOW = settings.get_L10n_firstDOW()
-        
-
-        now = request.utcnow
-        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-        if offset:
-            now = now + datetime.timedelta(seconds=offset)
-        timedelta = datetime.timedelta
-        earliest = now - timedelta(hours = past)
-        latest = now + timedelta(hours = future)
-
-        # Round to the nearest half hour
-        if earliest < now < latest:
-            start = now
-        else:
-            start = earliest
-        seconds = (start - start.min).seconds
-        rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
-        rounded = start + datetime.timedelta(0, rounding - seconds, - start.microsecond)
-
-        rounded = rounded.strftime(format)
-        earliest = earliest.strftime(format)
-        latest = latest.strftime(format)
-
-        
-        script_dir = "/%s/static/scripts" % current.request.application
-        s3.scripts.append("%s/anytime.js" % script_dir)
-        s3.stylesheets.append("plugins/anytime.css")
-            
-        for selector in selectors:
-            s3.jquery_ready.append(
-'''$('#%(selector)s').click(function(){
-if (!$('#%(selector)s').val()){
- $('#%(selector)s').val('%(rounded)s')
- $('#%(selector)s').AnyTime_picker({
-  askSecond:false,
-  firstDOW:%(firstDOW)s,
-  earliest:'%(earliest)s',
-  latest:'%(latest)s',
-  format:'%(format)s'
- }).focus()
-}})
-clear_button=$('<input type="button" value="clear"/>').click(function(e){
- $('#%(selector)s').val('')
-})
-$('#%(selector)s').after(clear_button)''' % \
-                dict(rounded=rounded,
-                     selector=selector,
-                     firstDOW=firstDOW,
-                     earliest=earliest,
-                     latest=latest,
-                     format=format.replace("%M", "%i")))
 
     # -------------------------------------------------------------------------
     @staticmethod
