@@ -5124,21 +5124,23 @@ def project_task_form_inject(r, output, project=True):
 
     table = s3db.project_task_activity
     field = table.activity_id
-    if project and r.id:
+    default = None
+    if r.component_id:
+        query = (table.task_id == r.component_id)
+        default = db(query).select(field,
+                                   limitby=(0, 1)).first()
+        if default:
+            default = default.activity_id
+    elif r.id:
         query = (table.task_id == r.id)
         default = db(query).select(field,
                                    limitby=(0, 1)).first()
         if default:
             default = default.activity_id
-    else:
+    if not default:
         default = field.default
     field_id = "%s_%s" % (table._tablename, field.name)
-    if project:
-        if default:
-            field.requires = IS_IN_SET([default])
-        else:
-            field.requires = IS_IN_SET([])
-    else:
+    if r.component_id:
         requires = {}
         table = db.project_activity
         query = (table.project_id == r.id)
@@ -5146,6 +5148,11 @@ def project_task_form_inject(r, output, project=True):
         for row in rows:
             requires[row.id] = row.name
         field.requires = IS_IN_SET(requires)
+    else:
+        if default:
+            field.requires = IS_IN_SET([default])
+        else:
+            field.requires = IS_IN_SET([])
     widget = SQLFORM.widgets.options.widget(field, default)
     label = field.label
     label = LABEL(label, label and sep, _for=field_id,
