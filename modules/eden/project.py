@@ -5140,7 +5140,7 @@ def project_task_form_inject(r, output, project=True):
     if not default:
         default = field.default
     field_id = "%s_%s" % (table._tablename, field.name)
-    if r.component_id:
+    if r.component:
         requires = {}
         table = db.project_activity
         query = (table.project_id == r.id)
