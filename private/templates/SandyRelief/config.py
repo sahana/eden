@@ -511,6 +511,6 @@ settings.modules = OrderedDict([
     #       name_nice = T("Optical Character Recognition"),
     #       #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
     #       restricted = False,
-    #       module_type = 10
+    #       module_type = None
     #   )),
 ])
