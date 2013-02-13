@@ -865,10 +865,6 @@ class S3Request(object):
                         current.session.error = self.ERROR.BAD_RECORD
                         redirect(URL(r=self, c=self.prefix, f=self.name))
 
-        if self.interactive and self.representation == "html":
-            settings = current.deployment_settings
-            attr = settings.ui_customize(self.tablename, **attr)
-
         # Pre-process
         if hooks is not None:
             preprocess = hooks.get("prep", None)

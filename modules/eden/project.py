@@ -95,6 +95,7 @@ class S3ProjectModel(S3Model):
              "project_pifacc_opts",
              "project_rfa_opts",
              "project_theme_opts",
+             "project_hazard_opts",
              ]
 
     def model(self):
@@ -280,26 +281,19 @@ class S3ProjectModel(S3Model):
                     field = "organisation_id",
                     cols = 3
                 ))
-        if settings.get_template() == "DRRPP":
-            append(S3SearchOptionsWidget(
-                    name = "project_search_location",
-                    label = T("Country"),
-                    field = "location.location_id",
-                    cols = 3
-                    ))
-        else:
-            append(S3SearchOptionsWidget(
-                    name = "project_search_L0",
-                    field = "location.location_id$L0",
-                    location_level="L0",
-                    cols = 3
-                    ))
-            append(S3SearchOptionsWidget(
-                    name = "project_search_L1",
-                    field = "location.location_id$L1",
-                    location_level="L1",
-                    cols = 3
-                    ))
+
+        append(S3SearchOptionsWidget(
+                name = "project_search_L0",
+                field = "location.location_id$L0",
+                location_level="L0",
+                cols = 3
+                ))
+        append(S3SearchOptionsWidget(
+                name = "project_search_L1",
+                field = "location.location_id$L1",
+                location_level="L1",
+                cols = 3
+                ))
             #append(S3SearchOptionsWidget(
             #        name = "project_search_L2",
             #        label = T("Countries"),
@@ -353,20 +347,6 @@ class S3ProjectModel(S3Model):
                         cols = 5
                     ))
 
-        if settings.get_template() == "DRRPP":
-            project_rfa_opts = self.project_rfa_opts()
-            options = {}
-            #options = {None:NONE} To search NO RFA
-            for key in project_rfa_opts.keys():
-                options[key] = "RFA %s" % key
-            append(S3SearchOptionsWidget(
-                        name = "project_search_rfa",
-                        label = T("RFA"),
-                        field = "drrpp.rfa",
-                        options = options,
-                        help_field = project_rfa_opts,
-                        cols = 6
-                    ))
         if multi_orgs:
             append(S3SearchOptionsWidget(
                         name = "project_search_partners",
@@ -402,65 +382,34 @@ class S3ProjectModel(S3Model):
             #                  args=["[id]", "display"])
             create_next = None
 
-        if settings.get_template() == "DRRPP":
-            list_fields = ["id",
-                           "name",
-                           "start_date",
-                           (T("Countries"), "location.location_id"),
-                           (T("Hazards"), "hazard.name"),
-                           (T("Lead Organization"), "organisation_id"),
-                           (T("Donors"), "donor.organisation_id"),
-                           ]
-            report_fields = [#(T("Projects"), "name"),
-                             (T("Countries"), "location.location_id"),
-                             (T("Hazards"), "hazard.name"),
-                             (T("Themes"), "theme.name"),
-                             (T("HFA Priorities"), "drr.hfa"),
-                             (T("RFA Priorities"), "drrpp.rfa"),
-                             (T("Lead Organization"), "organisation_id"),
-                             (T("Partner Organizations"), "partner.organisation_id"),
-                             (T("Donors"), "donor.organisation_id"),
-                             ]
-            report_col_default = "location.location_id"
+        list_fields = ["id"]
+        append = list_fields.append
+        if use_codes:
+            append("code")
+        append("name")
+        append("organisation_id")
+        if mode_3w:
+            append((T("Locations"), "location.location_id"))
+        if use_sectors:
+            append((T("Sectors"), "sector.name"))
+        if mode_drr:
+            append((T("Hazards"), "hazard.name"))
+            #append("drr.hfa")
+        append((T("Themes"), "theme.name"))
+        if multi_orgs:
+            table.virtualfields.append(S3ProjectOrganisationFundingVirtualFields())
+            append((T("Total Funding Amount"), "total_organisation_amount"))
+        if multi_budgets:
+            table.virtualfields.append(S3ProjectBudgetVirtualFields())
+            append((T("Total Annual Budget"), "total_annual_budget"))
+        append("start_date")
+        append("end_date")
 
-            if "chart" in current.request.vars:
-                crud_strings[tablename].title_report  = T("Project Graph")
-                report_fact_fields = [("project.id", "count")]
-                report_fact_default = "project.id"
-            else:
-                crud_strings[tablename].title_report  = T("Project Matrix")
-                report_fact_fields = [(field, "count") for field in report_fields]
-                report_fact_default = "theme.name"
-
-        else:
-            list_fields = ["id"]
-            append = list_fields.append
-            if use_codes:
-                append("code")
-            append("name")
-            append("organisation_id")
-            if mode_3w:
-                append((T("Locations"), "location.location_id"))
-            if use_sectors:
-                append((T("Sectors"), "sector.name"))
-            if mode_drr:
-                append((T("Hazards"), "hazard.name"))
-                #append("drr.hfa")
-            append((T("Themes"), "theme.name"))
-            if multi_orgs:
-                table.virtualfields.append(S3ProjectOrganisationFundingVirtualFields())
-                append((T("Total Funding Amount"), "total_organisation_amount"))
-            if multi_budgets:
-                table.virtualfields.append(S3ProjectBudgetVirtualFields())
-                append((T("Total Annual Budget"), "total_annual_budget"))
-            append("start_date")
-            append("end_date")
-
-            report_fields = list_fields
-            report_col_default = "location.location_id"
-            report_fact_fields = [(field, "count") for field in report_fields]
-            report_fact_default = "project.organisation_id"
-            #report_fact_default = "theme.name"
+        report_fields = list_fields
+        report_col_default = "location.location_id"
+        report_fact_fields = [(field, "count") for field in report_fields]
+        report_fact_default = "project.organisation_id"
+        #report_fact_default = "theme.name"
 
         configure(tablename,
                   super_entity="doc_entity",
@@ -642,6 +591,7 @@ class S3ProjectModel(S3Model):
             project_pifacc_opts = self.project_pifacc_opts,
             project_rfa_opts = self.project_rfa_opts,
             project_theme_opts = self.project_theme_opts,
+            project_hazard_opts = self.project_hazard_opts,
         )
 
     # -------------------------------------------------------------------------
