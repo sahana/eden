@@ -10,11 +10,9 @@ Downloading platform
 Official download page
 ``````````````````````
 
-.. note:: The download section in the official website is not available yet.
-
-The are several ways to download e-cidadania. The most simple of them is going to
-the `downloads <http://ecidadania.org/downloads>`_ page in the website and download
-the latest stable or development versions, ready to use.
+The are several ways to download e-cidadania. The most simple of them is going
+to the `downloads <http://ecidadania.net/en/download/>`_ page in the website
+and download the latest stable or development versions, ready to use.
 
 GitHub packages
 ```````````````
@@ -35,7 +33,7 @@ Stable version
 
 You can find the latest stable version in the download page in ecidadania.org::
 
-    http://ecidadania.org/en/downloads
+    http://ecidadania.net/en/downloads
 
 .. _dev-version:
 

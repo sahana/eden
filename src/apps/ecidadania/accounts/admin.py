@@ -34,7 +34,7 @@ class ProfileAdmin(admin.ModelAdmin):
     This is a minimal view for Django administration interface. It shows the
     user and the website.
     """
-    list_display = ('user', 'website')
+    list_display = ('user', 'firstname', 'surname', 'country', 'website')
     actions = ['mass_mail']
     
     def mass_mail(self, request, queryset):
