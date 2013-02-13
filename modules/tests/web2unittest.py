@@ -36,6 +36,7 @@ from unittest.case import SkipTest, _ExpectedFailure, _UnexpectedSuccess
 from dateutil.relativedelta import relativedelta
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.wait import WebDriverWait
 
 from gluon import current
 
@@ -455,6 +456,7 @@ class SeleniumUnitTest(Web2UnitTest):
         # Submit the Form
         submit_btn = browser.find_element_by_css_selector("input[type='submit']")
         submit_btn.click()
+        self.wait_for_page_to_load()
         # Check & Report the results
         confirm = True
         try:
@@ -497,6 +499,11 @@ class SeleniumUnitTest(Web2UnitTest):
                 return False
             else:
                 return True
+
+    # -------------------------------------------------------------------------
+    def wait_for_page_to_load(self, timeout=10000):
+        w = WebDriverWait(self.browser, timeout/1000.0)
+        w.until(lambda browser: browser.execute_script("return document.readyState") == "complete")
 
     # -------------------------------------------------------------------------
     class InvalidReportOrGroupException(Exception):
