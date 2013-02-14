@@ -169,9 +169,11 @@ class index():
         table = s3db.project_project
         query = (table.deleted == False) & (table.approved_by != None)
         projects = db(query).count()
-        current_projects = db(query & (table.status_id == 2)).count()
-        proposed_projects = db(query & (table.status_id == 1)).count()
-        completed_projects = db(query & (table.status_id == 3)).count()
+        status_table = s3db.project_status
+        status_query = query & (table.status_id == status_table.id)
+        current_projects = db(status_query & (status_table.name == "Current")).count()
+        proposed_projects = db(status_query & (status_table.name == "Proposed")).count()
+        completed_projects = db(status_query & (status_table.name == "Completed")).count()
         
         ftable = s3db.project_framework
         query = (ftable.deleted == False) & (ftable.approved_by != None)
