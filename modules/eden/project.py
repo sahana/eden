@@ -303,7 +303,7 @@ class S3ProjectModel(S3Model):
             #        ))
 
         if use_sectors:
-            if settings.get_ui_cluster():
+            if settings.get_ui_label_cluster():
                 sector = T("Cluster")
             else:
                 sector = T("Sector")

@@ -90,7 +90,7 @@ def shelter():
     field.represent = lambda id: \
         (id and [table[id].name] or ["None"])[0]
     field.ondelete = "RESTRICT"
-    if settings.get_ui_camp():
+    if settings.get_ui_label_camp():
         HELP = T("The Camp this person is checking into.")
     else:
         HELP = T("The Shelter this person is checking into.")
@@ -183,7 +183,7 @@ def shelter():
                         db.assess_rat.staff_id.default = staff_id.id
 
                 elif r.component.name == "presence":
-                    if deployment_settings.get_ui_camp():
+                    if deployment_settings.get_ui_label_camp():
                         REGISTER_LABEL = T("Register Person into this Camp")
                         EMPTY_LIST = T("No People currently registered in this camp")
                     else:

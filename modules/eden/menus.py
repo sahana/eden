@@ -564,7 +564,7 @@ class S3OptionsMenu(object):
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        if current.deployment_settings.get_ui_camp():
+        if current.deployment_settings.get_ui_label_camp():
             shelter = "Camps"
             types = "Camp Settings"
         else:
@@ -1410,7 +1410,7 @@ class S3OptionsMenu(object):
         """ ORG / Organization Registry """
 
         ADMIN = current.session.s3.system_roles.ADMIN
-        SECTORS = "Clusters" if current.deployment_settings.get_ui_cluster() \
+        SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
                              else "Sectors"
 
         return M(c="org")(

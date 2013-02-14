@@ -254,7 +254,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         hrm_vars = session.s3.hrm
 
         ADMIN = current.auth.get_system_roles().ADMIN
-        SECTORS = "Clusters" if current.deployment_settings.get_ui_cluster() \
+        SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
                              else "Sectors"
 
         manager_mode = lambda i: hrm_vars.mode is None

@@ -626,12 +626,20 @@ class S3Config(Storage):
                       _class=_class))
         return tuple(row)
 
-    # -------------------------------------------------------------------------
     def get_ui_formstyle(self):
         return self.ui.get("formstyle", self.default_formstyle)
 
-    def get_ui_navigate_away_confirm(self):
-        return self.ui.get("navigate_away_confirm", True)
+    # -------------------------------------------------------------------------
+    def get_ui_auth_user_represent(self):
+        """
+            Should the auth_user created_by/modified_by be represented by Name or Email?
+            - defaults to email
+        """
+        return self.ui.get("auth_user_represent", "email")
+
+    def get_ui_autocomplete(self):
+        """ Currently Unused """
+        return self.ui.get("autocomplete", False)
 
     def get_ui_confirm(self):
         """
@@ -641,29 +649,37 @@ class S3Config(Storage):
         """
         return self.ui.get("confirm", True)
 
-    def get_ui_autocomplete(self):
-        """ Currently Unused """
-        return self.ui.get("autocomplete", False)
+    def get_ui_crud_form(self, tablename):
+        """ Get custom crud_forms for diffent tables """
+        return self.ui.get("crud_form_%s" % tablename, None)
 
-    def get_ui_read_label(self):
-        """
-            Label for buttons in list views which lead to a Read-opnly 'Display' view
-        """
-        return self.ui.get("read_label", "Open")
+    def ui_customize(self, tablename, **attr):
+        """ Customizes field settings on a table"""
+        customize = self.ui.get("customize_%s" % tablename)
+        if customize:
+            return customize(**attr)
+        else:
+            return attr
 
-    def get_ui_update_label(self):
+    def get_ui_hide_report_filter_options(self):
         """
-            Label for buttons in list views which lead to a Read-opnly 'Display' view
+            Show report filter options form by default
         """
-        return self.ui.get("update_label", "Open")
+        return self.ui.get("hide_report_filter_options", False)
 
-    def get_ui_cluster(self):
-        """ UN-style deployment? """
-        return self.ui.get("cluster", False)
+    def get_ui_hide_report_options(self):
+        """
+            Hide report options form by default
+        """
+        return self.ui.get("hide_report_options", True)
 
-    def get_ui_camp(self):
+    def get_ui_label_camp(self):
         """ 'Camp' instead of 'Shelter'? """
         return self.ui.get("camp", False)
+
+    def get_ui_label_cluster(self):
+        """ UN-style deployment? """
+        return self.ui.get("cluster", False)
 
     def get_ui_label_mobile_phone(self):
         """
@@ -679,40 +695,30 @@ class S3Config(Storage):
         """
         return current.T(self.ui.get("label_postcode", "Postcode"))
 
+    def get_ui_label_read(self):
+        """
+            Label for buttons in list views which lead to a Read-opnly 'Display' view
+        """
+        return self.ui.get("read_label", "Open")
+
+    def get_ui_label_update(self):
+        """
+            Label for buttons in list views which lead to a Read-opnly 'Display' view
+        """
+        return self.ui.get("update_label", "Open")
+
+    def get_ui_navigate_away_confirm(self):
+        return self.ui.get("navigate_away_confirm", True)
+
+    def get_ui_search_submit_button(self):
+        """
+            Class for submit buttons in search views
+        """
+        return self.ui.get("search_submit_button", "search-button")
+
     def get_ui_social_buttons(self):
         """ Display social media Buttons in the footer? """
         return self.ui.get("social_buttons", False)
-
-    def get_ui_auth_user_represent(self):
-        """
-            Should the auth_user created_by/modified_by be represented by Name or Email?
-            - defaults to email
-        """
-        return self.ui.get("auth_user_represent", "email")
-
-    def get_ui_crud_form(self, tablename):
-        """ Get custom crud_forms for diffent tables """
-        return self.ui.get("crud_form_%s" % tablename, None)
-
-    def ui_customize(self, tablename, **attr):
-        """ Customizes field settings on a table"""
-        customize = self.ui.get("customize_%s" % tablename)
-        if customize:
-            return customize(**attr)
-        else:
-            return attr
-
-    def get_ui_hide_report_options(self):
-        """
-            Hide report options form by default
-        """
-        return self.ui.get("hide_report_options", True)
-
-    def get_ui_hide_report_filter_options(self):
-        """
-            Show report filter options form by default
-        """
-        return self.ui.get("hide_report_filter_options", False)
 
     # =========================================================================
     # Messaging

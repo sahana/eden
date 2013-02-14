@@ -169,6 +169,19 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
+    configFilenamedataTables = "sahana.js.dataTables_multi.cfg"
+    outputFilenamedataTables = "s3.dataTables.multi.min.js"
+    mergeddataTables = mergejs.run(sourceDirectorydataTables,
+                                   None,
+                                   configFilenamedataTables)
+    minimizeddataTables = minimize(mergeddataTables)
+    open(outputFilenamedataTables, "w").write(minimizeddataTables)
+    try:
+        os.remove("../S3/%s" % outputFilenamedataTables)
+    except:
+        pass
+    shutil.move(outputFilenamedataTables, "../S3")
+
     # Reports
     print "Compressing Reports"
     sourceDirectoryReport = ".."

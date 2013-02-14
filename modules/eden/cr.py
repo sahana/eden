@@ -71,7 +71,7 @@ class S3CampDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        if settings.get_ui_camp():
+        if settings.get_ui_label_camp():
             ADD_SHELTER_TYPE = T("Add Camp Type")
             SHELTER_TYPE_LABEL = T("Camp Type")
             crud_strings[tablename] = Storage(
@@ -135,7 +135,7 @@ class S3CampDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        if settings.get_ui_camp():
+        if settings.get_ui_label_camp():
             ADD_SHELTER_SERVICE = T("Add Camp Service")
             SHELTER_SERVICE_LABEL = T("Camp Service")
             crud_strings[tablename] = Storage(
@@ -268,7 +268,7 @@ class S3CampDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        if settings.get_ui_camp():
+        if settings.get_ui_label_camp():
             ADD_SHELTER = T("Add Camp")
             SHELTER_LABEL = T("Camp")
             SHELTER_HELP = T("The Camp this Request is from")
@@ -473,7 +473,7 @@ class S3CampDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        if settings.get_ui_camp():
+        if settings.get_ui_label_camp():
             ADD_SHELTER_STATUS = T("Add Camp Status")
             SHELTER_STATUS_LABEL = T("Camp Status")
             crud_strings[tablename] = Storage(

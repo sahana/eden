@@ -128,7 +128,7 @@ class S3OrganisationModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        if settings.get_ui_cluster():
+        if settings.get_ui_label_cluster():
             SECTOR = T("Cluster")
             ADD_SECTOR = T("Add Cluster")
             help = T("If you don't see the Cluster in the list, you can add a new one by clicking link 'Add Cluster'.")
@@ -239,7 +239,7 @@ class S3OrganisationModel(S3Model):
                              # *s3_meta_fields())
 
         ##CRUD strings
-        # if settings.get_ui_cluster():
+        # if settings.get_ui_label_cluster():
             # SUBSECTOR = T("Cluster Subsector")
             # crud_strings[tablename] = Storage(
                 # title_create = T("Add Cluster Subsector"),
@@ -2848,7 +2848,7 @@ def org_rheader(r, tabs=[]):
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         if table.multi_sector_id.readable and record.multi_sector_id:
-            if settings.get_ui_cluster():
+            if settings.get_ui_label_cluster():
                 sector_label = T("Cluster(s)")
             else:
                 sector_label = T("Sector(s)")

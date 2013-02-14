@@ -1178,7 +1178,9 @@ class S3Search(S3CRUD):
         }
 
         widget = TAG[""](BUTTON(T("Save this search"),
-                                _id="save-search"),
+                                _id="save-search",
+                                _class="save-search-button"
+                                ),
                          SCRIPT('''
 S3.search.saveOptions=%s
 i18n.edit_saved_search="%s"
@@ -1420,12 +1422,14 @@ i18n.edit_saved_search="%s"
 
         # Complete the output form-DIV()
         if simple_form is not None:
-            # Insert the save button next to the submit button
-            simple_form[0][-1][1].insert(1, save_search)
+            if save_search:
+                # Insert the save button next to the submit button
+                simple_form[0][-1][1].insert(1, save_search)
             form.append(simple_form)
         if advanced_form is not None:
-            # Insert the save button next to the submit button
-            advanced_form[0][-1][1].insert(1, save_search)
+            if save_search:
+                # Insert the save button next to the submit button
+                advanced_form[0][-1][1].insert(1, save_search)
             form.append(advanced_form)
         output["form"] = form
 
@@ -1783,11 +1787,14 @@ i18n.edit_saved_search="%s"
         if switch:
             trows.append(TR("", switch))
 
+        submit_class = current.deployment_settings.get_ui_search_submit_button()
         trows.append(
                      TR("",
                         TD(INPUT(_type="submit",
                                  _name=submit,
-                                 _value=T("Search")),
+                                 _value=T("Search"),
+                                 _class=submit_class
+                                 ),
                            clear
                           )
                         )

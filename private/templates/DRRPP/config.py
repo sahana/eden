@@ -164,8 +164,11 @@ settings.ui.formstyle_row = formstyle_row
 settings.ui.formstyle = formstyle_row
 
 # -----------------------------------------------------------------------------
-# Customize project_project controller
 def customize_project_project(**attr):
+    """
+        Customize project_project controller
+    """
+
     s3db = current.s3db
     s3 = current.response.s3
     tablename = "project_project"
@@ -479,10 +482,36 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
 settings.ui.customize_project_project = customize_project_project
 
 # -----------------------------------------------------------------------------
-# Customize pr_person controller
+def customize_project_framework(**attr):
+    """
+        Customize project_framework controller
+    """
+
+    # Load normal model
+    table = current.s3db.project_framework
+
+    # Custom CRUD Strings
+    current.response.s3.crud_strings.project_framework.title_search = \
+        T("Policies & Strategies List")
+
+    #settings.ui.search_submit_button = "search-button small inline"
+
+    return attr
+
+settings.ui.customize_project_framework = customize_project_framework
+
+# -----------------------------------------------------------------------------
 def customize_pr_person(**attr):
-    T = current.T  
+    """
+        Customize pr_person controller
+    """
+
+    # Load normal model
+    table = current.s3db.pr_person
+
+    # Custom CRUD Strings
     current.response.s3.crud_strings.pr_person.title_display = T("My Page")
+
     attr["rheader"] = H3(T("Saved Searches"))
     return attr
 

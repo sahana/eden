@@ -419,8 +419,9 @@ class S3Report(S3CRUD):
         form = FORM(filter_options,
                     report_options,
                     DIV(INPUT(_value=current.T("Submit"),
-                              _type="submit"
-                             ),
+                              _type="submit",
+                              _class="report-submit-button",
+                              ),
                         clear_opts
                        ),
                     hidden=hidden,

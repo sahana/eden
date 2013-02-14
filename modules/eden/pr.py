@@ -142,7 +142,7 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
-        if current.deployment_settings.get_ui_camp():
+        if current.deployment_settings.get_ui_label_camp():
             shelter = T("Camp")
         else:
             shelter = T("Shelter")
