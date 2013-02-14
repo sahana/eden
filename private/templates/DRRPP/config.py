@@ -487,14 +487,34 @@ def customize_project_framework(**attr):
         Customize project_framework controller
     """
 
+    s3db = current.s3db
+    s3 = current.response.s3
+
     # Load normal model
     table = current.s3db.project_framework
 
     # Custom CRUD Strings
-    current.response.s3.crud_strings.project_framework.title_search = \
+    s3.crud_strings.project_framework.title_list = \
         T("Policies & Strategies List")
 
-    #settings.ui.search_submit_button = "search-button small inline"
+    # Custom PreP
+    standard_prep = s3.prep
+    def drrpp_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            output = standard_prep(r)
+        else:
+            output = True
+        if r.interactive:
+            # Don't show Update/Delete button on List View
+            if r.method is None:
+                s3db.configure("project_framework",
+                               insertable = False,
+                               editable = False,
+                               deletable = False
+                               )
+        return output
+    s3.prep = drrpp_prep
 
     return attr
 

@@ -20,6 +20,9 @@ if theme != "default":
     folder = request.folder
     for view in ["create.html",
                  "display.html",
+                 "list.html",
+                 "list_create.html",
+                 "report.html",
                  "search.html",
                  "update.html",
                  ]:

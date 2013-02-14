@@ -1900,19 +1900,19 @@ class S3ProjectFrameworkModel(S3Model):
             ),
         )
 
-        search_method = S3Search(simple = S3SearchSimpleWidget(
-                name = "project_framework_search_text",
-                label = T("Name"),
-                comment = T("Search for a Policy or Strategy by name or description."),
-                field = ["name",
-                         "description",
-                         ]
-            ))
+        # search_method = S3Search(simple = S3SearchSimpleWidget(
+                # name = "project_framework_search_text",
+                # label = T("Name"),
+                # comment = T("Search for a Policy or Strategy by name or description."),
+                # field = ["name",
+                         # "description",
+                         # ]
+            # ))
         
         self.configure(tablename,
                        super_entity="doc_entity",
                        crud_form = crud_form,
-                       search_method = search_method,
+                       #search_method = search_method,
                        list_fields = ["name",
                                       (ORGANISATIONS, "framework_organisation.organisation_id"),
                                       "description",
