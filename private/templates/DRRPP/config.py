@@ -173,6 +173,7 @@ def customize_project_project(**attr):
     table = s3db[tablename]
 
     # Custom Components
+    add_component = s3db.add_component
     add_component("project_drrpp",
                   project_project=Storage(joinby="project_id",
                                           multiple = False))
