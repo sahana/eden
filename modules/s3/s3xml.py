@@ -1628,6 +1628,7 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     def get_struct(self, prefix, name,
+                   alias=None,
                    parent=None,
                    meta=False,
                    options=True,
@@ -1654,6 +1655,8 @@ class S3XML(S3Codec):
             else:
                 e = etree.Element(self.TAG.resource)
             e.set(self.ATTRIBUTE.name, tablename)
+            if alias and alias != name:
+                e.set(self.ATTRIBUTE.alias, alias)
             self.get_fields(prefix, name,
                             parent=e,
                             meta=meta,
