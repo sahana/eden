@@ -55,7 +55,9 @@ class S3DelphiModel(S3Model):
         T = current.T
         db = current.db
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        NONE = messages["NONE"]
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         add_component = self.add_component
         configure = self.configure
@@ -189,18 +191,21 @@ class S3DelphiModel(S3Model):
         tablename = "delphi_problem"
         table = define_table(tablename,
                              group_id(),
+                             Field("code", length=8,
+                                   represent = lambda v: v or NONE,
+                                   label = T("Problem Code")),
                              Field("name", notnull=True, unique=True,
                                    label = T("Problem Title")),
-                              Field("description", "text",
-                                    represent = s3_comments_represent,
-                                    label = T("Description")),
-                              Field("criteria", "text", notnull=True,
-                                    label = T("Criteria")),
-                              Field("active", "boolean", default=True,
-                                    represent = s3_yes_no_represent,
-                                    label = T("Active")),
-                              *s3_meta_fields()
-                            )
+                             Field("description", "text",
+                                   represent = s3_comments_represent,
+                                   label = T("Description")),
+                             Field("criteria", "text", notnull=True,
+                                   label = T("Criteria")),
+                             Field("active", "boolean", default=True,
+                                   represent = s3_yes_no_represent,
+                                   label = T("Active")),
+                             *s3_meta_fields()
+                             )
 
         table.modified_on.label = T("Last Modification")
 
@@ -224,6 +229,7 @@ class S3DelphiModel(S3Model):
         configure(tablename,
                   list_fields=["id",
                                "group_id",
+                               "code",
                                "name",
                                "description",
                                "created_by",
@@ -241,7 +247,9 @@ class S3DelphiModel(S3Model):
                       delphi_problem="problem_id")
 
         configure("delphi_problem",
-                  deduplicate=self.problem_duplicate)
+                  deduplicate = self.problem_duplicate,
+                  orderby = table.code,
+                  )
 
         # ---------------------------------------------------------------------
         # Solutions
@@ -260,7 +268,7 @@ class S3DelphiModel(S3Model):
                                    writable = False,
                                    label = T("Changes")),
                              *s3_meta_fields()
-                            )
+                             )
 
         table.created_by.label = T("Suggested By")
         table.modified_on.label = T("Last Modification")
@@ -296,13 +304,14 @@ class S3DelphiModel(S3Model):
                                (T("Comments"), "comments"),
                                ])
 
+        solution_represent = S3Represent(lookup=tablename)
         solution_id = S3ReusableField("solution_id", table,
                                       label = T("Solution"),
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "delphi_solution.id",
-                                                              self.delphi_solution_represent
+                                                              solution_represent
                                                               )),
-                                      represent = self.delphi_solution_represent)
+                                      represent = solution_represent)
 
         # ---------------------------------------------------------------------
         # Votes
@@ -351,7 +360,7 @@ class S3DelphiModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return Storage(
-                    delphi_solution_represent = self.delphi_solution_represent,
+                    delphi_solution_represent = solution_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -400,25 +409,6 @@ class S3DelphiModel(S3Model):
                 return A(row.name, _href=url)
             else:
                 return row.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def delphi_solution_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        if not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.delphi_solution
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 

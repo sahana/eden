@@ -62,10 +62,9 @@ def group_rheader(r, tabs = []):
             # List or Create form: rheader makes no sense here
             return None
 
-        tabs = [
-                (T("Basic Details"), None),
+        tabs = [(T("Basic Details"), None),
                 (T("Problems"), "problem"),
-               ]
+                ]
         # @ToDo: Check for Group Moderators too
         if s3_has_role("DelphiAdmin"):
             tabs.append((T("Membership"), "membership"))
@@ -128,13 +127,13 @@ def problem_rheader(r, tabs = []):
 
         problem = r.record
 
-        tabs = [
-                # Components & Custom Methods
+        tabs = [# Components & Custom Methods
+                (T("Problems"), "problems"),
                 (T("Solutions"), "solution"),
                 (T("Discuss"), "discuss"),
                 (T("Vote"), "vote"),
                 (T("Scale of Results"), "results"),
-               ]
+                ]
         # @ToDo: Replace this by Group Moderator
         #if s3_has_role("DelphiAdmin"):
         tabs.append((T("Edit"), None))
@@ -192,6 +191,10 @@ def problem():
     # Custom Methods
     set_method = s3db.set_method
     set_method(module, resourcename,
+               method="problems",
+               action=problems)
+
+    set_method(module, resourcename,
                method="discuss",
                action=discuss)
 
@@ -247,6 +250,19 @@ def problem():
 
     rheader = problem_rheader
     return s3_rest_controller(rheader=rheader)
+
+# -----------------------------------------------------------------------------
+def problems(r, **attr):
+    """
+        Redirect to the list of Problems for the Group
+    """
+
+    try:
+        group_id = r.record.group_id
+    except:
+        raise HTTP(400)
+    else:
+        redirect(URL(f="group", args=[group_id, "problem"]))
 
 # =============================================================================
 # Voting
