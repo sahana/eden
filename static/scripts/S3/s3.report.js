@@ -1,7 +1,7 @@
 /**
  * S3 Reporting Framework, Static JavaScript
  *
- * copyright: 2012 (c) Sahana Software Foundation
+ * copyright: 2012-13 (c) Sahana Software Foundation
  * license: MIT
  *
  * requires: jQuery
@@ -458,11 +458,11 @@ $(document).ready(function() {
             if (layers) {
                 lists = $('<div/>').addClass('report-cell-records');
 
-                for (var layer=0, ln=layers.length; layer<ln; layer++) {
+                for (var layer=0, ln=layers.length; layer < ln; layer++) {
                     var list = $('<ul/>');
                     var records = layers[layer];
 
-                    for (var record=0, rn=records.length; record<rn; record++) {
+                    for (var record=0, rn=records.length; record < rn; record++) {
                         list.append('<li>' + json_data.cell_lookup_table[layer][records[record]] + '</li>');
                     }
                     lists.append(list);

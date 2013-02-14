@@ -22,6 +22,7 @@ if theme != "default":
                  "display.html",
                  "list.html",
                  "list_create.html",
+                 "map.html",
                  "report.html",
                  "search.html",
                  "update.html",

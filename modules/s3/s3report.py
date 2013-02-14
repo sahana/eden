@@ -299,7 +299,6 @@ class S3Report(S3CRUD):
 
             # Convert the pivot table into a S3ContingencyTable
             if representation in ("html", "iframe"):
-                report_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
                                                show_totals=show_totals,
@@ -308,8 +307,15 @@ class S3Report(S3CRUD):
                                                _id="list",
                                                _class="dataTable display report")
                     report_data = items.report_data
+                    json_data = report_data.json_data
                 else:
                     items = self.crud_string(tablename, "msg_no_match")
+                    hide_opts = current.deployment_settings.get_ui_hide_report_options()
+                    report_data = None
+                    json_data = json.dumps({"cols": None,
+                                            "rows": None,
+                                            "h": hide_opts,
+                                            })
 
                 report_options = self._config("report_options", Storage())
 
@@ -350,7 +356,9 @@ class S3Report(S3CRUD):
                 )
                 output = dict(pivot_table=pivot_table,
                               chart_opts=chart_opts,
-                              report_data=report_data)
+                              report_data=report_data,
+                              json_data=json_data,
+                              )
 
                 # Other output options
                 s3 = response.s3
@@ -551,11 +559,10 @@ class S3Report(S3CRUD):
                     BUTTON(self.SHOW,
                            _type="button",
                            _class="toggle-text",
-                           _style="display:none" if not hidden else None),
+                           _style="display:none"),
                     BUTTON(self.HIDE,
                            _type="button",
-                           _class="toggle-text",
-                           _style="display:none" if hidden else None)
+                           _class="toggle-text")
                 ),
                 selectors, _id="report_options")
 
@@ -616,7 +623,8 @@ class S3Report(S3CRUD):
             @param attr: the HTML attributes for the widget
         """
 
-        RECORDS = current.T("Records")
+        T = current.T
+        RECORDS = T("Records")
 
         if "methods" in options:
             all_methods = options["methods"]
@@ -648,13 +656,11 @@ class S3Report(S3CRUD):
         if value:
             value = prefix(value)
 
-        # Backward-compatiblity: render aggregate if given --------------------
-
+        # Backward-compatiblity: render aggregate if given
         if "aggregate" in form_values and ":" not in value:
             value = "%s:%s" % (form_values["aggregate"], value)
 
-        # Resolve selectors, add method options -------------------------------
-
+        # Resolve selectors, add method options
         opts = []
         for o in methods:
 
@@ -709,21 +715,19 @@ class S3Report(S3CRUD):
                 opt.insert(0, rfield)
                 opts.append(opt)
 
-        # Construct missing labels --------------------------------------------
-
+        # Construct missing labels
         _methods = []
         for opt in opts:
             if len(opt) == 3:
                 # field+method -> construct label
                 mlabel = self.mname(opt[2])
                 flabel = opt[0].label if opt[0].label != "Id" else RECORDS
-                label = current.T("%s (%s)") % (flabel, mlabel)
+                label = T("%s (%s)") % (flabel, mlabel)
                 _methods.append((opt[0].selector, opt[2], label))
             else:
                 _methods.append((opt[0].selector, opt[2], opt[3]))
 
-        # Build the widget ----------------------------------------------------
-
+        # Build the widget
         opts = [("%s:%s" % (m[1], m[0]), m[2]) for m in _methods]
         if len(opts) == 1:
             opt = opts[0]
@@ -848,7 +852,7 @@ class S3ContingencyTable(TABLE):
         row_totals = []
         add_row_total = row_totals.append
 
-        # Layer titles --------------------------------------------------------
+        # Layer titles
 
         # Get custom labels from report options
         layer_labels = Storage()
@@ -884,8 +888,7 @@ class S3ContingencyTable(TABLE):
 
         layers_title = TH(" / ".join(labels))
 
-        # Columns field title -------------------------------------------------
-
+        # Columns field title
         if cols:
             col_label = get_label(rfields, cols, tablename, "cols")
             _colspan = numcols + 1
@@ -896,14 +899,12 @@ class S3ContingencyTable(TABLE):
 
         titles = TR(layers_title, cols_title)
 
-        # Rows field title ----------------------------------------------------
-
+        # Rows field title
         row_label = get_label(rfields, rows, tablename, "rows")
         rows_title = TH(row_label, _scope="col")
         headers = TR(rows_title)
 
-        # Column headers ------------------------------------------------------
-
+        # Column headers
         add_header = headers.append
         values = report.col
         for i in xrange(numcols):
@@ -913,14 +914,12 @@ class S3ContingencyTable(TABLE):
             colhdr = TH(v, _scope="col")
             add_header(colhdr)
 
-        # Row totals header ---------------------------------------------------
-
+        # Row totals header
         if show_totals and cols is not None:
             add_header(TH(TOTAL, _class="totals_header rtotal", _scope="col"))
         thead = THEAD(titles, headers)
 
-        # Table body ----------------------------------------------------------
-
+        # Table body
         tbody = TBODY()
         add_row = tbody.append
 
@@ -1044,8 +1043,7 @@ class S3ContingencyTable(TABLE):
 
             add_row(tr)
 
-        # Table footer --------------------------------------------------------
-
+        # Table footer
         i = numrows
         _class = i % 2 and "odd" or "even"
         _class = "%s %s" % (_class, "totals_row")
@@ -1053,30 +1051,26 @@ class S3ContingencyTable(TABLE):
         add_total = col_total.append
         add_total(TH(TOTAL, _class="totals_header", _scope="row"))
 
-        # Column totals -------------------------------------------------------
-
+        # Column totals
         for j in xrange(numcols):
             col = report.col[j]
             totals = get_total(col, layers, append=add_col_total)
             add_total(TD(IS_NUMBER.represent(totals)))
 
-        # Grand total ---------------------------------------------------------
-
+        # Grand total
         if cols is not None:
             grand_totals = get_total(report.totals, layers)
             add_total(TD(grand_totals))
         tfoot = TFOOT(col_total)
 
-        # Wrap up -------------------------------------------------------------
-
+        # Wrap up
         append = components.append
         append(thead)
         append(tbody)
         if show_totals:
             append(tfoot)
 
-        # Chart data ----------------------------------------------------------
-
+        # Chart data
         layer_label = s3_unicode(layer_label)
         BY = T("by")
         row_label = "%s %s" % (BY, s3_unicode(row_label))

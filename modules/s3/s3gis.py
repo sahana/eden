@@ -7643,7 +7643,6 @@ class S3Map(S3Search):
                                )
 
         else:
-            save_search = DIV()
             map = DIV()
 
         if response.s3.simple_search:
@@ -7653,10 +7652,14 @@ class S3Map(S3Search):
 
         # Complete the output form
         if simple_form is not None:
-            simple_form.append(save_search)
+            if save_search:
+                # Insert the save button next to the submit button
+                simple_form[0][-1][1].insert(1, save_search)
             form.append(simple_form)
         if advanced_form is not None:
-            advanced_form.append(save_search)
+            if save_search:
+                # Insert the save button next to the submit button
+                advanced_form[0][-1][1].insert(1, save_search)
             form.append(advanced_form)
 
         # Title
