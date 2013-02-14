@@ -193,6 +193,11 @@ def req_template():
         list_fields.append("priority")
         list_fields.append("purpose")
         list_fields.append("comments")
+        list_fields.append("status")
+        list_fields.append("times_run")
+        list_fields.append("times_failed")
+        list_fields.append("assigned_worker_name")
+        list_fields.append("application_name")
         s3db.configure("req_req",
                        list_fields=list_fields)
 
