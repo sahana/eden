@@ -169,7 +169,14 @@ def customize_project_project(**attr):
     s3db = current.s3db
     s3 = current.response.s3
     tablename = "project_project"
+    # Load normal model
     table = s3db[tablename]
+
+    # Custom Components
+    add_component("project_drrpp",
+                  project_project=Storage(joinby="project_id",
+                                          multiple = False))
+    add_component("project_output", project_project="project_id")
 
     # Custom CRUD Strings
     crud_strings = s3.crud_strings

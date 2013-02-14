@@ -555,13 +555,6 @@ class S3ProjectModel(S3Model):
                           project_project=Storage(joinby="project_id",
                                                   multiple = False))
 
-        # DRRPP
-        if settings.get_template() == "DRRPP":
-            add_component("project_drrpp",
-                          project_project=Storage(joinby="project_id",
-                                                  multiple = False))
-            add_component("project_output", project_project="project_id")
-
         # ---------------------------------------------------------------------
         # Project Human Resources
         #
@@ -1868,23 +1861,23 @@ class S3ProjectFrameworkModel(S3Model):
 
         # CRUD Strings
         if current.deployment_settings.get_auth_record_approval():
-            msg_record_created = T("Framework added, awaiting administrator's approval")
+            msg_record_created = T("Policy or Strategy added, awaiting administrator's approval")
         else:
-            msg_record_created = T("Framework added")
+            msg_record_created = T("Policy or Strategy added")
         crud_strings[tablename] = Storage(
-            title_create = T("Add Framework"),
-            title_display = T("Framework"),
-            title_list = T("Frameworks"),
-            title_update = T("Edit Framework"),
-            title_search = T("Search Frameworks"),
-            title_upload = T("Import Framework data"),
-            subtitle_create = T("Add New Framework"),
-            label_list_button = T("List Frameworks"),
-            label_create_button = T("Add Framework"),
+            title_create = T("Add Policy or Strategy"),
+            title_display = T("Policy or Strategy"),
+            title_list = T("Policies & Strategies"),
+            title_update = T("Edit Policy or Strategy"),
+            title_search = T("Search Policies & Strategies"),
+            title_upload = T("Import Policies & Strategies"),
+            subtitle_create = T("Add New Policy or Strategy"),
+            label_list_button = T("List Policies & Strategies"),
+            label_create_button = T("Add Policy or Strategy"),
             msg_record_created = msg_record_created,
-            msg_record_modified = T("Framework updated"),
-            msg_record_deleted = T("Framework deleted"),
-            msg_list_empty = T("No Frameworks found")
+            msg_record_modified = T("Policy or Strategy updated"),
+            msg_record_deleted = T("Policy or Strategy deleted"),
+            msg_list_empty = T("No Policies or Strategies found")
         )
 
         crud_form = S3SQLCustomForm(
@@ -1907,9 +1900,19 @@ class S3ProjectFrameworkModel(S3Model):
             ),
         )
 
+        search_method = S3Search(simple = S3SearchSimpleWidget(
+                name = "project_framework_search_text",
+                label = T("Name"),
+                comment = T("Search for a Policy or Strategy by name or description."),
+                field = ["name",
+                         "description",
+                         ]
+            ))
+        
         self.configure(tablename,
                        super_entity="doc_entity",
                        crud_form = crud_form,
+                       search_method = search_method,
                        list_fields = ["name",
                                       (ORGANISATIONS, "framework_organisation.organisation_id"),
                                       "description",
@@ -1949,14 +1952,13 @@ class S3ProjectFrameworkModel(S3Model):
             title_list = T("Organizations"),
             title_update = T("Edit Organization"),
             title_search = T("Search Organizations"),
-            title_upload = T("Import Framework data"),
             subtitle_create = T("Add New Organization"),
             label_list_button = T("List Organizations"),
             label_create_button = T("Add Organization"),
-            msg_record_created = T("Organization added to Framework"),
+            msg_record_created = T("Organization added to Policy/Strategy"),
             msg_record_modified = T("Organization updated"),
-            msg_record_deleted = T("Organization removed from Framework"),
-            msg_list_empty = T("No Organizations found for this Framework")
+            msg_record_deleted = T("Organization removed from Policy/Strategy"),
+            msg_list_empty = T("No Organizations found for this Policy/Strategy")
         )
 
         # Pass names back to global scope (s3.*)
