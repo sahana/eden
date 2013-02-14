@@ -36,6 +36,7 @@ def has_operation_permission(user, space, object_permission, allow):
     or (has_space_permission(user, space, allow) \
     and user.has_perm(object_permission))
 
+
 def has_space_permission(user, space, allow=[]):
 
     """

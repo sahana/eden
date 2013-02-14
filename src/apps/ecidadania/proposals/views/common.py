@@ -57,11 +57,12 @@ class ViewProposal(DetailView):
         space_url = self.kwargs['space_url']
         proposal = get_object_or_404(Proposal, pk = prop_id)
         place = get_object_or_404(Space, url = space_url)
+        
         if place.public:
             return proposal
-        elif self.request.user.is_authenticated and \
-            has_space_permission(self.request.user, place,
-                allow=['admins', 'mods', 'users']):
+        elif has_space_permission(self.request.user, place,
+            allow=['admins', 'mods', 'users']) \
+            or has_all_permissions(request.user):
             return proposal
         else:
             self.template_name = 'not_allowed.html'
