@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, TAG, DIV, H3
+from gluon import current, TAG, DIV, H3, SQLFORM
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from s3 import s3search
+from s3 import s3forms, s3search
 
 settings = current.deployment_settings
 T = current.T
@@ -78,7 +78,6 @@ settings.fin.currencies = {
     "NZD" : T("New Zealand Dollars"),
 }
 
-
 # =============================================================================
 # GIS Deployment Settings
 # Theme
@@ -119,7 +118,6 @@ settings.project.organisation_roles = {
     3: T("Donor"),
 }
 
-
 # =============================================================================
 # UI Deployment Settings
 # Enable this for a UN-style deployment
@@ -127,6 +125,7 @@ settings.ui.cluster = True
 
 settings.ui.hide_report_options = False
 settings.ui.hide_report_filter_options = True
+
 # -----------------------------------------------------------------------------
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
@@ -161,8 +160,9 @@ def form_style(self, xfields):
     return form
 
 settings.ui.formstyle_row = formstyle_row
-#settings.ui.formstyle = form_style 
+#settings.ui.formstyle = form_style # Breaks e.g. org/organisation/create
 settings.ui.formstyle = formstyle_row
+
 # -----------------------------------------------------------------------------
 # Customize project_project controller
 def customize_project_project(**attr):
@@ -172,7 +172,8 @@ def customize_project_project(**attr):
     table = s3db[tablename]
 
     # Custom CRUD Strings
-    s3.crud_strings.project_project.title_search = T("Project List")
+    crud_strings = s3.crud_strings
+    crud_strings.project_project.title_search = T("Project List")
 
     # Custom Fields
     table.name.label = T("Project Title")
@@ -186,7 +187,6 @@ def customize_project_project(**attr):
     # In DRRPP this is a free field
     table = s3db.project_organisation
     table.comments.label = T("Role")
-    from gluon import SQLFORM
     table.comments.widget = SQLFORM.widgets.string.widget
     table.amount.label = T("Amount")
     table = s3db.doc_document
@@ -349,11 +349,11 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                      ]
     # Report Settings for charts
     if "chart" in current.request.vars:
-        s3.crud_strings[tablename].title_report  = T("Project Graph")
+        crud_strings[tablename].title_report  = T("Project Graph")
         report_fact_fields = [("project.id", "count")]
         report_fact_default = "project.id"
     else:
-        s3.crud_strings[tablename].title_report  = T("Project Matrix")
+        crud_strings[tablename].title_report  = T("Project Matrix")
         report_fact_fields = [(field, "count") for field in report_fields]
         report_fact_default = "theme.name"
     report_options = Storage(search = advanced,
@@ -369,7 +369,6 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                              )
 
     # Custom Crud Form
-    from s3 import s3forms
     crud_form = s3forms.S3SQLCustomForm(
         "name",
         "code",
@@ -474,10 +473,8 @@ settings.ui.customize_project_project = customize_project_project
 # -----------------------------------------------------------------------------
 # Customize pr_person controller
 def customize_pr_person(**attr):
-    s3 = current.response.s3
-    t = current.T  
-    
-    s3.crud_strings.pr_person.title_display = T("My Page")
+    T = current.T  
+    current.response.s3.crud_strings.pr_person.title_display = T("My Page")
     attr["rheader"] = H3(T("Saved Searches"))
     return attr
 
