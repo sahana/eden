@@ -3,12 +3,16 @@
 from gluon import current, TAG, DIV, H3
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from s3 import s3search
+
 settings = current.deployment_settings
 T = current.T
 
 """
     Template settings for DRRPP
 """
+# =============================================================================
+# Base Deployment Settings
 
 # Pre-Populate
 settings.base.prepopulate = ["DRRPP"]
@@ -19,7 +23,13 @@ settings.base.system_name_short = T("DRRPP")
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "DRRPP"
 
-# Auth settings
+# =============================================================================
+# Auth Deployment Settings
+
+# Security Policy
+settings.security.policy = 6 # Realm
+settings.security.map = True
+
 # Do new users need to verify their email address?
 settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
@@ -38,7 +48,8 @@ settings.auth.record_approval_required_for = ["org_organisation",
                                               "project_framework"
                                               ]
 
-# L10n settings
+# =============================================================================
+# L10n Deployment Settings
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
 ])
@@ -54,7 +65,8 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.date_format = T("%d-%b-%Y")
 #settings.L10n.datetime_format = T("%d-%b-%Y %H:%M:%S")
 
-# Finance settings
+# =============================================================================
+# Finance Deployment Settings
 settings.fin.currencies = {
     #"AUD" : T("Australian Dollars"),
     #"CAD" : T("Canadian Dollars"),
@@ -66,10 +78,9 @@ settings.fin.currencies = {
     "NZD" : T("New Zealand Dollars"),
 }
 
-# Security Policy
-settings.security.policy = 6 # Realm
-settings.security.map = True
 
+# =============================================================================
+# GIS Deployment Settings
 # Theme
 settings.gis.map_height = 600
 settings.gis.map_width = 854
@@ -80,17 +91,9 @@ settings.gis.display_L0 = True
 # Deployment only covers Asia-Pacific
 settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK", "ID", "IN", "JP", "KH", "KI", "KP", "KR", "LA", "MH", "MM", "MN", "MV", "MY", "NP", "NZ", "PG", "PH", "PK", "PW", "SB", "SG", "SL", "TH", "TL", "TO", "TV", "TW", "VN", "VU", "WS"]
 
-# Enable this for a UN-style deployment
-settings.ui.cluster = True
 
-settings.ui.hide_report_options = False
-settings.ui.hide_report_filter_options = True
-
-# Organisations
-# Uncomment to add summary fields for Organisations/Offices for # National/International staff
-#settings.org.summary = True # Doesn't work with DRRPP formstyle
-
-# Projects
+# =============================================================================
+# Project Deployment Settings
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
@@ -116,6 +119,15 @@ settings.project.organisation_roles = {
     3: T("Donor"),
 }
 
+
+# =============================================================================
+# UI Deployment Settings
+# Enable this for a UN-style deployment
+settings.ui.cluster = True
+
+settings.ui.hide_report_options = False
+settings.ui.hide_report_filter_options = True
+# -----------------------------------------------------------------------------
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
     if hidden:
@@ -131,7 +143,7 @@ def formstyle_row(id, label, widget, comment, hidden=False):
               _class = "w2p_r",
               )
     return row
-
+# -----------------------------------------------------------------------------
 def form_style(self, xfields):
     """
         @ToDo: Requires further changes to code to use
@@ -149,49 +161,50 @@ def form_style(self, xfields):
     return form
 
 settings.ui.formstyle_row = formstyle_row
-#settings.ui.formstyle = form_style # Breaks e.g. org/organisation/create
+#settings.ui.formstyle = form_style 
 settings.ui.formstyle = formstyle_row
-
+# -----------------------------------------------------------------------------
+# Customize project_project controller
 def customize_project_project(**attr):
     s3db = current.s3db
     s3 = current.response.s3
-
     tablename = "project_project"
+    table = s3db[tablename]
+
+    # Custom CRUD Strings
     s3.crud_strings.project_project.title_search = T("Project List")
 
+    # Custom Fields
+    table.name.label = T("Project Title")
     s3db.project_project.budget.label = T("Total Funding")
-    
     location_id = s3db.project_location.location_id
     location_id.label = ""
     # Limit to just Countries
     location_id.requires = s3db.gis_country_requires
     # Use dropdown, not AC
     location_id.widget = None
-
     # In DRRPP this is a free field
     table = s3db.project_organisation
     table.comments.label = T("Role")
     from gluon import SQLFORM
     table.comments.widget = SQLFORM.widgets.string.widget
     table.amount.label = T("Amount")
-
     table = s3db.doc_document
     table.file.widget = lambda field, value, download_url: \
         SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
     table.comments.widget = SQLFORM.widgets.string.widget
 
+    # Custom dataTable
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
 
     # Don't show export buttons for XLS/XML    
     s3.formats = Storage(xls= None, xml = None)
     
-    table.name.label = T("Project Title")
-    
+    # Remove rheader
     attr["rheader"] = None
     
+    # Custom PreP
     standard_prep = s3.prep
-    
-    # custom Post-process
     def drrpp_prep(r):
         # Call standard prep
         if callable(standard_prep):
@@ -199,6 +212,13 @@ def customize_project_project(**attr):
         else:
             output = True
         if r.interactive:
+            # Don't show Update/Delete button on Search table 
+            if r.method == "search":
+                s3db.configure(tablename,
+                               editable = False,
+                               deletable = False
+                               )
+
             # Is Cook Islands in the Locations?
             pltable = s3db.project_location
             ltable = s3db.gis_location
@@ -223,9 +243,133 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
         return output
     
     s3.prep = drrpp_prep
-
-    from s3 import s3forms
     
+    # Custom List Fields
+    list_fields = ["id",
+                   "name",
+                   "start_date",
+                   (T("Countries"), "location.location_id"),
+                   (T("Hazards"), "hazard.name"),
+                   (T("Lead Organization"), "organisation_id"),
+                   (T("Donors"), "donor.organisation_id"),
+                   ]
+    
+    # Custom Search Fields
+    S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
+    S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
+    simple = [
+        S3SearchSimpleWidget(name = "project_search_text_advanced",
+                             label = T("Search Projects"),
+                             comment = T("Search for a Project by name, code, or description."),
+                             field = ["name",
+                                      "code",
+                                      "description",
+                                      ]
+                             ),
+        S3SearchOptionsWidget(name = "project_search_status",
+                              label = T("Status"),
+                              field = "status_id",
+                              cols = 4,
+                              )
+        ]
+
+    project_hfa_opts = s3db.project_hfa_opts()
+    hfa_options = {}
+    #hfa_options = {None:NONE} To search NO HFA
+    for key in project_hfa_opts.keys():
+        hfa_options[key] = "HFA %s" % key
+    project_rfa_opts = s3db.project_rfa_opts()
+    rfa_options = {}
+    #rfa_options = {None:NONE} To search NO RFA
+    for key in project_rfa_opts.keys():
+        rfa_options[key] = "RFA %s" % key
+
+    advanced = [
+        S3SearchOptionsWidget(name = "project_search_location",
+                              label = T("Country"),
+                              field = "location.location_id",
+                              cols = 3
+                              ),
+        S3SearchOptionsWidget(name = "project_search_hazard",
+                              label = T("Hazard"),
+                              field = "hazard.name",
+                              options = s3db.project_hazard_opts,
+                              help_field="comments",
+                              cols = 4
+                              ),
+        S3SearchOptionsWidget(name = "project_search_theme",
+                              label = T("Theme"),
+                              field = "theme.name",
+                              options = s3db.project_theme_opts,
+                              help_field="comments",
+                              cols = 4
+                              ),
+        S3SearchOptionsWidget(name = "project_search_hfa",
+                              label = T("HFA"),
+                              field = "drr.hfa",
+                              options = hfa_options,
+                              help_field = project_hfa_opts,
+                              cols = 5
+                              ),
+       S3SearchOptionsWidget(name = "project_search_rfa",
+                             label = T("RFA"),
+                             field = "drrpp.rfa",
+                             options = rfa_options,
+                             help_field = project_rfa_opts,
+                             cols = 6
+                             ),
+       S3SearchOptionsWidget(name = "project_search_organisation_id",
+                             label = T("Lead Organisation"),
+                             field = "organisation_id",
+                             cols = 3
+                             ),
+       S3SearchOptionsWidget(name = "project_search_partners",
+                             field = "partner.organisation_id",
+                             label = T("Partners"),
+                             cols = 3,
+                             ),
+       S3SearchOptionsWidget(name = "project_search_donors",
+                             field = "donor.organisation_id",
+                             label = T("Donors"),
+                             cols = 3,
+                             )
+     ]
+    project_search = s3search.S3Search(simple = simple,
+                                       advanced = simple + advanced)
+
+    # Custom Report Fields
+    report_fields = [(T("Countries"), "location.location_id"),
+                     (T("Hazards"), "hazard.name"),
+                     (T("Themes"), "theme.name"),
+                     (T("HFA Priorities"), "drr.hfa"),
+                     (T("RFA Priorities"), "drrpp.rfa"),
+                     (T("Lead Organization"), "organisation_id"),
+                     (T("Partner Organizations"), "partner.organisation_id"),
+                     (T("Donors"), "donor.organisation_id"),
+                     ]
+    # Report Settings for charts
+    if "chart" in current.request.vars:
+        s3.crud_strings[tablename].title_report  = T("Project Graph")
+        report_fact_fields = [("project.id", "count")]
+        report_fact_default = "project.id"
+    else:
+        s3.crud_strings[tablename].title_report  = T("Project Matrix")
+        report_fact_fields = [(field, "count") for field in report_fields]
+        report_fact_default = "theme.name"
+    report_options = Storage(search = advanced,
+                             rows = report_fields,
+                             cols = report_fields,
+                             fact = report_fact_fields,
+                             defaults = Storage(rows = "hazard.name",
+                                                cols = "location.location_id",
+                                                fact = report_fact_default,
+                                                aggregate = "count",
+                                                totals = True
+                                                )
+                             )
+
+    # Custom Crud Form
+    from s3 import s3forms
     crud_form = s3forms.S3SQLCustomForm(
         "name",
         "code",
@@ -245,12 +389,6 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
             field = "hazard_id",
             cols = 4,
         ),
-        #s3forms.S3SQLInlineComponentCheckbox(
-        #    "sector",
-        #    label = T("Sectors"),
-        #    field = "sector_id",
-        #    cols = 4,
-        #),
         s3forms.S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
@@ -324,14 +462,17 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
         "comments",
     )
 
-             
     s3db.configure(tablename,
+                   search_method = project_search,
+                   report_options = report_options,
                    crud_form = crud_form)
     
     return attr
 
 settings.ui.customize_project_project = customize_project_project
 
+# -----------------------------------------------------------------------------
+# Customize pr_person controller
 def customize_pr_person(**attr):
     s3 = current.response.s3
     t = current.T  
@@ -342,7 +483,8 @@ def customize_pr_person(**attr):
 
 settings.ui.customize_pr_person = customize_pr_person
 
-# Comment/uncomment modules here to disable/enable them
+# =============================================================================
+# Enabled Modules
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
     ("default", Storage(

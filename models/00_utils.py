@@ -254,6 +254,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
         ondelete                Function after record deletion
     """
 
+    # Custom Template Controller
+    settings = current.deployment_settings
+    attr = settings.ui_customize("%s_%s" % (prefix,resourcename), **attr) 
+
     # Parse the request
     r = s3_request(prefix, resourcename)
 
