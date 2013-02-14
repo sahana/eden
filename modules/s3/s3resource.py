@@ -3028,6 +3028,7 @@ class S3Resource(object):
         # Get the structure of the main resource
         root = etree.Element(xml.TAG.root)
         main = xml.get_struct(self.prefix, self.name,
+                              alias=self.alias,
                               parent=root,
                               meta=meta,
                               options=options,
@@ -3038,6 +3039,7 @@ class S3Resource(object):
             prefix = component.prefix
             name = component.name
             sub = xml.get_struct(prefix, name,
+                                 alias=component.alias,
                                  parent=main,
                                  meta=meta,
                                  options=options,

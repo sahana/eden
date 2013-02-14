@@ -2093,13 +2093,15 @@ class S3PDF(S3Method):
             @return: s3ocr etree
         """
 
+        r = self.r
+        
         s3xml_etree = self.resource.export_struct(options=True,
                                                   references=True,
                                                   stylesheet=None,
                                                   as_json=False,
                                                   as_tree=True)
-        #print etree.tostring(s3xml_etree, pretty_print=True)
-        # xml tags
+
+        # Additional XML tags
         ITEXT = "label"
         HINT = "comment"
         TYPE = "type"
@@ -2119,13 +2121,13 @@ class S3PDF(S3Method):
         settings = current.deployment_settings
         self.exclude_component_list =\
                     settings.get_pdf_excluded_fields("%s_%s" % \
-                                                     (self.r.prefix,
-                                                      self.r.resource.name))
+                                                     (r.prefix,
+                                                      r.resource.name))
 
-        if self.r.component:     # if it is a component
+        if r.component: # if it is a component
             s3ocr_root.append(resource_element)
 
-        else:                    # if it is main resource
+        else: # if it is main resource
             componentetrees = []
             # mres is main resource etree
             mres = etree.Element("resource")
@@ -2178,10 +2180,25 @@ class S3PDF(S3Method):
             resourcetablename = rget("name")
 
             # Exclude components
-            if not self.r.component:
+            if not r.component:
                 if rget("name") in self.exclude_component_list:
                     s3ocr_root.remove(resource)
                     continue
+
+            if "alias" in resource.attrib:
+                alias = resource.attrib["alias"]
+            elif "_" in resourcetablename:
+                alias = resourcetablename.split("_", 1)[1]
+            else:
+                alias = resourcetablename
+
+            if alias == self.resource.alias and \
+                resourcetablename == self.resource.tablename:
+                fieldresource = self.resource
+            elif alias in self.resource.components:
+                fieldresource = self.resource.components[alias]
+            else:
+                continue
 
             for field in resource.iterchildren():
                 get = field.attrib.get
@@ -2213,22 +2230,13 @@ class S3PDF(S3Method):
                 # If field is readable but not writable set default value
                 if get("readable", "False") == "True" and \
                    get("writable", "False") == "False":
-                    try:
-                        fieldresourcename = rget("name").split("%s_" % self.prefix)[1]
-                    except:
-                        fieldresourcename = rget("name").split("_")[1]
 
-                    fieldresource = \
-                        self.resource.components.get(fieldresourcename, None)
-                    if not fieldresource:
-                        fieldresource = self.resource
                     fieldname = get("name")
                     try:
-                        fielddefault = self.r.resource.table[fieldname].default
+                        fielddefault = fieldresource.table[fieldname].default
                     except(KeyError):
                         fielddefault = "None"
-                    set("default",
-                        str(fielddefault))
+                    set("default", str(fielddefault))
 
                 # For unknown field types
                 if fieldtype not in self.generic_ocr_field_type.values():
