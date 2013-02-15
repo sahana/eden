@@ -30,14 +30,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
 """
 
-from gluon import *
-from gluon.dal import Row
-from gluon.serializers import json as jsons
-from gluon.storage import Storage
-from gluon.tools import callback
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -46,18 +40,24 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from s3rest import S3Method
-from s3export import S3Exporter
-from s3forms import S3SQLDefaultForm
-from s3widgets import S3EmbedComponentWidget
-from s3utils import s3_unicode
-
 try:
     from lxml import etree
 except ImportError:
     import sys
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
+
+from gluon import *
+from gluon.dal import Row
+from gluon.serializers import json as jsons
+from gluon.storage import Storage
+from gluon.tools import callback
+
+from s3export import S3Exporter
+from s3forms import S3SQLDefaultForm
+from s3rest import S3Method
+from s3utils import s3_unicode
+from s3widgets import S3EmbedComponentWidget
 
 # =============================================================================
 class S3CRUD(S3Method):

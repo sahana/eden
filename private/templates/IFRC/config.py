@@ -3,6 +3,8 @@
 from gluon import current
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from s3 import IS_ONE_OF, s3forms
+
 settings = current.deployment_settings
 T = current.T
 
@@ -276,8 +278,54 @@ settings.project.organisation_roles = {
     5: T("Partner")
 }
 
-from s3 import s3forms
-settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
+# -----------------------------------------------------------------------------
+def customize_project_project(**attr):
+    """
+        Customize project_project controller
+    """
+
+    s3db = current.s3db
+    tablename = "project_project"
+    # Load normal model
+    table = s3db[tablename]
+
+    # Custom Fields
+    # Organisation needs to be an NS (not a branch)
+    f = table.organisation_id
+    db = current.db
+    ttable = db.org_organisation_type
+    type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
+                                                                   limitby=(0, 1)
+                                                                   ).first().id
+    btable = db.org_organisation_branch
+    rows = db(btable.deleted != True).select(btable.branch_id)
+    branches = [row.branch_id for row in rows]
+    f.requires = IS_ONE_OF(db, "org_organisation.id",
+                           s3db.org_OrganisationRepresent(),
+                           filterby="organisation_type_id",
+                           filter_opts=[type_id],
+                           not_filterby="id",
+                           not_filter_opts=branches,
+                           updateable = True,
+                           orderby = "org_organisation.name",
+                           sort = True)
+    s3_has_role = current.auth.s3_has_role
+    if s3_has_role("ADMIN") or \
+       s3_has_role("ORG_ADMIN"):
+        # Need to do import after setting Theme
+        from eden.layouts import S3AddResourceLink
+        f.comment = S3AddResourceLink(c="org",
+                                      f="organisation",
+                                      vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},
+                                      label=T("Add National Society"),
+                                      title=T("National Society"),
+                                      )
+    else:
+        # Not allowed to add NS
+        f.comment = ""
+
+    # Custom Crud Form
+    crud_form = s3forms.S3SQLCustomForm(
         "organisation_id",
         "name",
         #"code",
@@ -354,6 +402,14 @@ S3OptionsFilter({
         #"currency",
         "comments",
     )
+
+    s3db.configure(tablename,
+                   crud_form = crud_form)
+
+    return attr
+
+settings.ui.customize_project_project = customize_project_project
+
 settings.ui.crud_form_project_location = s3forms.S3SQLCustomForm(
         "project_id",
         "location_id",
