@@ -120,7 +120,7 @@ class EditProposal(UpdateView):
             return get_object_or_404(Proposal, pk = prop_id)
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
+                context_instance=RequestContext(self.request))
         
     def get_context_data(self, **kwargs):
         context = super(EditProposal, self).get_context_data(**kwargs)
