@@ -2275,31 +2275,25 @@ class S3OfficeModel(S3Model):
                       ),
             ))
 
-        # Experimental: filter form
-        office_filter = [
-            S3TextFilter("name"),
-            S3OptionsFilter("organisation_id", cols=3)
-        ]
-
         configure(tablename,
                   super_entity=("pr_pentity", "org_site"),
                   onaccept=self.org_office_onaccept,
                   deduplicate=self.org_office_duplicate,
                   search_method=office_search,
-                  # Experimental: filter form (used by S3CRUD.list_div)
-                  filter_widgets=[
-                        S3TextFilter(["name", "email", "comments"],
-                                     label=T("Search"),
-                                     comment=T("Search for office by text.")),
-                        S3OptionsFilter("organisation_id",
-                                        label=messages.ORGANISATION,
-                                        comment=T("Search for office by organization."),
-                                        represent="%(name)s",
-                                        cols=3),
-                        S3OptionsFilter("location_id$L1",
-                                        location_level="L1",
-                                        cols=3)
-                  ],
+                  ## Experimental: filter form (used by S3CRUD.list_div)
+                  #filter_widgets=[
+                        #S3TextFilter(["name", "email", "comments"],
+                                     #label=T("Search"),
+                                     #comment=T("Search for office by text.")),
+                        #S3OptionsFilter("organisation_id",
+                                        #label=messages.ORGANISATION,
+                                        #comment=T("Search for office by organization."),
+                                        #represent="%(name)s",
+                                        #cols=3),
+                        #S3OptionsFilter("location_id$L1",
+                                        #location_level="L1",
+                                        #cols=3)
+                  #],
                   list_fields=["id",
                                "name",
                                "organisation_id", # Filtered in Component views
