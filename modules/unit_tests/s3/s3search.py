@@ -189,7 +189,8 @@ class S3FilterWidgetTests(unittest.TestCase):
         self.assertTrue("%s-data" % widget._class in c)
 
         i = attr["_id"]
-        self.assertEqual(i, "%s-%s-data" % (resource.alias, widget._class))
+        self.assertEqual(i, "%s-org_office_name-org_organisation_name-%s-data" %
+                        (resource.alias, widget._class))
 
         v = attr["_value"]
         self.assertEqual(v, "~.name|~.organisation_id$name")
