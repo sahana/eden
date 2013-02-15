@@ -37,11 +37,11 @@
                            S3Pivottable
 """
 
+import collections
+import datetime
 import re
 import sys
-import datetime
 import time
-import collections
 
 from itertools import product, chain
 
@@ -76,9 +76,9 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3data import S3DataTable, S3DataList
 from s3fields import S3Represent, S3RepresentLazy
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper
-from s3data import S3DataTable, S3DataList
 from s3validators import IS_ONE_OF
 
 DEBUG = False

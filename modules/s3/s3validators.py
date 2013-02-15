@@ -65,9 +65,11 @@ from gluon import *
 #from gluon.dal import Field
 #from gluon.validators import IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
 from gluon.languages import lazyT
-from gluon.validators import Validator
 from gluon.storage import Storage
+from gluon.validators import Validator
 
+from s3utils import S3DateTime, s3_unicode
+    
 def translate(text):
     if text is None:
         return None
@@ -77,8 +79,6 @@ def translate(text):
             return str(current.T(text))
     return str(text)
 
-from s3utils import S3DateTime, s3_unicode
-    
 def options_sorter(x, y):
     return (s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() and 1) or -1
 

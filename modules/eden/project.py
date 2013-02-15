@@ -180,8 +180,9 @@ class S3ProjectModel(S3Model):
                              self.org_organisation_id(
                                 label = org_label,
                                 requires = self.org_organisation_requires(
-                                    updateable=True, # Only allowed to add Projects for Orgs that the user has write access to
-                                    required=True
+                                    required=True,
+                                    # Only allowed to add Projects for Orgs that the user has write access to
+                                    updateable=True,
                                     ),
                                 ),
                              Field("name", unique = True,
@@ -378,8 +379,6 @@ class S3ProjectModel(S3Model):
                                   args=["[id]", "task"])
         else:
             # Default
-            #create_next = URL(c="project", f="project",
-            #                  args=["[id]", "display"])
             create_next = None
 
         list_fields = ["id"]
@@ -2556,8 +2555,11 @@ class S3ProjectOrganisationModel(S3Model):
         table = self.define_table(tablename,
                                   self.project_project_id(),
                                   self.org_organisation_id(
-                                    requires = self.org_organisation_requires(updateable=True,
-                                                                              required=True),
+                                    requires = self.org_organisation_requires(
+                                                    required=True,
+                                                    # Need to be able to add Partners/Donors not just Lead org
+                                                    #updateable=True,
+                                                    ),
                                     widget = None,
                                     comment=S3AddResourceLink(c="org",
                                                               f="organisation",

@@ -34,15 +34,15 @@
 "AUTHENTICATED","Authenticated",,,,"pr_person",,,"READ|UPDATE",,,,
 "AUTHENTICATED","Authenticated",,,,"pr_physical_description",,,"READ|CREATE|UPDATE",,,,
 "reader","All Module Reader",,"asset",,,,"READ",,,,,
-"reader","All Module Reader",,"event",,,,"READ",,,,,
+"reader","All Module Reader",,"event",,,"any","READ",,,,,
 "reader","All Module Reader",,"hrm",,,,"READ",,,,,
 "reader","All Module Reader",,"hrm","human_resource",,,"NONE",,,,,
 "reader","All Module Reader",,"inv",,,,"READ",,,,,
-"reader","All Module Reader",,"irs",,,,"READ",,,,,
+"reader","All Module Reader",,"irs",,,"any","READ",,,,,
 "reader","All Module Reader",,"member",,,,"READ",,,,,
-"reader","All Module Reader",,"org",,,,"READ",,,,,
+"reader","All Module Reader",,"org",,,"any","READ",,,,,
 "reader","All Module Reader",,"pr",,,,"READ",,,,,
-"reader","All Module Reader",,"project",,,,"READ",,,,,
+"reader","All Module Reader",,"project",,,"any","READ",,,,,
 "reader","All Module Reader",,"req",,,,"READ",,,,,
 "reader","All Module Reader",,"stats",,,,"READ",,,,,
 "reader","All Module Reader",,"supply",,,"any","READ",,,,,
@@ -56,6 +56,7 @@
 "reader","All Module Reader",,"vulnerability",,,,"READ",,,,,
 "reader","All Module Reader",,,,"hrm_human_resource",,"READ",,,,,
 "reader","All Module Reader",,,,"hrm_training",,"READ",,,,,
+"reader","All Module Reader",,,,"org_organisation","any","READ",,,,,"Used to filter organisation fields"
 "reader","All Module Reader",,,,"survey_translate",,"READ",,,,,
 "asset_reader","Asset Reader",,"asset",,,,"READ",,,,,
 "asset_reader","Asset Reader",,"supply",,,,"READ",,,,,
@@ -199,7 +200,7 @@
 "project_data_entry","Project Data Entry",,,,"project_hazard",,"READ",,,,,
 "project_data_entry","Project Data Entry",,,,"project_activity_type",,"READ",,,,,
 "project_data_entry","Project Data Entry",,,,"project_beneficiary_type",,"READ",,,,,
-"project_data_entry","Project Data Entry",,"org",,,,"READ",,,,,"Used to filter organisation fields"
+"project_data_entry","Project Data Entry",,"org",,,,"READ",,,,,
 "project_data_entry","Project Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "project_data_entry","Project Data Entry",,"pr",,,,"READ",,,,,
 "project_data_entry","Project Data Entry",,"hrm","person_search",,,"READ",,,,,
@@ -209,6 +210,7 @@
 "project_editor","Project Editor",,,,"project_activity_type",,"READ",,,,,
 "project_editor","Project Editor",,,,"project_beneficiary_type",,"READ",,,,,
 "project_editor","Project Editor",,"org",,,,"READ|UPDATE",,,,,
+"project_editor","Project Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "project_editor","Project Editor",,"pr",,,,"READ",,,,,
 "project_editor","Project Editor",,"hrm","person_search",,,"READ",,,,,
 "project_super","Project Super Editor",,"project",,,,"READ|CREATE|UPDATE|DELETE",,,,,
@@ -217,6 +219,7 @@
 "project_super","Project Super Editor",,,,"project_activity_type",,"READ",,,,,
 "project_super","Project Super Editor",,,,"project_beneficiary_type",,"READ",,,,,
 "project_super","Project Super Editor",,"org",,,,"READ|CREATE|UPDATE",,,,,
+"project_super","Project Super Editor",,,,"org_organisation",,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
 "project_super","Project Super Editor",,"pr",,,,"READ",,,,,
 "project_super","Project Super Editor",,"hrm","person_search",,,"READ",,,,,
 "message_editor","Message Editor",,"event","compose",,,"READ|CREATE|UPDATE",,,,,
