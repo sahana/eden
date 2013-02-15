@@ -154,7 +154,7 @@ class DeleteProposal(DeleteView):
             return proposal
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
+                context_instance=RequestContext(self.request))
 
     def get_success_url(self):
         space = self.kwargs['space_url']
@@ -191,7 +191,7 @@ class ListProposals(ListView):
             return objects
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
+                context_instance=RequestContext(self.request))
 
     def get_context_data(self, **kwargs):
         context = super(ListProposals, self).get_context_data(**kwargs)
