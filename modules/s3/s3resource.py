@@ -4931,12 +4931,15 @@ class S3ResourceQuery(object):
                         else:
                             query |= q
                 return query
+
+        # Convert date(time) strings
         if ftype  == "datetime" and \
            isinstance(rfield, basestring):
             rfield = S3TypeConverter.convert(datetime.datetime, rfield)
         elif ftype  == "date" and \
-           isinstance(rfield, basestring):
+             isinstance(rfield, basestring):
             rfield = S3TypeConverter.convert(datetime.date, rfield)
+            
         query = query_bare(op, lfield, rfield)
         if invert:
             query = ~(query)

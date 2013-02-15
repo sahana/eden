@@ -395,11 +395,11 @@ S3.search.filterURL = function(url) {
                 // ISO-format is standard for URL queries
                 dt = new Date(dt);
                 dt_str = dt.getFullYear() + '-' +
-                        pad(dt.getMonth()+1, 2) + '-' +
-                        pad(dt.getDate(), 2) + '-T-' +
-                        pad(dt.getHours(), 2) + '-' +
-                        pad(dt.getMinutes(), 2) + '-' +
-                        pad(dt.getSeconds(), 2)
+                         pad(dt.getMonth()+1, 2) + '-' +
+                         pad(dt.getDate(), 2) + '-T-' +
+                         pad(dt.getHours(), 2) + '-' +
+                         pad(dt.getMinutes(), 2) + '-' +
+                         pad(dt.getSeconds(), 2);
             }
             queries.push(url_var + '=' + dt_str);
         }
