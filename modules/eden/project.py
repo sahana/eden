@@ -4885,7 +4885,7 @@ def project_rheader(r):
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
-        attachments_label = settings.get_project_attachments_label()
+        attachments_label = settings.get_ui_label_attachments()
 
         # Tabs
         ADMIN = current.session.s3.system_roles.ADMIN

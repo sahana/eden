@@ -245,6 +245,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
 #settings.ui.camp = True
+# Enable this to change the label for 'Attachments' tabs
+#settings.ui.label_attachments = "Attachments"
 # Enable this to change the label for 'Mobile Phone'
 #settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
@@ -489,7 +491,6 @@ settings.L10n.decimal_separator = "."
 #    5: T("Super"), # T("Beneficiary")?
 #}
 #settings.project.organisation_lead_role = 1
-#settings.project.attachments_label = T("Attachments")
 
 # Incidents
 # Uncomment this to use vehicles when responding to Incident Reports

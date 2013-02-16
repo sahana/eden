@@ -54,7 +54,7 @@ settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
 
-settings.L10n.languages = OrderedDict([                     
+settings.L10n.languages = OrderedDict([
     ("en", "English"),
     ("es", "Español"),
 ])
@@ -88,6 +88,7 @@ settings.security.policy = 5 # Controller, Function & Table ACLs
 #settings.auth.record_approval_required_for = ["org_facility"]
 
 settings.ui.update_label = "Edit"
+settings.ui.label_attachments = "Media"
 
 # Uncomment to disable that LatLons are within boundaries of their parent
 settings.gis.check_within_parent_boundaries = False
@@ -210,8 +211,6 @@ settings.project.milestones = False
 settings.project.sectors = False
 # Multiple partner organizations
 settings.project.multiple_organisations = True
-# Attachments -> Media
-settings.project.attachments_label = "Media"
 
 def customize_project_project(**attr):
     s3db = current.s3db
