@@ -54,7 +54,7 @@ settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
 
-settings.L10n.languages = OrderedDict([
+settings.L10n.languages = OrderedDict([                     
     ("en", "English"),
     ("es", "Español"),
 ])
@@ -198,14 +198,105 @@ settings.hrm.use_description = False
 settings.hrm.organisation_label = "Organization"
 
 # Projects
+# Use codes for projects
+settings.project.codes = True
 # Uncomment this to use settings suitable for detailed Task management
-settings.project.mode_task = True
+settings.project.mode_task = False
 # Uncomment this to use Activities for projects
 settings.project.activities = True
 # Uncomment this to use Milestones in project/task.
-settings.project.milestones = True
+settings.project.milestones = False
 # Uncomment this to disable Sectors in projects
 settings.project.sectors = False
+# Multiple partner organizations
+settings.project.multiple_organisations = True
+# Attachments -> Media
+settings.project.attachments_label = "Media"
+
+def customize_project_project(**attr):
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    tablename = "project_project"
+    
+    s3db.project_project.code.label = T("Project blurb (max. 100 characters)")
+    s3db.project_project.code.max_length = 100 
+    s3db.project_project.comments.label = T("How people can help")
+
+    location_id = s3db.project_location.location_id
+    # Limit to just Countries
+    location_id.requires = s3db.gis_location_id
+    # Use dropdown, not AC
+    #location_id.widget = s3.s3widgets.S3LocationAutocompleteWidget()
+
+    script = '''$('#project_project_code').attr('maxlength','100')'''
+    
+    s3.jquery_ready.append(script)
+
+    from s3 import s3forms
+
+    crud_form = s3forms.S3SQLCustomForm(
+        "organisation_id",
+        "name",
+        "code",        
+        "description",
+        "status_id",
+        "start_date",
+        "end_date",
+        "calendar",
+        #"drr.hfa",
+        #"objectives",
+        "human_resource_id",
+        # Activities
+       s3forms.S3SQLInlineComponent(
+            "location",
+            label = T("Location"),
+            fields = ["location_id"],
+        ),
+        # Partner Orgs
+        s3forms.S3SQLInlineComponent(
+         "organisation",
+         name = "partner",
+         label = T("Partner Organizations"),
+         fields = ["organisation_id",
+         "comments", # NB This is labelled 'Role' in DRRPP
+         ],
+         filterby = dict(field = "role",
+         options = "2"
+         )
+        ),
+        s3forms.S3SQLInlineComponent(
+         "document",
+         name = "media",
+         label = T("URLs (media, fundraising, website, social media, etc."),
+         fields = ["document_id",
+         "name",
+         "url",
+         "comments",
+         ],
+         filterby = dict(field = "name")
+        ),                                                                
+        s3forms.S3SQLInlineComponentCheckbox(
+            "activity_type",
+            label = T("Categories"),
+            field = "activity_type_id",
+            cols = 3,
+            # Filter Activity Type by Project
+            filter = {"linktable": "project_activity_type_project",
+                      "lkey": "project_id",
+                      "rkey": "activity_type_id",
+                      },
+        ),
+        #"budget",
+        #"currency",
+        "comments",
+    )
+    
+    s3db.configure(tablename, crud_form = crud_form)
+    
+    return attr
+
+settings.ui.customize_project_project = customize_project_project
 
 # Uncomment to show created_by/modified_by using Names not Emails
 settings.ui.auth_user_represent = "name"
