@@ -169,7 +169,7 @@ class DeleteEvent(DeleteView):
 
     @method_decorator(permission_required('spaces.delete_event'))
     def dispatch(self, *args, **kwargs):
-        return super(AddEvent, self).dispatch(*args, **kwargs)
+        return super(DeleteEvent, self).dispatch(*args, **kwargs)
 
 
 class ListEvents(ListView):
