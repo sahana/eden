@@ -331,10 +331,8 @@ def hospital():
         return True
     s3.prep = prep
 
-    rheader = s3db.hms_hospital_rheader
-
     output = s3_rest_controller("hms", "hospital",
-                                rheader=rheader)
+                                rheader=s3db.hms_hospital_rheader)
     return output
 
 # -----------------------------------------------------------------------------

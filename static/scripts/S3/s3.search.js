@@ -364,6 +364,47 @@ S3.search.filterURL = function(url) {
         }
     });
 
+    // Numerical range widgets -- each widget has two inputs.
+    $('.range-filter-input:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var value = $(this).val();
+        if (value) {
+            queries.push(url_var + '=' + value);
+        }
+    });
+
+    // Date(time) range widgets -- each widget has two inputs.
+    $('.date-filter-input:visible').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var value = $(this).val(),
+            pad = function (val, len) {
+            val = String(val);
+            len = len || 2;
+            while (val.length < len) val = "0" + val;
+            return val;
+        };
+        if (value) {
+            dt = Date.parse(value);
+            if (isNaN(dt)) {
+                // Unsupported format (e.g. US MM-DD-YYYY), pass
+                // as string, and hope the server can parse this
+                dt_str = '"'+ value + '"';
+            } else {
+                // ISO-format is standard for URL queries
+                dt = new Date(dt);
+                dt_str = dt.getFullYear() + '-' +
+                         pad(dt.getMonth()+1, 2) + '-' +
+                         pad(dt.getDate(), 2) + '-T-' +
+                         pad(dt.getHours(), 2) + '-' +
+                         pad(dt.getMinutes(), 2) + '-' +
+                         pad(dt.getSeconds(), 2);
+            }
+            queries.push(url_var + '=' + dt_str);
+        }
+    });
+
     // Other widgets go here...
 
     // Construct the URL

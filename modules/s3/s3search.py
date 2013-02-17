@@ -2928,6 +2928,21 @@ class S3FilterWidget(object):
         return self._variable(self.selector, self.operator)
 
     # -------------------------------------------------------------------------
+    def data_element(self, variable):
+        """
+            Prototype method to construct the hidden element that holds the
+            URL query term corresponding to an input element in the widget.
+
+            @param variable: the URL query variable
+        """
+        if type(variable) is list:
+            variable = "&".join(variable)
+        return INPUT(_type="hidden",
+                     _id="%s-data" % self.attr["_id"],
+                     _class="filter-widget-data %s-data" % self._class,
+                     _value=variable)
+
+    # -------------------------------------------------------------------------
     # Helper methods
     #
     def __init__(self, field=None, **attr):
@@ -2965,34 +2980,39 @@ class S3FilterWidget(object):
         # Construct name and id for the widget
         attr = self.attr
         if "_name" not in attr:
-            attr["_name"] = "%s-%s" % (resource.alias, _class)
+            flist = self.field
+            if type(flist) is not list:
+                flist = [flist]
+            colnames = [S3ResourceField(resource, f).colname for f in flist]
+            name = "%s-%s-%s" % (resource.alias, "-".join(colnames), _class)
+            attr["_name"] = name.replace(".", "_")
         if "_id" not in attr:
             attr["_id"] = attr["_name"]
-        self.attr = attr
 
-        # Construct the hidden data element
+        # Extract the URL values to populate the widget
         variable = self.variable(resource, get_vars)
         if type(variable) is list:
             values = Storage()
             for k in variable:
                 values[k] = self._values(get_vars, k)
-            variable = "&".join(variable)
         else:
             values = self._values(get_vars, variable)
 
-        # Construct the widget
+        # Construct and populate the widget
         widget = self.widget(resource, values)
 
-        # Recompute variable in case operator got changed in the widget
+        # Recompute variable in case operator got changed in widget()
         if self.alternatives:
             variable = self._variable(self.selector, self.operator)
 
-        data = INPUT(_type="hidden",
-                     _id="%s-data" % attr["_id"],
-                     _class="filter-widget-data %s-data" % _class,
-                     _value=variable)
+        # Construct the hidden data element
+        data = self.data_element(variable)
 
-        return TAG[""](data, widget)
+        if type(data) is list:
+            data.append(widget)
+        else:
+            data = [data, widget]
+        return TAG[""](*data)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -3316,12 +3336,7 @@ class S3OptionsFilter(S3FilterWidget):
         options = OrderedDict([("NONE" if o is None else o, v)
                                for o, v in opt_list])
 
-        # Construct HTML names, classes and ids for the widget
-        name = "%s_%s" % (attr["_name"], field_name.split("$", 1)[0])
-        self.attr["_name"] = name
-        self.attr["_id"] = name
-
-        attr["_id"] = name
+        # Construct HTML classes for the widget
         if "_class" in attr and attr["_class"]:
             _class = "%s %s %s" % (attr["_class"],
                                    "s3-checkboxes-widget",
@@ -3333,6 +3348,7 @@ class S3OptionsFilter(S3FilterWidget):
         attr["cols"] = opts["cols"]
 
         # Dummy field
+        name = attr["_name"]
         dummy_field = Storage(name=name,
                               type=field_type,
                               requires=IS_IN_SET(options, multiple=True))
@@ -3376,13 +3392,182 @@ class S3OptionsFilter(S3FilterWidget):
 
 # =============================================================================
 class S3RangeFilter(S3FilterWidget):
+    """ Numerical Range Filter Widget """
 
+    # Overall class
     _class = "range-filter"
+    # Class for visible input boxes.
+    _input_class = "%s-%s" % (_class, "input")
+
+    operator = ["ge", "le"]
+
+    # Untranslated labels for individual input boxes.
+    input_labels = {"ge": "Minimum", "le": "Maximum"}
+
+    # -------------------------------------------------------------------------
+    def data_element(self, variables):
+        """
+            Overrides S3FilterWidget.data_element(), constructs multiple
+            hidden INPUTs (one per variable) with element IDs of the form
+            <id>-<operator>-data (where no operator is translated as "eq").
+
+            @param variables: the variables
+        """
+        if variables is None:
+            operators = self.operator
+            if type(operators) is not list:
+                operators = [operators]
+            variables = self._variable(self.selector, operators)
+        else:
+            
+            # Split the operators off the ends of the variables.
+            if type(variables) is not list:
+                variables = [variables]
+            operators = [v.split("__")[1]
+                         if "__" in v else "eq"
+                         for v in variables]
+
+        elements = []
+        id = self.attr["_id"]
+
+        for o, v in zip(operators, variables):
+
+             elements.append(
+                 INPUT(_type="hidden",
+                       _id="%s-%s-data" % (id, o),
+                       _class="filter-widget-data %s-data" % self._class,
+                       _value=v))
+
+        return elements
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+        T = current.T
+
+        attr = self.attr
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], _class)
+        else:
+            _class = _class
+        attr["_class"] = _class
+
+        input_class = self._input_class
+        input_labels = self.input_labels
+        input_elements = DIV()
+
+        selector = self.selector
+        
+        _variable = self._variable
+
+        id = attr["_id"]
+        for operator in self.operator:
+
+            input_id = "%s-%s" % (id, operator)
+
+            input_box = INPUT(_name=input_id,
+                              _id=input_id,
+                              _type="text",
+                              _class=input_class)
+
+            variable = _variable(selector, operator)
+            
+            # Populate with the value, if given
+            # if user has not set any of the limits, we get [] in values.
+            value = values.get(variable, None)
+            if value not in [None, []]:
+                if type(value) is list:
+                    value = value[0]
+                input_box["_value"] = value
+                input_box["value"] = value
+
+            input_elements.append(T(input_labels[operator]) + ":")
+            input_elements.append(input_box)
+
+        return input_elements
 
 # =============================================================================
-class S3DateFilter(S3FilterWidget):
+class S3DateFilter(S3RangeFilter):
+    """ Date Range Filter Widget """
 
     _class = "date-filter"
+    
+    # Class for visible input boxes.
+    _input_class = "%s-%s" % (_class, "input")
+
+    operator = ["ge", "le"]
+
+    # Untranslated labels for individual input boxes.
+    input_labels = {"ge": "Earliest", "le": "Latest"}
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+        
+        T = current.T
+
+        attr = self.attr
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], _class)
+        else:
+            _class = _class
+        attr["_class"] = _class
+
+        rfield = S3ResourceField(resource, self.field)
+        field = rfield.field
+        if field is None:
+            # S3DateTimeWidget doesn't support virtual fields
+            dtformat = current.deployment_settings.get_L10n_date_format()
+            field = Field(rfield.fname, "datetime",
+                          requires = IS_DATE_IN_RANGE(format = dtformat))
+            field._tablename = rfield.tname
+
+        input_class = self._input_class
+        input_labels = self.input_labels
+        input_elements = DIV()
+
+        selector = self.selector
+
+        _variable = self._variable
+
+        id = attr["_id"]
+        input_elements = DIV()
+        for operator in self.operator:
+            input_id = "%s-%s" % (id, operator)
+
+            # Populate with the value, if given
+            # if user has not set any of the limits, we get [] in values.
+            variable = _variable(selector, operator)
+            value = values.get(variable, None)
+            if value not in [None, []]:
+                if type(value) is list:
+                    value = value[0]
+            else:
+                value = None
+
+            picker = S3DateTimeWidget()(field,
+                                        value,
+                                        _name=input_id,
+                                        _id=input_id,
+                                        _class = self._input_class)
+
+            input_elements.append(T(input_labels[operator]) + ":")
+            input_elements.append(picker)
+
+        return input_elements
 
 # =============================================================================
 class S3LocationFilter(S3FilterWidget):

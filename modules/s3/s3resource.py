@@ -4931,6 +4931,15 @@ class S3ResourceQuery(object):
                         else:
                             query |= q
                 return query
+
+        # Convert date(time) strings
+        if ftype  == "datetime" and \
+           isinstance(rfield, basestring):
+            rfield = S3TypeConverter.convert(datetime.datetime, rfield)
+        elif ftype  == "date" and \
+             isinstance(rfield, basestring):
+            rfield = S3TypeConverter.convert(datetime.date, rfield)
+            
         query = query_bare(op, lfield, rfield)
         if invert:
             query = ~(query)
@@ -6940,18 +6949,29 @@ class S3TypeConverter(object):
             return b
         elif isinstance(b, basestring):
             try:
+                # ISO Format is standard (e.g. in URLs)
                 tfmt = current.xml.ISOFORMAT
                 (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
             except ValueError:
-                tfmt = "%Y-%m-%d %H:%M:%S"
-                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
+                try:
+                    # Try localized datetime format
+                    tfmt = str(current.deployment_settings.get_L10n_datetime_format())
+                    (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
+                except ValueError:
+                    # dateutil as last resort
+                    try:
+                        dt = current.xml.decode_iso_datetime(b)
+                    except:
+                        raise ValueError
+                    else:
+                        return dt
             return datetime.datetime(y, m, d, hh, mm, ss)
         else:
             raise TypeError
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _date(b):
+    @classmethod
+    def _date(cls, b):
         """ Convert into datetime.date """
 
         if isinstance(b, datetime.date):
@@ -6959,9 +6979,10 @@ class S3TypeConverter(object):
         elif isinstance(b, basestring):
             format = current.deployment_settings.get_L10n_date_format()
             validator = IS_DATE(format=format)
-            value, error = validator(v)
+            value, error = validator(b)
             if error:
-                raise ValueError
+                # May be specified as datetime-string?
+                value = cls._datetime(b).date()
             return value
         else:
             raise TypeError

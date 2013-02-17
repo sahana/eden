@@ -2276,18 +2276,12 @@ class S3OfficeModel(S3Model):
                       ),
             ))
 
-        # Experimental: filter form
-        office_filter = [
-            S3TextFilter("name"),
-            S3OptionsFilter("organisation_id", cols=3)
-        ]
-
         configure(tablename,
                   super_entity=("pr_pentity", "org_site"),
                   onaccept=self.org_office_onaccept,
                   deduplicate=self.org_office_duplicate,
                   search_method=office_search,
-                  ## Experimental: filter form (used by S3CRUD.list_div)
+                  # Experimental: filter form (used by S3CRUD.list_div)
                   #filter_widgets=[
                   #      S3TextFilter(["name", "email", "comments"],
                   #                   label=T("Search"),
