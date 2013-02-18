@@ -43,8 +43,7 @@ class SearchMember(SeleniumUnitTest):
         self.clickLabel(ids)
 
         self.browser.find_element_by_xpath("//form[@class='advanced-form']"
-                                           "/table/tbody/tr[12]/td[2]"
-                                           "/input[@type='submit']").click()
+                                           "//input[@type='submit']").click()
         time.sleep(1)
         
         # click label again to reset to original status
