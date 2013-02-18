@@ -1966,7 +1966,7 @@ class S3Method(object):
 
         if not method:
             method = self.method
-        if method == "list":
+        if method in ("list", "search"):
             # Rest handled in S3Permission.METHODS
             method = "read"
 
