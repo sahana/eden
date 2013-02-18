@@ -314,7 +314,7 @@ def delete_note(request, space_url):
         all_comments = Comment.objects.filter(is_public=True,
                 is_removed=False, content_type=ctype,
                 object_pk=note.id).all()
-        for i in range(note.comment_count):
+        for i in range(len(all_comments)):
             all_comments[i].delete()
         note.delete()
         return HttpResponse("The note has been deleted.")
