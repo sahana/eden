@@ -13,7 +13,7 @@ app = request.application
 join = os.path.join
 
 # Pass View Templates to Compiler
-s3.views = {}
+s3.views = views = {}
 theme = s3.theme
 if theme != "default":
     exists = os.path.exists
