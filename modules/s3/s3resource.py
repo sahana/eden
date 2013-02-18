@@ -5249,10 +5249,12 @@ class S3ResourceQuery(object):
         url_query = Storage()
         def _serialize(n, o, v, invert):
             try:
+                quote = lambda s: s if "," not in s else '"%s"' % s
                 if isinstance(v, list):
-                    v = ",".join([S3TypeConverter.convert(str, val) for val in v])
+                    v = ",".join([quote(S3TypeConverter.convert(str, val))
+                                  for val in v])
                 else:
-                    v = S3TypeConverter.convert(str, v)
+                    v = quote(S3TypeConverter.convert(str, v))
             except:
                 return
             if "." not in n:
