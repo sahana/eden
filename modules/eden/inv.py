@@ -2135,7 +2135,9 @@ S3OptionsFilter({
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
             else:
-                if request.get_vars.get("received", None):
+                if r.id and request.get_vars.get("received", None):
+                    # "received" must not propagate:
+                    del request.get_vars["received"]
                     # Set the items to being received
                     db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
                     db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
