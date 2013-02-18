@@ -84,8 +84,7 @@ class S3MembersModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set
                              # realm_entity to filter appropriately
-                             organisation_id(
-                                             default = root_org,
+                             organisation_id(default = root_org,
                                              readable = is_admin,
                                              writable = is_admin,
                                              ),
@@ -288,15 +287,16 @@ class S3MembersModel(S3Model):
             ),
             ]
         # Map filter not working on Reports page
-        advanced_member_search = report_search + [S3SearchLocationWidget(
-                                                    name="member_search_map",
-                                                    label=T("Map"),
-                                                    )
-                                                  ]
+        #advanced_member_search = report_search + [S3SearchLocationWidget(
+        #                                            name="member_search_map",
+        #                                            label=T("Map"),
+        #                                            )
+        #                                          ]
 
         member_search = S3Search(
             simple=(self.member_search_simple_widget("simple")),
-            advanced=[self.member_search_simple_widget("advanced")] + advanced_member_search
+            #advanced=[self.member_search_simple_widget("advanced")] + advanced_member_search
+            advanced=[self.member_search_simple_widget("advanced")] + report_search
         )
 
         report_fields = ["person_id",
@@ -313,7 +313,7 @@ class S3MembersModel(S3Model):
                   onaccept = self.member_onaccept,
                   search_method = member_search,
                   report_options=Storage(
-                        search=advanced_member_search,
+                        search=report_search,
                         rows=report_fields,
                         cols=report_fields,
                         facts=report_fields,
@@ -594,7 +594,7 @@ class MemberVirtualFields:
                 else:
                     return OVERDUE
 
-            if paid_date > due:
+            if paid_date >= due:
                 return PAID
             elif (due - paid_date) > lapsed:
                 return LAPSED

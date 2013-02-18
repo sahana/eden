@@ -56,6 +56,7 @@
 "reader","All Module Reader",,"vulnerability",,,,"READ",,,,,
 "reader","All Module Reader",,,,"hrm_human_resource",,"READ",,,,,
 "reader","All Module Reader",,,,"hrm_training",,"READ",,,,,
+"reader","All Module Reader",,,,"member_membership_type",,"READ",,,,,
 "reader","All Module Reader",,,,"org_organisation","any","READ",,,,,"Used to filter organisation fields"
 "reader","All Module Reader",,,,"survey_translate",,"READ",,,,,
 "asset_reader","Asset Reader",,"asset",,,,"READ",,,,,
@@ -165,31 +166,45 @@
 "irs_super","Incident Super Editor",,"pr",,,,"READ",,,,,
 "irs_super","Incident Super Editor",,"hrm","person_search",,,"READ",,,,,
 "member_reader","Members Reader",,"member",,,,"READ",,,,,
-"member_reader","Members Reader",,"pr",,,,"READ",,,,,
 "member_reader","Members Reader",,"org",,,,"READ",,,,,
 "member_reader","Members Reader",,"pr",,,,"READ",,,,,
 "member_reader","Members Reader",,"hrm","person_search",,,"READ",,,,,
+"member_reader","Members Reader",,,,"pr_address",,"READ","READ|UPDATE",,,,"Need to specify explicitly to see other entities"
+"member_reader","Members Reader",,,,"pr_contact",,"READ","READ|UPDATE",,,,
+"member_reader","Members Reader",,,,"pr_contact_emergency",,"READ","READ|UPDATE",,,,
+"member_reader","Members Reader",,,,"pr_group_membership",,"READ",,,,,
+"member_reader","Members Reader",,,,"pr_person",,"READ","READ|UPDATE",,,,
 "member_data_entry","Members Data Entry",,"member",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
-"member_data_entry","Members Data Entry",,,,"member_membership_type",,"READ",,,,,
-"member_data_entry","Members Data Entry",,"pr",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_data_entry","Members Data Entry",,"org",,,,"READ",,,,,"Used to filter organisation fields"
-"member_data_entry","Members Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
-"member_data_entry","Members Data Entry",,"pr",,,,"READ",,,,,
+"member_data_entry","Members Data Entry",,"pr",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_data_entry","Members Data Entry",,"hrm","person_search",,,"READ",,,,,
+"member_data_entry","Members Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
+"member_data_entry","Members Data Entry",,,,"pr_address",,"READ|CREATE","READ|CREATE|UPDATE",,,,
+"member_data_entry","Members Data Entry",,,,"pr_contact",,"READ|CREATE","READ|CREATE|UPDATE",,,,
+"member_data_entry","Members Data Entry",,,,"pr_contact_emergency",,"READ|CREATE","READ|CREATE|UPDATE",,,,
+"member_data_entry","Members Data Entry",,,,"pr_group_membership",,"READ|CREATE","READ|CREATE|UPDATE",,,,
+"member_data_entry","Members Data Entry",,,,"pr_person",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_editor","Members Editor",,"member",,,,"READ|CREATE|UPDATE",,,,,
-"member_editor","Members Editor",,,,"member_membership_type",,"READ",,,,,
-"member_editor","Members Editor",,"pr",,,,"READ|CREATE|UPDATE",,,,,
 "member_editor","Members Editor",,"org",,,,"READ|UPDATE",,,,,"Used to filter organisation fields"
-"member_editor","Members Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
-"member_editor","Members Editor",,"pr",,,,"READ",,,,,
+"member_editor","Members Editor",,"pr",,,,"READ|CREATE|UPDATE",,,,,
 "member_editor","Members Editor",,"hrm","person_search",,,"READ",,,,,
+"member_editor","Members Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
+"member_editor","Members Editor",,,,"pr_address",,"READ|CREATE|UPDATE",,,,,
+"member_editor","Members Editor",,,,"pr_contact",,"READ|CREATE|UPDATE",,,,,
+"member_editor","Members Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE",,,,,
+"member_editor","Members Editor",,,,"pr_group_membership",,"READ|CREATE|UPDATE",,,,,
+"member_editor","Members Editor",,,,"pr_person",,"READ|CREATE|UPDATE",,,,,
 "member_super","Members Super Editor",,"member",,,,"READ|CREATE|UPDATE|DELETE",,,,,
-"member_super","Members Super Editor",,,,"member_membership_type",,"READ|CREATE|UPDATE|DELETE",,,,,
-"member_super","Members Super Editor",,"pr",,,,"READ|CREATE|UPDATE|DELETE",,,,,
 "member_super","Members Super Editor",,"org",,,,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
-"member_super","Members Super Editor",,,,"org_organisation",,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
-"member_super","Members Super Editor",,"pr",,,,"READ",,,,,
+"member_super","Members Super Editor",,"pr",,,,"READ|CREATE|UPDATE|DELETE",,,,,
 "member_super","Members Super Editor",,"hrm","person_search",,,"READ",,,,,
+"member_super","Members Super Editor",,,,"member_membership_type",,"READ|CREATE|UPDATE|DELETE",,,,,
+"member_super","Members Super Editor",,,,"org_organisation",,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
+"member_super","Members Super Editor",,,,"pr_address",,"READ|CREATE|UPDATE|DELETE",,,,,
+"member_super","Members Super Editor",,,,"pr_contact",,"READ|CREATE|UPDATE|DELETE",,,,,
+"member_super","Members Super Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE|DELETE",,,,,
+"member_super","Members Super Editor",,,,"pr_group_membership",,"READ|CREATE|UPDATE|DELETE",,,,,
+"member_super","Members Super Editor",,,,"pr_person",,"READ|CREATE|UPDATE|DELETE",,,,,
 "project_reader","Project Reader",,"project",,,,"READ",,,,,
 "project_reader","Project Reader",,"org",,,,"READ",,,,,
 "project_reader","Project Reader",,"pr",,,,"READ",,,,,
@@ -261,6 +276,7 @@
 "staff_data_entry","Staff Data Entry",,"pr","contact_emergency",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,,,"hrm_human_resource",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,,,"hrm_training",,"READ|CREATE","READ|CREATE|UPDATE",,,,
+"staff_data_entry","Staff Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "staff_data_entry","Staff Data Entry",,,,"pr_address",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,,,"pr_contact",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,,,"pr_contact_emergency",,"READ|CREATE","READ|CREATE|UPDATE",,,,
@@ -270,7 +286,6 @@
 "staff_data_entry","Staff Data Entry",,,,"pr_image",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,,,"pr_person",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,,,"pr_physical_description",,"READ|CREATE","READ|CREATE|UPDATE",,,,
-"staff_data_entry","Staff Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "staff_editor","Staff Editor",,"hrm",,,,"READ|CREATE|UPDATE","READ|CREATE|UPDATE",,,,
 "staff_editor","Staff Editor",,"hrm","certificate",,,"READ",,,,,
 "staff_editor","Staff Editor",,"hrm","compose",,,"NONE",,,,,
@@ -286,6 +301,7 @@
 "staff_editor","Staff Editor",,"vol",,,,"NONE",,,,,
 "staff_editor","Staff Editor",,,,"hrm_human_resource",,"READ|CREATE|UPDATE",,,,,
 "staff_editor","Staff Editor",,,,"hrm_training",,"READ|CREATE|UPDATE",,,,,
+"staff_editor","Staff Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "staff_editor","Staff Editor",,,,"pr_address",,"READ|CREATE|UPDATE",,,,,
 "staff_editor","Staff Editor",,,,"pr_contact",,"READ|CREATE|UPDATE",,,,,
 "staff_editor","Staff Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE",,,,,

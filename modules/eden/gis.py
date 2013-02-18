@@ -82,6 +82,7 @@ class S3LocationModel(S3Model):
         T = current.T
         db = current.db
         messages = current.messages
+        NONE = messages["NONE"]
 
         # Shortcuts
         add_component = self.add_component
@@ -130,7 +131,8 @@ class S3LocationModel(S3Model):
                                    ondelete = "RESTRICT"),
                              # Materialised Path
                              Field("path", length=256,
-                                   readable=False, writable=False),
+                                   readable=False,
+                                   writable=False),
                              Field("gis_feature_type", "integer",
                                    default=1, notnull=True,
                                    requires = IS_IN_SET(gis_feature_type_opts,
@@ -168,8 +170,7 @@ class S3LocationModel(S3Model):
                                    label = T("Inherited?"),
                                    default = False,
                                    writable = False,
-                                   represent = lambda opt: \
-                                    T("Yes") if opt == True else T("No")
+                                   represent = s3_yes_no_represent,
                                    ),
                              # Bounding box
                              Field("lat_min", "double",
@@ -185,29 +186,35 @@ class S3LocationModel(S3Model):
                                    readable=False, writable=False),
                              # Street Address (other address fields come from hierarchy)
                              Field("addr_street", "text",
-                                   represent = lambda v: v or "",
+                                   represent = lambda v: v or NONE,
                                    label = T("Street Address")),
                              Field("addr_postcode", length=128,
-                                   represent = lambda v: v or "",
+                                   represent = lambda v: v or NONE,
                                    label = T("Postcode")),
                              s3_comments(),
                              Field("L5",
+                                   represent = lambda v: v or NONE,
                                    readable=False,
                                    writable=False),
                              Field("L4",
+                                   represent = lambda v: v or NONE,
                                    readable=False,
                                    writable=False),
                              Field("L3",
+                                   represent = lambda v: v or NONE,
                                    readable=False,
                                    writable=False),
                              Field("L2",
+                                   represent = lambda v: v or NONE,
                                    readable=False,
                                    writable=False),
                              Field("L1",
+                                   represent = lambda v: v or NONE,
                                    readable=False,
                                    writable=False),
                              Field("L0",
                                    #label=current.messages.COUNTRY,
+                                   represent = lambda v: v or NONE,
                                    readable=False,
                                    writable=False),
                              *meta_spatial_fields)
