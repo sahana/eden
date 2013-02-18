@@ -1,35 +1,67 @@
 {{extend "layout.html"}}
-<div id='home_col1'>
- {{=home_img}}
- <div id='info_prod'>
-  <h1>Information Products</h1>
-   {{=list_img}}
-   {{=graph_img}}
-   {{=map_img}}
-   {{=matrix_img}}
-  </div>
-  {{=why_box}}
-  {{=what_box}}
-  {{=how_help_box}}
-  {{=home_map_img}}
-  {{=how_start_box}}
+<div id='front-slides' class='grid_12 alpha omega'>
+ <div data-src='/{{=appname}}/static/themes/DRRPP/img/slides/Slide1.jpg'>
+  <div class='camera_caption grid_4 prefix_8 alpha omega'>"With over DRR 1,000 projects in the Asia-pacific, and over 100 policies and strategies, the DRR Project portal is a one-stop resource to improve planning."</div>
+ </div>
+ <div data-src='/{{=appname}}/static/themes/DRRPP/img/slides/Slide2.jpg'>
+  <div class='camera_caption grid_4 prefix_8 alpha omega'>"I use the the portal for proposal writing and project planning. By knowing what's going on in neighboring countries, I have been able to build from other's work and improve our own."</div>
+ </div>
+ <div data-src='/{{=appname}}/static/themes/DRRPP/img/slides/Slide3.jpg'>
+  <div class='camera_caption grid_4 prefix_8 alpha omega'>"The portal has many potentials. It's the only of its kind in the Asia-pacific where you can log-in and receive instant information on trends in DRR project planning."</div>
+ </div>
+ <div data-src='/{{=appname}}/static/themes/DRRPP/img/slides/Slide4.jpg'>
+  <div class='camera_caption grid_4 prefix_8 alpha omega'>"I use the maps and graphs the most. It's easy to access and a great tool to understand gaps in DRR  projects in our region."</div>
+ </div>
+ <div data-src='/{{=appname}}/static/themes/DRRPP/img/slides/Slide5.jpg'>
+  <div class='camera_caption grid_4 prefix_8 alpha omega'>"It's not only about knowing who's doing what and where. It's a tool to network, maximize resources and ensure project effectiveness."</div>
+ </div>
 </div>
-<div id='home_col2'>
- {{=add_div}}    
- {{if auth.user is None and not settings.is_cd_version():}}
- <div id='login_div'>
-  <h1>Login</h1>
-  {{=login}}
-  <table>
-   <tr>
-    <td><a id='register-btn' href='{{=URL(f="user", args="register")}}'>{{=T("Register")}}</a></td>
-    <td><a id='retrieve-btn' href='{{=URL(f="user", args="retrieve_password")}}'>{{=T("Lost Password")}}</a>
-   </tr>
-  </table>
+<div class='clear'></div>
+<div id='front-latest' class='grid_8 alpha'>
+ <div id='front-latest-label' class='body-label-wrapper grid_8'><span class='icon body-icon icon-doc'></span><span class='body-label-text label-text'>Latest Projects</span></div>
+ {{=latest_projects}}
+</div>
+<div id='front-login' class='grid_4'>
+ {{if auth.user is None:}}
+ <div id='front-login-label' class='body-label-wrapper grid_4'><span class='icon body-icon icon-key'></span><span class='body-label-text label-text'>Login</span></div>
+ <div id='front-login-body' class='grid_4'>
+  <form id='front-login-form' class='login-form' action="#" enctype="multipart/form-data" method="post">
+   <div class='form-row'>
+    <label for='auth_user_email'>E-mail:</label>
+    <input type='text' id='auth_user_email' class='form-text front-login-text' name='email' />
+   </div>
+   <div class='form-row'>
+   <label for='auth_user_password'>Password:</label>
+    <input type='password' id='auth_user_password' class='form-text front-login-text' name='password' />
+   </div>
+   <div class='form-controller grid_4 alpha omega'>
+    <div class='grid_1 prefix_1'><input class='front-login-submit login-button small' type='submit' name='submit' value='' /></div>
+    <div class='grid_1 suffix_1'><a href='{{=URL(f="user", args="register")}}' class='front-login-register register-button small'></a></div>
+  </div>
+   <div class='form-login-forgot grid_4 alpha omega'><a href='{{=URL(f="user", args="retrieve_password")}}'>Forgot Password</a></div> 
+  {{=form.custom.end}}
  </div>
  {{pass}}
- {{=tour}}
- {{=help}}   
- {{=stats}}
- {{=market}}
 </div>
+<div class='clear'></div>
+<div id='front-middle-content' class='grid_12 alpha omega'>
+ <div id='front-mypage' class='front-block grid_4'>
+  <h1>Personalise</h1>
+  <h2>your portal.</h2>
+  <div class='front-block-info'>Create a space that supports your specific needs in just a few clicks.</div>
+  <a id='front-mypage-button' class='anchor-button mypage-button medium' href='{{=URL(r=request, c="default", f="index", args="mypage")}}'></a>
+ </div>
+ <div id='front-vid' class='grid_4 alpha omega'>
+  <div id='front-vid-label' class='body-label-wrapper grid_4'><span class='icon body-icon icon-film'></span><span class='body-label-text label-text'>The Portal in 3 Steps</span></div>
+  <div id='front-vid-player' class='grid_4 alpha omega'>
+   <iframe width='320' height='180' src='http://www.youtube.com/embed/tfdj0jZtUWQ' frameborder='0' allowfullscreen></iframe>
+  </div>
+ </div>
+ <div id='front-project' class='front-block grid_4'>
+  <h1>Improve</h1>
+  <h2>your project planning.</h2>
+  <div class='front-block-info'>Stay informed. Know who&#39;s doing what and where. No Log In is required.</div>
+  <a id='front-project-button' class='anchor-button search-project-button medium' href='{{=URL(r=request, c="project", f="project", args="search")}}'></a>
+ </div>
+</div>
+<div class='clear'></div>

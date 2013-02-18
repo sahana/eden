@@ -1,0 +1,71 @@
+{{extend "layout.html"}}
+<div id='getstarted-body-wrapper' class='body-content-wrapper container_12'>
+ <div id='getstarted-getstarted' class='grid_12 alpha omega'>
+  <div id='getstarted-getstarted-label' class='body-label-wrapper grid_12'>
+   <span class='icon body-icon icon-doc'></span>
+   <span class='body-label-text label-text'>Get Started</span>
+  </div>
+  <div class='line grid_12 alpha omega'></div>
+  <div id='getstarted-taglines' class='grid_8'>
+   <p>Stay informed. Know who's doing what and where. The portal has a lot to offer.</p>
+   <p>No login is required.</p>
+   <p>Click on an icon below to have instant access to DRR project data.</p>
+  </div>
+  <div id='getstarted-video' class='grid_4 alpha omega'>
+   <div id='getstarted-getstarted-label' class='body-label-wrapper grid_4'>
+    <span class='icon body-icon icon-film'></span>
+    <span class='body-label-text label-text'>The Portal in 3 Steps</span>
+   </div>
+   <div id='getstarted-vid-player' class='grid_4 alpha omega'>
+    <iframe width='320' height='180' src='http://www.youtube.com/embed/tfdj0jZtUWQ' frameborder='0' allowfullscreen></iframe>
+   </div>
+  </div>
+  <div class='clear'></div>
+  <div id='getstarted-block-project' class='block grid_4'>
+   <a href='{{=URL(r=request, c="project", f="project", args="search")}}'>
+    <div class='icon icon-doc big'></div>
+   </a>
+   <h2>Project List</h2>
+   <div class='block-info'>List of completed, planned/proposed and ongoing DRR projects - by country, hazards, themes, partners and donors.</div>
+  </div></a>
+  <div id='getstarted-block-pns' class='block grid_4'>
+   <a href='{{=URL(r=request, c="project", f="framework")}}'>
+    <div class='icon icon-jigsaw big'></div>
+   </a>
+   <h2>Policies &amp; Strategies List</h2>
+   <div class='block-info'>Know more on the DRR frameworks/action plans guiding the region - identify priority areas for providing support and implementation.</div>
+  </div>
+  <div id='getstarted-block-project' class='block grid_4'>
+   <a href='{{=URL(r=request, c="default", f="index", args="analysis")}}'>
+    <div class='icon icon-graph big'></div>
+   </a>
+   <h2>Matrix, Graphs and Map</h2>
+   <div class='block-info'>Quick analysis - on number and types of completed and ongoing DRR projects. Generate customized matrix report, graphs and maps.</div>
+  </div>
+ </div>
+ <div class='clear'></div>
+ <div id='getstarted-about' class='grid_12 alpha omega'>
+  <div id='getstarted-about-label' class='body-label-wrapper grid_12'>
+   <span class='icon body-icon icon-doc'></span>
+   <span class='body-label-text label-text'>About</span>
+  </div>
+  <div class='line grid_12 alpha omega'></div>
+  <div class='text-content grid_12'>
+   <div class='subtitle'>Our Purpose</div>
+   <p>The Disaster Risk Reduction (DRR) Project Portal aims to collect information on all multi-country and national level DRR projects and initiatives in Asia and the Pacific implemented since 2005. By facilitating information sharing in Asia and the Pacific, the Portal aims to advance the Hyogo Framework for Action (HFA) strategic goals.</p>
+   <p>The Portal:</p>
+   <ul>
+    <li>Helps effective planning, programming, cooperation, and collaboration of DRR projects and programmes in the region by facilitating project analysis to identify gaps and overlaps;</li>
+    <li>Is essential for governments, organisations and donors involved in implementing and supporting DRR projects and programmes in the region;</li>
+    <li>Is a useful resource for academics, students and the media for obtaining an overview of DRR projects being implemented in the region.</li>
+   </ul>
+   <div class='subtitle'>Definition of DRR Projects</div>
+   <p>DRR projects are those which involve reducing exposure to hazards, reducing vulnerability of people and property, wise management of land and the environment, and/or improved preparedness for adverse events. DRR projects include climate change adaptation projects where they are related to DRR, but they do not include relief or response initiatives undertaken in the aftermath of disasters unless they incorporate an aspect of reducing risk to future disasters.</p>
+  </div>
+ </div>
+ <div class='clear'></div>
+ <div id='getstarted-member-button' class='grid_12 alpha omega'>
+  <div class='grid_2 prefix_4'><a href='{{=URL(r=request, c="default", f="index", args="login")}}' class='login-button big'></a></div>
+  <div class='grid_2 postfix_4'><a href='{{=URL(r=request, c="default", f="index", args="register")}}' class='register-button big'></a></div>
+ </div>
+</div>

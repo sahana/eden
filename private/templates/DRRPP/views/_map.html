@@ -1,0 +1,24 @@
+<div class='body-content-wrapper grid_12 alpha omega'>
+ <div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'>{{try:}}{{=H2(title)}}{{except:}}{{pass}}</span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
+<div id='rheader'>
+{{try:}}
+ {{=XML(rheader)}}
+ </div>
+ <div id='component'>
+{{except:}}
+</div>
+<div>
+{{pass}}
+<div class='form-container'>
+{{try:}}{{=form}}{{except:}}{{pass}}
+</div>
+<div><br /></div>
+<div id='map'>
+{{try:}}{{=map}}{{except:}}{{pass}}
+</div>
+</div>
+</div>

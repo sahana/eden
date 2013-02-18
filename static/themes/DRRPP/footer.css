@@ -2,35 +2,19 @@
 
 /* Page Footer */
 #footer {
-    color: white;
-    background-color: #90AABC;
-    height: 40px;
-    width: 100%;
+	background: url(img/footer-bg.jpg);
+	height: 130px;
+	text-align: center;
+	color: #ffffff;
+	padding: 10px 0;
 }
-#footer .content {
-    vertical-align: middle;
+#footer-partner-label {
+	font-size: x-large;
+	margin-bottom: 15px;
 }
-#footer .content div {
-    float: left;
+#footer-partner-icon {
+	margin-bottom: 15px;
 }
-
-#footer .content div#menu_bottom {
-    float: right;
+#footer-partner-icon img {
+	margin-right: 20px;
 }
-#iap{
-    font-size: 1.2em; 
-    padding: 12px 0 0 10px;
-} 
-#adb {
-    padding: 2px 0 0 10px;
-} 
-#unisdr {
-    padding: 6px 0 0 10px;
-}
-#adpc {
- padding: 10px 0 0 10px;
-}
-#eden{
-    padding: 12px 5px 0 20px;
-} 
-

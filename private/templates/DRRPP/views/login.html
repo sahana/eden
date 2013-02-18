@@ -1,0 +1,30 @@
+{{extend "layout.html"}}
+<div id='login-body-wrapper' class='body-content-wrapper container_12'>
+ <div class='grid_12 alpha omega'>
+  <div id='login-label' class='body-label-wrapper grid_12'>
+   <span class='icon body-icon icon-doc'></span>
+   <span class='body-label-text label-text'>Login</span>
+  </div>
+  <div class='line grid_12 alpha omega'></div>
+  <div id='login-form-legend' class='form-legend grid_6 prefix_3 suffix_3 form-required'><label>Required</label></div>
+  <form id='login-form' class='login-form' action='#' enctype='multipart/form-data' method='post'>
+   <div class='grid_6 prefix_3 suffix_3 alpha omega'>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_email'>E-mail:</label>
+     <input type='text' id='auth_user_email' class='form-text' name='email' />
+    </div>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_password'>Password:</label>
+     <input type='password' id='auth_user_password' class='form-text' name='password' />
+    </div>
+   </div>
+  <div class='form-controller grid_2 prefix_5 suffix_5'>
+   <input type='submit' class='login-button medium' value='' />
+  </div>
+  <div class='form-controller grid_2 prefix_5 suffix_5'>
+   <a href='{{=URL(f="user", args="retrieve_password")}}'>Forgot Password</a>
+  </div>
+  {{=form.custom.end}}
+ </div>
+ <div class='clear'></div>
+</div>

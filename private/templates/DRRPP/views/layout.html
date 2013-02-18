@@ -1,17 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="{{=T.accepted_language or "en"}}">
+<html lang='{{=T.accepted_language or "en"}}'>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-<title>{{=settings.get_system_name()}} - {{try:}}{{=title}}{{except:}}{{if response.title:}}{{=response.title}}{{pass}}{{pass}}</title>
+<title>{{=settings.get_system_name()}} - {{try:}}{{=title}}{{except:}}{{=response.title}}{{pass}}</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <meta name="application-name" content="{{=appname}}" />
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
-{{if "MSIE" in request.wsgi.environ.get("HTTP_USER_AGENT",[]):}}
-<link href="/{{=appname}}/static/themes/DRRPP/font_ie.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{else:}}
-<link href="/{{=appname}}/static/themes/DRRPP/font_other.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{pass}}
 <link rel="shortcut icon" href="/{{=appname}}/static/themes/DRRPP/favicon.ico" type="image/x-icon" />
 <style type="text/css">
 {{if s3.rtl:}}
@@ -51,36 +46,65 @@
  {{include}}
 {{else:}}
 <body>
- <div id='header'>
-  <a href='{{=URL(r=request, c="default", f="index")}}'><div id='logo'></div></a>
-  <div id='strapline'>
-    <h1>Sharing information on disaster risk reduction initiatives for effective coordination in Asia Pacific</h1>
+<div id='header' class='container_12'>
+ <div id='header-banner' class='grid_12 alpha omega'>
+  <div id='header-top-menu' class='grid_3 prefix_9 omega'>
+   {{if auth.user is None:}}
+   <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="login")}}'>Login</a>
+   <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="register")}}'>Register</a>
+   {{else:}}
+   <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="user", args="logout")}}'>Logout</a>
+   {{pass}}
+   <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="contact")}}'>Contact</a>
   </div>
-  <div id='menu_top'>{{=current.menu.top}}</div>
-  {{if s3.cd_to_live_btn:}}
-   {{=s3.cd_to_live_btn}}
-  {{pass}}
+ </div>
+ <div class='clear'></div>
+ <div id='header-navbar' class='grid_12 alpha omega'>
+  <ul id='nav'>
+   <li><a id='header-navbar-home' href='{{=URL(r=request, c="default", f="index")}}'></a></li>
+   <li>
+    <a href='{{=URL(r=request, c="default", f="index", args="get_started")}}'>Get Started</a>
+    <ul class='sub-menu'>
+     <li><a href='{{=URL(r=request, c="project", f="project", args="create")}}'>Add Project</a></li>
+     <li><a href='{{=URL(r=request, c="project", f="framework", args="create")}}'>Add Policies &amp; Strategies</a></li>
+     <li><a href='{{=URL(r=request, c="project", f="project", args="import")}}'>Add Project Offline</a></li>
+    </ul>
+   </li>
+   <li><a href='{{=URL(r=request, c="project", f="project", args="search")}}'>Project List</a></li>
+   <li>
+    <a href='#'>Project Analysis</a>
+    <ul class='sub-menu'>
+     <li><a href='{{=URL(r=request, c="project", f="project", args="report")}}'>Matrix Report</a></li>
+     <li><a href='{{=URL(r=request, c="project", f="project", args="report", vars=dict(chart="breakdown:rows"))}}'>Graphs</a></li>
+     <li><a href='{{=URL(r=request, c="project", f="location", args="map")}}'>Maps</a></li>
+    </ul>
+   </li>
+   <li><a href='{{=URL(r=request, c="project", f="framework")}}'>Policies & Strategies</a></li>
+   <li><a href='{{=URL(r=request, c="default", f="index", args="organisations")}}'>Organisations</a></li>
+   <li><a id='header-navbar-mypage' href='{{=URL(r=request, c="default", f="index", args="mypage")}}'>My Page</a></li>
+  </ul>
+ </div>
 </div>
+<div id='content-wrapper' class='container_12'>
+{{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
+{{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
+{{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
+{{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
+{{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
+{{include}}
 </div>
-<div id='menu_modules'>
- {{=current.menu.main}}
-</div>
-<div class='container'>
- <div class='header'></div>
-  <div id='content' class='cf'>
-   {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
-   {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
-   {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
-   {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
-   {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
-   {{include}}
-  </div>
-  <div class='footer'></div>
-</div>
-<div id='footer'>
+<div id='footer' class='container_12'>
  {{include "../private/templates/DRRPP/views/footer.html"}}
  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
 </div>
+{{s3.jquery_ready.append(
+"""
+$('#nav').children('li').mouseover(function(){
+ $(this).children('.sub-menu').show()
+})
+$('#nav').children('li').mouseout(function(){
+ $(this).children('.sub-menu').hide()
+})""")}}
 {{pass}}
 {{include "scripts.html"}}
 </body>

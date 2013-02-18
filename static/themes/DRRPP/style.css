@@ -1,358 +1,56 @@
 @charset "UTF-8";
 
-/*** General ***/
-html {
-    /*min-height: 101%;*/
-    font-size: 100.01%;
-}
+@import url(http://fonts.googleapis.com/css?family=Exo);
 
 body {
-    font-size: 10px;
-    font-family: Arial, Helvetica, sans-serif;
-    line-height: 125%;
-    color: #000;
-    background: url(img/head_bg.png) repeat-x;
+	font-family: 'Exo', sans-serif;
+	font-size: 12px;
+	background: #f0f0f0;
+}
+a, a:link, a:hover, a:visited {
+	text-decoration: none;
+	color: #0a64a2;
+}
+h1 {
+	font-size: 36px;
+	font-weight: normal;
+}
+h2 {
+	font-size: x-large;
+	font-weight: normal;
 }
 
-form,
-fieldset,
-input,
-select,
-textarea {
-    font: 100%/125% Arial, Helvetica, sans-serif;
+p {
+	font-size: 12px;
+	line-height: 16px;
+	margin-bottom: 5px;
 }
 
-strong {
-    font-weight: bold;
+.line {
+	height: 1px;
+	border-bottom: 1px solid #000000;
 }
 
-/*** Typography ***/
-#content {
-    margin: 0px;
-    padding: 0 10px 0 10px;
-    background: url(img/page_sides.png) repeat-y;
-    font-size: 14px;
-    line-height: 1.25em;
+#content-wrapper > h2 {
+    margin-top: 20px;
 }
 
-#content h1,
-#content h2 {
-    font-family: "EraserRegular";
-    text-transform: uppercase;
-    color: #F5902E;
-    font-size: 1.4em;
-    font-weight: bold;
-    line-height: 1em;
-    margin: 0 0 5px 10px;
-    clear: both;
+div.form-container form {
+    background-color: #f0f0f0;
 }
-
-#content h3	{
-    text-transform: uppercase;
-    color: #F5902E;
-    font-size: 1.2em;
-    margin: 0 0 5px 0;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-#content h4 {
-    font-size: 1.2em;
-    line-height: 1.2em;
-    font-weight: normal;
-    margin-bottom: 10px;
-}
-#content h5 {
-    color: #006699;
-    margin-top: 10px;
-    font-size: 13px;
-    font-weight: bolder;
-    border-bottom: 1px #003366 dotted;
-    margin-bottom: 10px;
-}
-#content ul {
-    list-style-type: disc;
-    margin: 0 0 4px 20px;
-}
-/* Except here */
-#content ul.x-tab-strip,
-#content ul.x-tree-node-ct,
-#content ul.x-tree-root-ct {
-    list-style: none outside none;
-}
-
-/* Buttons */
-.button-left {
-    overflow: hidden;
-    background: transparent url(img/button_left.png) no-repeat;
-    display: block;
-    float: left;
-    height: 26px;
-    margin: 1px 2px 1px 2px;
-    text-decoration: none;
-}
-
-span.button-left input.button-right,
-.button-right {
-    overflow: hidden;
-    background: transparent url(img/button_right.png) no-repeat scroll top right;
-    display: block;
-    line-height: 16px;
-    margin: 0;
-    padding: 5px 13px 5px 13px;
-    border: 0;
-    color: black;
-    text-transform:uppercase;
-}
-
-/* Links should ALWAYS be unvisited */
-a {
-    color: #039;
-    text-decoration: underline;
-    outline: 0;
-}
-a:active,
-a:focus {
-    outline: 0;
-}
-
-/* Forms */
-form label {
-    cursor: pointer;
-}
-
-/* Input fields should give visual feedback when focussed */
-input:focus,
-select:focus,
-textarea:focus {
-    background-color: #ffffcc;
-}
-
-/* Add Projects Form */
-/*div.w2p_r */
-.form-container > form > table > tbody > tr:nth-child(2n+1) {
-    background: none repeat scroll 0 0 #E8E8E8;
-    overflow: hidden;
-    clear: both;
-}
-
-.form-container > form > table > tbody > tr:last-child {
-    background: white;
-}
-
-
-textarea {
-    width: 650px;
-}
-
-/* Because the outlines of the custom buttons are not Transparent */
-div.container table.list td.column_id,
-div.container table.list tr.odd {
-    background-color: transparent;
-}
-
-/* My Page */
-#table-container p {
-    font-size: 1em;
-}
-
-/* DRRPP END */
-
-/* other styles */
-a.help, a:link.help {
+table.dataTable th {
+    background: #5689ab;
     color: #fff;
-    text-decoration: none;
-    margin-right: 10px;
 }
-a:hover.help {
-    background-color: #336699;
-    text-decoration: underline;
+table.dataTable tr.odd,
+table.dataTable tr.odd td.sorting_1 {
+    background: #d1e0e5 !important;
 }
-a:visited.help {
-    font-weight: normal;
-    color: #666;
+table.dataTable tr.even,
+table.dataTable tr.even td.sorting_1 {
+    background: #f0f0f0 !important;
 }
 
-/* Form Layout styles */
-p.legend { margin-bottom: 1em; }
-p.legend em { color: #c00;
-              font-style: normal; }
-
-div.form-container { width: 100%; }
-div.form-container form { padding: 5px;
-                          background-color: #fff;
-                          border: #eee 1px solid;
-                          background-color: #fbfbfb; 
-                          overflow: auto;}
-div.form-container p { margin: 0.5em 0 0 0; }
-div.form-container form p { margin: 0; }
-div.form-container form p.note { font-style: italic;
-                                 margin-left: 18em;
-                                 font-size: 80%;
-                                 color: #666; }
-div.container form input,
-div.container form select { padding: 1px;
-                                 margin: 2px}
-
-div.form-container form fieldset { margin:0 0 10px 0;
-                                   padding: 10px;
-                                   border: #ddd 1px solid;
-                                   background-color:#fff;}
-div.form-container form legend { font-weight: bold;
-                                 color: #666; }
-div.form-container form fieldset div.brake { padding: 0.3em; }
-div.form-container form fieldset label.errorfield,
-div.form-container form fieldset span.errorfield { color: #c00; }
-div.form-container form fieldset label.value{display:block;
-                                             text-align:left;
-                                             width:auto;}
-div.form-container form fieldset input.errorfield { border-color: #c00;
-                                                    background-color: #fef; }
-div.form-container form fieldset input:focus,
-div.form-container form fieldset input.errorfield:focus,
-div.form-container form fieldset textarea:focus { background-color: #ffffcc;
-                                                  border-color: #fc6;  }
-div.form-container div.controlset label,
-div.form-container div.controlset input { display: inline;
-                                          float: none; }
-div.form-container div.controlset div { margin-left: 15em; }
-div.form-container div.buttonrow { margin-left: 180px; }
-
-/*** Overrides to widgets.css ***/
-/* Screen width */
-/* Tooltips */
-.tooltip,
-.tooltipbody,
-.stickytip,
-.ajaxtip {
-    width: 20px;
-}
-.tooltip:hover,
-.tooltipbody:hover,
-.stickytip:hover,
-.ajaxtip:hover {
-    width: 20px;
-}
-/* Colours */
-/* Action Buttons */
-.action-btn,
-.delete-btn-ajax,
-.delete-btn {
-    color: #fff;
-    background-color: #90AABC;
-    border: #c6bea7;
-    border-bottom: #164b8b;
-    border-top: #f4edd4;
-}
-.action-btn:hover,
-.delete-btn-ajax:hover,
-.delete-btn:hover {
-    background-color: #FAB73D;
-}
-/* Tabs */
-div.tabs {
-    border-bottom: 1px solid #90AABC;
-}
-div.tabs span.tab_here {
-    background: #f4edd4;
-    border-color: #90AABC;
-    border-bottom: #f4edd4;
-}
-div.tabs span.tab_here a {
-    color: #000000;
-}
-span.tab_last,
-span.tab_other {
-    background: #90AABC;
-    border-color: #90AABC;
-}
-span.tab_last:hover,
-span.tab_other:hover {
-    background: #c6bea7;
-    border-color: #c6bea7;
-}
-span.tab_prev_active {
-    color: #000000;
-}
-span.tab_next_active {
-    color: #000000;
-}
-div.tabs span,
-div.tabs span.tab_here {
-    padding-top: 2px;
-    padding-bottom: 2px;
-}
-button,
-.action-btn,
-.delete-btn,
-div.form-container form input[type=submit] {
-    color: inherit;
-    text-transform: uppercase;
-    border: 1px solid #d6d6d6;
-    /*border-top-width: 2px;*/
-    border-radius: 12px;
-    box-shadow: 2px 2px 3px #D6D6D6;
-    padding: 0.2em 0.5em;
-    background-color: white;
-}
-
-#about_logos ul {
-    list-style: none;
-    display: inline;
-}
-#about_logos li {
-    display: inline;
-}
-
-/* Search */
-div.form-container div.search_form>form>table>tbody>tr>td,
-div.form-container div#reportform>form>fieldset>table>tbody>tr>td {
-    padding: 5px 0;
-}
-
-.s3-checkboxes-widget-filter {
-    font-style:italic;
-}
-div.search_form .w2p_fl,
-div#reportform .w2p_fl {
-    color: grey;
-    text-transform: uppercase;
-}
-
-.advanced-lnk, .simple-lnk {
-    font-style: bold;
-    color: #F5902E;
-    margin: 0 0 5px;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-
-div.dataTables_info {
-    float: left;
-    color: #F5902E;
-    font-size: 1.2em;
+.item-container label {
     font-weight: bold;
-    text-transform: uppercase;
-}
-div.dataTables_paginate {
-    float: right;
-}
-div.dataTables_length {
-     margin-right: 20px;
-}
-div.dataTables_filter {
-    clear: left;
-}
-
-/* Report */
-div.chart-contents {
-    background-color: white;
-}
-/* Hide Report Options not needed in DRRPP */
-div#chart-opts,
-div.pivot-table-control,
-div.hide-chart,
-tr.report-fact-single-option,
-tr.report-show-totals-option {
-    display: none;
 }

@@ -1,5 +1,10 @@
 {{extend "layout.html"}}
-<h2>{{=T("Purpose")}}</h2>
+<div class='body-content-wrapper grid_12 alpha omega'>
+ <div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'><h2>Purpose</h2></span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
 <p>
   {{=XML(T("The Disaster Risk Reduction (DRR) Project Portal aims to collect information on all multi-country and national level DRR projects and initiatives in Asia and the Pacific implemented since 2005. By facilitating information sharing in Asia and the Pacific, the Portal aims to advance the %(hyogo_framework)s strategic goals.") % \
     dict(hyogo_framework=A(T("Hyogo Framework for Action (HFA)"),
@@ -11,7 +16,11 @@
   <li>{{=T("Is essential for governments, organisations and donors involved in implementing and supporting DRR projects and programmes in the region;")}}</li>
   <li>{{=T("Is a useful resource for academics, students and the media for obtaining an overview of DRR projects being implemented in the region.")}}</li>
 </ul>
-<h2>{{=T("More information")}}</h2>
+<div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'><h2>More information</h2></span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
 <ul>
   <li>
     {{=XML(T("A %(flyer)s.") % \
@@ -36,18 +45,27 @@
         dict(address=A(_href="mailto:admin@drrprojects.net")))}}
   </li>
 </ul>
-<h2>{{=T("Definition of DRR projects")}}</h2>
+<div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'><h2>Definition of DRR projects</h2></span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
 <p>
 	{{=T("DRR projects are those which involve reducing exposure to hazards, reducing vulnerability of people and property, wise management of land and the environment, and/or improved preparedness for adverse events.  DRR projects include climate change adaptation projects where they are related to DRR, but they do not include relief or response initiatives undertaken in the aftermath of disasters unless they incorporate an aspect of reducing risk to future disasters.")}}
 </p>
-<h2>{{=T("DRR Project Portal development")}}</h2>
+
+<div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'><h2>DRR Project Portal development</h2></span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
 <ul>
 	<li>{{=T("Developed by the UNISDR Asia Partnership on Disaster Reduction (IAP) including the members shown below")}}</li>
 	<li>{{=T("Supported by the Asian Development Bank (ADB)")}}</li>
 	<li>{{=T("Developed by the Asian Disaster Preparedness Center (ADPC)")}}</li>
 	<li>{{=T("Developed using the Sahana Eden Open Source Disaster Management Platform")}}</li>
 </ul>
-<ul id="about_logos">
+<ul id='about_logos'>
   {{for img, url, title in [
     ("unisdr", "http://www.unisdr.org", "The United Nations Office for Disaster Risk Reduction"),
     ("adb", "http://www.adb.org", "Asian Development Bank"),
@@ -67,3 +85,4 @@
   </li>
   {{pass}}
 </ul>
+</div>

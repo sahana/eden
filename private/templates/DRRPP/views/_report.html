@@ -1,0 +1,71 @@
+{{if s3.debug:}}
+<link href='/{{=appname}}/static/styles/plugins/jquery.jqplot.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />
+{{else:}}
+<link href='/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />
+{{pass}}
+<div class='body-content-wrapper grid_12 alpha omega'>
+ <div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'>{{try:}}{{=H2(title)}}{{except:}}{{pass}}</span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
+<div id='rheader'>
+{{try:}}{{=XML(rheader)}}</div><div id='component'>
+{{except:}}</div><div>{{pass}}
+<div class='form-container'>
+{{try:}}{{=form}}
+{{except:}}{{pass}}
+</div>
+<div id='map'></div>
+{{try:}}{{pivot_table = pivot_table}}
+  {{try:}}
+    {{if report_data is not None:}}
+    {{s3.actions=None}}
+    <div id='chart-opts' style='padding-bottom:10px;'>
+      {{=report_data.layer_label}}
+      {{if report_data.row_label:}}
+        <a class='chart-icon' id='pie_chart_rows'><img src='/{{=appname}}/static/img/report/pchart.png' style='vertical-align:middle;'/></a>
+        <a class='chart-icon' id='vbar_chart_rows'><img src='/{{=appname}}/static/img/report/vchart.png' style='vertical-align:middle;'/></a>
+        {{=report_data.row_label}}
+      {{pass}}
+      {{if report_data.col_label:}}
+        <a class='chart-icon' id='pie_chart_cols'><img src='/{{=appname}}/static/img/report/pchart.png' style='vertical-align:middle;'/></a>
+        <a class='chart-icon' id='vbar_chart_cols'><img src='/{{=appname}}/static/img/report/vchart.png' style='vertical-align:middle;'/></a>
+        {{=report_data.col_label}}
+      {{pass}}
+      {{if all((report_data.row_label, report_data.col_label)):}}
+        &nbsp;|&nbsp;{{=T("Breakdown")}}
+        <a class='chart-icon' id='bd_chart_rows'><img src='/{{=appname}}/static/img/report/hchart.png' style='vertical-align:middle;'/></a>
+        {{=report_data.row_label}}
+        <a class='chart-icon' id='bd_chart_cols'><img src='/{{=appname}}/static/img/report/hchart.png' style='vertical-align:middle;'/></a>
+        {{=report_data.col_label}}
+      {{pass}}
+    </div>
+  {{pass}}
+{{except:}}{{pass}}
+<div id='chart-container' class='hide' style='width: 800px;'>
+  {{=DIV(T("Hide Chart"), _class="hide-chart")}}
+  <div class='chart-contents'>
+    <div id='chart-header'></div>
+    <div id='chart' style='height:360px;'></div>
+  </div>
+</div>
+<div id='table-container'>
+  {{=pivot_table}}
+</div>
+{{except:}}{{pass}}
+</div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
+</div>
+{{include "dataTables.html"}}
+<script type='text/javascript'>//<![CDATA[
+{{try:}}{{if chart_opts:}}{{=XML(chart_opts)}}{{pass}}{{except:}}{{pass}}
+var json_data={{=XML(json_data)}}
+//]]></script>
+{{if s3.debug:}}
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/flot/jquery.flot.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/flot/jquery.flot.pie.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/S3/s3.report.js'></script>
+{{else:}}
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/S3/s3.report.min.js'></script>
+{{pass}}

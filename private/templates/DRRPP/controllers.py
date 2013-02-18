@@ -14,15 +14,7 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import *
 
-# =============================================================================
-def INPUT_BTN(**attributes):
-    """
-        Utility function to create a styled button
-    """
-
-    return SPAN(INPUT(_class = "button-right",
-                      **attributes),
-                _class = "button-left")
+THEME = "DRRPP"
 
 # =============================================================================
 class index():
@@ -33,9 +25,8 @@ class index():
         request = current.request
         response = current.response
 
-        response.title = current.deployment_settings.get_system_name()
         view = path.join(request.folder, "private", "templates",
-                         "DRRPP", "views", "index.html")
+                         THEME, "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -43,221 +34,79 @@ class index():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-        T = current.T
-        appname = request.application
-
-        home_img = IMG(_src="/%s/static/themes/DRRPP/img/home_img.jpg" % appname,
-                       _id="home_img")
-        home_page_img = IMG(_src="/%s/static/themes/DRRPP/img/home_page_img.png" % appname,
-                            _id="home_page_img")
-        home_map_img = IMG(_src="/%s/static/themes/DRRPP/img/home_map_img.png" % appname,
-                           _id="home_map_img")
-
-        list_img = A(IMG(_src="/%s/static/themes/DRRPP/img/list_img.png" % appname,
-                         _id="list_img"),
-                     _href=URL(c="project", f="project", args=["search"]),
-                     _title="Project List")
-
-        matrix_img = A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname,
-                           _id="matrix_img"),
-                       _href=URL(c="project", f="project", args=["report"]),
-                       _title="Project Matrix Report")
-
-        map_img = A(IMG(_src="/%s/static/themes/DRRPP/img/map_img.png" % appname,
-                        _id="map_img"),
-                    _href=URL(c="project", f="location", args=["map"]),
-                    _title="Project Map")
-
-        graph_img = A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname,
-                          _id="graph_img"),
-                      _href=URL(c="project", f="project", args=["report"],
-                                vars=dict(chart="breakdown:rows")),
-                      _title="Project Graph")
-
-        add_pipeline_project_link = URL(c="project",
-                                        f="project",
-                                        args=["create"],
-                                        vars={"project.status_id": "Proposed"})
-        add_current_project_link = URL(c="project",
-                                       f="project",
-                                       args=["create"],
-                                       vars={"project.status_id": "Current"})
-        add_completed_project_link = URL(c="project",
-                                         f="project",
-                                         args=["create"],
-                                         vars={"project.status_id": "Completed"})
-        add_offline_project_link = URL(c="static",
-                                       f="DRR_Project_Portal_New_Project_Form.doc")
-
-        add_framework_link = URL(c="project",
-                                 f="framework",
-                                 args=["create"])
-
-        project_captions = {
-            1:"DRR projects which will be being implemented in the future, and for which funding has been secured in the Asia and Pacific region.",
-            2:"DRR projects which are currently being implemented in one or more country in the Asia and Pacific region.",
-            3:"DRR projects which have been completed and are no longer being implemented in the Asia and Pacific region."
-            }
-        framework_caption = "Frameworks, action plans, road maps, strategies, declarations, statements and action agendas on DRR or DRR related themes, which are documents or instruments for guiding stakeholders on DRR planning, programming and implementation."
-        add_div = DIV(A(DIV("ADD ", SPAN("CURRENT", _class="white_text"), " PROJECT"),
-                        _href=add_current_project_link,
-                        _title=project_captions[2]),
-                      A(DIV("ADD ", SPAN("PROPOSED", _class="white_text"), " PROJECT" ),
-                        _href=add_pipeline_project_link,
-                        _title=project_captions[1]),
-                      A(DIV("ADD ", SPAN("COMPLETED", _class="white_text"), " PROJECT" ),
-                        _href=add_completed_project_link,
-                        _title=project_captions[3]),
-                      A(DIV("ADD PROJECT OFFLINE" ),
-                        _href=add_offline_project_link,
-                        _title="Download a form to enter a DRR projects off-line and submit by Email"),
-                      A(DIV("ADD ", SPAN("DRR FRAMEWORK", _class="white_text")),
-                        _href=add_framework_link,
-                        _title=framework_caption),
-                      _id="add_div"
-                     )
-
-        why_box = DIV(H1("WHY THIS PORTAL?"),
-                      UL("Share information on implementation of DRR: Who? What? Where?",
-                         "Collectively identify gaps, improve planning and programming on DRR",
-                         "Identify areas of cooperation on implementation of DRR"
-                         ),
-                      _id="why_box")
-
-        what_box = DIV(H1("WHAT CAN WE GET FROM THIS PORTAL?"),
-                       UL("List of completed and ongoing DRR projects - by country, hazards, themes, partners and donors.",
-                          "List of planned/proposed projects - better planning of future projects.",
-                          "Quick analysis - on number and types of completed and ongoing DRR projects",
-                          "Generate customised graphs and maps.",
-                          "Know more on the DRR frameworks/action plans guiding the region - identify priority areas for providing support and implementation.",
-                          "List of organisations implementing DRR projects at regional level.",
-                          "Archive of periodic meetings of regional DRR mechanisms."
-                          ),
-                       _id="what_box")
-
-        how_help_box = DIV(H1("HOW WOULD THIS INFORMATION HELP?"),
-                           B("National Government"),
-                           UL("Gain clarity on types of support that may be accessed from regional level and thus receive coherent regional assistance"),
-                           B("Organisation Implementing DRR Projects"),
-                           UL("Plan better-knowing who does what, and where; Find partners and scale up implementation; and Learn from past and ongoing work of partners"),
-                           B("Donor Agencies"),
-                           UL("Identify priorities to match your policy and programmatic imperatives; and minimise overlap; maximise resources"),
-                           _id="how_help_box")
-
-        how_start_box = DIV(H1("HOW DO WE GET STARTED?"),
-                            UL("Add information on  current / proposed / completed DRR projects",
-                               "Search for information - project list, project analysis, DRR frameworks",
-                               "Log in to add and edit your data",
-                               "Link to this portal from your organisation website"
-                               ),
-                            _id="how_start_box")
-
-        help = A(DIV("USER MANUAL",
-                     _id="help_div"),
-                 _href=URL(c="static", f="DRR_Portal_User_Manual.pdf"),
-                 _target="_blank"
-                 )
-
-        tour = A(DIV("VIDEO TOUR",
-                     _id="tour_div"),
-                 _href=URL(c="default", f="index", args="video"),
-                 _target="_blank"
-                 )
-
+        latest_projects = DIV(_id="front-latest-body",
+                              _class="grid_8 alpha")
+        lappend = latest_projects.append
+                              
         db = current.db
         s3db = current.s3db
         table = s3db.project_project
-        query = (table.deleted == False) & (table.approved_by != None)
-        projects = db(query).count()
-        status_table = s3db.project_status
-        status_query = query & (table.status_id == status_table.id)
-        current_projects = db(status_query & (status_table.name == "Current")).count()
-        proposed_projects = db(status_query & (status_table.name == "Proposed")).count()
-        completed_projects = db(status_query & (status_table.name == "Completed")).count()
-        
-        ftable = s3db.project_framework
-        query = (ftable.deleted == False) & (ftable.approved_by != None)
-        frameworks = db(query).count()
-        stats = DIV(DIV("Currently the DRR Projects Portal has information on:"),
-                    TABLE(TR(projects,
-                             A("Projects",
-                               _href=URL(c="project", f="project",
-                                         args=["search"]))
-                             ),
-                          TR(TD(),
-                             TABLE(TR(current_projects,
-                                      A("Current Projects",
-                                        _href=URL(c="project", f="project",
-                                                  args=["search"],
-                                                  vars={"project.status_id":2}))
-                                     )
-                                   )
-                             ),
-                          TR(TD(),
-                             TABLE(TR(proposed_projects,
-                                      A("Proposed Projects",
-                                        _href=URL(c="project", f="project",
-                                                  args=["search"],
-                                                  vars={"project.status_id":1}))
-                                     )
-                                    )
-                             ),
-                          TR(TD(),
-                             TABLE(TR(completed_projects,
-                                      A("Completed Projects",
-                                        _href=URL(c="project", f="project",
-                                                  args=["search"],
-                                                  vars={"project.status_id":3}))
-                                     )
-                                    )
-                             ),
-                          TR(frameworks,
-                             A("Frameworks",
-                               _href=URL(c="project", f="framework"))
-                            ),
-                         ),
-                    _id="stats_div")
-
-        market = DIV(DIV(I("Under Development...")),
-                     H3("DRR Project Marketplace"),
-                     DIV("A platform to coordinate and collaborate on future DRR Projects."),
-                     _id = "market_div")
-
-        auth = current.auth
-        _table_user = auth.settings.table_user
-        _table_user.language.label = T("Language")
-        _table_user.language.default = "en"
-        _table_user.language.comment = DIV(_class="tooltip",
-                                           _title=T("Language|The language to use for notifications."))
-        #_table_user.language.requires = IS_IN_SET(s3_languages)
-        languages = current.deployment_settings.get_L10n_languages()
-        _table_user.language.represent = lambda opt: \
-            languages.get(opt, current.messages.UNKNOWN_OPT)
+        query = (table.deleted != True) & \
+                (table.approved_by != None)
+        rows = db(query).select(table.id,
+                                table.name,
+                                table.description,
+                                table.start_date,
+                                limitby=(0, 3))
+        project_ids = [r.id for r in rows]
+        ltable = s3db.project_location
+        gtable = s3db.gis_location
+        query = (ltable.deleted != True) & \
+                (ltable.project_id == table.id) & \
+                (gtable.id == ltable.location_id) & \
+                (gtable.level == "L0")
+        locations = db(query).select(ltable.project_id,
+                                     gtable.L0)
+        odd = True
+        for row in rows:
+            countries = [l.gis_location.L0 for l in locations if l.project_location.project_id == row.id]
+            location = ", ".join(countries)
+            card = DIV(DIV(A(row.name,
+                             _href=URL(c="project", f="project", args=[row.id])),
+                           _class="front-latest-title grid_8",
+                           ),
+                       DIV(row.description,
+                           _class="front-latest-desc grid_8",
+                           ),
+                       DIV(SPAN("Start Date: %s" % row.start_date,
+                                _class="front-latest-info-date"),
+                           SPAN("Location: %s" % location,
+                                _class="front-latest-info-location"),
+                           _class="front-latest-info grid_8",
+                           ),
+                       _class="front-latest-item %s grid_8 alpha" % "odd" if odd else "even",
+                       )
+            lappend(card)
+            odd = False if odd else True
 
         request.args = ["login"]
-        auth.settings.formstyle = "divs"
-        login = auth()
-        login[0][-1][1][0] = INPUT_BTN(_type = "submit",
-                                      _value = T("Login"))
+        login = current.auth()
 
-        return dict(title = T("Home"),
-                    home_img = home_img,
-                    add_div = add_div,
-                    login = login,
-                    why_box = why_box,
-                    home_page_img = home_page_img,
-                    what_box = what_box,
-                    how_help_box = how_help_box,
-                    home_map_img = home_map_img,
-                    how_start_box = how_start_box,
-                    tour = tour,
-                    help = help,
-                    stats = stats,
-                    market = market,
-                    list_img = list_img,
-                    matrix_img = matrix_img,
-                    map_img = map_img,
-                    graph_img = graph_img,
+        appname = request.application
+        s3 = response.s3
+        append = s3.scripts.append
+        append("/%s/static/themes/DRRPP/js/jquery.easing.1.3.js" % appname)
+        if current.session.s3.debug:
+            append("/%s/static/themes/DRRPP/js/camera.js" % appname)
+        else:
+            append("/%s/static/themes/DRRPP/js/camera.min.js" % appname)
+        append = s3.jquery_ready.append
+        append('''
+$('#front-slides').camera({
+ thumbnails:false,
+ autoAdvance:true,
+ fx:'simpleFade',
+ pagination:false,
+ navigationHover:true,
+ playPause:false,
+ time:8000,
+ piePosition:'leftTop',
+ height:'310px'
+})''')
+
+        return dict(title = "Home",
+                    form = login,
+                    latest_projects = latest_projects,
                     )
 
 # =============================================================================
@@ -270,7 +119,7 @@ class register():
         response = current.response
 
         view = path.join(request.folder, "private", "templates",
-                         "DRRPP", "views", "register.html")
+                         THEME, "views", "register.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -302,8 +151,8 @@ class register():
         _form = form[0]
         _form[-1] = TR(TD(_class="w2p_fl"),
                        TD(_class="w2p_fc"),
-                       TD(INPUT_BTN(_type="submit",
-                                    _value=T("Register")),
+                       TD(INPUT(_type="submit",
+                                _value=T("Register")),
                           _class="w2p_fw"),
                        _id="submit_record_row"
                        )
@@ -528,7 +377,7 @@ class contact():
         response = current.response
 
         view = path.join(request.folder, "private", "templates",
-                         "DRRPP", "views", "contact.html")
+                         THEME, "views", "contact.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -551,31 +400,27 @@ class contact():
 
         #T = current.T
 
-        form = DIV(
-                H1("Contact Us"),
-                P("You can leave a message using the contact form below."),
-                FORM(TABLE(
-                        TR(LABEL("Your name:",
-                              SPAN(" *", _class="req"),
-                              _for="name")),
-                        TR(INPUT(_name="name", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Your e-mail address:",
-                              SPAN(" *", _class="req"),
-                              _for="address")),
-                        TR(INPUT(_name="address", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Subject:",
-                              SPAN(" *", _class="req"),
-                              _for="subject")),
-                        TR(INPUT(_name="subject", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Message:",
-                              SPAN(" *", _class="req"),
-                              _for="name")),
-                        TR(TEXTAREA(_name="message", _class="resizable", _rows=5, _cols=62)),
-                        TR(INPUT(_type="submit", _value="Send e-mail")),
-                        ),
-                    _id="mailform"
-                    )
-                )
+        # form = FORM(TABLE(
+                        # TR(LABEL("Your name:",
+                              # SPAN(" *", _class="req"),
+                              # _for="name")),
+                        # TR(INPUT(_name="name", _type="text", _size=62, _maxlength="255")),
+                        # TR(LABEL("Your e-mail address:",
+                              # SPAN(" *", _class="req"),
+                              # _for="address")),
+                        # TR(INPUT(_name="address", _type="text", _size=62, _maxlength="255")),
+                        # TR(LABEL("Subject:",
+                              # SPAN(" *", _class="req"),
+                              # _for="subject")),
+                        # TR(INPUT(_name="subject", _type="text", _size=62, _maxlength="255")),
+                        # TR(LABEL("Message:",
+                              # SPAN(" *", _class="req"),
+                              # _for="name")),
+                        # TR(TEXTAREA(_name="message", _class="resizable", _rows=5, _cols=62)),
+                        # TR(INPUT(_type="submit", _value="Send e-mail")),
+                        # ),
+                   # _id="contact-form"
+                   # )
         s3 = response.s3
         if s3.cdn:
             if s3.debug:
@@ -589,7 +434,7 @@ class contact():
             else:
                 s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % request.application)
         s3.jquery_ready.append(
-'''$('#mailform').validate({
+'''$('#contact-form').validate({
  errorClass:'req',
  rules:{
   name:{
@@ -627,7 +472,9 @@ class contact():
 })''')
 
         response.title = "Contact | DRR Project Portal"
-        return dict(form=form)
+        return dict(
+                #form=form
+            )
 
 # =============================================================================
 class about():
@@ -641,7 +488,7 @@ class about():
         T = current.T
 
         view = path.join(request.folder, "private", "templates",
-                         "DRRPP", "views", "about.html")
+                         THEME, "views", "about.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -656,34 +503,10 @@ class about():
         )
 
 # =============================================================================
-class analysis():
-    """
-        Custom page for Project Analysis
-    """
-
-    def __call__(self):
-        response = current.response
-        request = current.request
-        T = current.T
-
-        view = path.join(request.folder, "private", "templates",
-                         "DRRPP", "views", "analysis.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
-
-        response.title = T("Project Analysis")
-
-        return dict(
-            title=T("Project Analysis"),
-        )
-# =============================================================================
 class admin():
     """
         Custom Admin Index Page
+
     """
 
     def __call__(self):
@@ -699,7 +522,7 @@ class admin():
             T = current.T
 
             view = path.join(request.folder, "private", "templates",
-                             "DRRPP", "views", "admin.html")
+                             THEME, "views", "admin.html")
             try:
                 # Pass view as file not str to work in compiled mode
                 response.view = open(view, "rb")
@@ -747,6 +570,86 @@ class admin():
             redirect(URL(c="default", f="index"))
 
 # =============================================================================
+class analysis():
+    """
+        Custom page for Project Analysis
+    """
+
+    def __call__(self):
+        response = current.response
+        request = current.request
+        T = current.T
+
+        view = path.join(request.folder, "private", "templates",
+                         THEME, "views", "analysis.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        response.title = T("Project Analysis")
+
+        return dict(
+            title=T("Project Analysis"),
+        )
+
+# =============================================================================
+class get_started():
+    """
+        Custom page
+    """
+
+    def __call__(self):
+        response = current.response
+        request = current.request
+        T = current.T
+
+        view = path.join(request.folder, "private", "templates",
+                         THEME, "views", "get_started.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        response.title = T("Get Started")
+
+        return dict(
+        )
+
+# =============================================================================
+class login():
+    """
+        Custom Login page
+    """
+
+    def __call__(self):
+        response = current.response
+        request = current.request
+        T = current.T
+
+        view = path.join(request.folder, "private", "templates",
+                         THEME, "views", "login.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        response.title = T("Login")
+
+        request.args = ["login"]
+        login = current.auth()
+
+        return dict(
+            form = login
+        )
+
+# =============================================================================
 class mypage():
     """
         Custom page for a User to manage their Saved Search & Subscriptions
@@ -761,7 +664,7 @@ class mypage():
             T = current.T
 
             view = path.join(request.folder, "private", "templates",
-                             "DRRPP", "views", "mypage.html")
+                             THEME, "views", "mypage.html")
             try:
                 # Pass view as file not str to work in compiled mode
                 response.view = open(view, "rb")
@@ -799,7 +702,7 @@ class organisations():
 
         response.title = "DRR Projects Portal - Regional Organizations"
         view = path.join(request.folder, "private", "templates",
-                         "DRRPP", "views", "organisations.html")
+                         THEME, "views", "organisations.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -968,7 +871,7 @@ class organisations():
             #"sAjaxSource": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),
             "aoColumnDefs": [{"bVisible": False,
                               "aTargets": [0]
-                             }],
+                              }],
             "aoColumns": [{"sName": col["name"]} for col in cols],
             "sDom": 'rifpl<"dataTable_table"t>p'
         })

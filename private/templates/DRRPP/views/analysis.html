@@ -1,11 +1,14 @@
 {{extend "layout.html"}}
+<div class='body-content-wrapper grid_12 alpha omega'>
+ <div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'><h2>Project Analysis</h2></span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
 <div id='page_project_analysis'>
-  <h2>{{=T("Project Analysis")}}</h2>
   <div id='project_analysis_matrix' class='page_column'>
-    <h3>{{=T("Matrix Reports")}}</h3>
-    <p>
-      {{=T("Cross examine different project data and filter criteria.")}}
-    </p>
+    <div class='subtitle'>Matrix Reports</div>
+    <p>Cross examine different project data and filter criteria.</p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname),
            _href=URL(c="project", f="project", args=["report"]),
@@ -15,11 +18,9 @@
       {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["report"]))}}
     </p>
 </div>
-<div id="project_analysis_graph" class="page_column">
-    <h3>{{=T("Graphs")}}</h3>
-    <p>
-      {{=T("Develop your customised bar chart to identify gaps and find trends in the implementation of DRR Projects.")}}
-    </p>
+<div id='project_analysis_graph' class='page_column'>
+    <div class='subtitle'>Graphs</div>
+    <p>Develop your customised bar chart to identify gaps and find trends in the implementation of DRR Projects.</p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname),
            _href=URL(c="project", f="project", args=["report"],
@@ -27,29 +28,12 @@
           _title="Project Graphs")}}
     </p>
     <p>
-      {{=T("Display graph for:")}}
-      <ul>
-        {{for f, l in [("country_dummy", T("Countries")),
-                       ("hazard_ids", T("Hazards")),
-                       ("theme_ids", T("Themes")),
-                       ("hfa_ids", T("HFA priorities")),
-                       ("rfa_ids", T("RFA priorities")),
-                       ("lead_organisation_id", T("Lead organizations")),
-                       ("impl_org_dummy", T("Partner organizations")),
-                       ("funding_dummy", T("Donor(s)"))
-                       ]:}}
-        <li>
-          {{=A(l, _href=URL(c="project", f="project", args=["graphs"], vars={"graph_field_name": f}))}}
-        </li>
-        {{pass}}
-      </ul>
+      {{=A(T("Go to graph analysis"), _href=URL(c="project", f="project", args=["report"], vars=dict(chart="breakdown:rows")))}}
     </p>
   </div>
   <div id='project_analysis_map' class='page_column'>
-    <h3>{{=T("Maps")}}</h3>
-    <p>
-      {{=T("Develop maps which show the types of DRR Projects being implemented by different organizations and compare this with geographical risk mapping data.")}}
-    </p>
+    <div class='subtitle'>Maps</div>
+    <p>Develop maps which show the types of DRR Projects being implemented by different organizations and compare this with geographical risk mapping data.</p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/map_img.png" % appname),
            _href=URL(c="project", f="location", args=["map"]),
@@ -59,4 +43,5 @@
       {{=A(T("Go to map analysis"), _href=URL(c="project", f="location", args=["map"]))}}
     </p>
   </div>
+</div>
 </div>

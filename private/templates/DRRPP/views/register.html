@@ -1,4 +1,58 @@
 {{extend "layout.html"}}
-<h2>{{=T("Register")}}</h2>
-<p><b class='red'>{{=T("* Required Fields")}}</b></p>
-{{=form}}
+<div id='register-body-wrapper' class='body-content-wrapper container_12'>
+ <div class='grid_12 alpha omega'>
+  <div id='register-label' class='body-label-wrapper grid_12'>
+   <span class='icon body-icon icon-doc'></span>
+   <span class='body-label-text label-text'>Register</span>
+  </div>
+  <div class='line grid_12 alpha omega'></div>
+  <div id='register-form-legend' class='form-legend grid_6 prefix_3 suffix_3 form-required'><label>Required</label></div>
+  <form id='register-form' class='login-form' action='#' enctype='multipart/form-data' method='post'>
+   <div class='grid_6 prefix_3 suffix_3 alpha omega'>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_first_name'>First Name:</label>
+     <input type='text' id='auth_user_first_name' class='form-text' name='first_name' />
+    </div>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_last_name'>Last Name:</label>
+     <input type='text' id='auth_user_last_name' class='form-text' name='last_name' />
+    </div>
+    <div class='form-row grid_6'>
+     <label for='auth_user_organisation_id'>Organisation:</label>
+     <input type='text' id='auth_user_organisation_id' class='form-text' name='organisation_id' />
+    </div>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_position'>Role:</label>
+     <select id='auth_user_position' name='position'>
+      <option value=''> </option>
+      <option value='1'>Practitioner</option>
+      <option value='2'>Consultant</option>
+      <option value='3'>Researcher</option>
+      <option value='4'>Academic</option>
+      <option value='5'>Student</option>
+     </select>
+    </div>
+    <div class='form-row grid_6'>
+     <label for='auth_user_reason'>Reason:</label>
+     <textarea id='auth_user_reason' class='form-textarea' name='reason'></textarea>
+    </div>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_email'>E-mail:</label>
+     <input type='text' id='auth_user_email' class='form-text' name='email' />
+    </div>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_password'>Password:</label>
+     <input type='password' id='auth_user_password' class='form-text' name='password' />
+    </div>
+    <div class='form-row grid_6 form-required'>
+     <label for='auth_user_password_two'>Verify Password:</label>
+     <input type='password' id='auth_user_password_two' class='form-text' name='password_two' />
+    </div>
+   </div>
+  <div class='form-controller grid_2 prefix_5 suffix_5'>
+   <input type='submit' class='register-button medium' value='' />
+  </div>
+  {{=form.custom.end}}
+ </div>
+ <div class='clear'></div>
+</div>

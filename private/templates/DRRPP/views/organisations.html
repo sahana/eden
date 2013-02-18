@@ -6,12 +6,22 @@
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.multi.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.multi.min.js" % appname)}}{{pass}}
 {{if globals().get("tables", False):}}
-<div id='table-container'>
- <h1>{{=T("Regional Organizations")}}</h1>
- {{table = tables[0]}}
- {{include "_datatable.html"}}
- <h1 style = "padding-top:20px">{{=T("Committees, Forums, Mechanism, Meetings and Networks")}}</h1>
- {{table = tables[1]}}
- {{include "_datatable.html"}}
+<div class='body-content-wrapper grid_12 alpha omega'>
+ <div id='table-container'>
+  <div class='body-label-wrapper grid_12'>
+   <span class='icon body-icon icon-doc'></span>
+   <span class='body-label-text label-text'><h2>Regional Organisations</h2></span>
+  </div>
+  <div class='line grid_12 alpha omega'></div>
+{{table = tables[0]}}
+{{include "_datatable.html"}}
+  <div class='body-label-wrapper grid_12'>
+   <span class='icon body-icon icon-doc'></span>
+   <span class='body-label-text label-text'><h2>Committees, Forums, Mechanism, Meetings and Networks</h2></span>
+  </div>
+  <div class='line grid_12 alpha omega'></div>
+{{table = tables[1]}}
+{{include "_datatable.html"}}
+ </div>
 </div>
 {{pass}}

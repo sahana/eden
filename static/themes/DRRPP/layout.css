@@ -2,75 +2,87 @@
 
 /* Layout Elements */
 
-#header,
-#menu_modules,
-.container,
-#footer .content {
-    width: 886px;
-    margin-left: auto;
-    margin-right: auto;
+/* Header */
+#header-banner {
+	background: url(img/Header.jpg) #f0f0f0 no-repeat;
+	height: 160px;
 }
 
-#header {
-    position: relative;
-    height: 70px;
-    overflow:auto;
+#header-top-menu {
+	text-align: right;
+	margin-top: 15px;
+}
+.header-top-menu-btn, .header-top-menu-btn:link, .header-top-menu-btn:visited, .header-top-menu-btn:hover {
+	color: #ffffff;
+	text-decoration: none;
+	font-size: 12px;
+	padding: 0 5px;
 }
 
-#strapline {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 600px;
-    margin: 42px 0 5px 10px;
-    font-weight: bold;
+/******** Content/Body **********/
+.body-content-wrapper {
+	margin-top: 20px;
+	min-height: 550px;
+}
+.body-label-text {
+	line-height: 27px;
+	height: 27px;
+	vertical-align: middle;
+	font-size: 22px;
+	display: inline-block;
+}
+.body-label-wrapper {
+	margin-bottom: 5px;
+}
+.body-icon {
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 5px;
+}
+.subtitle {
+	font-size: 15px;
+	font-weight: bold;
+	margin: 5px 0;
+}
+.text-content ul {
+	list-style: disc outside;
+	padding: 15px;
+}
+.title-label {
+	font-weight: bold;
+	width: 80px;
+	float: left;
+}
+.form-row .text-content {
+	float: left;
+}
+.main-table {
+	width: 100%;
+}
+.main-table th {
+	background: #5689ab;
+	color: #ffffff;
+	vertical-align: middle;
+	border-left: 2px solid #ffffff;
+	font-weight: bold;
+	text-align: center;
+	padding: 10px 15px 10px 10px;
+}
+.main-table th:first-child {
+	border: 0;
+}
+.main-table th span {
+	
+}
+.main-table td {
+	vertical-align: top;
+	padding: 10px 5px;
+}
+.main-table td.center{
+	text-align: center;
 }
 
-#strapline h1 {
-    color: #FAB73D;
-    font-size: 1.3em;
-    line-height: 1em;
-    text-align: left;
-    font-style: italic;
-}
-
-#logo {
-    width: 250px;
-    height: 59px;
-    background: url(img/head_title.png) no-repeat;
-    margin-top: 10px;
-    float: left;
-}
-
-/* Content Container */
-.container {
-    margin-top: -3px;
-    margin-bottom: 30px;
-    height: 100%;
-    z-index: 0;
-}
-
-.container .header {
-    height: 13px;
-    font-size: 0px;
-    background: url(img/page_top.png) no-repeat;
-}
-
-.container .footer {
-    height: 13px;
-    font-size: 0;
-    background: url(img/page_bottom.png) no-repeat;
-}
-
-/* CD Version cd-to-live button */
-#cd_to_live_div  {
-    float: right;
-    font-size: 1.07em;
-    font-weight: bold;
-    color: #F5902E;
-    width: 196px;
-    height: 10px;
-    margin: -50px 1px 0 7px;
-    padding: 10px 0 10px 10px;
-    background: url(img/box_cd_to_live.png) no-repeat;
+/***** Block *******/
+.block {
+	text-align: center;
 }

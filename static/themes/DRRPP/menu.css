@@ -1,93 +1,59 @@
 @charset "UTF-8";
 
-#menu_top {
-    font-size: 1.2em;
-    position: absolute;
-    top: 0;
-    right: 0;
+/* Main Navigation (S3MainMenu or modules menu) */
+#nav {
+    clear: both;
+    float: left;
+    height: 30px;
 }
-
-/* Main Menu */
-#menu_modules {
+#nav > li {
     position: relative;
-    height: 28px;
-    z-index: 1;
-}
-
-#modulenav {
-    margin: 0 0 0 15px;
-    text-transform: uppercase;
-}
-#modulenav,
-#modulenav li,
-#modulenav ul,
-#menu_top,
-#menu_top li,
-#menu_top ul,
-#menu_bottom,
-#menu_bottom li,
-#menu_bottom ul {
+    float: left;
     list-style: none;
+    padding: 0;
 }
-#modulenav li {
-    margin-right: 8px;
-}
-
-/* Menu Buttons */
-#modulenav li a div {
-    padding-top: 3px;
-    height: 28px;
-    width: 122px;
-    text-align:center;
-    display: table-cell;
-    vertical-align: middle;
-    background: url(img/menu_grey.png) no-repeat;
-}
-
-#modulenav li a {
-    font-size: 1.1em;
-    font-weight: 700;
-    color: #9D9D9B;
-    text-decoration: none;
-}
-#modulenav li a:hover {
-    background: none;
-}
-
-#menu_top,
-#menu_bottom {
-    font-size: 1.2em;
+#nav > li > a {
+    display: inline-block;
     height: 20px;
-    vertical-align: bottom;
-}
-
-#menu_top li a,
-#menu_bottom li a {
+    width: 138px;
+    background: #568aab;
+    padding: 5px;
+    color: #fff;
+    font-size: 14px;
     text-decoration: none;
+    text-align: center;
+}
+#nav > li > a:hover {
+    background: #65a3d0;
 }
 
-#menu_top li a div,
-#menu_bottom li a div {
-    color: white;
-    padding: 0 5px 3px 5px;
-    border-left: 1px  solid white;
+#nav li .sub-menu {
+    display: none;
+    position: absolute;
+    width: 150px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 999999;
 }
-#menu_top li:first-child a div,
-#menu_bottom li:first-child a div {
-    border-left: 0;
+#nav li .sub-menu li a {
+    background: rgb(0,0,0);
+	background: rgba(0,0,0,0.7);
+	color: #fff;
+	width: 145px;
+	display: inline-block;
+	font-size: 14px;
+	padding: 5px 0 5px 5px;
 }
-#menu_top li a:hover,
-#menu_bottom li a:hover {
-    background: none;
+#nav li .sub-menu li a:hover {
+    background: rgb(0,0,0);
+	background: rgba(0,0,0,0.9);
 }
 
-#modulenav li.selected a div,
-#modulenav li.hovered a div,
-#modulenav li a div:hover {
-    color: #F5902E;
-    background: url(img/menu_white.png) no-repeat;
+#header-navbar-home {
+	width: 60px !important;
+	background-image: url(img/Menu-01-home.png) !important;
 }
-
-#modulenav li div.selected {
-    color: #F5902E;
+#header-navbar-mypage {
+	width: 140px !important;
 }
