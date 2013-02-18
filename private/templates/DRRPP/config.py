@@ -475,9 +475,11 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
     )
 
     s3db.configure(tablename,
-                   search_method = project_search,
+                   crud_form = crud_form,
+                   list_fields = list_fields,
                    report_options = report_options,
-                   crud_form = crud_form)
+                   search_method = project_search,
+                   )
     
     return attr
 

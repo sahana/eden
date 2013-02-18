@@ -673,6 +673,12 @@ class S3Config(Storage):
         """
         return self.ui.get("hide_report_options", True)
 
+    def get_ui_label_attachments(self):
+        """
+            Label for attachments tab
+        """
+        return current.T(self.ui.get("label_attachments", "Attachments"))    
+
     def get_ui_label_camp(self):
         """ 'Camp' instead of 'Shelter'? """
         return self.ui.get("camp", False)
@@ -1325,7 +1331,7 @@ class S3Config(Storage):
 
     def get_project_organisation_lead_role(self):
         return self.project.get("organisation_lead_role", 1)
-
+    
     # -------------------------------------------------------------------------
     # Request Settings
     def get_req_type_inv_label(self):

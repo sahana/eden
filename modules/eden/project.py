@@ -435,6 +435,7 @@ class S3ProjectModel(S3Model):
                                       "task",
                                       "organisation",
                                       "activity",
+                                      "activity_type",
                                       "annual_budget",
                                       "beneficiary",
                                       "location",
@@ -498,6 +499,14 @@ class S3ProjectModel(S3Model):
 
         # Activities
         add_component("project_activity", project_project="project_id")
+        
+        # Activity Types
+        add_component("project_activity_type",
+                      project_project=Storage(
+                                link="project_activity_type_project",
+                                joinby="project_id",
+                                key="activity_type_id",
+                                actuate="link"))        
 
         # Milestones
         add_component("project_milestone", project_project="project_id")
@@ -1278,6 +1287,7 @@ class S3ProjectActivityTypeModel(S3Model):
 
     names = ["project_activity_type",
              "project_activity_type_location",
+             "project_activity_type_project",
              "project_activity_type_sector",
              "project_activity_type_id",
              ]
@@ -1373,6 +1383,15 @@ class S3ProjectActivityTypeModel(S3Model):
                              activity_type_id(empty=False),
                              self.project_location_id(empty=False),
                              *s3_meta_fields())
+        
+        # ---------------------------------------------------------------------
+        # Activity Type - Project Link Table
+        #
+        tablename = "project_activity_type_project"
+        table = define_table(tablename,
+                             activity_type_id(empty=False),
+                             self.project_project_id(empty=False),
+                             *s3_meta_fields())        
 
         crud_strings[tablename] = Storage(
             title_create = T("New Activity Type"),
@@ -4866,6 +4885,7 @@ def project_rheader(r):
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
+        attachments_label = settings.get_ui_label_attachments()
 
         # Tabs
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -4898,7 +4918,7 @@ def project_rheader(r):
         if mode_3w:
             append((T("Documents"), "document"))
         else:
-            append((T("Attachments"), "document"))
+            append((attachments_label, "document"))
         if settings.get_hrm_show_staff():
             append((T("Staff"), "human_resource", dict(group="staff")))
         if settings.has_module("vol"):
@@ -4936,7 +4956,7 @@ def project_rheader(r):
                 (T("Contact Persons"), "contact")]
         if settings.get_project_mode_task():
             tabs.append((T("Tasks"), "task"))
-            tabs.append((T("Attachments"), "document"))
+            tabs.append((attachments_label, "document"))
         else:
             tabs.append((T("Documents"), "document"))
         rheader_fields = []
@@ -4950,7 +4970,7 @@ def project_rheader(r):
         # Tabs
         tabs = [(T("Details"), None)]
         append = tabs.append
-        append((T("Attachments"), "document"))
+        append((attachments_label, "document"))
         if settings.has_module("msg"):
             append((T("Notify"), "dispatch"))
         #(T("Roles"), "job_role"),

@@ -1704,7 +1704,7 @@ class S3RequestSkillModel(S3Model):
         req_id = self.req_req_id
 
         settings = current.deployment_settings
-        quantities_writable = settings.get_req_item_quantities_writable()
+        quantities_writable = settings.get_req_skill_quantities_writable()
         use_commit = settings.get_req_use_commit()
 
         define_table = self.define_table
