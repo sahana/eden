@@ -711,6 +711,12 @@ table {
 .votes {
   visibility:hidden;
 }
+
+/* Empty class for jqueryui-datepicker translate fix */
+
+.notranslate{
+}
+
 /*^END VOTES AND POLLS */
 
 /************************************************
