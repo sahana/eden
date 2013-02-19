@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load comments %}
 
-{% block title %}{% trans "View proposal" %} {{ proposal.id }} {% endblock %}
+{% block title %}{% trans "View proposal" %} {{ proposal.title }} {% endblock %}
 {% block logo %}
     {% if get_place %}
         <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
