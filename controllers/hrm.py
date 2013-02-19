@@ -108,8 +108,6 @@ def staff():
     _type = table.type
     _type.default = 1
     s3.filter = (_type == 1)
-    table.site_id.writable = True
-    table.site_id.readable = True
     s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
     if "expiring" in get_vars:
         s3.filter = s3.filter & \
@@ -170,9 +168,10 @@ def staff():
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
 
                 table.site_id.comment = DIV(DIV(_class="tooltip",
-                                                _title="%s|%s|%s" % (settings.get_org_site_label(),
-                                                                     T("The facility where this position is based."),
-                                                                     T("Enter some characters to bring up a list of possible matches."))))
+                                                _title="%s|%s" % (settings.get_org_site_label(),
+                                                                  T("The facility where this position is based."),
+                                                                  #T("Enter some characters to bring up a list of possible matches.")
+                                                                  )))
                 table.status.writable = table.status.readable = False
 
             elif r.method == "delete":

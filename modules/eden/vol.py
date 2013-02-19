@@ -76,7 +76,7 @@ class S3VolClusterDataModel(S3Model):
                                   *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster Type Type"),
+            title_create = T("Add Volunteer Cluster Type"),
             title_display = T("Volunteer Cluster Type"),
             title_list = T("Volunteer Cluster Type"),
             title_update = T("Edit Volunteer Cluster Type"),

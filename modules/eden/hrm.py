@@ -134,8 +134,8 @@ class S3HRModel(S3Model):
                                   super_link("track_id", "sit_trackable"),
                                   self.org_organisation_id(
                                     label = organisation_label,
-                                    requires = self.org_organisation_requires(updateable=True,
-                                                                              required=True),
+                                    requires = self.org_organisation_requires(required=True,
+                                                                              updateable=True),
                                     #widget = None,
                                     widget=S3OrganisationAutocompleteWidget(
                                         default_from_profile=True),
@@ -144,6 +144,7 @@ class S3HRModel(S3Model):
                                   super_link("site_id", "org_site",
                                              label=settings.get_org_site_label(),
                                              instance_types = auth.org_site_types,
+                                             orderby = "org_site.name",
                                              updateable = True,
                                              not_filterby = "obsolete",
                                              not_filter_opts = [True],
