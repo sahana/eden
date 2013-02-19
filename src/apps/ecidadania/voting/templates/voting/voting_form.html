@@ -136,7 +136,7 @@
                         {% if form.title.value %}
                         {{ form.start_date }}
                         {% else %}
-                        <input type="text" name="start_date" id="datepicker-start" class="hasDatePicker" />
+                        <input type="text" name="start_date" id="datepicker-start" class="hasDatePicker notranslate" />
                         {% endif %}
                         {% if form.start_date.help_text %}
                         <span class="add-on"><a href="#" rel="tooltip" title="{{ form.start_date.help_text }}"><i class="icon-question-sign"></i></a></span>
@@ -155,7 +155,7 @@
                 <label class="control-label">{{ form.end_date.label }}</label>
                 <div class="controls">
                     <div class="input-append">
-                        <input type="text" name="end_date" id="datepicker-end" class="hasDatePicker">
+                        <input type="text" name="end_date" id="datepicker-end" class="hasDatePicker notranslate">
                         {% if form.end_date.help_text %}
                         <span class="add-on"><a href="#" rel="tooltip" title="{{ form.end_date.help_text }}"><i class="icon-question-sign"></i></a></span>
                         {% endif %}
