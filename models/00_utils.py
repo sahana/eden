@@ -299,7 +299,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     output = r(**attr)
 
     if isinstance(output, dict) and \
-       (not method or method in ("report", "search")):
+       (not method or method in ("report", "search", "datatable")):
         if s3.actions is None:
 
             # Add default action buttons
