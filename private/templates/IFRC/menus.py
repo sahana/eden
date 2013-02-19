@@ -531,7 +531,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All"),
                     ),
                     M("Reports", c="irs", f="ireport",  m="report")(
-                        M("Incidents"),
+                        M("Incidents", m="report"),
                     ),
                 )
 

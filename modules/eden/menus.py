@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3MainMenu", "S3OptionsMenu"]
+__all__ = ["S3MainMenu",
+           "S3OptionsMenu"
+           ]
 
 import re
 

@@ -102,6 +102,7 @@ class S3ProjectModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
 
         #NONE = current.messages["NONE"]
 
@@ -179,10 +180,11 @@ class S3ProjectModel(S3Model):
                              # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
                              self.org_organisation_id(
                                 label = org_label,
+                                default = auth.root_org(),
                                 requires = self.org_organisation_requires(
-                                    required=True,
+                                    required = True,
                                     # Only allowed to add Projects for Orgs that the user has write access to
-                                    updateable=True,
+                                    updateable = True,
                                     ),
                                 ),
                              Field("name", unique = True,
@@ -451,8 +453,8 @@ class S3ProjectModel(S3Model):
         project_id = S3ReusableField("project_id", table,
             sortby="name",
             requires = IS_NULL_OR(
-                            IS_ONE_OF(db(current.auth.s3_accessible_query("update",
-                                                                          table)),
+                            IS_ONE_OF(db(auth.s3_accessible_query("update",
+                                                                  table)),
                                       "project_project.id",
                                       lambda id, row:
                                         project_project_represent(id, row, show_link=False)
