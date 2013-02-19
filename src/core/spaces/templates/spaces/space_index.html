@@ -411,7 +411,18 @@
                                         <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a>
                                             {% trans "by" %} {{ proposal.author }} {% if proposal.proposalset %}
                                             {% trans "on" %} <a href="{{ proposal.proposalset.get_absolute_url }}">{{ proposal.proposalset }}</a> {% endif %}
-                                            {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                            {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}
+                                            {% if perms.proposals.change_proposal %}
+                                                <a href="{% url 'edit-proposal' get_place.url proposal.id %}" title="{% trans 'Edit proposal' %}">
+                                                    <i class="icon-edit" style="font-size:16px;"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if perms.debate.delete_debate %}
+                                                <a href="{% url 'delete-proposal' get_place.url proposal.id %}" title="{% trans 'Delete proposal' %}">
+                                                    <i class="icon-trash" style="font-size:16px;"></i>
+                                                </a>
+                                            {% endif %}
+                                            </li>
                                     {% endif %}        
                                 {% empty %}
                                     <li>{% trans "No proposals available." %}</li>
