@@ -372,13 +372,17 @@ class S3SearchMinMaxWidget(S3SearchWidget):
 
         
         fname = "%s_min" % attr["_name"]
-        min_value = vars[fname]
-        if min_value is None:
+        
+        if fname in vars:
+            min_value = vars[fname]
+        else:
             min_value = ""
         
         fname = "%s_max" % attr["_name"]
-        max_value = vars[fname]
-        if max_value is None:
+        
+        if fname in vars:
+            max_value = vars[fname]
+        else:
             max_value = ""
 
         attr.update(_value = min_value)

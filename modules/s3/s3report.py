@@ -166,8 +166,8 @@ class S3Report(S3CRUD):
                         default_options = Storage()
                     if default_options:
                         form_values = default_options
-                        if not form_values._formname:
-                            form_values._formname = "report"
+                        if "_formname" not in form_values:
+                            form_values["_formname"] = "report"
                     else:
                         form_values = Storage()
 
