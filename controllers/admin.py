@@ -479,6 +479,28 @@ def errors():
     return dict(app=appname, tickets=tickets)
 
 # =============================================================================
+# Management scripts
+# =============================================================================
+@auth.s3_requires_membership(1)
+def clean():
+    """
+        Run an external script to clean this instance & reset to default values
+    """
+
+    from subprocess import check_call
+
+    #instance = settings.get_instance_name()
+    instance = "test"
+    try:
+        check_call(["clean %s" % instance], shell=True)
+    except:
+        import sys
+        error = sys.exc_info()[1]
+        status = current.xml.json_message(False, 400,
+                                          "Script cannot be run: %s" % error)
+        raise HTTP(400, body=status)
+
+# =============================================================================
 # Create portable app
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -916,7 +938,9 @@ def translate():
     output = s3_rest_controller("translate", "language")
     return output
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Selenium Test Results
+# =============================================================================
 def result():
     """
         Selenium Test Result Reports list
@@ -934,6 +958,7 @@ def result():
         file_list.append(link)
     return dict(file_list=file_list)
 
+# -----------------------------------------------------------------------------
 def result_automated():
     """
         Selenium Test Result Reports list
@@ -952,6 +977,7 @@ def result_automated():
         file_list_automated.append(link)
     return dict(file_list_automated=file_list_automated)
 
+# -----------------------------------------------------------------------------
 def result_smoke():
     """
         Selenium Test Result Reports list
@@ -971,6 +997,7 @@ def result_smoke():
         file_list_smoke.append(link)
     return dict(file_list_smoke=file_list_smoke)
 
+# -----------------------------------------------------------------------------
 def result_roles():
     """
         Selenium Test Result Reports list
