@@ -133,8 +133,8 @@ class EditEvent(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(EditEvent, self).get_context_data(**kwargs)
-        place =  get_object_or_404(Space, url=self.kwargs['space_url'])
-        context['get_place'] = place
+        space =  get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = space
         context['user_is_admin'] = (has_space_permission(self.request.user,
             space, allow=['admins', 'mods']) or has_all_permissions(
             self.request.user)) 
@@ -169,7 +169,7 @@ class DeleteEvent(DeleteView):
 
     @method_decorator(permission_required('spaces.delete_event'))
     def dispatch(self, *args, **kwargs):
-        return super(AddEvent, self).dispatch(*args, **kwargs)
+        return super(DeleteEvent, self).dispatch(*args, **kwargs)
 
 
 class ListEvents(ListView):
