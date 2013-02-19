@@ -485,14 +485,16 @@ def errors():
 def clean():
     """
         Run an external script to clean this instance & reset to default values
+
+        visudo
+        web2py ALL=(ALL)NOPASSWD:/usr/local/bin/clean
     """
 
     from subprocess import check_call
 
-    #instance = settings.get_instance_name()
-    instance = "test"
+    instance = settings.get_instance_name()
     try:
-        check_call(["clean %s" % instance], shell=True)
+        check_call(["sudo /usr/local/bin/clean %s" % instance], shell=True)
     except:
         import sys
         error = sys.exc_info()[1]

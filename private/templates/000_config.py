@@ -107,6 +107,9 @@ settings.frontpage.rss = [
 # Enable session store in Memcache to allow sharing of sessions across instances
 #settings.base.session_memcache = '127.0.0.1:11211'
 
+# Instance Name - for management scripts
+#settings.base.instance_name = "test"
+
 # Allow language files to be updated automatically
 #settings.L10n.languages_readonly = False
 

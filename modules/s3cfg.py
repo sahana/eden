@@ -316,9 +316,20 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Base settings
+    def get_instance_name(self):
+        """
+            Instance Name - for management scripts. e.g. prod or test
+        """
+        return self.base.get("instance_name", "")
     def get_system_name(self):
+        """
+            System Name - for the UI & Messaging
+        """
         return self.base.get("system_name", current.T("Sahana Eden Humanitarian Management Platform"))
     def get_system_name_short(self):
+        """
+            System Name (Short Version) - for the UI & Messaging
+        """
         return self.base.get("system_name_short", "Sahana Eden")
     def get_base_debug(self):
         return self.base.get("debug", False)

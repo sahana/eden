@@ -122,7 +122,10 @@ def group():
     s3.prep = prep
 
     rheader = group_rheader
-    return s3_rest_controller(rheader=rheader)
+    return s3_rest_controller(rheader=rheader,
+                              # Allow components with components (such as problem) to breakout from tabs
+                              native=True,
+                              )
 
 # =============================================================================
 # Problems
