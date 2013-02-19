@@ -696,7 +696,7 @@ S3OptionsFilter({
                        editable=direct_stock_edits,
                        deletable=direct_stock_edits,
                        super_entity = "supply_item_entity",
-                       # Experimental: filter form (used by S3CRUD.list_div)
+                       # Experimental: filter form (used by S3CRUD.datalist)
                        #filter_widgets=[
                        #    S3TextFilter(["item_id$name", "item_pack_id$name"],
                        #                 label=T("Item name"),
