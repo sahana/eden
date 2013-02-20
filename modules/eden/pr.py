@@ -889,10 +889,10 @@ class S3PersonModel(S3Model):
             if citem.tablename == "pr_contact":
                 data = citem.data
                 if "contact_method" in data and \
-                    data.contact_method == "EMAIL":
+                   data.contact_method == "EMAIL":
                     email = data.value
                 elif "contact_method" in data and \
-                        data.contact_method == "SMS":
+                     data.contact_method == "SMS":
                     sms = data.value
 
         if fname and lname:

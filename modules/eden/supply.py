@@ -603,8 +603,8 @@ S3OptionsFilter({
                                    notnull=True, # Ideally this would reference another table for normalising Pack names
                                    label = T("Name"),
                                    ),
-                             Field("quantity", "double",
-                                   notnull=True,
+                             Field("quantity", "double", notnull=True,
+                                   default = 1,
                                    label = T("Quantity"),
                                    represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)

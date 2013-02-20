@@ -510,6 +510,115 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    def inv(self):
+        """ INV / Inventory """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        current.s3db.inv_recv_crud_strings()
+        crud_strings = current.response.s3.crud_strings
+        inv_recv_list = crud_strings.inv_recv.title_list
+        inv_recv_search = crud_strings.inv_recv.title_search
+
+        use_commit = lambda i: current.deployment_settings.get_req_use_commit()
+
+        return M()(
+                    #M("Home", f="index"),
+                    M("Warehouses", c="inv", f="warehouse")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Warehouse Stock", c="inv", f="inv_item")(
+                        M("Search", f="inv_item", m="search"),
+                        M("Search Shipped Items", f="track_item", m="search"),
+                        M("Adjust Stock Levels", f="adj"),
+                        #M("Kitting", f="kit"),
+                        M("Import", f="inv_item", m="import", p="create"),
+                    ),
+                    M("Reports", c="inv", f="inv_item")(
+                        M("Warehouse Stock", f="inv_item",m="report"),
+                        #M("Expiration Report", c="inv", f="track_item",
+                        #  m="search", vars=dict(report="exp")),
+                        #M("Monetization Report", c="inv", f="inv_item",
+                        #  m="search", vars=dict(report="mon")),
+                        #M("Utilization Report", c="inv", f="track_item",
+                        #  m="search", vars=dict(report="util")),
+                        #M("Summary of Incoming Supplies", c="inv", f="track_item",
+                        #  m="search", vars=dict(report="inc")),
+                        # M("Summary of Releases", c="inv", f="track_item",
+                        #  m="search", vars=dict(report="rel")),
+                    ),
+                    M(inv_recv_list, c="inv", f="recv")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                    ),
+                    M("Sent Shipments", c="inv", f="send")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Search Shipped Items", f="track_item", m="search"),
+                    ),
+                    M("Items", c="supply", f="item")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Report", m="report"),
+                        M("Import", f="catalog_item", m="import", p="create"),
+                    ),
+                    # Catalog Items moved to be next to the Item Categories
+                    #M("Catalog Items", c="supply", f="catalog_item")(
+                       #M("New", m="create"),
+                       #M("List All"),
+                       #M("Search", m="search"),
+                    #),
+                    #M("Brands", c="supply", f="brand",
+                    #  restrict=[ADMIN])(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
+                    M("Catalogs", c="supply", f="catalog")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Item Categories", c="supply", f="item_category",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Suppliers", c="inv", f="supplier")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Facilities", c="inv", f="facility")(
+                        M("New", m="create", t="org_facility"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Facility Types", c="inv", f="facility_type",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Requests", c="req", f="req")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Requested Items", f="req_item"),
+                        #M("Search Requested Items", f="req_item", m="search"),
+                    ),
+                    M("Commitments", c="req", f="commit", check=use_commit)(
+                        M("List All"),
+                        M("Search", m="search"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def irs(self):
         """ IRS Incident Reporting """
 

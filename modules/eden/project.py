@@ -1584,6 +1584,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                              # populated automatically
                              self.gis_location_id(readable = False,
                                                   writable = False),
+                             # @ToDo: What is this used for?
                              self.stats_group_id(readable = False,
                                                  writable = False),
                              Field("value", "double",

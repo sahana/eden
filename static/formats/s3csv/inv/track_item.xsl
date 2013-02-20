@@ -61,7 +61,7 @@
     <inv:recvtype code="1">Donation</inv:recvtype>
     <inv:recvtype code="2">Supplier</inv:recvtype>
 
-    <xsl:key name="organistion"
+    <xsl:key name="organisation"
              match="row"
              use="col[@field='Organisation']"/>
 
@@ -85,7 +85,9 @@
              match="row"
              use="col[@field='Name of Recipient']"/>
 
-    <xsl:key name="catalog" match="row" use="col[@field='Catalog']"/>
+    <xsl:key name="catalog"
+             match="row"
+             use="col[@field='Catalog']"/>
 
     <xsl:key name="supply_item"
              match="row"
@@ -122,7 +124,7 @@
                  Search for each organisation (shipping org and supplier or donor org)
                  ****************************************************************** -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('organistion',
+                                        generate-id(key('organisation',
                                                         col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName" select="col[@field='Organisation']"/>

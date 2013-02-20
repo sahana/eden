@@ -932,8 +932,7 @@ class S3StatsGroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Document-source entities
         #
-        source_types = Storage(
-                               doc_document = T("Document"),
+        source_types = Storage(doc_document = T("Document"),
                                # @ToDo: Remove - Images aren't stats sources!
                                doc_image = T("Image"),
                                #pr_pentity = T("Person"),
@@ -1052,14 +1051,16 @@ class S3StatsGroupModel(S3Model):
                              )
         # Reusable Field
         group_id = S3ReusableField("group_id", table,
-                                   requires = IS_ONE_OF(db,
-                                                        "stats_group.id",
-                                                        stats_group_represent),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db,
+                                                          "stats_group.id",
+                                                          stats_group_represent)),
                                    represent = stats_group_represent,
                                    label = T("Stats Group"),
                                    ondelete = "CASCADE")
 
         table.virtualfields.append(StatsGroupVirtualFields())
+
         # Resource Configuration
         configure("stats_group",
                   deduplicate=self.stats_group_duplicate,

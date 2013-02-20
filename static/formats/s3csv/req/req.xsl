@@ -65,7 +65,7 @@
             </xsl:for-each>
 
             <!-- Requesters -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('assigned_to_id',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('requester_id',
                                                                        col[@field='Requester'])[1])]">
                 <xsl:call-template name="HumanResource">
                     <xsl:with-param name="Name">
@@ -75,7 +75,7 @@
             </xsl:for-each>
 
             <!-- Assignees -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('approved_by_id',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('assigned_to_id',
                                                                        col[@field='Assigned To'])[1])]">
                 <xsl:call-template name="HumanResource">
                     <xsl:with-param name="Name">
@@ -85,7 +85,7 @@
             </xsl:for-each>
 
             <!-- Approvers -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('request_for_id',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('approved_by_id',
                                                                        col[@field='Approved By'])[1])]">
                 <xsl:call-template name="HumanResource">
                     <xsl:with-param name="Name">
@@ -95,7 +95,7 @@
             </xsl:for-each>
 
             <!-- Requested For -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('recv_by_id',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('request_for_id',
                                                                        col[@field='Requested For'])[1])]">
                 <xsl:call-template name="HumanResource">
                     <xsl:with-param name="Name">
@@ -105,7 +105,7 @@
             </xsl:for-each>
 
             <!-- Receivers -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('requester_id',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('recv_by_id',
                                                                        col[@field='Received By'])[1])]">
                 <xsl:call-template name="HumanResource">
                     <xsl:with-param name="Name">

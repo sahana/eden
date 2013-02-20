@@ -46,7 +46,7 @@ from gluon import *
 from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 from ..s3 import *
-#from eden.layouts import S3AddResourceLink
+from eden.layouts import S3AddResourceLink
 
 SHIP_STATUS_IN_PROCESS = 0
 SHIP_STATUS_RECEIVED   = 1
@@ -1559,7 +1559,13 @@ class S3TrackingModel(S3Model):
                                    readable = True,
                                    writable = True,
                                    widget = S3SiteAutocompleteWidget(),
-                                   represent = org_site_represent
+                                   represent = org_site_represent,
+                                   comment = S3AddResourceLink(
+                                        c="inv",
+                                        f="warehouse",
+                                        label=T("Add New Warehouse"),
+                                        title=T("Warehouse"),
+                                        tooltip=T("Type the name of an existing site OR Click 'Add New Warehouse' to add a new warehouse.")),
                                    ),
                              item_id(label = T("Kit"),
                                      requires = IS_ONE_OF(db, "supply_item.id",
@@ -1570,13 +1576,15 @@ class S3TrackingModel(S3Model):
                                      widget = S3AutocompleteWidget("supply", "item",
                                                                    filter="item.kit=1"),
                                      # Needs better workflow as no way to add the Kit Items
-                                     comment = None,
                                      #comment = S3AddResourceLink(
                                      #   c="supply",
                                      #   f="item",
                                      #   label=T("Add New Kit"),
                                      #   title=T("Kit"),
                                      #   tooltip=T("Type the name of an existing catalog kit OR Click 'Add New Kit' to add a kit which is not in the catalog.")),
+                                     comment = DIV(_class="tooltip",
+                                                   _title="%s|%s" % (T("Kit"),
+                                                                     T("Type the name of an existing catalog kit"))),
                                      ),
                              Field("quantity", "double",
                                    label = T("Quantity"),
