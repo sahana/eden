@@ -70,29 +70,41 @@ class CreateStaff(SeleniumUnitTest):
                      )
 
 #===============================================================================
-#    def test_hrm001_create_staff_registry(self):
-#        """
-#            @case: HRM001
-#            @description: Create a Staff from registry
-#            
-#            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
-#            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
-#        """
-#        print "\n"
-# 
-#        self.login(account="admin", nexturl="hrm/staff/create")
-#        self.browser.find_element_by_id("select_from_registry").click()
-#        self.create("hrm_human_resource", 
-#                    [( "organisation_id",
-#                       "Timor-Leste Red Cross Society",
-#                       "autocomplete"),
-#                     ( "person_id",
-#                       "Yakobus Maia",
-#                       "autocomplete"),
-#                     ( "site_id",
-#                       "Ainaro Branch Office",
-#                       "autocomplete")
-#                     ]
-#                     )
+    def test_hrm001_create_staff_registry(self):
+        """
+            @case: HRM001
+            @description: Create a Staff from registry
+            
+            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
+            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
+        """
+        print "\n"
+ 
+        self.login(account="admin", nexturl="hrm/staff/create")
+        
+        # If a confirmation is shown then clear it so that it doesn't give a false positive later
+        # This makes sure that there is no click between clicking 'Select from registry' and filling in name of person
+        try:
+            elem = self.browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem.click()
+            time.sleep(2) # Give it time to dissolve
+        except:
+            pass
+
+        self.browser.find_element_by_id("select_from_registry").click()
+
+        self.create("hrm_human_resource", 
+                    [
+                     ( "person_id",
+                       "Yakobus Maia",
+                       "autocomplete"),
+                     ( "organisation_id",
+                      "Timor-Leste Red Cross Society",
+                      "autocomplete"),
+                     ( "site_id",
+                       "Ainaro Branch Office (Office)",
+                       "option")
+                     ]
+                     )
 
 # END =========================================================================
