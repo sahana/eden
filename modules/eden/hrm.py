@@ -1962,8 +1962,10 @@ class S3HRSkillModel(S3Model):
                              # Once this has been filled-out then the other fields are locked
                              Field("grade", "integer",
                                    label = T("Grade"),
-                                   requires = IS_IN_SET(hrm_pass_fail_opts,  # Default to pass/fail (can override to 5-levels in Controller)
-                                                        zero=None),
+                                   # Default to pass/fail (can override to 5-levels in Controller)
+                                   requires = IS_EMPTY_OR(
+                                                IS_IN_SET(hrm_pass_fail_opts, 
+                                                          zero=None)),
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 NONE),

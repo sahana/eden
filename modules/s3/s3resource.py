@@ -1437,7 +1437,8 @@ class S3Resource(object):
                  orderby=None,
                  distinct=False,
                  getids=False,
-                 listid=None):
+                 listid=None,
+                 layout=None):
         """
             Generate a data list of this resource
 
@@ -1449,6 +1450,8 @@ class S3Resource(object):
             @param distinct: distinct-flag for DB query
             @param getids: return the record IDs of all records matching the
                            query (used in search to create a filter)
+            @param listid: the list identifier
+            @param layout: custom renderer function (see S3DataList.render)
 
             @return: tuple (S3DataList, numrows, ids), where numrows represents
                      the total number of rows in the table that match the query;
@@ -1489,7 +1492,8 @@ class S3Resource(object):
                               listid=listid,
                               start=start,
                               total=numrows,
-                              limit=limit), numrows, ids
+                              limit=limit,
+                              layout=layout), numrows, ids
         else:
             return None, 0, []
 

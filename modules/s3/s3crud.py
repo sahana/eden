@@ -1538,6 +1538,7 @@ class S3CRUD(S3Method):
         # Get table-specific parameters
         sortby = get_config("sortby", [[1, 'asc']])
         linkto = get_config("linkto", None)
+        layout = get_config("list_layout", None)
 
         # List fields
         list_fields = resource.list_fields()
@@ -1591,10 +1592,12 @@ class S3CRUD(S3Method):
                 initial_limit = min(limit, pagelength)
             else:
                 initial_limit = pagelength
+
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=start,
                                                        limit=initial_limit,
-                                                       listid="datalist")
+                                                       listid="datalist",
+                                                       layout=layout)
 
             if numrows == 0:
                 # Empty table or just no match?
