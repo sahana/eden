@@ -1247,6 +1247,12 @@ class S3Config(Storage):
             @ToDo: Fix (form fails to submit)
         """
         return self.pr.get("select_existing", True)
+    def get_pr_import_update_requires_email(self):
+        """
+            During imports, records are only updated if the import
+            item contains a (matching) email address
+        """
+        return self.pr.get("import_update_requires_email", True)
 
     # -------------------------------------------------------------------------
     # Proc
