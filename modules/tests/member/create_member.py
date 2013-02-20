@@ -63,33 +63,43 @@ class CreateMember(SeleniumUnitTest):
                        today)]
                      )
         
+#===============================================================================
 
-#    def test_mem001_create_member_registry(self):
-#        """
-#            @case: mem001
-#            @description: Create Member from registery
-#
-#        """
-#        print "\n"   
-#                    
-#        today = self.today()
-#
-#        self.login(account="admin", nexturl="member/membership/create")
-#        self.browser.find_element_by_id("select_from_registry").click()
-#        
-#        self.create("member_membership", 
-#                    [( "person_id",
-#                       "Beatriz Albuquequer",
-#                       "autocomplete"),
-#                     ( "organisation_id",
-#                       "Timor-Leste Red Cross Society",
-#                       "autocomplete"),
-#                     ( "start_date",
-#                       today),
-#                     ( "membership_fee",
-#                       "10.00"),
-#                     ( "membership_paid",
-#                       today)]
-#                     )
-      
+    def test_mem001_create_member_registry(self):
+        """
+            @case: mem001
+            @description: Create Member from registery
+
+        """
+        print "\n"   
+                    
+        today = self.today()
+
+        self.login(account="admin", nexturl="member/membership/create")
+
+        # If a confirmation is shown then clear it so that it doesn't give a false positive later
+        # This makes sure that there is no click between clicking 'Select from registry' and filling in name of person
+        try:
+            elem = self.browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem.click()
+            time.sleep(2) # Give it time to dissolve
+        except:
+            pass
+
+        self.browser.find_element_by_id("select_from_registry").click()
         
+        self.create("member_membership", 
+                    [( "person_id",
+                       "Beatriz Albuquequer",
+                       "autocomplete"),
+                     ( "organisation_id",
+                       "Timor-Leste Red Cross Society (CVTL)",
+                       "option"),
+                     ( "start_date",
+                       today),
+                     ( "membership_fee",
+                       "10.00"),
+                     ( "membership_paid",
+                       today)]
+                     )
+
