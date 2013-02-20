@@ -3858,16 +3858,17 @@ class GIS(object):
                     wkt_centroid(form)
                     vars = form.vars
                     if "lat_max" in vars:
+                        wkt = vars.wkt
                         _vars = dict(gis_feature_type = vars.gis_feature_type,
                                      lat = vars.lat,
                                      lon = vars.lon,
-                                     wkt = vars.wkt,
+                                     wkt = wkt,
                                      lat_max = vars.lat_max,
                                      lat_min = vars.lat_min,
                                      lon_min = vars.lon_min,
                                      lon_max = vars.lon_max)
-                        if spatial:
-                            _vars.update(the_geom = vars.wkt)
+                        if spatial and wkt:
+                            _vars.update(the_geom = wkt)
                         db(table.id == feature.id).update(**_vars)
             return
 
