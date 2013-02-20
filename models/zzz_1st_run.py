@@ -247,6 +247,10 @@ if len(pop_list) > 0:
     protected = s3mgr.PROTECTED
     s3mgr.PROTECTED = []
 
+    # Relax strict email-matching rule for import updates of person records
+    email_required = settings.get_pr_import_update_requires_email()
+    settings.pr.import_update_requires_email = False
+
     # Additional settings for user table imports:
     s3db.configure("auth_user",
                    onaccept = lambda form: auth.s3_approve_user(form.vars))
@@ -394,6 +398,9 @@ if len(pop_list) > 0:
 
     # Restore table protection
     s3mgr.PROTECTED = protected
+
+    # Restore setting for strict email-matching
+    settings.pr.import_update_requires_email = email_required
 
     # Restore Auth
     auth.override = False

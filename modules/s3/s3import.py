@@ -1965,6 +1965,8 @@ class S3ImportItem(object):
         xml = current.xml
         ERROR = xml.ATTRIBUTE["error"]
 
+        self.deduplicate()
+
         # Check for mandatory fields
         required_fields = self._mandatory_fields()
 
@@ -1990,6 +1992,7 @@ class S3ImportItem(object):
 
         missing = [fname for fname in required_fields
                          if fname not in all_fields]
+            
         if missing:
             original = self.original
             if original:
@@ -2053,6 +2056,7 @@ class S3ImportItem(object):
         # Globals
         db = current.db
         xml = current.xml
+        s3db = current.s3db
 
         # Methods
         METHOD = self.METHOD
@@ -2084,17 +2088,15 @@ class S3ImportItem(object):
         current.response.s3.bulk = True
 
         # De-duplicate (auto-detect updates)
-        self.deduplicate()
+        #self.deduplicate()
 
         # Load the original (if not already loaded)
-        table = self.table
-        this = self.original
-        method = self.method
-        if not this and self.id and method in (UPDATE, DELETE):
-            query = (table.id == self.id)
-            self.original = this = db(query).select(limitby=(0, 1)).first()
-
-        s3db = current.s3db
+        #table = self.table
+        #this = self.original
+        #method = self.method
+        #if not this and self.id and method in (UPDATE, DELETE):
+            #query = (table.id == self.id)
+            #self.original = this = db(query).select(limitby=(0, 1)).first()
 
         # Validate
         if not self.validate():
@@ -2140,6 +2142,8 @@ class S3ImportItem(object):
             return True
 
         # Check mtime and mci
+        table = self.table
+        this = self.original
         this_mtime = None
         this_mci = 0
         if this:

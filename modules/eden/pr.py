@@ -920,6 +920,7 @@ class S3PersonModel(S3Model):
             else:
                 return untested
 
+        email_required = current.deployment_settings.get_pr_import_update_requires_email()
         for row in candidates:
             row_fname = row[ptable.first_name]
             row_lname = row[ptable.last_name]
@@ -941,7 +942,7 @@ class S3PersonModel(S3Model):
 
             if email and row_email:
                 check += rank(email.lower(), row_email.lower(), +2, -5)
-            elif not email:
+            elif not email and email_required:
                 # Treat missing email as mismatch
                 check -= 2 if initials else 3 if not row_email else 4
 
