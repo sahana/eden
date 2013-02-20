@@ -2759,7 +2759,8 @@ class S3SurveyCompleteModel(S3Model):
         if not locDetails:
             return
         widgetObj = get_default_location(complete_id)
-        current.db(rtable.id == complete_id).update(location = widgetObj.repr())
+        if widgetObj:
+            current.db(rtable.id == complete_id).update(location = widgetObj.repr())
         locations = get_location_details(complete_id)
         S3SurveyCompleteModel.importLocations(locations)
 

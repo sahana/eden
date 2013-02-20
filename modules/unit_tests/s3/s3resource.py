@@ -2050,9 +2050,11 @@ class MergeReferenceListsTest(unittest.TestCase):
 <s3xml>
     <resource name="org_sector" uuid="TESTMERGESECTOR1">
         <data field="name">TestMergeSector1</data>
+        <data field="abrv">TMS1</data>
     </resource>
     <resource name="org_sector" uuid="TESTMERGESECTOR2">
         <data field="name">TestMergeSector2</data>
+        <data field="abrv">TMS2</data>
     </resource>
     <resource name="org_organisation" uuid="TESTMERGEMULTISECTORORG">
         <data field="name">TestMergeMultiSectorOrg</data>

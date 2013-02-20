@@ -1867,6 +1867,12 @@ class S3ImportItem(object):
 
         RESOLVER = "deduplicate"
 
+        METHOD = self.METHOD
+        UPDATE = METHOD["UPDATE"]
+        DELETE = METHOD["DELETE"]
+
+        UID = current.xml.UID
+
         if self.id:
             return
 
@@ -1876,13 +1882,14 @@ class S3ImportItem(object):
             return
         if self.original is not None:
             original = self.original
-        else:
+        elif self.data:
             original = S3Resource.original(table, self.data)
+        else:
+            original = None
 
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
-            UID = current.xml.UID
             if UID in original:
                 self.uid = original[UID]
                 self.data.update({UID:self.uid})
@@ -1891,6 +1898,12 @@ class S3ImportItem(object):
             resolve = current.s3db.get_config(self.tablename, RESOLVER)
             if self.data and resolve:
                 resolve(self)
+            if self.id and self.method in (UPDATE, DELETE):
+                query = (table._id == self.id)
+                self.original = current.db(query).select(limitby=(0, 1)).first()
+                if original and UID in original:
+                    self.uid = original[UID]
+                    self.data.update({UID:self.uid})
 
         return
 
@@ -1949,10 +1962,50 @@ class S3ImportItem(object):
             self.accepted = False
             return False
 
+        xml = current.xml
+        ERROR = xml.ATTRIBUTE["error"]
+
+        # Check for mandatory fields
+        required_fields = self._mandatory_fields()
+
+        all_fields = self.data.keys()
+
+        items = self.job.items
+        for reference in self.references:
+            resolved = True
+            entry = reference.entry
+            if entry and not entry.id:
+                if entry.item_id:
+                    item = items[entry.item_id]
+                    if item.error:
+                        resolved = False
+                else:
+                    resolved = False
+            if resolved:
+                field = reference.field
+                if isinstance(field, (tuple, list)):
+                    all_fields.append(field[1])
+                else:
+                    all_fields.append(field)
+
+        missing = [fname for fname in required_fields
+                         if fname not in all_fields]
+        if missing:
+            original = self.original
+            if original:
+                missing = [fname for fname in missing
+                                 if fname not in original]
+            if missing:
+                fields = ", ".join(missing)
+                self.error = "%s: value(s) required" % fields
+                self.element.set(ERROR, self.error)
+                self.accepted = False
+                return False
+
+        # Run onvalidation
         form = Storage(method = self.method,
                        vars = self.data,
                        request_vars = self.data)
-
         if self.id:
             form.vars.id = self.id
 
@@ -1969,7 +2022,6 @@ class S3ImportItem(object):
                 pass # @todo need a better handler here.
         self.accepted = True
         if form.errors:
-            error = current.xml.ATTRIBUTE["error"]
             for k in form.errors:
                 e = self.element.findall("data[@field='%s']" % k)
                 if not e:
@@ -1979,8 +2031,7 @@ class S3ImportItem(object):
                     form.errors[k] = "[%s] %s" % (k, form.errors[k])
                 else:
                     e = e[0]
-                e.set(error,
-                      str(form.errors[k]).decode("utf-8"))
+                e.set(ERROR, str(form.errors[k]).decode("utf-8"))
             self.error = self.ERROR.VALIDATION_ERROR
             self.accepted = False
 
@@ -1995,10 +2046,30 @@ class S3ImportItem(object):
                                   (still reports errors)
         """
 
-        # Check if already committed
         if self.committed:
             # already committed
             return True
+
+        # Globals
+        db = current.db
+        xml = current.xml
+
+        # Methods
+        METHOD = self.METHOD
+        CREATE = METHOD.CREATE
+        UPDATE = METHOD.UPDATE
+        DELETE = METHOD.DELETE
+
+        # Policies
+        POLICY = self.POLICY
+        THIS = POLICY["THIS"]
+        NEWER = POLICY["NEWER"]
+        MASTER = POLICY["MASTER"]
+
+        # Constants
+        UID = xml.UID
+        MCI = xml.MCI
+        MTIME = xml.MTIME
 
         # If the parent item gets skipped, then skip this item as well
         if self.parent is not None and self.parent.skip:
@@ -2012,7 +2083,18 @@ class S3ImportItem(object):
         # Set a flag so that we know this is an import job
         current.response.s3.bulk = True
 
-        xml = current.xml
+        # De-duplicate (auto-detect updates)
+        self.deduplicate()
+
+        # Load the original (if not already loaded)
+        table = self.table
+        this = self.original
+        method = self.method
+        if not this and self.id and method in (UPDATE, DELETE):
+            query = (table.id == self.id)
+            self.original = this = db(query).select(limitby=(0, 1)).first()
+
+        s3db = current.s3db
 
         # Validate
         if not self.validate():
@@ -2036,28 +2118,6 @@ class S3ImportItem(object):
                     self.error = self.ERROR.VALIDATION_ERROR
                     return False
 
-        # De-duplicate
-        self.deduplicate()
-
-        METHOD = self.METHOD
-        CREATE = METHOD.CREATE
-        UPDATE = METHOD.UPDATE
-        DELETE = METHOD.DELETE
-
-        POLICY = self.POLICY
-        THIS = POLICY["THIS"]
-        NEWER = POLICY["NEWER"]
-        MASTER = POLICY["MASTER"]
-
-        db = current.db
-        s3db = current.s3db
-        manager = current.manager
-        table = self.table
-
-        # Log this item
-        if manager.log is not None:
-            manager.log(self)
-
         # Authorize item
         if not self.authorize():
             _debug("Not authorized - skip")
@@ -2065,6 +2125,7 @@ class S3ImportItem(object):
             self.skip = True
             return ignore_errors
 
+        # Update the method
         method = self.method
         _debug("Method: %s" % method)
 
@@ -2078,14 +2139,7 @@ class S3ImportItem(object):
             self.skip = True
             return True
 
-        UID = xml.UID
-        MCI = xml.MCI
-        MTIME = xml.MTIME
-
-        this = self.original
-        if not this and self.id and method in (UPDATE, DELETE):
-            query = (table.id == self.id)
-            this = db(query).select(limitby=(0, 1)).first()
+        # Check mtime and mci
         this_mtime = None
         this_mci = 0
         if this:
@@ -2095,7 +2149,7 @@ class S3ImportItem(object):
                 this_mci = this[MCI]
         self.mtime = xml.as_utc(self.mtime)
 
-        # Conflict detection
+        # Detect conflicts
         this_modified = True
         self.modified = True
         self.conflict = False
@@ -2107,7 +2161,6 @@ class S3ImportItem(object):
                 self.modified = False
             if self.modified and this_modified:
                 self.conflict = True
-
         if self.conflict and method in (UPDATE, DELETE):
             _debug("Conflict: %s" % self)
             if self.job.onconflict:
@@ -2118,6 +2171,7 @@ class S3ImportItem(object):
         else:
             data = Storage()
 
+        # Update policy
         if isinstance(self.update_policy, dict):
             def update_policy(f):
                 setting = self.update_policy
@@ -2132,6 +2186,11 @@ class S3ImportItem(object):
                 if p not in POLICY:
                     return THIS
                 return p
+
+        # Log this item
+        manager = current.manager
+        if manager.log is not None:
+            manager.log(self)
 
         # Update existing record
         if method == UPDATE:
@@ -2327,6 +2386,36 @@ class S3ImportItem(object):
                                            self.skip and "skippe" or \
                                            method))
         return True
+
+    # -------------------------------------------------------------------------
+    def _mandatory_fields(self):
+
+        job = self.job
+
+        mandatory = None
+        tablename = self.tablename
+
+        mfields = job.mandatory_fields
+        if tablename in mfields:
+            mandatory = mfields[tablename]
+
+        if mandatory is None:
+            mandatory = []
+            for field in self.table:
+                if field.default is not None:
+                    continue
+                requires = field.requires
+                if requires:
+                    if not isinstance(requires, (list, tuple)):
+                        requires = [requires]
+                    if isinstance(requires[0], IS_EMPTY_OR):
+                        continue
+                    value, error = field.validate("")
+                    if error:
+                        mandatory.append(field.name)
+            mfields[tablename] = mandatory
+
+        return mandatory
 
     # -------------------------------------------------------------------------
     def _resolve_references(self):
@@ -2592,6 +2681,9 @@ class S3ImportJob():
         self.tree = tree
         self.files = files
         self.directory = Storage()
+
+        # Mandatory fields
+        self.mandatory_fields = Storage()
 
         self.elements = Storage()
         self.items = Storage()
