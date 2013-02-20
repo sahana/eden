@@ -121,7 +121,7 @@ def add_new_debate(request, space_url):
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
 
-@permission_required('debate.edit_debate')
+@permission_required('debate.change_debate')
 def edit_debate(request, space_url, pk):
 
 

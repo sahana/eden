@@ -30,7 +30,7 @@
     <div class="row">
         <div class="span8">
             <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.title }}</a>
-                {% if perms.news.edit_post %}
+                {% if perms.news.change_post %}
                     <a href="{% url 'edit-site-post' news.id %}">
                         <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                     </a>
