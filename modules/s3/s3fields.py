@@ -29,10 +29,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
 import datetime
-from uuid import uuid4
+import sys
 from itertools import chain
+from uuid import uuid4
 
 from gluon import *
 # Here are dependencies listed for reference:

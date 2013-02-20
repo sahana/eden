@@ -1649,6 +1649,12 @@ class S3TrackingModel(S3Model):
                                              ),
                              inv_item_id(name="send_inv_item_id",
                                          ondelete = "RESTRICT",
+                                         # Local Purchases don't have this available
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "inv_inv_item.id",
+                                                                  self.inv_item_represent,
+                                                                  orderby="inv_inv_item.id",
+                                                                  sort=True)),
                                          script = '''
 S3OptionsFilter({
  'triggerName':'send_inv_item_id',
