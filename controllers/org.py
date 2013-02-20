@@ -109,11 +109,13 @@ def sites_for_org():
     else:
         # Find all branches for this Organisation
         btable = s3db.org_organisation_branch
-        query = (btable.organisation_id == org)
+        query = (btable.organisation_id == org) & \
+                (btable.deleted != True)
         rows = db(query).select(btable.branch_id)
         org_ids = [row.branch_id for row in rows] + [org]
         stable = s3db.org_site
-        query = (stable.organisation_id.belongs(org_ids))
+        query = (stable.organisation_id.belongs(org_ids)) & \
+                (stable.deleted != True)
         rows = db(query).select(stable.site_id,
                                 stable.name,
                                 orderby=stable.name)
