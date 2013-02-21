@@ -3602,7 +3602,8 @@ class S3ProjectTaskModel(S3Model):
                                       "person_id",
                                       "hours",
                                       "comments"
-                                      ]
+                                      ],
+                            orderby = "date"
                         ),
                         "time_actual",
                     )
@@ -4881,10 +4882,10 @@ def project_rheader(r):
     auth = current.auth
     settings = current.deployment_settings
 
+    attachments_label = settings.get_ui_label_attachments()
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
-        attachments_label = settings.get_ui_label_attachments()
 
         # Tabs
         ADMIN = current.session.s3.system_roles.ADMIN

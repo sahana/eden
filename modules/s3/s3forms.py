@@ -1418,6 +1418,38 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 qfields.insert(0, pkey)
             qfields = [table[f] for f in qfields]
 
+            # Sort the component items
+            # @note: this is using a left join which can result in the same
+            # component record appearing multiple times if the orderby-selector
+            # gives multiple values per row, so make sure that the orderby-selector
+            # gives only one possible value per row, or otherwise rewrite this
+            # function to use S3Resource.select+extract with its more powerful
+            # orderby-logic!
+            orderby_rfield = None
+            orderby_dir = None
+            if "orderby" in self.options:
+                orderby = self.options["orderby"]
+                if isinstance(orderby, (list, tuple)):
+                    orderby, orderby_dir = orderby[:2]
+                else:
+                    orderby, orderby_dir = orderby, "asc"
+                try:
+                    orderby_rfield = component.resolve_selector(orderby)
+                except:
+                    orderby_rfield = None
+            left = None
+            if orderby_rfield is not None:
+                orderby = orderby_rfield.field
+                left = []
+                if orderby is not None:
+                    for joins in orderby_rfield.left.values():
+                        left.extend(joins)
+                    left = component.sortleft(left)
+                if orderby_dir[:3].lower() == "des":
+                    orderby = ~orderby
+            else:
+                orderby = None
+
             items = []
             if record_id:
                 # Build the query
@@ -1430,7 +1462,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     query &= f
 
                 # Get the rows:
-                rows = current.db(query).select(*qfields)
+                rows = current.db(query).select(*qfields,
+                                                left=left,
+                                                orderby=orderby)
 
                 permit = resource.permit
                 represent = current.manager.represent
