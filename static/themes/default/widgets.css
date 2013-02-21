@@ -718,7 +718,7 @@ div#last_update {
 .expanded {
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -32px -16px;
-    white-space:nowrap; /* prevent the label from wrapping */
+    white-space: nowrap;
 }
 
 /* Embed Widget */

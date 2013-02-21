@@ -61,6 +61,10 @@ class index():
         for row in rows:
             countries = [l.gis_location.L0 for l in locations if l.project_location.project_id == row.id]
             location = ", ".join(countries)
+            if odd:
+                _class = "front-latest-item odd grid_8 alpha"
+            else:
+                _class = "front-latest-item even grid_8 alpha"
             card = DIV(DIV(A(row.name,
                              _href=URL(c="project", f="project", args=[row.id])),
                            _class="front-latest-title grid_8",
@@ -74,7 +78,7 @@ class index():
                                 _class="front-latest-info-location"),
                            _class="front-latest-info grid_8",
                            ),
-                       _class="front-latest-item %s grid_8 alpha" % "odd" if odd else "even",
+                       _class=_class,
                        )
             lappend(card)
             odd = False if odd else True

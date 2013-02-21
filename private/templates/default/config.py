@@ -257,6 +257,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.hide_report_options = False
 # Uncomment to show created_by/modified_by using Names not Emails
 #settings.ui.auth_user_represent = "name"
+# Uncomment to restrict the export formats available
+#settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
 
 # -----------------------------------------------------------------------------
 # Persons

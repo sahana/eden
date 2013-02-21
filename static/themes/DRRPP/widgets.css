@@ -88,7 +88,8 @@
 	background: transparent;
 }
 label {
-	width: 80px;
+	/* Screws up the width of CheckboxWidgets */
+    /*width: 80px;*/
 	float: left;
 	letter-spacing: -0.1px;
 }

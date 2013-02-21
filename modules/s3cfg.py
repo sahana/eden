@@ -661,16 +661,28 @@ class S3Config(Storage):
         return self.ui.get("confirm", True)
 
     def get_ui_crud_form(self, tablename):
-        """ Get custom crud_forms for diffent tables """
+        """
+            Get custom crud_forms for diffent tables
+        """
         return self.ui.get("crud_form_%s" % tablename, None)
 
     def ui_customize(self, tablename, **attr):
-        """ Customizes field settings on a table"""
+        """
+            Customize field settings for a table
+        """
         customize = self.ui.get("customize_%s" % tablename)
         if customize:
             return customize(**attr)
         else:
             return attr
+
+    def get_ui_export_formats(self):
+        """
+            Which export formats should we display?
+            - specify a list of export formats to restrict
+        """
+        return self.ui.get("export_formats",
+                           ["have", "kml", "map", "pdf", "rss", "xls", "xml"])
 
     def get_ui_hide_report_filter_options(self):
         """
