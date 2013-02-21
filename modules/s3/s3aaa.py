@@ -59,7 +59,7 @@ from gluon.utils import web2py_uuid
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3error import S3PermissionError
-from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
+from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
 from s3track import S3Tracker
 from s3utils import s3_mark_required
@@ -215,9 +215,7 @@ Thank you
             shelter = T("Camp")
         else:
             shelter = T("Shelter")
-        self.org_site_types = Storage(
-
-                                      transport_airport = T("Airport"),
+        self.org_site_types = Storage(transport_airport = T("Airport"),
                                       cr_shelter = shelter,
                                       org_facility = T("Facility"),
                                       #org_facility = T("Site"),
@@ -384,6 +382,7 @@ Thank you
                 Field("group_id", gtable,
                       requires = IS_IN_DB(db, "%s.id" % gname,
                                           "%(id)s: %(role)s"),
+                      represent = S3Represent(lookup=gname, fields=["role"]),
                       label=label_group_id),
                 # Realm
                 Field("pe_id", "integer"),
@@ -1214,14 +1213,14 @@ Thank you
             Configure User Fields - for registration & user administration
         """
 
+        T = current.T
+        db = current.db
+        s3db = current.s3db
         request = current.request
         messages = self.messages
         cmessages = current.messages
         settings = self.settings
         deployment_settings = current.deployment_settings
-        T = current.T
-        db = current.db
-        s3db = current.s3db
 
         utable = self.settings.table_user
 

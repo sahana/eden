@@ -35,15 +35,16 @@ try:
 except:
     from StringIO import StringIO
 
-from gluon import *
-from gluon.storage import Storage
-from gluon.contenttype import contenttype
 try:
     from lxml import etree
 except ImportError:
     import sys
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
+
+from gluon import *
+from gluon.storage import Storage
+from gluon.contenttype import contenttype
 
 from ..s3codec import S3Codec
 from ..s3utils import s3_unicode, s3_strip_markup
@@ -73,7 +74,6 @@ class S3XLS(S3Codec):
             XLRD_ERROR = T("ERROR: Running Python needs the xlrd module installed for XLS export"),
             XLWT_ERROR = T("ERROR: Running Python needs the xlwt module installed for XLS export")
         )
-
 
     # -------------------------------------------------------------------------
     def extractResource(self, resource, list_fields):
@@ -152,7 +152,7 @@ class S3XLS(S3Codec):
 
         request = current.request
 
-        # The xlwt library supports a maximum of 182 character in a single cell
+        # The xlwt library supports a maximum of 182 characters in a single cell
         max_cell_size = 182
 
         COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
@@ -187,9 +187,6 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         date_format = S3XLS.dt_format_translate(settings.get_L10n_date_format())
         time_format = S3XLS.dt_format_translate(settings.get_L10n_time_format())
         datetime_format = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
-
-        # Initialize output
-        output = StringIO()
 
         # Create the workbook
         book = xlwt.Workbook(encoding="utf-8")
@@ -265,7 +262,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         currentRow.height = 500
         currentRow = sheet1.row(1)
         currentRow.write(colCnt, request.now, styleNotes)
-        # fix the size of the last column to display the date
+        # Fix the size of the last column to display the date
         if 16 * COL_WIDTH_MULTIPLIER > width:
             sheet1.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
@@ -366,10 +363,12 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > fieldWidth[colCnt]:
                     fieldWidth[colCnt] = width
-                    sheet1.col(colCnt).width = width
+                    sheet1.col(colCnt - 1).width = width
                 colCnt += 1
         sheet1.panes_frozen = True
         sheet1.horz_split_pos = 3
+
+        output = StringIO()
         book.save(output)
 
         # Response headers
@@ -415,7 +414,8 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                      "%Y": "yyyy",
                      "%z": "",
                      "%Z": "",
-                     "%%": "%"}
+                     "%%": "%",
+                     }
 
         xlfmt = str(pyfmt)
 

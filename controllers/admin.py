@@ -72,13 +72,28 @@ def user():
 
     auth.configure_user_fields()
 
+    s3db.add_component("auth_membership", auth_user="user_id")
+
+    list_fields = ["first_name",
+                   "last_name",
+                   "email",
+                   ]
+    lappend = list_fields.append
+    if len(settings.get_L10n_languages()) > 1:
+        lappend("language")
+    if settings.get_auth_registration_requests_organisation():
+        lappend("organisation_id")
+    if settings.get_auth_registration_requests_site():
+        lappend("site_id")
+    if settings.get_auth_registration_link_user_to():
+        lappend("link_user_to")
+    lappend((T("Roles"), "membership.group_id"))
+
     s3db.configure(tablename,
                    main="first_name",
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
+                   list_fields = list_fields,
                    )
-
-    if "import" in request.args:
-        s3db.add_component("auth_membership", auth_user="user_id")
 
     def disable_user(r, **args):
         if not r.id:
@@ -412,7 +427,6 @@ def acl():
 
     output = s3_rest_controller(module, name)
     return output
-
 
 # -----------------------------------------------------------------------------
 def acl_represent(acl, options):
