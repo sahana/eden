@@ -393,6 +393,7 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
             "location",
             label = T("Countries"),
             fields = ["location_id"],
+            orderby = "location_id$name"
         ),
         "drrpp.L1",
         s3forms.S3SQLInlineComponentCheckbox(
