@@ -610,7 +610,27 @@ def group():
         Team controller
         - uses the group table from PR
     """
+
     return s3db.hrm_group_controller()
+
+# -----------------------------------------------------------------------------
+def group_membership():
+    """
+        Membership controller
+        - uses the group_membership table from PR
+    """
+
+    # Change Labels
+    s3db.hrm_configure_pr_group_membership()
+
+    # Only show Relief Teams
+    # Do not show system groups
+    table = db.pr_group
+    s3.filter = (table.system == False) & \
+                (table.group_type == 3)
+
+    output = s3_rest_controller("pr", "group_membership")
+    return output 
 
 # =============================================================================
 # Jobs

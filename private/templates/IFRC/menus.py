@@ -277,6 +277,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New Team", m="create"),
                         M("List All"),
+                        M("Search Members", f="group_membership", m="search"),
                     ),
                     M("National Societies", c="org", 
                                             f="organisation",
@@ -423,6 +424,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
+                        M("Search Members", f="group_membership", m="search"),
                     ),
                     M("Department Catalog", f="department",
                       check=manager_mode)(

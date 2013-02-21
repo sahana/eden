@@ -20,26 +20,26 @@
 }
 </style>
 {{try:}}{{=H2(T("User Roles"))}}{{except:}}{{pass}}
-<div id="rheader">
+<div id='rheader'>
 {{try:}}{{=XML(rheader)}}
 </div>
-<div id="component">
+<div id='component'>
 {{except:}}
 <div>
 {{pass}}
 <h3>{{=T("Assigned Roles")}}</h3>
 {{if globals().get("pagination_list", False):}}
- <form action="" method="GET">
+ <form action='' method='GET'>
   <fieldset>
-   <legend>Page</legend>
+   <legend>{{=T("Page")}}</legend>
    {{for offset in range(pagination_pages):}}
     {{if offset == pagination_offset:}}
-     <button name="page_offset" value="{{=offset}}" disabled="disabled">{{=offset + 1}}</button>
+     <button name='page_offset' value='{{=offset}}' disabled='disabled'>{{=offset + 1}}</button>
     {{else:}}
-     <button name="page_offset" value="{{=offset}}">{{=offset + 1}}</button>
+     <button name='page_offset' value='{{=offset}}'>{{=offset + 1}}</button>
     {{pass}}
    {{pass}}
-   <input type="hidden" name="page_size" value="{{=pagination_size}}">
+   <input type='hidden' name='page_size' value='{{=pagination_size}}'>
   </fieldset>
  </form>
 {{pass}}
@@ -62,7 +62,7 @@
 	<tr>
 	{{if first_row:}}
 	 {{first_row = False}}
-	 <td rowspan="{{=len(assigned_roles[object_id])}}"><a href="?edit={{=object_id}}" title="Edit roles for {{=object_name}}">{{=object_name}}</a></td>
+	 <td rowspan='{{=len(assigned_roles[object_id])}}'><a href='?edit={{=object_id}}' title='{{=T("Edit roles for")}} {{=object_name}}'>{{=object_name}}</a></td>
 	{{pass}}
  	 <td>{{=roles[role]["module"]["label"]}}</td>
  	 <td>{{=roles[role]["acl"]["label"]}}</td>
@@ -71,7 +71,7 @@
   </tbody>
   {{pass}}
 {{pass}}
-<!-- regular table form for assigning roles to a user -->
+{{# regular table form for assigning roles to a user }}
 {{if globals().get("form", False):}}
  <tbody>
  {{include "admin/_role_form.html"}}

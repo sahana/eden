@@ -7183,7 +7183,8 @@ class S3EntityRoleManager(S3Method):
                     "org_office",
                     "inv_warehouse",
                     "hms_hospital",
-                    "pr_group"]
+                    "pr_group",
+                    ]
 
     def __init__(self, *args, **kwargs):
         """ Constructor """
@@ -7324,7 +7325,8 @@ class S3EntityRoleManager(S3Method):
         context = {"roles": self.roles,
                    "foreign_object": self.foreign_object,
                    "form": form,
-                   "title": T("Roles")}
+                   "title": T("Roles"),
+                   }
 
         if not self.foreign_object:
             # how many assigned roles to show per page
@@ -7342,7 +7344,8 @@ class S3EntityRoleManager(S3Method):
                             "pagination_size": pagination_size,
                             "pagination_offset": pagination_offset,
                             "pagination_list": pagination_list,
-                            "pagination_pages": pagination_pages})
+                            "pagination_pages": pagination_pages,
+                            })
 
         return context
 

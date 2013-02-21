@@ -277,7 +277,7 @@ s3.crud_strings[tablename] = Storage(
 building_nzseel1_search = s3base.S3Search(
         name="nzseel1_search_simple",
         label=T("Ticket ID"),
-        comment=T("To search for an assessment, enter any portion the ticket number of the assessment. You may use % as wildcard. Press 'Search' without input to list all assessments."),
+        comment=T("To search for an assessment, enter any portion of the ticket number of the assessment. You may use % as wildcard. Press 'Search' without input to list all assessments."),
         field=["ticket_id"])
 
 # Set as default search method
