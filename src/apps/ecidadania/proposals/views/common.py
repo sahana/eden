@@ -33,7 +33,7 @@ from django.shortcuts import get_object_or_404
 from apps.ecidadania.proposals import url_names as urln_prop
 from core.spaces import url_names as urln_space
 from core.spaces.models import Space
-from core.permissions import has_space_permission, has_all_permissions
+from core.permissions import has_space_permission, has_all_permissions,has_operation_permission
 from apps.ecidadania.proposals.models import Proposal
 
 class ViewProposal(DetailView):
@@ -97,7 +97,7 @@ def support_proposal(request, space_url):
     """
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
     space = get_object_or_404(Space, url=space_url)
-    if has_space_permission(request.user, space, allow=['admins', 'mods', 'users']):
+    if has_operaion_permission(request.user, space,"proposals.change_proposal" ,allow=['admins', 'mods', 'users']):
         try:
             prop.support_votes.add(request.user)
             return HttpResponse(" Support vote emmited.")
