@@ -86,44 +86,42 @@ def add_new_debate(request, space_url):
         except ObjectDoesNotExist:
             current_debate_id = 1
 
-        if request.user.has_perm('debate.debate_add') \
-        or has_all_permissions(request.user):
-            if request.method == 'POST':
-                if debate_form.is_valid() and row_formset.is_valid() \
-                and column_formset.is_valid():
-                    debate_form_uncommited = debate_form.save(commit=False)
-                    debate_form_uncommited.space = place
-                    debate_form_uncommited.author = request.user
+        if request.method == 'POST':
+            if debate_form.is_valid() and row_formset.is_valid() \
+            and column_formset.is_valid():
+                debate_form_uncommited = debate_form.save(commit=False)
+                debate_form_uncommited.space = place
+                debate_form_uncommited.author = request.user
 
-                    saved_debate = debate_form_uncommited.save()
-                    debate_instance = get_object_or_404(Debate,
-                        pk=current_debate_id)
-                    
-                    row = row_formset.save(commit=False)
-                    for form in row:
-                        form.debate = debate_instance
-                        form.save()
-                    
-                    column = column_formset.save(commit=False)
-                    for form in column:
-                        form.debate = debate_instance
-                        form.save()
+                saved_debate = debate_form_uncommited.save()
+                debate_instance = get_object_or_404(Debate,
+                    pk=current_debate_id)
+                
+                row = row_formset.save(commit=False)
+                for form in row:
+                    form.debate = debate_instance
+                    form.save()
+                
+                column = column_formset.save(commit=False)
+                for form in column:
+                    form.debate = debate_instance
+                    form.save()
 
-                    return HttpResponseRedirect(reverse(urln.DEBATE_VIEW,
-                        kwargs={'space_url': space_url,
-                                'debate_id': str(debate_form_uncommited.id)}))
+                return HttpResponseRedirect(reverse(urln.DEBATE_VIEW,
+                    kwargs={'space_url': space_url,
+                            'debate_id': str(debate_form_uncommited.id)}))
 
-            return render_to_response('debate/debate_add.html',
-                                  {'form': debate_form,
-                                   'rowform': row_formset,
-                                   'colform': column_formset,
-                                   'get_place': place,
-                                   'debateid': current_debate_id},
-                                  context_instance=RequestContext(request))
+        return render_to_response('debate/debate_add.html',
+                              {'form': debate_form,
+                               'rowform': row_formset,
+                               'colform': column_formset,
+                               'get_place': place,
+                               'debateid': current_debate_id},
+                              context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
 
-@permission_required('debate.edit_debate')
+@permission_required('debate.change_debate')
 def edit_debate(request, space_url, pk):
 
 
@@ -316,7 +314,7 @@ def delete_note(request, space_url):
         all_comments = Comment.objects.filter(is_public=True,
                 is_removed=False, content_type=ctype,
                 object_pk=note.id).all()
-        for i in range(note.comment_count):
+        for i in range(len(all_comments)):
             all_comments[i].delete()
         note.delete()
         return HttpResponse("The note has been deleted.")

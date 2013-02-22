@@ -40,7 +40,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from apps.ecidadania.proposals import url_names as urln_prop
 from core.spaces import url_names as urln_space
 from core.spaces.models import Space
-from core.permissions import has_space_permission, has_all_permissions
+from core.permissions import has_operation_permission
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
@@ -66,16 +66,18 @@ class AddProposal(FormView):
         
     def form_valid(self, form):
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        if has_space_permission(self.request.user, space, allow=['admins',
-            'mods','users']):
+
+        if has_operation_permission(self.request.user, space,
+        'proposals.add_proposal', allow=['admins', 'mods','users']):
             form_uncommited = form.save(commit=False)
             form_uncommited.space = space
             form_uncommited.author = self.request.user
             form_uncommited.save()
+
+            return super(AddProposal, self).form_valid(form)
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
-        return super(AddProposal, self).form_valid(form)
+                context_instance=RequestContext(self.request))
     
     def get_context_data(self, **kwargs):
         context = super(AddProposal, self).get_context_data(**kwargs)
@@ -115,12 +117,13 @@ class EditProposal(UpdateView):
         proposal = get_object_or_404(Proposal, pk = prop_id)
         space = get_object_or_404(Space, url = space_url)
 
-        if has_space_permission(self.request.user, space, allow=['admins',
-            'mods']) or proposal.author.id == self.request.user.id:
+        if has_operation_permission(self.request.user, space,
+        'proposals.change_proposal', allow=['admins', 'mods']) \
+        or proposal.author.id == self.request.user.id:
             return get_object_or_404(Proposal, pk = prop_id)
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
+                context_instance=RequestContext(self.request))
         
     def get_context_data(self, **kwargs):
         context = super(EditProposal, self).get_context_data(**kwargs)
@@ -130,7 +133,7 @@ class EditProposal(UpdateView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
-    @method_decorator(permission_required('proposals.edit_proposal'))
+    @method_decorator(permission_required('proposals.change_proposal'))
     def dispatch(self, *args, **kwargs):
         return super(EditProposal, self).dispatch(*args, **kwargs)
 
@@ -149,12 +152,13 @@ class DeleteProposal(DeleteView):
         proposal = get_object_or_404(Proposal, pk = prop_id)
         space = get_object_or_404(Space, url = space_url)
 
-        if has_space_permission(self.request.user, space, allow=['admins',
-            'mods']) or proposal.author.id == self.request.user.id:
+        if has_operation_permission(self.request.user, space,
+        'proposals.delete_proposal', allow=['admins', 'mods']) \
+        or proposal.author.id == self.request.user.id:
             return proposal
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
+                context_instance=RequestContext(self.request))
 
     def get_success_url(self):
         space = self.kwargs['space_url']
@@ -191,7 +195,7 @@ class ListProposals(ListView):
             return objects
         else:
             return render_to_response('not_allowed.html',
-                context_instance=RequestContext(request))
+                context_instance=RequestContext(self.request))
 
     def get_context_data(self, **kwargs):
         context = super(ListProposals, self).get_context_data(**kwargs)
