@@ -453,6 +453,7 @@ class TestS3CheckboxesWidget(unittest.TestCase):
                                                _value="2"),
                                          LABEL("Two",
                                                _for="id-f-1"))),
+                                   _id="f",
                                    _class="s3-checkboxes-widget",
                                    _name="f_widget")))
 
@@ -472,6 +473,7 @@ class TestS3CheckboxesWidget(unittest.TestCase):
                                                _value="2"),
                                          LABEL("Two",
                                                _for="id-f-1"))),
+                                   _id="f",
                                    _class="s3-checkboxes-widget",
                                    _name="f_widget")))
 
@@ -494,6 +496,7 @@ class TestS3CheckboxesWidget(unittest.TestCase):
                                                _value="2"),
                                          LABEL("Two",
                                                _for="id-f-6"))),
+                                   _id="f",
                                    _class="myclass",
                                    _name="f_widget")))
 

@@ -110,6 +110,7 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
                                          )
                                       ),
                                    _class="s3-checkboxes-widget",
+                                   _id="human_resource_search_select_virtual_field",
                                    _name="human_resource_search_select_virtual_field_widget")))
 
 # =============================================================================
