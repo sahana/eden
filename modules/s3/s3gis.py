@@ -76,10 +76,10 @@ from gluon.storage import Storage, Messages
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names
+from s3rest import S3Method
 from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key
-from s3rest import S3Method
 
 DEBUG = False
 if DEBUG:
@@ -965,12 +965,23 @@ class GIS(object):
 
         cache = Storage()
         row = None
+        rows = None
         if config_id:
-            query = (ctable.id == config_id) & \
-                    (mtable.id == stable.marker_id) & \
-                    (stable.id == ctable.symbology_id) & \
-                    (ptable.id == ctable.projection_id)
-            row = db(query).select(limitby=(0, 1)).first()
+            # Merge this one with the Site Default
+            query = (ctable.id == config_id) | \
+                    (ctable.uuid == "SITE_DEFAULT")
+            # May well not be complete, so Left Join
+            left = [ptable.on(ptable.id == ctable.projection_id),
+                    stable.on(stable.id == ctable.symbology_id),
+                    mtable.on(mtable.id == stable.marker_id),
+                    ]
+            rows = db(query).select(ctable.ALL,
+                                    mtable.ALL,
+                                    ptable.ALL,
+                                    left=left,
+                                    limitby=(0, 2))
+            if len(rows) == 1:
+                row = rows.first()
 
         elif config_id is 0:
             # Use site default.
@@ -1019,50 +1030,53 @@ class GIS(object):
                                         ptable.ALL,
                                         left=left,
                                         orderby=ctable.pe_type)
-                cache["ids"] = []
-                exclude = list(all_meta_field_names)
-                append = exclude.append
-                for fieldname in ["delete_record", "update_record",
-                                  "pe_path",
-                                  "gis_layer_config", "gis_menu"]:
-                    append(fieldname)
-                for row in rows:
-                    config = row["gis_config"]
-                    if not config_id:
-                        config_id = config.id
-                    cache["ids"].append(config.id)
-                    fields = filter(lambda key: key not in exclude,
-                                    config)
-                    for key in fields:
-                        if key not in cache or cache[key] is None:
-                            cache[key] = config[key]
-                    if "epsg" not in cache or cache["epsg"] is None:
-                        projection = row["gis_projection"]
-                        for key in ["epsg", "units", "maxResolution",
-                                    "maxExtent"]:
-                            cache[key] = projection[key] if key in projection \
-                                                         else None
-                    if "marker_image" not in cache or \
-                       cache["marker_image"] is None:
-                        marker = row["gis_marker"]
-                        for key in ["image", "height", "width"]:
-                            cache["marker_%s" % key] = marker[key] if key in marker \
-                                                                   else None
-                    #if "base" not in cache:
-                    #    # Default Base Layer?
-                    #    query = (ltable.config_id == config.id) & \
-                    #            (ltable.base == True) & \
-                    #            (ltable.enabled == True)
-                    #    base = db(query).select(ltable.layer_id,
-                    #                            limitby=(0, 1)).first()
-                    #    if base:
-                    #        cache["base"] = base.layer_id
-                # Add NULL values for any that aren't defined, to avoid KeyErrors
-                for key in ["epsg", "units", "maxResolution", "maxExtent",
-                            "marker_image", "marker_height", "marker_width",
-                            "base"]:
-                    if key not in cache:
-                        cache[key] = None
+
+        if rows and not row:
+            # Merge Configs
+            cache["ids"] = []
+            exclude = list(all_meta_field_names)
+            append = exclude.append
+            for fieldname in ["delete_record", "update_record",
+                              "pe_path",
+                              "gis_layer_config", "gis_menu"]:
+                append(fieldname)
+            for row in rows:
+                config = row["gis_config"]
+                if not config_id:
+                    config_id = config.id
+                cache["ids"].append(config.id)
+                fields = filter(lambda key: key not in exclude,
+                                config)
+                for key in fields:
+                    if key not in cache or cache[key] is None:
+                        cache[key] = config[key]
+                if "epsg" not in cache or cache["epsg"] is None:
+                    projection = row["gis_projection"]
+                    for key in ["epsg", "units", "maxResolution",
+                                "maxExtent"]:
+                        cache[key] = projection[key] if key in projection \
+                                                     else None
+                if "marker_image" not in cache or \
+                   cache["marker_image"] is None:
+                    marker = row["gis_marker"]
+                    for key in ["image", "height", "width"]:
+                        cache["marker_%s" % key] = marker[key] if key in marker \
+                                                               else None
+                #if "base" not in cache:
+                #    # Default Base Layer?
+                #    query = (ltable.config_id == config.id) & \
+                #            (ltable.base == True) & \
+                #            (ltable.enabled == True)
+                #    base = db(query).select(ltable.layer_id,
+                #                            limitby=(0, 1)).first()
+                #    if base:
+                #        cache["base"] = base.layer_id
+            # Add NULL values for any that aren't defined, to avoid KeyErrors
+            for key in ["epsg", "units", "maxResolution", "maxExtent",
+                        "marker_image", "marker_height", "marker_width",
+                        "base"]:
+                if key not in cache:
+                    cache[key] = None
 
         if not row:
             # No personal config or not logged in. Use site default.

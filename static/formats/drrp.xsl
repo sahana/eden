@@ -180,6 +180,11 @@
             </xsl:if>
 
             <xsl:if test="$LeadOrganisation!=''">
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$LeadOrganisation"/>
+                    </xsl:attribute>
+                </reference>
                 <resource name="project_organisation">
                     <!-- Lead Implementer -->
                     <data field="role">1</data>
@@ -899,13 +904,16 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <resource name="project_location">
-                    <reference field="location_id" resource="gis_location">
-                        <xsl:attribute name="uuid">
-                            <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', $CountryCode)"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
+                <xsl:if test="$CountryCode!=''">
+                    <!-- This shouldn't happen, but does on 1 record, which we fix up manually -->
+                    <resource name="project_location">
+                        <reference field="location_id" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', $CountryCode)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
             </xsl:when>
 
             <!-- Hazards -->

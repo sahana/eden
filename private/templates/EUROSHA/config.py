@@ -267,5 +267,10 @@ settings.modules = OrderedDict([
            restricted = True,
            module_type = 10,
        )),
-
+    ("stats", Storage(
+            name_nice = "Stats",
+            #description = "Needed for Project Benficiaries",
+            restricted = True,
+            module_type = None
+        )),
 ])
