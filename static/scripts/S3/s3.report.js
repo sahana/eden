@@ -160,6 +160,9 @@ function reportRenderBarChart(json, dim) {
     var layer = json['t'];
 
     var url = json['u'], concat = '?';
+    if (url.split('?').length > 1) {
+        concat = '&';
+    }
     for (var f in json['f']) {
         url += concat + f + '=' + json['f'][f];
         concat = '&';
@@ -269,6 +272,9 @@ function reportRenderBreakdown(json, dim) {
     var layer = json['t'];
 
     var url = json['u'], concat = '?';
+    if (url.split('?').length > 1) {
+        concat = '&';
+    }
     for (var f in json['f']) {
         url += concat + f + '=' + json['f'][f];
         concat = '&';
