@@ -150,12 +150,11 @@ def formstyle_row(id, label, widget, comment, hidden=False):
 # -----------------------------------------------------------------------------
 def form_style(self, xfields):
     """
-        @ToDo: Requires further changes to code to use
-        - Adding a formstyle_row setting to use for individual rows
         Use new Web2Py formstyle to generate form using DIVs & CSS
         CSS can then be used to create MUCH more flexible form designs:
         - Labels above vs. labels to left
         - Multiple Columns 
+        @ToDo: Requires further changes to code to use
     """
     form = DIV()
 
@@ -256,10 +255,44 @@ def customize_project_project(**attr):
 if($('[name=sub_drrpp_L1]').is(':checked')==false){
  $('[name=sub_drrpp_L1]').attr('checked','checked')}'''
                 s3.jquery_ready.append(script)
+        elif r.representation == "xls":
+            # All readable Fields should be exported
+            list_fields = ["id",
+                           "name",
+                           "code",
+                           "status_id",
+                           "start_date",
+                           "end_date",
+                           "drrpp.duration",
+                           (T("Countries"), "location.location_id"),
+                           "drrpp.L1",
+                           (T("Hazards"), "hazard.name"),
+                           (T("Themes"), "theme.name"),
+                           "objectives",
+                           "drrpp.activities",
+                           "output.name",
+                           "drr.hfa",
+                           "drrpp.rfa",
+                           "drrpp.pifacc",
+                           "drrpp.jnap",
+                           (T("Lead Organization"), "organisation_id"),
+                           (T("Partners"), "partner.organisation_id"),
+                           (T("Donors"), "donor.organisation_id"),
+                           "budget",
+                           "currency",
+                           "drrpp.focal_person",
+                           "drrpp.organisation_id",
+                           "drrpp.email",
+                           "url.url",
+                           "drrpp.parent_project",
+                           "comments",
+                           ]
+            s3db.configure(tablename,
+                           list_fields = list_fields)
         return output
-    
+
     s3.prep = drrpp_prep
-    
+
     # Custom List Fields
     list_fields = ["id",
                    "name",
@@ -269,7 +302,7 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                    (T("Lead Organization"), "organisation_id"),
                    (T("Donors"), "donor.organisation_id"),
                    ]
-    
+
     # Custom Search Fields
     S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
     S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
@@ -308,16 +341,16 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                               ),
         S3SearchOptionsWidget(name = "project_search_hazard",
                               label = T("Hazard"),
-                              field = "hazard.name",
+                              field = "hazard.id",
                               options = s3db.project_hazard_opts,
-                              help_field="comments",
+                              help_field = s3db.project_hazard_helps,
                               cols = 4
                               ),
         S3SearchOptionsWidget(name = "project_search_theme",
                               label = T("Theme"),
-                              field = "theme.name",
+                              field = "theme.id",
                               options = s3db.project_theme_opts,
-                              help_field="comments",
+                              help_field = s3db.project_theme_helps,
                               cols = 4
                               ),
         S3SearchOptionsWidget(name = "project_search_hfa",
@@ -483,6 +516,15 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                    list_fields = list_fields,
                    report_options = report_options,
                    search_method = project_search,
+                   subheadings = {1: "hazard",
+                                  2: "theme",
+                                  3: "objectives",
+                                  4: "drr_hfa",
+                                  5: "drrpp_rfa",
+                                  6: "drrpp_pifacc",
+                                  7: "drrpp_jnap",
+                                  8: "organisation_id",
+                                  },
                    )
     
     return attr

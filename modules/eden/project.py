@@ -95,7 +95,9 @@ class S3ProjectModel(S3Model):
              "project_pifacc_opts",
              "project_rfa_opts",
              "project_theme_opts",
+             "project_theme_helps",
              "project_hazard_opts",
+             "project_hazard_helps",
              ]
 
     def model(self):
@@ -323,7 +325,7 @@ class S3ProjectModel(S3Model):
                         label = T("Hazard"),
                         field = "hazard.name",
                         options = self.project_hazard_opts,
-                        help_field="comments",
+                        help_field = self.project_hazard_helps,
                         cols = 4
                     ))
         if mode_3w:
@@ -332,7 +334,7 @@ class S3ProjectModel(S3Model):
                         label = T("Theme"),
                         field = "theme.name",
                         options = self.project_theme_opts,
-                        help_field="comments",
+                        help_field = self.project_theme_helps,
                         cols = 4
                     ))
         if mode_drr:
@@ -594,7 +596,9 @@ class S3ProjectModel(S3Model):
             project_pifacc_opts = self.project_pifacc_opts,
             project_rfa_opts = self.project_rfa_opts,
             project_theme_opts = self.project_theme_opts,
+            project_theme_helps = self.project_theme_helps,
             project_hazard_opts = self.project_hazard_opts,
+            project_hazard_helps = self.project_hazard_helps,
         )
 
     # -------------------------------------------------------------------------
@@ -915,6 +919,23 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_hazard_helps():
+        """
+            Provide the help tooltips for the Hazard search filter
+            - defined in the model used to ensure a good load order
+        """
+
+        table = current.s3db.project_hazard
+        opts = current.db(table.deleted == False).select(table.id,
+                                                         table.comments)
+        T = current.T
+        d = {}
+        for opt in opts:
+            d[opt.id] = T(opt.comments)
+        return d
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def project_hfa_opts():
         """
             Provide the options for the HFA search filter
@@ -1009,6 +1030,23 @@ class S3ProjectModel(S3Model):
         for opt in opts:
             od[opt.id] = T(opt.name)
         return od
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_theme_helps():
+        """
+            Provide the help tooltips for the Theme search filter
+            - defined in the model used to ensure a good load order
+        """
+
+        table = current.s3db.project_theme
+        opts = current.db(table.deleted == False).select(table.id,
+                                                         table.comments)
+        T = current.T
+        d = {}
+        for opt in opts:
+            d[opt.id] = T(opt.comments)
+        return d
 
 # =============================================================================
 class S3ProjectActivityModel(S3Model):
@@ -3040,6 +3078,8 @@ class S3ProjectDRRModel(S3Model):
             opts = [opt]
         elif not isinstance(opt, (list, tuple)):
             return NONE
+        elif opt[0] is None:
+            return NONE
         vals = ["HFA %s" % o for o in opts]
         return ", ".join(vals)
 
@@ -3226,6 +3266,8 @@ class S3ProjectDRRPPModel(S3Model):
         if isinstance(opt, int):
             opts = [opt]
         elif not isinstance(opt, (list, tuple)):
+            return NONE
+        elif opt[0] is None:
             return NONE
         vals = ["%s %s" % (prefix, o) for o in opts]
         return ", ".join(vals)

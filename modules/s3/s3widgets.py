@@ -3936,6 +3936,7 @@ def s3_checkboxes_widget(field,
 
     field_name = field.name
     attributes["_name"] = "%s_widget" % field_name
+    attributes["_id"] = field_name
     if "_class" not in attributes:
         attributes["_class"] = "s3-checkboxes-widget"
 
@@ -3955,6 +3956,13 @@ def s3_checkboxes_widget(field,
         ktablename, pkey, multiple = s3_get_foreign_key(field)
 
         if isinstance(help_field, dict):
+            # Convert the keys to strings (that's what the options are)
+            for key in help_field.keys():
+                help_text[str(key)] = help_field[key]
+
+        elif hasattr(help_field, "__call__"):
+            # Execute the callable
+            help_field = help_field()
             # Convert the keys to strings (that's what the options are)
             for key in help_field.keys():
                 help_text[str(key)] = help_field[key]

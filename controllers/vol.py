@@ -645,7 +645,9 @@ def group_membership():
     # Change Labels
     s3db.hrm_configure_pr_group_membership()
     
+    table = db.pr_group_membership
     # Add Team Name to list_fields
+    table.group_id.label = T("Team Name")
     s3db.configure("pr_group_membership",
                    list_fields=["id",
                                 "group_id",
@@ -657,7 +659,6 @@ def group_membership():
     # Only show Relief Teams
     # Do not show system groups
     # Only show Volunteers
-    table = db.pr_group_membership
     gtable = db.pr_group
     htable = s3db.hrm_human_resource
     s3.filter = (gtable.system == False) & \

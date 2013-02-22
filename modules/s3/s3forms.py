@@ -39,8 +39,8 @@ except ImportError:
 
 from gluon import *
 from gluon.storage import Storage
-from gluon.tools import callback
 from gluon.sqlhtml import StringWidget
+from gluon.tools import callback
 from gluon.validators import Validator
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
@@ -126,6 +126,82 @@ class S3SQLForm(object):
             return current.s3db.get_config(tablename, key, default)
         else:
             return default
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _insert_subheadings(form, tablename, subheadings):
+        """
+            Insert subheadings into forms
+
+            @param form: the form
+            @param tablename: the tablename
+            @param subheadings: a dict of {"Headline": Fieldnames}, where
+                Fieldname can be either a single field name or a list/tuple
+                of field names belonging under that headline
+        """
+
+        if subheadings:
+            if tablename in subheadings:
+                subheadings = subheadings.get(tablename)
+            form_rows = iter(form[0])
+            tr = form_rows.next()
+            i = 0
+            done = []
+            while tr:
+                # @ToDo: We need a better way of working than this!
+                f = tr.attributes.get("_id", None)
+                if not f:
+                    try:
+                        # DIV-based form-style
+                        f = tr[0][0].attributes.get("_id", None)
+                        if not f:
+                            # DRRPP formstyle
+                            f = tr[0][0][1][0].attributes.get("_id", None)
+                            if not f:
+                                # Date fields are inside an extra TAG()
+                                f = tr[0][0][1][0][0].attributes.get("_id", None)
+                    except:
+                        # Something else
+                        f = None
+                if f:
+                    if f.startswith(tablename):
+                        f = f[len(tablename) + 1:] # : -6
+                        if f.startswith("sub_"):
+                            # Component
+                            f = f[4:]
+                    elif f.startswith("sub-default"):
+                        # S3SQLInlineComponent[CheckBox]
+                        f = f[11:]
+                    elif f.startswith("sub_"):
+                        # s3_checkboxes_widget
+                        f = f[4:]
+                    for k in subheadings.keys():
+                        if k in done:
+                            continue
+                        fields = subheadings[k]
+                        if not isinstance(fields, (list, tuple)):
+                            fields = [fields]
+                        if f in fields:
+                            done.append(k)
+                            if isinstance(k, int):
+                                # Don't display a section title
+                                repr = ""
+                            else:
+                                repr = k 
+                            form[0].insert(i, TR(TD(repr, _colspan=3,
+                                                    _class="subheading"),
+                                                 _class = "subheading",
+                                                 _id = "%s_%s__subheading" %
+                                                       (tablename, f)))
+                            tr.attributes.update(_class="after_subheading")
+                            tr = form_rows.next()
+                            i += 1
+                try:
+                    tr = form_rows.next()
+                except StopIteration:
+                    break
+                else:
+                    i += 1
 
 # =============================================================================
 class S3SQLDefaultForm(S3SQLForm):
@@ -250,7 +326,7 @@ class S3SQLDefaultForm(S3SQLForm):
         # Subheadings
         subheadings = options.get("subheadings", None)
         if subheadings:
-            self.insert_subheadings(form, tablename, subheadings)
+            self._insert_subheadings(form, tablename, subheadings)
 
         # Cancel button
         if not readonly and response.s3.cancel:
@@ -509,63 +585,6 @@ class S3SQLDefaultForm(S3SQLForm):
 
         return success, error
 
-    # -------------------------------------------------------------------------
-    # Utility functions
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def insert_subheadings(form, tablename, subheadings):
-        """
-            Insert subheadings into forms
-
-            @param form: the form
-            @param tablename: the tablename
-            @param subheadings: a dict of {"Headline": Fieldnames}, where
-                Fieldname can be either a single field name or a list/tuple
-                of field names belonging under that headline
-        """
-
-        if subheadings:
-            if tablename in subheadings:
-                subheadings = subheadings.get(tablename)
-            form_rows = iter(form[0])
-            tr = form_rows.next()
-            i = 0
-            done = []
-            while tr:
-                f = tr.attributes.get("_id", None)
-                if not f:
-                    try:
-                        # DIV-based form-style
-                        f = tr[0][0].attributes.get("_id", None)
-                    except:
-                        # Something else
-                        # @ToDo: Support DRRPP formstyle
-                        f = None
-                if f and f.startswith(tablename):
-                    f = f[len(tablename) + 1 : -6]
-                    for k in subheadings.keys():
-                        if k in done:
-                            continue
-                        fields = subheadings[k]
-                        if not isinstance(fields, (list, tuple)):
-                            fields = [fields]
-                        if f in fields:
-                            done.append(k)
-                            form[0].insert(i, TR(TD(k, _colspan=3,
-                                                    _class="subheading"),
-                                                 _class = "subheading",
-                                                 _id = "%s_%s__subheading" %
-                                                       (tablename, f)))
-                            tr.attributes.update(_class="after_subheading")
-                            tr = form_rows.next()
-                            i += 1
-                try:
-                    tr = form_rows.next()
-                except StopIteration:
-                    break
-                else:
-                    i += 1
-
 # =============================================================================
 class S3SQLCustomForm(S3SQLForm):
     """ Custom SQL Form """
@@ -746,19 +765,39 @@ class S3SQLCustomForm(S3SQLForm):
         formfields = [f[-1] for f in fields]
 
         # Render the form
+        tablename = self.tablename
         form = SQLFORM.factory(*formfields,
                                record = data,
                                showid = False,
                                labels = labels,
                                formstyle = formstyle,
-                               table_name = self.tablename,
+                               table_name = tablename,
                                upload = "default/download",
                                readonly = readonly,
                                separator = "",
                                submit_button = settings.submit_button)
 
+        # Style the Submit button, if-requested (untested for CustomForm)
+        if settings.submit_style:
+            try:
+                form[0][-1][0][0]["_class"] = settings.submit_style
+            except TypeError:
+                # Submit button has been removed
+                pass
+
+        # Subheadings
+        subheadings = options.get("subheadings", None)
+        if subheadings:
+            self._insert_subheadings(form, tablename, subheadings)
+
+        # Cancel button (untested for CustomForm)
+        if not readonly and s3.cancel:
+            form[0][-1][0].append(A(current.T("Cancel"),
+                                    _href=s3.cancel,
+                                    _class="action-lnk"))
+
         # Process the form
-        formname = "%s/%s" % (self.tablename, record_id)
+        formname = "%s/%s" % (tablename, record_id)
         if form.accepts(request.post_vars,
                         current.session,
                         onvalidation=self.validate,

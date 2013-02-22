@@ -587,7 +587,7 @@ S3OptionsFilter({
         #    name = "partner",
         #    label = T("Partner Organizations"),
         #    fields = ["organisation_id",
-        #              "comments", # NB This is labelled 'Role' in DRRPP
+        #              "comments",
         #              ],
         #    filterby = dict(field = "role",
         #                    options = "2"
