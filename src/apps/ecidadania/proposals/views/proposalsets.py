@@ -327,7 +327,7 @@ class EditProposalSet(UpdateView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
-    @method_decorator(permission_required('proposals.edit_proposalset'))
+    @method_decorator(permission_required('proposals.change_proposalset'))
     def dispatch(self, *args, **kwargs):
         return super(EditProposalSet, self).dispatch(*args, **kwargs)
 

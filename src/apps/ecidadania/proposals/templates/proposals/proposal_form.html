@@ -105,7 +105,7 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div class="control-group {% if form.latitude.errors %}error{% endif %}">
+            <div class="control-group {% if form.latitude.errors %}error{% endif %} hidden">
                 <label class="control-label">{{ form.latitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">
@@ -122,7 +122,7 @@ automatically if found in the data models.
                 </div>
             </div>
 
-            <div class="control-group {% if form.longitude.errors %}error{% endif %}">
+            <div class="control-group {% if form.longitude.errors %}error{% endif %} hidden">
                 <label class="control-label">{{ form.longitude.label }}</label>
                 <div class="controls">
                     <div class="input-append">

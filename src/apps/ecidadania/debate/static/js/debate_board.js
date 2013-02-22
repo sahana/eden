@@ -21,6 +21,9 @@ var errorSavePos = gettext("Couldn't save note position.");
 var errorDelete = gettext("Couldn't delete note.");
 var confirmDelete = gettext('Are you sure?');
 var comment = gettext('Comment');
+var view = gettext('View');
+var edit = gettext('Edit');
+var remove = gettext('Delete note');
 
 /*
     NOTE FUNCTIONS
@@ -68,10 +71,10 @@ function createNote() {
     request.done(function (note) {
         var newNote = $("#sortable-dispatcher").append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
             "<div class='handler'><span id='view-note' style='float:left;'>" +
-            "<a href='#' class='nounderline' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note' title='{% trans 'View' %}'><i class='icon-eye-open' style='font-size:12px;''></i></a>" +
-            "</span><div class='deletenote' style='float:right;'><a href='#' onclick='deleteNote(this)' id='deletenote' title='{% trans 'Delete note' %}'><i class='icon-remove' style='font-size:12px;'></i></a></div>" +
+            "<a href='#' class='nounderline' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note' title='" + view + "'><i class='icon-eye-open' style='font-size:12px;''></i></a>" +
+            "</span><div class='deletenote' style='float:right;'><a href='#' onclick='deleteNote(this)' id='deletenote' title='" + remove + "'><i class='icon-remove' style='font-size:12px;'></i></a></div>" +
             "<span id='edit-note' style='float:right;'>" +
-            "<a href='#'' class='nounderline' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note' title='{% trans 'Edit' %}'><i class='icon-pencil' style='font-size:12px;'></i></a>" +
+            "<a href='#'' class='nounderline' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note' title='" + edit + "'><i class='icon-pencil' style='font-size:12px;'></i></a>" +
             "</span></div><p class='note-text'>" + note.title + "</p>");
         newNote.show("slow");
         showControls();
