@@ -914,7 +914,7 @@ class S3ProjectModel(S3Model):
         T = current.T
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = T(opt.name)
+            od[opt.id] = T(opt.name) if opt.name else ""
         return od
 
     # -------------------------------------------------------------------------
@@ -931,7 +931,7 @@ class S3ProjectModel(S3Model):
         T = current.T
         d = {}
         for opt in opts:
-            d[opt.id] = T(opt.comments)
+            d[opt.id] = T(opt.comments) if opt.comments else ""
         return d
 
     # -------------------------------------------------------------------------
@@ -1028,7 +1028,7 @@ class S3ProjectModel(S3Model):
         T = current.T
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = T(opt.name)
+            od[opt.id] = T(opt.name) if opt.name else ""
         return od
 
     # -------------------------------------------------------------------------
@@ -1045,7 +1045,7 @@ class S3ProjectModel(S3Model):
         T = current.T
         d = {}
         for opt in opts:
-            d[opt.id] = T(opt.comments)
+            d[opt.id] = T(opt.comments) if opt.comments else ""
         return d
 
 # =============================================================================
