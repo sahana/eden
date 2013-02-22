@@ -60,7 +60,7 @@ th {
     font-weight: bold;
 }
 thead th {
-    background: #c3d9ff;
+    background-color: #c3d9ff;
 }
 th, td, caption {
     padding: 4px 10px 4px 5px;
@@ -77,13 +77,18 @@ table td,table th {
     border-bottom: 2px #fff solid;
     line-height:1.25em;
 }
-table th, table th label{vertical-align:bottom;padding-top:20px;color:#590f12;font-weight:bold;}
+table th, table th label {
+    vertical-align: bottom;
+    padding-top: 20px;
+    color: #590f12;
+    font-weight: bold;
+}
 table td {
     padding: 10px;
     vertical-align: top;
 }
 table td:first-child {
-    background: #fff;
+    background-color: #fff;
 }
 /*
 table tr td:last-child,
@@ -91,14 +96,14 @@ table tr th:last-child {
     border-right: 1px #9C9C9C dashed;
 }*/
 table tr.odd td {
-    background: #f1e8cb;
+    background-color: #f1e8cb;
 }
 table tr.even td {
-    background: #fff;
+    background-color: #fff;
 }
 table tr td.white-cell,
 table tr th.white-cell {
-    background: #fff;
+    background-color: #fff;
     /*border-right: 1px #9C9C9C dashed;*/
 }
 table tr th.edit-delete-col {

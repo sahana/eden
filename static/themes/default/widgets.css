@@ -138,6 +138,8 @@ div#table-container {
    min-width: 640px;
 }
 table.dataTable thead th {
+/* datatables fixed headers must not be transparent, however those aren't used currently & this removes the Sorting Icons
+    background: no-repeat scroll right center #F0F3F4;*/
     border: 1px solid #ccc;
     border-bottom: 1px solid black;
 }
@@ -251,10 +253,6 @@ a.paginate_active {
 }
 .sorting_disabled {
     background: no-repeat scroll right center transparent;
-}
-/* datatables fixed headers must not be transparent */
-table.dataTable th {
-    background: no-repeat scroll right center #F0F3F4;
 }
 table.dataTable .row_selected td {
 	background-color: #ddd;
