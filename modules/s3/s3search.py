@@ -30,6 +30,7 @@
 """
 
 import datetime
+import re
 import string
 
 try:

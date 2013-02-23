@@ -2925,7 +2925,7 @@ class S3ImportJob():
         TAG = xml.TAG
         UID = xml.UID
         reference_list = []
-
+        
         root = None
         if tree is not None:
             if isinstance(tree, etree._Element):
@@ -3007,7 +3007,7 @@ class S3ImportJob():
                     if directory is not None:
                         entry = directory.get((tablename, attr, uid), None)
                     if not entry:
-                        expr = ".//%s[@%s='%s' and @%s='%s']" % (
+                        expr = './/%s[@%s="%s" and @%s="%s"]' % (
                                     TAG.resource,
                                     ATTRIBUTE.name,
                                     tablename,
