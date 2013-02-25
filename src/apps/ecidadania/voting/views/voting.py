@@ -219,7 +219,7 @@ def vote_voting(request, space_url):
     space = get_object_or_404(Space, url=space_url)
     voteform = VoteForm(request.POST)
 
-    if has_space_permission(request.user, space, allow=['admins', 'mods',
+    if has_operation_permission(request.user, space,'voting.change_voting', allow=['admins', 'mods',
         'users']):
         if request.method == 'POST' and voteform.is_valid():
             # Generate the objetct
