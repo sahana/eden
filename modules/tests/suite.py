@@ -78,6 +78,9 @@ def loadAllTests():
 
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
+    
+    # Assign Staff Participants
+    addTests(loadTests(AddStaffParticipants))
 
     # Warehouse Tests
     addTests(loadTests(CreateWarehouse))
