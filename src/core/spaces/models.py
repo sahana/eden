@@ -27,21 +27,7 @@ from django.contrib.sites.models import Site
 
 from core.spaces.file_validation import ContentTypeRestrictedFileField
 from fields import StdImageField
-
-ALLOWED_CONTENT_TYPES = [
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
-    'application/vnd.openxmlformats-officedocument.presentationml.template',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/pdf',
-    'application/msword',
-    'application/vnd.oasis.opendocument.text',
-    'application/vnd.oasis.opendocument.presentation',
-    'application/vnd.oasis.opendocument.spreadsheet',
-    'application/vnd.openofficeorg.extension',
-    'text/plain',
-]
+from allowed_types import ALLOWED_CONTENT_TYPES
 
 
 class Space(models.Model):
