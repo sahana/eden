@@ -40,7 +40,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from apps.ecidadania.proposals import url_names as urln_prop
 from core.spaces import url_names as urln_space
 from core.spaces.models import Space
-from core.permissions import has_operation_permission
+from core.permissions import has_operation_permission, has_space_permission
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
