@@ -2153,6 +2153,7 @@ S3OptionsFilter({
                     # "received" must not propagate:
                     del request.get_vars["received"]
                     # Set the items to being received
+                    # @ToDo: Check Permissions & Avoid DB updates in GETs
                     db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
                     db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
                     req_ref = record.req_ref

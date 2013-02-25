@@ -249,6 +249,7 @@ def req_controller():
                                                                              ).first()
                 site_id = inv_item.site_id
                 item_id = inv_item.item_id
+                # @ToDo: Check Permissions & Avoid DB updates in GETs
                 db(s3db.req_req_item.id == request.vars.req_item_id).update(site_id = site_id)
                 response.confirmation = T("%(item)s requested from %(site)s") % \
                     {"item": s3db.supply_item_represent(item_id, show_link=False),

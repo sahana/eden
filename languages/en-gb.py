@@ -197,5 +197,6 @@
 'User ID': 'User ID',
 'UTC Offset': 'UTC Offset',
 'Utilization Report': 'Utilisation Report',
+'Volunteer Role Catalog': 'Volunteer Role Catalogue',
 'Year that the organization was founded': 'Year that the organisation was founded',
 }

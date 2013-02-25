@@ -70,6 +70,7 @@ settings.base.debug = False
 
 # This setting will be automatically changed _before_ registering the 1st user
 settings.auth.hmac_key = "akeytochange"
+
 # This setting is for Minimum Password Length
 #settings.auth.password_min_length = 8
 

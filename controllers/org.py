@@ -43,8 +43,14 @@ def index():
 
     if not item:
         #item = H2(module_name)
-        # Just redirect to the Facilities
-        redirect(URL(f="facility", args=["search"]))
+        # @ToDo: Move this to the Template (separate deployment_setting or else a customize for non-REST controllers)
+        template = settings.get_template()
+        if template == "SandyRelief":
+            # Just redirect to the Facilities
+            redirect(URL(f="facility", args=["search"]))
+        else:
+            # Just redirect to the list of Organisations
+            redirect(URL(f="organisation"))
 
     # tbc
     report = ""
