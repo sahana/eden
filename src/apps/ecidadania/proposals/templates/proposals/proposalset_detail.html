@@ -6,6 +6,34 @@
 {% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
 
+{% block extrajs %}
+    <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+    <script type="text/javascript">
+        function upvote(proposal) {
+            var request = $.ajax({
+                type: "POST",
+                url: "../../support/",
+                data: { propid: proposal },
+               success: function(data)
+               {
+               $("div.span1 button").attr('disabled', 'disabled');
+               }
+
+            });
+
+            request.fail(function(jqXHR, textStatus) {
+                $("#jsnotify").notify("create", {
+                    title:"Couldn't vote the proposal",
+                    text:"There has been an error." + textStatus,
+                    icon:"alert.png"
+                });
+            })
+        }
+    </script>
+{% endblock %}
+
+
+
 {% block content %}
 
     <div class="row">
