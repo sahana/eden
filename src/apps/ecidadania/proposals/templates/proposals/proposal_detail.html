@@ -21,7 +21,7 @@
         function upvote(proposal) {
             var request = $.ajax({
                 type: "POST",
-                url: "../add_support_vote/",
+                url: "../support/",
                 data: { propid: proposal },
                success: function(data)
                {
