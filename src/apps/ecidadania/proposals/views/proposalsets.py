@@ -219,8 +219,9 @@ class ListProposalSet(ListView):
     context_object_name = 'setlist'
     
     def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_url'])
-        objects = ProposalSet.objects.all()
+        cur_space = self.kwargs['space_url']
+        place = get_object_or_404(Space, url=cur_space)
+        objects = ProposalSet.objects.filter(space=place)
         return objects
     
     def get_context_data(self, **kwargs):
