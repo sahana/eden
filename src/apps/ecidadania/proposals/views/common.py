@@ -97,7 +97,8 @@ def support_proposal(request, space_url):
     """
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
     space = get_object_or_404(Space, url=space_url)
-    if has_space_permission(request.user, space, allow=['admins', 'mods', 'users']):
+    if has_space_permission(request.user, space,
+    allow=['admins', 'mods', 'users']):
         try:
             prop.support_votes.add(request.user)
             return HttpResponse(" Support vote emmited.")
