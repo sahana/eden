@@ -50,8 +50,9 @@ class AddStaffToWarehouse(SeleniumUnitTest):
         except:
             org_id = int(url_parts[-1])
         browser.get("%s/inv/warehouse/%s/human_resource" % (config.url, org_id))
-        
+        self.browser.find_element_by_id("show-add-btn").click()
         self.browser.find_element_by_id("select_from_registry").click()
+        
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",
