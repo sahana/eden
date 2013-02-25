@@ -49,9 +49,12 @@ class AddStaffToOffice(SeleniumUnitTest):
         except:
             org_id = int(url_parts[-1])
         browser.get("%s/org/office/%s/human_resource" % (config.url, org_id))
-        self.browser.find_element_by_id("show-add-btn").click()
-        self.browser.find_element_by_id("select_from_registry").click()
 
+        select_from_registry_btn = self.browser.find_element_by_id("select_from_registry")
+        if not select_from_registry_btn.is_displayed():
+            self.browser.find_element_by_id("show-add-btn").click()
+	    
+        select_from_registry_btn.click()
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",
