@@ -47,7 +47,7 @@ from core.spaces.models import Space
 from core.permissions import has_all_permissions, has_space_permission, has_operation_permission
 from apps.ecidadania.voting.models import *
 from apps.ecidadania.voting.forms import *
-from apps.ecidadania.proposals.models import *
+from apps.ecidadania.proposals.models import Proposal, ProposalSet
 
 
 class AddVoting(FormView):
@@ -63,6 +63,16 @@ class AddVoting(FormView):
     """
     form_class = VotingForm
     template_name = 'voting/voting_form.html'
+
+    def get_form_kwargs(self):
+        """
+        This send the current space to the form so we can change the
+        foreignkeys querysets there.
+        """
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        kwargs = super(AddVoting, self).get_form_kwargs()
+        kwargs['current_space'] = space 
+        return kwargs
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
