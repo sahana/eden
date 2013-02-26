@@ -103,8 +103,12 @@ def index():
     has_module = settings.has_module
     if has_module("cms"):
         table = s3db.cms_post
-        item = db(table.module == module).select(table.body,
-                                                 limitby=(0, 1)).first()
+        ltable = s3db.cms_post_module
+        query = (ltable.module == module) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = db(query).select(table.body,
+                                limitby=(0, 1)).first()
         if item:
             item = DIV(XML(item.body))
         else:

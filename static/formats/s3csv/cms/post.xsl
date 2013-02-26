@@ -46,7 +46,9 @@
                 </reference>
             </xsl:if>
             <xsl:if test="$Module!=''">
-                <data field="module"><xsl:value-of select="$Module"/></data>
+                <resource name="cms_post_module">
+                    <data field="module"><xsl:value-of select="$Module"/></data>
+                </resource>
             </xsl:if>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="title"><xsl:value-of select="col[@field='Title']"/></data>

@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3ContentModel",
+           "cms_index",
            "cms_rheader",
            ]
 
@@ -71,14 +72,17 @@ class S3ContentModel(S3Model):
                                    default=False,
                                    represent = s3_yes_no_represent,
                                    label=T("Show author picture?")),
+                             Field("location", "boolean",
+                                   default=False,
+                                   represent = s3_yes_no_represent,
+                                   label=T("Show Location?")),
                              Field("replies", "boolean",
                                    default=False,
                                    represent = s3_yes_no_represent,
                                    label=T("Comments permitted?")),
                              s3_comments(),
                              # Multiple Roles (@ToDo: Implement the restriction)
-                             s3_roles_permitted(
-                                                readable = False,
+                             s3_roles_permitted(readable = False,
                                                 writable = False
                                                 ),
                              *s3_meta_fields())
@@ -101,12 +105,14 @@ class S3ContentModel(S3Model):
             msg_list_empty = T("No series currently defined"))
 
         # Reusable field
+        represent = S3Represent(lookup=tablename)
         series_id = S3ReusableField("series_id", table,
-                                    readable=False,
-                                    writable=False,
+                                    readable = False,
+                                    writable = False,
+                                    represent = represent,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cms_series.id",
-                                                          "%(name)s")),
+                                                          represent)),
                                     ondelete = "CASCADE")
 
         # Resource Configuration
@@ -123,22 +129,9 @@ class S3ContentModel(S3Model):
         #   be viewed as full pages or as part of a Series
         #
 
-        modules = {}
-        _modules = current.deployment_settings.modules
-        for module in _modules:
-            if module in ["appadmin", "errors", "sync"]:
-                continue
-            modules[module] = _modules[module].name_nice
-
         tablename = "cms_post"
         table = define_table(tablename,
                              series_id(),
-                             Field("module",
-                                   requires=IS_NULL_OR(
-                                                IS_IN_SET_LAZY(lambda: \
-                                            sort_dict_by_values(modules))),
-                                   comment=T("If you specify a module then this will be used as the text in that module's index page"),
-                                   label=T("Module")),
                              Field("name", notnull=True,
                                    comment=T("This isn't visible to the published site, but is used to allow menu items to point to the page"),
                                    label=T("Name")),
@@ -148,6 +141,7 @@ class S3ContentModel(S3Model):
                              Field("body", "text", notnull=True,
                                    widget = s3_richtext_widget,
                                    label=T("Body")),
+                             self.gis_location_id(),
                              Field("avatar", "boolean",
                                    default=False,
                                    represent = s3_yes_no_represent,
@@ -184,14 +178,14 @@ class S3ContentModel(S3Model):
             msg_list_empty = T("No posts currently defined"))
 
         # Reusable field
+        represent = S3Represent(lookup=tablename)
         post_id = S3ReusableField("post_id", table,
                                   label = T("Post"),
                                   sortby="name",
                                   requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cms_post.id",
-                                                          "%(name)s")),
-                                  represent = lambda id, row=None: \
-                                                (id and [db.cms_post[id].name] or [NONE])[0],
+                                                          represent)),
+                                  represent = represent,
                                   comment = S3AddResourceLink(c="cms",
                                                               f="post",
                                                               title=ADD_POST,
@@ -205,6 +199,43 @@ class S3ContentModel(S3Model):
         # Components
         add_component("cms_comment", cms_post="post_id")
 
+        add_component("cms_post_module", cms_post="post_id")
+
+        # ---------------------------------------------------------------------
+        # Modules <> Posts link table
+        #
+        modules = {}
+        _modules = current.deployment_settings.modules
+        for module in _modules:
+            if module in ("appadmin", "errors", "sync", "ocr"):
+                continue
+            modules[module] = _modules[module].name_nice
+
+        tablename = "cms_post_module"
+        table = define_table(tablename,
+                             post_id(),
+                             Field("module",
+                                   requires=IS_IN_SET_LAZY(lambda: \
+                                                sort_dict_by_values(modules)),
+                                   comment=T("If you specify a module then this will be used as the text in that module's index page"),
+                                   label=T("Module")),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_POST = T("Add Post")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_POST,
+            title_display = T("Post Details"),
+            title_list = T("Posts"),
+            title_update = T("Edit Post"),
+            subtitle_create = T("Add New Post"),
+            label_list_button = T("List Posts"),
+            label_create_button = ADD_POST,
+            msg_record_created = T("Post set as Module homepage"),
+            msg_record_modified = T("Post updated"),
+            msg_record_deleted = T("Post removed"),
+            msg_list_empty = T("No posts currently set as module homepages"))
+
         # ---------------------------------------------------------------------
         # Tags
         #
@@ -214,8 +245,7 @@ class S3ContentModel(S3Model):
                                    label=T("Tag")),
                              s3_comments(),
                              # Multiple Roles (@ToDo: Implement the restriction)
-                             #s3_roles_permitted(
-                             #                   readable = False,
+                             #s3_roles_permitted(readable = False,
                              #                   writable = False
                              #                   ),
                              *s3_meta_fields())
@@ -240,7 +270,7 @@ class S3ContentModel(S3Model):
         # ---------------------------------------------------------------------
         # Tags <> Posts link table
         #
-        tablename = "cms_tag"
+        tablename = "cms_tag_post"
         table = define_table(tablename,
                              post_id(),
                              Field("tag_id", "reference cms_tag"),
@@ -323,18 +353,102 @@ class S3ContentModel(S3Model):
         """
         """
 
-        vars = form.vars
-
-        module = vars.get("module", None)
+        module = current.request.get_vars.get("module", None)
         if module:
-            # Ensure that no other record is set as the one for this module
+            # Set this page as the one for this module
+            post_id = form.vars.id
             db = current.db
-            table = db.cms_post
-            query = (table.module == module) & \
-                    (table.id != vars.id)
-            db(query).update(module=None)
+            table = db.cms_post_module
+            query = (table.module == module)
+            result = db(query).update(post_id=post_id)
+            if not result:
+                table.insert(post_id=post_id,
+                             module=module,
+                             )
 
         return
+
+# =============================================================================
+def cms_index(module, alt_function=None):
+    """
+        Return a module index page retrieved from CMS
+        - or run an alternate function if not found
+    """
+
+    response = current.response
+    settings = current.deployment_settings
+
+    module_name = settings.modules[module].name_nice
+    response.title = module_name
+
+    item = None
+    if settings.has_module("cms"):
+        db = current.db
+        table = current.s3db.cms_post
+        ltable = db.cms_post_module
+        query = (ltable.module == module) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        _item = db(query).select(table.id,
+                                 table.body,
+                                 limitby=(0, 1)).first()
+        auth = current.auth
+        ADMIN = auth.get_system_roles().ADMIN
+        ADMIN = auth.s3_has_role(ADMIN)
+        if _item:
+            if ADMIN:
+                item = DIV(XML(_item.body),
+                           BR(),
+                           A(current.T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[_item.id, "update"],
+                                       vars={"module":module}),
+                             _class="action-btn"))
+            else:
+                item = XML(_item.body)
+        elif ADMIN:
+            item = DIV(H2(module_name),
+                       A(current.T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module":module}),
+                         _class="action-btn"))
+
+    if not item:
+        if alt_function:
+            # Serve the alternate controller function
+            # Copied from gluon.main serve_controller()
+            # (We don't want to re-run models)
+            from gluon.compileapp import build_environment, run_controller_in, run_view_in
+            request = current.request
+            environment = build_environment(request, response, current.session)
+            page = run_controller_in(request.controller, alt_function, environment)
+            if isinstance(page, dict):
+                response._vars = page
+                response._view_environment.update(page)
+                run_view_in(response._view_environment)
+                page = response.body.getvalue()
+            # Set default headers if not set
+            default_headers = [
+                ("Content-Type", contenttype("." + request.extension)),
+                ("Cache-Control",
+                 "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"),
+                ("Expires", time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+                                          time.gmtime())),
+                ("Pragma", "no-cache")]
+            for key, value in default_headers:
+                response.headers.setdefault(key, value)
+            raise HTTP(response.status, page, **response.headers)
+
+        else:
+            item = H2(module_name)
+
+    # tbc
+    report = ""
+
+    response.view = "index.html"
+    return dict(item=item, report=report)
+    
+    return None
 
 # =============================================================================
 def cms_rheader(r, tabs=[]):
@@ -356,30 +470,26 @@ def cms_rheader(r, tabs=[]):
         # Tabs
         tabs = [(T("Basic Details"), None),
                 (T("Posts"), "post"),
-               ]
+                ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        rheader = DIV(TABLE(
-            TR(
-               TH("%s: " % table.name.label),
-               record.name
-              ),
-            ), rheader_tabs)
+        rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                               record.name
+                               ),
+                            ), rheader_tabs)
 
     elif resourcename == "post":
         # Tabs
         tabs = [(T("Basic Details"), None),
-               ]
+                ]
         if record.replies:
             tabs.append((T("Comments"), "discuss"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        rheader = DIV(TABLE(
-            TR(
-               TH("%s: " % table.name.label),
-               record.name
-              ),
-            ), rheader_tabs)
+        rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                               record.name
+                               ),
+                            ), rheader_tabs)
 
     return rheader
 
