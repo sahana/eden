@@ -130,12 +130,13 @@ class S3HRModel(S3Model):
             default_site = auth.user.site_id if auth.is_logged_in() else None
 
         tablename = "hrm_human_resource"
+        realms = auth.permission.permitted_realms(tablename, method="create")
         table = self.define_table(tablename,
                                   super_link("track_id", "sit_trackable"),
                                   self.org_organisation_id(
                                     label = organisation_label,
                                     requires = self.org_organisation_requires(required=True,
-                                                                              updateable=True),
+                                                                              realms=realms),
                                     #widget = None,
                                     widget=S3OrganisationAutocompleteWidget(
                                         default_from_profile=True),
@@ -145,7 +146,7 @@ class S3HRModel(S3Model):
                                              label=settings.get_org_site_label(),
                                              instance_types = auth.org_site_types,
                                              orderby = "org_site.name",
-                                             updateable = True,
+                                             realms = realms,
                                              not_filterby = "obsolete",
                                              not_filter_opts = [True],
                                              default = default_site,

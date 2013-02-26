@@ -431,6 +431,7 @@ class IS_ONE_OF_EMPTY(Validator):
                  filter_opts=None,
                  not_filterby=None,
                  not_filter_opts=None,
+                 realms=None,
                  updateable=False,
                  instance_types=None,
                  error_message="invalid value!",
@@ -441,7 +442,7 @@ class IS_ONE_OF_EMPTY(Validator):
                  zero="",
                  sort=True,
                  _and=None,
-                ):
+                 ):
         """
             Validator for foreign keys.
 
@@ -456,6 +457,8 @@ class IS_ONE_OF_EMPTY(Validator):
             @param not_filterby: a field in the referenced table to filter by
             @param not_filter_opts: values for not_filterby field which indicate
                                     records to exclude
+            @param realms: only include records belonging to the listed realms
+                           (if None, all readable records will be included)
             @param updateable: only include records in the referenced table which
                                can be updated by the user (if False, all readable
                                records will be included)
@@ -542,6 +545,7 @@ class IS_ONE_OF_EMPTY(Validator):
         self.not_filterby = not_filterby
         self.not_filter_opts = not_filter_opts
 
+        self.realms = realms
         self.updateable = updateable
         self.instance_types = instance_types
 
@@ -595,7 +599,17 @@ class IS_ONE_OF_EMPTY(Validator):
                                                     instance_types=self.instance_types)
 
                 if "deleted" in table:
-                    query = ((table["deleted"] == False) & query)
+                    query &= (table["deleted"] == False)
+
+                # Realms filter?
+                if self.realms:
+                    auth = current.auth
+                    if auth.is_logged_in() and \
+                       auth.get_system_roles().ADMIN in auth.user.realms:
+                        # Admin doesn't filter
+                        pass
+                    else:
+                        query &= auth.permission.realm_query(table, self.realms)
 
                 all_fields = [str(f) for f in fields]
 

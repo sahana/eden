@@ -831,6 +831,7 @@ class S3Model(object):
                    not_filterby=None,
                    not_filter_opts=None,
                    instance_types=None,
+                   realms=None,
                    updateable=False,
                    groupby=None,
                    script=None,
@@ -873,6 +874,7 @@ class S3Model(object):
                                  filterby=filterby,
                                  filter_opts=filter_opts,
                                  instance_types=instance_types,
+                                 realms=realms,
                                  updateable=updateable,
                                  not_filterby=not_filterby,
                                  not_filter_opts=not_filter_opts,)

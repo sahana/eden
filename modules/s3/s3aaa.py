@@ -4284,14 +4284,12 @@ class S3Permission(object):
             Define permissions table, invoked by AuthS3.define_tables()
         """
 
-        db = current.db
-
         table_group = self.auth.settings.table_group
         if table_group is None:
             table_group = "integer" # fallback (doesn't work with requires)
 
         if not self.table:
-            self.table = db.define_table(self.tablename,
+            self.table = current.db.define_table(self.tablename,
                             Field("group_id", table_group),
                             Field("controller", length=64),
                             Field("function", length=512),
@@ -4593,8 +4591,8 @@ class S3Permission(object):
             @param user: the current auth.user (None for not authenticated)
             @param use_realm: use realms
             @param no_realm: don't include these entities in role realms
-            @returns: a web2py Query instance, or None if no query
-                      can be constructed
+            @returns: a web2py Query instance, or None if no query can be
+                      constructed
         """
 
         OUSR = "owned_by_user"
@@ -4676,13 +4674,12 @@ class S3Permission(object):
     # -------------------------------------------------------------------------
     def realm_query(self, table, entities):
         """
-            Returns a query to select the records owned by one of the
-            entities.
+            Returns a query to select the records owned by one of the entities.
 
             @param table: the table
             @param entities: list of entities
-            @returns: a web2py Query instance, or None if no query
-                      can be constructed
+            @returns: a web2py Query instance, or None if no query can be
+                      constructed
         """
 
         ANY = "ANY"
@@ -4699,6 +4696,54 @@ class S3Permission(object):
             else:
                 return (table[OENT].belongs(entities)) | public
         return None
+
+    # -------------------------------------------------------------------------
+    def permitted_realms(self, tablename, method="read"):
+        """
+            Returns a list of the realm entities which a user can access for
+            the given table.
+
+            @param tablename: the tablename
+            @param method: the method
+            @returns: a list of pe_ids or None (for no restriction)
+        """
+
+        if not self.entity_realm:
+            # Security Policy doesn't use Realms, so unrestricted
+            return None
+
+        auth = self.auth
+        sr = auth.get_system_roles()
+        user = auth.user
+        if auth.is_logged_in():
+            realms = user.realms
+            if sr.ADMIN in realms:
+                # ADMIN can see all Realms
+                return None
+            delegations = user.delegations
+        else:
+            realms = Storage({sr.ANONYMOUS:None})
+            delegations = Storage()
+
+        racl = self.required_acl([method])
+        request = current.request
+        acls = self.applicable_acls(racl,
+                                    realms=realms,
+                                    delegations=delegations,
+                                    c=request.controller,
+                                    f=request.function,
+                                    t=tablename)
+        if "ANY" in acls:
+            # User is permitted access for all Realms
+            return None
+        
+        entities = []
+        for entity in acls:
+            acl = acls[entity]
+            if acl[0] & racl == racl:
+                entities.append(entity)
+
+        return entities
 
     # -------------------------------------------------------------------------
     # Record approval
@@ -5203,6 +5248,7 @@ class S3Permission(object):
                        env=None):
         """
             Return a URL only if accessible by the user, otherwise False
+            - used for Navigation Items
 
             @param c: the controller
             @param f: the function
@@ -5500,7 +5546,6 @@ class S3Permission(object):
         if not acls and not (t and self.use_tacls):
             acls[ANY] = Storage(c=default_page_acl)
 
-
         # Order by precedence
         result = Storage()
         for e in acls:
@@ -5575,7 +5620,6 @@ class S3Permission(object):
         s3 = current.response.s3
 
         if not "restricted_tables" in s3:
-
             table = self.table
             query = (table.deleted != True) & \
                     (table.controller == None) & \

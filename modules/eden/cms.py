@@ -45,6 +45,7 @@ class S3ContentModel(S3Model):
 
     names = ["cms_series",
              "cms_post",
+             "cms_post_module",
              "cms_tag",
              "cms_tag_post",
              "cms_comment",
