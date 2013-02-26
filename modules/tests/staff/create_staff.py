@@ -97,7 +97,7 @@ class CreateStaff(SeleniumUnitTest):
                        "Yakobus Maia",
                        "autocomplete"),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society (CVTL)",
+                       "International Federation of Red Cross and Red Crescent Societies (IFRC)",
                        "option"),
                      ( "site_id",
                        "AP Zone (Office)",
