@@ -164,8 +164,12 @@ def proposal_to_set(request, space_url):
     :context: form, get_place
 
     """
-    sel_form = ProposalSetSelectForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
+    sel_form = ProposalSetSelectForm(request.POST or None)
+    # We change here the queryset, so only the proposalsets of this space
+    # appear on the list.
+    sel_form.fields['proposalset'].queryset = ProposalSet.objects.filter(
+        space=get_place)
 
     if request.method == 'POST':
         if sel_form.is_valid():
