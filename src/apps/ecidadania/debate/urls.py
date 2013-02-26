@@ -44,7 +44,7 @@ urlpatterns = patterns('apps.ecidadania.debate.views',
     url(r'^delete_note/', 'delete_note', name=NOTE_DELETE),
 
     # Editing debates is not allowed at this time
-    url(r'^edit/(?P<pk>\d+)/', 'edit_debate', name=DEBATE_EDIT),
+    url(r'^edit/(?P<debate_id>\d+)/', 'edit_debate', name=DEBATE_EDIT),
 
     #(r'^edit/(?P<pk>\d+)', 'delete_debate'),
 
