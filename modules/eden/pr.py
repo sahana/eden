@@ -4827,6 +4827,8 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
 
         @param pe_ids: person entity ID or list of IDs
         @param skip: list of person entity IDs to skip during descending
+        @param entity_type: optional filter to a specific entity_type
+        @param ids: whether to return a list of ids or nodes
 
         @returns: a list of PE-IDs
     """
@@ -4875,7 +4877,6 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
 # =============================================================================
 # Internal Path Tools
 # =============================================================================
-#
 def pr_rebuild_path(pe_id, clear=False):
     """
         Rebuild the ancestor path of all roles in the OU hierarchy a person

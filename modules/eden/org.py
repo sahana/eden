@@ -2601,16 +2601,21 @@ def org_root_organisation(organisation_id=None, pe_id=None):
     return None, None
 
 # =============================================================================
-def org_organisation_requires(required=False,
-                              updateable=False
+def org_organisation_requires(required = False,
+                              realms = None,
+                              updateable = False
                               ):
     """
         @param required: Whether the selection is optional or mandatory
-        @param updateable: Whether the list should be filtered to just those which the user has Write access to
+        @param realms: Whether the list should be filtered to just those
+                       belonging to a list of realm entities
+        @param updateable: Whether the list should be filtered to just those
+                           which the user has Write access to
     """
 
     requires = IS_ONE_OF(current.db, "org_organisation.id",
                          org_OrganisationRepresent(),
+                         realms = realms,
                          updateable = updateable,
                          orderby = "org_organisation.name",
                          sort = True)
@@ -2951,7 +2956,7 @@ def org_organisation_controller():
             list_fields = s3db.get_config(r.tablename,
                                           "list_fields") or []
             s3db.configure(r.tablename, list_fields=list_fields + ["pe_id"])
-        elif r.interactive:
+        elif r.interactive or r.representation.lower() == "aadata":
             request = current.request
             gis = current.gis
             r.table.country.default = gis.get_default_country("code")
