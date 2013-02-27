@@ -34,9 +34,9 @@
 
 __all__ = ["S3XML"]
 
+import datetime
 import os
 import sys
-import datetime
 import urllib2
 
 try:
@@ -47,18 +47,18 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import *
-from gluon.storage import Storage
-
-from s3codec import S3Codec
-from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper
-from s3fields import S3Represent, S3RepresentLazy
-
 try:
     from lxml import etree
 except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
+
+from gluon import *
+from gluon.storage import Storage
+
+from s3codec import S3Codec
+from s3fields import S3Represent, S3RepresentLazy
+from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper
 
 ogetattr = object.__getattribute__
 
@@ -1275,7 +1275,7 @@ class S3XML(S3Codec):
             elif f in USER_FIELDS:
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
-                    query = utable.email == v
+                    query = (utable.email == v)
                     user = db(query).select(utable.id, limitby=(0, 1)).first()
                     if user:
                         record[f] = user.id
@@ -1283,7 +1283,7 @@ class S3XML(S3Codec):
             elif f == OGROUP:
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
-                    query = gtable.role == v
+                    query = (gtable.role == v)
                     role = db(query).select(gtable.id, limitby=(0, 1)).first()
                     if role:
                         record[f] = role.id

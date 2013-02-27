@@ -41,7 +41,9 @@ __all__ = ["S3EventModel",
 
 from gluon import *
 from gluon.storage import Storage
+
 from ..s3 import *
+from layouts import S3AddResourceLink
 
 # =============================================================================
 class S3EventModel(S3Model):
@@ -63,6 +65,8 @@ class S3EventModel(S3Model):
 
     names = ["event_event",
              "event_event_id",
+             "event_event_location",
+             "event_event_tag",
              "event_incident",
              "event_incident_id",
              ]
@@ -93,13 +97,6 @@ class S3EventModel(S3Model):
                              Field("name", notnull=True, # Name could be a code
                                    length=64,    # Mayon compatiblity
                                    label=T("Name")),
-                             #Field("code",       # e.g. to link to WebEOC or GLIDE (http://glidenumber.net/glide/public/about.jsp)
-                             #      length=64,    # Mayon compatiblity
-                             #      label=T("Code")),
-                             self.gis_countries_id(
-                                      #readable=False,
-                                      #writable=False
-                                    ),
                              Field("exercise", "boolean",
                                    represent = lambda opt: "√" if opt else NONE,
                                    #comment = DIV(_class="tooltip",
@@ -139,16 +136,17 @@ class S3EventModel(S3Model):
             msg_record_deleted = T("Event deleted"),
             msg_list_empty = T("No Events currently registered"))
 
+        represent = S3Represent(lookup=tablename)
         event_id = S3ReusableField("event_id", table,
                                    sortby="name",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "event_event.id",
-                                                          self.event_represent,
+                                                          represent,
                                                           filterby="closed",
                                                           filter_opts=[False],
                                                           orderby="event_event.name",
                                                           sort=True)),
-                                   represent = self.event_represent,
+                                   represent = represent,
                                    label = T("Event"),
                                    ondelete = "CASCADE",
                                    # Uncomment these to use an Autocomplete & not a Dropdown
@@ -163,6 +161,7 @@ class S3EventModel(S3Model):
                   deduplicate=self.event_duplicate,
                   list_fields = ["id",
                                  "name",
+                                 (T("Location"), "location.name"),
                                  "exercise",
                                  "closed",
                                  "comments",
@@ -172,8 +171,61 @@ class S3EventModel(S3Model):
         # Incidents
         add_component("event_incident", event_event="event_id")
 
+        # Locations
+        add_component("gis_location",
+                      event_event=Storage(link="event_event_location",
+                                          joinby="event_id",
+                                          key="location_id",
+                                          actuate="hide"))
+
         # Requests
         add_component("req_req", event_event="event_id")
+
+        # Tags
+        add_component("event_event_tag",
+                      event_event=dict(joinby="event_id",
+                                       name="tag"))
+
+        # ---------------------------------------------------------------------
+        # Event Locations (link table)
+        #
+        tablename = "event_event_location"
+        table = define_table(tablename,
+                             event_id(),
+                             self.gis_location_id(
+                                widget = S3LocationAutocompleteWidget(),
+                                requires = IS_LOCATION(),
+                                represent = self.gis_location_lx_represent,
+                                comment = S3AddResourceLink(c="gis",
+                                                            f="location",
+                                                            label = T("Add Location"),
+                                                            title=T("Location"),
+                                                            tooltip=T("Enter some characters to bring up a list of possible matches")),
+                                ),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Event Tags
+        # - Key-Value extensions
+        # - can be used to identify a Source
+        # - can be used to add extra attributes (e.g. Area, Population)
+        # - can link Events to other Systems, such as:
+        #   * GLIDE (http://glidenumber.net/glide/public/about.jsp)
+        #   * Mayon
+        #   * WebEOC
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "event_event_tag"
+        table = define_table(tablename,
+                             event_id(),
+                             # key is a reserved word in MySQL
+                             Field("tag", label=T("Key")),
+                             Field("value", label=T("Value")),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate=self.event_event_tag_deduplicate)
 
         # ---------------------------------------------------------------------
         # Incidents
@@ -227,16 +279,17 @@ class S3EventModel(S3Model):
             msg_record_deleted = T("Incident removed"),
             msg_list_empty = T("No Incidents currently registered in this event"))
 
+        represent = S3Represent(lookup=tablename)
         incident_id = S3ReusableField("incident_id", table,
                                       sortby="name",
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "event_incident.id",
-                                                              self.incident_represent,
+                                                              represent,
                                                               filterby="closed",
                                                               filter_opts=[False],
                                                               orderby="event_incident.name",
                                                               sort=True)),
-                                      represent = self.incident_represent,
+                                      represent = represent,
                                       label = T("Incident"),
                                       ondelete = "RESTRICT",
                                       # Uncomment these to use an Autocomplete & not a Dropdown
@@ -270,52 +323,48 @@ class S3EventModel(S3Model):
         # Components
         # Tasks
         add_component("project_task",
-                      event_incident=Storage(
-                                link="event_task",
-                                joinby="incident_id",
-                                key="task_id",
-                                # @ToDo: Widget to handle embedded LocationSelector
-                                #actuate="embed",
-                                actuate="link",
-                                autocomplete="name",
-                                autodelete=False))
+                      event_incident=Storage(link="event_task",
+                                             joinby="incident_id",
+                                             key="task_id",
+                                             # @ToDo: Widget to handle embedded LocationSelector
+                                             #actuate="embed",
+                                             actuate="link",
+                                             autocomplete="name",
+                                             autodelete=False))
 
         # Human Resources
         add_component("event_human_resource", event_event="event_id")
         add_component("hrm_human_resource",
-                      event_incident=Storage(
-                                link="event_human_resource",
-                                joinby="incident_id",
-                                key="human_resource_id",
-                                # @ToDo: Widget to handle embedded AddPersonWidget
-                                #actuate="embed",
-                                actuate="link",
-                                autocomplete="name",
-                                autodelete=False))
+                      event_incident=Storage(link="event_human_resource",
+                                             joinby="incident_id",
+                                             key="human_resource_id",
+                                             # @ToDo: Widget to handle embedded AddPersonWidget
+                                             #actuate="embed",
+                                             actuate="link",
+                                             autocomplete="name",
+                                             autodelete=False))
 
         # Assets
         add_component("asset_asset",
-                      event_incident=Storage(
-                                    link="event_asset",
-                                    joinby="incident_id",
-                                    key="asset_id",
-                                    actuate="embed",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      event_incident=Storage(link="event_asset",
+                                             joinby="incident_id",
+                                             key="asset_id",
+                                             actuate="embed",
+                                             autocomplete="name",
+                                             autodelete=False))
 
         # Facilities
         add_component("event_site", event_incident="incident_id")
 
         # Map Config
         add_component("gis_config",
-                      event_incident=Storage(
-                                    link="event_config",
-                                    joinby="incident_id",
-                                    multiple=False,
-                                    key="config_id",
-                                    actuate="replace",
-                                    autocomplete="name",
-                                    autodelete=True))
+                      event_incident=Storage(link="event_config",
+                                             joinby="incident_id",
+                                             multiple=False,
+                                             key="config_id",
+                                             actuate="replace",
+                                             autocomplete="name",
+                                             autodelete=True))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -340,6 +389,31 @@ class S3EventModel(S3Model):
                                                 readable=False,
                                                 writable=False),
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_event_tag_deduplicate(job):
+        """
+           If the record is a duplicate then it will set the job method to update
+        """
+
+        if job.tablename == "event_event_tag":
+            table = job.table
+            data = job.data
+            tag = "tag" in data and data.tag or None
+            event = "event_id" in data and data.event_id or None
+
+            if not tag or not event:
+                return
+
+            query = (table.tag.lower() == tag.lower()) & \
+                    (table.event_id == event)
+
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -459,25 +533,6 @@ class S3EventModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def event_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.event_event
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # ---------------------------------------------------------------------
-    @staticmethod
     def event_duplicate(item):
         """
             Deduplication of Events
@@ -497,25 +552,6 @@ class S3EventModel(S3Model):
             item.id = _duplicate.id
             item.data.id = _duplicate.id
             item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def incident_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.event_incident
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -506,24 +506,22 @@ class S3ProjectModel(S3Model):
         
         # Activity Types
         add_component("project_activity_type",
-                      project_project=Storage(
-                                link="project_activity_type_project",
-                                joinby="project_id",
-                                key="activity_type_id",
-                                actuate="link"))        
+                      project_project=Storage(link="project_activity_type_project",
+                                              joinby="project_id",
+                                              key="activity_type_id",
+                                              actuate="link"))        
 
         # Milestones
         add_component("project_milestone", project_project="project_id")
 
         # Tasks
         add_component("project_task",
-                      project_project=Storage(
-                                link="project_task_project",
-                                joinby="project_id",
-                                key="task_id",
-                                actuate="replace",
-                                autocomplete="name",
-                                autodelete=False))
+                      project_project=Storage(link="project_task_project",
+                                              joinby="project_id",
+                                              key="task_id",
+                                              actuate="replace",
+                                              autocomplete="name",
+                                              autodelete=False))
 
         # Annual Budgets
         add_component("project_annual_budget", project_project="project_id")
@@ -533,11 +531,10 @@ class S3ProjectModel(S3Model):
 
         # Hazards
         add_component("project_hazard",
-                      project_project=Storage(
-                                link="project_hazard_project",
-                                joinby="project_id",
-                                key="hazard_id",
-                                actuate="hide"))
+                      project_project=Storage(link="project_hazard_project",
+                                              joinby="project_id",
+                                              key="hazard_id",
+                                              actuate="hide"))
 
         # Human Resources
         add_component("project_human_resource", project_project="project_id")
@@ -547,19 +544,17 @@ class S3ProjectModel(S3Model):
 
         # Sectors
         add_component("org_sector",
-                      project_project=Storage(
-                                link="project_sector_project",
-                                joinby="project_id",
-                                key="sector_id",
-                                actuate="hide"))
+                      project_project=Storage(link="project_sector_project",
+                                              joinby="project_id",
+                                              key="sector_id",
+                                              actuate="hide"))
 
         # Themes
         add_component("project_theme",
-                      project_project=Storage(
-                                link="project_theme_project",
-                                joinby="project_id",
-                                key="theme_id",
-                                actuate="hide"))
+                      project_project=Storage(link="project_theme_project",
+                                              joinby="project_id",
+                                              key="theme_id",
+                                              actuate="hide"))
 
         # DRR
         if mode_drr:

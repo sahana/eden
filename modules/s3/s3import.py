@@ -33,22 +33,16 @@ __all__ = ["S3Importer",
            "S3ImportItem",
            ]
 
+import cPickle
 import os
 import sys
-import cPickle
 import tempfile
-from datetime import datetime
 from copy import deepcopy
+from datetime import datetime
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
-
-try:
-    from lxml import etree
-except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
 
 try:
     import json # try stdlib (Python 2.6)
@@ -58,15 +52,21 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
+try:
+    from lxml import etree
+except ImportError:
+    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    raise
+
 from gluon import *
 from gluon.serializers import json as jsons
 from gluon.storage import Storage, Messages
 from gluon.tools import callback
 
 from s3crud import S3CRUD
-from s3xml import S3XML
-from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3resource import S3Resource
+from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
+from s3xml import S3XML
 
 DEBUG = False
 if DEBUG:
