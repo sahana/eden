@@ -43,11 +43,9 @@ class CreateVolunteer(SeleniumUnitTest):
 
         self.create("hrm_human_resource", 
                    [( "organisation_id",
-                       "International Federation of Red Cross and Red Crescent Societies",
-                       "autocomplete",
-                       0,
                        "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       ),
+                       "option",
+                       0),
                      ( "first_name",
                        "John",
                        "pr_person"),
@@ -93,11 +91,10 @@ class CreateVolunteer(SeleniumUnitTest):
                        "Duarte Botelheiro",
                        "autocomplete"),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society",
-                       "autocomplete"),
+                       "Timor-Leste Red Cross Society (CVTL)",
+                       "option"),
                      ( "job_title_id",
                        "Coordinator",
                        "option"),
                     ]
                     )
- 
