@@ -59,7 +59,7 @@ urlpatterns = patterns('',
     url(_(r'^(?P<space_url>\w+)/debate/'),
         include('apps.ecidadania.debate.urls')),
     
-    # Debates
+    # Votes
     url(_(r'^(?P<space_url>\w+)/voting/'),
         include('apps.ecidadania.voting.urls')),
 

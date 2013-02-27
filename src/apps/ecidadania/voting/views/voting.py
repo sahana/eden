@@ -123,10 +123,6 @@ class ViewVoting(DetailView):
         all_proposals = Proposal.objects.all()
         proposalsets = voting.proposalsets.all()
         proposals = voting.proposals.all()
-        print "proposalsets: %s" % proposalsets
-        print "proposals: %s" % proposals
-        print "all_proposals: %s" % all_proposals
-        print "prop inside set: %s" % Proposal.objects.filter(proposalset=proposalsets)
         context['proposalsets'] = proposalsets
         context['proposals'] = proposals
         context['all_proposals'] = all_proposals
@@ -244,7 +240,7 @@ def vote_voting(request, space_url):
             # Send the email to the user. Get URL, get user mail, send mail.
             space_absolute_url = space.get_absolute_url()
             full_url = ''.join(['http://', get_current_site(request).domain,
-                        space_absolute_url, 'vote/validate/', token])
+                        space_absolute_url, 'voting/vote/validate/', token])
             user_email = request.user.email
             subject = _("Validate your vote")
             body = _("You voted recently on a process in our platform, please validate your vote following this link: %s") % full_url
