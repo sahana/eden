@@ -27,7 +27,7 @@ var url_append = function(url, query) {
 function dlInfiniteScroll(datalist) {
 
     pagination = $(datalist).find('.dl-pagination');
-    var dl_data = JSON.parse($(pagination).val());
+    var dl_data = JSON.parse($(pagination[0]).val());
 
     // Read dl_data
     var startindex = dl_data['startindex'],

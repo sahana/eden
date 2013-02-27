@@ -1724,7 +1724,8 @@ class S3RequestSkillModel(S3Model):
                                     label = T("Required Skills"),
                                     comment = T("Leave blank to request an unskilled person"),
                                     represent = lambda id: \
-                                                    id and s3_represent_multi_id(self.hrm_skill)(id) or \
+                                                    id and S3Represent(lookup="hrm_skill",
+                                                                       multiple=True)(id) or \
                                                     T("No Skills Required"),
                                     ),
                              # @ToDo: Add a minimum competency rating?
@@ -3180,7 +3181,8 @@ class ReqVirtualFields:
             skills = current.db(query).select(ltable.skill_id,
                                               ltable.quantity)
             if skills:
-                represent = s3_represent_multi_id(s3db.hrm_skill)
+                represent = S3Represent(lookup="hrm_skill",
+                                        multiple=True)
                 skills = ["%s %s" % (skill.quantity,
                                      represent(skill.skill_id)) \
                           for skill in skills]

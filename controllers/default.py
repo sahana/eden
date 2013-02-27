@@ -122,36 +122,44 @@ def index():
 
     # Menu Boxes
     menu_btns = [#div, label, app, function
-                ["facility", T("Facilities"), "org", "facility"],
-                ["facility", T("Hospitals"), "hms", "hospital"],
-                ["facility", T("Offices"), "org", "office"],
-                ["facility", SHELTERS, "cr", "shelter"],
-                ["facility", T("Warehouses"), "inv", "warehouse"],
-                ["sit", T("Staff"), "hrm", "staff"],
-                ["sit", T("Volunteers"), "vol", "volunteer"],
-                ["sit", T("Incidents"), "irs", "ireport"],
-                ["sit", T("Assessments"), "survey", "series"],
-                ["sit", T("Assets"), "asset", "asset"],
-                ["sit", T("Inventory Items"), "inv", "inv_item"],
-                #["dec", T("Gap Map"), "project", "gap_map"],
-                #["dec", T("Gap Report"), "project", "gap_report"],
-                ["dec", T("Requests"), "req", "req"],
-                ["res", T("Projects"), "project", "project"],
-                ["res", T("Commitments"), "req", "commit"],
-                ["res", T("Sent Shipments"), "inv", "send"],
-                ["res", T("Received Shipments"), "inv", "recv"]
+                 ["facility", T("Facilities"), "org", "facility"],
+                 ["facility", T("Hospitals"), "hms", "hospital"],
+                 ["facility", T("Offices"), "org", "office"],
+                 ["facility", SHELTERS, "cr", "shelter"],
+                 ["facility", T("Warehouses"), "inv", "warehouse"],
+                 ["sit", T("Staff"), "hrm", "staff"],
+                 ["sit", T("Volunteers"), "vol", "volunteer"],
+                 ["sit", T("Incidents"), "irs", "ireport"],
+                 ["sit", T("Assessments"), "survey", "series"],
+                 ["sit", T("Assets"), "asset", "asset"],
+                 ["sit", T("Inventory Items"), "inv", "inv_item"],
+                 #["dec", T("Gap Map"), "project", "gap_map"],
+                 #["dec", T("Gap Report"), "project", "gap_report"],
+                 ["dec", T("Requests"), "req", "req"],
+                 ["res", T("Projects"), "project", "project"],
+                 ["res", T("Commitments"), "req", "commit"],
+                 ["res", T("Sent Shipments"), "inv", "send"],
+                 ["res", T("Received Shipments"), "inv", "recv"],
                 ]
 
     # Change to (Mitigation)/Preparedness/Response/Recovery?
-    menu_divs = {"facility": DIV( H3(T("Facilities")),
-                                 _id = "facility_box", _class = "menu_box"),
-                 "sit": DIV( H3(T("Situation")),
-                              _id = "menu_div_sit", _class = "menu_div"),
-                 "dec": DIV( H3(T("Decision")),
-                              _id = "menu_div_dec", _class = "menu_div"),
-                 "res": DIV( H3(T("Response")),
-                              _id = "menu_div_res", _class = "menu_div"),
-                }
+    menu_divs = {"facility": DIV(H3(T("Facilities")),
+                                 _id = "facility_box",
+                                 _class = "menu_box",
+                                 ),
+                 "sit": DIV(H3(T("Situation")),
+                            _id = "menu_div_sit",
+                            _class = "menu_div",
+                            ),
+                 "dec": DIV(H3(T("Decision")),
+                            _id = "menu_div_dec",
+                            _class = "menu_div",
+                            ),
+                 "res": DIV(H3(T("Response")),
+                            _id = "menu_div_res",
+                            _class = "menu_div",
+                            ),
+                 }
 
     for div, label, app, function in menu_btns:
         if has_module(app):
@@ -401,26 +409,32 @@ def organisation():
 # -----------------------------------------------------------------------------
 def site():
     """
-        @todo: Avoid redirect
+        @ToDo: Avoid redirect
     """
-    s3db.table("org_site")
-    if len(request.args):
+
+    try:
         site_id = request.args[0]
-        site_r = db.org_site[site_id]
-        tablename = site_r.instance_type
-        table = s3db.table(tablename)
-        if table:
-            query = (table.site_id == site_id)
-            id = db(query).select(db[tablename].id,
-                                  limitby = (0, 1)).first().id
-            cf = tablename.split("_", 1)
-            redirect(URL(c = cf[0],
-                         f = cf[1],
-                         args = [id]))
-    raise HTTP(404)
+    except:
+        raise HTTP(404)
+
+    table = s3db.org_site
+    record = db(table.site_id == site_id).select(table.instance_type,
+                                                 limitby=(0, 1)).first()
+    tablename = record.instance_type
+    table = s3db.table(tablename)
+    if table:
+        query = (table.site_id == site_id)
+        id = db(query).select(table.id,
+                              limitby = (0, 1)).first().id
+        cf = tablename.split("_", 1)
+        redirect(URL(c = cf[0],
+                     f = cf[1],
+                     args = [id]))
 
 # -----------------------------------------------------------------------------
 def message():
+    """ Show a confirmation screen """
+
     #if "verify_email_sent" in request.args:
     title = T("Account Registered - Please Check Your Email")
     message = T( "%(system_name)s has sent an email to %(email)s to verify your email address.\nPlease check your email to verify this address. If you do not receive this email please check you junk email or spam filters." )\
@@ -523,8 +537,8 @@ def person():
         Profile to show:
          - User Details
          - Person Details
-         - HRM
-
+         - Staff/Volunteer Record
+         - Map Config
     """
 
     # Set to current user
@@ -583,7 +597,7 @@ def person():
         title_display = T("Personal Profile"),
         title_update = T("Personal Profile"))
 
-    # Organisation Dependent Fields
+    # Organisation-dependent Fields
     set_org_dependent_field = settings.set_org_dependent_field
     set_org_dependent_field("pr_person_details", "father_name")
     set_org_dependent_field("pr_person_details", "mother_name")
@@ -624,24 +638,31 @@ def person():
                                 raise HTTP(404)
 
                 elif r.component_name == "config":
-                    s3db.add_component("auth_user_options",
-                        gis_config=dict(joinby="pe_id", pkey="pe_id", multiple=False)
-                    )
-
-                    from s3.s3forms import S3SQLCustomForm
-
                     _config = s3db.gis_config
                     s3db.gis_config_form_setup()
                     # Name will be generated from person's name.
-                    _config.name.readable = _config.name.writable = False
+                    #_config.name.readable = _config.name.writable = False
                     # Hide Location
-                    _config.region_location_id.readable = _config.region_location_id.writable = False
+                    #_config.region_location_id.readable = _config.region_location_id.writable = False
 
-                    fields = s3db.gis_config.fields + [
-                          "user_options.osm_oauth_consumer_key",
-                          "user_options.osm_oauth_consumer_secret"
-                      ]
-                    crud_form = S3SQLCustomForm(*fields)
+                    # OpenStreetMap config
+                    s3db.add_component("auth_user_options",
+                                       gis_config=dict(joinby="pe_id",
+                                                       pkey="pe_id",
+                                                       multiple=False)
+                                       )
+                    fields = ["default_location_id",
+                              "zoom",
+                              "lat",
+                              "lon",
+                              "projection_id",
+                              "symbology_id",
+                              "wmsbrowser_url",
+                              "wmsbrowser_name",
+                              "user_options.osm_oauth_consumer_key",
+                              "user_options.osm_oauth_consumer_secret",
+                              ]
+                    crud_form = s3base.S3SQLCustomForm(*fields)
                     s3db.configure("gis_config", crud_form=crud_form)
             else:
                 table = r.table

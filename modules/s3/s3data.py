@@ -29,9 +29,9 @@
 
 #from gluon import *
 from gluon import current
+from gluon.dal import Expression, Field
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.dal import Expression, Field
 
 from s3utils import s3_unicode
 
@@ -899,8 +899,7 @@ class S3DataList(object):
             # template
             raise NotImplementedError
 
-        listid = self.listid
-        return DIV(items, _class = "dl", _id = listid)
+        return DIV(items, _class = "dl", _id = self.listid)
 
     # ---------------------------------------------------------------------
     def json(self):
@@ -926,7 +925,7 @@ class S3DataList(object):
             item_id = "%s-%s" % (listid, record[pkey])
         else:
             # template
-            item_id = "%s-[id]" % list_id
+            item_id = "%s-[id]" % listid
 
         # Add classes passed from caller (e.g. even/odd)
         item_class = "dl-item"

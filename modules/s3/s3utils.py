@@ -613,33 +613,6 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_represent_multi_id(table):
-    """
-        Returns a represent function for a list:reference field.
-        @param: table - the table within which to lookup the values
-    """
-
-    def represent(ids):
-        if not ids:
-            return current.messages["NONE"]
-
-        ids = [ids] if type(ids) is not list else ids
-
-        rows = current.db(table.id.belongs(ids)).select(table.name)
-
-        try:
-            strings = [str(row.name) for row in rows]
-        except:
-            return current.messages["NONE"]
-
-        if strings:
-            return ", ".join(strings)
-        else:
-            return current.messages["NONE"]
-
-    return represent
-
-# =============================================================================
 def s3_yes_no_represent(value):
     " Represent a Boolean field as Yes/No instead of True/False "
 

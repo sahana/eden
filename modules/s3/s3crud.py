@@ -420,6 +420,8 @@ class S3CRUD(S3Method):
             if not record_id and r.component and not r.multiple:
                 authorised = self._permitted(method="create")
                 if authorised:
+                    # This should become Native
+                    r.method = "create"
                     return self.create(r, **attr)
                 else:
                     return self.select(r, **attr)
