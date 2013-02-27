@@ -42,11 +42,9 @@ class CreateStaff(SeleniumUnitTest):
 
         self.create("hrm_human_resource", 
                     [( "organisation_id",
-                       "International Federation of Red Cross and Red Crescent Societies",
-                       "autocomplete",
-                       0,
                        "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       ),
+                       "option",
+                       0),
                      ( "site_id",
                        "AP Zone (Office)",
                        "option",
@@ -99,10 +97,10 @@ class CreateStaff(SeleniumUnitTest):
                        "Yakobus Maia",
                        "autocomplete"),
                      ( "organisation_id",
-                      "Timor-Leste Red Cross Society",
-                      "autocomplete"),
+                       "International Federation of Red Cross and Red Crescent Societies (IFRC)",
+                       "option"),
                      ( "site_id",
-                       "Ainaro Branch Office (Office)",
+                       "AP Zone (Office)",
                        "option")
                      ]
                      )
