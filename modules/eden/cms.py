@@ -67,7 +67,7 @@ class S3ContentModel(S3Model):
 
         tablename = "cms_series"
         table = define_table(tablename,
-                             Field("name", notnull=True,
+                             Field("name", notnull=True, unique=True,
                                    label=T("Name")),
                              Field("avatar", "boolean",
                                    default=False,
@@ -132,8 +132,9 @@ class S3ContentModel(S3Model):
 
         tablename = "cms_post"
         table = define_table(tablename,
+                             self.super_link("doc_id", "doc_entity"),
                              series_id(),
-                             Field("name", notnull=True,
+                             Field("name", #notnull=True,
                                    comment=T("This isn't visible to the published site, but is used to allow menu items to point to the page"),
                                    label=T("Name")),
                              Field("title",

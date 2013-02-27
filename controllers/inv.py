@@ -1287,8 +1287,7 @@ def track_item():
     vars = request.get_vars
     if "report" in vars:
         if vars.report == "rel":
-            s3.crud_strings["inv_track_item"] = Storage(
-                                                        title_list = T("Summary of Releases"),
+            s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Releases"),
                                                         subtitle_list = T("Summary Details"),
                                                         title_search = T("Summary of Releases"),
                                                         )
@@ -1313,8 +1312,7 @@ def track_item():
             s3.filter = (table.send_id != None)
 
         elif vars.report == "inc":
-            s3.crud_strings["inv_track_item"] = Storage(
-                                                        title_list = T("Summary of Incoming Supplies"),
+            s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Incoming Supplies"),
                                                         subtitle_list = T("Summary Details"),
                                                         title_search = T("Summary of Incoming Supplies"),
                                                         )
@@ -1339,8 +1337,7 @@ def track_item():
             s3.filter = (table.recv_id != None)
 
         elif vars.report == "util":
-            s3.crud_strings["inv_track_item"] = Storage(
-                                                        title_list = T("Utilization Report"),
+            s3.crud_strings["inv_track_item"] = Storage(title_list = T("Utilization Report"),
                                                         subtitle_list = T("Utilization Details"),
                                                         title_search = T("Utilization Report"),
                                                         )
@@ -1363,8 +1360,7 @@ def track_item():
             s3.filter = (table.item_id != None)
 
         elif vars.report == "exp":
-            s3.crud_strings["inv_track_item"] = Storage(
-                                                        title_list = T("Expiration Report"),
+            s3.crud_strings["inv_track_item"] = Storage(title_list = T("Expiration Report"),
                                                         subtitle_list = T("Expiration Details"),
                                                         title_search = T("Expiration Report"),
                                                         )

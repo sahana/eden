@@ -3101,7 +3101,6 @@ class S3ProjectDRRPPModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        ltable = self.gis_location
         project_id = self.project_project_id
 
         NONE = current.messages["NONE"]
@@ -3191,7 +3190,8 @@ class S3ProjectDRRPPModel(S3Model):
                                                   not_filterby = "name",
                                                   not_filter_opts = ["Cook Islands"],
                                                   multiple=True)),
-                           represent = s3_represent_multi_id(ltable),
+                           represent = S3Represent(lookup="gis_location",
+                                                   multiple=True),
                            widget = lambda f, v, **attr: \
                             s3_checkboxes_widget(f, v, cols=4, **attr),
                            ),

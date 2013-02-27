@@ -1008,7 +1008,8 @@ class S3HRJobModel(S3Model):
                                                       filter_opts=filter_opts,
                                                       sort=True,
                                                       multiple=True)),
-                                represent = s3_represent_multi_id(table),
+                                represent = S3Represent(lookup=tablename,
+                                                        multiple=True),
                                 comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
                                                           f="job_role",
                                                           label=label_create,
@@ -1482,7 +1483,8 @@ class S3HRSkillModel(S3Model):
                                                                   sort=True,
                                                                   multiple=True
                                                                   )),
-                                         represent = s3_represent_multi_id(table),
+                                         represent = S3Represent(lookup=tablename,
+                                                                 multiple=True),
                                          #comment = skill_help,
                                          ondelete = "SET NULL",
                                          widget = S3MultiSelectWidget()

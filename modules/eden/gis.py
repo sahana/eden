@@ -1405,19 +1405,19 @@ class S3GISConfigModel(S3Model):
         # Components
         # Layers
         add_component("gis_layer_entity",
-                      gis_config=Storage(
-                                    link="gis_layer_config",
-                                    joinby="config_id",
-                                    key="layer_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_config=Storage(link="gis_layer_config",
+                                         joinby="config_id",
+                                         key="layer_id",
+                                         actuate="hide",
+                                         autocomplete="name",
+                                         autodelete=False))
 
         configure(tablename,
                   deduplicate=self.gis_config_deduplicate,
                   onvalidation=self.gis_config_onvalidation,
                   onaccept=self.gis_config_onaccept,
-                  create_next=URL(args=["[id]", "layer_entity"]),
+                  create_next=URL(c="gis", f="config",
+                                  args=["[id]", "layer_entity"]),
                   ondelete=self.gis_config_ondelete,
                   subheadings = {
                        T("Map Settings"): "zoom",
@@ -1428,7 +1428,7 @@ class S3GISConfigModel(S3Model):
                                  "pe_id",
                                  "region_location_id",
                                  "default_location_id",
-                               ])
+                                 ])
 
         if current.deployment_settings.get_security_map() and not \
            current.auth.s3_has_role("MapAdmin"):
