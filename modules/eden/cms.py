@@ -196,12 +196,19 @@ class S3ContentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  super_entity="doc_document",
                   onaccept = self.post_onaccept)
 
         # Components
         add_component("cms_comment", cms_post="post_id")
 
         add_component("cms_post_module", cms_post="post_id")
+
+        add_component("cms_tag",
+                      cms_post=Storage(link="cms_post_tag",
+                                       joinby="post_id",
+                                       key="tag_id",
+                                       actuate="hide"))
 
         # ---------------------------------------------------------------------
         # Modules <> Posts link table
