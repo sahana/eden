@@ -7,7 +7,7 @@
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <meta name="application-name" content="{{=appname}}" />
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
-<link rel="shortcut icon" href="/{{=appname}}/static/themes/IFRC/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/{{=response.s3.theme}}/favicon.ico" type="image/x-icon" />
 <style type="text/css">
 {{if s3.rtl:}}
  div{direction:rtl;}
@@ -19,7 +19,7 @@
  {{=s3base.s3_include_debug_css()}}
 {{else:}}
  {{# Built by /static/scripts/tools/build.sahana.py }}
- <link href="/{{=appname}}/static/themes/IFRC/eden.min.css" rel="stylesheet" type="text/css" />
+ <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
@@ -88,7 +88,7 @@
     </div>
   </div>
   <div id='footer'>
-   {{include "../private/templates/IFRC/views/footer.html"}}
+   {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
    {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
   </div>
  </div>

@@ -4,10 +4,19 @@
     xmlns:hrm="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Training Event Participant List - CSV Import Stylesheet
+         Training Participant List - CSV Import Stylesheet
 
          Column headers defined in this stylesheet:
-         Course,Organisation,Facility,Start,End,Hours,First Name,Last Name,Sex,Email
+         Course
+         Organisation
+         Facility
+         Start
+         End
+         Hours
+         First Name
+         Last Name
+         Sex
+         Email
 
          Column headers looked up in labels.xml:
 
@@ -77,34 +86,36 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Event">
-
         <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
         <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
         <xsl:variable name="Start" select="col[@field='Start']/text()"/>
+        <xsl:variable name="Hours" select="col[@field='Hours']/text()"/>
 
-        <resource name="hrm_training_event">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($SiteName, '/',
-                                             $CourseName, '/',
-                                             $Start)"/>
-            </xsl:attribute>
-            <data field="start_date"><xsl:value-of select="$Start"/></data>
-            <data field="end_date"><xsl:value-of select="col[@field='End']/text()"/></data>
-            <data field="hours"><xsl:value-of select="col[@field='Hours']/text()"/></data>
-            <!-- Link to Course -->
-            <reference field="course_id" resource="hrm_course">
+        <xsl:if test="$SiteName!='' and $Hours!=''">
+            <resource name="hrm_training_event">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$CourseName"/>
+                    <xsl:value-of select="concat($SiteName, '/',
+                                                 $CourseName, '/',
+                                                 $Start)"/>
                 </xsl:attribute>
-            </reference>
-            <!-- Link to Site -->
-            <reference field="site_id" resource="org_office">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$SiteName"/>
-                </xsl:attribute>
-            </reference>
+                <data field="start_date"><xsl:value-of select="$Start"/></data>
+                <data field="end_date"><xsl:value-of select="col[@field='End']/text()"/></data>
+                <data field="hours"><xsl:value-of select="$Hours"/></data>
+                <!-- Link to Course -->
+                <reference field="course_id" resource="hrm_course">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$CourseName"/>
+                    </xsl:attribute>
+                </reference>
+                <!-- Link to Site -->
+                <reference field="site_id" resource="org_office">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$SiteName"/>
+                    </xsl:attribute>
+                </reference>
 
-        </resource>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -142,15 +153,18 @@
         <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
         <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
         <xsl:variable name="Start" select="col[@field='Start']/text()"/>
+        <xsl:variable name="Hours" select="col[@field='Hours']/text()"/>
 
         <resource name="hrm_training">
-            <reference field="training_event_id" resource="hrm_training_event">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($SiteName, '/',
-                                                 $CourseName, '/',
-                                                 $Start)"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$SiteName!='' and $Hours!=''">
+                <reference field="training_event_id" resource="hrm_training_event">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($SiteName, '/',
+                                                     $CourseName, '/',
+                                                     $Start)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
             <reference field="person_id" resource="pr_person">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat(col[@field='First Name'], '/',
@@ -164,7 +178,7 @@
                 </xsl:attribute>
             </reference>
             <data field="date"><xsl:value-of select="col[@field='Start']"/></data>
-            <data field="hours"><xsl:value-of select="col[@field='Hours']"/></data>
+            <data field="hours"><xsl:value-of select="$Hours"/></data>
         </resource>
 
     </xsl:template>

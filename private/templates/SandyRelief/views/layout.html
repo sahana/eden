@@ -33,7 +33,7 @@
  {{=s3base.s3_include_debug_css()}}
 {{else:}}
  {{# Built by /static/scripts/tools/build.sahana.py }}
- <link href="/{{=appname}}/static/themes/SandyRelief/eden.min.css" rel="stylesheet" type="text/css" />
+ <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
@@ -86,11 +86,11 @@
   </div>
  </div>
  <div id='footer'>
-  {{include "../private/templates/SandyRelief/views/footer.html"}}
+  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
 {{pass}}
 {{include "scripts.html"}}
-<script src="/{{=appname}}/static/themes/SandyRelief/js/splitview.js"></script>
+<script src="/{{=appname}}/static/themes/{{=response.s3.theme}}/js/splitview.js"></script>
 </body>
 </html>

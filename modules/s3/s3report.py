@@ -43,13 +43,13 @@ except ImportError:
 
 from gluon import current
 from gluon.html import *
+from gluon.languages import lazyT
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
-from gluon.languages import lazyT
 from gluon.validators import IS_EMPTY_OR
 
-from s3resource import S3TypeConverter
 from s3crud import S3CRUD
+from s3resource import S3TypeConverter
 from s3search import S3Search
 from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode
 from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER, IS_IN_SET
@@ -376,6 +376,7 @@ class S3Report(S3CRUD):
             # Fallback to list view
             current.s3db.configure(tablename, insertable=False)
             output = self.select(r, **attr)
+            output["json_data"] = json.dumps({})
             response.s3.actions = [
                 dict(url = r.url(method="",
                                  id="[id]",
