@@ -7611,8 +7611,9 @@ class S3Map(S3Search):
                     search_url_vars = query.serialize_url(resource)
                 search_url = r.url(method = "", vars = search_url_vars)
 
-                # Create a Save Search widget
-                save_search = self.save_search_widget(r, query, **attr)
+                if current.deployment_settings.get_save_search_widget():
+                    # Create a Save Search widget
+                    save_search = self.save_search_widget(r, query, **attr)
 
             # Add sub-queries
             resource.add_filter(dq)

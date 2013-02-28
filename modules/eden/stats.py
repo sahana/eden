@@ -38,6 +38,7 @@ from gluon.dal import Row, Rows
 from gluon.storage import Storage
 
 from ..s3 import *
+from layouts import S3AddResourceLink
 
 # =============================================================================
 class S3StatsModel(S3Model):
@@ -848,15 +849,22 @@ class S3StatsDemographicModel(S3Model):
                                         readable = True,
                                         writable = True,
                                         empty = False,
+                                        comment = S3AddResourceLink(c="stats",
+                                                                    f="demographic",
+                                                                    vars = dict(child = "parameter_id"),
+                                                                    title=ADD_DEMOGRAPHIC,
+                                                                    ),
                                         ),
                              self.gis_location_id(
                                     widget = S3LocationAutocompleteWidget(),
                                     requires = IS_LOCATION()
                                 ),
                              Field("value", "double",
+                                   required = True,
                                    label = T("Value")),
                              Field("date", "date",
                                    label = T("Date")),
+                             s3_comments(),
                              self.stats_group_id(),
                              *s3_meta_fields()
                              )
@@ -1072,13 +1080,13 @@ class S3StatsGroupModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return Storage(
-                       demographic_source_crud_strings = demographic_crud_strings,
-                       vulnerability_source_crud_strings = vulnerability_crud_strings,
-                       stats_group_type_id = group_type_id,
-                       stats_group_id = group_id,
-                       stats_source_id = source_id,
-                       stats_group_clean = self.stats_group_clean,
-                       )
+                demographic_source_crud_strings = demographic_crud_strings,
+                vulnerability_source_crud_strings = vulnerability_crud_strings,
+                stats_group_type_id = group_type_id,
+                stats_group_id = group_id,
+                stats_source_id = source_id,
+                stats_group_clean = self.stats_group_clean,
+            )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1182,22 +1190,29 @@ class S3StatsGroupModel(S3Model):
 # =============================================================================
 def stats_demographic_data_controller():
     """
-        Function to be called from controller functions to display all
-        demographic data as a tab for a location.
+        Function to be called from controller functions
+        - display all demographic data for a location as a tab.
+        - options.s3json lookups for AddResourceLink
     """
 
-    vars = current.request.vars
-
-    output = dict()
-
-    if "viewing" not in vars:
+    request = current.request
+    if "options.s3json" in request.args:
+        # options.s3json lookups for AddResourceLink
+        output = current.rest_controller("stats", "demographic_data")
         return output
+
+    # Only viewing is valid
+    vars = request.get_vars
+    if "viewing" not in vars:
+        error = current.xml.json_message(False, 400, message="viewing not in vars")
+        raise HTTP(400, error)
     else:
         viewing = vars.viewing
     if "." in viewing:
         tablename, id = viewing.split(".", 1)
     else:
-        return output
+        error = current.xml.json_message(False, 400, message="viewing needs a period")
+        raise HTTP(400, error)
 
     s3db = current.s3db
     table = s3db[tablename]
