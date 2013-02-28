@@ -60,6 +60,14 @@ import re
 import time
 from datetime import datetime, timedelta
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 #from gluon import current
 #from gluon.dal import Field
@@ -1645,12 +1653,13 @@ class IS_ADD_PERSON_WIDGET(Validator):
         db = current.db
         s3db = current.s3db
         request = current.request
-        settings = current.deployment_settings
 
-        try:
-            person_id = int(value)
-        except:
-            person_id = None
+        person_id = None
+        if value:
+            try:
+                person_id = int(value)
+            except:
+                pass
 
         ptable = db.pr_person
         ctable = db.pr_contact
@@ -1665,7 +1674,8 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
             # No email?
             if not value:
-                email_required = settings.get_hrm_email_required()
+                email_required = \
+                    current.deployment_settings.get_hrm_email_required()
                 if email_required:
                     return (value, error_message)
                 return (value, None)
@@ -1692,6 +1702,9 @@ class IS_ADD_PERSON_WIDGET(Validator):
             return value, None
 
         if request.env.request_method == "POST":
+            if "import" in request.args:
+                # Widget Validator not appropriate for this context
+                return (person_id, None)
             _vars = request.post_vars
             mobile = _vars["mobile_phone"]
             if mobile:
@@ -1717,7 +1730,8 @@ class IS_ADD_PERSON_WIDGET(Validator):
                     db(query).update(**data)
 
                 # Update the contact information & details
-                record = db(query).select(ptable.pe_id, limitby=(0, 1)).first()
+                record = db(query).select(ptable.pe_id,
+                                          limitby=(0, 1)).first()
                 if record:
                     pe_id = record.pe_id
 
