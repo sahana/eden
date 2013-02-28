@@ -30,7 +30,6 @@
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
            "S3StatsGroupModel",
-           "stats_parameter_represent",
            "stats_demographic_data_controller",
            ]
 
@@ -69,14 +68,13 @@ class S3StatsModel(S3Model):
         #----------------------------------------------------------------------
         # Super entity: stats_parameter
         #
-        sp_types = Storage(
+        sp_types = Storage(stats_demographic = T("Demographic"),
+                           project_beneficiary_type = T("Project Beneficiary Type"),
                            vulnerability_indicator = T("Vulnerability Indicator"),
                            vulnerability_aggregated_indicator = T("Vulnerability Aggregated Indicator"),
-                           stats_demographic = T("Demographic"),
-                           project_beneficiary_type = T("Project Beneficiary Type"),
                            #survey_question_type = T("Survey Question Type"),
                            #climate_parameter = T("Climate Parameter"),
-                          )
+                           )
 
         tablename = "stats_parameter"
         table = super_entity(tablename, "parameter_id",
@@ -89,13 +87,14 @@ class S3StatsModel(S3Model):
         table.instance_type.readable = True
 
         # Reusable Field
+        represent = S3Represent(lookup=tablename)
         param_id = S3ReusableField("parameter_id", table,
                                    sortby="name",
                                    requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
-                                                        stats_parameter_represent,
+                                                        represent,
                                                         orderby="stats_parameter.name",
                                                         sort=True),
-                                   represent = stats_parameter_represent,
+                                   represent = represent,
                                    label = T("Statistics Parameter"),
                                    ondelete = "CASCADE"
                                    )
@@ -103,11 +102,10 @@ class S3StatsModel(S3Model):
         #----------------------------------------------------------------------
         # Super entity: stats_data
         #
-        sd_types = Storage(
-                           vulnerability_data = T("Vulnerability Data"),
-                           stats_demographic_data = T("Demographic Data"),
-                           #survey_answer = T("Survey Answer"),
+        sd_types = Storage(stats_demographic_data = T("Demographic Data"),
                            project_beneficiary = T("Project Beneficiary"),
+                           vulnerability_data = T("Vulnerability Data"),
+                           #survey_answer = T("Survey Answer"),
                            #climate_data = T("Climate Data"),
                            )
 
@@ -152,6 +150,7 @@ class S3StatsModel(S3Model):
 
         tablename = "stats_aggregate"
         table = define_table(tablename,
+                             # Component
                              param_id(),
                              location_id(
                                 widget = S3LocationAutocompleteWidget(),
@@ -838,16 +837,18 @@ class S3StatsDemographicModel(S3Model):
         #
         tablename = "stats_demographic_data"
         table = define_table(tablename,
+                             # Instance
                              super_link("data_id", "stats_data"),
-                             self.stats_param_id(
-                                    label=T("Demographic"),
-                                    requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
-                                                         stats_parameter_represent,
-                                                         filterby="instance_type",
-                                                         filter_opts=["stats_demographic"],
-                                                         orderby="stats_parameter.name",
-                                                         sort=True)
-                                ),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Demographic"),
+                                        instance_types = ["stats_demographic"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        ),
                              self.gis_location_id(
                                     widget = S3LocationAutocompleteWidget(),
                                     requires = IS_LOCATION()
@@ -1177,24 +1178,6 @@ class S3StatsGroupModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-# =============================================================================
-def stats_parameter_represent(id, row=None):
-    """ FK representation """
-
-    if row:
-        return row.name
-    elif not id:
-        return current.messages["NONE"]
-
-    db = current.db
-    table = db.stats_parameter
-    r = db(table._id == id).select(table.name,
-                                   limitby=(0, 1)).first()
-    try:
-        return r.name
-    except:
-        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def stats_demographic_data_controller():
