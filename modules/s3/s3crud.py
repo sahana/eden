@@ -833,7 +833,7 @@ class S3CRUD(S3Method):
         # Get table-specific parameters
         _config = self._config
         orderby = _config("orderby", None)
-        sortby = _config("sortby", [[1, 'asc']])
+        sortby = _config("sortby", [[1, "asc"]])
         linkto = _config("linkto", None)
         insertable = _config("insertable", True)
         listadd = _config("listadd", True)
@@ -1166,8 +1166,11 @@ class S3CRUD(S3Method):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets:
                 from s3search import S3FilterForm
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                           submit=True,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
                                            url=r.url(vars={}),
                                            _class="filter-form")
                 fresource = current.s3db.resource(resource.tablename)
@@ -1321,7 +1324,7 @@ class S3CRUD(S3Method):
         get_config = resource.get_config
 
         # Get table-specific parameters
-        sortby = get_config("sortby", [[1, 'asc']])
+        sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
 
         # List fields
@@ -1538,7 +1541,7 @@ class S3CRUD(S3Method):
         get_config = resource.get_config
 
         # Get table-specific parameters
-        sortby = get_config("sortby", [[1, 'asc']])
+        sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
         layout = get_config("list_layout", None)
 
@@ -1713,7 +1716,7 @@ class S3CRUD(S3Method):
         # Get table-specific parameters
         _config = self._config
         orderby = _config("orderby", None)
-        sortby = _config("sortby", [[1, 'asc']])
+        sortby = _config("sortby", [[1, "asc"]])
         linkto = _config("linkto", None)
         insertable = _config("insertable", True)
         listadd = _config("listadd", True)

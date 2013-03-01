@@ -475,7 +475,7 @@ def s3_avatar_represent(id, tablename="auth_user", **attr):
 
         @param tablename: either "auth_user" or "pr_person" depending on which
                           table the 'id' refers to
-        @param attr: keyword args which are passed into the IMG(), such as _class
+        @param attr: additional HTML attributes for the IMG(), such as _class
     """
 
     db = current.db
@@ -567,23 +567,23 @@ def s3_auth_user_represent(id, row=None):
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-def s3_auth_user_represent_name(id):
+def s3_auth_user_represent_name(id, row=None):
     """
         Represent users by their names
     """
 
-    if not id:
-        return current.messages["NONE"]
-
-    db = current.db
-    table = db.auth_user
-    user = db(table.id == id).select(table.first_name,
-                                     table.last_name,
-                                     limitby=(0, 1)).first()
+    if not row:
+        if not id:
+            return current.messages["NONE"]
+        db = current.db
+        table = db.auth_user
+        row = db(table.id == id).select(table.first_name,
+                                        table.last_name,
+                                        limitby=(0, 1)).first()
     try:
-        return s3_format_fullname(user.first_name.strip(),
+        return s3_format_fullname(row.first_name.strip(),
                                   None,
-                                  user.last_name.strip())
+                                  row.last_name.strip())
     except:
         return current.messages.UNKNOWN_OPT
 

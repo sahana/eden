@@ -157,11 +157,14 @@ class S3EventModel(S3Model):
                                    )
 
         configure(tablename,
+                  orderby=~table.zero_hour,
+                  list_orderby=~table.zero_hour,
                   update_onaccept=self.event_update_onaccept,
                   deduplicate=self.event_duplicate,
                   list_fields = ["id",
                                  "name",
                                  (T("Location"), "location.name"),
+                                 "zero_hour",
                                  "exercise",
                                  "closed",
                                  "comments",

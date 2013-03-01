@@ -3611,7 +3611,9 @@ class S3FilterForm(object):
             @param get_vars: the request GET vars (URL query dict)
         """
 
-        formstyle = self.opts.get("formstyle", self._formstyle)
+        formstyle = self.opts.get("formstyle", None)
+        if not formstyle:
+            formstyle = self._formstyle
 
         rows = []
         rappend = rows.append
@@ -3636,17 +3638,22 @@ class S3FilterForm(object):
 
         submit = self.opts.get("submit", False)
         if submit:
+            _class = "filter-submit"
             if submit is True:
                 label = current.T("Search")
+            elif isinstance(submit, (list, tuple)):
+                label = submit[0]
+                _class = "%s %s" % (submit[1], _class)
             else:
                 label = submit
             url = self.opts.get("url", URL(vars={}))
             submit = TAG[""](
                         INPUT(_type="button",
                               _value=label,
-                              _class="filter-submit"),
+                              _class=_class),
                         INPUT(_type="hidden",
                               _value=url))
+
             rappend(formstyle(None, "", submit, ""))
 
         form = FORM(TABLE(TBODY(rows)), **self.attr)

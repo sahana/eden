@@ -8,7 +8,7 @@
          CSV fields:
          Series...................Series Name (optional)
          Name.....................Post Name (for menu links)
-         Name.....................Post Title (for use in the browser-bar)
+         Title.....................Post Title (for use in the browser-bar)
          Body.....................Post Body (HTML)
          Module...................Post Module
          Country..................optional.....Post Country
@@ -21,6 +21,7 @@
          Lon......................float........Longitude of the most local location
          Comments.................Post Comments
          Author...................Post created_by (email)
+         Date.....................Post created_on (datetime)
          Roles....................Post Roles (not yet implemented)
 
     *********************************************************************** -->
@@ -126,6 +127,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="Author" select="col[@field='Author']/text()"/>
+        <xsl:variable name="Date" select="col[@field='Date']/text()"/>
         <xsl:variable name="Series" select="col[@field='Series']/text()"/>
         <xsl:variable name="Name" select="col[@field='Name']/text()"/>
         <xsl:variable name="Title" select="col[@field='Title']/text()"/>
@@ -136,6 +138,11 @@
             <xsl:if test="$Author!=''">
                 <xsl:attribute name="created_by">
                     <xsl:value-of select="$Author"/>
+                </xsl:attribute>
+            </xsl:if>
+            <xsl:if test="$Date!=''">
+                <xsl:attribute name="created_on">
+                    <xsl:value-of select="$Date"/>
                 </xsl:attribute>
             </xsl:if>
             <xsl:if test="$Series!=''">
