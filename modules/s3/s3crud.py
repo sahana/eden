@@ -1550,7 +1550,7 @@ class S3CRUD(S3Method):
         if orderby is None:
             for f in list_fields:
                 rfield = resource.resolve_selector(f)
-                if rfield.field:
+                if rfield.field and rfield.colname != str(resource._id):
                     default_orderby = rfield.field
                     break
         else:
@@ -1595,9 +1595,13 @@ class S3CRUD(S3Method):
             else:
                 initial_limit = pagelength
 
+            if not orderby:
+                orderby = default_orderby
+
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=start,
                                                        limit=initial_limit,
+                                                       orderby=orderby,
                                                        listid="datalist",
                                                        layout=layout)
 
