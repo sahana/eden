@@ -2517,12 +2517,15 @@ class S3Resource(object):
         if alias == name:
             alias = None
 
+        postprocess = self.get_config("xml_post_render")
+
         # Generate the element
         element = xml.resource(parent, table, record,
                                fields=dfields,
                                alias=alias,
                                lazy=lazy,
-                               url=url)
+                               url=url,
+                               postprocess=postprocess)
 
         # Add the references
         xml.add_references(element, rmap,

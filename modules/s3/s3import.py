@@ -1825,9 +1825,11 @@ class S3ImportItem(object):
 
         if original is None:
             original = S3Resource.original(table, element)
+        postprocess = s3db.get_config(self.tablename, "xml_post_parse")
         data = xml.record(table, element,
                           files=files,
                           original=original,
+                          postprocess=postprocess,
                           validate=validate)
 
         if data is None:
@@ -2171,7 +2173,7 @@ class S3ImportItem(object):
                 self.job.onconflict(self)
 
         if self.data is not None:
-            data = Storage(self.data)
+            data = table._filter_fields(self.data, id=True)
         else:
             data = Storage()
 
