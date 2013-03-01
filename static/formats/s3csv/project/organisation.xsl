@@ -10,6 +10,7 @@
 
          Project..............string..........Project Name
          Organisation.........string..........Organisation Name
+         Organisation Type....string..........Organisation Type
          Role.................code............Organisation Role
          Amount...............float...........Funding Amount
          Currency.............code............Currency of the Funding Amount
@@ -23,13 +24,21 @@
     <project:organisation-role code="1">Host National Society</project:organisation-role>
     <project:organisation-role code="2">Partner National Society</project:organisation-role>
     <project:organisation-role code="3">Donor</project:organisation-role>
+    <project:organisation-role code="5">Partner</project:organisation-role>
 
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="org_types" match="row" use="col[@field='Organisation Type']"/>
     <xsl:key name="projects" match="row" use="col[@field='Project']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+            <!-- Organisation Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('org_types',
+                                                                   col[@field='Organisation Type'])[1])]">
+                <xsl:call-template name="OrganisationType"/>
+            </xsl:for-each>
+
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisations',
                                                                    col[@field='Organisation'])[1])]">
@@ -99,15 +108,102 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="OrganisationType">
+        <xsl:variable name="Type" select="col[@field='Organisation Type']/text()"/>
+
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('OrgType:', $Type)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Type"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="Type" select="col[@field='Organisation Type']/text()"/>
+        <xsl:variable name="Role" select="col[@field='Role']/text()"/>
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('Organisation:', $OrgName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$OrgName"/></data>
+            <xsl:choose>
+                <!-- Use Type if-specified -->
+                <xsl:when test="$Type!=''">
+                    <reference field="organisation_type_id" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('OrgType:', $Type)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <!-- If not-specified, then use a sensible default
+                     NB This is bad as it will update existing records!
+                     @ToDo: Provide Defaults from XML (customisable in onvalidation by-deployment)
+                -->
+                <xsl:when test="$Role='Host National Society' or $Role='Partner National Society'">
+                    <reference field="organisation_type_id" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="'OrgType:Red Cross'"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$Role='Donor'">
+                    <reference field="organisation_type_id" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('OrgType:', $Role)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$Role='Partner'">
+                    <reference field="organisation_type_id" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('OrgType:', $Role)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+            </xsl:choose>
         </resource>
+
+        <!-- Inefficient, but we don't want to create types here for deployments which don't want them -->
+        <xsl:choose>
+            <xsl:when test="$Type!=''">
+                <!-- Created in "/" -->
+            </xsl:when>
+            <xsl:when test="$Role='Host National Society' or $Role='Partner National Society'">
+                <resource name="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="'OrgType:Red Cross'"/>
+                    </xsl:attribute>
+                    <data field="name">
+                        <xsl:text>Red Cross / Red Crescent</xsl:text>
+                    </data>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$Role='Donor'">
+                <resource name="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('OrgType:', $Role)"/>
+                    </xsl:attribute>
+                    <data field="name">
+                        <xsl:text>Bilateral</xsl:text>
+                    </data>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$Role='Partner'">
+                <resource name="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('OrgType:', $Role)"/>
+                    </xsl:attribute>
+                    <data field="name">
+                        <xsl:text>NGO</xsl:text>
+                    </data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
 
     </xsl:template>
 

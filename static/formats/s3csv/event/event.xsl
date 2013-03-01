@@ -199,10 +199,12 @@
                 </xsl:when>
             </xsl:choose>
 
-            <!-- Link to Locations -->
-            <resource name="event_event_location">
-                <xsl:call-template name="LocationReference"/>
-            </resource>
+            <!-- Link to Location(s) -->
+            <xsl:if test="col[@field=$Country]!=''">
+                <resource name="event_event_location">
+                    <xsl:call-template name="LocationReference"/>
+                </resource>
+            </xsl:if>
             
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">

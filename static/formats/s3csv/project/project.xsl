@@ -42,13 +42,16 @@
     <xsl:variable name="ThemePrefix" select="'Theme:'"/>
 
     <!-- ****************************************************************** -->
-    <xsl:key name="orgs"
-             match="row"
-             use="col[@field='Organisation']"/>
+    <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
 
-    <xsl:key name="statuses"
-             match="row"
-             use="col[@field='Status']"/>
+    <xsl:key name="statuses" match="row" use="col[@field='Status']"/>
+
+    <xsl:key name="FP" match="row"
+             use="concat(col[@field='Organisation'], '/',
+                         col[@field='FPFirstName'], '/',
+                         col[@field='FPLastName'], '/',
+                         col[@field='FPEmail'], '/',
+                         col[@field='FPMobilePhone'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -58,6 +61,17 @@
                                         generate-id(key('orgs',
                                                         col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Focal Persons -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('FP',
+                                                        concat(col[@field='Organisation'], '/',
+                                                               col[@field='FPFirstName'], '/',
+                                                               col[@field='FPLastName'], '/',
+                                                               col[@field='FPEmail'], '/',
+                                                               col[@field='FPMobilePhone']))[1])]">
+                <xsl:call-template name="FocalPerson"/>
             </xsl:for-each>
 
             <!-- Statuses -->
@@ -97,8 +111,12 @@
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
-            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+            <xsl:if test="col[@field='Start Date']!=''">
+                <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='End Date']!=''">
+                <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+            </xsl:if>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             <xsl:if test="col[@field='Objectives']!=''">
                 <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
@@ -228,10 +246,6 @@
             <xsl:with-param name="list"><xsl:value-of select="$Themes"/></xsl:with-param>
             <xsl:with-param name="arg">theme_res</xsl:with-param>
         </xsl:call-template>
-
-        <xsl:if test="$FirstName!=''">
-            <xsl:call-template name="FocalPerson"/>
-        </xsl:if>
 
     </xsl:template>
 

@@ -3114,13 +3114,24 @@ def org_organisation_controller():
                 type_table = s3db.org_organisation_type
                 fquery = (type_table.name.lower().belongs(type_names))
                 field = r.table.organisation_type_id
-                list_fields = s3db.get_config("org_organisation", "list_fields")
-                try:
-                    list_fields.remove("organisation_type_id")
-                except:
-                    pass
-                else:
-                    s3db.configure("org_organisation", list_fields=list_fields)
+                if len(type_names) == 1:
+                    list_fields = s3db.get_config("org_organisation", "list_fields")
+                    try:
+                        list_fields.remove("organisation_type_id")
+                    except:
+                        pass
+                    else:
+                        s3db.configure("org_organisation", list_fields=list_fields)
+                    # Default the Type
+                    if not r.method or r.method == "create":
+                        query = (type_table.name == type_filter)
+                        row = db(query).select(type_table.id,
+                                               limitby=(0, 1)).first()
+                        type = row and row.id
+                        if type:
+                            field.default = type
+                            field.writable = False
+
                 field.requires = IS_ONE_OF(db(fquery),
                                            "org_organisation_type.id",
                                            label=field.represent,
@@ -3131,15 +3142,6 @@ def org_organisation_controller():
                 if type_filter in type_crud_strings:
                     s3.crud_strings.org_organisation = type_crud_strings[type_filter]
 
-                # default the Type
-                if not r.method or r.method == "create":
-                    query = (type_table.name == type_filter)
-                    row = db(query).select(type_table.id,
-                                           limitby=(0, 1)).first()
-                    type = row and row.id
-                    if type:
-                        field.default = type
-                        field.writable = False
 
         return True
     s3.prep = prep

@@ -53,7 +53,7 @@
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
 <script type='text/javascript'>//<![CDATA[
-{{try:}}{{if chart_opts:}}{{=XML(chart_opts)}}{{pass}}{{except:}}{{pass}}
+{{try:}}{{=XML(chart_opts)}}{{except:}}var chart_opts{{pass}}
 var json_data={{=XML(json_data)}}
 //]]></script>
 {{if s3.debug:}}

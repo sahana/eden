@@ -1031,8 +1031,6 @@ class S3XML(S3Codec):
 
         encode_iso_datetime = self.encode_iso_datetime
 
-        table_fields = table.fields
-
         _repr = self.represent
         to_json = json.dumps
 

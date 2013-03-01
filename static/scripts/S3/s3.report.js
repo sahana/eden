@@ -282,7 +282,7 @@ function reportRenderBreakdown(json, dim) {
 
     var odata = [];
     var xmax = 0;
-    for (var c=0; c<cols.length; c++) {
+    for (var c=0; c < cols.length; c++) {
         // every col gives a series
         var series = {label: cols[c][2]};
         var values = [];
@@ -485,8 +485,8 @@ $(document).ready(function() {
         $('#report_options legend').children().toggle();
     }
 
-    // Render default chart
     if (undefined !== chart_opts) {
+        // Render default chart
         var t = chart_opts.type, d = chart_opts.dim;
         if (d == 'cols') {
             d = 1;

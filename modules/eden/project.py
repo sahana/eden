@@ -1581,25 +1581,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                   super_entity = "stats_parameter",
                   )
 
-        # Reusable Field
-        beneficiary_type_param_id = S3ReusableField("parameter_id", table,
-            sortby="name",
-            requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
-                                 self.stats_parameter_represent,
-                                 orderby="stats_parameter.name",
-                                 filterby = "instance_type",
-                                 filter_opts = ["project_beneficiary_type"],
-                                 sort=True),
-            represent = self.stats_parameter_represent,
-            label = T("Beneficiary Type"),
-            comment = S3AddResourceLink(c="project",
-                f="beneficiary_type",
-                vars = dict(child = "parameter_id"),
-                title=ADD_BNF_TYPE,
-                tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
-            ondelete = "CASCADE"
-            )
-
         # ---------------------------------------------------------------------
         # Project Beneficiary
         #
@@ -1611,9 +1592,23 @@ class S3ProjectBeneficiaryModel(S3Model):
                                                      writable=False),
                              self.project_location_id(comment=None),
 
-                             # stats_data Fields
+                             # Instance
                              super_link("data_id", "stats_data"),
-                             beneficiary_type_param_id(),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Beneficiary Type"),
+                                        instance_types = ["project_beneficiary_type"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        comment = S3AddResourceLink(c="project",
+                                                                    f="beneficiary_type",
+                                                                    vars = dict(child = "parameter_id"),
+                                                                    title=ADD_BNF_TYPE,
+                                                                    tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
+                                        ),
                              # populated automatically
                              self.gis_location_id(readable = False,
                                                   writable = False),

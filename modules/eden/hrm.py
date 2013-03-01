@@ -1515,6 +1515,7 @@ class S3HRSkillModel(S3Model):
                                    length=64),       # Mayon Compatibility
                              Field("priority", "integer",
                                    label = T("Priority"),
+                                   default = 1,
                                    requires = IS_INT_IN_RANGE(1, 9),
                                    widget = S3SliderWidget(minval=1, maxval=9, steprange=1, value=1),
                                    comment = DIV(_class="tooltip",

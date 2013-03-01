@@ -26,7 +26,7 @@ settings.base.theme = "SandyRelief"
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
 # Default timezone for users
-settings.L10n.utc_offset = "UTC +0500"
+settings.L10n.utc_offset = "UTC -0500"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 settings.L10n.date_format = T("%m-%d-%Y")
 settings.L10n.time_format = T("%H:%M:%S")
@@ -44,6 +44,8 @@ settings.L10n.default_country_code = 1
 settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
 settings.ui.label_postcode = "ZIP Code"
+# PDF to Letter
+settings.base.paper_size = T("Letter")
 
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
