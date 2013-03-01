@@ -624,14 +624,18 @@ def group_membership():
     s3db.hrm_configure_pr_group_membership()
 
     table = db.pr_group_membership
-    # Add Team Name to list_fields
+    # Amend list_fields
     table.group_id.label = T("Team Name")
     s3db.configure("pr_group_membership",
                    list_fields=["id",
                                 "group_id",
-                                "person_id",
+                                "group_id$description",
                                 "group_head",
-                                "description",
+                                "person_id$first_name",
+                                "person_id$middle_name",
+                                "person_id$last_name",
+                                (T("Email"), "person_id$email.value"),
+                                (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
                                 ])
 
     # Only show Relief Teams
@@ -644,7 +648,10 @@ def group_membership():
                 (htable.type == 1) & \
                 (htable.person_id == table.person_id)
 
-    output = s3_rest_controller("pr", "group_membership")
+    output = s3_rest_controller("pr", "group_membership",
+                                csv_template="group_membership",
+                                csv_stylesheet=("hrm", "group_membership.xsl"),
+                                )
     return output 
 
 # =============================================================================

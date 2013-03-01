@@ -193,22 +193,39 @@ class S3PersonEntity(S3Model):
 
         # Components
         pe_id = super_key(table)
-        add_component("pr_contact_emergency", pr_pentity=pe_id)
         add_component("pr_address", pr_pentity=pe_id)
-        add_component("pr_image", pr_pentity=pe_id)
         add_component("pr_contact", pr_pentity=pe_id)
+        # Email
+        add_component("pr_contact",
+                      pr_pentity=dict(
+                        name="email",
+                        joinby="pe_id",
+                        filterby="contact_method",
+                        filterfor=["EMAIL"],
+                      ))
+        # Mobile Phone
+        add_component("pr_contact",
+                      pr_pentity=dict(
+                        name="phone",
+                        joinby="pe_id",
+                        filterby="contact_method",
+                        filterfor=["SMS"],
+                      ))
+        add_component("pr_contact_emergency", pr_pentity=pe_id)
+        add_component("pr_image", pr_pentity=pe_id)
         add_component("pr_note", pr_pentity=pe_id)
-        add_component("pr_role", pr_pentity=pe_id)
         add_component("pr_physical_description",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
-        add_component("dvi_identification",
+        add_component("pr_role", pr_pentity=pe_id)
+        add_component("pr_saved_search", pr_pentity=pe_id)
+        add_component("dvi_checklist",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
         add_component("dvi_effects",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
-        add_component("dvi_checklist",
+        add_component("dvi_identification",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
         # Map Configs
@@ -217,8 +234,6 @@ class S3PersonEntity(S3Model):
         add_component("gis_config",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
-
-        add_component("pr_saved_search", pr_pentity=pe_id)
 
         # ---------------------------------------------------------------------
         # Person <-> User
@@ -1168,9 +1183,9 @@ class S3GroupModel(S3Model):
                   search_method = search_method,
                   list_fields = ["id",
                                  "group_id",
+                                 "group_id$description",
                                  "person_id",
                                  "group_head",
-                                 "description"
                                  ])
 
         # ---------------------------------------------------------------------

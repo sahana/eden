@@ -133,46 +133,38 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="orgs"
-             match="row"
+    <xsl:key name="orgs" match="row"
              use="col[@field='Organisation']"/>
 
     <xsl:key name="branches" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
 
-    <xsl:key name="offices"
-             match="row"
+    <xsl:key name="offices" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'], '/', col[@field='Office'])"/>
 
-    <xsl:key name="departments"
-             match="row"
+    <xsl:key name="departments" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Department'])"/>
 
-    <xsl:key name="jobtitles"
-             match="row"
+    <xsl:key name="jobtitles" match="row"
              use="concat(col[@field='Organisation'], '/',
                          col[contains(
                              document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
                              concat('|', @field, '|'))])"/>
 
-    <xsl:key name="jobroles"
-             match="row"
+    <xsl:key name="jobroles" match="row"
              use="concat(col[@field='Organisation'], '/',
                          col[contains(
                              document('../labels.xml')/labels/column[@name='JobRole']/match/text(),
                              concat('|', @field, '|'))])"/>
 
-    <xsl:key name="volunteerclusters"
-             match="row"
+    <xsl:key name="volunteerclusters" match="row"
              use="concat(col[@field='Volunteer Cluster Type'],
                          col[@field='Volunteer Cluster'])"/>
 
-    <xsl:key name="volunteerclustertypes"
-             match="row"
+    <xsl:key name="volunteerclustertypes" match="row"
              use="col[@field='Volunteer Cluster Type']"/>
 
-    <xsl:key name="volunteerclustertpositions"
-             match="row"
+    <xsl:key name="volunteerclustertpositions" match="row"
              use="col[@field='Volunteer Cluster Position']"/>
 
     <!-- ****************************************************************** -->
@@ -567,12 +559,13 @@
                 <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
                 <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
 	            <xsl:if test="col[@field='Religion']">
-	                <xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
-	                <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
-	                <xsl:variable name="religion">
-	                    <xsl:value-of select="translate(col[@field='Religion'], $uppercase, $smallcase)"/>
-	                </xsl:variable>
-	                <data field="religion"><xsl:value-of select="$religion"/></data>
+	                <data field="religion">
+                        <xsl:call-template name="lowercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="col[@field='Religion']"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </data>
 	            </xsl:if>
 	            <xsl:variable name="l0">
                     <xsl:choose>

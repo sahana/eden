@@ -855,8 +855,9 @@ class S3PDFTable(object):
             p = Table(page, repeatRows=1,
                       style=self.style,
                       hAlign="LEFT",
-                      colWidths=colWidths
-                     )
+                      colWidths=colWidths,
+                      emptyTableAction="indicate"
+                      )
             content.append(p)
             # Add a page break, except for the last page.
             if currentPage + 1 < len(self.pages):
