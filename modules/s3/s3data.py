@@ -916,7 +916,7 @@ class S3DataList(object):
             @param record: the record as dict
             @param attr: additional HTML attributes for the item
         """
-        
+
         pkey = str(self.resource._id)
 
         # Construct the item ID

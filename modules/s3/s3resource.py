@@ -1485,7 +1485,8 @@ class S3Resource(object):
 
         # Generate the data table
         if rows:
-            data = self.extract(rows, selectors, represent=True)
+            data = self.extract(rows, selectors,
+                                represent=True, raw_data=True)
             return S3DataList(self,
                               fields,
                               data,
@@ -3227,7 +3228,12 @@ class S3Resource(object):
         return None
 
     # -------------------------------------------------------------------------
-    def extract(self, rows, fields, represent=False, show_links=True):
+    def extract(self,
+                rows,
+                fields,
+                represent=False,
+                show_links=True,
+                raw_data=False):
         """
             Extract the fields corresponding to fields from the given
             rows and return them as a list of Storages, with ambiguous
@@ -3235,6 +3241,12 @@ class S3Resource(object):
 
             @param rows: the Rows
             @param fields: list of fields
+            @param represent: return text representations instead of
+                              raw values
+            @param show_links: render representations as links where
+                               available (S3Represent only)
+            @param raw_data: include the raw data as additional "_row"
+                             attribute in the result dict
 
             @return: list of dicts of {"tablename.fieldname":value}
         """
@@ -3287,7 +3299,8 @@ class S3Resource(object):
             record_id = pkey.extract(row)
             if record_id not in results:
                 duplicate = False
-                results[record_id] = Storage()
+                results[record_id] = Storage() \
+                                     if not raw_data else Storage(_row=Storage())
                 seen(record_id)
             else:
                 duplicate = True
@@ -3378,6 +3391,8 @@ class S3Resource(object):
                         except:
                             text = s3_unicode(value)
                         result[colname] = text
+                        if raw_data:
+                            result["_row"][colname] = value
 
                     # Single value (master record)
                     elif len(record) == 1 or \
@@ -3385,6 +3400,8 @@ class S3Resource(object):
                         value = record.keys()[0]
                         result[colname] = values[value] \
                                           if value in values else NONE
+                        if raw_data:
+                            result["_row"][colname] = value
                         continue
 
                     # Multiple values (joined or list-type)
@@ -3409,6 +3426,8 @@ class S3Resource(object):
                             data = ", ".join([s3_unicode(v) for v in vlist])
 
                         result[colname] = data
+                        if raw_data:
+                            result["_row"][colname] = record.keys()
 
                 # Restore linkto
                 if linkto is not None:
