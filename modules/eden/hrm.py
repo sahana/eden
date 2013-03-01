@@ -3717,7 +3717,7 @@ def hrm_service_record(r, **attr):
             avatar = IMG(_src=url,
                          _width=size[0],
                          _height=size[1],
-                       )
+                         )
             person_details[0].append(TD(avatar))
 
         # Contact Details

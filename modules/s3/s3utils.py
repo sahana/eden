@@ -45,10 +45,11 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.storage import Storage
 from gluon.dal import Row
 from gluon.sqlhtml import SQLTABLE
+from gluon.storage import Storage
 from gluon.tools import Crud
+
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 DEBUG = False
@@ -468,11 +469,13 @@ def s3_url_represent(url):
     return A(url, _href=url, _target="blank")
 
 # =============================================================================
-def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
+def s3_avatar_represent(id, tablename="auth_user", **attr):
     """
         Represent a User as their profile picture or Gravatar
 
-        @todo: parameter description?
+        @param tablename: either "auth_user" or "pr_person" depending on which
+                          table the 'id' refers to
+        @param attr: keyword args which are passed into the IMG(), such as _class
     """
 
     db = current.db
@@ -534,11 +537,13 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
     else:
         url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
 
-    return IMG(_src=url,
-               _class=_class,
-               _width=size[0],
-               _height=size[1],
-              )
+    if "_class" not in attr:
+        attr["_class"] = "avatar"
+    if "_width" not in attr:
+        attr["_width"] = size[0]
+    if "_height" not in attr:
+        attr["_height"] = size[1]
+    return IMG(_src=url, **attr)
 
 # =============================================================================
 def s3_auth_user_represent(id, row=None):

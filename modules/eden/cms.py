@@ -196,7 +196,7 @@ class S3ContentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity="doc_document",
+                  super_entity="doc_entity",
                   onaccept = self.post_onaccept)
 
         # Components
