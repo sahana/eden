@@ -1643,7 +1643,13 @@ class S3CRUD(S3Method):
                 # Pagination data
                 vars = dict([(k,v) for k, v in r.get_vars.iteritems()
                                    if k not in ("start", "limit")])
-                ajax_url = r.url(representation="dl", vars=vars)
+
+                # Allow customization of the datalist Ajax-URL
+                # Note: the Ajax-URL must use the .dl representation and
+                # plain.html view for pagination to work properly!
+                ajax_url = attr.get("list_ajaxurl", None)
+                if not ajax_url:
+                    ajax_url = r.url(representation="dl", vars=vars)
                 dl_data = {
                     "startindex": start if start else 0,
                     "maxitems": limit if limit else numrows,
