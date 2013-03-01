@@ -1166,8 +1166,11 @@ class S3CRUD(S3Method):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets:
                 from s3search import S3FilterForm
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                           submit=True,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
                                            url=r.url(vars={}),
                                            _class="filter-form")
                 fresource = current.s3db.resource(resource.tablename)

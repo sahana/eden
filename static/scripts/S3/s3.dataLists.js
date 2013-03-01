@@ -26,7 +26,11 @@ var url_append = function(url, query) {
 
 function dlInfiniteScroll(datalist) {
 
-    pagination = $(datalist).find('.dl-pagination');
+    var pagination = $(datalist).find('.dl-pagination');
+    if (!pagination.length) {
+        // This dataList doesn't paginate
+        return;
+    }
     var dl_data = JSON.parse($(pagination[0]).val());
 
     // Read dl_data
@@ -36,8 +40,7 @@ function dlInfiniteScroll(datalist) {
         ajaxurl = dl_data['ajaxurl'];
 
     // Compute bounds
-    var maxpage = 1
-        maxindex = startindex + maxitems,
+    var maxindex = startindex + maxitems,
         initialitems = $(datalist).find('.dl-item').length;
 
     // Compute maxpage
