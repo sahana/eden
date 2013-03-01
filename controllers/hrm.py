@@ -60,8 +60,7 @@ def human_resource():
                 field.widget = OptionsWidget.widget
             elif r.id:
                 # Redirect to person controller
-                vars = {
-                        "human_resource.id" : r.id,
+                vars = {"human_resource.id" : r.id,
                         "group" : "staff"
                         }
                 redirect(URL(f="person",
