@@ -6,6 +6,8 @@
     A module to record inventories of items at a locations (sites),
     including Warehouses, Offices, Shelters & Hospitals
 """
+from gluon import current
+settings = current.deployment_settings
 
 module = request.controller
 resourcename = request.function

@@ -3,6 +3,8 @@
 """
     Request Management
 """
+from gluon import current
+settings = current.deployment_settings
 
 module = request.controller
 resourcename = request.function
