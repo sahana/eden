@@ -155,6 +155,61 @@ class ComponentDisambiguationTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
+class PostParseAddValueTests(unittest.TestCase):
+    """ Test adding values to record using xml_post_parse """
+
+    def setUp(self):
+    
+        current.auth.override = True
+
+    def testPostParseAddValue(self):
+
+        xmlstr = """
+<s3xml>
+    <resource name="pr_person">
+        <data field="first_name">Test</data>
+        <data field="last_name">PostParseAdd1</data>
+    </resource>
+    <resource name="pr_person">
+        <data field="first_name">Test</data>
+        <data field="last_name">PostParseAdd2</data>
+        <data field="gender" value="3"/>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        resource = current.s3db.resource("pr_person")
+
+        def xml_post_parse(elem, record):
+            record["_gender"] = 2 # set female as dynamic default
+
+        pp = resource.get_config("xml_post_parse")
+        resource.configure(xml_post_parse=xml_post_parse)
+
+        resource.import_xml(tree)
+
+        db = current.db
+        table = resource.table
+        query = (table.first_name == "Test") & \
+                (table.last_name == "PostParseAdd1")
+        row = db(query).select(table.id, table.gender).first()
+        self.assertNotEqual(row, None)
+        self.assertEqual(row.gender, 2)
+
+        query = (table.first_name == "Test") & \
+                (table.last_name == "PostParseAdd2")
+        row = db(query).select(table.id, table.gender).first()
+        self.assertNotEqual(row, None)
+        self.assertEqual(row.gender, 3)
+
+    def tearDown(self):
+
+        current.db.rollback()
+        current.auth.override = False
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -172,6 +227,7 @@ if __name__ == "__main__":
     run_suite(
         DefaultApproverOverrideTests,
         ComponentDisambiguationTests,
+        PostParseAddValueTests,
     )
 
 # END ========================================================================
