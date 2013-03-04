@@ -5486,30 +5486,39 @@ class S3URLQuery(object):
             @returns: the parsed value
         """
 
+        uquote = lambda w: w.replace('\\"', '\\"\\') \
+                            .strip('"') \
+                            .replace('\\"\\', '"')
         NONE = ("NONE", "None")
-        if type(value) is list:
-            value = ",".join(value)
+        if type(value) is not list:
+            value = [value]
         vlist = []
-        w = ""
-        quote = False
-        for c in value:
-            if c == '"':
-                w += c
-                quote = not quote
-            elif c == "," and not quote:
-                if w in NONE:
-                    w = None
+        for item in value:
+            w = ""
+            quote = False
+            ignore_quote = False
+            for c in item:
+                if c == '"' and not ignore_quote:
+                    w += c
+                    quote = not quote
+                elif c == "," and not quote:
+                    if w in NONE:
+                        w = None
+                    else:
+                        w = uquote(w)
+                    vlist.append(w)
+                    w = ""
                 else:
-                    w = w.strip('"')
-                vlist.append(w)
-                w = ""
+                    w += c
+                if c == "\\":
+                    ignore_quote = True
+                else:
+                    ignore_quote = False
+            if w in NONE:
+                w = None
             else:
-                w += c
-        if w in NONE:
-            w = None
-        else:
-            w = w.strip('"')
-        vlist.append(w)
+                w = uquote(w)
+            vlist.append(w)
         if len(vlist) == 1:
             return vlist[0]
         return vlist
@@ -5537,7 +5546,7 @@ class S3URLQuery(object):
                 if isinstance(v, basestring):
                     v = v.replace("*", "%").lower()
                 elif isinstance(v, list):
-                    v = [x.replace("*", "%").lower() for x in v]
+                    v = [x.replace("*", "%").lower() for x in v if x is not None]
             else:
                 f = S3FieldSelector(fs)
 

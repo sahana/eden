@@ -1958,7 +1958,12 @@ class S3ImportItem(object):
         xml = current.xml
         ERROR = xml.ATTRIBUTE["error"]
 
+        # Detect update
         self.deduplicate()
+
+        # Set dynamic defaults for new records
+        if not self.id:
+            self._dynamic_defaults(self.data)
 
         # Check for mandatory fields
         required_fields = self._mandatory_fields()
@@ -2383,6 +2388,23 @@ class S3ImportItem(object):
                                            self.skip and "skippe" or \
                                            method))
         return True
+
+    # -------------------------------------------------------------------------
+    def _dynamic_defaults(self, data):
+        """
+            Applies dynamic defaults from any keys in data that start with
+            an underscore, used only for new records and only if the respective
+            field is not populated yet.
+
+            @param data: the data dict
+        """
+
+        for k, v in data.items():
+            if k[0] == "_":
+                fn = k[1:]
+                if fn in self.table.fields and fn not in data:
+                    data[fn] = v
+        return
 
     # -------------------------------------------------------------------------
     def _mandatory_fields(self):
