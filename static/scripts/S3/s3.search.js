@@ -318,6 +318,21 @@ S3.search.toggleMapClearButton = function(event) {
 // New search framework
 
 /*
+ * quoteValue: add quotes to values which contain commas, escape quotes
+ */
+S3.search.quoteValue = function(value) {
+    if (value) {
+        var result = value.replace(/\"/, '\\"');
+        if (result.search(/\,/) != -1) {
+            result = '"' + result + '"';
+        }
+        return result
+    } else {
+        return (value);
+    }
+}
+
+/*
  * filterURL: add all current filters to a URL
  */
 S3.search.filterURL = function(url) {
@@ -332,9 +347,10 @@ S3.search.filterURL = function(url) {
         var url_var = $('#' + id + '-data').val(),
             value = $(this).val();
         if (value) {
-            var values = value.split(' ');
+            var values = value.split(' '), v;
             for (var i=0; i<values.length; i++) {
-                queries.push(url_var + '=*' + values[i] + '*');
+                v = '*' + values[i] + '*';
+                queries.push(url_var + '=' + S3.search.quoteValue(v));
             }
         }
     });
@@ -360,7 +376,7 @@ S3.search.filterURL = function(url) {
             }
         });
         if (value !== '') {
-            queries.push(url_var + '=' + value);
+            queries.push(url_var + '=' + S3.search.quoteValue(value));
         }
     });
 

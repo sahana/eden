@@ -2351,6 +2351,8 @@ class URLQueryParserTests(unittest.TestCase):
             ("NONE,1", [None, "1"]),
             ('"NONE",1', ["NONE", "1"]),
             ('"NONE,1"', "NONE,1"),
+            ('"NONE",NONE,1,"Test\\""', ['NONE', None, "1", 'Test"']),
+            (['"NONE",NONE,1','"Test\\"",None'], ['NONE', None, "1", 'Test"', None])
         ]
         for v, r in items:
             self.assertEqual((v, parse(v)), (v, r))
