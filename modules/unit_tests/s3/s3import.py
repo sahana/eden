@@ -155,14 +155,16 @@ class ComponentDisambiguationTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
-class PostParseAddValueTests(unittest.TestCase):
-    """ Test adding values to record using xml_post_parse """
+class PostParseTests(unittest.TestCase):
+    """ Test xml_post_parse hook """
 
     def setUp(self):
     
         current.auth.override = True
+        self.pp = current.s3db.get_config("pr_person", "xml_post_parse")
 
-    def testPostParseAddValue(self):
+    def testDynamicDefaults(self):
+        """ Test setting dynamic defaults with xml_post_parse """
 
         xmlstr = """
 <s3xml>
@@ -185,9 +187,7 @@ class PostParseAddValueTests(unittest.TestCase):
         def xml_post_parse(elem, record):
             record["_gender"] = 2 # set female as dynamic default
 
-        pp = resource.get_config("xml_post_parse")
         resource.configure(xml_post_parse=xml_post_parse)
-
         resource.import_xml(tree)
 
         db = current.db
@@ -208,6 +208,7 @@ class PostParseAddValueTests(unittest.TestCase):
 
         current.db.rollback()
         current.auth.override = False
+        current.s3db.configure("pr_person", xml_post_parse=self.pp)
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -227,7 +228,7 @@ if __name__ == "__main__":
     run_suite(
         DefaultApproverOverrideTests,
         ComponentDisambiguationTests,
-        PostParseAddValueTests,
+        PostParseTests,
     )
 
 # END ========================================================================
