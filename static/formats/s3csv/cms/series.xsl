@@ -9,6 +9,7 @@
          Name.....................Series Name
          Avatar...................Series Avatar
          Location.................Series Location
+         Rich Text................Series Rich Text
          Replies..................Series Replies
          Roles....................Series Roles (not yet implemented)
 
@@ -38,6 +39,13 @@
             <xsl:call-template name="uppercase">
                 <xsl:with-param name="string">
                    <xsl:value-of select="col[@field='Location']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="RichText">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Rich Text']"/>
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
@@ -107,6 +115,35 @@
                 </xsl:when>
                 <xsl:when test="$Location='FALSE'">
                     <data field="location" value="false">False</data>
+                </xsl:when>
+            </xsl:choose>
+            <xsl:choose>
+                <xsl:when test="$RichText=''">
+                    <!-- Use System Default -->
+                </xsl:when>
+                <xsl:when test="$RichText='Y'">
+                    <data field="richtext" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$RichText='YES'">
+                    <data field="richtext" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$RichText='T'">
+                    <data field="richtext" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$RichText='TRUE'">
+                    <data field="richtext" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$RichText='N'">
+                    <data field="richtext" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$RichText='NO'">
+                    <data field="richtext" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$RichText='F'">
+                    <data field="richtext" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$RichText='FALSE'">
+                    <data field="richtext" value="false">False</data>
                 </xsl:when>
             </xsl:choose>
             <xsl:choose>
