@@ -399,8 +399,12 @@ function S3EnableNavigateAwayConfirm() {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
-        $(':input:not(input[id=gis_location_advanced_checkbox])').keypress( S3SetNavigateAwayConfirm );
-        $(':input:not(input[id=gis_location_advanced_checkbox])').change( S3SetNavigateAwayConfirm );
+        var form = 'form:not(form.filter-form)',
+            input = 'input:not(input[id=gis_location_advanced_checkbox])',
+            select = 'select';
+        $(form + ' ' + input).keypress( S3SetNavigateAwayConfirm );
+        $(form + ' ' + input).change( S3SetNavigateAwayConfirm );
+        $(form + ' ' + select).change( S3SetNavigateAwayConfirm );
         $('form').submit( S3ClearNavigateAwayConfirm );
     });
 }
