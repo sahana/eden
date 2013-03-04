@@ -140,70 +140,13 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:when>
-                <!-- If not-specified, then use a sensible default
-                     NB This is bad as it will update existing records!
-                     @ToDo: Provide Defaults from XML (customisable in onvalidation by-deployment)
-                -->
-                <xsl:when test="$Role='Host National Society' or $Role='Partner National Society'">
-                    <reference field="organisation_type_id" resource="org_organisation_type">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="'OrgType:Red Cross'"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:when>
-                <xsl:when test="$Role='Donor'">
-                    <reference field="organisation_type_id" resource="org_organisation_type">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrgType:', $Role)"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:when>
-                <xsl:when test="$Role='Partner'">
-                    <reference field="organisation_type_id" resource="org_organisation_type">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrgType:', $Role)"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:when>
+                <!-- If not-specified, then provide a default via a dummy field
+                     to be caught in xml_post_parse & passed to onvalidation -->
+                <xsl:otherwise>
+                    <data field="organisation_type_default"><xsl:value-of select="$Role"/></data>
+                </xsl:otherwise>
             </xsl:choose>
         </resource>
-
-        <!-- Inefficient, but we don't want to create types here for deployments which don't want them -->
-        <xsl:choose>
-            <xsl:when test="$Type!=''">
-                <!-- Created in "/" -->
-            </xsl:when>
-            <xsl:when test="$Role='Host National Society' or $Role='Partner National Society'">
-                <resource name="org_organisation_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="'OrgType:Red Cross'"/>
-                    </xsl:attribute>
-                    <data field="name">
-                        <xsl:text>Red Cross / Red Crescent</xsl:text>
-                    </data>
-                </resource>
-            </xsl:when>
-            <xsl:when test="$Role='Donor'">
-                <resource name="org_organisation_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('OrgType:', $Role)"/>
-                    </xsl:attribute>
-                    <data field="name">
-                        <xsl:text>Bilateral</xsl:text>
-                    </data>
-                </resource>
-            </xsl:when>
-            <xsl:when test="$Role='Partner'">
-                <resource name="org_organisation_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('OrgType:', $Role)"/>
-                    </xsl:attribute>
-                    <data field="name">
-                        <xsl:text>NGO</xsl:text>
-                    </data>
-                </resource>
-            </xsl:when>
-        </xsl:choose>
 
     </xsl:template>
 

@@ -554,12 +554,14 @@ class S3OrganisationModel(S3Model):
 
         utablename = current.auth.settings.table_user_name
         configure(tablename,
+                  super_entity="pr_pentity",
+                  deduplicate=self.organisation_duplicate,
                   onaccept=self.org_organisation_onaccept,
                   ondelete=self.org_organisation_ondelete,
-                  super_entity="pr_pentity",
+                  onvalidation=self.org_organisation_onvalidation,
                   referenced_by=[(utablename, "organisation_id")],
                   search_method=organisation_search,
-                  deduplicate=self.organisation_duplicate,
+                  xml_post_parse=self.org_organisation_xml_post_parse,
                   list_fields=["id",
                                "name",
                                "acronym",
@@ -814,6 +816,59 @@ class S3OrganisationModel(S3Model):
                                                     ).first()
         if deleted_row and deleted_row.logo:
             current.s3db.pr_image_delete_all(deleted_row.logo)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_xml_post_parse(element, record):
+        """
+            Check for defaults provided by XML & pass onto onvalidation
+        """
+
+        org_type_default = element.xpath('data[@field="organisation_type_default"]')
+        if org_type_default:
+            record.organisation_type_default = org_type_default[0].text
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_onvalidation(form):
+        """
+            Check for defaults provided by XML post-parse
+        """
+
+        vars = form.vars
+        if form.record_id or vars.id:
+            # Only applicable to Creates not Updates
+            return
+        if vars.organisation_type_id:
+            # Default value set explictly
+            return
+        organisation_type_default = vars.organisation_type_default
+        if not organisation_type_default:
+            # No default value
+            return
+        vars.pop("organisation_type_default")
+        db = current.db
+        table = db.org_organisation_type
+        cache = current.s3db.cache
+        row = None
+        # These default mappings can be overridden per-deployment
+        if organisation_type_default == "Donor":
+            row = db(table.name == "Bilateral").select(table.id,
+                                                       cache=cache,
+                                                       limitby=(0, 1)).first()
+        elif organisation_type_default == "Partner":
+            row = db(table.name == "NGO").select(table.id,
+                                                 cache=cache,
+                                                 limitby=(0, 1)).first()
+        elif organisation_type_default in ("Host National Society",
+                                           "Partner National Society"):
+            row = db(table.name == "Red Cross / Red Crescent").select(table.id,
+                                                                      cache=cache,
+                                                                      limitby=(0, 1)
+                                                                      ).first()
+        if row:
+            vars.organisation_type_id = row.id
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2268,10 +2323,11 @@ class S3OfficeModel(S3Model):
                         location_level="L1",
                         cols=3
                       ),
-                      S3SearchLocationWidget(
-                        name="office_search_map",
-                        label=T("Map"),
-                      ),
+                      # Disabled until fixed (which will be in new S3FilterForm)
+                      #S3SearchLocationWidget(
+                      #  name="office_search_map",
+                      #  label=T("Map"),
+                      #),
             ))
 
         configure(tablename,

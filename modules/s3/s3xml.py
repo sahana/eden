@@ -457,14 +457,12 @@ class S3XML(S3Codec):
     # -------------------------------------------------------------------------
     @staticmethod
     def represent_user(user_id):
-        db = current.db
-        cache = current.cache
-        auth = current.auth
-        utable = auth.settings.table_user
-        user = None
-        if "email" in utable:
-            user = db(utable.id == user_id).select(utable.email,
-                                                   limitby=(0, 1)).first()
+        utable = current.auth.settings.table_user
+        #user = None
+        #if "email" in utable:
+        user = current.db(utable.id == user_id).select(utable.email,
+                                                       limitby=(0, 1)
+                                                       ).first()
         if user:
             return user.email
         return None
@@ -472,16 +470,14 @@ class S3XML(S3Codec):
     # -------------------------------------------------------------------------
     @staticmethod
     def represent_role(role_id):
-        db = current.db
-        cache = current.cache
-        auth = current.auth
-        gtable = auth.settings.table_group
-        role = None
-        if "role" in gtable:
-            role = db(gtable.id == role_id).select(
-                        gtable.role,
-                        limitby=(0, 1),
-                        cache=(cache.ram, S3XML.CACHE_TTL)).first()
+        gtable = current.auth.settings.table_group
+        #role = None
+        #if "role" in gtable:
+        role = current.db(gtable.id == role_id).select(gtable.role,
+                                                       limitby=(0, 1),
+                                                       cache=(current.cache.ram,
+                                                              S3XML.CACHE_TTL)
+                                                       ).first()
         if role:
             return role.role
         return None

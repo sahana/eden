@@ -60,6 +60,8 @@ def blog():
     """
         RESTful CRUD controller for display of a series of posts as a full-page
         read-only showing last 5 items in reverse time order
+
+        @ToDo: Convert to dataList
     """
 
     # Pre-process
@@ -85,7 +87,7 @@ def post():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
-    # Filter out those posts which are parts of a series
+    # Filter out those posts which are part of a series
     s3.filter = (table.series_id == None)
 
     _module = request.get_vars.get("module", None)
