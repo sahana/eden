@@ -141,9 +141,9 @@
                     </reference>
                 </xsl:when>
                 <!-- If not-specified, then provide a default via a dummy field
-                     to be caught in xml_post_parse & passed to onvalidation -->
+                     to be caught in xml_post_parse -->
                 <xsl:otherwise>
-                    <data field="organisation_type_default"><xsl:value-of select="$Role"/></data>
+                    <data field="_organisation_type_id"><xsl:value-of select="$Role"/></data>
                 </xsl:otherwise>
             </xsl:choose>
         </resource>

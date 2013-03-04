@@ -319,7 +319,7 @@ class S3SQLDefaultForm(S3SQLForm):
         if settings.submit_style:
             try:
                 form[0][-1][0][0]["_class"] = settings.submit_style
-            except TypeError:
+            except:
                 # Submit button has been removed
                 pass
 

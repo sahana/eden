@@ -558,7 +558,6 @@ class S3OrganisationModel(S3Model):
                   deduplicate=self.organisation_duplicate,
                   onaccept=self.org_organisation_onaccept,
                   ondelete=self.org_organisation_ondelete,
-                  onvalidation=self.org_organisation_onvalidation,
                   referenced_by=[(utablename, "organisation_id")],
                   search_method=organisation_search,
                   xml_post_parse=self.org_organisation_xml_post_parse,
@@ -821,54 +820,35 @@ class S3OrganisationModel(S3Model):
     @staticmethod
     def org_organisation_xml_post_parse(element, record):
         """
-            Check for defaults provided by XML & pass onto onvalidation
+            Check for defaults provided by project/organisation.xsl
         """
 
-        org_type_default = element.xpath('data[@field="organisation_type_default"]')
+        org_type_default = element.xpath('data[@field="_organisation_type_id"]')
         if org_type_default:
-            record.organisation_type_default = org_type_default[0].text
+            org_type_default = org_type_default[0].text            
+            db = current.db
+            table = db.org_organisation_type
+            cache = current.s3db.cache
+            row = None
+            # These default mappings can be overridden per-deployment
+            if org_type_default == "Donor":
+                row = db(table.name == "Bilateral").select(table.id,
+                                                           cache=cache,
+                                                           limitby=(0, 1)).first()
+            elif org_type_default == "Partner":
+                row = db(table.name == "NGO").select(table.id,
+                                                     cache=cache,
+                                                     limitby=(0, 1)).first()
+            elif org_type_default in ("Host National Society",
+                                      "Partner National Society"):
+                row = db(table.name == "Red Cross / Red Crescent").select(table.id,
+                                                                          cache=cache,
+                                                                          limitby=(0, 1)
+                                                                          ).first()
+            if row:
+                # Note this sets only the default, so won't override existing or explicit values
+                record._organisation_type_id = row.id
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_onvalidation(form):
-        """
-            Check for defaults provided by XML post-parse
-        """
-
-        vars = form.vars
-        if form.record_id or vars.id:
-            # Only applicable to Creates not Updates
-            return
-        if vars.organisation_type_id:
-            # Default value set explictly
-            return
-        organisation_type_default = vars.organisation_type_default
-        if not organisation_type_default:
-            # No default value
-            return
-        vars.pop("organisation_type_default")
-        db = current.db
-        table = db.org_organisation_type
-        cache = current.s3db.cache
-        row = None
-        # These default mappings can be overridden per-deployment
-        if organisation_type_default == "Donor":
-            row = db(table.name == "Bilateral").select(table.id,
-                                                       cache=cache,
-                                                       limitby=(0, 1)).first()
-        elif organisation_type_default == "Partner":
-            row = db(table.name == "NGO").select(table.id,
-                                                 cache=cache,
-                                                 limitby=(0, 1)).first()
-        elif organisation_type_default in ("Host National Society",
-                                           "Partner National Society"):
-            row = db(table.name == "Red Cross / Red Crescent").select(table.id,
-                                                                      cache=cache,
-                                                                      limitby=(0, 1)
-                                                                      ).first()
-        if row:
-            vars.organisation_type_id = row.id
 
     # -------------------------------------------------------------------------
     @staticmethod

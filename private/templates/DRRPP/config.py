@@ -90,7 +90,6 @@ settings.gis.display_L0 = True
 # Deployment only covers Asia-Pacific
 settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK", "ID", "IN", "JP", "KH", "KI", "KP", "KR", "LA", "MH", "MM", "MN", "MV", "MY", "NP", "NZ", "PG", "PH", "PK", "PW", "SB", "SG", "SL", "TH", "TL", "TO", "TV", "TW", "VN", "VU", "WS"]
 
-
 # =============================================================================
 # Project Deployment Settings
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -147,6 +146,7 @@ def formstyle_row(id, label, widget, comment, hidden=False):
               _class = "w2p_r",
               )
     return row
+
 # -----------------------------------------------------------------------------
 def form_style(self, xfields):
     """
