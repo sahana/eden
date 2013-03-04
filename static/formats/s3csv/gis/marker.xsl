@@ -12,6 +12,8 @@
          Width................integer.........Marker Width
          Image................string..........Marker Image
 
+         NB File must already exist in static/img/markers/
+
     *********************************************************************** -->
     <xsl:output method="xml"/>
 

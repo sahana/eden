@@ -22,6 +22,7 @@
          Comments.................Post Comments
          Author...................Post created_by (email)
          Date.....................Post created_on (datetime)
+         Attachment...............doc_document (URL to remote server to download)
          Roles....................Post Roles (not yet implemented)
 
     *********************************************************************** -->
@@ -172,6 +173,17 @@
 
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
+
+            <!-- Attachment -->
+            <xsl:if test="col[@field='Attachment']!=''">
+                <resource name="doc_document">
+                    <data field="file">
+                        <xsl:attribute name="url">
+                            <xsl:value-of select="col[@field='Attachment']"/>
+                        </xsl:attribute>
+                    </data>
+                </resource>
+            </xsl:if>
 
         </resource>
 

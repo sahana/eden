@@ -2756,7 +2756,7 @@ class S3Resource(object):
         manager = current.manager
         db = current.db
         xml = current.xml
-        permit = manager.auth.s3_has_permission
+        permit = current.auth.s3_has_permission
         audit = manager.audit
         tablename = self.tablename
         table = self.table

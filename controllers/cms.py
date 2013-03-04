@@ -90,7 +90,7 @@ def post():
     table = s3db[tablename]
 
     # Filter out those posts which are part of a series
-    s3.filter = (table.series_id == None)
+    #s3.filter = (table.series_id == None)
 
     _module = request.get_vars.get("module", None)
     if _module:
