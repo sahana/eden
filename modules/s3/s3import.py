@@ -2654,6 +2654,9 @@ class S3ImportItem(object):
                 self.uid = original[UID]
                 self.data.update({UID:self.uid})
         self.error = row.error
+        postprocess = s3db.get_config(self.tablename, "xml_post_parse")
+        if postprocess:
+            postprocess(self.element, self.data)
         if self.error and not self.data:
             # Validation error
             return False
