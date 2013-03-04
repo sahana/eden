@@ -636,20 +636,13 @@ class S3LocationAutocompleteWidget(FormWidget):
     """
         Renders a gis_location SELECT as an INPUT field with AJAX Autocomplete
 
-        @note: differs from the S3AutocompleteWidget:
-            - needs to have deployment_settings passed-in
-            - excludes unreliable imported records (Level 'XX')
-
         Appropriate when the location has been previously created (as is the
         case for location groups or other specialized locations that need
         the location create form).
-        S3LocationSelectorWidget may be more appropriate for specific locations.
+        S3LocationSelectorWidget is generally more appropriate for specific locations.
 
         Currently used for selecting the region location in gis_config
         and for project/location.
-
-        @todo: .represent for the returned data
-        @todo: Refreshes any dropdowns as-necessary (post_process)
     """
 
     def __init__(self,

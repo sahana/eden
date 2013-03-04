@@ -2545,8 +2545,9 @@ class S3ImportItem(object):
         if item_table is None:
             return None
         db = current.db
-        query = item_table.item_id == self.item_id
-        row = db(query).select(item_table.id, limitby=(0, 1)).first()
+        row = db(item_table.item_id == self.item_id).select(item_table.id,
+                                                            limitby=(0, 1)
+                                                            ).first()
         if row:
             record_id = row.id
         else:
@@ -3127,6 +3128,7 @@ class S3ImportJob():
         """
 
         ATTRIBUTE = current.xml.ATTRIBUTE
+        METHOD = S3ImportItem.METHOD
 
         # Resolve references
         import_list = []
@@ -3162,11 +3164,11 @@ class S3ImportJob():
                 if mtime is None or item.mtime > mtime:
                     mtime = item.mtime
                 if item.id:
-                    if item.method == item.METHOD.CREATE:
+                    if item.method == METHOD.CREATE:
                         cappend(item.id)
-                    elif item.method == item.METHOD.UPDATE:
+                    elif item.method == METHOD.UPDATE:
                         updated.append(item.id)
-                    elif item.method == item.METHOD.DELETE:
+                    elif item.method == METHOD.DELETE:
                         deleted.append(item.id)
         self.count = count
         self.mtime = mtime

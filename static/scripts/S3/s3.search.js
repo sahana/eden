@@ -466,33 +466,35 @@ $(document).ready(function() {
 //     });
 
     $('.filter-submit').click(function() {
-        // Update Map results URL
-        Ext.iterate(map.layers, function(key, val, obj) {
-            if (key.s3_layer_id == 'search_results') {
-                var layer = map.layers[val];
-                var url = layer.protocol.url;
-                url = S3.search.filterURL(url);
-                layer.protocol.url = url;
-                // If map is showing then refresh the layer
-                if (S3.gis.mapWin.isVisible()) {
-                    // Set a new event when the layer is loaded (defined in s3.dataTable.js)
-                    layer.events.on({
-                        'loadend': s3_gis_search_layer_loadend
-                    });
-                    // Disable Clustering to get correct bounds
-                    Ext.iterate(layer.strategies, function(key, val, obj) {
-                        if (key.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                            layer.strategies[val].deactivate();
-                        }
-                    });
-                    Ext.iterate(layer.strategies, function(key, val, obj) {
-                        if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                            layer.strategies[val].refresh();
-                        }
-                    });
+        try {
+            // Update Map results URL
+            Ext.iterate(map.layers, function(key, val, obj) {
+                if (key.s3_layer_id == 'search_results') {
+                    var layer = map.layers[val];
+                    var url = layer.protocol.url;
+                    url = S3.search.filterURL(url);
+                    layer.protocol.url = url;
+                    // If map is showing then refresh the layer
+                    if (S3.gis.mapWin.isVisible()) {
+                        // Set a new event when the layer is loaded (defined in s3.dataTable.js)
+                        layer.events.on({
+                            'loadend': s3_gis_search_layer_loadend
+                        });
+                        // Disable Clustering to get correct bounds
+                        Ext.iterate(layer.strategies, function(key, val, obj) {
+                            if (key.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                                layer.strategies[val].deactivate();
+                            }
+                        });
+                        Ext.iterate(layer.strategies, function(key, val, obj) {
+                            if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                layer.strategies[val].refresh();
+                            }
+                        });
+                    }
                 }
-            }
-        });
+            });
+        } catch(err) {}
         // Server-side page refresh
         // @ToDo: AJAX request instead
         var url = $(this).next('input[type="hidden"]').val();
