@@ -2639,8 +2639,9 @@ class S3ImportItem(object):
         if row.ritems:
             self.load_references = [json.loads(ritem) for ritem in row.ritems]
         self.load_parent = row.parent
+        s3db = current.s3db
         try:
-            table = current.s3db[tablename]
+            table = s3db[tablename]
         except:
             self.error = self.ERROR.BAD_RESOURCE
             return False
@@ -2655,6 +2656,9 @@ class S3ImportItem(object):
                 self.uid = original[UID]
                 self.data.update({UID:self.uid})
         self.error = row.error
+        postprocess = s3db.get_config(self.tablename, "xml_post_parse")
+        if postprocess:
+            postprocess(self.element, self.data)
         if self.error and not self.data:
             # Validation error
             return False
