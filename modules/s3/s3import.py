@@ -1955,8 +1955,7 @@ class S3ImportItem(object):
             self.accepted = False
             return False
 
-        xml = current.xml
-        ERROR = xml.ATTRIBUTE["error"]
+        ERROR = current.xml.ATTRIBUTE["error"]
 
         # Detect update
         self.deduplicate()

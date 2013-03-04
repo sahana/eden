@@ -48,6 +48,8 @@ def series():
             _roles_permitted = table.roles_permitted
             _roles_permitted.readable = _roles_permitted.writable = False
             _roles_permitted.default = r.record.roles_permitted
+            if not r.record.richtext:
+                table.body.widget = None
             # Titles do show up
             table.name.comment = ""
         return True
@@ -84,7 +86,7 @@ def blog():
 def post():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "cms_post"
     table = s3db[tablename]
 
     # Filter out those posts which are part of a series
