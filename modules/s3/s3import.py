@@ -2638,8 +2638,9 @@ class S3ImportItem(object):
         if row.ritems:
             self.load_references = [json.loads(ritem) for ritem in row.ritems]
         self.load_parent = row.parent
+        s3db = current.s3db
         try:
-            table = current.s3db[tablename]
+            table = s3db[tablename]
         except:
             self.error = self.ERROR.BAD_RESOURCE
             return False
