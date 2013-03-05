@@ -1287,7 +1287,7 @@ def s3_rheader_tabs(r, tabs=[]):
     return rheader_tabs.render(r)
 
 # =============================================================================
-class S3ComponentTabs:
+class S3ComponentTabs(object):
 
     def __init__(self, tabs=[]):
 
@@ -1360,7 +1360,7 @@ class S3ComponentTabs:
                 _id = "rheader_tab_%s" % component
             else:
                 args = []
-                if function != r.name:
+                if function != r.name and not tab.native:
                     if "viewing" not in _vars and r.id:
                         _vars.update(viewing="%s.%s" % (r.tablename, r.id))
                     elif not tab.component and not tab.function:
@@ -1383,7 +1383,7 @@ class S3ComponentTabs:
         return rheader_tabs
 
 # =============================================================================
-class S3ComponentTab:
+class S3ComponentTab(object):
 
     def __init__(self, tab):
 
@@ -1394,6 +1394,8 @@ class S3ComponentTab:
             function = None
 
         self.title = title
+
+        self.native = False
 
         if function:
             self.function = function
@@ -1406,7 +1408,10 @@ class S3ComponentTab:
             self.component = None
 
         if len(tab) > 2:
-            self.vars = Storage(tab[2])
+            vars = self.vars = Storage(tab[2])
+            if "native" in vars:
+                self.native = True if vars["native"] else False
+                del vars["native"]
         else:
             self.vars = None
 
@@ -1455,6 +1460,8 @@ class S3ComponentTab:
         if self.vars is None:
             return True
         for k, v in self.vars.iteritems():
+            if v is None:
+                continue
             if k not in get_vars or \
                k in get_vars and get_vars[k] != v:
                 return False

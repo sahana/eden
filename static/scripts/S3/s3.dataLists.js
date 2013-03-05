@@ -77,11 +77,13 @@ function dlInfiniteScroll(datalist) {
 
             },
             function(data) {
-                $('.dl-item:last:in-viewport').each(function() {
-                    if (!$(this).hasClass('autoretrieve')) {
-                        dlAutoRetrieve(this);
-                        $(this).addClass('autoretrieve');
-                    }
+                $('.dl').each(function() {
+                    $(this).find('.dl-item:last:in-viewport').each(function() {
+                        if (!$(this).hasClass('autoretrieve')) {
+                            $(this).addClass('autoretrieve');
+                            dlAutoRetrieve(this);
+                        }
+                    });
                 });
             }
         );
@@ -93,9 +95,11 @@ $(document).ready(function(){
     $('.dl').each(function() {
         dlInfiniteScroll(this);
     });
-    $('.dl-item:last:in-viewport').each(function() {
-        $(this).addClass('autoretrieve');
-        dlAutoRetrieve(this);
+    $('.dl').each(function() {
+        $(this).find('.dl-item:last:in-viewport').each(function() {
+            $(this).addClass('autoretrieve');
+            dlAutoRetrieve(this);
+        });
     });
 });
 
