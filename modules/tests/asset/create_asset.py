@@ -55,7 +55,7 @@ class CreateAsset(SeleniumUnitTest):
                       "International Federation of Red Cross and Red Crescent Societies (IFRC)", 
                       "option"),
                      ( "site_id",
-                       "AP Zone",
+                       "AP Zone (Office)",
                        "option",
                         4),
                      ( "sn",
@@ -73,8 +73,6 @@ class CreateAsset(SeleniumUnitTest):
                      ( "comments",
                        "Test Asset")]
                      )
-                     
-        
         # Set Base Facility/Site
         self.browser.find_element_by_link_text("Set Base Facility/Site").click()
         
@@ -84,13 +82,6 @@ class CreateAsset(SeleniumUnitTest):
 # It puts in a different time and so fails to find the record
 #                     ( "datetime",
 #                       now),
-                     ( "organisation_id",
-                       "Timor-Leste Red Cross Society (CVTL)",
-                       "option"),
-                     ( "site_id",
-                       "Lori (Facility)",
-                       "option",
-                       3),
                      ( "cond",
                        "Good Condition",
                        "option"),
@@ -100,66 +91,61 @@ class CreateAsset(SeleniumUnitTest):
                      ( "comments",
                        "Test site")]
                      )
-
-#        # Assign to Facility/Site
-#        self.browser.find_element_by_link_text("Assign to Facility/Site").click()
-#                    
-#        #self.browser.find_element_by_id("rheader_tab_log").click()
-#        
-#        self.create("asset_log",
-#                    [
+        
+        # Assign to Facility/Site
+        self.browser.find_element_by_link_text("Assign to Facility/Site").click()
+        
+        self.create("asset_log",
+                    [
 #                     ( "datetime",
 #                       now),
 #                     ( "datetime_until",
 #                       now_1_week),
-#                     ( "person_id",
-#                       "Yakobus Sereno",
-#                       "autocomplete"),
-#                     ( "site_id",
-#                       "Besusu (Site)",
-#                       "option"),
-#                     #( "room-id",
-#                     #  "-",
-#                     #  "option"),
-#                     ( "cond",
-#                       "Good Condition",
-#                       "option"),
-#                     ( "by_person_id",
-#                       "Admin User",
-#                       "autocomplete"),
-#                     ( "comments",
-#                       "Test assign")]
-#                     )
-#                          
-#        # Assign to Person
-#        self.browser.find_element_by_link_text("Assign to Person").click()
-#                    
-#        #self.browser.find_element_by_id("rheader_tab_log").click()
-#        
-#        self.create("asset_log",
+                     ( "person_id",
+                       "Yakobus Sereno",
+                       "autocomplete"),
+                     ( "site_id",
+                       "AP Zone (Office)",
+                       "option"),
+                     #( "room-id",
+                     #  "-",
+                     #  "option"),
+                     ( "cond",
+                       "Good Condition",
+                       "option"),
+                     ( "by_person_id",
+                       "Admin User",
+                       "autocomplete"),
+                     ( "comments",
+                       "Test assign")]
+                     )
+                           
+        self.browser.find_element_by_link_text("Assign to Person").click()
+
+        self.create("asset_log",
 #                    [( "datetime",
 #                       now_1_day),
 #                     ( "datetime_until",
 #                       now_1_week),
-#                     ( "person_id",
-#                       "Margarida Martins",
-#                       "autocomplete"),
-#                     # @ToDo: Determine how to enter checkboxes
-#                     #( "check_in_to_person",
-#                     #  "true",
-#                     #  "option"),
-#                     ( "site_id",
-#                       "Besusu (Site)",
-#                       "option"),
-#                     #( "room-id",
-#                     #  "-",
-#                     #  "option"),
-#                     ( "cond",
-#                       "Good Condition",
-#                       "option"),
-#                     ( "by_person_id",
-#                       "Yakobus Sereno",
-#                       "autocomplete"),
-#                     ( "comments",
-#                       "Test assign person")]
-#                     )
+                     [( "person_id",
+                       "Margarida Martins",
+                       "autocomplete"),
+                     # @ToDo: Determine how to enter checkboxes
+                     #( "check_in_to_person",
+                     #  "true",
+                     #  "option"),
+                     ( "site_id",
+                       "Besusu (Facility)",
+                       "option"),
+                     #( "room-id",
+                     #  "-",
+                     #  "option"),
+                     ( "cond",
+                       "Good Condition",
+                       "option"),
+                     ( "by_person_id",
+                       "Yakobus Sereno",
+                       "autocomplete"),
+                     ( "comments",
+                       "Test assign person")]
+                     )
