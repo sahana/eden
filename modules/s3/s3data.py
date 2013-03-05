@@ -894,7 +894,11 @@ class S3DataList(object):
             ]
             for i in xrange(len(records)):
                 _class = (i + self.start) % 2 and "even" or "odd"
-                items.append(render(rfields, records[i], _class=_class))
+                item = render(rfields, records[i], _class=_class)
+                # Class "dl-item" is required for pagination:
+                if hasattr(item, "add_class"):
+                    item.add_class("dl-item")
+                items.append(item)
         else:
             # template
             raise NotImplementedError
