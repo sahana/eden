@@ -2054,6 +2054,7 @@ class S3ImportItem(object):
         db = current.db
         xml = current.xml
         s3db = current.s3db
+        manager = current.manager
 
         # Methods
         METHOD = self.METHOD
@@ -2189,7 +2190,6 @@ class S3ImportItem(object):
                 return p
 
         # Log this item
-        manager = current.manager
         if manager.log is not None:
             manager.log(self)
 

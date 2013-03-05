@@ -572,10 +572,12 @@ class S3SQLDefaultForm(S3SQLForm):
                 errors = []
                 table = self.table
                 for fieldname in form.errors:
-                    if fieldname in table and \
-                       isinstance(table[fieldname].requires, IS_LIST_OF):
-                        errors.append("%s: %s" % (fieldname,
-                                                  form.errors[fieldname]))
+                    if fieldname in table:
+                        if isinstance(table[fieldname].requires, IS_LIST_OF):
+                            errors.append("%s: %s" % (fieldname,
+                                                      form.errors[fieldname]))
+                        else:
+                            errors.append(str(form.errors[fieldname]))
                 if errors:
                     error = "\n".join(errors)
 
