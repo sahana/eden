@@ -117,7 +117,7 @@ def add_new_debate(request, space_url):
                                'rowform': row_formset,
                                'colform': column_formset,
                                'get_place': place,
-			       'debateid': current_debate_id},
+			                         'debateid': current_debate_id},
                               context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
@@ -169,7 +169,7 @@ def edit_debate(request, space_url, debate_id):
                                    'rowform': row_formset,
                                    'colform': column_formset,
                                    'get_place': place,
-				   'debateid': debate_id},
+				                     'debateid': debate_id},
                                   context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
