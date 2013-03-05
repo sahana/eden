@@ -2887,7 +2887,8 @@ def org_rheader(r, tabs=[]):
         rheader_tabs = s3_rheader_tabs(r, tabs)
         if hack:
             # Fix error in tabs
-            rheader_tabs[0][0]["_href"] = URL(c="project", f="partners", args=[r.id])
+            rheader_tabs[0][0]["_href"] = URL(c="project", f="partners",
+                                              args=[r.id])
 
         if table.multi_sector_id.readable and record.multi_sector_id:
             if settings.get_ui_label_cluster():

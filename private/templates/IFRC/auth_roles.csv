@@ -223,6 +223,7 @@
 "project_reader","Project Reader",,"pr",,,,"READ",,,,,
 "project_reader","Project Reader",,"hrm","person_search",,,"READ",,,,,
 "project_data_entry","Project Data Entry",,"project",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
+"project_data_entry","Project Data Entry",,"project","location","pr_person",,"READ|CREATE",,,,,"Community Contacts"
 "project_data_entry","Project Data Entry",,"project","partner",,,"READ",,,,,
 "project_data_entry","Project Data Entry",,,,"project_theme",,"READ",,,,,
 "project_data_entry","Project Data Entry",,,,"project_hazard",,"READ",,,,,
@@ -233,6 +234,7 @@
 "project_data_entry","Project Data Entry",,"pr",,,,"READ",,,,,
 "project_data_entry","Project Data Entry",,"hrm","person_search",,,"READ",,,,,
 "project_editor","Project Editor",,"project",,,,"READ|CREATE|UPDATE",,,,,
+"project_editor","Project Editor",,"project","location","pr_person",,"READ|CREATE|UPDATE",,,,,"Community Contacts"
 "project_editor","Project Editor",,,,"project_theme",,"READ",,,,,
 "project_editor","Project Editor",,,,"project_hazard",,"READ",,,,,
 "project_editor","Project Editor",,,,"project_activity_type",,"READ",,,,,
@@ -242,6 +244,7 @@
 "project_editor","Project Editor",,"pr",,,,"READ",,,,,
 "project_editor","Project Editor",,"hrm","person_search",,,"READ",,,,,
 "project_super","Project Super Editor",,"project",,,,"READ|CREATE|UPDATE|DELETE",,,,,
+"project_super","Project Super Editor",,"project","location","pr_person",,"READ|CREATE|UPDATE",,,,,"Community Contacts"
 "project_super","Project Super Editor",,,,"project_theme",,"READ",,,,,
 "project_super","Project Super Editor",,,,"project_hazard",,"READ",,,,,
 "project_super","Project Super Editor",,,,"project_activity_type",,"READ",,,,,

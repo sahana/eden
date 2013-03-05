@@ -534,9 +534,7 @@ def activity():
 
 # -----------------------------------------------------------------------------
 def location():
-    """
-        RESTful CRUD controller to display project location information
-    """
+    """ RESTful CRUD controller """
 
     table = s3db.project_location
 
@@ -552,16 +550,12 @@ def location():
             else:
                 sector_ids = []
             set_activity_type_requires("project_activity_type_location", sector_ids)
-                    
-            if r.component:
-                if r.component_name == "document":
-                    doc_table = s3db.doc_document
-                    doc_table.organisation_id.readable = False
-                    doc_table.person_id.readable = False
-                    doc_table.location_id.readable = False
-                    doc_table.organisation_id.writable = False
-                    doc_table.person_id.writable = False
-                    doc_table.location_id.writable = False
+
+            if r.component_name == "document":
+                table = db.doc_document
+                table.organisation_id.readable = table.organisation_id.writable = False
+                table.person_id.readable = table.person_id.writable = False
+                table.location_id.readable = table.location_id.writable = False
 
         return True
     s3.prep = prep
@@ -654,7 +648,7 @@ def demographic_data():
 
 # -----------------------------------------------------------------------------
 def location_contact():
-    """ Show a list of all community contacts """
+    """ RESTful CRUD controller for Community Contacts """
 
     return s3_rest_controller()
 
@@ -671,10 +665,10 @@ def report():
 # -----------------------------------------------------------------------------
 def partners():
     """
-        A REST controller for Organisations filtered by Type
-        @ToDo: This could need to be a deployment setting
+        RESTful CRUD controller for Organisations filtered by Type
     """
 
+    # @ToDo: This could need to be a deployment setting
     request.get_vars["organisation.organisation_type_id$name"] = \
         "Bilateral,Government,Intergovernmental,NGO,UN agency"
 

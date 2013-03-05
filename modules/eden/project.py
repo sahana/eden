@@ -2480,7 +2480,7 @@ class S3ProjectLocationModel(S3Model):
                         filterfor=["SMS"],
                       ))
 
-        location_contact_search = S3Search(
+        contact_search_method = S3Search(
             advanced=(S3SearchSimpleWidget(
                             name = "location_contact_search_simple",
                             label = T("Name"),
@@ -2505,14 +2505,9 @@ class S3ProjectLocationModel(S3Model):
                     ))
 
         # Resource configuration
-        #hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
-                  search_method=location_contact_search,
+                  search_method=contact_search_method,
                   list_fields=["person_id",
-                               # (hierarchy["L0"], "person_id$location_id$L0"),
-                               # (hierarchy["L1"], "person_id$location_id$L1"),
-                               # (hierarchy["L2"], "person_id$location_id$L2"),
-                               # (hierarchy["L3"], "person_id$location_id$L3"),
                                (T("Email"), "email.value"),
                                (T("Mobile Phone"), "phone.value"),
                                "project_location_id",

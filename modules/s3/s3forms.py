@@ -2570,29 +2570,36 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 values = filter["values"]
             else:
                 # Option B - from record
-                parent = resource.parent
-                if parent:
+                lookuptable = filter.get("lookuptable", None)
+                if lookuptable:
                     # e.g. Project Community Activity Types filtered by Sector of parent Project
-                    _resource = parent
+                    lookupkey = filter.get("lookupkey", None)
+                    if not lookupkey:
+                        raise
+                    id = resource._rows[0][lookupkey]
+                    _resource = s3db.resource(lookuptable, id=id)
                 else:
                     # e.g. Project Themes filtered by Sector
                     _resource = resource
-                if _resource._ids:
-                    id = _resource._ids[0]
+                    if _resource._ids:
+                        id = _resource._ids[0]
+                    else:
+                        id = None
+                if id:
                     _table = _resource.table
                     if rkey in _table.fields:
                         values = [_table[rkey]]
                     else:
                         found = False
-                        if parent:
-                            # Need to load component
-                            hooks = s3db.get_components(_table)
-                            for alias in hooks:
-                                if hooks[alias].rkey == rkey:
-                                    found = True
-                                    _resource._attach(alias, hooks[alias])
-                                    _component = _resource.components[alias]
-                                    break
+                        if lookuptable:
+                           # Need to load component
+                           hooks = s3db.get_components(_table)
+                           for alias in hooks:
+                               if hooks[alias].rkey == rkey:
+                                   found = True
+                                   _resource._attach(alias, hooks[alias])
+                                   _component = _resource.components[alias]
+                                   break
                         else:
                             # Components are already loaded
                             components = _resource.components
@@ -2634,9 +2641,11 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         if not rows:
             widget = T("No options currently available")
         else:
-            tablename = component.tablename
-            permit = component.permit
-            creatable = permit("create", tablename)
+            if component.link:
+                # For link-table components, check the link table permissions
+                # rather than the component
+                component = component.link
+            creatable = component.permit("create", component.tablename)
             options = OrderedDict()
             for r in rows:
                 options[r.id] = dict(name=r.name,
