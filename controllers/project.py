@@ -641,6 +641,12 @@ def location():
                               csv_template="location")
 
 # -----------------------------------------------------------------------------
+def demographic():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("stats", "demographic")
+
+# -----------------------------------------------------------------------------
 def demographic_data():
     """ RESTful CRUD controller """
 

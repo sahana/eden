@@ -1320,7 +1320,7 @@ class S3ComponentTabs:
                 if "viewing" in r.get_vars:
                     _vars.viewing = r.get_vars.viewing
 
-            if i == len(tabs)-1:
+            if i == len(tabs) - 1:
                 _class = "tab_last"
             else:
                 _class = "tab_other"

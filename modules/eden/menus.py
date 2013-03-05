@@ -1589,6 +1589,11 @@ class S3OptionsMenu(object):
                     M("New", m="create"),
                     M("List All"),
                  ),
+                 M("Demographics", f="demographic",
+                   check = stats,)(
+                    M("New", m="create"),
+                    M("List All"),
+                 ),
                 )
 
             if settings.get_project_mode_drr():

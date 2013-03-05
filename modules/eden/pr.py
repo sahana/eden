@@ -2474,16 +2474,12 @@ class S3PersonPresence(S3Model):
     def model(self):
 
         T = current.T
-        auth = current.auth
 
-        person_id = self.pr_person_id
         location_id = self.gis_location_id
-
+        super_link = self.super_link
         messages = current.messages
         ADD_LOCATION = messages.ADD_LOCATION
         UNKNOWN_OPT = messages.UNKNOWN_OPT
-
-        crud_strings = current.response.s3.crud_strings
 
         # Trackable types
         pr_trackable_types = {
@@ -2536,14 +2532,14 @@ class S3PersonPresence(S3Model):
 
         tablename = "pr_presence"
         table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  self.super_link("sit_id", "sit_situation"),
-                                  person_id("observer",
-                                            label=T("Observer"),
-                                            default = auth.s3_logged_in_person(),
-                                            comment=pr_person_comment(title=T("Observer"),
-                                                                      comment=T("Person who has actually seen the person/group."),
-                                                                      child="observer")),
+                                  super_link("pe_id", "pr_pentity"),
+                                  super_link("sit_id", "sit_situation"),
+                                  self.pr_person_id("observer",
+                                    label=T("Observer"),
+                                    default = current.auth.s3_logged_in_person(),
+                                    comment=pr_person_comment(title=T("Observer"),
+                                                              comment=T("Person who has actually seen the person/group."),
+                                                              child="observer")),
                                   Field("shelter_id", "integer",
                                         readable = False,
                                         writable = False),
@@ -2604,7 +2600,7 @@ class S3PersonPresence(S3Model):
 
         # CRUD Strings
         ADD_LOG_ENTRY = T("Add Log Entry")
-        crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_LOG_ENTRY,
             title_display = T("Log Entry Details"),
             title_list = T("Presence Log"),

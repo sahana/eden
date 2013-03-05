@@ -426,12 +426,13 @@ class S3CampDataModel(S3Model):
                    )
 
         # Reusable field
+        represent = S3Represent(lookup=tablename)
         shelter_id = S3ReusableField("shelter_id", table,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "cr_shelter.id",
-                                                              self.cr_shelter_represent,
+                                                              represent,
                                                               sort=True)),
-                                     represent = self.cr_shelter_represent,
+                                     represent = represent,
                                      ondelete = "RESTRICT",
                                      comment=S3AddResourceLink(c="cr",
                                                                f="shelter",
@@ -514,7 +515,6 @@ class S3CampDataModel(S3Model):
         return Storage(
                 ADD_SHELTER = ADD_SHELTER,
                 SHELTER_LABEL = SHELTER_LABEL,
-                cr_shelter_represent = self.cr_shelter_represent
             )
 
     # -----------------------------------------------------------------------------
@@ -546,25 +546,6 @@ class S3CampDataModel(S3Model):
         # @ToDo: Update the cr_shelter record
         # Status & Population
         pass
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.cr_shelter
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

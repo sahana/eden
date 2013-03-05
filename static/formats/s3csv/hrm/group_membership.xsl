@@ -6,8 +6,7 @@
          Groups - CSV Import Stylesheet
 
          CSV fields:
-         Group Name......................pr_group.name
-         Group Type......................pr_group.group_type
+         Team Name.......................pr_group.name
          First Name......................pr_person.first_name
          Middle Name.....................pr_person.middle_name
          Last Name.......................pr_person.last_name
@@ -24,7 +23,7 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="group" match="row"
-             use="concat(col[@field='Group Type'], '/', col[@field='Group Name'])"/>
+             use="col[@field='Team Name']"/>
 
     <xsl:key name="orgs" match="row"
              use="col[@field='Organisation']"/>
@@ -44,8 +43,7 @@
         <s3xml>
             <!-- Groups -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('group',
-                                                                   concat(col[@field='Group Type'], '/', 
-                                                                          col[@field='Group Name']))[1])]">
+                                                                   col[@field='Team Name'])[1])]">
                 <xsl:call-template name="Group"/>
             </xsl:for-each>
 
@@ -86,8 +84,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <xsl:variable name="GroupName" select="col[@field='Group Name']"/>
-        <xsl:variable name="GroupType" select="col[@field='Group Type']"/>
+        <xsl:variable name="GroupName" select="col[@field='Team Name']"/>
         <xsl:variable name="FirstName" select="col[@field='First Name']"/>
         <xsl:variable name="MiddleName" select="col[@field='Middle Name']"/>
         <xsl:variable name="LastName" select="col[@field='Last Name']"/>
@@ -97,7 +94,7 @@
         <resource name="pr_group_membership">
             <reference field="group_id" resource="pr_group">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Group:', $GroupType, '/', $GroupName)"/>
+                    <xsl:value-of select="concat('Group:', $GroupName)"/>
                 </xsl:attribute>
             </reference>
             <reference field="person_id" resource="pr_person">
@@ -115,39 +112,15 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Group">
-        <xsl:variable name="GroupName" select="col[@field='Group Name']"/>
-        <xsl:variable name="GroupType" select="col[@field='Group Type']"/>
+        <xsl:variable name="GroupName" select="col[@field='Team Name']"/>
 
         <resource name="pr_group">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('Group:', $GroupType, '/', $GroupName)"/>
+                <xsl:value-of select="concat('Group:', $GroupName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$GroupName"/></data>
-            <xsl:variable name="GROUPTYPE">
-                <xsl:call-template name="uppercase">
-                    <xsl:with-param name="string">
-                       <xsl:value-of select="$GroupType"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:choose>
-                <xsl:when test="$GROUPTYPE='FAMILY'">
-                    <data field="group_type">1</data>
-                </xsl:when>
-                <xsl:when test="$GROUPTYPE='TOURIST GROUP'">
-                    <data field="group_type">2</data>
-                </xsl:when>
-                <xsl:when test="$GROUPTYPE='RELIEF TEAM'">
-                    <data field="group_type">3</data>
-                </xsl:when>
-                <xsl:when test="$GROUPTYPE='MAILING LISTS'">
-                    <data field="group_type">5</data>
-                </xsl:when>
-                <xsl:otherwise>
-                    <!-- Default to Relief team -->
-                    <data field="group_type">3</data>
-                </xsl:otherwise>
-            </xsl:choose>
+            <!-- Default to Relief team -->
+            <data field="group_type">3</data>
         </resource>
 
     </xsl:template>

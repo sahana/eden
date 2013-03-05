@@ -2830,26 +2830,25 @@ def org_rheader(r, tabs=[]):
         # RHeaders only used in interactive views
         return None
 
-    s3db = current.s3db
-
     # Need to use this format as otherwise req_match?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
-    r.record = record
-    r.table = s3db[tablename]
 
     if record is None:
         # List or Create form: rheader makes no sense here
         return None
 
     T = current.T
+    s3db = current.s3db
+    # These 2 needed for req_match
+    r.record = record
+    r.table = \
     table = s3db[tablename]
-    resourcename = r.name
     settings = current.deployment_settings
 
     if tablename == "org_organisation":
-
         # Tabs
+        hack = False
         if not tabs:
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
@@ -2863,7 +2862,8 @@ def org_rheader(r, tabs=[]):
                     #(T("Tasks"), "task"),
                     ]
             # If a filter is being applied to the Organisations, amend the tabs accordingly
-            type_filter = current.request.get_vars.get("organisation.organisation_type_id$name", None)
+            request = current.request
+            type_filter = request.get_vars.get("organisation.organisation_type_id$name", None)
             if type_filter:
                 if type_filter == "Supplier":
                     tabs = [(T("Basic Details"), None),
@@ -2879,8 +2879,15 @@ def org_rheader(r, tabs=[]):
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
                             ]
+                    if request.controller == "project" and \
+                       request.function == "partners":
+                        # s3_rheader_tabs will make a mistake
+                        hack = True
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
+        if hack:
+            # Fix error in tabs
+            rheader_tabs[0][0]["_href"] = URL(c="project", f="partners", args=[r.id])
 
         if table.multi_sector_id.readable and record.multi_sector_id:
             if settings.get_ui_label_cluster():
