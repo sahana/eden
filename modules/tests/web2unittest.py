@@ -611,11 +611,20 @@ class SeleniumUnitTest(Web2UnitTest):
                     field = field(field_spec[query_type])
 
             if ("label" in field_spec) and ("name" in field_spec):
-                xpath = "//*[contains(@for,'{name}') and contains(text(), '{label}')]".format(**field_spec)
+                splitted_label = field_spec["label"].split()
+                xpath = "//*[contains(@for,'{name}') ".format(**field_spec)
+                for word in splitted_label:
+                    xpath += "and contains(text(), '" + word + "') "
+                xpath = xpath + "]"
                 field = browser.find_element_by_xpath(xpath)
             elif "label" in field_spec:
-                field = browser.find_element_by_xpath(
-                    "//label[contains(text(),'{label}')]".format(**field_spec))
+                xpath = "//*[ "
+                splitted_label = field_spec["label"].split()
+                for word in splitted_label[0 : -1]:
+                    xpath += "contains(text(), '" + word + "') and "
+                xpath = xpath + "contains(text(), '" + splitted_label[-1] + "')]"
+                field = browser.find_element_by_xpath(xpath)
+                    
 
             if isinstance(value, basestring):  # Text inputs
                 field.send_keys(value)
