@@ -719,6 +719,7 @@ class S3PDFTable(object):
             data = [self.labels] + data
         elif self.raw_data != None:
             data = [self.labels] + self.raw_data
+
         # Only build the table if we have some data
         if not data or not (data[0]):
             return None
@@ -995,12 +996,15 @@ class S3PDFTable(object):
         newColWidth = []
         pageColWidth = []
         for colW in colWidths:
-            if total + colW > self.tempDoc.printable_width:
+            if colNo > 0 and total + colW > self.tempDoc.printable_width:
+                # Split before this column...
                 colSplit.append(colNo)
                 newColWidth.append(pageColWidth)
+                # ...and put it on a new page
                 pageColWidth = [colW]
                 total = colW
             else:
+                # Append this column to the current page
                 pageColWidth.append(colW)
                 total += colW
             colNo += 1
