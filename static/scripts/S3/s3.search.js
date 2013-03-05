@@ -372,11 +372,11 @@ S3.search.filterURL = function(url) {
             if (value === '') {
                 value = $(this).val();
             } else {
-                value = value + ',' + $(this).val();
+                value = value + ',' + S3.search.quoteValue($(this).val());
             }
         });
         if (value !== '') {
-            queries.push(url_var + '=' + S3.search.quoteValue(value));
+            queries.push(url_var + '=' + value);
         }
     });
 
