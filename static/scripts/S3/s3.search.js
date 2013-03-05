@@ -370,7 +370,7 @@ S3.search.filterURL = function(url) {
         var value = '';
         $("input[name='" + id + "']:checked").each(function() {
             if (value === '') {
-                value = $(this).val();
+                value = S3.search.quoteValue($(this).val());
             } else {
                 value = value + ',' + S3.search.quoteValue($(this).val());
             }
