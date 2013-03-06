@@ -1388,11 +1388,21 @@ class S3XML(S3Codec):
                         v = value.encode("utf-8")
                     else:
                         v = value
+                    filename = None
                     try:
-                        if field_type == "upload" and download_url != "local":
-                            fn, ff = field.retrieve(value)
-                            v = Storage({"filename": fn, "file": ff})
-                            (v, error) = validate(table, original, f, v)
+                        if field_type == "upload" and \
+                           download_url != "local" and \
+                           table[f].requires:
+                            filename, stream = field.retrieve(value)
+                            v = filename
+                            if isinstance(stream, basestring):
+                                # Regular file in file system => try open
+                                stream = open(stream, "rb")
+                            if not error:
+                                dummy = Storage({"filename": filename,
+                                                 "file": stream})
+                                (dummy, error) = validate(table, original, f,
+                                                          dummy)
                         elif field_type == "password":
                             v = value
                             (value, error) = validate(table, None, f, v)
@@ -1401,6 +1411,11 @@ class S3XML(S3Codec):
                     except AttributeError:
                         # No such field
                         continue
+                    except IOError:
+                        if filename:
+                            error = "Cannot read uploaded file: %s" % filename
+                        else:
+                            error = sys.exc_info()[1]
                     except:
                         error = sys.exc_info()[1]
 

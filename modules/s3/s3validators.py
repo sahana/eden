@@ -1863,6 +1863,11 @@ class IS_PROCESSED_IMAGE(Validator):
         self.upload_path = upload_path
 
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return value, None
+        
         r = current.request
         vars = r.post_vars
 

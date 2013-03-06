@@ -2683,6 +2683,8 @@ class S3Resource(object):
             # job ID given
             pass
 
+        response = current.response
+        response.s3.bulk = True
         success = self.import_tree(id, tree,
                                    ignore_errors=ignore_errors,
                                    job_id=job_id,
@@ -2693,6 +2695,7 @@ class S3Resource(object):
                                    conflict_policy=conflict_policy,
                                    last_sync=last_sync,
                                    onconflict=onconflict)
+        response.s3.bulk = False
 
         self.files = Storage()
 
@@ -2700,7 +2703,7 @@ class S3Resource(object):
         if format == "json":
             # Whilst all Responses are JSON, it's easier to debug by having the
             # response appear in the browser than launching a text editor
-            current.response.headers["Content-Type"] = "application/json"
+            response.headers["Content-Type"] = "application/json"
         if self.error_tree is not None:
             tree = xml.tree2json(self.error_tree)
         else:
@@ -2718,10 +2721,12 @@ class S3Resource(object):
             import_info["deleted"] = deleted
 
         if success is True:
-            return xml.json_message(message=self.error, tree=tree, **import_info)
+            return xml.json_message(message=self.error, tree=tree,
+                                    **import_info)
         elif success and hasattr(success, "job_id"):
             self.job = success
-            return xml.json_message(message=self.error, tree=tree, **import_info)
+            return xml.json_message(message=self.error, tree=tree,
+                                    **import_info)
         else:
             return xml.json_message(False, 400,
                                     message=self.error, tree=tree)
