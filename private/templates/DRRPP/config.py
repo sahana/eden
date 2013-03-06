@@ -290,7 +290,6 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
             s3db.configure(tablename,
                            list_fields = list_fields)
         return output
-
     s3.prep = drrpp_prep
 
     # Custom List Fields

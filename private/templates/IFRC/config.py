@@ -632,6 +632,8 @@ settings.ui.crud_form_project_location = s3forms.S3SQLCustomForm(
             filter = {"linktable": "project_activity_type_sector",
                       "lkey": "activity_type_id",
                       "rkey": "sector_id",
+                      "lookuptable": "project_project",
+                      "lookupkey": "project_id",
                       },
         ),
         "comments",

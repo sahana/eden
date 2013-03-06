@@ -38,7 +38,7 @@ __all__ = ["AuthS3",
            ]
 
 import datetime
-import re
+#import re
 from uuid import uuid4
 
 try:
@@ -65,7 +65,7 @@ from s3track import S3Tracker
 from s3utils import s3_mark_required
 
 DEFAULT = lambda: None
-table_field = re.compile("[\w_]+\.[\w_]+")
+#table_field = re.compile("[\w_]+\.[\w_]+")
 
 DEBUG = False
 if DEBUG:

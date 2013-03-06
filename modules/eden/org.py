@@ -2848,6 +2848,7 @@ def org_rheader(r, tabs=[]):
 
     if tablename == "org_organisation":
         # Tabs
+        hack = False
         if not tabs:
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
@@ -2878,7 +2879,6 @@ def org_rheader(r, tabs=[]):
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
                             ]
-
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         if table.multi_sector_id.readable and record.multi_sector_id:
