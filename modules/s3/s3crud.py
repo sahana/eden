@@ -292,6 +292,9 @@ class S3CRUD(S3Method):
 
             subheadings = _config("subheadings")
 
+            # Interim save button
+            self._interim_save_button()
+            
             # Get the form
             output["form"] = self.sqlform(request=request,
                                           resource=resource,
@@ -315,7 +318,10 @@ class S3CRUD(S3Method):
             if representation in ("popup", "iframe"):
                 self.next = None
             else:
-                if session.s3.rapid_data_entry and not r.component:
+                if r.http == "POST" and "interim_save" in r.post_vars:
+                    next_vars = self._remove_filters(r.get_vars)
+                    create_next = r.url(target="[id]", method="update", vars=next_vars)
+                elif session.s3.rapid_data_entry and not r.component:
                     create_next = r.url()
                 else:
                     create_next = _config("create_next")
@@ -651,6 +657,9 @@ class S3CRUD(S3Method):
             # Success message
             message = crud_string(self.tablename, "msg_record_modified")
 
+            # Interim save button
+            self._interim_save_button()
+
             # Get the form
             form = self.sqlform(request=self.request,
                                 resource=resource,
@@ -697,20 +706,24 @@ class S3CRUD(S3Method):
             output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
             # Redirection
-            update_next = _config("update_next")
-            if representation in ("popup", "iframe", "plain"):
-                self.next = None
-            elif not update_next:
+            if r.http == "POST" and "interim_save" in r.post_vars:
                 next_vars = self._remove_filters(r.get_vars)
-                if r.component:
-                    self.next = r.url(method="", vars=next_vars)
-                else:
-                    self.next = r.url(id="[id]", method="read", vars=next_vars)
+                self.next = r.url(target="[id]", method="update", vars=next_vars)
             else:
-                try:
-                    self.next = update_next(self)
-                except TypeError:
-                    self.next = update_next
+                update_next = _config("update_next")
+                if representation in ("popup", "iframe", "plain"):
+                    self.next = None
+                elif not update_next:
+                    next_vars = self._remove_filters(r.get_vars)
+                    if r.component:
+                        self.next = r.url(method="", vars=next_vars)
+                    else:
+                        self.next = r.url(id="[id]", method="read", vars=next_vars)
+                else:
+                    try:
+                        self.next = update_next(self)
+                    except TypeError:
+                        self.next = update_next
 
         elif representation == "url":
             return self.import_url(r)
@@ -2794,5 +2807,34 @@ class S3CRUD(S3Method):
                                        args=args + ["read"],
                                        vars=r.get_vars))
         return list_linkto
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _interim_save_button():
+        """
+            Render an additional custom submit button for interim save,
+            which overrides the default _next to returns to an update
+            form for the same record after create/update
+        """
+
+        settings = current.response.s3.crud
+        if settings.interim_save:
+            T = current.T
+            label = settings.interim_save
+            _class = "interim-save"
+            if isinstance(label, basestring):
+                label = T(label)
+            elif isinstance(label, (tuple, list)) and len(label) > 1:
+                label, _class = label[:2]
+            elif not isinstance(label, lazyT):
+                label = T("Save and Continue Editing")
+            item = ("interim_save", label, _class)
+        else:
+            return
+        if settings.custom_submit:
+            settings.custom_submit.insert(0, item)
+        else:
+            settings.custom_submit = [item]
+        return
 
 # END =========================================================================

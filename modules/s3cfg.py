@@ -739,6 +739,10 @@ class S3Config(Storage):
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)
 
+    def get_ui_interim_save(self):
+        """ Render interim-save button in CRUD forms by default """
+        return self.ui.get("interim_save", False)
+
     def get_ui_search_submit_button(self):
         """
             Class for submit buttons in search views

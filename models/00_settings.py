@@ -296,6 +296,7 @@ submit_button = T("Save")
 _crud = s3.crud
 _crud.formstyle = s3_formstyle
 _crud.submit_button = submit_button
+_crud.interim_save = settings.get_ui_interim_save()
 # Optional class for Submit buttons
 #_crud.submit_style = "submit-button"
 _crud.confirm_delete = T("Do you really want to delete these records?")

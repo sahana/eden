@@ -129,6 +129,29 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def _submit_buttons(items):
+        """
+            Render custom submit buttons
+
+            @param items: list of tuples (<HTML name>, label, <HTML class>)
+            @return: list of additional submit buttons
+        """
+
+        buttons = []
+        for name, label, _class in items:
+            if isinstance(label, basestring):
+                label = current.T(label)
+            button = INPUT(_type="submit",
+                           _class="crud-submit-button",
+                           _name=name,
+                           _value=label)
+            if _class:
+                button.add_class(_class)
+            buttons.append(button)
+        return buttons
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def _insert_subheadings(form, tablename, subheadings):
         """
             Insert subheadings into forms
@@ -299,6 +322,20 @@ class S3SQLDefaultForm(S3SQLForm):
         else:
             formstyle = settings.formstyle
 
+        # Submit buttons
+        submit = [(None,
+                   settings.submit_button,
+                   settings.submit_style)]
+        if settings.custom_submit:
+            submit.extend(settings.custom_submit)
+        buttons = self._submit_buttons(submit)
+
+        # Cancel button
+        if not readonly and s3.cancel:
+            buttons.append(A(current.T("Cancel"),
+                             _href=response.s3.cancel,
+                             _class="action-lnk"))
+
         # Generate the form
         if record is None:
             record = record_id
@@ -313,27 +350,13 @@ class S3SQLDefaultForm(S3SQLForm):
                        labels = labels,
                        formstyle = formstyle,
                        separator = "",
-                       submit_button = settings.submit_button)
-
-        # Style the Submit button, if-requested
-        if settings.submit_style:
-            try:
-                form[0][-1][0][0]["_class"] = settings.submit_style
-            except:
-                # Submit button has been removed or a different formstyle,
-                # such as Bootstrap (which is already styled anyway)
-                pass
+                       submit_button = settings.submit_button,
+                       buttons = buttons)
 
         # Subheadings
         subheadings = options.get("subheadings", None)
         if subheadings:
             self._insert_subheadings(form, tablename, subheadings)
-
-        # Cancel button
-        if not readonly and response.s3.cancel:
-            form[0][-1][0].append(A(current.T("Cancel"),
-                                    _href=response.s3.cancel,
-                                    _class="action-lnk"))
 
         # Process the form
         logged = False
@@ -767,6 +790,20 @@ class S3SQLCustomForm(S3SQLForm):
         # Aggregate the form fields
         formfields = [f[-1] for f in fields]
 
+        # Submit buttons
+        submit = [(None,
+                   settings.submit_button,
+                   settings.submit_style)]
+        if settings.custom_submit:
+            submit.extend(settings.custom_submit)
+        buttons = self._submit_buttons(submit)
+
+        # Cancel button
+        if not readonly and s3.cancel:
+            buttons.append(A(current.T("Cancel"),
+                             _href=response.s3.cancel,
+                             _class="action-lnk"))
+
         # Render the form
         tablename = self.tablename
         form = SQLFORM.factory(*formfields,
@@ -778,26 +815,13 @@ class S3SQLCustomForm(S3SQLForm):
                                upload = "default/download",
                                readonly = readonly,
                                separator = "",
-                               submit_button = settings.submit_button)
-
-        # Style the Submit button, if-requested (untested for CustomForm)
-        if settings.submit_style:
-            try:
-                form[0][-1][0][0]["_class"] = settings.submit_style
-            except TypeError:
-                # Submit button has been removed
-                pass
+                               submit_button = settings.submit_button,
+                               buttons = buttons)
 
         # Subheadings
         subheadings = options.get("subheadings", None)
         if subheadings:
             self._insert_subheadings(form, tablename, subheadings)
-
-        # Cancel button (untested for CustomForm)
-        if not readonly and s3.cancel:
-            form[0][-1][0].append(A(current.T("Cancel"),
-                                    _href=s3.cancel,
-                                    _class="action-lnk"))
 
         # Process the form
         formname = "%s/%s" % (tablename, record_id)
