@@ -46,7 +46,7 @@ LANGUAGES = (
     ('gl_ES', 'Galego'),
     ('fr_FR', 'Français'),
     ('mk_MK', 'Makedonski'),
-    ('pt_BR', 'Português (Brazil)'),
+    ('pt_BR', 'Português'),
     ('hi_IN', 'Hindi'),
 )
 
