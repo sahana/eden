@@ -45,7 +45,9 @@ LANGUAGES = (
     ('en_GB', 'English'),
     ('gl_ES', 'Galego'),
     ('fr_FR', 'Français'),
-    ('mk_MK', 'Makedonski')
+    ('mk_MK', 'Makedonski'),
+    ('pt_BR', 'Português (Brazil)'),
+    ('hi_IN', 'Hindi'),
 )
 
 LOCALE_PATHS = (
