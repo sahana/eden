@@ -1,0 +1,35 @@
+/* Icons */
+i.icon.icon-incident,
+i.icon.icon-news,
+i.icon.icon-sitrep,
+i.icon.icon-update,
+i.icon.icon-ushahidi,
+i.icon.icon-youtube {
+    font-size: 17px;
+}
+/* Incident */
+/*.icon-warning-sign*/
+.icon-incident:before {
+    content: "\f071";
+}
+/* News */
+/*.icon-book*/
+.icon-news:before {
+    content: "\f02d";
+}
+/* Situational Report */
+/*.icon-file-alt*/
+.icon-sitrep:before,
+.icon-update:before {
+    content: "\f0f6";
+}
+/* Ushahidi */
+/*.icon-group:*/
+.icon-ushahidi:before  {
+    content: "\f0c0";
+}
+/* YouTube */
+/*.icon-film:*/
+.icon-youtube:before  {
+    content: "\f008";
+}

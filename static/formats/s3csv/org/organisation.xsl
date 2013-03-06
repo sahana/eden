@@ -11,15 +11,16 @@
          Branch..................org_organisation (the branch org's name)
 
          all of the following are for the branch, unless the branch field is empty:
-         Acronym.................org_organisation
-         Type....................org_organisation_type
-         Sector..................org_sector
-         Region..................org_organisation
-         Country.................org_organisation (ISO Code)
-         Website.................org_organisation
-         Twitter.................org_organisation
-         Donation Phone..........org_organisation
-         Comments................org_organisation
+         Acronym.................org_organisation.acronym
+         Type....................org_organisation$organisation_type_id
+         Sector..................org_organisation$sector_id
+         Region..................org_organisation.region
+         Country.................org_organisation.country (ISO Code)
+         Website.................org_organisation.website
+         Twitter.................org_organisation.twitter
+         Donation Phone..........org_organisation.donation_phone
+         Logo....................org_organisation.logo
+         Comments................org_organisation.comments
          Approved................org_organisation.approved_by
 
     *********************************************************************** -->
@@ -170,6 +171,25 @@
                         <xsl:value-of select="concat('[', $qlist, ']')"/>
                     </xsl:attribute>
                 </reference>
+            </xsl:if>
+
+            <!-- Logo -->
+            <xsl:if test="col[@field='Logo']!=''">
+                <xsl:variable name="logo">
+                    <xsl:value-of select="col[@field='Logo']"/>
+                </xsl:variable>
+                <data field="logo">
+                    <xsl:attribute name="url">
+                        <xsl:value-of select="$logo"/>
+                    </xsl:attribute>
+                    <!--
+                    <xsl:attribute name="filename">
+                        <xsl:call-template name="substringAfterLast">
+                            <xsl:with-param name="input" select="$logo"/>
+                            <xsl:with-param name="sep" select="'/'"/>
+                        </xsl:call-template>
+                    </xsl:attribute>-->
+                </data>
             </xsl:if>
 
             <xsl:if test="$OrgName!=''">
