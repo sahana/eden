@@ -2578,13 +2578,16 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     lookupkey = filter.get("lookupkey", None)
                     if not lookupkey:
                         raise
-                    id = resource._rows[0][lookupkey]
-                    _resource = s3db.resource(lookuptable, id=id)
+                    if resource._rows:
+                        id = resource._rows[0][lookupkey]
+                        _resource = s3db.resource(lookuptable, id=id)
+                    else:
+                        id = None
                 else:
                     # e.g. Project Themes filtered by Sector
-                    _resource = resource
-                    if _resource._ids:
-                        id = _resource._ids[0]
+                    if resource._ids:
+                        id = resource._ids[0]
+                        _resource = resource
                     else:
                         id = None
                 if id:
