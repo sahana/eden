@@ -107,6 +107,15 @@ hr { /* This hr replaces the bootstrap one */
     top: 20%;
     margin-top: -200px;
 }
+
+#gritter-notice-wrapper {
+    background: #000;
+    opacity: 0.8;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
 /* END COMMON CUSTOMIZATIONS */
 
 /* BOOTSTRAP OVERRIDES */

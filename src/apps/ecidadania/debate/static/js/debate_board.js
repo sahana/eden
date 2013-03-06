@@ -81,14 +81,12 @@ function createNote() {
     });
 
     request.fail(function (jqXHR, textStatus) {
-        $('#jsnotify').notify("create", {
-            title: errorCreate,
-            text: errorMsg + textStatus,
-            icon:"alert.png"
+        $.gritter.add({
+            title: errorMsg,
+            text: errorCreate + ' ' + textStatus,
+            image: 'http://i.imgur.com/gqh6G5l.png'
         });
     });
-
-    // Activate control show/hide for the new note
 }
 
 function viewNote(obj) {
@@ -124,10 +122,10 @@ function viewNote(obj) {
 
     request.fail(function (jqXHR, textStatus) {
         $('#view-current-note').modal('hide');
-        $('#jsnotify').notify("create", {
-            title: errorGetNote,
-            text: errorMsg + textStatus,
-            icon:"alert.png"
+        $.gritter.add({
+            title: errorMsg,
+            text: errorGetNote + ' ' + textStatus,
+            image: 'http://i.imgur.com/gqh6G5l.png'
         });
     });
 }
@@ -156,10 +154,10 @@ function editNote(obj) {
 
     request.fail(function (jqXHR, textStatus) {
         $('#edit-current-note').modal('hide');
-        $('#jsnotify').notify("create", {
-            title: errorGetNote,
-            text: errorMsg + textStatus,
-            icon:"alert.png"
+        $.gritter.add({
+            title: errorMsg,
+            text: errorGetNote + ' ' + textStatus,
+            image: 'http://i.imgur.com/gqh6G5l.png'
         });
     });
 }
@@ -191,10 +189,10 @@ function saveNote() {
 
     request.fail(function(jqXHR, textStatus) {
         $('#edit-current-note').modal('hide');
-        $('#jsnotify').notify("create", {
-            title: errorSave,
-            text: errorMsg + textStatus,
-            icon:"alert.png"
+        $.gritter.add({
+            title: errorMsg,
+            text: errorSave + ' ' + textStatus,
+            image: 'http://i.imgur.com/gqh6G5l.png'
         });
     })
 }
@@ -223,10 +221,10 @@ function deleteNote(obj) {
         });
 
         request.fail(function(jqXHR, textStatus) {
-            $('#jsnotify').notify("create", {
-                title: errorDelete,
-                text: errorMsg + textStatus,
-                icon:"alert.png"
+            $.gritter.add({
+                title: errorMsg,
+                text: errorDelete + ' ' + textStatus,
+                image: 'http://i.imgur.com/gqh6G5l.png'
             });
         });
     }
@@ -241,7 +239,7 @@ function makeSortable() {
     */
     
     // Get all the div elements starting by sortable
-    $('#[id^=sortable]').sortable({
+    $("[id^=sortable]").sortable({
         connectWith: ".connectedSortable",
         cancel: ".disabled",
     	cursor: "move",
@@ -266,10 +264,10 @@ function makeSortable() {
                     row: position[1]
                 }
             }).fail(function(jqXHR, textStatus) {
-                $('#jsnotify').notify("create", {
-                    title: errorSavePos,
-                    text: errorMsg + textStatus,
-                    icon:"alert.png"
+                $.gritter.add({
+                    title: errorMsg,
+                    text: errorSavePos + ' ' + textStatus,
+                    image: 'http://i.imgur.com/gqh6G5l.png'
                 });
             });
         }
@@ -393,8 +391,6 @@ function saveTable() {
 ********************/
 
 $(document).ready(function() {
-    // Activate javascript notifications.
-    $('#jsnotify').notify();
     // Activate sortables
     makeSortable();
     // Show controls for some notes
