@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
-"POT-Creation-Date: 2013-01-08 11:54+0100\n"
-"PO-Revision-Date: 2013-01-22 18:44+0000\n"
-"Last-Translator: Enrico Nicoletto <enrico.BR@gmx.co.uk>\n"
+"POT-Creation-Date: 2013-03-06 11:16+0100\n"
+"PO-Revision-Date: 2013-03-06 10:17+0000\n"
+"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/ecidadania/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -39,201 +39,201 @@ msgstr "Por favor mantenha o tamanho do arquivo inferior a %s."
 msgid "Filetype not supported."
 msgstr "O tipo do arquivo não é suportado."
 
-#: models.py:57 models.py:118
+#: models.py:43 models.py:104
 msgid "Name"
 msgstr "Nome"
 
-#: models.py:58
+#: models.py:44
 msgid "Max: 250 characters"
 msgstr "Máx: 250 caracteres"
 
-#: models.py:59
+#: models.py:45
 msgid "URL"
 msgstr "URL"
 
-#: models.py:62
+#: models.py:48
 msgid ""
 "Valid characters are lowercase, digits and                      underscore. "
 "This will be the accesible URL"
 msgstr "Caracteres válidos são minúsculas, digitos e sublinhado. Isto será a URL acessível."
 
-#: models.py:64 models.py:201
+#: models.py:50 models.py:187
 msgid "Description"
 msgstr "Descrição"
 
-#: models.py:65
+#: models.py:51
 msgid "Write here your description."
 msgstr "Escreva aqui sua descrição."
 
-#: models.py:66
+#: models.py:52
 msgid "Date of creation"
 msgstr "Data de criação"
 
-#: models.py:68
+#: models.py:54
 msgid "Space creator"
 msgstr "Criador do espaço"
 
-#: models.py:68
+#: models.py:54
 msgid "Select a user that         will be marked as creator of the space"
 msgstr "Selecione um usuário que será marcado como criador do espaço"
 
-#: models.py:71 models.py:73
+#: models.py:57 models.py:59
 msgid "Valid extensions are jpg, jpeg, png and gif"
 msgstr "Extensões válidas são: jpg, jpeg, png e gif"
 
-#: models.py:74
+#: models.py:60
 msgid "Public space"
 msgstr "Espaço público"
 
-#: models.py:74
+#: models.py:60
 msgid ""
 "This will         make the space visible to everyone, but registration will "
 "be         necessary to participate."
 msgstr "Isto irá marcar o espaço visível para todos, porém será necessário registrar-se para participar."
 
-#: models.py:78
+#: models.py:64
 msgid "Administrators"
 msgstr "Administradores"
 
-#: models.py:78
+#: models.py:64
 msgid ""
 "Please select the         users that will be administrators of this space"
 msgstr "Por favor selecione os usuários que serão administradores deste espaço."
 
-#: models.py:82
+#: models.py:68
 msgid "Moderators"
 msgstr "Moderadores"
 
-#: models.py:82
+#: models.py:68
 msgid "Please select the users         that will be moderators of this space."
 msgstr "Por favor selecione os usuários que serão moderadores deste espaço."
 
-#: models.py:84 models.py:192
+#: models.py:70 models.py:178
 msgid "Users"
 msgstr "Usuários"
 
-#: models.py:84
+#: models.py:70
 msgid "Please select the users that         can participate on this space"
 msgstr "Por favor selecione os usuários que podem participar neste espaço"
 
-#: models.py:88
+#: models.py:74
 msgid "Debate"
 msgstr "Debate"
 
-#: models.py:89 templates/spaces/space_index.html:41
+#: models.py:75 templates/spaces/space_index.html:41
 #: templates/spaces/space_index.html:141
 msgid "Proposals"
 msgstr "Propostas"
 
-#: models.py:90 templates/spaces/space_index.html:35
+#: models.py:76 templates/spaces/space_index.html:35
 #: templates/spaces/space_index.html:113
 msgid "News"
 msgstr "Notícias"
 
-#: models.py:91
+#: models.py:77
 msgid "Calendar"
 msgstr "Calendário"
 
-#: models.py:92 models.py:173 templates/spaces/space_index.html:44
+#: models.py:78 models.py:159 templates/spaces/space_index.html:44
 msgid "Documents"
 msgstr "Documentos"
 
-#: models.py:93 templates/spaces/space_index.html:50
+#: models.py:79 templates/spaces/space_index.html:50
 #: templates/spaces/space_index.html:227
 msgid "Voting"
 msgstr "Votação"
 
-#: models.py:97
+#: models.py:83
 msgid "Space"
 msgstr "Espaço"
 
-#: models.py:98
+#: models.py:84
 msgid "Spaces"
 msgstr "Espaços"
 
-#: models.py:119
+#: models.py:105
 msgid "Website"
 msgstr "Site da web"
 
-#: models.py:121
+#: models.py:107
 msgid "Logo"
 msgstr "Logotipo"
 
-#: models.py:127
+#: models.py:113
 msgid "Entity"
 msgstr "Entidade"
 
-#: models.py:128
+#: models.py:114
 msgid "Entities"
 msgstr "Entidades"
 
-#: models.py:142
+#: models.py:128
 msgid "Document title"
 msgstr "Título do documento"
 
-#: models.py:143
+#: models.py:129
 msgid "Max: 100 characters"
 msgstr "Máx: 100 caracteres"
 
-#: models.py:145
+#: models.py:131
 msgid "Change the space to whom belongs this document"
 msgstr "Altere o espaço a quem pertence este documento"
 
-#: models.py:146
+#: models.py:132
 msgid "File"
 msgstr "Arquivo"
 
-#: models.py:150
+#: models.py:136
 msgid ""
 "Permitted file types: DOC, DOCX, PPT, ODT, ODF, ODP,             PDF, RST, "
 "TXT."
 msgstr "Tipos de arquivos permitidos: DOC, DOCX, PPT, ODT, ODF, ODP, PDF, RST, TXT."
 
-#: models.py:153
+#: models.py:139
 msgid "Author"
 msgstr "Autor"
 
-#: models.py:154
+#: models.py:140
 msgid "Change the user that will figure as the         author"
 msgstr "Altere o usuário a quem vai parecer ser o autor"
 
-#: models.py:172
+#: models.py:158
 msgid "Document"
 msgstr "Documento"
 
-#: models.py:189
+#: models.py:175
 msgid "Event name"
 msgstr "Nome do evento"
 
-#: models.py:193
+#: models.py:179
 msgid "List of the users that will assist or assisted to the         event."
 msgstr "Lista dos usuários que irão ajudar ou assistirem o evento."
 
-#: models.py:196
+#: models.py:182
 msgid "Created by"
 msgstr "Criado por"
 
-#: models.py:198
+#: models.py:184
 msgid "Select the user that will be designated as author."
 msgstr "Selecione o usuário que será designado como autor."
 
-#: models.py:199
+#: models.py:185
 msgid "Event date"
 msgstr "Data do evento"
 
-#: models.py:200
+#: models.py:186
 msgid "Select the date where the event is celebrated."
 msgstr "Selecione a data a qual o evento será celebrado."
 
-#: models.py:202
+#: models.py:188
 msgid "Location"
 msgstr "Local"
 
-#: models.py:212
+#: models.py:198
 msgid "Event"
 msgstr "Evento"
 
-#: models.py:213 templates/spaces/space_index.html:47
+#: models.py:199 templates/spaces/space_index.html:47
 #: templates/spaces/space_index.html:155
 msgid "Events"
 msgstr "Eventos"
@@ -340,7 +340,7 @@ msgstr "^(?P<space_url>\\w+)/roles/"
 
 #: templates/spaces/document_confirm_delete.html:4
 #: templates/spaces/document_confirm_delete.html:16
-#: templates/spaces/space_index.html:496
+#: templates/spaces/space_index.html:514
 msgid "Delete document"
 msgstr "Excluir documento"
 
@@ -368,7 +368,7 @@ msgstr "Excluir"
 
 #: templates/spaces/document_form.html:13
 #: templates/spaces/document_form.html:31
-#: templates/spaces/space_index.html:491
+#: templates/spaces/space_index.html:509
 msgid "Edit document"
 msgstr "Editar documento"
 
@@ -500,9 +500,9 @@ msgid "Debates"
 msgstr "Debates"
 
 #: templates/spaces/space_index.html:54 templates/spaces/space_index.html:250
-#: templates/spaces/space_index.html:316 templates/spaces/space_index.html:372
-#: templates/spaces/space_index.html:444 templates/spaces/space_index.html:508
-#: templates/spaces/space_index.html:554
+#: templates/spaces/space_index.html:316 templates/spaces/space_index.html:379
+#: templates/spaces/space_index.html:462 templates/spaces/space_index.html:526
+#: templates/spaces/space_index.html:572
 msgid "Administration"
 msgstr "Administração"
 
@@ -570,8 +570,8 @@ msgstr "publicado"
 #: templates/spaces/space_index.html:116 templates/spaces/space_index.html:130
 #: templates/spaces/space_index.html:144 templates/spaces/space_index.html:158
 #: templates/spaces/space_index.html:171 templates/spaces/space_index.html:179
-#: templates/spaces/space_index.html:304 templates/spaces/space_index.html:414
-#: templates/spaces/space_index.html:433
+#: templates/spaces/space_index.html:304 templates/spaces/space_index.html:421
+#: templates/spaces/space_index.html:451
 msgid "on"
 msgstr "em"
 
@@ -588,7 +588,7 @@ msgstr "mais..."
 msgid "created debate"
 msgstr "debate criado"
 
-#: templates/spaces/space_index.html:132 templates/spaces/space_index.html:356
+#: templates/spaces/space_index.html:132 templates/spaces/space_index.html:363
 msgid "No debates started."
 msgstr "Não há debates iniciados."
 
@@ -596,7 +596,7 @@ msgstr "Não há debates iniciados."
 msgid "proposed"
 msgstr "proposto"
 
-#: templates/spaces/space_index.html:146 templates/spaces/space_index.html:418
+#: templates/spaces/space_index.html:146 templates/spaces/space_index.html:436
 msgid "No proposals available."
 msgstr "Nenhuma proposta disponível."
 
@@ -604,7 +604,7 @@ msgstr "Nenhuma proposta disponível."
 msgid "No events registered."
 msgstr "Nenhum evento registrado."
 
-#: templates/spaces/space_index.html:163 templates/spaces/space_index.html:565
+#: templates/spaces/space_index.html:163 templates/spaces/space_index.html:583
 msgid "View all events"
 msgstr "Ver todos os eventos"
 
@@ -620,7 +620,7 @@ msgstr "Votações"
 msgid "There are no votings."
 msgstr "Não há votações."
 
-#: templates/spaces/space_index.html:187 templates/spaces/space_index.html:530
+#: templates/spaces/space_index.html:187 templates/spaces/space_index.html:548
 msgid "Next events"
 msgstr "Próximos eventos"
 
@@ -652,9 +652,9 @@ msgstr "Adicionar nova enquete"
 msgid "Add new voting process"
 msgstr "Adicionar novo processo de votação"
 
-#: templates/spaces/space_index.html:267 templates/spaces/space_index.html:394
-#: templates/spaces/space_index.html:473 templates/spaces/space_index.html:518
-#: templates/spaces/space_index.html:563
+#: templates/spaces/space_index.html:267 templates/spaces/space_index.html:401
+#: templates/spaces/space_index.html:491 templates/spaces/space_index.html:536
+#: templates/spaces/space_index.html:581
 msgid "Actions"
 msgstr "Ações"
 
@@ -694,7 +694,7 @@ msgstr "Não há nenhuma notícia para este espaço."
 msgid "Most viewed"
 msgstr "Mais visto"
 
-#: templates/spaces/space_index.html:330 templates/spaces/space_index.html:439
+#: templates/spaces/space_index.html:330 templates/spaces/space_index.html:457
 msgid "Most commented"
 msgstr "Mais comentado"
 
@@ -710,111 +710,123 @@ msgstr "Arquivo de notícias"
 msgid "Active debates"
 msgstr "Debates ativos"
 
-#: templates/spaces/space_index.html:359
+#: templates/spaces/space_index.html:354
+msgid "Edit debate"
+msgstr ""
+
+#: templates/spaces/space_index.html:366
 msgid "Closed debates"
 msgstr "Debates encerrados"
 
-#: templates/spaces/space_index.html:366
+#: templates/spaces/space_index.html:373
 msgid "No debates closed yet."
 msgstr "Nenhum debate encerrado ainda."
 
-#: templates/spaces/space_index.html:375 templates/spaces/space_index.html:376
+#: templates/spaces/space_index.html:382 templates/spaces/space_index.html:383
 msgid "Add debate"
 msgstr "Adicionar debate"
 
-#: templates/spaces/space_index.html:396
+#: templates/spaces/space_index.html:403
 msgid "View all debates"
 msgstr "Ver todos os debates"
 
-#: templates/spaces/space_index.html:408
+#: templates/spaces/space_index.html:415
 msgid "New proposals"
 msgstr "Novas propostas"
 
-#: templates/spaces/space_index.html:413 templates/spaces/space_index.html:424
-#: templates/spaces/space_index.html:433
+#: templates/spaces/space_index.html:420 templates/spaces/space_index.html:442
+#: templates/spaces/space_index.html:451
 msgid "by"
 msgstr "por"
 
-#: templates/spaces/space_index.html:415 templates/spaces/space_index.html:424
-#: templates/spaces/space_index.html:433
+#: templates/spaces/space_index.html:422 templates/spaces/space_index.html:442
+#: templates/spaces/space_index.html:451
 msgid "at"
 msgstr "em"
 
-#: templates/spaces/space_index.html:421
+#: templates/spaces/space_index.html:424
+msgid "Edit proposal"
+msgstr ""
+
+#: templates/spaces/space_index.html:429
+msgid "Delete proposal"
+msgstr ""
+
+#: templates/spaces/space_index.html:439
 msgid "New proposal sets"
 msgstr "Novos conjuntos de propostas"
 
-#: templates/spaces/space_index.html:426
+#: templates/spaces/space_index.html:444
 msgid "No proposal sets available."
 msgstr "Nenhum conjunto de propostas disponível."
 
-#: templates/spaces/space_index.html:429
+#: templates/spaces/space_index.html:447
 msgid "Merged proposals"
 msgstr "Propostas mescladas"
 
-#: templates/spaces/space_index.html:436
+#: templates/spaces/space_index.html:454
 msgid "No merged proposals"
 msgstr "Nenhuma proposta mesclada"
 
-#: templates/spaces/space_index.html:440
+#: templates/spaces/space_index.html:458
 msgid "Highlighted proposals"
 msgstr "Propostas destacadas"
 
-#: templates/spaces/space_index.html:448 templates/spaces/space_index.html:449
+#: templates/spaces/space_index.html:466 templates/spaces/space_index.html:467
 msgid "Add proposal set"
 msgstr "Adicionar conjunto de proposta"
 
-#: templates/spaces/space_index.html:457 templates/spaces/space_index.html:458
+#: templates/spaces/space_index.html:475 templates/spaces/space_index.html:476
 msgid "Add new proposal"
 msgstr "Adicionar nova proposta"
 
-#: templates/spaces/space_index.html:466
+#: templates/spaces/space_index.html:484
 msgid "Merge proposal"
 msgstr "Mesclar proposta"
 
-#: templates/spaces/space_index.html:467
+#: templates/spaces/space_index.html:485
 msgid "Create merged proposal"
 msgstr "Criar proposta mesclada"
 
-#: templates/spaces/space_index.html:475
+#: templates/spaces/space_index.html:493
 msgid "View all proposals"
 msgstr "Ver todas as propostas"
 
-#: templates/spaces/space_index.html:476
+#: templates/spaces/space_index.html:494
 msgid "View all proposal sets"
 msgstr "Ver todos os conjuntos de propostas"
 
-#: templates/spaces/space_index.html:502
+#: templates/spaces/space_index.html:520
 msgid "No documents or files available."
 msgstr "Não há documentos ou arquivos disponíveis."
 
-#: templates/spaces/space_index.html:511
+#: templates/spaces/space_index.html:529
 msgid "Add new document"
 msgstr "Adicionar novo documento"
 
-#: templates/spaces/space_index.html:512
+#: templates/spaces/space_index.html:530
 msgid "Add documents"
 msgstr "Adicionar documentos"
 
-#: templates/spaces/space_index.html:520
+#: templates/spaces/space_index.html:538
 msgid "View all documents"
 msgstr "Ver todos os documentos"
 
-#: templates/spaces/space_index.html:538
+#: templates/spaces/space_index.html:556
 msgid "Past events"
 msgstr "Eventos anteriores"
 
-#: templates/spaces/space_index.html:550
+#: templates/spaces/space_index.html:568
 msgid ""
 "<strong>Hey!</strong> You can click on a day to see a bigger calendar with "
 "the events."
 msgstr "<strong>Ei!</strong> Você pode clicar em um dia para ver um calendário maior com os eventos."
 
-#: templates/spaces/space_index.html:557
+#: templates/spaces/space_index.html:575
 msgid "Add new event"
 msgstr "Adicionar novo evento"
 
-#: templates/spaces/space_index.html:558
+#: templates/spaces/space_index.html:576
 msgid "Add event"
 msgstr "Adicionar evento"
 
@@ -871,36 +883,36 @@ msgstr "Autorizar participação para o usuário %(request_user)s"
 msgid "Back to"
 msgstr "Retornar a"
 
-#: views/intent.py:58
+#: views/intent.py:59
 msgid "Access has been already authorized"
 msgstr "O acesso já foi autorizado"
 
-#: views/intent.py:65
+#: views/intent.py:66
 msgid "New participation request"
 msgstr "Pedido de nova participação"
 
-#: views/intent.py:66
+#: views/intent.py:67
 msgid ""
 "User {0} wants to participate in space {1}.\n"
 "                 Please click on the link below to approve.\n"
 " {2}"
 msgstr "O usuário {0} deseja participar no espaço {1}.\n                 Por favor clique no link abaixo para aprovar.\n {2}"
 
-#: views/intent.py:69
+#: views/intent.py:70
 msgid "Your request is being processed."
 msgstr "Seu pedido está sendo processado."
 
-#: views/intent.py:88 views/intent.py:108
+#: views/intent.py:89 views/intent.py:109
 msgid "The requested intent does not exist!"
 msgstr "A intenção solicitada não existe!"
 
-#: views/intent.py:103
+#: views/intent.py:104
 #, python-format
 msgid ""
 "The user has been authorized to participate                 in space \"%s\"."
 msgstr "O usuário foi autorizado a participar no espaço \"%s\"."
 
-#: views/intent.py:105
+#: views/intent.py:106
 msgid "Authorization successful"
 msgstr "Autorizado com sucesso"
 

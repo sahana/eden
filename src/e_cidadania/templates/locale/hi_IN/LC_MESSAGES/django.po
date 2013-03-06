@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Vishrut Mehta <vishrut.mehta009@gmail.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
-"POT-Creation-Date: 2013-01-08 11:54+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-03-06 11:17+0100\n"
 "PO-Revision-Date: 2013-02-28 15:32+0000\n"
 "Last-Translator: vishrut009 <vishrut.mehta009@gmail.com>\n"
-"Language-Team: Hindi (India) (http://www.transifex.com/projects/p/ecidadania/language/hi_IN/)\n"
+"Language-Team: Hindi (India) (http://www.transifex.com/projects/p/ecidadania/"
+"language/hi_IN/)\n"
+"Language: hi_IN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: hi_IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: templates/404.html:9
@@ -38,7 +39,8 @@ msgstr "ऐसा नहीं होना चाहिए था! आप क�
 msgid ""
 "We will send the spaguetti squad to repair this. Meanwhile you can go back "
 "to the index."
-msgstr "हम spaguetti दस्ते भेजने के लिए यह मरम्मत करेंगे. इस बीच आप सूची पर वापस जा सकते हैं."
+msgstr ""
+"हम spaguetti दस्ते भेजने के लिए यह मरम्मत करेंगे. इस बीच आप सूची पर वापस जा सकते हैं."
 
 #: templates/explore.html:9
 msgid "Recent processes"
@@ -90,19 +92,25 @@ msgid ""
 "If you want to invite more than one person, you will have to write their "
 "adresses separated by commas. Example: this@that.com, foo@bar.net, "
 "black@white.org"
-msgstr "यदि आप एक से अधिक व्यक्ति को आमंत्रित करना चाहते हैं, आप उनके पते अल्पविराम के द्वारा अलग लिखना होगा. उदाहरण: this@that.com, foo@bar.net, black@white.org"
+msgstr ""
+"यदि आप एक से अधिक व्यक्ति को आमंत्रित करना चाहते हैं, आप उनके पते अल्पविराम के द्वारा अलग "
+"लिखना होगा. उदाहरण: this@that.com, foo@bar.net, black@white.org"
 
 #: templates/invite.html:24
 msgid ""
 "Hi!, I would like you to join e-cidadania, the participative democracy "
 "platform for citizens."
-msgstr "हाय, मैं आप e- cidadania, नागरिकों के लिए भागीदारी लोकतंत्र मंच में शामिल होने के लिए करना चाहते हैं."
+msgstr ""
+"हाय, मैं आप e- cidadania, नागरिकों के लिए भागीदारी लोकतंत्र मंच में शामिल होने के लिए "
+"करना चाहते हैं."
 
 #: templates/invite.html:25
 msgid ""
 "You can write here whatever text you want for your invitation, or leave it "
 "by default."
-msgstr "आप यहाँ लिख सकते हैं, जो पाठ आप अपने निमंत्रण के लिए करना चाहते हैं या यह डिफ़ॉल्ट रूप से छोड़ दें."
+msgstr ""
+"आप यहाँ लिख सकते हैं, जो पाठ आप अपने निमंत्रण के लिए करना चाहते हैं या यह डिफ़ॉल्ट रूप से "
+"छोड़ दें."
 
 #: templates/invite.html:26
 msgid "Submit"
@@ -110,9 +118,10 @@ msgstr "प्रस्तुत करना"
 
 #: templates/invite.html:31
 msgid ""
-"To send invitations via e-mail you have to be <a "
-"href='/accounts/login/'>logged in</a>."
-msgstr "ई - मेल के जरिए निमंत्रण भेजने के लिए आप <a   href='/accounts/login/'> में लॉग है.</a>"
+"To send invitations via e-mail you have to be <a href='/accounts/"
+"login/'>logged in</a>."
+msgstr ""
+"ई - मेल के जरिए निमंत्रण भेजने के लिए आप <a   href='/accounts/login/'> में लॉग है.</a>"
 
 #: templates/invite_done.html:11
 msgid "The email(s) have been sent"
@@ -184,9 +193,11 @@ msgstr "मैं भाग लेना चाहता हूँ"
 
 #: templates/not_allowed.html:15 templates/space_intent.html:12
 msgid ""
-"You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your"
-" profile</a>"
-msgstr "आप घर के लिए </ a> या <a href='/accounts/'> अपने प्रोफ़ाइल के लिए वापस </ a> <a href='/'> वापस जा सकते हैं"
+"You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your "
+"profile</a>"
+msgstr ""
+"आप घर के लिए </ a> या <a href='/accounts/'> अपने प्रोफ़ाइल के लिए वापस </ a> <a "
+"href='/'> वापस जा सकते हैं"
 
 #: templates/site_index.html:5
 msgid "e-cidadania"
@@ -194,10 +205,13 @@ msgstr "e-cidadania"
 
 #: templates/site_index.html:23
 msgid ""
-"Would you like the debates and decisions to be more inclusive? Well done and"
-" integrative proposals where participation is always a nice and enriching "
+"Would you like the debates and decisions to be more inclusive? Well done and "
+"integrative proposals where participation is always a nice and enriching "
 "experience? We too, that's why we created e-cidadania."
-msgstr "आप अधिक समावेशी हो बहस और निर्णय करना चाहेंगे? अच्छा किया और एकीकृत प्रस्तावों जहां भागीदारी हमेशा एक अच्छा और समृद्ध अनुभव है? हम भी हैं, यही कारण है कि हम e - cidadania बनाया."
+msgstr ""
+"आप अधिक समावेशी हो बहस और निर्णय करना चाहेंगे? अच्छा किया और एकीकृत प्रस्तावों जहां "
+"भागीदारी हमेशा एक अच्छा और समृद्ध अनुभव है? हम भी हैं, यही कारण है कि हम e - "
+"cidadania बनाया."
 
 #: templates/site_index.html:25
 msgid "Latest participative processes"
@@ -378,17 +392,33 @@ msgstr "किसी ने आपको एक ई - cidadania में शा
 #, python-format
 msgid ""
 "\n"
-"                                        <a href=\"http://ecidadania.org\">e-cidadania</a> is an e-democracy platform for citizen participation. More clearly, it's for direct democracy in every one if its shapes,\n"
-"                                        from 99%% movement, 15M to official participative budgets. The message that was sent to you follows:\n"
+"                                        <a href=\"http://ecidadania.org\">e-"
+"cidadania</a> is an e-democracy platform for citizen participation. More "
+"clearly, it's for direct democracy in every one if its shapes,\n"
+"                                        from 99%% movement, 15M to official "
+"participative budgets. The message that was sent to you follows:\n"
 "                                        "
-msgstr "\n\n⏎ <a href=\"http://ecidadania.org\">e-cidadania</a> is an e-democracy platform for citizen participation. More clearly, it's for direct democracy in every one if its shapes,⏎ from 99%% movement, 15M to official participative budgets. The message that was sent to you follows:⏎ "
+msgstr ""
+"\n"
+"\n"
+"⏎ <a href=\"http://ecidadania.org\">e-cidadania</a> is an e-democracy "
+"platform for citizen participation. More clearly, it's for direct democracy "
+"in every one if its shapes,⏎ from 99%% movement, 15M to official "
+"participative budgets. The message that was sent to you follows:⏎ "
 
 #: templates/invite/invite_plain.txt:4
 #, python-format
 msgid ""
 "\n"
-"You have been invited to join e-cidadania, an e-democracy platform for citizen participation. More clearly, it's for direct democracy in every one of its shapes, from 99%% movement, 15M to official participative budgets. The message that was sent to you follows:\n"
-msgstr "\n⏎ You have been invited to join e-cidadania, an e-democracy platform for citizen participation. More clearly, it's for direct democracy in every one of its shapes, from 99%% movement, \n"
+"You have been invited to join e-cidadania, an e-democracy platform for "
+"citizen participation. More clearly, it's for direct democracy in every one "
+"of its shapes, from 99%% movement, 15M to official participative budgets. "
+"The message that was sent to you follows:\n"
+msgstr ""
+"\n"
+"⏎ You have been invited to join e-cidadania, an e-democracy platform for "
+"citizen participation. More clearly, it's for direct democracy in every one "
+"of its shapes, from 99%% movement, \n"
 
 #: templates/invite/invite_plain.txt:9
 msgid "Join e-cidadania today in http://ecidadania.org"

@@ -7,7 +7,7 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
-// We put here the string for translation. This is meant to be translated by
+// We put here the strings for translation. This is meant to be translated by
 // django jsi18n
 var newTitle = gettext('Write here your title');
 var newMessage = gettext('Write here your message');
