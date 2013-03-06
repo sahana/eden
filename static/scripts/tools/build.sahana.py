@@ -456,6 +456,33 @@ def docss():
     print "Moving new %s." % outputFilenameCSS
     shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
 
+    # Bootstrap
+    print "Bootstrap CSS"
+    listCSS = []
+    for file in ["bootstrap.css",
+                 "bootstrap-responsive.css",
+                 "font-awesome.css"]:
+        listCSS.append("../../styles/bootstrap/%s" % file)
+
+    outputFilenameCSS = "bootstrap-combined.min.css"
+
+    # Merge CSS files
+    print "Merging Bootstrap styles."
+    mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+
+    # Compress CSS files
+    print "Writing to %s." % outputFilenameCSS
+    compressCSS(mergedCSS, outputFilenameCSS)
+
+    # Move files to correct locations
+    print "Deleting %s." % outputFilenameCSS
+    try:
+        os.remove("../../styles/bootstrap/%s" % outputFilenameCSS)
+    except:
+        pass
+    print "Moving new %s." % outputFilenameCSS
+    shutil.move(outputFilenameCSS, "../../styles/bootstrap")
+
 def main(argv):
     try:
         parameter1 = argv[0]
