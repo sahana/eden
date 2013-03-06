@@ -323,12 +323,14 @@ class S3SQLDefaultForm(S3SQLForm):
             formstyle = settings.formstyle
 
         # Submit buttons
-        submit = [(None,
-                   settings.submit_button,
-                   settings.submit_style)]
         if settings.custom_submit:
+            submit = [(None,
+                       settings.submit_button,
+                       settings.submit_style)]
             submit.extend(settings.custom_submit)
-        buttons = self._submit_buttons(submit)
+            buttons = self._submit_buttons(submit)
+        else:
+            buttons = ["submit"]
 
         # Cancel button
         if not readonly and s3.cancel:
@@ -352,6 +354,15 @@ class S3SQLDefaultForm(S3SQLForm):
                        separator = "",
                        submit_button = settings.submit_button,
                        buttons = buttons)
+
+        # Style the Submit button, if-requested
+        if settings.submit_style and not settings.custom_submit:
+            try:
+                form[0][-1][0][0]["_class"] = settings.submit_style
+            except:
+                # Submit button has been removed or a different formstyle,
+                # such as Bootstrap (which is already styled anyway)
+                pass
 
         # Subheadings
         subheadings = options.get("subheadings", None)
@@ -791,12 +802,14 @@ class S3SQLCustomForm(S3SQLForm):
         formfields = [f[-1] for f in fields]
 
         # Submit buttons
-        submit = [(None,
-                   settings.submit_button,
-                   settings.submit_style)]
         if settings.custom_submit:
+            submit = [(None,
+                       settings.submit_button,
+                       settings.submit_style)]
             submit.extend(settings.custom_submit)
-        buttons = self._submit_buttons(submit)
+            buttons = self._submit_buttons(submit)
+        else:
+            buttons = ["submit"]
 
         # Cancel button
         if not readonly and s3.cancel:
@@ -817,6 +830,15 @@ class S3SQLCustomForm(S3SQLForm):
                                separator = "",
                                submit_button = settings.submit_button,
                                buttons = buttons)
+
+        # Style the Submit button, if-requested
+        if settings.submit_style and not settings.custom_submit:
+            try:
+                form[0][-1][0][0]["_class"] = settings.submit_style
+            except:
+                # Submit button has been removed or a different formstyle,
+                # such as Bootstrap (which is already styled anyway)
+                pass
 
         # Subheadings
         subheadings = options.get("subheadings", None)
