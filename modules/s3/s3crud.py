@@ -2818,9 +2818,9 @@ class S3CRUD(S3Method):
         """
 
         settings = current.response.s3.crud
-        if settings.interim_save:
+        label = current.deployment_settings.get_ui_interim_save()
+        if label:
             T = current.T
-            label = settings.interim_save
             _class = "interim-save"
             if isinstance(label, basestring):
                 label = T(label)
