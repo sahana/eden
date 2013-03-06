@@ -6,13 +6,6 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
-function checkBrowser() {
-    // Detect IE 6-8
-    if ( $.support.leadingWhitespace == false ) {
-        alert('Su navegador no dispone de las últimas tecnologías web.')
-    }
-}
-
 /* Cookie Reader (jQuery Cookie Plugin) */
 $(document).ajaxSend(function(event, xhr, settings) {
     function getCookie(name) {
@@ -98,9 +91,10 @@ function sitestart() {
 }
 
 $(document).ready(function(){
-    //checkBrowser();
+    checkBrowser();
     sitestart();
     $(".alert-message").alert();
+    alert(navigator.sayswho[1]);
 });
 
 

@@ -6,7 +6,6 @@
         <title>{% block title %}{% endblock %}</title>
         <!-- Load CSS -->
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/bootstrap.min.css" media="screen" />
-        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/ui.notify.css" media="screen" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/smoothness/jquery-ui-1.8.13.custom.css" media="screen" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/bootstrap-wysihtml5.css" media="screen">
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/font-awesome.css" media="screen" />
@@ -62,15 +61,6 @@
             {% endfor %}
         {% endif %}
     
-        <div id="jsnotify">
-            <div class="hidden" id="basic-template">
-                <a class="ui-notify-cross ui-notify-close" href="#">x</a>
-                <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}assets/icons/#{icon}" alt="warning" /></div>
-                <h1>#{title}</h1>
-                <p>#{text}</p>
-            </div>
-        </div>
-    
         <div class="container">
             <div>
                 <div class="row">
@@ -122,10 +112,8 @@
         <!-- Load JavaScript -->
         <script src="{{ STATIC_URL }}/js/bootstrap.min.js" type="text/javascript"></script>
         <script src="{{ STATIC_URL }}/js/site.js" type="text/javascript"></script>
-        <script src="{{ STATIC_URL }}/js/jquery.notify.min.js" type="text/javascript"></script>
         <script type="text/javascript">
             $(document).ready(function(){
-                $(".alert").alert();
                 $("[rel=tooltip]").tooltip();
             });
         </script>
