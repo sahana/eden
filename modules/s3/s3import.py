@@ -2961,7 +2961,7 @@ class S3ImportJob():
             field = reference.get(ATTRIBUTE.field, None)
 
             # Ignore references without valid field-attribute
-            if not field or field not in fields:
+            if not field or field not in fields or field not in table:
                 continue
 
             # Find the key table
@@ -3031,13 +3031,12 @@ class S3ImportJob():
                     if directory is not None:
                         entry = directory.get((tablename, attr, uid), None)
                     if not entry:
-                        expr = './/%s[@%s="%s" and @%s="%s"]' % (
+                        expr = './/%s[@%s="%s" and @%s=$uid]' % (
                                     TAG.resource,
                                     ATTRIBUTE.name,
                                     tablename,
-                                    attr,
-                                    uid)
-                        e = root.xpath(expr)
+                                    attr)
+                        e = root.xpath(expr, uid=uid)
                         if e:
                             # Element in the source => append to relements
                             relements.append(e[0])
