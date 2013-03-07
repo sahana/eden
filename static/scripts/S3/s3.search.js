@@ -503,8 +503,10 @@ $(document).ready(function() {
     });
 
     // Alternative with bootstrap-multiselect (note the hack for the fn-name):
-    $('.multiselect-filter-bootstrap:visible').addClass('active');
-    $('.multiselect-filter-bootstrap').multiselect_bs();
+    if (typeof $.fn.multiselect_bs != 'undefined') {
+        $('.multiselect-filter-bootstrap:visible').addClass('active');
+        $('.multiselect-filter-bootstrap').multiselect_bs();
+    }
     
     $('.filter-submit').click(function() {
         try {
