@@ -3394,9 +3394,9 @@ class S3OptionsFilter(S3FilterWidget):
                                                   values,
                                                   **attr)
             if opts.widget == "multiselect-bootstrap":
-                widget.add_class("multiselect-search-bootstrap")
+                widget.add_class("multiselect-filter-bootstrap")
             else:
-                widget.add_class("multiselect-search-widget")
+                widget.add_class("multiselect-filter-widget")
         else:
             widget = s3_grouped_checkboxes_widget(dummy_field,
                                                   values,

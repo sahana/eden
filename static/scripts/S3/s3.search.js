@@ -357,8 +357,8 @@ S3.search.filterURL = function(url) {
 
     // Options widgets
     $('.options-filter:visible,' +
-      '.options-filter.multiselect-search-widget.active,' +
-      '.options-filter.multiselect-search-bootstrap.active').each(function() {
+      '.options-filter.multiselect-filter-widget.active,' +
+      '.options-filter.multiselect-filter-bootstrap.active').each(function() {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
@@ -487,10 +487,10 @@ $(document).ready(function() {
     // Activate drop-down checklist widgets:
     
     // Mark active, otherwise submit can't find them
-    $('.multiselect-search-widget:visible').addClass('active');
+    $('.multiselect-filter-widget:visible').addClass('active');
     // Namespace bridge to not interfere with ui.multiselect
     $.widget.bridge("ech_multiselect", $.ech.multiselect);
-    $('.multiselect-search-widget').each(function() {
+    $('.multiselect-filter-widget').each(function() {
         if ($(this).find('option').length > 5) {
             $(this).ech_multiselect({
                 selectedList: 5
@@ -503,8 +503,8 @@ $(document).ready(function() {
     });
 
     // Alternative with bootstrap-multiselect (note the hack for the fn-name):
-    $('.multiselect-search-bootstrap:visible').addClass('active');
-    $('.multiselect-search-bootstrap').multiselect_bs();
+    $('.multiselect-filter-bootstrap:visible').addClass('active');
+    $('.multiselect-filter-bootstrap').multiselect_bs();
     
     $('.filter-submit').click(function() {
         try {
