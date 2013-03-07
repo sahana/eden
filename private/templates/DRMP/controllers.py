@@ -69,6 +69,7 @@ def homepage():
                       S3OptionsFilter("created_by$organisation_id",
                                       label=T("Filter by Organization"),
                                       represent="%(name)s",
+                                      #widget="multiselect-bootstrap",
                                       cols=3),
                       S3DateFilter("created_on",
                                    label=T("Filter by Date")),
