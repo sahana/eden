@@ -3388,12 +3388,15 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             any_all = ""
 
-        if opts.widget == "multiselect":
+        if opts.widget in ("multiselect", "multiselect-bootstrap"):
             from gluon.sqlhtml import MultipleOptionsWidget
             widget = MultipleOptionsWidget.widget(dummy_field,
                                                   values,
                                                   **attr)
-            widget.add_class("multiselect-widget")
+            if opts.widget == "multiselect-bootstrap":
+                widget.add_class("multiselect-search-bootstrap")
+            else:
+                widget.add_class("multiselect-search-widget")
         else:
             widget = s3_grouped_checkboxes_widget(dummy_field,
                                                   values,

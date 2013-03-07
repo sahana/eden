@@ -356,7 +356,9 @@ S3.search.filterURL = function(url) {
     });
 
     // Options widgets
-    $('.options-filter:visible, .options-filter.multiselect-widget.active').each(function() {
+    $('.options-filter:visible,' +
+      '.options-filter.multiselect-search-widget.active,' +
+      '.options-filter.multiselect-search-bootstrap.active').each(function() {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
@@ -368,6 +370,7 @@ S3.search.filterURL = function(url) {
             url_var = url_var.replace(anyof,'__contains');
         }
         if (this.tagName.toLowerCase() == 'select') {
+            // Standard SELECT
             value = '';
             values = $(this).val();
             if (values) {
@@ -381,6 +384,7 @@ S3.search.filterURL = function(url) {
                 }
             }
         } else {
+            // Checkboxes widget
             var value = '';
             $("input[name='" + id + "']:checked").each(function() {
                 if (value === '') {
@@ -483,13 +487,25 @@ $(document).ready(function() {
     // Activate drop-down checklist widgets:
     
     // Mark active, otherwise submit can't find them
-    $('.multiselect-widget:visible').addClass('active');
+    $('.multiselect-search-widget:visible').addClass('active');
     // Namespace bridge to not interfere with ui.multiselect
     $.widget.bridge("ech_multiselect", $.ech.multiselect);
-    $('.multiselect-widget').ech_multiselect({
-        selectedList: 3
+    $('.multiselect-search-widget').each(function() {
+        if ($(this).find('option').length > 5) {
+            $(this).ech_multiselect({
+                selectedList: 5
+            }).multiselectfilter();
+        } else {
+            $(this).ech_multiselect({
+                selectedList: 5
+            });
+        }
     });
 
+    // Alternative with bootstrap-multiselect (note the hack for the fn-name):
+    $('.multiselect-search-bootstrap:visible').addClass('active');
+    $('.multiselect-search-bootstrap').multiselect_bs();
+    
     $('.filter-submit').click(function() {
         try {
             // Update Map results URL

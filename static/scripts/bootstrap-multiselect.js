@@ -214,7 +214,8 @@
         }
     };
 
-    $.fn.multiselect = function (option) {
+    // Hack: rename function into multiselect_bs to avoid collisions with ui.multiselect
+    $.fn.multiselect_bs = function (option) {
         return this.each(function () {
             var data = $(this).data('multiselect'),
                 options = typeof option == 'object' && option;
