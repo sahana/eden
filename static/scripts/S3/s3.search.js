@@ -370,12 +370,14 @@ S3.search.filterURL = function(url) {
         if (this.tagName.toLowerCase() == 'select') {
             value = '';
             values = $(this).val();
-            for (i=0; i<values.length; i++) {
-                v = S3.search.quoteValue(values[i]);
-                if (value === '') {
-                    value = v;
-                } else {
-                    value = value + ',' + v;
+            if (values) {
+                for (i=0; i<values.length; i++) {
+                    v = S3.search.quoteValue(values[i]);
+                    if (value === '') {
+                        value = v;
+                    } else {
+                        value = value + ',' + v;
+                    }
                 }
             }
         } else {
