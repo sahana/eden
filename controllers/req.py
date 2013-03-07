@@ -436,9 +436,6 @@ S3OptionsFilter({
                 if r.interactive:
                     #table.organisation_id.readable = True
                     #table.organisation_id.writable = True
-                    # Dropdown not Autocomplete
-                    itable = s3db.req_commit_skill
-                    itable.skill_id.widget = None
                     # Custom Form
                     s3forms = s3base.s3forms
                     crud_form = s3forms.S3SQLCustomForm(
@@ -1077,9 +1074,6 @@ S3OptionsFilter({
                     #auth.permitted_organisations(table=r.table, redirect_on_error=False)
                     #table.organisation_id.readable = True
                     #table.organisation_id.writable = True
-                    # Dropdown not Autocomplete
-                    stable = s3db.req_commit_skill
-                    stable.skill_id.widget = None
                     # Custom Form
                     s3forms = s3base.s3forms
                     crud_form = s3forms.S3SQLCustomForm(

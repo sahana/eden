@@ -220,12 +220,13 @@ def customize_project_project(**attr):
     
     # Custom PreP
     standard_prep = s3.prep
-    def drrpp_prep(r):
+    def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
-            output = standard_prep(r)
-        else:
-            output = True
+            result = standard_prep(r)
+            if not result:
+                return False
+
         if r.interactive:
             # Don't show Update/Delete button on Search table 
             if r.method == "search":
@@ -243,12 +244,9 @@ def customize_project_project(**attr):
             if current.db(query).select(pltable.id,
                                         limitby=(0, 1)).first() is None:
                 drrpptable = s3db.project_drrpp
-                drrpptable.pifacc.readable = False
-                drrpptable.pifacc.writable = False
-                drrpptable.jnap.readable = False
-                drrpptable.jnap.writable = False
-                drrpptable.L1.readable = False
-                drrpptable.L1.writable = False
+                drrpptable.pifacc.readable = drrpptable.pifacc.writable = False
+                drrpptable.jnap.readable = drrpptable.jnap.writable = False
+                drrpptable.L1.readable = drrpptable.L1.writable = False
             else:
                 # If no Cook Islands are checked, then check them all
                 script = '''
@@ -289,8 +287,8 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                            ]
             s3db.configure(tablename,
                            list_fields = list_fields)
-        return output
-    s3.prep = drrpp_prep
+        return True
+    s3.prep = custom_prep
 
     # Custom List Fields
     list_fields = ["id",
@@ -382,8 +380,8 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                              cols = 3,
                              )
      ]
-    project_search = s3search.S3Search(simple = simple,
-                                       advanced = simple + advanced)
+    search_method = s3search.S3Search(simple = simple,
+                                      advanced = simple + advanced)
 
     # Custom Report Fields
     report_fields = [(T("Countries"), "location.location_id"),
@@ -514,7 +512,7 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                    crud_form = crud_form,
                    list_fields = list_fields,
                    report_options = report_options,
-                   search_method = project_search,
+                   search_method = search_method,
                    subheadings = {1: "hazard",
                                   2: "theme",
                                   3: "objectives",
@@ -548,7 +546,7 @@ def customize_project_framework(**attr):
 
     # Custom PreP
     standard_prep = s3.prep
-    def drrpp_prep(r):
+    def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
             output = standard_prep(r)
@@ -563,7 +561,7 @@ def customize_project_framework(**attr):
                                deletable = False
                                )
         return output
-    s3.prep = drrpp_prep
+    s3.prep = custom_prep
 
     return attr
 

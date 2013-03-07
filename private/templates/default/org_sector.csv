@@ -16,7 +16,7 @@ Abrv,Name,SubsectorOf
 "Food Supply",,"Nutrition"
 "Aggravating factors",,"WASH"
 "Disease vectors",,"WASH"
-"Drainage",;"WASH"
+"Drainage",,"WASH"
 "Excreta disposal",,"WASH"
 "Hygiene NFIs",,"WASH"
 "Hygiene practice",,"WASH"

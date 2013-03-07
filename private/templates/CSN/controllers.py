@@ -237,7 +237,20 @@ def render_homepage_posts(rfields, record, **attr):
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id])
+
+    # Attachment(s)?
+    document = raw["doc_document.file"]
+    if document:
+        doc_url = URL(c="default", f="download",
+                      args=[document]
+                      )
+        doc_link = A(I(_class="icon icon-paper-clip fright"),
+                     _href=doc_url)
+    else:
+        doc_link = ""
+
     if series not in ("News", "Twitter", "Ushahidi", "YouTube"):
+        # We expect an Author
         author = record["cms_post.created_by"]
         author_id = raw["cms_post.created_by"]
         organisation = record["auth_user.organisation_id"]
@@ -266,10 +279,21 @@ def render_homepage_posts(rfields, record, **attr):
                    _href=person_url,
                    _class="pull-left",
                    )
+        card_person = DIV(author,
+                          " - ",
+                          A(organisation,
+                            _href=org_url,
+                            _class="card-organisation",
+                            ),
+                          doc_link,
+                          _class="card-person",
+                          )
     else:
-        author = ""
-        organisation = ""
-        org_url = ""
+        # No Author
+        card_person = DIV(doc_link,
+                          _class="card-person",
+                          )
+        avatar = None
         if series == "News":
             icon = URL(c="static", f="img",
                        args=["markers", "gis_marker.image.News.png"])
@@ -279,13 +303,21 @@ def render_homepage_posts(rfields, record, **attr):
             icon = URL(c="static", f="img",
                        args=["markers", "gis_marker.image.Ushahidi.png"])
         elif series == "YouTube":
-            icon = URL(c="static", f="img", args=["social", "YouTube.png"])
-        avatar = DIV(IMG(_src=icon,
-                         _class="media-object",
-                         _style="width:50px;padding:5px;padding-top:0px;",
-                         ),
-                     _class="pull-left")
+            #icon = URL(c="static", f="img", args=["social", "YouTube.png"])
+            avatar = DIV(IFRAME(_width=320,
+                                _height=180,
+                                _src=raw["cms_post.comments"],
+                                _frameborder=0),
+                         _class="pull-left"
+                         )
+        if not avatar:
+            avatar = DIV(IMG(_src=icon,
+                             _class="media-object",
+                             _style="width:50px;padding:5px;padding-top:0px;",
+                             ),
+                         _class="pull-left")
 
+    # Edit Bar
     permit = current.auth.s3_has_permission
     table = db.cms_post
     if permit("update", table, record_id=record_id):
@@ -296,7 +328,8 @@ def render_homepage_posts(rfields, record, **attr):
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _href=URL(c="cms", f="post", args=[record_id, "delete"]),
+                       _href=URL(c="cms", f="post",
+                                 args=[record_id, "delete"]),
                        )
     else:
         delete_btn = ""
@@ -304,20 +337,11 @@ def render_homepage_posts(rfields, record, **attr):
                    delete_btn,
                    _class="edit-bar fright",
                    )
-    document = raw["doc_document.file"]
-    if document:
-        doc_url = URL(c="default", f="download",
-                      args=[document]
-                      )
-        doc_link = A(I(_class="icon icon-paper-clip fright"),
-                     _href=doc_url)
-    else:
-        doc_link = ""
 
     if series == "Alert":
         item_class = "%s disaster" % item_class
 
-    # Render the item
+    # Overall layout
     item = DIV(DIV(I(SPAN(" %s" % current.T(series),
                           _class="card-title",
                           ),
@@ -336,15 +360,7 @@ def render_homepage_posts(rfields, record, **attr):
                    ),
                DIV(avatar,
                    DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               doc_link,
-                               _class="card-person",
-                               ),
+                           card_person,
                            _class="media",
                            ),
                        _class="media-body",

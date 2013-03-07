@@ -203,6 +203,8 @@ class S3OrganisationModel(S3Model):
                                                           multiple=True),
                                     comment=sector_comment("multi_sector_id"),
                                     label=SECTOR,
+                                    widget=S3MultiSelectWidget(filter=False,
+                                                               header=False),
                                     ondelete="SET NULL")
 
         # Components
