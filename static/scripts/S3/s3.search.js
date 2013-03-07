@@ -356,7 +356,7 @@ S3.search.filterURL = function(url) {
     });
 
     // Options widgets
-    $('.options-filter:visible').each(function() {
+    $('.options-filter:visible, .options-filter.ddcl.active').each(function() {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
@@ -367,14 +367,27 @@ S3.search.filterURL = function(url) {
         } else if (operator == 'all' && url_var.match(anyof)) {
             url_var = url_var.replace(anyof,'__contains');
         }
-        var value = '';
-        $("input[name='" + id + "']:checked").each(function() {
-            if (value === '') {
-                value = S3.search.quoteValue($(this).val());
-            } else {
-                value = value + ',' + S3.search.quoteValue($(this).val());
+        if (this.tagName.toLowerCase() == 'select') {
+            value = '';
+            values = $(this).val();
+            for (i=0; i<values.length; i++) {
+                v = S3.search.quoteValue(values[i]);
+                if (value === '') {
+                    value = v;
+                } else {
+                    value = value + ',' + v;
+                }
             }
-        });
+        } else {
+            var value = '';
+            $("input[name='" + id + "']:checked").each(function() {
+                if (value === '') {
+                    value = S3.search.quoteValue($(this).val());
+                } else {
+                    value = value + ',' + S3.search.quoteValue($(this).val());
+                }
+            });
+        }
         if (value !== '') {
             queries.push(url_var + '=' + value);
         }
@@ -464,6 +477,16 @@ $(document).ready(function() {
 //         }
 //         window.location.href = url;
 //     });
+
+    // Activate drop-down checklist widgets:
+    
+    // Mark active, otherwise submit can't find them
+    $('.ddcl:visible').addClass('active');
+    // Namespace bridge to not interfere with ui.multiselect
+    $.widget.bridge("ech_multiselect", $.ech.multiselect);
+    $('.ddcl').ech_multiselect({
+        selectedList: 3
+    });
 
     $('.filter-submit').click(function() {
         try {
