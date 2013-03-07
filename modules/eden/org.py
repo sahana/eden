@@ -2325,11 +2325,11 @@ class S3OfficeModel(S3Model):
                                        comment=T("Search for office by organization."),
                                        represent="%(name)s",
                                        cols=3,
-                                       widget="ddcl"),
+                                       widget="multiselect"),
                        S3OptionsFilter("location_id$L1",
                                        location_level="L1",
                                        cols=3,
-                                       widget="ddcl")
+                                       widget="multiselect")
                   ],
                   list_fields=["id",
                                "name",

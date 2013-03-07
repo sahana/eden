@@ -356,7 +356,7 @@ S3.search.filterURL = function(url) {
     });
 
     // Options widgets
-    $('.options-filter:visible, .options-filter.ddcl.active').each(function() {
+    $('.options-filter:visible, .options-filter.multiselect-widget.active').each(function() {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
@@ -483,10 +483,10 @@ $(document).ready(function() {
     // Activate drop-down checklist widgets:
     
     // Mark active, otherwise submit can't find them
-    $('.ddcl:visible').addClass('active');
+    $('.multiselect-widget:visible').addClass('active');
     // Namespace bridge to not interfere with ui.multiselect
     $.widget.bridge("ech_multiselect", $.ech.multiselect);
-    $('.ddcl').ech_multiselect({
+    $('.multiselect-widget').ech_multiselect({
         selectedList: 3
     });
 
