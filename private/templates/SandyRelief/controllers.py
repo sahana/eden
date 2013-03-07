@@ -35,25 +35,14 @@ class index():
         item = ""
         if settings.has_module("cms"):
             table = s3db.cms_post
-            item = db(table.module == "default").select(table.id,
-                                                        table.body,
-                                                        limitby=(0, 1)).first()
+            ltable = s3db.cms_post_module
+            query = (ltable.module == "default") & \
+                    (ltable.post_id == table.id) & \
+                    (table.deleted != True)
+            item = db(query).select(table.body,
+                                    limitby=(0, 1)).first()
             if item:
-                if s3_has_role(ADMIN):
-                    item = DIV(XML(item.body),
-                               BR(),
-                               A(T("Edit"),
-                                 _href=URL(c="cms", f="post",
-                                           args=[item.id, "update"],
-                                           vars={"module":"default"}),
-                                 _class="action-btn"))
-                else:
-                    item = XML(item.body)
-            elif s3_has_role(ADMIN):
-                item = DIV(A(T("Edit"),
-                             _href=URL(c="cms", f="post", args="create",
-                                       vars={"module":"default"}),
-                             _class="action-btn"))
+                item = DIV(XML(item.body))
             else:
                 item = ""
             

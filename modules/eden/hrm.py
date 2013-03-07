@@ -1487,7 +1487,8 @@ class S3HRSkillModel(S3Model):
                                                                  multiple=True),
                                          #comment = skill_help,
                                          ondelete = "SET NULL",
-                                         widget = S3MultiSelectWidget()
+                                         widget = S3MultiSelectWidget(header="",
+                                                                      selectedList=3),
                                          )
 
         configure("hrm_skill",

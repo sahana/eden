@@ -2650,41 +2650,49 @@ class S3CheckboxesWidget(OptionsWidget):
 class S3MultiSelectWidget(MultipleOptionsWidget):
     """
         Standard MultipleOptionsWidget, but using the jQuery UI:
-        http://www.quasipartikel.at/multiselect/
-        static/scripts/ui.multiselect.js
+        http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/
+        static/scripts/jquery.ui.multiselect.js
     """
 
-    def __init__(self):
-        pass
+    def __init__(self,
+                 filter = True,
+                 header = True,
+                 selectedList = 4,
+                 noneSelectedText = "Select"
+                 ):
+        self.filter = filter
+        self.header = header
+        self.selectedList = selectedList
+        self.noneSelectedText = noneSelectedText
 
-    def __call__(self, field, value, **attributes):
+    def __call__(self, field, value, **attr):
 
         T = current.T
-        s3 = current.response.s3
 
         selector = str(field).replace(".", "_")
 
-        s3.js_global.append('''
-i18n.addAll='%s'
-i18n.removeAll='%s'
-i18n.itemsCount='%s'
-i18n.search='%s'
-''' % (T("Add all"),
-       T("Remove all"),
-       T("items selected"),
-       T("search")))
+        # Options:
+        # * Show Selected List
+        if self.header is True:
+            header = ""
+        elif self.header is False:
+            header = '''header:false,'''
+        else:
+            header = '''header:"%s",''' % self.header
+        script = '''$('#%s').multiselect({%sselectedList:%s,noneSelectedText:'%s'})''' % \
+            (selector, header, self.selectedList, current.T(self.noneSelectedText))
+        if self.filter:
+            script = '''%s.multiselectfilter()''' % script
+        current.response.s3.jquery_ready.append(script)
 
-        s3.jquery_ready.append('''
-$('#%s').removeClass('list')
-$('#%s').addClass('multiselect')
-$('#%s').multiselect({
- dividerLocation:0.5,
- sortable:false
-})''' % (selector,
-         selector,
-         selector))
+        _class = attr.get("_class", None)
+        if _class:
+            if "multiselect-widget" not in _class:
+                attr["_class"] = "%s multiselect-widget" % _class
+        else:
+            attr["_class"] = "multiselect-widget"
 
-        return TAG[""](MultipleOptionsWidget.widget(field, value, **attributes),
+        return TAG[""](MultipleOptionsWidget.widget(field, value, **attr),
                        requires = field.requires
                        )
 

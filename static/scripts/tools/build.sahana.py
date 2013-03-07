@@ -153,6 +153,22 @@ def dojs(dogis = False, warnings = True):
     print "Moving new JS files"
     shutil.move(outputFilename, "../S3")
 
+    # Bootstrap
+    # print "Compressing Bootstrap"
+    # sourceDirectoryBootstrap = ".."
+    # configFilenameBootstrap = "sahana.js.bootstrap.cfg"
+    # outputFilenameBootstrap = "bootstrap.min.js"
+    # mergedBootstrap = mergejs.run(sourceDirectoryBootstrap,
+                                  # None,
+                                  # configFilenameBootstrap)
+    # minimizedBootstrap = minimize(mergedBootstrap)
+    # open(outputFilenameBootstrap, "w").write(minimizedBootstrap)
+    # try:
+        # os.remove("../%s" % outputFilenameBootstrap)
+    # except:
+        # pass
+    # shutil.move(outputFilenameBootstrap, "..")
+
     # dataTables
     print "Compressing dataTables"
     sourceDirectorydataTables = ".."
@@ -229,8 +245,7 @@ def dojs(dogis = False, warnings = True):
     shutil.move(outputFilenameVulnerability, "../../themes/Vulnerability/js")
 
     # Single scripts
-    for filename in [
-                     "contacts",
+    for filename in ["contacts",
                      "embed_component",
                      "gis.fullscreen",
                      "locationselector.widget",
@@ -461,7 +476,9 @@ def docss():
     listCSS = []
     for file in ["bootstrap.css",
                  "bootstrap-responsive.css",
-                 "font-awesome.css"]:
+                 "font-awesome.css",
+                 "bootstrap-multiselect.css",
+                 ]:
         listCSS.append("../../styles/bootstrap/%s" % file)
 
     outputFilenameCSS = "bootstrap-combined.min.css"

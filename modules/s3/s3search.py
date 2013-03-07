@@ -3394,6 +3394,9 @@ class S3OptionsFilter(S3FilterWidget):
                                                   values,
                                                   **attr)
             if opts.widget == "multiselect-bootstrap":
+                script = "/%s/static/scripts/bootstrap-multiselect.js" % \
+                    current.request.application
+                current.response.s3.scripts.append(script)
                 widget.add_class("multiselect-filter-bootstrap")
             else:
                 widget.add_class("multiselect-filter-widget")

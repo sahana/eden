@@ -743,7 +743,6 @@ S3OptionsFilter({
             # Custom Form
             stable = s3db.req_req_skill
             stable.skill_id.label = T("Required Skills (optional)")
-            stable.skill_id.widget = None
             # Custom Form
             settings = current.deployment_settings
             fields = ["site_id",
@@ -3104,9 +3103,10 @@ def req_skill_onaccept(form):
                             site_id=record.req_req.site_id)
 
         # Add the Request as a Component to the Task
-        table = s3db.req_task_req
-        table.insert(task_id = task,
-                     req_id = req_id)
+        table = s3db.table("req_task_req", None)
+        if table:
+            table.insert(task_id = task,
+                         req_id = req_id)
 
 # =============================================================================
 def req_details_field(row):

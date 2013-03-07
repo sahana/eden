@@ -489,22 +489,24 @@ $(document).ready(function() {
     // Mark active, otherwise submit can't find them
     $('.multiselect-filter-widget:visible').addClass('active');
     // Namespace bridge to not interfere with ui.multiselect
-    $.widget.bridge("ech_multiselect", $.ech.multiselect);
+    //$.widget.bridge("ech_multiselect", $.ech.multiselect);
     $('.multiselect-filter-widget').each(function() {
         if ($(this).find('option').length > 5) {
-            $(this).ech_multiselect({
+            $(this).multiselect({
                 selectedList: 5
             }).multiselectfilter();
         } else {
-            $(this).ech_multiselect({
+            $(this).multiselect({
                 selectedList: 5
             });
         }
     });
 
-    // Alternative with bootstrap-multiselect (note the hack for the fn-name):
-    $('.multiselect-filter-bootstrap:visible').addClass('active');
-    $('.multiselect-filter-bootstrap').multiselect_bs();
+    if (typeof($.fn.multiselect_bs) != 'undefined') {
+        // Alternative with bootstrap-multiselect (note the hack for the fn-name):
+        $('.multiselect-filter-bootstrap:visible').addClass('active');
+        $('.multiselect-filter-bootstrap').multiselect_bs();
+    }
     
     $('.filter-submit').click(function() {
         try {
