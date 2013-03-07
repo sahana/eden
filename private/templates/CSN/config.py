@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, URL
+from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-from s3.s3utils import s3_auth_user_represent_name, s3_unicode
+from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_LOCATION
 from s3.s3widgets import S3LocationAutocompleteWidget
 
@@ -151,6 +152,7 @@ def customize_cms_post(**attr):
         Customize cms_post controller
     """
 
+    s3 = current.response.s3
     s3db = current.s3db
     table = s3db.cms_post
 
@@ -202,6 +204,7 @@ def customize_cms_post(**attr):
                    "created_by",
                    "created_by$organisation_id",
                    "document.file",
+                   "comments", # Needed for YouTube URLs
                    ]
 
     s3db.configure("cms_post",
@@ -212,11 +215,175 @@ def customize_cms_post(**attr):
                    list_fields = list_fields,
                    )
 
-    crud_settings = current.response.s3.crud
+    crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
     crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
+
+    # Custom PostP
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.representation == "plain" and \
+           r.method != "search":
+            # Map Popups - styled like dataList
+            auth = current.auth
+            db = current.db
+            record = r.record
+            record_id = record.id
+
+            item_class = "thumbnail"
+            item_id = "popup-%s" % record_id
+
+            table = s3db.cms_post
+            series = table.series_id.represent(record.series_id)
+            date = S3DateTime.date_represent(record.created_on, utc=True)
+            body = record.body
+            location_id = record.location_id
+            location = table.location_id.represent(location_id)
+            location_url = URL(c="gis", f="location", args=[location_id])
+
+            # Attachment(s)?
+            table = s3db.doc_document
+            row = db(table.doc_id == record.doc_id).select(table.file,
+                                                           limitby=(0, 1)
+                                                           ).first()
+            if row:
+                doc_url = URL(c="default", f="download",
+                              args=[row.file]
+                              )
+                doc_link = A(I(_class="icon icon-paper-clip fright"),
+                             _href=doc_url)
+            else:
+                doc_link = ""
+
+            if series not in ("News", "Twitter", "Ushahidi", "YouTube"):
+                # We expect an Author
+                author_id = record.created_by
+                author = table.created_by.represent(author_id)
+                utable = auth.settings.table_user
+                user = db(utable.id == author_id).select(utable.organisation_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+                organisation_id = user.organisation_id
+                organisation = s3db.org_organisation_id.attr["represent"](organisation_id)
+                org_url = URL(c="org", f="organisation", args=[organisation_id])
+                # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+                avatar = s3_avatar_represent(author_id,
+                                             _class="media-object",
+                                             _style="width:50px;padding:5px;padding-top:0px;")
+                ltable = s3db.pr_person_user
+                ptable = db.pr_person
+                query = (ltable.user_id == author_id) & \
+                        (ltable.pe_id == ptable.pe_id)
+                row = db(query).select(ptable.id,
+                                       limitby=(0, 1)
+                                       ).first()
+                if row:
+                    person_url = URL(c="hrm", f="person", args=[row.id])
+                else:
+                    person_url = "#"
+                author = A(author,
+                           _href=person_url,
+                           )
+                avatar = A(avatar,
+                           _href=person_url,
+                           _class="pull-left",
+                           )
+                card_person = DIV(author,
+                                  " - ",
+                                  A(organisation,
+                                    _href=org_url,
+                                    _class="card-organisation",
+                                    ),
+                                  doc_link,
+                                  _class="card-person",
+                                  )
+            else:
+                # No Author
+                card_person = DIV(doc_link,
+                                  _class="card-person",
+                                  )
+                avatar = None
+                if series == "News":
+                    icon = URL(c="static", f="img",
+                               args=["markers", "gis_marker.image.News.png"])
+                elif series == "Twitter":
+                    icon = URL(c="static", f="img", args=["social", "twitter.png"])
+                elif series == "Ushahidi":
+                    icon = URL(c="static", f="img",
+                               args=["markers", "gis_marker.image.Ushahidi.png"])
+                elif series == "YouTube":
+                    #icon = URL(c="static", f="img", args=["social", "YouTube.png"])
+                    avatar = DIV(IFRAME(_width=320,
+                                        _height=180,
+                                        _src=record.comments,
+                                        _frameborder=0),
+                                 _class="pull-left"
+                                 )
+                if not avatar:
+                    avatar = DIV(IMG(_src=icon,
+                                     _class="media-object",
+                                     _style="width:50px;padding:5px;padding-top:0px;",
+                                     ),
+                                 _class="pull-left")
+
+            # Edit Bar
+            permit = auth.s3_has_permission
+            if permit("update", table, record_id=record_id):
+                edit_btn = A(I(" ", _class="icon icon-edit"),
+                             _href=URL(c="cms", f="post",
+                             args=[record_id, "update"]),
+                             )
+            else:
+                edit_btn = ""
+            # delete_btn looks too much like popup close!
+            #if permit("delete", table, record_id=record_id):
+            #    delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+            #                   _href=URL(c="cms", f="post",
+            #                   args=[record_id, "delete"]),
+            #                   )
+            #else:
+            delete_btn = ""
+            edit_bar = DIV(edit_btn,
+                           delete_btn,
+                           _class="edit-bar fright",
+                           )
+
+            # Overall layout
+            output = DIV(DIV(I(SPAN(" %s" % T(series),
+                                    _class="card-title",
+                                    ),
+                               _class="icon icon-%s" % series.lower(),
+                               ),
+                             SPAN(A(location,
+                                    _href=location_url,
+                                    ),
+                                  _class="location-title",
+                                  ),
+                             SPAN(date,
+                                  _class="date-title",
+                                  ),
+                             edit_bar,
+                             _class="card-header",
+                             ),
+                         DIV(avatar,
+                             DIV(DIV(body,
+                                     card_person,
+                                     _class="media",
+                                     ),
+                                 _class="media-body",
+                                 ),
+                             _class="media",
+                             ),
+                         _class=item_class,
+                         _id=item_id,
+                         )
+        elif callable(standard_postp):
+            # Call standard postp
+            output = standard_postp(r, output)
+        return output
+    s3.postp = custom_postp
 
     return attr
 

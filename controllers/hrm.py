@@ -85,7 +85,7 @@ def human_resource():
                         "_class": "action-btn",
                         "label": str(T("Send Message"))})
         elif r.representation == "plain" and \
-             r.method !="search":
+             r.method != "search":
             # Map Popups
             output = s3db.hrm_map_popup(r)
         return output

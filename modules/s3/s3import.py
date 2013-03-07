@@ -2082,9 +2082,6 @@ class S3ImportItem(object):
         # Resolve references
         self._resolve_references()
 
-        # Set a flag so that we know this is an import job
-        current.response.s3.bulk = True
-
         # De-duplicate (auto-detect updates)
         #self.deduplicate()
 
