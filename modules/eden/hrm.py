@@ -1136,7 +1136,7 @@ class S3HRJobModel(S3Model):
         #                                                              hrm_position_represent)),
         #                              represent = hrm_position_represent,
         #                              comment = DIV(A(label_create,
-        #                                              _class="colorbox",
+        #                                              _class="s3_add_resource_link",
         #                                              _href=URL(f="position",
         #                                                        args="create",
         #                                                        vars=dict(format="popup")),
@@ -1652,7 +1652,7 @@ class S3HRSkillModel(S3Model):
         #                                                           represent)),
         #                           represent = represent,
         #                           comment = DIV(A(label_create,
-        #                                           _class="colorbox",
+        #                                           _class="s3_add_resource_link",
         #                                           _href=URL(f="skill_provision",
         #                                                     args="create",
         #                                                     vars=dict(format="popup")),
@@ -4545,13 +4545,12 @@ def hrm_configure_pr_group_membership():
 
     T = current.T
     s3db = current.s3db
-    s3 = current.response.s3
 
-    mtable = s3db.pr_group_membership
-    mtable.group_id.label = T("Team ID")
-    mtable.group_head.label = T("Team Leader")
+    table = s3db.pr_group_membership
+    table.group_id.label = T("Team Name")
+    table.group_head.label = T("Team Leader")
 
-    s3.crud_strings["pr_group_membership"] = Storage(
+    current.response.s3.crud_strings["pr_group_membership"] = Storage(
         title_create = T("Add Member"),
         title_display = T("Membership Details"),
         title_list = T("Team Members"),
@@ -4566,12 +4565,20 @@ def hrm_configure_pr_group_membership():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
+    phone_label = current.deployment_settings.get_ui_label_mobile_phone()
+    list_fields = ["id",
+                   "group_id$description",
+                   "group_head",
+                   "person_id$first_name",
+                   "person_id$middle_name",
+                   "person_id$last_name",
+                   (T("Email"), "person_id$email.value"),
+                   (phone_label, "person_id$phone.value"),
+                   ]
+    if current.request.function == "group_membership":
+        list_fields.insert(1, "group_id")
     s3db.configure("pr_group_membership",
-                   list_fields=["id",
-                                "person_id",
-                                "group_head",
-                                "description",
-                                ])
+                   list_fields=list_fields)
 
 # =============================================================================
 def hrm_group_controller():
@@ -4625,9 +4632,10 @@ def hrm_group_controller():
 
     # Pre-process
     def prep(r):
-        if r.interactive:
+        if r.interactive or r.representation == "xls":
             if r.component_name == "group_membership":
                 hrm_configure_pr_group_membership()
+                
         return True
     s3.prep = prep
 

@@ -1,3 +1,3 @@
 {{extend "layout.html"}}
 {{include "hrm/org_choose.html"}}
-{{include "_search.html"}}
+{{include response.s3.views.get("search.html", "_search.html")}}

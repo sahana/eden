@@ -132,24 +132,20 @@ $(function() {
         // Allow the Form's Save to continue
         return true;
     });
-    function hide_embedded()
-    {
+    function hide_embedded() {
         $('.embedded').addClass('hide');
     }
-    function show_embedded()
-    {
+    function show_embedded() {
         $('.embedded').removeClass('hide');
     }
-    function enable_embedded()
-    {
-        $('.embedded > td > input').removeAttr('disabled');
-        $('.embedded > td > select').removeAttr('disabled');
-        $('.embedded > td > textarea').removeAttr('disabled');
+    function enable_embedded() {
+        $('.embedded > td > input').prop('disabled', false);
+        $('.embedded > td > select').prop('disabled', false);
+        $('.embedded > td > textarea').prop('disabled', false);
     }
-    function disable_embedded()
-    {
-        $('.embedded > td > input').attr('disabled', true);
-        $('.embedded > td > select').attr('disabled', true);
-        $('.embedded > td > textarea').attr('disabled', true);
+    function disable_embedded() {
+        $('.embedded > td > input').prop('disabled', true);
+        $('.embedded > td > select').prop('disabled', true);
+        $('.embedded > td > textarea').prop('disabled', true);
     }
 });

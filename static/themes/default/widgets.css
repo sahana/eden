@@ -435,6 +435,9 @@ div#map {
 div#popup {
     background: #fff;
 }
+.loading {
+    background: url(../../img/ajax-loader.gif) center no-repeat !important;
+}
 
 /* Message Flash styles */
 div.confirmation {

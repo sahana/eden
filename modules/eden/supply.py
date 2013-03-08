@@ -752,7 +752,7 @@ S3OptionsFilter({
         #                               _title="%s|%s" % (T("Alternative Item"),
         #                                                 T("An item which can be used in place of another item"))),
         #                          A( ADD_ALT_ITEM,
-        #                             _class="colorbox",
+        #                             _class="s3_add_resource_link",
         #                             _href=URL(#                                       c="supply",
         #                                       f="item_alt",
         #                                       args="create",

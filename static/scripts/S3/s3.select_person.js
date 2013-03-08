@@ -150,23 +150,23 @@ function select_person(person_id) {
 }
 
 function enable_person_fields() {
-    $('#pr_person_first_name').removeAttr('disabled');
-    $('#pr_person_middle_name').removeAttr('disabled');
-    $('#pr_person_last_name').removeAttr('disabled');
-    $('#pr_person_gender').removeAttr('disabled');
-    $('#pr_person_date_of_birth').removeAttr('disabled');
-    $('#pr_person_occupation').removeAttr('disabled');
-    $('#pr_person_email').removeAttr('disabled');
-    $('#pr_person_mobile_phone').removeAttr('disabled');
+    $('#pr_person_first_name').prop('disabled', false);
+    $('#pr_person_middle_name').prop('disabled', false);
+    $('#pr_person_last_name').prop('disabled', false);
+    $('#pr_person_gender').prop('disabled', false);
+    $('#pr_person_date_of_birth').prop('disabled', false);
+    $('#pr_person_occupation').prop('disabled', false);
+    $('#pr_person_email').prop('disabled', false);
+    $('#pr_person_mobile_phone').prop('disabled', false);
 }
 
 function disable_person_fields() {
-    $('#pr_person_first_name').attr('disabled', true);
-    $('#pr_person_middle_name').attr('disabled', true);
-    $('#pr_person_last_name').attr('disabled', true);
-    $('#pr_person_gender').attr('disabled', true);
-    $('#pr_person_date_of_birth').attr('disabled', true);
-    $('#pr_person_occupation').attr('disabled', true);
-    $('#pr_person_email').attr('disabled', true);
-    $('#pr_person_mobile_phone').attr('disabled', true);
+    $('#pr_person_first_name').prop('disabled', true);
+    $('#pr_person_middle_name').prop('disabled', true);
+    $('#pr_person_last_name').prop('disabled', true);
+    $('#pr_person_gender').prop('disabled', true);
+    $('#pr_person_date_of_birth').prop('disabled', true);
+    $('#pr_person_occupation').prop('disabled', true);
+    $('#pr_person_email').prop('disabled', true);
+    $('#pr_person_mobile_phone').prop('disabled', true);
 }

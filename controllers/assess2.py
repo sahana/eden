@@ -518,7 +518,7 @@ def rat_tables():
                                     readable = False, writable = False,
                                     #label = T("Rapid Assessment"),
                                     #comment = A(ADD_ASSESSMENT,
-                                    #            _class="colorbox",
+                                    #            _class="s3_add_resource_link",
                                     #            _href=URL(c="assess", f="rat",
                                     #                      args="create",
                                     #                      vars=dict(format="popup")),

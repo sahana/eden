@@ -17,7 +17,7 @@ S3.search.saveCurrentSearch = function(event) {
                .insertAfter(btn);
 
 	// Disable the button to prevent clicking while loading
-	btn.attr('disabled', 'disabled');
+	btn.prop('disabled', true);
 
 	// POST the s3json to the saved_search REST controller
 	$.ajax({
@@ -224,7 +224,7 @@ $(document).ready(function() {
         Hide all the expanding/collapsing letter widgets that don't have
         any options selected
     */
-    $('.search_select_letter_label,.s3-grouped-checkboxes-widget-label').live('click', function(event) {
+    $(document).on('click', '.search_select_letter_label,.s3-grouped-checkboxes-widget-label', function(event) {
         /*
             Listen for click events on the expanding/collapsing letter widgets
         */
@@ -251,7 +251,7 @@ $(document).ready(function() {
     					  .keypress(S3.search.ancelEnterPress);
 
     // Select Item for Autocomplete
-    $('.search_autocomplete_result_list li span').live('click', function() {
+    $(document).on('click', '.search_autocomplete_result_list li span', function() {
         var selResultLI = $(this).parent();
         var selResultList = selResultLI.parent();
         var selSearchForm = selResultList.parent();

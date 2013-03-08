@@ -140,7 +140,7 @@ $(document).ready(function() {
      * Function to show the transactions related to request commit, transit &
      * fulfil quantities
      */
-	$('.quantity.ajax_more').live('click', function(e) {
+	$(document).on('click', '.quantity.ajax_more', function(e) {
 		e.preventDefault();
 		var DIV = $(this);
         var ShipmentType;
@@ -268,12 +268,12 @@ $(document).ready(function() {
 						if (data.length > 0) {
 							$('#dummy_asset_log_organisation_id').show()
 																 .val(data[0].name)
-																 .attr('disabled', 'disabled');
+																 .prop('disabled', true);
 							$('#asset_log_organisation_id').val(data[0].id);
 						} else {
 							$('#dummy_asset_log_organisation_id').show()
 																 .val('')
-																 .removeAttr('disabled');
+																 .prop('disabled', false);
 							$('#asset_log_organisation_id').val('');
 						}
 						
@@ -281,7 +281,7 @@ $(document).ready(function() {
 				});
 			} else {
 				$('#dummy_asset_log_organisation_id').val('')
-													 .removeAttr('disabled');
+													 .prop('disabled', false);
 				$('#asset_log_organisation_id').val('');
 			}
 		}
@@ -315,20 +315,20 @@ $(document).ready(function() {
 					if (data.length > 0) {
 						$('#dummy_asset_log_organisation_id').show()
 						 .val(data[0].name)
-						 .attr('disabled', 'disabled');
+						 .prop('disabled', true);
 						$('#asset_log_organisation_id').val(data[0].id);
 						$('#asset_log_site_id').show()
 											   .val(data[0].site_id)
-											   .attr('disabled', 'disabled')
+											   .prop('disabled', true)
 											   .change();
 					} else {
 						$('#dummy_asset_log_organisation_id').show()
 						 .val('')
-						 .removeAttr('disabled');
+						 .prop('disabled', false);
 						$('#asset_log_organisation_id').val('');
 						$('#asset_log_site_id').show()
 											   .val('')
-											   .removeAttr('disabled')
+											   .prop('disabled', false)
 											   .change();
 					}
 					
@@ -337,11 +337,11 @@ $(document).ready(function() {
 		} else {
 			$('#asset_log_site_id').show()
 								   .val('')
-								   .removeAttr('disabled')
+								   .prop('disabled', false)
 								   .change();
 			$('#asset_log_organisation_id').val('');
 			$('#dummy_asset_log_organisation_id').val('')
-												 .removeAttr('disabled');
+												 .prop('disabled', false);
 		}
 	});*/
 });

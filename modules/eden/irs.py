@@ -1266,14 +1266,14 @@ def irs_rheader(r, tabs=[]):
                 contact = DIV(TH("%s: " % T("Contact")), TD(contact))
 
             #create_request = A(T("Create Request"),
-            #                   _class="action-btn colorbox",
+            #                   _class="action-btn s3_add_resource_link",
             #                   _href=URL(c="req", f="req",
             #                             args="create",
             #                             vars={"format":"popup",
             #                                   "caller":"irs_ireport"}),
             #                  _title=T("Add Request"))
             #create_task = A(T("Create Task"),
-            #                _class="action-btn colorbox",
+            #                _class="action-btn s3_add_resource_link",
             #                _href=URL(c="project", f="task",
             #                          args="create",
             #                          vars={"format":"popup",

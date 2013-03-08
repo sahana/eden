@@ -654,13 +654,13 @@
 
         function enable() {
             disabled = false;
-            boundElement.attr("disabled", false);
+            boundElement.prop("disabled", false);
             offsetElement.removeClass("sp-disabled");
         }
 
         function disable() {
             disabled = true;
-            boundElement.attr("disabled", true);
+            boundElement.prop("disabled", true);
             offsetElement.addClass("sp-disabled");
         }
 

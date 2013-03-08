@@ -333,7 +333,7 @@ class S3AddResourceLink(S3NavigationItem):
 
         popup_link = A(item.label,
                        _href=item.url(format="popup"),
-                       _class="s3_add_resource_link colorbox",
+                       _class="s3_add_resource_link",
                        _id="%s_add" % item.function,
                        _target="top",
                        _title=item.opts.info)
@@ -357,7 +357,7 @@ class S3AddResourceLink(S3NavigationItem):
         
         popup_link = A(item.label,
                        _href=item.url(format="popup"),
-                       _class="s3_add_resource_link colorbox action-lnk",
+                       _class="s3_add_resource_link action-lnk",
                        _id="%s_%s_add" % (item.vars["caller"], item.function),
                        _target="top",
                        _title=item.opts.info)

@@ -53,10 +53,10 @@
 
             if (immutable) {
                 if (immutable & 1) {
-                    $key.attr('disabled', true);
+                    $key.prop('disabled', true);
                 }
                 if (immutable & 2) {
-                    $value.attr('disabled', true);
+                    $value.prop('disabled', true);
                 }
             }
 

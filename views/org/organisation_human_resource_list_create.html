@@ -1,7 +1,4 @@
 {{extend "layout.html"}}
-{{try:}}
-  {{=sform}}
-{{except:}}
-{{pass}}
+{{try:}}{{=sform}}{{except:}}{{pass}}
 {{include "hrm/org_choose.html"}}
-{{include "_list_create.html"}}
+{{include response.s3.views.get("list_create.html", "_list_create.html")}}

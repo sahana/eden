@@ -133,6 +133,7 @@
 		
 	var loader;
 	
+	//$.browser deprecated in jQuery 1.9
 	if(opts.loader=='pie' && $.browser.msie && $.browser.version < 9){
 		loader = 'bar';
 	} else {

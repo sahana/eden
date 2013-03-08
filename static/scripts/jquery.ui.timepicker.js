@@ -1,5 +1,5 @@
 /*
- * jQuery UI Timepicker 0.3.1
+ * jQuery UI Timepicker 0.3.2
  *
  * Copyright 2010-2011, Francois Gelinas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -40,7 +40,7 @@
 
 (function ($) {
 
-    $.extend($.ui, { timepicker: { version: "0.3.1"} });
+    $.extend($.ui, { timepicker: { version: "0.3.2"} });
 
     var PROP_NAME = 'timepicker',
         tpuuid = new Date().getTime();
@@ -408,7 +408,7 @@
                     inst.tpDiv.show(showAnim, $.timepicker._get(inst, 'showOptions'), duration, postProcess);
                 }
                 else {
-                    inst.tpDiv[showAnim || 'show']((showAnim ? duration : null), postProcess);
+                    inst.tpDiv.show((showAnim ? duration : null), postProcess);
                 }
                 if (!showAnim || !duration) { postProcess(); }
                 if (inst.input.is(':visible') && !inst.input.is(':disabled')) { inst.input.focus(); }
@@ -553,7 +553,7 @@
                 amRows = Math.floor(amItems / hours.length * rows);
                 pmRows = Math.floor(pmItems / hours.length * rows);
 
-                // assign the extra row to the period that is more densly populated
+                // assign the extra row to the period that is more densely populated
                 if (rows != amRows + pmRows) {
                     // Make sure: AM Has Items and either PM Does Not, AM has no rows yet, or AM is more dense
                     if (amItems && (!pmItems || !amRows || (pmRows && amItems / amRows >= pmItems / pmRows))) {
@@ -564,7 +564,14 @@
                 }
                 amFirstRow = Math.min(amRows, 1);
                 pmFirstRow = amRows + 1;
-                hoursPerRow = Math.ceil(Math.max(amItems / amRows, pmItems / pmRows));
+
+                if (amRows == 0) {
+                    hoursPerRow = Math.ceil(pmItems / pmRows);
+                } else if (pmRows == 0) {
+                    hoursPerRow = Math.ceil(amItems / amRows);
+                } else {
+                    hoursPerRow = Math.ceil(Math.max(amItems / amRows, pmItems / pmRows));
+                }
             }
 
 
@@ -598,8 +605,8 @@
                     }
                     html += '</tr>';
                 }
-                html += '</tr></table>' + // Close the hours cells table
-                        '</td>';          // Close the Hour td
+                html += '</table>' + // Close the hours cells table
+                        '</td>'; // Close the Hour td
             }
 
             if (showMinutes) {
@@ -632,10 +639,6 @@
                 html += buttonPanel + '</div></td></tr>';
             }
             html += '</table>';
-
-             /* IE6 IFRAME FIX (taken from datepicker 1.5.3, fixed in 0.1.2 */
-            html += ($.browser.msie && parseInt($.browser.version,10) < 7 && !inst.inline ?
-                '<iframe src="javascript:false;" class="ui-timepicker-cover" frameborder="0"></iframe>' : '');
 
             return html;
         },
@@ -1100,11 +1103,16 @@
         _setTime: function(inst, time, noChange) {
             var origHours = inst.hours;
             var origMinutes = inst.minutes;
-            var time = this.parseTime(inst, time);
-            inst.hours = time.hours;
-            inst.minutes = time.minutes;
+            if (time instanceof Date) {
+                inst.hours = time.getHours();
+                inst.minutes = time.getMinutes();
+            } else {
+                var time = this.parseTime(inst, time);
+                inst.hours = time.hours;
+                inst.minutes = time.minutes;
+            }
 
-            if ((origHours != inst.hours || origMinutes != inst.minuts) && !noChange) {
+            if ((origHours != inst.hours || origMinutes != inst.minutes) && !noChange) {
                 inst.input.trigger('change');
             }
             this._updateTimepicker(inst);
@@ -1128,6 +1136,9 @@
             var retVal = new Object();
             retVal.hours = -1;
             retVal.minutes = -1;
+            
+            if(!timeVal)
+                return '';
 
             var timeSeparator = this._get(inst, 'timeSeparator'),
                 amPmText = this._get(inst, 'amPmText'),
@@ -1287,6 +1298,10 @@
                 displayHours = selectedHours ? selectedHours : 0,
                 parsedTime = '';
 
+            // fix some display problem when hours or minutes are not selected yet
+            if (displayHours == -1) { displayHours = 0 }
+            if (selectedMinutes == -1) { selectedMinutes = 0 }
+
             if (showPeriod) { 
                 if (inst.hours == 0) {
                     displayHours = 12;
@@ -1334,6 +1349,19 @@
             }
         },
 
+        _getTimeAsDateTimepicker: function(input) {
+            var inst = this._getInst(input);
+            if (inst.hours == -1 && inst.minutes == -1) {
+                return '';
+            }
+
+            // default to 0 AM if hours is not valid
+            if ((inst.hours < inst.hours.starts) || (inst.hours > inst.hours.ends )) { inst.hours = 0; }
+            // default to 0 minutes if minute is not valid
+            if ((inst.minutes < inst.minutes.starts) || (inst.minutes > inst.minutes.ends)) { inst.minutes = 0; }
+
+            return new Date(0, 0, 0, inst.hours, inst.minutes, 0);
+        },
         /* This might look unused but it's called by the $.fn.timepicker function with param getTime */
         /* added v 0.2.3 - gitHub issue #5 - Thanks edanuff */
         _getTimeTimepicker : function(input) {
@@ -1371,7 +1399,7 @@
 
 
         var otherArgs = Array.prototype.slice.call(arguments, 1);
-        if (typeof options == 'string' && (options == 'getTime' || options == 'getHour' || options == 'getMinute' ))
+        if (typeof options == 'string' && (options == 'getTime' || options == 'getTimeAsDate' || options == 'getHour' || options == 'getMinute' ))
             return $.timepicker['_' + options + 'Timepicker'].
 			    apply($.timepicker, [this[0]].concat(otherArgs));
         if (options == 'option' && arguments.length == 2 && typeof arguments[1] == 'string')
@@ -1397,7 +1425,7 @@
     $.timepicker = new Timepicker(); // singleton instance
     $.timepicker.initialized = false;
     $.timepicker.uuid = new Date().getTime();
-    $.timepicker.version = "0.3.1";
+    $.timepicker.version = "0.3.2";
 
     // Workaround for #4055
     // Add another global to avoid noConflict issues with inline event handlers

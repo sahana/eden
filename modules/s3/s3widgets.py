@@ -920,7 +920,7 @@ $('#%(dummy_input)s').autocomplete({
   %(real_input)s.accept=true
   return false
  }
-}).data('autocomplete')._renderItem=function(ul,item){
+}).data('ui-autocomplete')._renderItem=function(ul,item){
  var name=item.first
  if(item.middle){
   name+=' '+item.middle
@@ -928,7 +928,7 @@ $('#%(dummy_input)s').autocomplete({
  if(item.last){
   name+=' '+item.last
  }
- return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
+ return $('<li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
 }}catch(e){}
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
@@ -1103,7 +1103,7 @@ $('#%(dummy_input)s').autocomplete({
   %(real_input)s.accept=true
   return false
  }
-}).data('autocomplete')._renderItem=function(ul,item){
+}).data('ui-autocomplete')._renderItem=function(ul,item){
  var name=item.first
  if(item.middle){
   name+=' '+item.middle
@@ -1124,7 +1124,7 @@ $('#%(dummy_input)s').autocomplete({
    name+=' ('+org+')'
   }
  }
- return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
+ return $('<li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
 }}catch(e){}
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
@@ -1265,7 +1265,7 @@ $('#%(dummy_input)s').autocomplete({
    %(real_input)s.accept=true
    return false
   }
-}).data('autocomplete')._renderItem=function(ul,item){
+}).data('ui-autocomplete')._renderItem=function(ul,item){
  var name=''
  if(item.name!=null){
   name+=item.name
@@ -1273,7 +1273,7 @@ $('#%(dummy_input)s').autocomplete({
  if(item.instance_type!=''){
   name+=' ('+s3_site_lookup(item.instance_type)+')'
  }
- return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
+ return $('<li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
 }}catch(e){}
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
@@ -1386,8 +1386,8 @@ $('#%(dummy_input)s').autocomplete({
   %(real_input)s.accept=true
   return false
  }
-}).data('autocomplete')._renderItem=function(ul,item){
- return $('<li></li>').data('item.autocomplete',item).append('<a>'+item.name+'</a>').appendTo(ul)
+}).data('ui-autocomplete')._renderItem=function(ul,item){
+ return $('<li>').data('item.autocomplete',item).append('<a>'+item.name+'</a>').appendTo(ul)
 }
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
@@ -1495,8 +1495,8 @@ $('#%(dummy_input)s').autocomplete({
   %(real_input)s.accept=true
   return false
  }
-}).data('autocomplete')._renderItem=function(ul,item){
- return $('<li></li>').data('item.autocomplete',item).append('<a>'+get_name(item)+'</a>').appendTo(ul)
+}).data('ui-autocomplete')._renderItem=function(ul,item){
+ return $('<li>').data('item.autocomplete',item).append('<a>'+get_name(item)+'</a>').appendTo(ul)
 }}catch(e){}''' % locals(),
 '''
 $('#%(dummy_input)s').blur(function(){
@@ -1515,6 +1515,7 @@ $('#%(dummy_input)s').blur(function(){
  }
  %(real_input)s.accept=false
 })''' % locals()))
+
 
     if value:
         try:

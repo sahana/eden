@@ -1,0 +1,4 @@
+/* Ensure jQui Dialog Modal Popup goes above header */
+.ui-front {
+    z-index: 999;
+}

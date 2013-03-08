@@ -923,17 +923,17 @@ function s3_gis_edit_tab() {
     // @ToDo: Display warning about this location possibly being a shared location
 
     // Remove the Disabled Status from the fields
-    $('#gis_location_L0').removeAttr('disabled');
-    $('#gis_location_name').removeAttr('disabled');
-    $('#gis_location_street').removeAttr('disabled');
-    $('#gis_location_postcode').removeAttr('disabled');
-    $('#gis_location_lat').removeAttr('disabled');
-    $('#gis_location_lon').removeAttr('disabled');
-    $('#gis_location_L5_ac').removeAttr('disabled');
-    $('#gis_location_L4_ac').removeAttr('disabled');
-    $('#gis_location_L3_ac').removeAttr('disabled');
-    $('#gis_location_L2_ac').removeAttr('disabled');
-    $('#gis_location_L1_ac').removeAttr('disabled');
+    $('#gis_location_L0').prop('disabled', false);
+    $('#gis_location_name').prop('disabled', false);
+    $('#gis_location_street').prop('disabled', false);
+    $('#gis_location_postcode').prop('disabled', false);
+    $('#gis_location_lat').prop('disabled', false);
+    $('#gis_location_lon').prop('disabled', false);
+    $('#gis_location_L5_ac').prop('disabled', false);
+    $('#gis_location_L4_ac').prop('disabled', false);
+    $('#gis_location_L3_ac').prop('disabled', false);
+    $('#gis_location_L2_ac').prop('disabled', false);
+    $('#gis_location_L1_ac').prop('disabled', false);
 
     // Unhide all fields
     $('#gis_location_L0_label__row').removeClass('hide').show();
@@ -1015,7 +1015,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L0_label__row').hide();
         $('#gis_location_L0__row').hide();
     } else {
-        $('#gis_location_L0').attr('disabled', true);
+        $('#gis_location_L0').prop('disabled', true);
         $('#gis_location_L0__row').show();
     }
     var name = $('#gis_location_name').val();
@@ -1023,7 +1023,7 @@ function s3_gis_view_tab() {
         $('#gis_location_name_label__row').hide();
         $('#gis_location_name__row').hide();
     } else {
-        $('#gis_location_name').attr('disabled', true);
+        $('#gis_location_name').prop('disabled', true);
         $('#gis_location_name__row').show();
     }
     var street = $('#gis_location_street').val();
@@ -1031,7 +1031,7 @@ function s3_gis_view_tab() {
         $('#gis_location_street_label__row').hide();
         $('#gis_location_street__row').hide();
     } else {
-        $('#gis_location_street').attr('disabled', true);
+        $('#gis_location_street').prop('disabled', true);
         $('#gis_location_street__row').show();
     }
     var postcode = $('#gis_location_postcode').val();
@@ -1039,7 +1039,7 @@ function s3_gis_view_tab() {
         $('#gis_location_postcode_label__row').hide();
         $('#gis_location_postcode__row').hide();
     } else {
-        $('#gis_location_postcode').attr('disabled', true);
+        $('#gis_location_postcode').prop('disabled', true);
         $('#gis_location_postcode__row').show();
     }
     if ( !S3.gis.no_latlon ) {
@@ -1048,7 +1048,7 @@ function s3_gis_view_tab() {
             $('#gis_location_lat_label__row').hide();
             $('#gis_location_lat__row').hide();
         } else {
-            $('#gis_location_lat').attr('disabled', true);
+            $('#gis_location_lat').prop('disabled', true);
             $('#gis_location_lat__row').show();
         }
         var lon = $('#gis_location_lon').val();
@@ -1056,7 +1056,7 @@ function s3_gis_view_tab() {
             $('#gis_location_lon_label__row').hide();
             $('#gis_location_lon__row').hide();
         } else {
-            $('#gis_location_lon').attr('disabled', true);
+            $('#gis_location_lon').prop('disabled', true);
             $('#gis_location_lon__row').show();
         }
     }
@@ -1066,7 +1066,7 @@ function s3_gis_view_tab() {
         $('#gis_location_wkt__row').hide();
     } else {
         $('#gis_location_wkt_label__row').show();
-        $('#gis_location_wkt').attr('disabled', true);
+        $('#gis_location_wkt').prop('disabled', true);
         $('#gis_location_wkt__row').show();
     }
     var L5 = $('#gis_location_L5_ac').val();
@@ -1074,7 +1074,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L5_label__row').hide();
         $('#gis_location_L5__row').hide();
     } else if ( !$('#gis_location_L5_ac').hasClass('hide') ) {
-        $('#gis_location_L5_ac').attr('disabled', true);
+        $('#gis_location_L5_ac').prop('disabled', true);
         $('#gis_location_L5__row').show();
     }
     var L4 = $('#gis_location_L4_ac').val();
@@ -1082,7 +1082,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L4_label__row').hide();
         $('#gis_location_L4__row').hide();
     } else if ( !$('#gis_location_L4_ac').hasClass('hide') ) {
-        $('#gis_location_L4_ac').attr('disabled', true);
+        $('#gis_location_L4_ac').prop('disabled', true);
         $('#gis_location_L4__row').show();
     }
     var L3 = $('#gis_location_L3_ac').val();
@@ -1090,7 +1090,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L3_label__row').hide();
         $('#gis_location_L3__row').hide();
     } else if ( !$('#gis_location_L3_ac').hasClass('hide') ) {
-        $('#gis_location_L3_ac').attr('disabled', true);
+        $('#gis_location_L3_ac').prop('disabled', true);
         $('#gis_location_L3__row').show();
     }
     var L2 = $('#gis_location_L2_ac').val();
@@ -1098,7 +1098,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L2_label__row').hide();
         $('#gis_location_L2__row').hide();
     } else if ( !$('#gis_location_L2_ac').hasClass('hide') ) {
-        $('#gis_location_L2_ac').attr('disabled', true);
+        $('#gis_location_L2_ac').prop('disabled', true);
         $('#gis_location_L2__row').show();
     }
     var L1 = $('#gis_location_L1_ac').val();
@@ -1106,7 +1106,7 @@ function s3_gis_view_tab() {
         $('#gis_location_L1_label__row').hide();
         $('#gis_location_L1__row').hide();
     } else if ( !$('#gis_location_L1_ac').hasClass('hide') ) {
-        $('#gis_location_L1_ac').attr('disabled', true);
+        $('#gis_location_L1_ac').prop('disabled', true);
         $('#gis_location_L1__row').show();
     }
 
@@ -1470,12 +1470,12 @@ function s3_gis_save_locations() {
     }
 
     // Ensure that all fields aren't disabled (to avoid wiping their contents)
-    $('#gis_location_L0').removeAttr('disabled');
-    $('#gis_location_name').removeAttr('disabled');
-    $('#gis_location_street').removeAttr('disabled');
-    $('#gis_location_postcode').removeAttr('disabled');
-    $('#gis_location_lat').removeAttr('disabled');
-    $('#gis_location_lon').removeAttr('disabled');
+    $('#gis_location_L0').prop('disabled', false);
+    $('#gis_location_name').prop('disabled', false);
+    $('#gis_location_street').prop('disabled', false);
+    $('#gis_location_postcode').prop('disabled', false);
+    $('#gis_location_lat').prop('disabled', false);
+    $('#gis_location_lon').prop('disabled', false);
 
     // Allow the Form's Save to continue
     return true;

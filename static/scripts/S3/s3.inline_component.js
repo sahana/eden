@@ -73,18 +73,18 @@ $(function() {
 
     // Disable the add-row
     var disable_inline_add = function(formname) {
-        $('#add-row-' + formname + ' > td input').attr('disabled', true);
-        $('#add-row-' + formname + ' > td select').attr('disabled', true);
-        $('#add-row-' + formname + ' > td textarea').attr('disabled', true);
+        $('#add-row-' + formname + ' > td input').prop('disabled', true);
+        $('#add-row-' + formname + ' > td select').prop('disabled', true);
+        $('#add-row-' + formname + ' > td textarea').prop('disabled', true);
         $('#add-row-' + formname + ' > td .inline-add').addClass('hide');
         $('#add-row-' + formname + ' > td .action-lnk').addClass('hide');
     };
 
     // Enable the add-row
     var enable_inline_add = function(formname) {
-        $('#add-row-' + formname + ' > td input').removeAttr('disabled');
-        $('#add-row-' + formname + ' > td select').removeAttr('disabled');
-        $('#add-row-' + formname + ' > td textarea').removeAttr('disabled');
+        $('#add-row-' + formname + ' > td input').prop('disabled', false);
+        $('#add-row-' + formname + ' > td select').prop('disabled', false);
+        $('#add-row-' + formname + ' > td textarea').prop('disabled', false);
         $('#add-row-' + formname + ' > td .inline-add').removeClass('hide');
         $('#add-row-' + formname + ' > td .action-lnk').removeClass('hide');
     };
