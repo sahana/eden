@@ -14,16 +14,25 @@ var newMessage = gettext('Write here your message');
 var editString = gettext('Edit');
 var viewString = gettext('View');
 var errorMsg = gettext('There has been an error.');
+var errorMsg2 = gettext("Could't delete column or row.");
 var errorCreate = gettext("Couldn't create note.");
 var errorGetNote = gettext("Couldn't get note data.");
 var errorSave = gettext("Couldn't save note.");
 var errorSavePos = gettext("Couldn't save note position.");
 var errorDelete = gettext("Couldn't delete note.");
+var errorCRDelete = gettext("There must be at least one column or row in the table.");
+var errorCRCreate = gettext("Couln't create row or column.");
 var confirmDelete = gettext('Are you sure?');
 var comment = gettext('Comment');
 var view = gettext('View');
 var edit = gettext('Edit');
 var remove = gettext('Delete note');
+var adviceMsg = gettext("Caution");
+var advice = gettext("You are adding too much columns. We put no limit, \
+    but too many columns will be a problem in smaller screens.");
+
+/* Minor settings */
+var alertIcon = 'http://ecidadania.org/static/assets/icons/alert.png';
 
 /*
     NOTE FUNCTIONS
@@ -84,7 +93,7 @@ function createNote() {
         $.gritter.add({
             title: errorMsg,
             text: errorCreate + ' ' + textStatus,
-            image: 'http://i.imgur.com/gqh6G5l.png'
+            image: alertIcon
         });
     });
 }
@@ -125,7 +134,7 @@ function viewNote(obj) {
         $.gritter.add({
             title: errorMsg,
             text: errorGetNote + ' ' + textStatus,
-            image: 'http://i.imgur.com/gqh6G5l.png'
+            image: alertIcon
         });
     });
 }
@@ -157,7 +166,7 @@ function editNote(obj) {
         $.gritter.add({
             title: errorMsg,
             text: errorGetNote + ' ' + textStatus,
-            image: 'http://i.imgur.com/gqh6G5l.png'
+            image: alertIcon
         });
     });
 }
@@ -177,7 +186,7 @@ function saveNote() {
             noteid: noteID,
             title: $("input[name='notename']").val(),
             message: $("textarea#id_note_message").val()
-//            message: $("td#cke_contents_id_note_message .cke_show_borders").text()
+            //message: $("td#cke_contents_id_note_message .cke_show_borders").text()
         }
     });
 
@@ -192,7 +201,7 @@ function saveNote() {
         $.gritter.add({
             title: errorMsg,
             text: errorSave + ' ' + textStatus,
-            image: 'http://i.imgur.com/gqh6G5l.png'
+            image: alertIcon
         });
     })
 }
@@ -224,7 +233,7 @@ function deleteNote(obj) {
             $.gritter.add({
                 title: errorMsg,
                 text: errorDelete + ' ' + textStatus,
-                image: 'http://i.imgur.com/gqh6G5l.png'
+                image: alertIcon
             });
         });
     }
@@ -267,7 +276,7 @@ function makeSortable() {
                 $.gritter.add({
                     title: errorMsg,
                     text: errorSavePos + ' ' + textStatus,
-                    image: 'http://i.imgur.com/gqh6G5l.png'
+                    image: alertIcon
                 });
             });
         }
@@ -289,7 +298,14 @@ function addTableColumn() {
     var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
     var formCount = parseInt($('#id_colform-TOTAL_FORMS').val());
 
-    if (criteriacount >= 10) return false;
+    if (criteriacount >= 7) {
+        $.gritter.add({
+            title: adviceMsg,
+            text: advice,
+            image: alertIcon,
+            sticky: true
+        });
+    };
     $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria" + (criteriacount+1) + "' class='criteria-vtitle'><input id='" + tableID + "-criteria" + (inputs+1) + "' name='colform-" + (criteriacount) + "-criteria' type='text' class='small'></th>");
     $('#' + tableID + ' tbody tr').each(function(){
         //var tdlength = $('#' + tableID + ' td').length;
@@ -301,6 +317,11 @@ function addTableColumn() {
 }
 
 function addTableRow() {
+    /*
+        addTableRow() - Creates a new row in the debate table, it has no limits
+        no warnings and no validations. The validations are done by django
+        in the form.
+    */
     var tableID =$('table').attr('id');
     var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
     var tdlength = $('#' + tableID + 'td').length;
@@ -322,10 +343,20 @@ function addTableRow() {
 }
 
 function removeTableRow() {
+    /*
+        removeTableRow() - Deletes the last row, unless there is only one,
+        in which case it will show up a message.
+    */
     var t = $('table');
     var numRows = $('td[class=criteria-htitle]', t).length;
     var formCount_row = parseInt($('#id_rowform-TOTAL_FORMS').val());
-    if (numRows < 2) return false;
+    if (numRows < 2) {
+        $.gritter.add({
+            title: errorMsg2,
+            text: errorCRDelete + ' ' + textStatus,
+            image: alertIcon
+        });
+    };
     $('tbody tr:last-child').fadeOut("fast", function() {
         $(this).remove();
     $('#id_rowform-TOTAL_FORMS').val(formCount_row - 1);
@@ -349,10 +380,10 @@ function removeTableColumn() {
         });
     } 
     else {
-        $('#jsnotify').notify("create", {
-            title: "Can't delete column",
-            text: "There must be at least one column in the table.",
-            icon: "alert.png"
+        $.gritter.add({
+            title: errorMsg2,
+            text: errorCRDelete + ' ' + textStatus,
+            image: alertIcon
         });
     }
 }
