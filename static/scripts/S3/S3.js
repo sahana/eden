@@ -259,7 +259,7 @@ $(document).ready(function() {
             minHeight: 600,
             modal: true,
             title: title,
-            width: 600,
+            width: 600
         });
         // Prevent browser from following link
         return false;
