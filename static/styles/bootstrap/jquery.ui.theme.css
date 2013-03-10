@@ -914,3 +914,23 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   transition: 0.1s linear all;
    overflow: visible;
 }
+
+/* MultiSelect */
+.ui-multiselect {
+    background-color: #006dcc;
+    background-image: linear-gradient(to bottom, #0088cc, #0044cc);
+    background-repeat: repeat-x;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    color: #ffffff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.ui-multiselect:hover,
+.ui-multiselect:focus {
+    color: #ffffff;
+    background-color: #0044cc;
+    *background-color: #003bb3;
+}
+
+.ui-multiselect-header {
+    background-color: #eeeeee;
+}
