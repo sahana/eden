@@ -25,11 +25,30 @@
         <script src="{{ STATIC_URL }}/js/advanced.js"></script>
         <script src="{{ STATIC_URL }}/js/wysihtml5-0.4.0pre.min.js"></script>
         <script src="{{ STATIC_URL }}/js/bootstrap-wysihtml5.js"></script>
+        <script src="{{ STATIC_URL }}/js/modernizr.js"></script>
         <!-- End load JavaScript -->
         {% block extrajs %}
         {% endblock %}
     </head>
     <body>
+
+        <div id="browser" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="myModalLabel">{% trans "Your browser is too old" %}</h3>
+            </div>
+            <div class="modal-body">
+                <p>{% blocktrans %}
+                    You can continue navigation under your risk, but it appears that your browser is too old for the
+                    features we use in e-cidadania. Please consider updating your browser or downloading a new one
+                    like Chrome, Opera, Safari or Firefox.
+                {% endblocktrans %}
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+            </div>
+        </div>
 
         {# {% get_current_language as LANGUAGE_CODE %} #}
     

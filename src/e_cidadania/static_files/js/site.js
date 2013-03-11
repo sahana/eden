@@ -6,6 +6,17 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
+
+/* Browser detection. We do not support IE<9 so we check directly for canvas */
+function hasCanvas() {
+    if (Modernizr.canvas) {
+        // Don't do anything
+    }
+    else {
+        $('#browser').modal('show');
+    }
+}
+
 /* Cookie Reader (jQuery Cookie Plugin) */
 $(document).ajaxSend(function(event, xhr, settings) {
     function getCookie(name) {
@@ -83,6 +94,7 @@ function dropdown() {
 }
 
 function sitestart() {
+    hasCanvas();
     dropdown();
     msg();
     // This function activates the datepicker sitewide
