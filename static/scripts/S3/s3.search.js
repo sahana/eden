@@ -348,7 +348,7 @@ S3.search.filterURL = function(url) {
             value = $(this).val();
         if (value) {
             var values = value.split(' '), v;
-            for (var i=0; i<values.length; i++) {
+            for (var i=0; i < values.length; i++) {
                 v = '*' + values[i] + '*';
                 queries.push(url_var + '=' + S3.search.quoteValue(v));
             }
@@ -542,7 +542,154 @@ $(document).ready(function() {
         $('.multiselect-filter-bootstrap:visible').addClass('active');
         $('.multiselect-filter-bootstrap').multiselect_bs();
     }
-    
+
+    // Hierarchical Location Filter
+    $('.location-filter').on('change', function() {
+        var name = this.name;
+        var values = $('#' + name).val();
+        var base = name.slice(0, -1);
+        var level = parseInt(name.slice(-1));
+        var hierarchy = S3.location_filter_hierarchy;
+        // Initialise vars in a way in which we can access them via dynamic names
+        this.options1 = [];
+        this.options2 = [];
+        this.options3 = [];
+        this.options4 = [];
+        this.options5 = [];
+        var new_level;
+        if (hierarchy.hasOwnProperty('L' + level)) {
+            // Top-level
+            var _hierarchy = hierarchy['L' + level];
+            for (opt in _hierarchy) {
+                if (_hierarchy.hasOwnProperty(opt)) {
+                    if (values === null) {
+                        // Show all Options
+                        for (option in _hierarchy[opt]) {
+                            if (_hierarchy[opt].hasOwnProperty(option)) {
+                                new_level = level + 1;
+                                this['options' + new_level].push(option);
+                                if (typeof(_hierarchy[opt][option]) === 'object') {
+                                    var __hierarchy = _hierarchy[opt][option];
+                                    for (_opt in __hierarchy) {
+                                        if (__hierarchy.hasOwnProperty(_opt)) {
+                                            new_level = level + 2;
+                                            this['options' + new_level].push(_opt);
+                                            // @ToDo: Greater recursion
+                                            //if (typeof(__hierarchy[_opt]) === 'object') {
+                                            //}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        for (i in values) {
+                            if (values[i] === opt) {
+                                for (option in _hierarchy[opt]) {
+                                    if (_hierarchy[opt].hasOwnProperty(option)) {
+                                        new_level = level + 1;
+                                        this['options' + new_level].push(option);
+                                        if (typeof(_hierarchy[opt][option]) === 'object') {
+                                            var __hierarchy = _hierarchy[opt][option];
+                                            for (_opt in __hierarchy) {
+                                                if (__hierarchy.hasOwnProperty(_opt)) {
+                                                    new_level = level + 2;
+                                                    this['options' + new_level].push(_opt);
+                                                    // @ToDo: Greater recursion
+                                                    //if (typeof(__hierarchy[_opt]) === 'object') {
+                                                    //}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (hierarchy.hasOwnProperty('L' + (level - 1))) {
+            // Nested 1 in
+            var _hierarchy = hierarchy['L' + (level - 1)];
+            // Read higher level
+            var _values = $('#' + base + (level - 1)).val();
+            for (opt in _hierarchy) {
+                if (_hierarchy.hasOwnProperty(opt)) {
+                    /* Only needed if not hiding
+                    if (_values === null) {
+                    } else { */
+                    for (i in _values) {
+                        if (_values[i] === opt) {
+                            for (option in _hierarchy[opt]) {
+                                if (_hierarchy[opt].hasOwnProperty(option)) {
+                                    if (values === null) {
+                                        // Show all subsequent Options
+                                        for (option in _hierarchy[opt]) {
+                                            if (_hierarchy[opt].hasOwnProperty(option)) {
+                                                var __hierarchy = _hierarchy[opt][option];
+                                                for (_opt in __hierarchy) {
+                                                    if (__hierarchy.hasOwnProperty(_opt)) {
+                                                        new_level = level + 1;
+                                                        this['options' + new_level].push(_opt);
+                                                        // @ToDo: Greater recursion
+                                                        //if (typeof(__hierarchy[_opt]) === 'object') {
+                                                        //}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        for (i in values) {
+                                            if (values[i] === option) {
+                                                var __hierarchy = _hierarchy[opt][option];
+                                                for (_opt in __hierarchy) {
+                                                    if (__hierarchy.hasOwnProperty(_opt)) {
+                                                        new_level = level + 1;
+                                                        this['options' + new_level].push(_opt);
+                                                        // @ToDo: Greater recursion
+                                                        //if (typeof(__hierarchy[_opt]) === 'object') {
+                                                        //}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (hierarchy.hasOwnProperty('L' + (level - 2))) {
+            // @ToDo
+        }
+        for (l = level + 1; l <= 5; l++) {
+            var select = $('#' + base + l);
+            if (typeof(select) != 'undefined') {
+                var options = this['options' + l];
+                options.sort();
+                _options = '';
+                for (i in options) {
+                    if (options.hasOwnProperty(i)) {
+                        _options += '<option value="' + options[i] + '">' + options[i] + '</option>';
+                    }
+                }
+                select.html(_options);
+                select.multiselect('refresh');
+                if (l === (level + 1)) {
+                    if (values) {
+                        // Show next level down (if hidden)
+                        select.next('button').removeClass('hidden').show();
+                        // @ToDo: Hide subsequent levels (if configured to do so)
+                    } else {
+                        // @ToDo: Hide next levels down (if configured to do so)
+                        //select.next('button').hide();
+                    }
+                }
+            }
+        }
+    });
+
     $('.filter-submit').click(function() {
         try {
             // Update Map results URL

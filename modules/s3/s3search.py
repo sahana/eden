@@ -3378,13 +3378,14 @@ class S3LocationFilter(S3FilterWidget):
         # Which levels should we display?
         # Lookup the appropriate labels from the GIS configuration
         hierarchy = current.gis.get_location_hierarchy()
+        levels = OrderedDict()
         if "levels" in opts:
-            levels = OrderedDict()
             for level in opts["levels"]:
                 levels[level] = hierarchy.get(level, level)
         else:
             # @ToDo: Do this dynamically from the data?
-            levels = hierarchy
+            for level in hierarchy:
+                levels[level] = hierarchy.get(level, level)
         # Pass to data_element
         self.levels = levels
 
@@ -3397,7 +3398,7 @@ class S3LocationFilter(S3FilterWidget):
         field = rfield.field
         colname = rfield.colname
         field_type = "reference gis_location"
-        fields = [field_name, "%s$level" % field_name]
+        fields = [field_name]
         fappend = fields.append
         for level in levels:
             fappend("%s$%s" % (field_name, level))
@@ -3413,18 +3414,56 @@ class S3LocationFilter(S3FilterWidget):
             msg = attr.get("_no_opts", T("No options available"))
             return SPAN(msg, _class="no-options-available")
 
-        # Store the options
+        # Intialise Options Storage & Hierarchy
+        hierarchy = {}
+        first = True
         for level in levels:
+            if first:
+                hierarchy[level] = {}
+                _level = level
+                first = False
             levels[level] = {"label" : levels[level],
                              "options" : [],
                              }
+            
+        # Store the options & hierarchy
         for row in rows:
             if "gis_location" in row:
                 _row = row.gis_location
+                parent = None
+                grandparent = None
+                greatgrandparent = None
+                greatgreatgrandparent = None
+                greatgreatgreatgrandparent = None
+                i = 0
                 for level in levels:
                     v = _row[level]
-                    if v and v not in levels[level]["options"]:
-                        levels[level]["options"].append(v)
+                    if v:
+                        if v not in levels[level]["options"]:
+                            levels[level]["options"].append(v)
+                        if i == 0:
+                            if v not in hierarchy[_level]:
+                                hierarchy[_level][v] = {}
+                            parent = v
+                        elif i == 1:
+                            if v not in hierarchy[_level][parent]:
+                                hierarchy[_level][parent][v] = {}
+                            grandparent = parent
+                            parent = v
+                        elif i == 2:
+                            if v not in hierarchy[_level][grandparent][parent]:
+                                hierarchy[_level][grandparent][parent][v] = {}
+                            greatgrandparent = grandparent
+                            grandparent = parent
+                            parent = v
+                        elif i == 3:
+                            if v not in hierarchy[_level][greatgrandparent][grandparent][parent]:
+                                hierarchy[_level][greatgrandparent][grandparent][parent][v] = {}
+                            greatgreatgrandparent = greatgrandparent
+                            greatgrandparent = grandparent
+                            grandparent = parent
+                            parent = v
+                    i += 1
 
         # Construct HTML classes for the widget
         if "_class" in attr and attr["_class"]:
@@ -3465,9 +3504,9 @@ class S3LocationFilter(S3FilterWidget):
                 attr["_name"] = name
                 # Find relevant values
                 _values = values["~.%s$%s__%s" % (field_name, level, operator)]
-                w = S3MultiSelectWidget(filter = False,
-                                        header = False,
-                                        selectedList = 3,
+                w = S3MultiSelectWidget(filter = opts.get("filter", False),
+                                        header = opts.get("header", False),
+                                        selectedList = opts.get("selectedList", 3),
                                         noneSelectedText = "Select %s" % levels[level]["label"])
                 widget = w(dummy_field, _values, **attr)
                 w_append(widget)
@@ -3493,6 +3532,10 @@ class S3LocationFilter(S3FilterWidget):
 
         # Reset for data_element
         attr["_id"] = base_id
+
+        # Inject the Location Hierarchy
+        hierarchy = "S3.location_filter_hierarchy=%s" % json.dumps(hierarchy)
+        current.response.s3.js_global.append(hierarchy)
 
         # Render the filter widget
         return TAG[""](*widgets)
@@ -3804,9 +3847,10 @@ class S3OptionsFilter(S3FilterWidget):
                         attr["_class"] = "%s multiselect-filter-widget" % _class
                 else:
                     attr["_class"] = "multiselect-filter-widget"
-                w = S3MultiSelectWidget(filter = False,
-                                        header = False,
-                                        selectedList = 3)
+                w = S3MultiSelectWidget(filter = opts.get("filter", False),
+                                        header = opts.get("header", False),
+                                        selectedList = opts.get("selectedList", 3),
+                                        )
                 widget = w(dummy_field, values, **attr)
         else:
             # Grouped Checkboxes
