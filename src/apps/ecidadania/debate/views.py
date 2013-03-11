@@ -173,6 +173,7 @@ def edit_debate(request, space_url, debate_id):
                                   context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
+
 def get_debates(request):
 
     """
@@ -398,3 +399,33 @@ class ListDebates(ListView):
         space = get_or_insert_object_in_cache(Space, key, url=key)
         context['get_place'] = space
         return context
+
+
+class DeleteDebate(DeleteView):
+
+	"""
+	Delete an existent debate. Debate deletion is only reserved to spaces
+	administrators or site admins.
+	"""
+	context_object_name = "get_place"
+
+	def get_success_url(self):
+		space = self.kwargs['space_url']
+		return '/spaces/%s' % (space)
+
+	def get_object(self):
+		self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+		if has_operation_permission(self.request.user, self.space, 'debate.delete_debate', allow=['admins', 'mods']):
+			return get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+		else:
+			self.template_name = 'not_allowed.html'
+
+	def get_context_data(self, **kwargs):
+
+		"""
+		Get extra context data for ViewDebate view.
+		"""
+		context = super(DeleteDebate, self).get_context_data(**kwargs)
+		context['get_place'] = self.space
+		return context
+
