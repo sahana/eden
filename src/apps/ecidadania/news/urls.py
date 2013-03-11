@@ -19,7 +19,6 @@
 
 from django.conf.urls import *
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
 
 from apps.ecidadania.news.views import DeletePost, ViewPost, AddPost, EditPost
 from apps.ecidadania.news.url_names import *

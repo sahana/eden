@@ -22,7 +22,6 @@ Proposal module URLs.
 """
 
 from django.conf.urls import *
-from django.utils.translation import ugettext_lazy as _
 
 from apps.ecidadania.proposals.views.common import ViewProposal, \
     support_proposal

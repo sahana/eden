@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-06 11:16+0100\n"
+"POT-Creation-Date: 2013-03-11 10:51+0100\n"
 "PO-Revision-Date: 2013-01-18 23:56+0000\n"
 "Last-Translator: Enrico Nicoletto <enrico.BR@gmx.co.uk>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/"
@@ -98,14 +98,6 @@ msgstr "Data criada"
 #: models.py:111
 msgid "Ponderation"
 msgstr "Ponderação"
-
-#: urls.py:54
-msgid "^poll/(?P<pk>\\d+)/$"
-msgstr "^poll/(?P<pk>\\d+)/$"
-
-#: urls.py:56
-msgid "^poll/(?P<pk>\\d+)/results/$"
-msgstr "^poll/(?P<pk>\\d+)/results/$"
 
 #: templates/voting/poll_confirm_delete.html:6
 msgid "View poll "
@@ -277,3 +269,9 @@ msgid ""
 msgstr ""
 "Você votou recentemente em um processo em nossa plataforma, por favor valide "
 "seu voto seguindo este link: %s"
+
+#~ msgid "^poll/(?P<pk>\\d+)/$"
+#~ msgstr "^poll/(?P<pk>\\d+)/$"
+
+#~ msgid "^poll/(?P<pk>\\d+)/results/$"
+#~ msgstr "^poll/(?P<pk>\\d+)/results/$"

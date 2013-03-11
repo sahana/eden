@@ -22,7 +22,6 @@ This file contains all the URLs that e_cidadania will inherit when the user
 access to '/spaces/'.
 """
 from django.conf.urls import *
-from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.decorators import permission_required
 from apps.ecidadania.debate.views import ListDebates, ViewDebate, edit_debate 
 from apps.ecidadania.debate.url_names import *

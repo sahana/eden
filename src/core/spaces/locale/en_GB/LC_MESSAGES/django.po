@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-06 11:16+0100\n"
+"POT-Creation-Date: 2013-03-11 10:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -236,106 +236,6 @@ msgstr ""
 #: models.py:199 templates/spaces/space_index.html:47
 #: templates/spaces/space_index.html:155
 msgid "Events"
-msgstr ""
-
-#: urls.py:44
-msgid "^(?P<space_url>\\w+)/rss/$"
-msgstr ""
-
-#: urls.py:47
-msgid "^(?P<space_url>\\w+)/news/"
-msgstr ""
-
-#: urls.py:51
-msgid "^(?P<space_url>\\w+)/proposal/"
-msgstr ""
-
-#: urls.py:55
-msgid "^(?P<space_url>\\w+)/calendar/"
-msgstr ""
-
-#: urls.py:59
-msgid "^(?P<space_url>\\w+)/debate/"
-msgstr ""
-
-#: urls.py:63
-msgid "^(?P<space_url>\\w+)/voting/"
-msgstr ""
-
-#: urls.py:71
-msgid "^(?P<space_url>\\w+)/docs/add/$"
-msgstr ""
-
-#: urls.py:74
-msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
-msgstr ""
-
-#: urls.py:77
-msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
-msgstr ""
-
-#: urls.py:80
-msgid "^(?P<space_url>\\w+)/docs/$"
-msgstr ""
-
-#: urls.py:88
-msgid "^(?P<space_url>\\w+)/event/add/$"
-msgstr ""
-
-#: urls.py:91
-msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/edit/$"
-msgstr ""
-
-#: urls.py:94
-msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/delete/$"
-msgstr ""
-
-#: urls.py:97
-msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/$"
-msgstr ""
-
-#: urls.py:100
-msgid "^(?P<space_url>\\w+)/event/$"
-msgstr ""
-
-#: urls.py:108
-msgid "^(?P<space_url>\\w+)/intent/$"
-msgstr ""
-
-#: urls.py:111
-msgid "^(?P<space_url>\\w+)/intent/approve/(?P<token>\\w+)/$"
-msgstr ""
-
-#: urls.py:119
-msgid "^(?P<space_url>\\w+)/edit/"
-msgstr ""
-
-#: urls.py:122
-msgid "^(?P<space_url>\\w+)/delete/"
-msgstr ""
-
-#: urls.py:125
-msgid "^(?P<space_url>\\w+)/news/$"
-msgstr ""
-
-#: urls.py:128
-msgid "^(?P<space_url>\\w+)/news/archive/$"
-msgstr ""
-
-#: urls.py:131
-msgid "^(?P<space_url>\\w+)/news/archive/(?P<year>\\d{4})/$"
-msgstr ""
-
-#: urls.py:134
-msgid "^(?P<space_url>\\w+)/news/archive/(?P<year>\\d{4})/(?P<month>\\w+)/$"
-msgstr ""
-
-#: urls.py:137
-msgid "^add/$"
-msgstr ""
-
-#: urls.py:144
-msgid "^(?P<space_url>\\w+)/roles/"
 msgstr ""
 
 #: templates/spaces/document_confirm_delete.html:4

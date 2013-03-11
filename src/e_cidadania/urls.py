@@ -25,7 +25,6 @@ from django.conf.urls import *
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.utils.translation import ugettext_lazy as _
 
 from core.views.index import IndexEntriesFeed
 from core.views.news import ListNews

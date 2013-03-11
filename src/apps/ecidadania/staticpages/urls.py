@@ -18,7 +18,6 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls import *
-from django.utils.translation import ugettext_lazy as _
 
 from apps.ecidadania.staticpages.views import ViewPage, EditPage, DeletePage
 

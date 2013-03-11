@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-06 11:16+0100\n"
+"POT-Creation-Date: 2013-03-11 10:51+0100\n"
 "PO-Revision-Date: 2013-02-27 19:50+0000\n"
 "Last-Translator: vishrut009 <vishrut.mehta009@gmail.com>\n"
 "Language-Team: Hindi (India) (http://www.transifex.com/projects/p/ecidadania/"
@@ -98,14 +98,6 @@ msgstr "तिथि बनाया"
 #: models.py:111
 msgid "Ponderation"
 msgstr "तोलन"
-
-#: urls.py:54
-msgid "^poll/(?P<pk>\\d+)/$"
-msgstr " ^poll/(?P<pk>\\d+)/$ "
-
-#: urls.py:56
-msgid "^poll/(?P<pk>\\d+)/results/$"
-msgstr "^poll/(?P<pk>\\d+)/$ "
 
 #: templates/voting/poll_confirm_delete.html:6
 msgid "View poll "
@@ -277,3 +269,9 @@ msgid ""
 msgstr ""
 "आप हमारे मंच में एक प्रक्रिया पर हाल ही में मतदान किया, इस लिंक के बाद अपने वोट को मान्य "
 "करें:% s"
+
+#~ msgid "^poll/(?P<pk>\\d+)/$"
+#~ msgstr " ^poll/(?P<pk>\\d+)/$ "
+
+#~ msgid "^poll/(?P<pk>\\d+)/results/$"
+#~ msgstr "^poll/(?P<pk>\\d+)/$ "

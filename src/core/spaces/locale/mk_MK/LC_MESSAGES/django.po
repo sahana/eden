@@ -1,20 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
-"POT-Creation-Date: 2013-03-06 11:16+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-03-11 10:51+0100\n"
 "PO-Revision-Date: 2013-03-06 10:17+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/ecidadania/language/mk_MK/)\n"
+"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/"
+"ecidadania/language/mk_MK/)\n"
+"Language: mk_MK\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: mk_MK\n"
 "Plural-Forms: nplurals=2; plural=(n % 10 == 1 && n % 100 != 11) ? 0 : 1;\n"
 
 #: admin.py:66
@@ -235,106 +236,6 @@ msgstr ""
 #: models.py:199 templates/spaces/space_index.html:47
 #: templates/spaces/space_index.html:155
 msgid "Events"
-msgstr ""
-
-#: urls.py:44
-msgid "^(?P<space_url>\\w+)/rss/$"
-msgstr ""
-
-#: urls.py:47
-msgid "^(?P<space_url>\\w+)/news/"
-msgstr ""
-
-#: urls.py:51
-msgid "^(?P<space_url>\\w+)/proposal/"
-msgstr ""
-
-#: urls.py:55
-msgid "^(?P<space_url>\\w+)/calendar/"
-msgstr ""
-
-#: urls.py:59
-msgid "^(?P<space_url>\\w+)/debate/"
-msgstr ""
-
-#: urls.py:63
-msgid "^(?P<space_url>\\w+)/voting/"
-msgstr ""
-
-#: urls.py:71
-msgid "^(?P<space_url>\\w+)/docs/add/$"
-msgstr ""
-
-#: urls.py:74
-msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
-msgstr ""
-
-#: urls.py:77
-msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
-msgstr ""
-
-#: urls.py:80
-msgid "^(?P<space_url>\\w+)/docs/$"
-msgstr ""
-
-#: urls.py:88
-msgid "^(?P<space_url>\\w+)/event/add/$"
-msgstr ""
-
-#: urls.py:91
-msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/edit/$"
-msgstr ""
-
-#: urls.py:94
-msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/delete/$"
-msgstr ""
-
-#: urls.py:97
-msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/$"
-msgstr ""
-
-#: urls.py:100
-msgid "^(?P<space_url>\\w+)/event/$"
-msgstr ""
-
-#: urls.py:108
-msgid "^(?P<space_url>\\w+)/intent/$"
-msgstr ""
-
-#: urls.py:111
-msgid "^(?P<space_url>\\w+)/intent/approve/(?P<token>\\w+)/$"
-msgstr ""
-
-#: urls.py:119
-msgid "^(?P<space_url>\\w+)/edit/"
-msgstr ""
-
-#: urls.py:122
-msgid "^(?P<space_url>\\w+)/delete/"
-msgstr ""
-
-#: urls.py:125
-msgid "^(?P<space_url>\\w+)/news/$"
-msgstr ""
-
-#: urls.py:128
-msgid "^(?P<space_url>\\w+)/news/archive/$"
-msgstr ""
-
-#: urls.py:131
-msgid "^(?P<space_url>\\w+)/news/archive/(?P<year>\\d{4})/$"
-msgstr ""
-
-#: urls.py:134
-msgid "^(?P<space_url>\\w+)/news/archive/(?P<year>\\d{4})/(?P<month>\\w+)/$"
-msgstr ""
-
-#: urls.py:137
-msgid "^add/$"
-msgstr ""
-
-#: urls.py:144
-msgid "^(?P<space_url>\\w+)/roles/"
 msgstr ""
 
 #: templates/spaces/document_confirm_delete.html:4
@@ -927,17 +828,17 @@ msgstr ""
 
 #: views/spaces.py:117
 msgid ""
-"Hello anonymous user. Remember                     that this space is public"
-" to view, but you must                     <a "
-"href=\"/accounts/register\">register</a> or                     <a "
-"href=\"/accounts/login\">login</a> to participate."
+"Hello anonymous user. Remember                     that this space is public "
+"to view, but you must                     <a href=\"/accounts/register"
+"\">register</a> or                     <a href=\"/accounts/login\">login</a> "
+"to participate."
 msgstr ""
 
 #: views/spaces.py:131
 msgid ""
-"You're an anonymous user. You must                 <a "
-"href=\"/accounts/register\">register</a> or                 <a "
-"href=\"/accounts/login\">login</a> to access here."
+"You're an anonymous user. You must                 <a href=\"/accounts/"
+"register\">register</a> or                 <a href=\"/accounts/login"
+"\">login</a> to access here."
 msgstr ""
 
 #: views/spaces.py:135
