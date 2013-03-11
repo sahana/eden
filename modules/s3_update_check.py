@@ -100,8 +100,15 @@ def update_check():
     if web2py_version_ok:
         web2py_minimum_parsed = parse_version(web2py_minimum_version)
         web2py_minimum_datetime = web2py_minimum_parsed[datetime_index]
+        # 2.4.2 & earlier style
         web2py_installed_datetime = request.global_settings.web2py_version[datetime_index]
-        web2py_version_ok = web2py_installed_datetime >= web2py_minimum_datetime
+        try:
+            web2py_version_ok = web2py_installed_datetime >= web2py_minimum_datetime
+        except:
+            # Post 2.4.2
+            web2py_installed_parsed = parse_version(request.global_settings.web2py_version)
+            web2py_installed_datetime = web2py_installed_parsed[datetime_index]
+            web2py_version_ok = web2py_installed_datetime >= web2py_minimum_datetime
     if not web2py_version_ok:
         warnings.append(
             "The installed version of Web2py is too old to provide the Scheduler,"
