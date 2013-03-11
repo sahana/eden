@@ -15,6 +15,10 @@
     {% endif %}
 {% endblock %}
 
+{% block space %}
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+{% endblock %}
+
 {% block content %}
 
     <div class="row">

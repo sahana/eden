@@ -202,6 +202,7 @@ class ListProposals(ListView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])   
         return context
 
+
 def merge_proposal(request, space_url, set_id):
     
     """
