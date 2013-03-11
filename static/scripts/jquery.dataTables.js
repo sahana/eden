@@ -2774,7 +2774,7 @@
 			 * Set the length to the current display length - thanks to Andrea Pavlovic for this fix,
 			 * and Stefan Skopnik for fixing the fix!
 			 */
-			$('select option[value="'+oSettings._iDisplayLength+'"]', nLength).attr("selected", true);
+			$('select option[value="'+oSettings._iDisplayLength+'"]', nLength).prop("selected", true);
 			
 			$('select', nLength).bind( 'change.DT', function(e) {
 				var iVal = $(this).val();

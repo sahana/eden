@@ -143,11 +143,11 @@
                             }
 
                             if (locked) {
-                                $f.attr('disabled', true)
+                                $f.prop('disabled', true)
                                   // @ToDo: i18n
                                   .attr('title', 'This field is locked by the template');
                             } else {
-                                $f.removeAttr('disabled')
+                                $f.prop('disabled', false)
                                   .attr('title', '');
                             }
                         }

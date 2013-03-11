@@ -17,7 +17,7 @@ S3.search.saveCurrentSearch = function(event) {
                .insertAfter(btn);
 
 	// Disable the button to prevent clicking while loading
-	btn.attr('disabled', 'disabled');
+	btn.prop('disabled', true);
 
 	// POST the s3json to the saved_search REST controller
 	$.ajax({
@@ -224,7 +224,7 @@ $(document).ready(function() {
         Hide all the expanding/collapsing letter widgets that don't have
         any options selected
     */
-    $('.search_select_letter_label,.s3-grouped-checkboxes-widget-label').live('click', function(event) {
+    $(document).on('click', '.search_select_letter_label, .s3-grouped-checkboxes-widget-label', function(event) {
         /*
             Listen for click events on the expanding/collapsing letter widgets
         */
@@ -248,10 +248,10 @@ $(document).ready(function() {
 
     $('div.advanced-form').keyup(S3.search.AutocompleteTimer)
     					  .click(S3.search.AutocompleteTimer)
-    					  .keypress(S3.search.ancelEnterPress);
+    					  .keypress(S3.search.CancelEnterPress);
 
     // Select Item for Autocomplete
-    $('.search_autocomplete_result_list li span').live('click', function() {
+    $(document).on('click', '.search_autocomplete_result_list li span', function() {
         var selResultLI = $(this).parent();
         var selResultList = selResultLI.parent();
         var selSearchForm = selResultList.parent();
@@ -362,19 +362,19 @@ S3.search.filterURL = function(url) {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
-        var contains=/__contains$/;
-        var anyof=/__anyof$/;
+        var contains = /__contains$/;
+        var anyof = /__anyof$/;
         if (operator == 'any' && url_var.match(contains)) {
-            url_var = url_var.replace(contains,'__anyof');
+            url_var = url_var.replace(contains, '__anyof');
         } else if (operator == 'all' && url_var.match(anyof)) {
-            url_var = url_var.replace(anyof,'__contains');
+            url_var = url_var.replace(anyof, '__contains');
         }
         if (this.tagName.toLowerCase() == 'select') {
             // Standard SELECT
             value = '';
             values = $(this).val();
             if (values) {
-                for (i=0; i<values.length; i++) {
+                for (i=0; i < values.length; i++) {
                     v = S3.search.quoteValue(values[i]);
                     if (value === '') {
                         value = v;
@@ -440,6 +440,43 @@ S3.search.filterURL = function(url) {
         }
     });
 
+    // Location widgets
+    $('.location-filter:visible,' +
+      '.location-filter.multiselect-filter-widget.active,' +
+      '.location-filter.multiselect-filter-bootstrap.active').each(function() {
+        var id = $(this).attr('id');
+        var url_var = $('#' + id + '-data').val();
+        var operator = $("input:radio[name='" + id + "_filter']:checked").val();
+        if (this.tagName.toLowerCase() == 'select') {
+            // Standard SELECT
+            value = '';
+            values = $(this).val();
+            if (values) {
+                for (i=0; i < values.length; i++) {
+                    v = S3.search.quoteValue(values[i]);
+                    if (value === '') {
+                        value = v;
+                    } else {
+                        value = value + ',' + v;
+                    }
+                }
+            }
+        } else {
+            // Checkboxes widget
+            var value = '';
+            $("input[name='" + id + "']:checked").each(function() {
+                if (value === '') {
+                    value = S3.search.quoteValue($(this).val());
+                } else {
+                    value = value + ',' + S3.search.quoteValue($(this).val());
+                }
+            });
+        }
+        if (value !== '') {
+            queries.push(url_var + '=' + value);
+        }
+    });
+
     // Other widgets go here...
 
     // Construct the URL
@@ -458,7 +495,7 @@ S3.search.filterURL = function(url) {
     return filtered_url;
 };
 
-// To be completed: New Search Framework
+// New Search Framework
 $(document).ready(function() {
 
 //     $('.filter-request').click(function() {
@@ -488,8 +525,6 @@ $(document).ready(function() {
     
     // Mark active, otherwise submit can't find them
     $('.multiselect-filter-widget:visible').addClass('active');
-    // Namespace bridge to not interfere with ui.multiselect
-    //$.widget.bridge("ech_multiselect", $.ech.multiselect);
     $('.multiselect-filter-widget').each(function() {
         if ($(this).find('option').length > 5) {
             $(this).multiselect({

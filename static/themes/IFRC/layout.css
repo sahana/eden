@@ -10,8 +10,8 @@
 }
 #header {
     position: relative;
-    /* z-index: 99999999999; We don't want to override the Fullscreen Map */
-    z-index: 999;
+    /* z-index: 99999999999; We don't want to override the Fullscreen Map or jQui Dialog Modal Popups */
+    z-index: 998;
     height: 132px;
     background: #f4edd4;
 }

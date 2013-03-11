@@ -1,15 +1,15 @@
 {{extend "layout.html"}}
 {{include "_popup.html"}}
 {{if "caller" in request.vars and "donor_id" in request.vars.caller:}}
-    <script type="text/javascript">//<![CDATA[
-    $(function() {
-        // If coming from the 'Add Donor' button then populate the type field & hide row
-        $('#org_organisation_type').val(4);
-        $('#org_organisation_type__row').hide();
-        $('#org_organisation_type__row1').hide();
-        $('#org_organisation_donation_phone__row').hide();
-        $('#org_organisation_donation_phone__row1').hide();
-    });
-    //]]></script>
+<script type="text/javascript">//<![CDATA[
+$(function() {
+ {{#If coming from the 'Add Donor' button then populate the type field & hide row}}
+ $('#org_organisation_type').val(4)
+ $('#org_organisation_type__row').hide()
+ $('#org_organisation_type__row1').hide()
+ $('#org_organisation_donation_phone__row').hide()
+ $('#org_organisation_donation_phone__row1').hide()
+});
+//]]></script>
 {{else:}}
 {{pass}}

@@ -2,7 +2,6 @@
 "Alerts",,"cms","post","US","incident","Danger Area","Alert","title/body","post.series_id$name=Alert",,,,,,"False",
 "Incident Reports",,"cms","post","US","incident","Danger Area","Incident","body","post.series_id$name=Incident",,,,,,"False",
 "News Media",,"cms","post","US","news","Information","News","title/body","post.series_id$name=News",,,,,,"False",
-"Situational Reports",,"cms","post","US","information","Information","SitRep","title","post.series_id$name=SitRep",,,,,,"False",
 "Updates",,"cms","post","US","information","Information","Update","body","post.series_id$name=Update",,,,,,"False",
 "Twitter",,"cms","post","US","twitter","Information","Twitter","body","post.series_id$name=Twitter",,,,,,"False",
 "Ushahidi",,"cms","post","US","ushahidi","Information","Ushahidi","body","post.series_id$name=Ushahidi",,,,,,"False",

@@ -153,8 +153,7 @@
             </xsl:if>
 
             <!-- HR record -->
-            <xsl:if test="col[@field='Organisation']!='' or
-                          col[@field='HR Type']!=''">
+            <xsl:if test="col[@field='Organisation']!=''">
                 <xsl:call-template name="HumanResource"/>
             </xsl:if>
 

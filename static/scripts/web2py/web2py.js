@@ -43,8 +43,8 @@ function web2py_ajax_init() {
         });
     } else {
         // For other Languages
-        jQuery('input.integer').live('keyup', function() {this.value = this.value.reverse().replace(/[^0-9\-]|\-(?=.)/g, '').reverse();});
-        jQuery('input.double,input.decimal').live('keyup', function() {this.value = this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.,](?=[0-9]*[\.,])/g, '').reverse();});
+        jQuery(document).on('keyup', 'input.integer', function() {this.value = this.value.reverse().replace(/[^0-9\-]|\-(?=.)/g, '').reverse();});
+        jQuery(document).on('keyup', 'input.double,input.decimal', function() {this.value = this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.,](?=[0-9]*[\.,])/g, '').reverse();});
     }
     //try { jQuery('input.time').timeEntry(); } catch(e) {};
 };

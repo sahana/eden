@@ -7,7 +7,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
-from s3.s3search import S3DateFilter, S3OptionsFilter, S3TextFilter
+from s3.s3search import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
 from s3.s3utils import s3_avatar_represent
 
 # =============================================================================
@@ -59,21 +59,23 @@ def homepage():
                                    _class="filter-search",
                                    _placeholder=T("Search").upper()),
                       S3OptionsFilter("series_id",
-                                      label=T("Filter by Type"),
-                                      represent="%(name)s",
-                                      cols=3),
-                      S3OptionsFilter("location_id",
-                                      label=T("Filter by Location"),
-                                      represent="%(name)s",
-                                      cols=3),
+                                     label=T("Filter by Type"),
+                                     represent="%(name)s",
+                                     cols=3),
+                      S3LocationFilter("location_id",
+                                       label=T("Filter by Location"),
+                                       levels=["L1", "L2", "L3"],
+                                       #represent="%(name)s",
+                                       widget="multiselect",
+                                       cols=3),
                       S3OptionsFilter("created_by$organisation_id",
-                                      label=T("Filter by Organization"),
-                                      represent="%(name)s",
-                                      #widget="multiselect",
-                                      widget="multiselect-bootstrap",
-                                      cols=3),
+                                     label=T("Filter by Organization"),
+                                     represent="%(name)s",
+                                     widget="multiselect",
+                                     #widget="multiselect-bootstrap",
+                                     cols=3),
                       S3DateFilter("created_on",
-                                   label=T("Filter by Date")),
+                                  label=T("Filter by Date")),
                       ]
 
     s3db.configure("cms_post",

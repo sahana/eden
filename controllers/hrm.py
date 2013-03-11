@@ -619,27 +619,13 @@ def group_membership():
         - uses the group_membership table from PR
     """
 
-    # Change Labels
+    # Change Labels & list_fields
     s3db.hrm_configure_pr_group_membership()
-
-    table = db.pr_group_membership
-    # Amend list_fields
-    table.group_id.label = T("Team Name")
-    s3db.configure("pr_group_membership",
-                   list_fields=["id",
-                                "group_id",
-                                "group_id$description",
-                                "group_head",
-                                "person_id$first_name",
-                                "person_id$middle_name",
-                                "person_id$last_name",
-                                (T("Email"), "person_id$email.value"),
-                                (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
-                                ])
 
     # Only show Relief Teams
     # Do not show system groups
     # Only show Staff
+    table = db.pr_group_membership
     gtable = db.pr_group
     htable = s3db.hrm_human_resource
     s3.filter = (gtable.system == False) & \
