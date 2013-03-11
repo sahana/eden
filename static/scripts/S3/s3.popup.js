@@ -6,6 +6,23 @@ function s3_popup_refresh_main_form() {
     // The Get parameters
     var $_GET = getQueryParams(document.location.search);
 
+    // Update Form?
+    var refresh = $_GET['refresh'];
+    if (typeof refresh != 'undefined') {
+        // Update DataList/DataTable
+        var selector = self.parent.$('#' + refresh);
+        if (typeof selector.dataTable !== 'undefined') {
+            // refresh dataTable
+            selector.dataTable().fnReloadAjax();
+        } else {
+            // @ToDo: refresh dataList
+        }
+        // Remove popup
+        self.parent.s3_popup_remove();
+        return;
+    }
+
+    // Create form (e.g. S3AddResourceLink)
     var level = $_GET['level'];
     if (typeof level != 'undefined') {
         // Location Selector

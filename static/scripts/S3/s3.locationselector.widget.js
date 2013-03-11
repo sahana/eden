@@ -211,7 +211,7 @@ function s3_gis_autocomplete(level) {
                 s3_gis_autocomplete(parseInt(ui.item.level.replace('L', ''), 10) + 1);
                 return false;
             }
-        }).data('autocomplete')._renderItem = function(ul, item) {
+        }).data('ui-autocomplete')._renderItem = function(ul, item) {
             return $('<li></li>')
                 .data('item.autocomplete', item)
                 .append('<a>' + item.name + '</a>')
@@ -255,7 +255,7 @@ function s3_gis_autocomplete_search() {
                 s3_gis_ac_search_selected(ui.item);
                 return false;
             }
-        }).data( 'autocomplete' )._renderItem = function( ul, item ) {
+        }).data( 'ui-autocomplete' )._renderItem = function( ul, item ) {
         	var represent;
             if (item.name && item.addr_street) {
                 represent = '<a>' + item.name + ',  ' + item.addr_street.split(',')[0].split('\n')[0] + '</a>';

@@ -80,6 +80,7 @@ function openPopup(url, center) {
         popupWin = window.open(url, 'popupWin', params);
     } else popupWin.focus();
 }
+
 S3.addTooltips = function() {
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
@@ -108,6 +109,50 @@ S3.addTooltips = function() {
     	closeText: tipCloseText,
     	width: 380
     });
+};
+
+S3.addModals = function() {
+    // jQueryUI Modal Popups
+    $('a.s3_add_resource_link').attr('href', function(index, attr) {
+        // Add the caller to the URL vars so that the popup knows which field to refresh/set
+        var caller = $(this).parents('tr').attr('id');
+        if (!caller) {
+            // DIV-based formstyle
+            caller = $(this).parent().parent().attr('id');
+        }
+        caller = caller.replace(/__row/, '');
+        // Avoid Duplicate callers
+        var url_out = attr;
+        if (attr.indexOf('caller=') == -1) {
+            url_out = attr + '&caller=' + caller;
+        }
+        return url_out;
+    });
+    $('.s3_add_resource_link, .s3_modal').click(function() {
+        var title = this.title;
+        var url = this.href;
+        S3.popup_loaded = function() {
+            // Resize the iframe to fit the Dialog
+            var width = $('.ui-dialog').width() - 10;
+            dialog.css({width: width});
+        }
+        // Open a jQueryUI Dialog showing a spinner until iframe is loaded
+        var dialog = $('<iframe class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded()"></iframe>')
+                      .appendTo('body');
+        dialog.dialog({
+            // add a close listener to prevent adding multiple divs to the document
+            close: function(event, ui) {
+                // remove div with all data and events
+                dialog.remove();
+            },
+            minHeight: 600,
+            modal: true,
+            title: title,
+            width: 600
+        });
+        // Prevent browser from following link
+        return false;
+    })
 };
 
 $(document).ready(function() {
@@ -224,46 +269,7 @@ $(document).ready(function() {
     );
 
     // jQueryUI Dialog Modal Popups
-    $('a.s3_add_resource_link').attr('href', function(index, attr) {
-        // Add the caller to the URL vars so that the popup knows which field to refresh/set
-        var caller = $(this).parents('tr').attr('id');
-        if (!caller) {
-            // DIV-based formstyle
-            caller = $(this).parent().parent().attr('id');
-        }
-        caller = caller.replace(/__row/, '');
-        // Avoid Duplicate callers
-        var url_out = attr;
-        if (attr.indexOf('caller=') == -1) {
-            url_out = attr + '&caller=' + caller;
-        }
-        return url_out;
-    });
-    $('.s3_add_resource_link').click(function() {
-        var title = this.title;
-        var url = this.href;
-        S3.popup_loaded = function() {
-            // Resize the iframe to fit the Dialog
-            var width = $('.ui-dialog').width() - 10;
-            dialog.css({width: width});
-        }
-        // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded()"></iframe>')
-                      .appendTo('body');
-        dialog.dialog({
-            // add a close listener to prevent adding multiple divs to the document
-            close: function(event, ui) {
-                // remove div with all data and events
-                dialog.remove();
-            },
-            minHeight: 600,
-            modal: true,
-            title: title,
-            width: 600
-        });
-        // Prevent browser from following link
-        return false;
-    })
+    S3.addModals();
 
     // Help Tooltips
     S3.addTooltips();

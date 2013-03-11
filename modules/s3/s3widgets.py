@@ -2670,18 +2670,24 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         T = current.T
 
-        selector = str(field).replace(".", "_")
+        selector = field.name.replace(".", "_")
 
         # Options:
         # * Show Selected List
         if self.header is True:
-            header = ""
+            header = '''checkAllText:'%s',uncheckAllText:"%s"''' % \
+                (T("Check all"),
+                 T("Uncheck all"))
         elif self.header is False:
-            header = '''header:false,'''
+            header = '''header:false'''
         else:
-            header = '''header:"%s",''' % self.header
-        script = '''$('#%s').multiselect({%sselectedList:%s,noneSelectedText:'%s'})''' % \
-            (selector, header, self.selectedList, current.T(self.noneSelectedText))
+            header = '''header:"%s"''' % self.header
+        script = '''$('#%s').multiselect({selectedText:'%s',%s,height:250,selectedList:%s,noneSelectedText:'%s'})''' % \
+            (selector,
+             T("# selected"),
+             header,
+             self.selectedList,
+             T(self.noneSelectedText))
         if self.filter:
             script = '''%s.multiselectfilter()''' % script
         current.response.s3.jquery_ready.append(script)

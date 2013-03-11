@@ -59,9 +59,10 @@ def homepage():
                                    _class="filter-search",
                                    _placeholder=T("Search").upper()),
                       S3OptionsFilter("series_id",
-                                     label=T("Filter by Type"),
-                                     represent="%(name)s",
-                                     cols=3),
+                                      label=T("Filter by Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      cols=3),
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
                                        levels=["L1", "L2", "L3"],
@@ -69,13 +70,13 @@ def homepage():
                                        widget="multiselect",
                                        cols=3),
                       S3OptionsFilter("created_by$organisation_id",
-                                     label=T("Filter by Organization"),
-                                     represent="%(name)s",
-                                     widget="multiselect",
-                                     #widget="multiselect-bootstrap",
-                                     cols=3),
+                                      label=T("Filter by Organization"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      #widget="multiselect-bootstrap",
+                                      cols=3),
                       S3DateFilter("created_on",
-                                  label=T("Filter by Date")),
+                                   label=T("Filter by Date")),
                       ]
 
     s3db.configure("cms_post",
@@ -218,7 +219,7 @@ def render_homepage_posts(rfields, record, **attr):
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
     """
-    
+
     pkey = "cms_post.id"
 
     # Construct the item ID
@@ -272,7 +273,11 @@ def render_homepage_posts(rfields, record, **attr):
     table = db.cms_post
     if permit("update", table, record_id=record_id):
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post", args=[record_id, "update"]),
+                     _href=URL(c="cms", f="post",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid}),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.cms_post.title_update,
                      )
     else:
         edit_btn = ""

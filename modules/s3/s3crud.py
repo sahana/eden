@@ -2444,9 +2444,14 @@ class S3CRUD(S3Method):
         if editable and has_permission("update", table) and \
            not ownership_required("update", table):
             if not update_url:
-                update_url = URL(args = args + ["update"],
+                # To use modals
+                #get_vars["refresh"] = "list"
+                update_url = URL(args = args + ["update.popup"],
                                  vars = get_vars)
-            s3crud.action_button(labels.UPDATE, update_url)
+            s3crud.action_button(labels.UPDATE, update_url,
+                                 # To use modals
+                                 #_class="action-btn s3_modal"
+                                 )
         else:
             if not read_url:
                 read_url = URL(args = args,

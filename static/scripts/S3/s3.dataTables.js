@@ -1017,6 +1017,8 @@ $(document).ready(function() {
             'fnDrawCallback': function(oSettings) {
                 var table = '#' + oSettings.nTable.id;
                 var t = tableIdReverse(table);
+                // If using Modals for Update forms:
+                //S3.addModals();
                 bindButtons(t);
                 if (oSettings.aiDisplay.length === 0) {
                     return;
