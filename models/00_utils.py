@@ -333,7 +333,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                               copyable=copyable,
                               editable=editable,
                               read_url=open_url,
-                              update_url=open_url)
+                              update_url=open_url
+                              # To use modals
+                              #update_url="%s.popup?refresh=list" % open_url
+                              )
 
             # Override Add-button, link to native controller and put
             # the primary key into vars for automatic linking

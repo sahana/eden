@@ -1,7 +1,7 @@
 body {
     background: none repeat scroll 0 0 #eeeeee;
-    /* 60px to make the container go all the way to the bottom of the topbar */
-    padding-top: 60px; 
+    /* 60px to make the container go all the way to the bottom of the topbar
+    padding-top: 60px;  */
 }
 
 /* Over-ride ext */

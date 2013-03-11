@@ -218,7 +218,7 @@ def render_homepage_posts(rfields, record, **attr):
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
     """
-    
+
     pkey = "cms_post.id"
 
     # Construct the item ID
@@ -272,7 +272,11 @@ def render_homepage_posts(rfields, record, **attr):
     table = db.cms_post
     if permit("update", table, record_id=record_id):
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post", args=[record_id, "update"]),
+                     _href=URL(c="cms", f="post",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid}),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.cms_post.title_update,
                      )
     else:
         edit_btn = ""

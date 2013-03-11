@@ -144,7 +144,7 @@ class S3ContentModel(S3Model):
                              Field("title",
                                    comment=T("The title of the page, as seen in the browser (optional)"),
                                    label=T("Title")),
-                             Field("body", "text", #notnull=True,
+                             Field("body", "text", notnull=True,
                                    widget = s3_richtext_widget,
                                    label=T("Body")),
                              self.gis_location_id(),
