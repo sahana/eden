@@ -3,8 +3,17 @@
 {% load comments %}
 
 {% block title %}{% trans "View proposals" %}{% endblock %}
-{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
-{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+{% block logo %}
+    {% if get_place %}
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
+    {% endif %}
+{% endblock %}
+
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 
