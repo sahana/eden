@@ -415,7 +415,7 @@ class DeleteDebate(DeleteView):
 
 	def get_object(self):
 		self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-		if has_operation_permission(self.request.user, self.space, 'debate.add_debate', allow=['admins', 'mods']):
+		if has_operation_permission(self.request.user, self.space, 'debate.delete_debate', allow=['admins', 'mods']):
 			return get_object_or_404(Debate, pk=self.kwargs['debate_id'])
 		else:
 			self.template_name = 'not_allowed.html'
