@@ -56,7 +56,7 @@ from s3navigation import s3_search_tabs
 from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime
 from s3validators import *
-from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget, S3DateTimeWidget
+from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
@@ -3426,8 +3426,6 @@ class S3LocationFilter(S3FilterWidget):
                     if v and v not in levels[level]["options"]:
                         levels[level]["options"].append(v)
 
-        # @ToDo: Sort Options
-
         # Construct HTML classes for the widget
         if "_class" in attr and attr["_class"]:
             _class = "%s %s %s" % (attr["_class"],
@@ -3445,41 +3443,44 @@ class S3LocationFilter(S3FilterWidget):
         base_name = attr["_name"]
         operator = self.operator
         # @ToDo: Hide dropdowns other than first
-        if opts.widget in ("multiselect", "multiselect-bootstrap"):
-            # @ToDo: Pass label into noneSelectedText
-            if opts.widget == "multiselect-bootstrap":
-                _class = "multiselect-filter-bootstrap"
-                script = "/%s/static/scripts/bootstrap-multiselect.js" % \
-                    current.request.application
-                scripts = current.response.s3.scripts
-                if script not in scripts:
-                    scripts.append(script)
+        if opts.widget == "multiselect":
+            # Multiselect Dropdown with Checkboxes
+            _class = attr.get("_class", None)
+            if _class:
+                if "multiselect-filter-widget" not in _class:
+                    attr["_class"] = "%s multiselect-filter-widget" % _class
             else:
-                _class = "multiselect-filter-widget"
+                attr["_class"] = "multiselect-filter-widget"
             for level in levels:
                 # Dummy field
                 name = "%s-%s" % (base_name, level)
+                options = levels[level]["options"]
+                options.sort()
                 dummy_field = Storage(name=name,
                                       type=field_type,
-                                      requires=IS_IN_SET(levels[level]["options"],
+                                      requires=IS_IN_SET(options,
                                                          multiple=True))
                 # Unique ID/name
                 attr["_id"] = "%s-%s" % (base_id, level)
                 attr["_name"] = name
                 # Find relevant values
                 _values = values["~.%s$%s__%s" % (field_name, level, operator)]
-                widget = MultipleOptionsWidget.widget(dummy_field,
-                                                      _values,
-                                                      **attr)
-                widget.add_class(_class)
+                w = S3MultiSelectWidget(filter = False,
+                                        header = False,
+                                        selectedList = 3,
+                                        noneSelectedText = "Select %s" % levels[level]["label"])
+                widget = w(dummy_field, _values, **attr)
                 w_append(widget)
         else:
+            # Grouped Checkboxes
             for level in levels:
                 # Dummy field
                 name = "%s-%s" % (base_name, level)
+                options = levels[level]["options"]
+                options.sort()
                 dummy_field = Storage(name=name,
                                       type=field_type,
-                                      requires=IS_IN_SET(levels[level]["options"],
+                                      requires=IS_IN_SET(options,
                                                          multiple=True))
                 # Unique ID/name
                 attr["_id"] = "%s-%s" % (base_id, level)
@@ -3599,18 +3600,6 @@ class S3OptionsFilter(S3FilterWidget):
 
         attr = self.attr
         opts = self.opts
-
-        # @ToDo: Deprecate with LocationFilter
-        if "label" not in opts and "location_level" in opts:
-            # This is searching a Location Hierarchy, so lookup
-            # the appropriate label from the GIS configuration:
-            level = opts["location_level"]
-            hierarchy = current.gis.get_location_hierarchy()
-            if level in hierarchy:
-                label = hierarchy[level]
-            else:
-                label = level
-            opts["label"] = label
 
         # Resolve the field selector
         field_name = self.field
@@ -3798,18 +3787,27 @@ class S3OptionsFilter(S3FilterWidget):
 
         if opts.widget in ("multiselect", "multiselect-bootstrap"):
             # Multiselect Dropdown with Checkboxes
-            widget = MultipleOptionsWidget.widget(dummy_field,
-                                                  values,
-                                                  **attr)
             if opts.widget == "multiselect-bootstrap":
                 script = "/%s/static/scripts/bootstrap-multiselect.js" % \
                     current.request.application
                 scripts = current.response.s3.scripts
                 if script not in scripts:
                     scripts.append(script)
+                widget = MultipleOptionsWidget.widget(dummy_field,
+                                                      values,
+                                                      **attr)
                 widget.add_class("multiselect-filter-bootstrap")
             else:
-                widget.add_class("multiselect-filter-widget")
+                _class = attr.get("_class", None)
+                if _class:
+                    if "multiselect-filter-widget" not in _class:
+                        attr["_class"] = "%s multiselect-filter-widget" % _class
+                else:
+                    attr["_class"] = "multiselect-filter-widget"
+                w = S3MultiSelectWidget(filter = False,
+                                        header = False,
+                                        selectedList = 3)
+                widget = w(dummy_field, values, **attr)
         else:
             # Grouped Checkboxes
             widget = s3_grouped_checkboxes_widget(dummy_field,
