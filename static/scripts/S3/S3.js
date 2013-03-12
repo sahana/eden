@@ -147,6 +147,7 @@ S3.addModals = function() {
             },
             minHeight: 600,
             modal: true,
+            open: function(event, ui) {$('.ui-widget-overlay').bind('click', function(){ dialog.dialog('close'); });},
             title: title,
             width: 600
         });

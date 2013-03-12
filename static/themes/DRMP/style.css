@@ -21,6 +21,7 @@ form {
 }
 
 /* Over-ride Bootstrap */
+#gis-map-window img,
 #map_wrapper img {
     max-width: none;
 }
