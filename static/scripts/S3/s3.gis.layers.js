@@ -1848,13 +1848,13 @@ function addWMSLayer(layer) {
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
-            layers: layers
+            layers: layers,
+            transparent: transparent
         },
         {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
-            transparent: transparent,
             // This is used to Save State
             s3_layer_id: layer.id,
             s3_layer_type: 'wms',
