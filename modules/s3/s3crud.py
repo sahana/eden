@@ -794,11 +794,6 @@ class S3CRUD(S3Method):
                 r.error(404, current.manager.error, next=r.url(method=""))
             current.response.confirmation = message
             r.http = "DELETE" # must be set for immediate redirect
-            #next = r.get_vars.get("_next", None)
-            #if next:
-                #self.next = next
-            #else:
-                #self.next = delete_next or r.url(method="")
             self.next = delete_next or r.url(method="")
 
         elif r.http == "DELETE":
@@ -1577,17 +1572,25 @@ class S3CRUD(S3Method):
 
         # Pagination
         get_vars = self.request.get_vars
-        start = get_vars.get("start", None)
-        limit = get_vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
+        record_id = get_vars.get("record", None)
+        if record_id is not None:
+            # Ajax-reload of a single record
+            from s3resource import S3FieldSelector as FS
+            resource.add_filter(FS("id") == record_id)
+            start = 0
+            limit = 1
         else:
-            start = None
+            start = get_vars.get("start", None)
+            limit = get_vars.get("limit", None)
+            if limit is not None:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = None # use default
+            else:
+                start = None
 
         # Initialize output
         output = {}
@@ -1600,6 +1603,46 @@ class S3CRUD(S3Method):
 
         # Prepare data list
         representation = r.representation
+
+        # Ajax-delete items
+        if representation == "dl" and r.http in ("DELETE", "POST"):
+            delete = get_vars.get("delete", None)
+            if delete is not None:
+
+                dresource = current.s3db.resource(self.resource, id=delete)
+
+                # Deleting in this resource allowed at all?
+                deletable = dresource.get_config("deletable", True)
+                if not deletable:
+                    r.error(403, current.manager.ERROR.NOT_PERMITTED)
+                # Permitted to delete this record?
+                permitted = current.auth.s3_has_permission("delete",
+                                                           dresource.table,
+                                                           record_id=delete)
+                if not authorised:
+                    r.unauthorised()
+
+                # Callback
+                ondelete = dresource.get_config("ondelete")
+
+                # Delete it
+                numrows = dresource.delete(ondelete=ondelete,
+                                           format=representation)
+                if numrows > 1:
+                    message = "%s %s" % (numrows,
+                                         current.T("records deleted"))
+                elif numrows == 1:
+                    message = self.crud_string(dresource.tablename,
+                                               "msg_record_deleted")
+                else:
+                    r.error(404, current.manager.error)
+
+                # Return a JSON message
+                # @note: make sure the view doesn't get overridden afterwards!
+                output["item"] = current.xml.json_message(message=message)
+                current.response.view = "xml.html"
+                return output
+
         if representation in ("html", "dl"):
 
             # How many records per page?
@@ -1653,38 +1696,22 @@ class S3CRUD(S3Method):
                 data = msg
 
             else:
-                # Render the list
-                dl = datalist.html()
-
-                # Pagination data
-                vars = dict([(k,v) for k, v in r.get_vars.iteritems()
-                                   if k not in ("start", "limit")])
-
                 # Allow customization of the datalist Ajax-URL
                 # Note: the Ajax-URL must use the .dl representation and
                 # plain.html view for pagination to work properly!
+                vars = dict([(k,v) for k, v in r.get_vars.iteritems()
+                                   if k not in ("start", "limit")])
                 ajax_url = attr.get("list_ajaxurl", None)
                 if not ajax_url:
                     ajax_url = r.url(representation="dl", vars=vars)
-                dl_data = {
-                    "startindex": start if start else 0,
-                    "maxitems": limit if limit else numrows,
-                    #"totalitems": numrows,
-                    "pagesize": pagelength,
-                    "ajaxurl": ajax_url
-                }
-                from gluon.serializers import json as jsons
-                dl_data = jsons(dl_data)
-                dl.append(DIV(
-                            FORM(
-                                INPUT(_type="hidden",
-                                      _class="dl-pagination",
-                                      _value=dl_data)),
-                            A(current.T("more..."),
-                              _href=ajax_url,
-                              _class="dl-pagination"),
-                            _class="dl-navigation"))
-
+                    
+                # Render the list
+                dl = datalist.html(
+                        start = start if start else 0,
+                        limit = limit if limit else numrows,
+                        pagesize = pagelength,
+                        ajaxurl = ajax_url
+                     )
                 data = dl
         else:
             r.error(501, current.manager.ERROR.BAD_FORMAT)

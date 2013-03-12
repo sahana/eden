@@ -15,7 +15,14 @@ function s3_popup_refresh_main_form() {
             // refresh dataTable
             selector.dataTable().fnReloadAjax();
         } else {
-            // @ToDo: refresh dataList
+            var record = $_GET['record'];
+            if (record !== undefined) {
+                // reload a single item
+                self.parent.dlAjaxReloadItem(refresh, record);
+            } else {
+                // reload the whole list
+                self.parent.dlAjaxReload(refresh);
+            }
         }
         // Remove popup
         self.parent.s3_popup_remove();

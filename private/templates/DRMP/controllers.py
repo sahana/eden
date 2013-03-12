@@ -104,7 +104,9 @@ def homepage():
                                      list_ajaxurl = URL(f="index", args="datalist_dl_post"))
 
     if ajax:
-        response.view = "plain.html"
+        # Don't override view if this is an Ajax-deletion request
+        if not "delete" in request.get_vars:
+            response.view = "plain.html"
     else:
         form = output["form"]
         # Remove duplicate Submit button
@@ -275,16 +277,20 @@ def render_homepage_posts(rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="cms", f="post",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid}),
+                               vars={"refresh": listid,
+                                     "record": record_id}),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.cms_post.title_update,
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
+        #delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       #_href=URL(c="cms", f="post", args=[record_id, "delete"]),
+                       #)
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _href=URL(c="cms", f="post", args=[record_id, "delete"]),
-                       )
+                       _class="dl-item-delete",
+                      )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
