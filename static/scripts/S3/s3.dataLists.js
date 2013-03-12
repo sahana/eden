@@ -22,10 +22,11 @@ function dlURLAppend(url, query) {
     }
 }
 
-function dlAjaxRemoveItemBind() {
+function dlAjaxRemoveItemBindEvents() {
     // Bind the click-event handler to dl-item-delete elements
 
     $('.dl-item-delete').css({cursor: 'pointer'});
+    $('.dl-item-delete').unbind('click');
     $('.dl-item-delete').click(function(event) {
         if (confirm(i18n.delete_confirmation)) {
             dlAjaxRemoveItem(this);
@@ -75,6 +76,8 @@ function dlAjaxReloadItem(list_id, record_id) {
             if (item_data.length) {
                 $(item).replaceWith(item_data);
             }
+            dlAjaxRemoveItemBindEvents();
+            S3.addModals();
         },
         'error': function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
@@ -136,7 +139,7 @@ function dlAjaxRemoveItem(anchor) {
     });
 }
 
-function dlAjaxReload(list_id) {
+function dlAjaxReload(list_id, filters) {
     // Reload the data list (also resets pagination to page #1)
 
     datalist = $('#' + list_id);
@@ -156,6 +159,14 @@ function dlAjaxReload(list_id) {
         pagesize = dl_data['pagesize'],
         ajaxurl = dl_data['ajaxurl'];
 
+    if (filters) {
+        try {
+            ajaxurl = S3.search.filterURL(ajaxurl, filters);
+            dl_data['ajaxurl'] = ajaxurl;
+            $(pagination[0]).val(JSON.stringify(dl_data));
+        } catch(e) {}
+    }
+
     if (pagesize === null) {
         // No pagination
         return;
@@ -164,20 +175,31 @@ function dlAjaxReload(list_id) {
     var start = startindex;
     var limit = pagesize;
 
-    // Ajax-load the item
+    // Ajax-load the list
     $.ajax({
         'url': dlURLAppend(ajaxurl, 'start=' + startindex + '&limit=' + pagesize),
         'success': function(data) {
             var newlist = $(data.slice(data.indexOf('<'))).find('.dl');
             $(datalist).infinitescroll('destroy');
             $(datalist).data('infinitescroll', null);
-            $(datalist).empty().append(newlist);
-            $(datalist).find('input.dl-pagination').replaceWith(pagination);
+            if (newlist.length) {
+                // @todo: update total items appropriately
+                $(datalist).empty().append(newlist);
+                $(datalist).find('input.dl-pagination').replaceWith(pagination);
+            } else {
+                // List is empty
+                var nav = $(datalist).find('.dl-navigation').css({display: 'none'});
+                newlist = $(data.slice(data.indexOf('<'))).find('.empty');
+                $(datalist).empty().append(newlist);
+                $(datalist).append(nav);
+            }
             dlInfiniteScroll(datalist);
             $(datalist).find('.dl-item:last:in-viewport').each(function() {
                 $(this).addClass('autoretrieve');
                 dlAutoRetrieve(this);
             });
+            dlAjaxRemoveItemBindEvents();
+            S3.addModals();
         },
         'error': function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
@@ -222,7 +244,7 @@ function dlInfiniteScroll(datalist) {
         maxpage += Math.ceil(ajaxitems / pagesize);
     } else {
         if (pagination.length) {
-            pagination.css({display:'none'});
+            pagination.closest('.dl-navigation').css({display:'none'});
         }
         return;
     }
@@ -259,8 +281,8 @@ function dlInfiniteScroll(datalist) {
                     });
                 });
                 // Re-bind the click-event to newly loaded dl-item-delete's
-                $('.dl-item-delete').unbind('click');
-                dlAjaxRemoveItemBind();
+                dlAjaxRemoveItemBindEvents();
+                S3.addModals();
             }
         );
     }
@@ -277,7 +299,8 @@ $(document).ready(function() {
             dlAutoRetrieve(this);
         });
     });
-    dlAjaxRemoveItemBind();
+    dlAjaxRemoveItemBindEvents();
+    S3.addModals();
 });
 
 // END ========================================================================

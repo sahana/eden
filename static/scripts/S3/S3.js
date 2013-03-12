@@ -128,6 +128,7 @@ S3.addModals = function() {
         }
         return url_out;
     });
+    $('.s3_add_resource_link, .s3_modal').unbind('click');
     $('.s3_add_resource_link, .s3_modal').click(function() {
         var title = this.title;
         var url = this.href;

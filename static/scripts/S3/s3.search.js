@@ -333,10 +333,11 @@ S3.search.quoteValue = function(value) {
 }
 
 /*
- * filterURL: add all current filters to a URL
+ * getCurrentFilters: retrieve all current filters
  */
-S3.search.filterURL = function(url) {
 
+S3.search.getCurrentFilters = function(url) {
+    
     var queries = [];
 
     // Text widgets
@@ -479,14 +480,37 @@ S3.search.filterURL = function(url) {
 
     // Other widgets go here...
 
+    // return queries to caller
+    return queries;
+};
+
+/*
+ * filterURL: add all current filters to a URL
+ */
+S3.search.filterURL = function(url, queries) {
+
     // Construct the URL
     var url_parts = url.split('?'), url_query = queries.join('&');
     if (url_parts.length > 1) {
-        if (url_query) {
-            url_query = url_query + '&' + url_parts[1];
-        } else {
-            url_query = url_parts[1];
+        var qstr = url_parts[1], query = {};
+        var a = qstr.split('&'), v, i;
+        for (i=0; i<a.length; i++) {
+            var b = a[i].split('=');
+            if (b.length > 1 && b[0].search(/\./) == -1) {
+                query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
+            }
         }
+        for (i=0; i<queries.length; i++) {
+            v = queries[i].split('=');
+            if (v.length > 1) {
+                query[v[0]] = v[1];
+            }
+        }
+        var url_queries = [], url_query;
+        for (v in query) {
+            url_queries.push(v + '=' + query[v]);
+        }
+        url_query = url_queries.join('&');
     }
     var filtered_url = url_parts[0];
     if (url_query) {
@@ -720,11 +744,23 @@ $(document).ready(function() {
                 }
             });
         } catch(err) {}
+        
         // Server-side page refresh
         // @ToDo: AJAX request instead
-        var url = $(this).next('input[type="hidden"]').val();
-        // Update URL
-        url = S3.search.filterURL(url);
-        window.location.href = url;
+        var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val();
+        var queries = S3.search.getCurrentFilters();
+        if ($(this).hasClass('filter-ajax')) {
+            var target = $(this).nextAll('input.filter-submit-target[type="hidden"]').val();
+            if ($('#' + target).hasClass('dl')) {
+                dlAjaxReload(target, queries);
+            } else {
+                url = S3.search.filterURL(url, queries);
+                window.location.href = url;
+            }
+        } else {
+            // Update URL
+            url = S3.search.filterURL(url, queries);
+            window.location.href = url;
+        }
     });
 });
