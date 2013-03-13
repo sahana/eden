@@ -195,31 +195,35 @@ def create_note(request, space_url):
     .. versionadded:: 0.1.5
     """
     note_form = NoteForm(request.POST or None)
+    place = get_object_or_404(Space, url=space_url)
         
-    if request.method == "POST" and request.is_ajax:        
-        if note_form.is_valid():
-            note_form_uncommited = note_form.save(commit=False)
-            note_form_uncommited.author = request.user
-            note_form_uncommited.debate = get_object_or_404(Debate,
-                pk=request.POST['debateid'])
-            note_form_uncommited.title = request.POST['title']
-            note_form_uncommited.message = request.POST['message']
-            note_form_uncommited.column = get_object_or_404(Column,
-                pk=request.POST['column'])
-            note_form_uncommited.row = get_object_or_404(Row,
-                pk=request.POST['row'])
-            note_form_uncommited.save()
+    if request.method == "POST" and request.is_ajax:
+	if has_operation_permission(request.user, place, 'note.add_note', \
+			allow=['admins','mods','users']):
+        	if note_form.is_valid():
+            		note_form_uncommited = note_form.save(commit=False)
+            		note_form_uncommited.author = request.user
+            		note_form_uncommited.debate = get_object_or_404(Debate,
+                		pk=request.POST['debateid'])
+            		note_form_uncommited.title = request.POST['title']
+            		note_form_uncommited.message = request.POST['message']
+            		note_form_uncommited.column = get_object_or_404(Column,
+                		pk=request.POST['column'])
+            		note_form_uncommited.row = get_object_or_404(Row,
+                		pk=request.POST['row'])
+            		note_form_uncommited.save()
 
-            response_data = {}
-            response_data['id'] = note_form_uncommited.id
-            response_data['message'] = note_form_uncommited.message
-            response_data['title'] = note_form_uncommited.title
-            return HttpResponse(json.dumps(response_data),
-                                mimetype="application/json")
+            		response_data = {}
+            		response_data['id'] = note_form_uncommited.id
+            		response_data['message'] = note_form_uncommited.message
+            		response_data['title'] = note_form_uncommited.title
+			msg = "The note has been created."
+            		return HttpResponse(json.dumps(response_data),
+                                		mimetype="application/json")
 
-        else:
-            msg = "The note form didn't validate. This fields gave errors: " \
-            + str(note_form.errors)
+        	else:
+            		msg = "The note form didn't validate. This fields gave errors: " \
+            			+ str(note_form.errors)
     else:
         msg = "The petition was not POST."
         
@@ -233,6 +237,8 @@ def update_note(request, space_url):
     form that doesn't handle some properties, only the important for the note
     editing.
     """
+
+    place = get_object_or_404(Space, url=space_url)
 
     if request.method == "GET" and request.is_ajax:
         note = get_object_or_404(Note, pk=request.GET['noteid'])
@@ -255,18 +261,21 @@ def update_note(request, space_url):
                             mimetype="application/json")
 
     if request.method == "POST" and request.is_ajax:
-        note = get_object_or_404(Note, pk=request.POST['noteid'])
-        note_form = UpdateNoteForm(request.POST or None, instance=note)
-        if note_form.is_valid():
-            note_form_uncommited = note_form.save(commit=False)
-            note_form_uncommited.title = request.POST['title']
-            note_form_uncommited.message = request.POST['message']
-            note_form_uncommited.last_mod_author = request.user
+    	if has_operation_permission(request.user, place, 'note.change_note',
+			allow=['admins','mods']) or request.user == note.author:
+        	note = get_object_or_404(Note, pk=request.POST['noteid'])
+        	note_form = UpdateNoteForm(request.POST or None, instance=note)
+        	if note_form.is_valid():
+            		note_form_uncommited = note_form.save(commit=False)
+            		note_form_uncommited.title = request.POST['title']
+            		note_form_uncommited.message = request.POST['message']
+            		note_form_uncommited.last_mod_author = request.user
         
-            note_form_uncommited.save()
-            msg = "The note has been updated."
-        else:
-            msg = "The form is not valid, check field(s): " + note_form.errors
+            		note_form_uncommited.save()
+            		msg = "The note has been updated."
+        	else:
+            		msg = "The form is not valid, check field(s): " + note_form.errors
+	return HttpResponse(msg)
     else:
         msg = "There was some error in the petition."
         
@@ -282,9 +291,11 @@ def update_position(request, space_url):
     """
     note = get_object_or_404(Note, pk=request.POST['noteid'])
     position_form = UpdateNotePosition(request.POST or None, instance=note)
+    place = get_object_or_404(Space, url=space_url)
 
     if request.method == "POST" and request.is_ajax:
-        if request.user == note.author or request.user.is_staff:
+        if has_operation_permission(request.user, place, 'note.change_note', \
+			allow=['admins','mods']) or request.user == note.author:
             if position_form.is_valid():
                 position_form_uncommited = position_form.save(commit=False)
                 position_form_uncommited.column = get_object_or_404(Column,
@@ -307,8 +318,10 @@ def delete_note(request, space_url):
     Deletes a note object.
     """
     note = get_object_or_404(Note, pk=request.POST['noteid'])
+    place = get_object_or_404(Space, url=space_url)
 
-    if note.author == request.user or has_all_permissions(request.user):
+    if has_operation_permission(request.user, place, 'note.delete_note', \
+		allow=['admins','mods']) or note.author == request.user:
         ctype = ContentType.objects.get_for_model(Note)
         all_comments = Comment.objects.filter(is_public=True,
                 is_removed=False, content_type=ctype,
