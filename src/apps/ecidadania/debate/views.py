@@ -198,8 +198,8 @@ def create_note(request, space_url):
     place = get_object_or_404(Space, url=space_url)
         
     if request.method == "POST" and request.is_ajax:
-	if has_operation_permission(request.user, place, 'note.add_note', \
-			allow=['admins','mods','users']):
+			if has_operation_permission(request.user, place, 'note.add_note', \
+				allow=['admins','mods','users']):
         	if note_form.is_valid():
             		note_form_uncommited = note_form.save(commit=False)
             		note_form_uncommited.author = request.user
@@ -217,7 +217,7 @@ def create_note(request, space_url):
             		response_data['id'] = note_form_uncommited.id
             		response_data['message'] = note_form_uncommited.message
             		response_data['title'] = note_form_uncommited.title
-			msg = "The note has been created."
+					msg = "The note has been created."
             		return HttpResponse(json.dumps(response_data),
                                 		mimetype="application/json")
 
@@ -262,7 +262,7 @@ def update_note(request, space_url):
 
     if request.method == "POST" and request.is_ajax:
     	if has_operation_permission(request.user, place, 'note.change_note',
-			allow=['admins','mods']) or request.user == note.author:
+				allow=['admins','mods']) or request.user == note.author:
         	note = get_object_or_404(Note, pk=request.POST['noteid'])
         	note_form = UpdateNoteForm(request.POST or None, instance=note)
         	if note_form.is_valid():
@@ -295,7 +295,7 @@ def update_position(request, space_url):
 
     if request.method == "POST" and request.is_ajax:
         if has_operation_permission(request.user, place, 'note.change_note', \
-			allow=['admins','mods']) or request.user == note.author:
+					allow=['admins','mods']) or request.user == note.author:
             if position_form.is_valid():
                 position_form_uncommited = position_form.save(commit=False)
                 position_form_uncommited.column = get_object_or_404(Column,
@@ -321,7 +321,7 @@ def delete_note(request, space_url):
     place = get_object_or_404(Space, url=space_url)
 
     if has_operation_permission(request.user, place, 'note.delete_note', \
-		allow=['admins','mods']) or note.author == request.user:
+			allow=['admins','mods']) or note.author == request.user:
         ctype = ContentType.objects.get_for_model(Note)
         all_comments = Comment.objects.filter(is_public=True,
                 is_removed=False, content_type=ctype,
