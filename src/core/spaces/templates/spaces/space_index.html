@@ -353,10 +353,8 @@
                                         <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a>
                                             <a href="{% url 'edit-debate' get_place.url debate.id %}" title="{% trans 'Edit debate' %}">
                                             <i class="icon-edit" style="font-size:16px;"></i></a>
-                                            {% comment %}
                                             <a href="{% url 'delete-debate' get_place.url debate.id %}" title="{% trans 'Delete debate' %}">
                                             <i class="icon-trash" style="font-size:16px;"></i></a>
-                                            {% endcomment %}
                                     {% endif %}
                                 {% empty %}
                                     <li>{% trans "No debates started." %}</li>

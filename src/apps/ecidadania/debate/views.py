@@ -217,7 +217,7 @@ def create_note(request, space_url):
             		response_data['id'] = note_form_uncommited.id
             		response_data['message'] = note_form_uncommited.message
             		response_data['title'] = note_form_uncommited.title
-					msg = "The note has been created."
+					      msg = "The note has been created."
             		return HttpResponse(json.dumps(response_data),
                                 		mimetype="application/json")
 
