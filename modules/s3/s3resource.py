@@ -671,7 +671,7 @@ class S3Resource(object):
             if not groupby or str(field) in gfields:
                 qfields.append(field)
 
-        if distinct or left_joins:
+        if distinct or getids or left_joins:
             if orderby:
                 # For GROUPBY id (which we need here for left joins), we need
                 # all ORDERBY-fields to appear in an aggregation function, or
