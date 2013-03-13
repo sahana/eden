@@ -149,6 +149,7 @@ class ViewSpaceIndex(DetailView):
             .values('object_pk').annotate(score=Count('id')).order_by('-score')
         post_ids = [int(obj['object_pk']) for obj in posts_by_score]
         top_posts = Post.objects.filter(space=place.id).in_bulk(post_ids)
+	print top_posts.values()
         # print top_posts.values()[0].title
         o_list = Comment.objects.annotate(ocount=Count('object_pk'))
 
@@ -161,7 +162,8 @@ class ViewSpaceIndex(DetailView):
                                                     .order_by('-pub_date')[:5]
         context['mostviewed'] = Post.objects.filter(space=place.id) \
                                                     .order_by('-views')[:5]
-        context['mostcommented'] = top_posts
+	print context['mostviewed']
+        context['mostcommented'] = top_posts.values()
         # context['mostcommented'] = sorted(o_list,
         #     key=lambda k: k['ocount'])[:10]
         # print sorted(o_list, key=lambda k: k['ocount'])[:10]
