@@ -1175,7 +1175,7 @@ class S3CRUD(S3Method):
             # Filter-form
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets:
-                from s3search import S3FilterForm
+                from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,

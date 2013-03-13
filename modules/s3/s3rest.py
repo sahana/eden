@@ -31,6 +31,7 @@ import datetime
 import os
 import sys
 import time
+import types
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -756,7 +757,11 @@ class S3Request(object):
         if method not in method_hooks:
             return None
         else:
-            return method_hooks[method]
+            handler = method_hooks[method]
+            if isinstance(handler, (type, types.ClassType)):
+                return handler()
+            else:
+                return handler
 
     # -------------------------------------------------------------------------
     # Request Parser

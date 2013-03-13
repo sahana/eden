@@ -7,7 +7,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
-from s3.s3search import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
 from s3.s3utils import s3_avatar_represent
 
 # =============================================================================

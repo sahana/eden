@@ -85,6 +85,7 @@ from s3forms import *
 
 # Search
 from s3search import *
+from s3filter import *
 
 # Reporting
 from s3report import *

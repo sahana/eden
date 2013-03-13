@@ -262,22 +262,21 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Parse the request
     r = s3_request(prefix, resourcename)
 
-    # Set method handlers
-    method = r.method
+    # Configure standard method handlers
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)
-    set_handler("compose", s3base.S3Compose())
+    set_handler("compose", s3base.S3Compose)
     set_handler("copy", lambda r, **attr: \
-                        redirect(URL(args="create",
-                                     vars={"from_record":r.id})))
-    set_handler("import", s3base.S3Importer())
-    set_handler("map", lambda r, **attr: s3base.S3Map()(r, **attr))
-    set_handler("report", s3base.S3Report())
-    set_handler("deduplicate", s3base.S3Merge())
-
-    if method == "import" and \
-       r.representation == "pdf":
-        # Don't load S3PDF unless needed (very slow import with Reportlab)
+                               redirect(URL(args="create",
+                                            vars={"from_record":r.id})))
+    set_handler("map", s3base.S3Map)
+    set_handler("filter", s3base.S3Filter)
+    set_handler("report", s3base.S3Report)
+    set_handler("deduplicate", s3base.S3Merge)
+    
+    # Don't load S3PDF unless needed (very slow import with Reportlab)
+    method = r.method
+    if method == "import" and r.representation == "pdf":
         from s3.s3pdf import S3PDF
         set_handler("import", S3PDF(),
                     http = ["GET", "POST"],
