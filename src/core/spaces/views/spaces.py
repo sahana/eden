@@ -162,7 +162,6 @@ class ViewSpaceIndex(DetailView):
                                                     .order_by('-pub_date')[:5]
         context['mostviewed'] = Post.objects.filter(space=place.id) \
                                                     .order_by('-views')[:5]
-	print context['mostviewed']
         context['mostcommented'] = top_posts.values()
         # context['mostcommented'] = sorted(o_list,
         #     key=lambda k: k['ocount'])[:10]
