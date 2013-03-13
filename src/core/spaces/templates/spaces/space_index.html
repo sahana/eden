@@ -330,7 +330,7 @@
                             <h4>{% trans "Most commented" %}</h4>
                                 {% for c in mostcommented %}
                                     <ul class="unstyled">
-                                        <li><a href="{% url 'view-post' get_place.url c %}">{{ c }}</a></li>
+                                        <li><a href="{% url 'view-post' get_place.url c.id %}">{{ c.title }}</a></li>
                                     </ul>
                                 {% endfor %}
                             <h4>{% trans "View monthly archive" %}</h4>
