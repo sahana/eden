@@ -315,7 +315,7 @@ S3.search.toggleMapClearButton = function(event) {
 };
 
 // ============================================================================
-// New search framework
+// New search framework (S3FilterForm aka "filtered GETs")
 
 /*
  * quoteValue: add quotes to values which contain commas, escape quotes
@@ -333,10 +333,12 @@ S3.search.quoteValue = function(value) {
 }
 
 /*
- * filterURL: add all current filters to a URL
+ * getCurrentFilters: retrieve all current filters
  */
-S3.search.filterURL = function(url) {
+S3.search.getCurrentFilters = function() {
 
+    // @todo: allow form selection (=support multiple filter forms per page)
+    
     var queries = [];
 
     // Text widgets
@@ -479,14 +481,38 @@ S3.search.filterURL = function(url) {
 
     // Other widgets go here...
 
+    // return queries to caller
+    return queries;
+};
+
+/*
+ * filterURL: add filters to a URL
+ * @note: this removes+replaces all existing filters in the URL query
+ */
+S3.search.filterURL = function(url, queries) {
+
     // Construct the URL
     var url_parts = url.split('?'), url_query = queries.join('&');
     if (url_parts.length > 1) {
-        if (url_query) {
-            url_query = url_query + '&' + url_parts[1];
-        } else {
-            url_query = url_parts[1];
+        var qstr = url_parts[1], query = {};
+        var a = qstr.split('&'), v, i;
+        for (i=0; i<a.length; i++) {
+            var b = a[i].split('=');
+            if (b.length > 1 && b[0].search(/\./) == -1) {
+                query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
+            }
         }
+        for (i=0; i<queries.length; i++) {
+            v = queries[i].split('=');
+            if (v.length > 1) {
+                query[v[0]] = v[1];
+            }
+        }
+        var url_queries = [], url_query;
+        for (v in query) {
+            url_queries.push(v + '=' + query[v]);
+        }
+        url_query = url_queries.join('&');
     }
     var filtered_url = url_parts[0];
     if (url_query) {
@@ -495,31 +521,10 @@ S3.search.filterURL = function(url) {
     return filtered_url;
 };
 
-// New Search Framework
+/*
+ * S3FilterForm: document-ready script
+ */
 $(document).ready(function() {
-
-//     $('.filter-request').click(function() {
-//         var url = $(this).next('input[type="hidden"]').val(),
-//             loc = document.location,
-//             queries = [],
-//             url_parts = url.split('?');
-// 
-//         if (url_parts.length > 1) {
-//             queries.push(url_parts[1]);
-//         }
-//         if (loc.search) {
-//             queries.push(loc.search.slice(1));
-//         }
-//         var base_url = url_parts[0];
-// 
-//         if (queries.length > 0) {
-//             var query = queries.join('&');
-//             url = base_url + '?' + query;
-//         } else {
-//             url = base_url;
-//         }
-//         window.location.href = url;
-//     });
 
     // Activate drop-down checklist widgets:
     
@@ -690,6 +695,7 @@ $(document).ready(function() {
         }
     });
 
+    // Filter-form submission
     $('.filter-submit').click(function() {
         try {
             // Update Map results URL
@@ -720,11 +726,23 @@ $(document).ready(function() {
                 }
             });
         } catch(err) {}
-        // Server-side page refresh
-        // @ToDo: AJAX request instead
-        var url = $(this).next('input[type="hidden"]').val();
-        // Update URL
-        url = S3.search.filterURL(url);
-        window.location.href = url;
+        
+        var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val();
+        var queries = S3.search.getCurrentFilters();
+        
+        if ($(this).hasClass('filter-ajax')) {
+            // Ajax-refresh the target object (@todo: support multiple)
+            var target = $(this).nextAll('input.filter-submit-target[type="hidden"]').val();
+            if ($('#' + target).hasClass('dl')) {
+                dlAjaxReload(target, queries);
+            } else {
+                url = S3.search.filterURL(url, queries);
+                window.location.href = url;
+            }
+        } else {
+            // Page reload
+            url = S3.search.filterURL(url, queries);
+            window.location.href = url;
+        }
     });
 });

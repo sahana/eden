@@ -1153,8 +1153,10 @@ class S3CRUD(S3Method):
             # Data
             list_type = attr.get("list_type", "datatable")
             if list_type == "datalist":
+                filter_ajax = True
                 output = self._datalist(r, **attr)
             else:
+                filter_ajax = False
                 output = self._datatable(r, **attr)
 
             if r.representation in ("aadata", "dl"):
@@ -1179,11 +1181,14 @@ class S3CRUD(S3Method):
                 filter_form = S3FilterForm(filter_widgets,
                                            formstyle=filter_formstyle,
                                            submit=filter_submit,
+                                           ajax=filter_ajax,
                                            url=r.url(vars={}),
                                            _class="filter-form")
                 fresource = current.s3db.resource(resource.tablename)
+                target = "datalist"
                 output["list_filter_form"] = filter_form.html(fresource,
-                                                              r.get_vars)
+                                                              r.get_vars,
+                                                              target=target)
             else:
                 # Render as empty string to avoid the exception in the view
                 output["list_filter_form"] = ""

@@ -3886,7 +3886,7 @@ class S3FilterForm(object):
         self.opts = options
 
     # -------------------------------------------------------------------------
-    def html(self, resource, get_vars=None):
+    def html(self, resource, get_vars=None, target=None):
         """
             Render this filter form as HTML
 
@@ -3922,6 +3922,9 @@ class S3FilterForm(object):
         submit = self.opts.get("submit", False)
         if submit:
             _class = "filter-submit"
+            ajax = self.opts.get("ajax", False)
+            if ajax:
+                _class = "%s filter-ajax" % _class
             if submit is True:
                 label = current.T("Search")
             elif isinstance(submit, (list, tuple)):
@@ -3935,7 +3938,13 @@ class S3FilterForm(object):
                               _value=label,
                               _class=_class),
                         INPUT(_type="hidden",
+                              _class="filter-submit-url",
                               _value=url))
+
+            if ajax and target:
+                submit.append(INPUT(_type="hidden",
+                                    _class="filter-submit-target",
+                                    _value=target))
 
             rappend(formstyle(None, "", submit, ""))
 
