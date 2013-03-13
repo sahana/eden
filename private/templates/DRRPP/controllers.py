@@ -88,24 +88,28 @@ class index():
 
         appname = request.application
         s3 = response.s3
-        append = s3.scripts.append
-        append("/%s/static/themes/DRRPP/js/jquery.easing.1.3.js" % appname)
         if current.session.s3.debug:
-            append("/%s/static/themes/DRRPP/js/camera.js" % appname)
+            s3.scripts.append("/%s/static/themes/DRRPP/js/slides.jquery.js" % appname)
         else:
-            append("/%s/static/themes/DRRPP/js/camera.min.js" % appname)
-        append = s3.jquery_ready.append
-        append('''
-$('#front-slides').camera({
- thumbnails:false,
- autoAdvance:true,
- fx:'simpleFade',
- pagination:false,
- navigationHover:true,
- playPause:false,
- time:8000,
- piePosition:'leftTop',
- height:'310px'
+            s3.scripts.append("/%s/static/themes/DRRPP/js/slides.min.jquery.js" % appname)
+        s3.jquery_ready.append('''
+$('#slides').slides({
+ play:8000,
+ animationStart:function(current){
+  $('.caption').animate({
+   bottom:-35
+  },100);
+ },
+ animationComplete:function(current){
+  $('.caption').animate({
+   bottom:0
+  },200);
+ },
+ slidesLoaded:function() {
+  $('.caption').animate({
+   bottom:0
+  },200);
+ }
 })''')
 
         return dict(title = "Home",

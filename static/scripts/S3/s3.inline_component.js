@@ -668,11 +668,43 @@ $(function() {
     inline_button_events();
 
     // Used by S3SQLInlineComponentCheckbox
+    if ($('.error_wrapper').length) {
+        // Errors in form, so ensure we show correct checkbox status
+        var checkboxes = $('.inline-checkbox :checkbox');
+        var that, value, names, formname, fieldname, data, _data, item, i;
+        for (var c = 0; c < checkboxes.length; c++) {
+            that = $(checkboxes[c]);
+            value = that.val();
+            names = that.attr('id').split('-');
+            formname = names[1];
+            fieldname = names[2];
+            // Read current data from real input
+            data = inline_deserialize(formname);
+            _data = data['data'];
+            item = 0;
+            for (var prop in _data) {
+                i = _data[prop];
+                if (i.hasOwnProperty(fieldname) && i[fieldname]['value'] == value) {
+                    item = i;
+                    break;
+                }
+            }
+            // Modify checkbox state, as-required
+            if (item) {
+                if (item['_changed']) {
+                    that.prop('checked', true);
+                } else if (item['_delete']) {
+                    that.prop('checked', false);
+                }
+            }
+        }
+    }
     var inline_checkbox_events = function() {
         // Listen for changes on all Inline Checkboxes
         $('.inline-checkbox :checkbox').click(function() {
-            var value = $(this).val();
-            var names = $(this).attr('id').split('-');
+            var that = $(this);
+            var value = that.val();
+            var names = that.attr('id').split('-');
             var formname = names[1];
             var fieldname = names[2];
             // Read current data from real input
@@ -687,10 +719,10 @@ $(function() {
                 }
             }
             // Modify data
-            if ($(this).prop('checked')) {
+            if (that.prop('checked')) {
                 if (!item) {
                     // Not yet found, so initialise
-                    var label = $(this).next().html(); // May be fragile to different formstyles :/
+                    var label = that.next().html(); // May be fragile to different formstyles :/
                     item = {};
                     item[fieldname] = {'text': label, 'value': value};
                     _data.push(item);
