@@ -447,7 +447,6 @@ S3OptionsFilter({
                         label=T("Year"),
                         comment=T("Search for an item by Year of Manufacture."),
                         field="year",
-                        #represent ="%(name)s",
                         cols = 1
                       ),
                    ],
@@ -1705,9 +1704,6 @@ def supply_item_controller():
     s3.prep = prep
 
     return current.rest_controller("supply", "item",
-                                   # Need to be explicit since can also come from Asset controller
-                                   csv_template=("supply", "item"),
-                                   csv_stylesheet=("supply", "item.xsl"),
                                    rheader=s3db.supply_item_rheader)
 
 # =============================================================================

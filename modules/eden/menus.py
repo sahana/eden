@@ -469,7 +469,7 @@ class S3OptionsMenu(object):
                         M("List All"),
                         M("Search", m="search"),
                         M("Report", m="report"),
-                        M("Import", m="import", p="create"),
+                        M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", f="item_category",
                       restrict=[ADMIN])(

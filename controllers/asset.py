@@ -84,6 +84,18 @@ def item():
     return s3db.supply_item_controller()
 
 # -----------------------------------------------------------------------------
+def catalog_item():
+    """
+        RESTful CRUD controller
+        - used for Imports
+    """
+
+    return s3_rest_controller("supply", "catalog_item",
+                              csv_template=("supply", "catalog_item"),
+                              csv_stylesheet=("supply", "catalog_item.xsl"),
+                              )
+
+# -----------------------------------------------------------------------------
 def item_category():
     """ RESTful CRUD controller """
 
