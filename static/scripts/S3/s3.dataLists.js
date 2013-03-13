@@ -4,6 +4,9 @@
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  */
 
+/*
+ * dlURLAppend: Helper function to extend a URL with a query
+ */
 function dlURLAppend(url, query) {
     // Append extra query elements to a URL
     
@@ -22,29 +25,40 @@ function dlURLAppend(url, query) {
     }
 }
 
-function dlAjaxRemoveItemBindEvents() {
-    // Bind the click-event handler to dl-item-delete elements
+/*
+ * dlItemBindEvents: Bind event handlers for item actions
+ */
+function dlItemBindEvents() {
 
+    // Click-event for dl-item-delete
     $('.dl-item-delete').css({cursor: 'pointer'});
     $('.dl-item-delete').unbind('click');
     $('.dl-item-delete').click(function(event) {
         if (confirm(i18n.delete_confirmation)) {
-            dlAjaxRemoveItem(this);
+            dlAjaxDeleteItem(this);
             return true;
         } else {
             event.preventDefault();
             return false;
         }
     });
+
+    // Modals
+    S3.addModals();
 }
 
+/*
+ * dlAutoRetrieve: Force retrieval of the next scroll page
+ */
 function dlAutoRetrieve(item) {
     // Force page retrieval
     $(item).closest('.dl').infinitescroll('retrieve');
 }
 
+/*
+ * dlAjaxReloadItem: Ajax-reload a single item in a datalist (e.g. after update)
+ */
 function dlAjaxReloadItem(list_id, record_id) {
-    // Ajax-reload a single item in a datalist (e.g. after update)
 
     datalist = '#' + list_id;
     var item_id = '#' + list_id + '-' + record_id;
@@ -76,8 +90,7 @@ function dlAjaxReloadItem(list_id, record_id) {
             if (item_data.length) {
                 $(item).replaceWith(item_data);
             }
-            dlAjaxRemoveItemBindEvents();
-            S3.addModals();
+            dlItemBindEvents();
         },
         'error': function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
@@ -91,8 +104,10 @@ function dlAjaxReloadItem(list_id, record_id) {
     });
 }
 
-function dlAjaxRemoveItem(anchor) {
-    // Ajax-delete and remove an item from the list
+/*
+ * dlAjaxDeleteItem: Ajax-delete an item from a datalist
+ */
+function dlAjaxDeleteItem(anchor) {
 
     var item = $(anchor).closest('.dl-item');
     if (!item.length) {
@@ -139,8 +154,10 @@ function dlAjaxRemoveItem(anchor) {
     });
 }
 
+/*
+ * dlAjaxReload: Force Ajax-reload of a datalist
+ */
 function dlAjaxReload(list_id, filters) {
-    // Reload the data list (also resets pagination to page #1)
 
     datalist = $('#' + list_id);
     if (!datalist.length) {
@@ -157,6 +174,8 @@ function dlAjaxReload(list_id, filters) {
     // Read dl_data
     var startindex = dl_data['startindex'],
         pagesize = dl_data['pagesize'],
+        maxitems = dl_data['maxitems'],
+        totalitems = dl_data['totalitems'],
         ajaxurl = dl_data['ajaxurl'];
 
     if (filters) {
@@ -183,8 +202,13 @@ function dlAjaxReload(list_id, filters) {
             $(datalist).infinitescroll('destroy');
             $(datalist).data('infinitescroll', null);
             if (newlist.length) {
-                // @todo: update total items appropriately
-                $(datalist).empty().append(newlist);
+                var pagination_new = $(newlist).find('input.dl-pagination');
+                if (pagination_new.length) {
+                    var dl_data_new = JSON.parse($(pagination_new[0]).val());
+                    dl_data['totalitems'] = dl_data_new['totalitems'];
+                    $(pagination[0]).val(JSON.stringify(dl_data));
+                }
+                $(datalist).empty().html(newlist.html());
                 $(datalist).find('input.dl-pagination').replaceWith(pagination);
             } else {
                 // List is empty
@@ -198,8 +222,7 @@ function dlAjaxReload(list_id, filters) {
                 $(this).addClass('autoretrieve');
                 dlAutoRetrieve(this);
             });
-            dlAjaxRemoveItemBindEvents();
-            S3.addModals();
+            dlItemBindEvents();
         },
         'error': function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
@@ -213,8 +236,10 @@ function dlAjaxReload(list_id, filters) {
     });
 }
 
+/*
+ * dlInfiniteScroll: activate infinite scroll pagination
+ */
 function dlInfiniteScroll(datalist) {
-    // Activate infinite scroll pagination
 
     var pagination = $(datalist).find('input.dl-pagination');
     if (!pagination.length) {
@@ -226,13 +251,18 @@ function dlInfiniteScroll(datalist) {
     // Read dl_data
     var startindex = dl_data['startindex'],
         maxitems = dl_data['maxitems'],
+        totalitems = dl_data['totalitems'],
         pagesize = dl_data['pagesize'],
         ajaxurl = dl_data['ajaxurl'];
 
     if (pagesize === null) {
         // No pagination
+        pagination.closest('.dl-navigation').css({display:'none'});
         return;
     }
+
+    // Cannot retrieve more items than there are totally available
+    maxitems = Math.min(maxitems, totalitems - startindex);
 
     // Compute bounds
     var maxindex = startindex + maxitems,
@@ -280,27 +310,32 @@ function dlInfiniteScroll(datalist) {
                         }
                     });
                 });
-                // Re-bind the click-event to newly loaded dl-item-delete's
-                dlAjaxRemoveItemBindEvents();
-                S3.addModals();
+                dlItemBindEvents();
             }
         );
     }
 }
 
+/*
+ * DataLists document-ready script
+ */
 $(document).ready(function() {
 
+    // Initialize infinite scroll
     $('.dl').each(function() {
         dlInfiniteScroll(this);
     });
+
+    // Auto-retrieve paginated lists which don't reach their view-port bottom
     $('.dl').each(function() {
         $(this).find('.dl-item:last:in-viewport').each(function() {
             $(this).addClass('autoretrieve');
             dlAutoRetrieve(this);
         });
     });
-    dlAjaxRemoveItemBindEvents();
-    S3.addModals();
+
+    // Bind events for newly loaded items
+    dlItemBindEvents();
 });
 
 // END ========================================================================

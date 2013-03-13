@@ -913,6 +913,7 @@ class S3DataList(object):
         dl_data = {
             "startindex": start,
             "maxitems": limit,
+            "totalitems": self.total,
             "pagesize": pagesize,
             "ajaxurl": ajaxurl
         }
@@ -929,12 +930,6 @@ class S3DataList(object):
                     _class="dl-navigation"))
 
         return dl
-
-    # ---------------------------------------------------------------------
-    def json(self):
-        """ Render list data as JSON (for Ajax pagination) """
-
-        raise NotImplementedError
 
     # ---------------------------------------------------------------------
     def render(self, rfields, record, **attr):

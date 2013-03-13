@@ -315,7 +315,7 @@ S3.search.toggleMapClearButton = function(event) {
 };
 
 // ============================================================================
-// New search framework
+// New search framework (S3FilterForm aka "filtered GETs")
 
 /*
  * quoteValue: add quotes to values which contain commas, escape quotes
@@ -335,8 +335,9 @@ S3.search.quoteValue = function(value) {
 /*
  * getCurrentFilters: retrieve all current filters
  */
+S3.search.getCurrentFilters = function() {
 
-S3.search.getCurrentFilters = function(url) {
+    // @todo: allow form selection (=support multiple filter forms per page)
     
     var queries = [];
 
@@ -485,7 +486,8 @@ S3.search.getCurrentFilters = function(url) {
 };
 
 /*
- * filterURL: add all current filters to a URL
+ * filterURL: add filters to a URL
+ * @note: this removes+replaces all existing filters in the URL query
  */
 S3.search.filterURL = function(url, queries) {
 
@@ -519,31 +521,10 @@ S3.search.filterURL = function(url, queries) {
     return filtered_url;
 };
 
-// New Search Framework
+/*
+ * S3FilterForm: document-ready script
+ */
 $(document).ready(function() {
-
-//     $('.filter-request').click(function() {
-//         var url = $(this).next('input[type="hidden"]').val(),
-//             loc = document.location,
-//             queries = [],
-//             url_parts = url.split('?');
-// 
-//         if (url_parts.length > 1) {
-//             queries.push(url_parts[1]);
-//         }
-//         if (loc.search) {
-//             queries.push(loc.search.slice(1));
-//         }
-//         var base_url = url_parts[0];
-// 
-//         if (queries.length > 0) {
-//             var query = queries.join('&');
-//             url = base_url + '?' + query;
-//         } else {
-//             url = base_url;
-//         }
-//         window.location.href = url;
-//     });
 
     // Activate drop-down checklist widgets:
     
@@ -714,6 +695,7 @@ $(document).ready(function() {
         }
     });
 
+    // Filter-form submission
     $('.filter-submit').click(function() {
         try {
             // Update Map results URL
@@ -745,11 +727,11 @@ $(document).ready(function() {
             });
         } catch(err) {}
         
-        // Server-side page refresh
-        // @ToDo: AJAX request instead
         var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val();
         var queries = S3.search.getCurrentFilters();
+        
         if ($(this).hasClass('filter-ajax')) {
+            // Ajax-refresh the target object (@todo: support multiple)
             var target = $(this).nextAll('input.filter-submit-target[type="hidden"]').val();
             if ($('#' + target).hasClass('dl')) {
                 dlAjaxReload(target, queries);
@@ -758,7 +740,7 @@ $(document).ready(function() {
                 window.location.href = url;
             }
         } else {
-            // Update URL
+            // Page reload
             url = S3.search.filterURL(url, queries);
             window.location.href = url;
         }
