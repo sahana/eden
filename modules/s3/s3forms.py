@@ -2579,16 +2579,15 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         if data is None:
             raise SyntaxError("No resource structure information")
 
-        if "script" in self.options:
-            current.response.s3.jquery_ready.append(self.options.script)
-
         T = current.T
+        opts = self.options
 
-        if "cols" in self.options:
-            cols = self.options.cols
-        else:
-            cols = 1
+        cols = opts.get("cols", 1)
 
+        script = opts.get("script", None)
+        if script:
+            current.response.s3.jquery_ready.append(script)
+        
         field_name = field.name
 
         # Get the component resource
@@ -2607,8 +2606,14 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         query = (table.deleted == False) & \
                 current.auth.s3_accessible_query("read", table)
 
-        if "filter" in self.options:
-            filter = self.options.filter
+        option_help = opts.get("option_help", None)
+        if option_help:
+            fields = [table.id, table.name, table[option_help]]
+        else:
+            fields = [table.id, table.name]
+
+        filter = opts.get("script", None)
+        if filter:
             s3db = current.s3db
             linktable = s3db[filter["linktable"]]
             lkey = filter["lkey"]
@@ -2671,11 +2676,10 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             rows = []
             rappend = rows.append
             # All rows, whether or not in the link table
-            srows = current.db(query).select(table.id,
-                                             table.name,
-                                             linktable[rkey],
-                                             left=linktable.on(linktable[lkey] == table.id),
-                                             orderby=table.name)
+            fields.append(linktable[rkey])
+            srows = current.db(query).select(left=linktable.on(linktable[lkey] == table.id),
+                                             orderby=table.name,
+                                             *fields)
             for r in srows:
                 v = r[linktable][rkey]
                 # We want all all rows which have no entry in the linktable (no restrictions)
@@ -2684,11 +2688,12 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     _r = r[table]
                     record = Storage(id = _r.id,
                                      name = _r.name)
+                    if option_help:
+                        record[option_help] = _r[option_help]
                     rappend(record)
         else:
-            rows = current.db(query).select(table.id,
-                                            table.name,
-                                            orderby=table.name)
+            rows = current.db(query).select(orderby=table.name,
+                                            *fields)
         if not rows:
             widget = T("No options currently available")
         else:
@@ -2702,6 +2707,8 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 options[r.id] = dict(name=r.name,
                                      selected=False,
                                      editable=creatable)
+                if option_help:
+                    options[r.id]["help"] = r[option_help]
 
             # Which ones are currently selected?
             items = data["data"]
@@ -2736,11 +2743,17 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
             row_index = 0
             col_index = 0
-            
+
             for id in options:
-                option = options[id]
-                label = T(option["name"])
                 input_id = "id-%s-%s-%s" % (field_name, row_index, col_index)
+                option = options[id]
+                label = LABEL(T(option["name"]),
+                              _for=input_id,
+                              )
+                title = option.get("help", None)
+                if title:
+                    # Add help tooltip
+                    label["_title"] = title
                 widget = TD(INPUT(_disabled= not option["editable"],
                                   _id=input_id,
                                   _name=field_name,
@@ -2749,9 +2762,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                                   hideerror=True,
                                   value=option["selected"],
                                   ),
-                            LABEL(label,
-                                  _for=input_id,
-                                  )
+                            label,
                             )
                 table[row_index].append(widget)
                 row_index += 1
