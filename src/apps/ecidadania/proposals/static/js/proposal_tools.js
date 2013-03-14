@@ -23,16 +23,17 @@ var toProjection   = new OpenLayers.Projection("EPSG:900913");
 function toggleMap() {
     /* toggleMap() - Show or hide the map div. */
 
-    $("#showmap").toggle(
-        function() {
-            $("#map").show();
+    $('#showmap').click( function() {
+        $('#map').slideToggle(500);
+        if ($('#map').data("show")=="no") {
             $("#showmap").text(hidemap);
-        },
-        function() {
-            $("#map").hide();
-            $("#showmap").text(showmap);
+            $('#map').data("show","yes");
         }
-    )
+        else {
+            $("#showmap").text(showmap);
+            $('#map').data("show","no");     
+        }
+    })
 }
 
 function clickMap() {
@@ -133,8 +134,8 @@ function viewMap(lat, lon) {
     MAIN LOOP
 ********************/
 
-$(document).ready(function() {
-     clickMap();
-     startMap();
-     toggleMap();
- });
+// $(document).ready(function() {
+//      clickMap();
+//      startMap();
+//      toggleMap();
+//  });
