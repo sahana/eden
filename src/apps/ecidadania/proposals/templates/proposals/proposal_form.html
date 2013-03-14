@@ -145,12 +145,12 @@ automatically if found in the data models.
 
             <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/proposal_tools.js"></script>
-            <script type="text/javascript">clickMap();startMap();toggleMap();</script>
+            <script type="text/javascript">clickMap();startMap();</script>
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
             <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />
         </form>
     </div>
 </div>
-
+</br>
 {% endblock %}

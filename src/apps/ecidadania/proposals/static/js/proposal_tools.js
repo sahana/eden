@@ -133,8 +133,8 @@ function viewMap(lat, lon) {
     MAIN LOOP
 ********************/
 
-// $(document).ready(function() {
-//     clickMap();
-//     startMap();
-//     toggleMap();
-// });
+$(document).ready(function() {
+     clickMap();
+     startMap();
+     toggleMap();
+ });
