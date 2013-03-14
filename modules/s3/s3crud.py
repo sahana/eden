@@ -1154,9 +1154,11 @@ class S3CRUD(S3Method):
             list_type = attr.get("list_type", "datatable")
             if list_type == "datalist":
                 filter_ajax = True
+                target = "datalist"
                 output = self._datalist(r, **attr)
             else:
                 filter_ajax = False
+                target = "datatable"
                 output = self._datatable(r, **attr)
 
             if r.representation in ("aadata", "dl"):
@@ -1175,6 +1177,16 @@ class S3CRUD(S3Method):
             # Filter-form
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets:
+
+                # Where to retrieve filtered data from:
+                filter_submit_url = attr.get("filter_submit_url",
+                                             r.url(vars={}))
+                # Where to retrieve updated filter options from:
+                filter_ajax_url = attr.get("filter_ajax_url",
+                                           r.url(method="filter",
+                                                 vars={},
+                                                 representation="json"))
+
                 from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
@@ -1182,10 +1194,11 @@ class S3CRUD(S3Method):
                                            formstyle=filter_formstyle,
                                            submit=filter_submit,
                                            ajax=filter_ajax,
-                                           url=r.url(vars={}),
-                                           _class="filter-form")
+                                           url=filter_submit_url,
+                                           ajaxurl=filter_ajax_url,
+                                           _class="filter-form",
+                                           _id="%s-filter-form" % target)
                 fresource = current.s3db.resource(resource.tablename)
-                target = "datalist"
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               r.get_vars,
                                                               target=target)

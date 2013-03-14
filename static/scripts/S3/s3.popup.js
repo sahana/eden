@@ -24,6 +24,11 @@ function s3_popup_refresh_main_form() {
                 self.parent.dlAjaxReload(refresh);
             }
         }
+        // Also update the options in the filter-form for this target (if any)
+        var filterform = self.parent.$('#' + refresh + '-filter-form');
+        if (filterform.length) {
+            self.parent.S3.search.ajaxUpdateOptions(filterform);
+        }
         // Remove popup
         self.parent.s3_popup_remove();
         return;

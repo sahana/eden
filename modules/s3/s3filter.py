@@ -1135,14 +1135,20 @@ class S3FilterForm(object):
                 _class = "%s %s" % (submit[1], _class)
             else:
                 label = submit
-            url = self.opts.get("url", URL(vars={}))
+            # Where to request filtered data from:
+            submit_url = self.opts.get("url", URL(vars={}))
+            # Where to request updated options from:
+            ajax_url = self.opts.get("ajaxurl", URL(args=["filter.json"], vars={}))
             submit = TAG[""](
                         INPUT(_type="button",
                               _value=label,
                               _class=_class),
                         INPUT(_type="hidden",
+                              _class="filter-ajax-url",
+                              _value=ajax_url),
+                        INPUT(_type="hidden",
                               _class="filter-submit-url",
-                              _value=url))
+                              _value=submit_url))
 
             if ajax and target:
                 submit.append(INPUT(_type="hidden",

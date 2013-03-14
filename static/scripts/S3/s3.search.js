@@ -522,6 +522,74 @@ S3.search.filterURL = function(url, queries) {
 };
 
 /*
+ * updateOptions: Update the options of all filter widgets
+ */
+S3.search.updateOptions = function(options) {
+
+    for (filter_id in options) {
+        var widget = $('#' + filter_id);
+        if (widget.length) {
+            var newopts = options[filter_id], i;
+
+            // OptionsFilter
+            if ($(widget).hasClass('options-filter')) {
+                if ($(widget)[0].tagName.toLowerCase() == 'select') {
+                    // Standard SELECT
+                    var selected = $(widget).val(), k, v, s=[], opts='';
+                    for (i=0; i<newopts.length; i++) {
+                        k = newopts[i][0].toString();
+                        v = newopts[i][1];
+                        if (selected && $.inArray(k, selected) >= 0) {
+                            s.push(k);
+                        }
+                        opts += '<option value="' + k + '">' + v + '</option>';
+                    }
+                    $(widget).html(opts);
+                    if (s) {
+                        $(widget).val(s);
+                    }
+                    if (typeof(widget.multiselect) !== undefined) {
+                        widget.multiselect('refresh');
+                    }
+                } else {
+                    // other widget types of options filter (e.g. grouped_checkboxes)
+                }
+
+            } else {
+                // @todo: other filter types (e.g. S3LocationFilter)
+            }
+        }
+    }
+};
+
+/*
+ * ajaxUpdateOptions: Ajax-update the options in a filter form
+ */
+S3.search.ajaxUpdateOptions = function(form) {
+
+    // Ajax-load the item
+    var ajaxurl = $(form).find('input.filter-ajax-url');
+    if (ajaxurl.length) {
+        ajaxurl = $(ajaxurl[0]).val();
+    }
+    $.ajax({
+        'url': ajaxurl,
+        'success': function(data) {
+            S3.search.updateOptions(data);
+        },
+        'error': function(request, status, error) {
+            if (error == 'UNAUTHORIZED') {
+                msg = i18n.gis_requires_login;
+            } else {
+                msg = request.responseText;
+            }
+            console.log(msg);
+        },
+        'dataType': 'json'
+    });
+};
+
+/*
  * S3FilterForm: document-ready script
  */
 $(document).ready(function() {
