@@ -265,6 +265,35 @@ div.card-holder {
 div.span5.card-details {
     margin-left: 7px;
 }
+
+div.card-holder div.edit-bar.fright {
+    color: #8A8989;
+    font-size: 14px;
+}
+div.card-holder div.edit-bar.fright {
+    color: #8A8989;
+    font-size: 14px;
+}
+div.card-holder span.date-title {
+	font: 11px "Helvetica Neue",Arial,sans-serif;
+	list-style: none outside none;
+	text-decoration: none;
+	text-transform: none;
+	color: #999;	
+}
+div.card-holder span.card-title {
+	font-size: 14px;
+}
+div.card-holder span.location-title {
+	font: bold 13px "Helvetica Neue", Arial,sans-serif;
+	color: #333333;
+    padding: 0;
+}
+div.card-holder p.card_comments {
+	font: 13px/17px "Georgia",Times;
+	color: #5c5c5c;
+	padding-top: 2px;
+}
 p.citation {
     clear: left;
     float: left;
