@@ -546,9 +546,137 @@ class S3LocationFilter(S3FilterWidget):
             @param values: the search values from the URL query
         """
 
+        attr = self._attr(resource)
+        opts = self.opts
+        name = attr["_name"]
+
+        ftype, levels, noopt = self._options(resource)
+        if noopt:
+            return SPAN(noopt, _class="no-options-available")
+
+        # Filter class (default+custom)
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (_class, attr["_class"])
+        attr["_class"] = _class
+
+        # Store id and name for the data element
+        base_id = attr["_id"]
+        base_name = attr["_name"]
+
+        widgets = []
+        w_append = widgets.append
+        operator = self.operator
+        field_name = self.field
+
+        # @ToDo: Hide dropdowns other than first
+        if opts.widget == "multiselect":
+
+            # Multiselect Dropdown with Checkboxes
+            if "multiselect-filter-widget" not in _class:
+                attr["_class"] = "%s multiselect-filter-widget" % _class
+
+            # Add one widget per level
+            for level in levels:
+                # Dummy field
+                name = "%s-%s" % (base_name, level)
+                options = levels[level]["options"]
+                options.sort()
+                dummy_field = Storage(name=name,
+                                      type=ftype,
+                                      requires=IS_IN_SET(options,
+                                                         multiple=True))
+                # Unique ID/name
+                attr["_id"] = "%s-%s" % (base_id, level)
+                attr["_name"] = name
+                # Find relevant values to pre-populate the widget
+                _values = values["~.%s$%s__%s" % (field_name, level, operator)]
+                w = S3MultiSelectWidget(filter = opts.get("filter", False),
+                                        header = opts.get("header", False),
+                                        selectedList = opts.get("selectedList", 3),
+                                        noneSelectedText = "Select %s" % levels[level]["label"])
+                widget = w(dummy_field, _values, **attr)
+                w_append(widget)
+
+        else:
+
+            # Grouped Checkboxes
+            if "s3-checkboxes-widget" not in _class:
+                attr["_class"] = "%s s3-checkboxes-widget" % _class
+            attr["cols"] = opts["cols"]
+
+            # Add one widget per level
+            for level in levels:
+                # Dummy field
+                name = "%s-%s" % (base_name, level)
+                options = levels[level]["options"]
+                options.sort()
+                dummy_field = Storage(name=name,
+                                      type=ftype,
+                                      requires=IS_IN_SET(options,
+                                                         multiple=True))
+                # Unique ID/name
+                attr["_id"] = "%s-%s" % (base_id, level)
+                attr["_name"] = name
+                # Find relevant values to pre-populate
+                _values = values["~.%s$%s__%s" % (field_name, level, operator)]
+                w_append(s3_grouped_checkboxes_widget(dummy_field,
+                                                      _values,
+                                                      **attr))
+
+        # Restore id and name for the data_element
+        attr["_id"] = base_id
+        attr["_name"] = base_name
+
+        # Render the filter widget
+        return TAG[""](*widgets)
+
+    # -------------------------------------------------------------------------
+    def data_element(self, variable):
+        """
+            Prototype method to construct the hidden element that holds the
+            URL query term corresponding to an input element in the widget.
+
+            @param variable: the URL query variable
+        """
+
+        output = []
+        oappend = output.append
+        i = 0
+        for level in self.levels:
+            widget = INPUT(_type="hidden",
+                           _id="%s-%s-data" % (self.attr["_id"], level),
+                           _class="filter-widget-data %s-data" % self._class,
+                           _value=variable[i])
+            oappend(widget)
+            i += 1
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def ajax_options(self, resource):
+
+        attr = self._attr(resource)
+        ftype, levels, noopt = self._options(resource)
+
+        opts = {}
+        base_id = attr["_id"]
+        for level in levels:
+            if noopt:
+                opts["%s-%s" % (base_id, level)] = noopt
+            else:
+                options = levels[level]["options"]
+                options.sort()
+                opts["%s-%s" % (base_id, level)] = options
+        return opts
+
+    # -------------------------------------------------------------------------
+    def _options(self, resource):
+
         T = current.T
 
         EMPTY = T("None")
+        NOOPT = T("No options available")
 
         attr = self.attr
         opts = self.opts
@@ -575,7 +703,7 @@ class S3LocationFilter(S3FilterWidget):
         rfield = S3ResourceField(resource, field_name)
         field = rfield.field
         colname = rfield.colname
-        field_type = "reference gis_location"
+        ftype = "reference gis_location"
         fields = [field_name]
         fappend = fields.append
         for level in levels:
@@ -589,8 +717,7 @@ class S3LocationFilter(S3FilterWidget):
 
         # No options?
         if not rows:
-            msg = attr.get("_no_opts", T("No options available"))
-            return SPAN(msg, _class="no-options-available")
+            return (ftype, levels.keys(), opts.get("no_opts", NOOPT))
 
         # Intialise Options Storage & Hierarchy
         hierarchy = {}
@@ -643,102 +770,11 @@ class S3LocationFilter(S3FilterWidget):
                             parent = v
                     i += 1
 
-        # Construct HTML classes for the widget
-        if "_class" in attr and attr["_class"]:
-            _class = "%s %s %s" % (attr["_class"],
-                                   "s3-checkboxes-widget",
-                                   self._class)
-        else:
-            _class = "%s %s" % ("s3-checkboxes-widget", self._class)
-
-        attr["_class"] = _class
-        attr["cols"] = opts["cols"]
-
-        widgets = []
-        w_append = widgets.append
-        base_id = attr["_id"]
-        base_name = attr["_name"]
-        operator = self.operator
-        # @ToDo: Hide dropdowns other than first
-        if opts.widget == "multiselect":
-            # Multiselect Dropdown with Checkboxes
-            _class = attr.get("_class", None)
-            if _class:
-                if "multiselect-filter-widget" not in _class:
-                    attr["_class"] = "%s multiselect-filter-widget" % _class
-            else:
-                attr["_class"] = "multiselect-filter-widget"
-            for level in levels:
-                # Dummy field
-                name = "%s-%s" % (base_name, level)
-                options = levels[level]["options"]
-                options.sort()
-                dummy_field = Storage(name=name,
-                                      type=field_type,
-                                      requires=IS_IN_SET(options,
-                                                         multiple=True))
-                # Unique ID/name
-                attr["_id"] = "%s-%s" % (base_id, level)
-                attr["_name"] = name
-                # Find relevant values
-                _values = values["~.%s$%s__%s" % (field_name, level, operator)]
-                w = S3MultiSelectWidget(filter = opts.get("filter", False),
-                                        header = opts.get("header", False),
-                                        selectedList = opts.get("selectedList", 3),
-                                        noneSelectedText = "Select %s" % levels[level]["label"])
-                widget = w(dummy_field, _values, **attr)
-                w_append(widget)
-        else:
-            # Grouped Checkboxes
-            for level in levels:
-                # Dummy field
-                name = "%s-%s" % (base_name, level)
-                options = levels[level]["options"]
-                options.sort()
-                dummy_field = Storage(name=name,
-                                      type=field_type,
-                                      requires=IS_IN_SET(options,
-                                                         multiple=True))
-                # Unique ID/name
-                attr["_id"] = "%s-%s" % (base_id, level)
-                attr["_name"] = name
-                # Find relevant values
-                _values = values["~.%s$%s__%s" % (field_name, level, operator)]
-                w_append(s3_grouped_checkboxes_widget(dummy_field,
-                                                      _values,
-                                                      **attr))
-
-        # Reset for data_element
-        attr["_id"] = base_id
-
         # Inject the Location Hierarchy
         hierarchy = "S3.location_filter_hierarchy=%s" % json.dumps(hierarchy)
         current.response.s3.js_global.append(hierarchy)
 
-        # Render the filter widget
-        return TAG[""](*widgets)
-
-    # -------------------------------------------------------------------------
-    def data_element(self, variable):
-        """
-            Prototype method to construct the hidden element that holds the
-            URL query term corresponding to an input element in the widget.
-
-            @param variable: the URL query variable
-        """
-
-        output = []
-        oappend = output.append
-        i = 0
-        for level in self.levels:
-            widget = INPUT(_type="hidden",
-                           _id="%s-%s-data" % (self.attr["_id"], level),
-                           _class="filter-widget-data %s-data" % self._class,
-                           _value=variable[i])
-            oappend(widget)
-            i += 1
-
-        return output
+        return (ftype, levels, None)
 
     # -------------------------------------------------------------------------
     def _selector(self, resource, fields):
@@ -817,6 +853,7 @@ class S3OptionsFilter(S3FilterWidget):
         _class = self._class
         if "_class" in attr and attr["_class"]:
             _class = "%s %s" % (_class, attr["_class"])
+        attr["_class"] = _class
 
         # Get the options
         ftype, options, noopt = self._options(resource)
@@ -973,7 +1010,7 @@ class S3OptionsFilter(S3FilterWidget):
 
         # No options?
         if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:
-            return (None, opts.get("no_opts", NOOPT))
+            return (ftype, None, opts.get("no_opts", NOOPT))
 
         # Represent the options
 
