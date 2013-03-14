@@ -31,6 +31,7 @@ __all__ = ["S3EventModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
            "S3EventAssetModel",
+           "S3EventCMSModel",
            "S3EventHRModel",
            "S3EventIReportModel",
            "S3EventMapModel",
@@ -766,6 +767,51 @@ class S3EventAssetModel(S3Model):
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset removed"),
             msg_list_empty = T("No Assets currently registered in this incident"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage()
+
+# =============================================================================
+class S3EventCMSModel(S3Model):
+    """
+        Link CMS Posts to Events
+    """
+
+    names = ["event_post"]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("cms"):
+            return None
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Posts
+        # @ToDo: Search Widget
+
+        tablename = "event_post"
+        table = self.define_table(tablename,
+                                  self.event_event_id(),
+                                  self.cms_post_id(),
+                                  *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = T("Tag Post"),
+            title_display = T("Tag Details"),
+            title_list = T("Tags"),
+            title_update = T("Edit Tag"),
+            title_search = T("Search Tags"),
+            subtitle_create = T("Add New Tag"),
+            label_list_button = T("List Tags"),
+            label_create_button = T("Add Tag"),
+            label_delete_button = T("Remove Tag for this Event from this Post"),
+            msg_record_created = T("Tag added"),
+            msg_record_modified = T("Tag updated"),
+            msg_record_deleted = T("Tag removed"),
+            msg_list_empty = T("No Posts currently tagged to this event"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

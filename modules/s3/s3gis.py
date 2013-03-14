@@ -5258,8 +5258,7 @@ class GIS(object):
             @param height: Height of viewport (if not provided then the default deployment setting is used)
             @param width: Width of viewport (if not provided then the default deployment setting is used)
             @param bbox: default Bounding Box of viewport (if not provided then the Lat/Lon/Zoom are used) (Dict):
-                {
-                 "max_lat" : float,
+                {"max_lat" : float,
                  "max_lon" : float,
                  "min_lat" : float,
                  "min_lon" : float
@@ -5275,8 +5274,7 @@ class GIS(object):
             @param features: Simple Features to overlay on Map (no control over appearance & not interactive)
                 [wkt]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
-                [{
-                  "name"   : T("MyLabel"), # A string: the label for the layer
+                [{"name"   : T("MyLabel"), # A string: the label for the layer
                   "query"  : query,        # A gluon.sql.Rows of gis_locations, which can be from a simple query or a Join.
                                            # Extra fields can be added for 'popup_url', 'popup_label' & either
                                            # 'marker' (url/height/width) or 'shape' (with optional 'colour' & 'size')
@@ -5287,8 +5285,7 @@ class GIS(object):
                   "cluster_threshold"      # Optional
                 }]
             @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
-                [{
-                  "name"      : T("MyLabel"), # A string: the label for the layer
+                [{"name"      : T("MyLabel"), # A string: the label for the layer
                   "id"        : "search",     # A string: the id for the layer (for manipulation by JavaScript)
                   "tablename" : "module_resource", # A string: the tablename (used to determine whether to locate via location_id or site_id)
                   "url"       : "/eden/module/resource.geojson?filter", # A URL to load the resource
@@ -5299,8 +5296,7 @@ class GIS(object):
                   "cluster_threshold"         # Optional
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
-                {
-                 "name": T("MyLabel"),     # Name for the Folder in LayerTree
+                {"name": T("MyLabel"),     # Name for the Folder in LayerTree
                  "url": string             # URL of GetCapabilities
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
@@ -5312,14 +5308,12 @@ class GIS(object):
             @param googleStreetview: Include the ability to click to open up StreetView in a popup at that location
             @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal' (default), 'mgrs' (MGRS), False (off)
             @param print_tool: Show a print utility (NB This requires server-side support: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting)
-                {
-                 "url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
+                {"url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
                  "mapTitle": string,       # Title for the Printed Map (optional)
                  "subTitle": string        # subTitle for the Printed Map (optional)
                 }
             @param mgrs: Use the MGRS Control to select PDFs
-                {
-                 "name": string,           # Name for the Control
+                {"name": string,           # Name for the Control
                  "url": string             # URL of PDF server
                 }
                 @ToDo: Also add MGRS Search support: http://gxp.opengeo.org/master/examples/mgrs.html

@@ -43,6 +43,14 @@ class datalist_dl_filter():
         return homepage()
 
 # =============================================================================
+class validate():
+    """ Alternate URL for homepage """
+
+    def __call__(self):
+
+        return homepage()
+
+# =============================================================================
 def homepage():
     """
         Custom Homepage
@@ -408,7 +416,8 @@ def render_homepage_events(rfields, record, **attr):
         edit_bar = DIV(A(I(" ",
                            _class="icon icon-edit",
                            ),
-                         _href=URL(c="event", f="event", args=[record_id]),
+                         _href=URL(c="event", f="event",
+                                   args=[record_id, "profile"]),
                          ),
                        A(I(" ",
                            _class="icon icon-remove-sign",

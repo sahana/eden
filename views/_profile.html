@@ -1,3 +1,3 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-{{for widget in widgets:}}{{=widget}}{{pass}}
+{{try:}}{{=H2(title, _class="profile_header")}}{{except:}}{{pass}}
+{{for row in rows:}}{{=row}}{{pass}}
 {{include "dataLists.html"}}

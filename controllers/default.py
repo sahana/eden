@@ -72,6 +72,9 @@ def index():
                         settings.get_template()
             s3base.s3_debug("File not loadable: %s, %s" % (page, e.message))
         else:
+            if "." in page:
+                # Remove extension
+                page = page.split(".", 1)[0]
             if page in custom.__dict__:
                 exec ("output = custom.%s()()" % page)
                 return output

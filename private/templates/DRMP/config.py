@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from gluon import current, URL
+from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-from s3.s3utils import s3_auth_user_represent_name, s3_unicode
+from s3.s3resource import S3FieldSelector
+from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_LOCATION
 from s3.s3widgets import S3LocationAutocompleteWidget
 
-settings = current.deployment_settings
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for DRM Portal
@@ -124,9 +126,9 @@ def location_represent(id, row=None):
                                                 table.L3,
                                                 limitby=(0, 1)).first()
 
-    represent = "%s | %s | %s" % (s3_unicode(row.L1).upper() if row.L1 else "",
-                                  s3_unicode(row.L2).upper() if row.L2 else "",
-                                  s3_unicode(row.L3).upper() if row.L3 else "",
+    represent = "%s | %s | %s" % (s3_unicode(row.L1) if row.L1 else "",
+                                  s3_unicode(row.L2) if row.L2 else "",
+                                  s3_unicode(row.L3) if row.L3 else "",
                                   )
     return represent
 
@@ -167,6 +169,14 @@ def customize_cms_post(**attr):
         "series_id",
         "body",
         "location_id",
+        # @ToDo
+        #S3SQLInlineComponent(
+        #    "event",
+        #    name = "event_id",
+        #    label = T("Disaster(s)"),
+        #    fields = ["event_id",
+        #              ],
+        #),
         S3SQLInlineComponent(
             "document",
             name = "file",
@@ -206,6 +216,214 @@ def customize_cms_post(**attr):
     return attr
 
 settings.ui.customize_cms_post = customize_cms_post
+
+# -----------------------------------------------------------------------------
+def render_profile_posts(rfields, record, **attr):
+    """
+        Custom dataList item renderer for CMS Posts on the Profile pages
+
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "cms_post.id"
+
+    # Construct the item ID
+    listid = "datalist" # @ToDo: Needs to be unique per widget!
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    series = record["cms_post.series_id"]
+    date = record["cms_post.created_on"]
+    body = record["cms_post.body"]
+    location = record["cms_post.location_id"]
+    location_id = raw["cms_post.location_id"]
+    location_url = URL(c="gis", f="location", args=[location_id])
+    author = record["cms_post.created_by"]
+    author_id = raw["cms_post.created_by"]
+    organisation = record["auth_user.organisation_id"]
+    organisation_id = raw["auth_user.organisation_id"]
+    org_url = URL(c="org", f="organisation", args=[organisation_id])
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    avatar = s3_avatar_represent(author_id,
+                                 _class="media-object")
+    db = current.db
+    s3db = current.s3db
+    ltable = s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="hrm", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+    avatar = A(avatar,
+               _href=person_url,
+               _class="pull-left",
+               )
+    permit = current.auth.s3_has_permission
+    table = db.cms_post
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="cms", f="post",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.cms_post.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        #delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       #_href=URL(c="cms", f="post", args=[record_id, "delete"]),
+                       #)
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                      )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+    document = raw["doc_document.file"]
+    if document:
+        doc_url = URL(c="default", f="download",
+                      args=[document]
+                      )
+        doc_link = A(I(_class="icon icon-paper-clip fright"),
+                     _href=doc_url)
+    else:
+        doc_link = ""
+
+    # Render the item
+    class SMALL(DIV):
+        tag = "small"
+
+    item = DIV(DIV(DIV(avatar,
+                       P(SMALL(" ", author, " ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               ),
+                         _class="citation"),
+                       _class="span1"),
+                   DIV(SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title"),
+                        SPAN(date,
+                             _class="date-title"),
+                        edit_bar,
+                        P(body,
+                          _class="card_comments"),
+                        doc_link,
+                       _class="span5 card-details"),
+                   _class="row",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# -----------------------------------------------------------------------------
+def customize_event_event(**attr):
+    """
+        Customize event_event controller
+        - Profile Page
+    """
+
+    s3db = current.s3db
+
+    # Customise the cms_post table as that is used for the widgets
+    customize_cms_post()
+
+    # Represent used in rendering
+    current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
+
+    table = s3db.event_event
+
+    alerts_widget = dict(label = "Alerts",
+                         type = "datalist",
+                         tablename = "cms_post",
+                         filter = S3FieldSelector("series_id$name") == "Alert",
+                         icon = "icon-warning-sign",
+                         list_layout = render_profile_posts,
+                         )
+    map_widget = dict(label = "Location",
+                      type = "map",
+                      icon = "icon-map-marker",
+                      )
+    incidents_widget = dict(label = "Incidents",
+                            type = "datalist",
+                            tablename = "cms_post",
+                            filter = S3FieldSelector("series_id$name") == "Incident",
+                            icon = "icon-warning-sign",
+                            list_layout = render_profile_posts,
+                            )
+    assessments_widget = dict(label = "Assessments",
+                              type = "datalist",
+                              tablename = "cms_post",
+                              filter = S3FieldSelector("series_id$name") == "Assessment",
+                              icon = "icon-file-alt",
+                              list_layout = render_profile_posts,
+                              )
+    activities_widget = dict(label = "Activities",
+                             type = "datalist",
+                             tablename = "cms_post",
+                             filter = S3FieldSelector("series_id$name") == "Activity",
+                             icon = "icon-wrench",
+                             list_layout = render_profile_posts,
+                             )
+    reports_widget = dict(label = "Reports",
+                          type = "datalist",
+                          tablename = "cms_post",
+                          filter = S3FieldSelector("series_id$name") == "Report",
+                          icon = "icon-file-alt",
+                          list_layout = render_profile_posts,
+                          )
+    comments_widget = dict(label = "Comments",
+                           type = "comments",
+                           icon = "icon-comments-alt",
+                           colspan = 2,
+                           )
+    s3db.configure("event_event",
+                   profile_widgets=[alerts_widget,
+                                    map_widget,
+                                    incidents_widget,
+                                    assessments_widget,
+                                    activities_widget,
+                                    reports_widget,
+                                    comments_widget,
+                                    ],
+                   )
+
+    crud_settings = current.response.s3.crud
+    crud_settings.formstyle = "bootstrap"
+    crud_settings.submit_button = T("Save changes")
+    # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
+    #crud_settings.submit_style = "btn btn-primary"
+
+    return attr
+
+settings.ui.customize_event_event = customize_event_event
 
 # =============================================================================
 # Template Modules

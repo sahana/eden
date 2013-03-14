@@ -1,13 +1,16 @@
 {{if s3.debug:}}
 <link href="/{{=appname}}/static/styles/bootstrap/bootstrap.css" rel="stylesheet">
-<link href="/{{=appname}}/static/styles/bootstrap/bootstrap-responsive.css" rel="stylesheet">
+<!--<link href="/{{=appname}}/static/styles/bootstrap/bootstrap-responsive.css" rel="stylesheet">-->
 <link href="/{{=appname}}/static/styles/bootstrap/font-awesome.css" rel="stylesheet">
 {{else:}}
 {{if s3.cdn:}}
 <!-- For Sites Hosted on the Public Internet, using a CDN will provide better performance -->
-<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet">
+<!--<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">-->
+<link href="/{{=appname}}/static/styles/bootstrap/bootstrap.css" rel="stylesheet">
 <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
 {{else:}}
-<link href="/{{=appname}}/static/styles/bootstrap/bootstrap-combined.min.css" rel="stylesheet">
+<!--<link href="/{{=appname}}/static/styles/bootstrap/bootstrap-combined.min.css" rel="stylesheet">-->
+<link href="/{{=appname}}/static/styles/bootstrap/bootstrap.css" rel="stylesheet">
+<link href="/{{=appname}}/static/styles/bootstrap/font-awesome.css" rel="stylesheet">
 {{pass}}
 {{pass}}

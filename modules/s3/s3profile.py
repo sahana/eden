@@ -36,7 +36,15 @@ from s3data import S3DataList
 
 # =============================================================================
 class S3Profile(S3CRUD):
-    """ Interactive Method Handler for Profile Pages """
+    """
+        Interactive Method Handler for Profile Pages
+
+        Configure widgets using s3db.configure(tablename, profile_widgets=[])
+
+        @ToDo: Make more configurable:
+               * Currently assumes a max of 2 widgets per row
+               * Currently uses Bootstrap classes
+    """
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -66,75 +74,246 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        #T = current.T
-        s3db = current.s3db
         tablename = self.tablename
 
         # Initialise Output
-        output = dict(widgets=[])
+        output = dict()
 
         # Get the options
-        widgets = s3db.get_config(tablename, "profile_widgets")
+        widgets = current.s3db.get_config(tablename, "profile_widgets")
+        rows = []
         if widgets:
-            append = output["widgets"].append
+            append = rows.append
+            odd = True
+            for widget in widgets:
+                w_type = widget["type"]
+                if odd:
+                    row = DIV(_class="row profile")
+                colspan = widget.get("colspan", 1)
+                if w_type == "map":
+                    row.append(self._map(r, widget, **attr))
+                    if colspan == 2:
+                        append(row)
+                elif w_type == "comments":
+                    row.append(self._comments(r, widget, **attr))
+                    if colspan == 2:
+                        append(row)
+                elif w_type == "datalist":
+                    row.append(self._datalist(r, widget, **attr))
+                    if colspan == 2:
+                        append(row)
+                else:
+                    raise
+                if odd:
+                    odd = False
+                else:
+                    odd = True
+                    append(row)
         else:
             # @ToDo Some kind of 'Page not Configured'?
-            widgets = []
-        for widget in widgets:
-            if widget == "map":
-                append(self._map(r, **attr))
-            elif widget == "comments":
-                append(self._comments(r, **attr))
-            else:
-                # Resource (with Optional Filter)
-                append(self._resource(r, widget, **attr))
+            pass
 
+        output["rows"] = rows
+        try:
+            output["title"] = r.record.name
+        except:
+            output["title"] = current.T("Profile Page")
         current.response.view = self._view(r, "profile.html")
         return output
 
     # -------------------------------------------------------------------------
-    def _comments(self, r, **attr):
+    def _comments(self, r, widget, **attr):
         """
             Generate a Comments widget
 
             @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label, type, icon)
             @param attr: controller attributes for the request
+
+            @ToDo: Configurable to use either Disqus or internal Comments
         """
 
-        # Initialise Output
-        output = DIV(_id="profile-comments")
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+        icon = widget.get("icon", "")
+        if icon:
+            icon = TAG[""](I(_class=icon), " ")
+
+        # Render the widget
+        output = DIV(H4(icon,
+                        label,
+                        _class="profile-sub-header"),
+                     DIV(_class="thumbnail"),
+                     _class="span12")
 
         return output
 
     # -------------------------------------------------------------------------
-    def _map(self, r, **attr):
+    def _datalist(self, r, widget, **attr):
+        """
+            Generate a dataList
+
+            @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label, tablename, icon, filter)
+            @param attr: controller attributes for the request
+        """
+
+
+        tablename = widget.get("tablename", None)
+        resource = current.s3db.resource(tablename)
+        table = resource.table
+
+        # @ToDo: Can we automate some of filter through link_table to the primary resource?
+        filter = widget.get("filter", None)
+        if filter:
+            resource.add_filter(filter)
+
+        listid = "profile-list-%s" % tablename
+        if filter:
+            # We may have multiple of the same resource with different filters
+            listid = "%s-%s" % (listid, filter.right)
+
+        c, f = tablename.split("_", 1)
+
+        # Permission to create new items?
+        if current.auth.s3_has_permission("create", table):
+            create = A(I(_class="icon icon-plus-sign small-add"),
+                       _href=URL(c=c, f=f,
+                                 args=["create.popup"],
+                                 vars={"refresh": listid}
+                                 # @ToDo: Set defaults based on Filter (Disaster & Type)
+                                 ),
+                       _class="s3_modal",
+                       )
+        else:
+            create = "" 
+
+        # Config Options:
+        # 1st choice: Widget
+        # 2nd choice: get_config
+        # 3rd choice: Default
+        list_fields = widget.get("list_fields", 
+                                 resource.get_config("list_fields",
+                                                     [f for f in table.fields if table[f].readable]
+                                                     ))
+        list_layout = widget.get("list_layout", 
+                                 resource.get_config("list_layout",
+                                                     None))
+        orderby = widget.get("orderby",
+                             resource.get_config("list_orderby",
+                                                 ~resource.table.created_on))
+
+        # dataList
+        datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                   start=None,
+                                                   limit=4,
+                                                   listid=listid,
+                                                   orderby=orderby,
+                                                   layout=list_layout)
+        if numrows == 0:
+            msg = P(I(_class="icon-folder-open-alt"),
+                    BR(),
+                    S3CRUD.crud_string(resource.tablename,
+                                       "msg_no_match"),
+                    _class="empty_card-holder")
+            data = msg
+        else:
+            # Render the list
+            dl = datalist.html()
+            data = dl
+
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+        icon = widget.get("icon", "")
+        if icon:
+            icon = TAG[""](I(_class=icon), " ")
+
+        # Render the widget
+        output = DIV(create,
+                     H4(icon,
+                        label,
+                        _class="profile-sub-header"),
+                     DIV(data,
+                         _class="card-holder"),
+                     _class="span6")
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _map(self, r, widget, **attr):
         """
             Generate a Map widget
 
             @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label, type, icon)
             @param attr: controller attributes for the request
         """
 
-        # Initialise Output
-        output = DIV(_id="profile-map")
+        T = current.T
+        s3db = current.s3db
 
-        return output
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+        icon = widget.get("icon", "")
+        if icon:
+            icon = TAG[""](I(_class=icon), " ")
 
-    # -------------------------------------------------------------------------
-    def _resource(self, r, tablename, **attr):
-        """
-            Generate a Resource widget
-            - defaults to a dataList
+        # Default to showing all the resources in datalist widgets as separate layers
+        feature_resources = []
+        fappend = feature_resources.append
+        widgets = s3db.get_config(r.tablename, "profile_widgets")
+        for widget in widgets:
+            if widget["type"] != "datalist":
+                continue
+            show_on_map = widget.get("show_on_map", True)
+            if not show_on_map:
+                continue
+            tablename = widget["tablename"]
+            resource = s3db.resource(tablename)
+            filter = widget.get("filter", None)
+            map_url = widget.get("map_url", None)
+            if not map_url:
+                # Build one
+                c, f = tablename.split("_")
+                map_url = URL(c=c, f=f, extension="geojson")
+                if filter:
+                    map_url = "%s?" % map_url
+                    filter_url = filter.serialize_url(resource)
+                    for f in filter_url:
+                        map_url = "%s%s=%s" % (map_url, f, filter_url[f])
 
-            @param r: the S3Request instance
-            @param tablename: the table name
-            @param attr: controller attributes for the request
-        """
+            id = "profile_map-%s" % tablename
+            if filter:
+                id = "%s-%s" % (id, filter.right)
+            fappend({"name"      : T(widget["label"]),
+                     "id"        : id,
+                     "tablename" : tablename,
+                     "url"       : map_url,
+                     "active"    : True,          # Is the feed displayed upon load or needs ticking to load afterwards?
+                     #"marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
+                     #"opacity"   : 1,            # Optional
+                     #"cluster_distance",         # Optional
+                     #"cluster_threshold"         # Optional
+                     })
 
-        # Can we automate filter through Tag to the primary resource?
+        height = widget.get("height", 383)
+        width = widget.get("width", 460)
+        map = current.gis.show_map(height=height,
+                                   width=width,
+                                   collapsed=True,
+                                   feature_resources=feature_resources,
+                                   )
 
-        # Initialise Output
-        output = DIV(_id="profile-list-%s" % tablename)
+        # Render the widget
+        output = DIV(H4(icon,
+                        label,
+                        _class="profile-sub-header"),
+                     DIV(map,
+                         _class="card-holder"),
+                     _class="span6")
 
         return output
 

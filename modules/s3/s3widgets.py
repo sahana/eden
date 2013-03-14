@@ -70,19 +70,19 @@ __all__ = ["S3HiddenWidget",
 import datetime
 
 try:
-    from lxml import etree
-except ImportError:
-    import sys
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
-
-try:
     import json # try stdlib (Python 2.6)
 except ImportError:
     try:
         import simplejson as json # try external module
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
+
+try:
+    from lxml import etree
+except ImportError:
+    import sys
+    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    raise
 
 from gluon import *
 # Here are dependencies listed for reference:

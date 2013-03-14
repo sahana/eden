@@ -38,10 +38,7 @@ div.dl-item {
     border-top: 0;
     clear: none;
 }
-#datalist-header {
-    display: none;
-}
-#event_datalist-header {
+.dl-header {
     display: none;
 }
 
@@ -208,4 +205,71 @@ div.thumbnail.side-filter {
     position: relative;
     top: 40px;
     /*height: 300px;*/
+}
+
+/* Front Page */
+#datalist span.location-title {
+    text-transform: uppercase;
+}
+
+/* Profile Page */
+h2.profile_header {
+    font-size: 25px;
+	color: #666;
+	text-align: center;
+	text-transform: uppercase;
+    font-weight: normal;
+	font-style: normal;
+}
+div.row.profile {
+    margin-top: 5px;
+}
+h4.profile-sub-header {
+	font-size: 20px;
+	color: #666;
+	text-align: center;
+	font-weight: normal;
+	font-style: normal;	
+	padding: 6px;
+	border-bottom: solid 1px #c9ccd0;
+	border-radius: 5px 5px 0 0;
+	background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8));
+	background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: -moz-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: linear-gradient(top,#f9f9fa,#e0e2e8);
+	-moz-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+	-webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+	-o-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+	box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+	margin-bottom: -1px;
+}
+a i.icon.icon-plus-sign.small-add {
+    color: #0096FE;
+    float: right;
+    font-size: 17px;
+    position: relative;
+    right: 9px;
+    top: 17px;
+}
+div.card-holder {
+	display: inline-block;
+	min-height: 383px;
+	width: 460px;
+	-moz-box-shadow: 0 2px 5px #827f7f;
+	-webkit-box-shadow: 0 2px 5px #827f7f;
+	box-shadow: 0 2px 5px #827f7f;
+	background-color: #f0f0ef;
+}
+div.span5.card-details {
+    margin-left: 7px;
+}
+p.citation {
+    clear: left;
+    float: left;
+    font-size: 80%;
+    line-height: 11px;
+    text-align: center;
+    width: 58px;
 }
