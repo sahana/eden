@@ -122,6 +122,8 @@ def homepage():
             r.representation = "dl"
         elif ajax == "filter":
             r.representation = "json"
+        else:
+            s3.stylesheets.append("bootstrap/bootstrap-responsive.css")
         return True
     s3.prep = prep
 
@@ -242,10 +244,12 @@ def filter_formstyle(row_id, label, widget, comment):
         return widget
 
 # -----------------------------------------------------------------------------
-def render_homepage_posts(rfields, record, **attr):
+def render_homepage_posts(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for CMS Posts on the Homepage
 
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
@@ -254,7 +258,6 @@ def render_homepage_posts(rfields, record, **attr):
     pkey = "cms_post.id"
 
     # Construct the item ID
-    listid = "datalist"
     if pkey in record:
         record_id = record[pkey]
         item_id = "%s-%s" % (listid, record_id)
@@ -380,10 +383,12 @@ def render_homepage_posts(rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_homepage_events(rfields, record, **attr):
+def render_homepage_events(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Events on the Homepage
 
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
@@ -392,7 +397,6 @@ def render_homepage_events(rfields, record, **attr):
     pkey = "event_event.id"
 
     # Construct the item ID
-    listid = "event_datalist"
     if pkey in record:
         item_id = "%s-%s" % (listid, record[pkey])
     else:

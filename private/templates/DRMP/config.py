@@ -218,10 +218,12 @@ def customize_cms_post(**attr):
 settings.ui.customize_cms_post = customize_cms_post
 
 # -----------------------------------------------------------------------------
-def render_profile_posts(rfields, record, **attr):
+def render_profile_posts(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for CMS Posts on the Profile pages
 
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
@@ -230,7 +232,6 @@ def render_profile_posts(rfields, record, **attr):
     pkey = "cms_post.id"
 
     # Construct the item ID
-    listid = "datalist" # @ToDo: Needs to be unique per widget!
     if pkey in record:
         record_id = record[pkey]
         item_id = "%s-%s" % (listid, record_id)
@@ -328,6 +329,7 @@ def render_profile_posts(rfields, record, **attr):
                               _href=location_url,
                               ),
                             _class="location-title"),
+                        " ",
                         SPAN(date,
                              _class="date-title"),
                         edit_bar,

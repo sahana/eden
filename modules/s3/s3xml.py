@@ -2015,7 +2015,7 @@ class S3XML(S3Codec):
 
         def add_col(row, key, value):
             col = etree.SubElement(row, cls.TAG.col)
-            col.set(cls.ATTRIBUTE.field, str(key))
+            col.set(cls.ATTRIBUTE.field, s3_unicode(key))
             if value:
                 text = s3_unicode(value).strip()
                 if text.lower() not in ("null", "<null>"):

@@ -881,25 +881,29 @@ class S3DataList(object):
              limit=None,
              pagesize=None,
              ajaxurl=None):
+        """
+            Render list data as HTML (nested DIVs)
+        """
 
-        """ Render list data as HTML (nested DIVs) """
-
+        T = current.T
         resource = self.resource
         list_fields = self.list_fields
         rfields = resource.resolve_selectors(list_fields)[0]
 
+        listid = self.listid
         render = self.layout
         
         records = self.records
         if records is not None:
             items = [
-                DIV(current.T("Total Records: %(numrows)s") % {"numrows": self.total},
+                DIV(T("Total Records: %(numrows)s") % {"numrows": self.total},
                     _class="dl-header",
-                    _id="%s-header" % self.listid)
+                    _id="%s-header" % listid)
             ]
+            _start = self.start
             for i in xrange(len(records)):
-                _class = (i + self.start) % 2 and "even" or "odd"
-                item = render(rfields, records[i], _class=_class)
+                _class = (i + _start) % 2 and "even" or "odd"
+                item = render(listid, resource, rfields, records[i], _class=_class)
                 # Class "dl-item" is required for pagination:
                 if hasattr(item, "add_class"):
                     item.add_class("dl-item")
@@ -908,15 +912,14 @@ class S3DataList(object):
             # template
             raise NotImplementedError
 
-        dl = DIV(items, _class = "dl", _id = self.listid)
+        dl = DIV(items, _class = "dl", _id = listid)
 
-        dl_data = {
-            "startindex": start,
-            "maxitems": limit,
-            "totalitems": self.total,
-            "pagesize": pagesize,
-            "ajaxurl": ajaxurl
-        }
+        dl_data = {"startindex": start,
+                   "maxitems": limit,
+                   "totalitems": self.total,
+                   "pagesize": pagesize,
+                   "ajaxurl": ajaxurl
+                   }
         from gluon.serializers import json as jsons
         dl_data = jsons(dl_data)
         dl.append(DIV(
@@ -924,7 +927,7 @@ class S3DataList(object):
                         INPUT(_type="hidden",
                               _class="dl-pagination",
                               _value=dl_data)),
-                    A(current.T("more..."),
+                    A(T("more..."),
                       _href=ajaxurl,
                       _class="dl-pagination"),
                     _class="dl-navigation"))
@@ -932,19 +935,21 @@ class S3DataList(object):
         return dl
 
     # ---------------------------------------------------------------------
-    def render(self, rfields, record, **attr):
+    @staticmethod
+    def render(listid, resource, rfields, record, **attr):
         """
             Default item renderer
 
+            @param listid: the HTML ID for this list
+            @param resource: the S3Resource to render
             @param rfields: the S3ResourceFields to render
             @param record: the record as dict
             @param attr: additional HTML attributes for the item
         """
 
-        pkey = str(self.resource._id)
+        pkey = str(resource._id)
 
         # Construct the item ID
-        listid = self.listid
         if pkey in record:
             item_id = "%s-%s" % (listid, record[pkey])
         else:
