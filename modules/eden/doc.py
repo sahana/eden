@@ -296,31 +296,31 @@ class S3DocumentLibrary(S3Model):
         vars = form.vars
         doc = vars.file
         
-        if (not document) and (not doc) and ("imagecrop-data" in vars):
-            import base64
-            import uuid
-            encoded_file = vars.get("imagecrop-data")
-            metadata, encoded_file = encoded_file.split(",")
-            filename, datatype, enctype = metadata.split(";")
-            f = Storage()
-            f.filename = uuid.uuid4().hex + filename
-            import cStringIO
-            f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
-            form.vars.file = f
+        if (not document) and (not doc):
+            encoded_file = vars.get("imagecrop-data", None)
+            if encoded_file:
+                import base64
+                import uuid
+                metadata, encoded_file = encoded_file.split(",")
+                filename, datatype, enctype = metadata.split(";")
+                f = Storage()
+                f.filename = uuid.uuid4().hex + filename
+                import cStringIO
+                f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
+                form.vars.file = f
         
         if doc is None:
             # This is a prepop, so file not in form
             return
 
-        T = current.T
         db = current.db
 
         if document:
             tablename = "doc_document"
-            msg = T("Either file upload or document URL required.")
+            msg = current.T("Either file upload or document URL required.")
         else:
             tablename = "doc_image"
-            msg = T("Either file upload or image URL required.")
+            msg = current.T("Either file upload or image URL required.")
 
         table = db[tablename]
 

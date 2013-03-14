@@ -488,21 +488,31 @@ class S3ImageCropWidget(FormWidget):
         self.image_bounds = image_bounds
 
     def __call__(self, field, value, download_url=None, **attributes):
-        request = current.request
-        s3 = current.response.s3
+
         T = current.T
+        CROP_IMAGE = T("Crop Image")
 
-        script_dir = "/%s/static/scripts" % request.application
+        script_dir = "/%s/static/scripts" % current.request.application
 
-        if s3.debug and \
-           "%s/jquery.Jcrop.js" % script_dir not in s3.scripts:
-            s3.scripts.append("%s/jquery.Jcrop.js" % script_dir)
+        s3 = current.response.s3
+        debug = s3.debug
+        scripts = s3.scripts
 
-        if s3.debug and \
-            "%s/jquery.color.js" % script_dir not in s3.scripts:
-            s3.scripts.append("%s/jquery.color.js" % script_dir)
+        s3.js_global.append('''
+i18n.invalid_image='%s'
+i18n.crop_image='%s'
+i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
+                            CROP_IMAGE,
+                            T("Cancel Crop")))
+        if debug and \
+           "%s/jquery.Jcrop.js" % script_dir not in scripts:
+            scripts.append("%s/jquery.Jcrop.js" % script_dir)
 
-        s3.scripts.append("%s/S3/s3.imagecrop.widget.js" % script_dir)
+        if debug and \
+            "%s/jquery.color.js" % script_dir not in scripts:
+            scripts.append("%s/jquery.color.js" % script_dir)
+
+        scripts.append("%s/S3/s3.imagecrop.widget.js" % script_dir)
 
         s3.stylesheets.append("plugins/jquery.Jcrop.css")
 
@@ -512,37 +522,48 @@ class S3ImageCropWidget(FormWidget):
             }, **attributes)
 
         elements = [INPUT(_type="hidden", _name="imagecrop-points")]
+        append = elements.append
 
         if value and download_url:
             if callable(download_url):
                 download_url = download_url()
 
-            URL = download_url + '/' + value
+            URL = download_url + "/" + value
 
-            elements.append(IMG(_class="imagecrop-preview",
-                _style="display: hidden;", _src=URL,
-                _width=str(self.DEFAULT_WIDTH)+'px'))
-            elements.append(P(T("You can select an area on the image and save to crop it."), _class="imagecrop-help",
-              _style="display: none;"))
-            elements.append(INPUT(_value=T("Crop Image"), _type="button", _class="imagecrop-toggle"))
-            elements.append(INPUT(**attr))
+            append(IMG(_src=URL,
+                       _class="imagecrop-preview",
+                       _style="display: hidden;",
+                       _width="%spx" % self.DEFAULT_WIDTH))
+            append(P(T("You can select an area on the image and save to crop it."),
+                     _class="imagecrop-help",
+                     _style="display: none;"))
+            append(INPUT(_value=CROP_IMAGE,
+                         _type="button",
+                         _class="imagecrop-toggle"))
+            append(INPUT(**attr))
             # Set up the canvas
-            canvas = TAG["canvas"](_class="imagecrop-canvas", _style="display: none;")
-            elements.append(canvas)
+            canvas = TAG["canvas"](_class="imagecrop-canvas",
+                                   _style="display: none;")
+            append(canvas)
 
         else:
-            elements.append(DIV(_class="tooltip",
-              _title=T("Crop Image|Select an image to upload. You can crop this later by opening this record.")))
+            append(DIV(_class="tooltip",
+                       _title="%s|%s" % \
+                (CROP_IMAGE,
+                 T("Select an image to upload. You can crop this later by opening this record."))))
             # Set up the canvas
-            canvas = TAG["canvas"](_class="imagecrop-canvas", _style="display: none;")
+            canvas = TAG["canvas"](_class="imagecrop-canvas",
+                                   _style="display: none;")
             if self.image_bounds:
                 canvas.attributes["_width"] = self.image_bounds[0]
                 canvas.attributes["_height"] = self.image_bounds[1]
                 canvas.attributes["_style"] = "background: black;"
-            elements.append(INPUT(**attr))
-            elements.append(INPUT(_type="hidden", _name="imagecrop-data", _class="imagecrop-data"))
-            elements.append(P(T("Drag an image below to crop and scale it before uploading it:")))
-            elements.append(canvas)
+            append(INPUT(**attr))
+            append(INPUT(_type="hidden",
+                         _name="imagecrop-data",
+                         _class="imagecrop-data"))
+            append(P(T("Drag an image below to crop and scale it before uploading it:")))
+            append(canvas)
 
         # Prevent multiple widgets on the same page from interfering with each
         # other.

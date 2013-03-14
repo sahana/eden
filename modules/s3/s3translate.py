@@ -968,7 +968,7 @@ class TranslateReportStatus:
             modlist.append("core")
 
             query = (utable.code == lang_code)
-            row = db(query).select()
+            row = db(query).select(utable.sbit, limitby=(0, 1)).first()
 
             # If the translation percentages for the given language hasn't been
             # calculated earlier, add the row corresponding to that language
@@ -983,12 +983,11 @@ class TranslateReportStatus:
                                   untranslated = 0)
                 self.update_percentages(lang_code)
             else:
-                for r in row:
-                    # If the update bit for the language is set,
-                    # then update the percentages
-                    if r.sbit == True:
-                        self.update_percentages(lang_code)
-                        db(query).update(sbit = False)
+                # If the update bit for the language is set,
+                # then update the percentages
+                if row.sbit == True:
+                    self.update_percentages(lang_code)
+                    db(query).update(sbit = False)
 
             # Dictionary keyed on modules to store percentage for each module
             percent_dict = {}
@@ -996,8 +995,10 @@ class TranslateReportStatus:
             total_translated = 0
             # Total number of untranslated strings for the given language
             total_untranslated = 0
-            query = (ptable.code == lang_code)
-            rows = db(query).select()
+            rows = db(ptable.code == lang_code).select(ptable.translated,
+                                                       ptable.untranslated,
+                                                       ptable.module,
+                                                       )
             # Display the translation percentage for each module
             # by fetching the data from the table
             for row in rows:

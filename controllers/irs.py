@@ -103,6 +103,8 @@ def ireport():
                         msg_record_modified = T("Human Resource Assignment updated"),
                         msg_record_deleted = T("Human Resource unassigned"),
                         msg_list_empty = T("No Human Resources currently assigned to this incident"))
+                elif r.component_name == "task":
+                    s3db.configure("project_task", copyable=False)
                 elif r.component_name == "vehicle":
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_vehicle"] = Storage(
@@ -125,15 +127,7 @@ def ireport():
 
     # Post-processor
     def postp(r, output):
-        if r.interactive:
-            if not r.component:
-                s3_action_buttons(r, deletable=False)
-                # if deployment_settings.has_module("assess"):
-                    # response.s3.actions.append({"url" : URL(c="assess", f="basic_assess",
-                                                            # vars = {"ireport_id":"[id]"}),
-                                                # "_class" : "action-btn",
-                                                # "label" : "Assess"})
-        elif r.representation == "plain" and \
+        if r.representation == "plain" and \
              r.method !="search":
             # Map Popups
             # Look for a Photo

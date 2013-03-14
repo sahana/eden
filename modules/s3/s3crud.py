@@ -63,7 +63,6 @@ from s3widgets import S3EmbedComponentWidget
 class S3CRUD(S3Method):
     """
         Interactive CRUD Method Handler
-
     """
 
     # -------------------------------------------------------------------------
@@ -2478,7 +2477,7 @@ class S3CRUD(S3Method):
             if not update_url:
                 # To use modals
                 #get_vars["refresh"] = "list"
-                update_url = URL(args = args + ["update.popup"],
+                update_url = URL(args = args + ["update"], #.popup to use modals
                                  vars = get_vars)
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals

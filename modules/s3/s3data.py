@@ -834,7 +834,7 @@ class S3DataTable(object):
 
 # =============================================================================
 class S3DataList(object):
-    """ Class representing a data list (experimental) """
+    """ Class representing a data list """
 
     # -------------------------------------------------------------------------
     # Standard API

@@ -96,6 +96,8 @@ class S3SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        float_represent = IS_FLOAT_AMOUNT.represent
+
         NONE = current.messages["NONE"]
 
         # =====================================================================
@@ -345,27 +347,27 @@ S3OptionsFilter({
                              Field("weight", "double",
                                    label = T("Weight (kg)"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              Field("length", "double",
                                    label = T("Length (m)"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              Field("width", "double",
                                    label = T("Width (m)"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              Field("height", "double",
                                    label = T("Height (m)"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              Field("volume", "double",
                                    label = T("Volume (m3)"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              s3_comments(),
@@ -606,7 +608,7 @@ S3OptionsFilter({
                                    default = 1,
                                    label = T("Quantity"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -683,7 +685,7 @@ S3OptionsFilter({
                              Field("quantity", "double",
                                    label = T("Quantity"),
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              item_pack_id(),
                              s3_comments(),
@@ -709,7 +711,7 @@ S3OptionsFilter({
                                    default = 1,
                                    notnull=True,
                                    represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                    float_represent(v, precision=2)
                                    ),
                              supply_item_id("alt_item_id", notnull=True),
                              s3_comments(),
@@ -1019,13 +1021,12 @@ S3OptionsFilter({
         db = current.db
         table = db.supply_item
         btable = db.supply_brand
-        query = (table.id == id)
-        r = db(query).select(table.name,
-                             table.model,
-                             table.um,
-                             btable.name,
-                             left = btable.on(table.brand_id == btable.id),
-                             limitby=(0, 1)).first()
+        r = db(table.id == id).select(table.name,
+                                      table.model,
+                                      table.um,
+                                      btable.name,
+                                      left = btable.on(table.brand_id == btable.id),
+                                      limitby=(0, 1)).first()
         try:
             represent = [r.supply_item.name,
                          r.supply_brand.name,
@@ -1072,14 +1073,14 @@ S3OptionsFilter({
                                   table.quantity,
                                   db.supply_item.um,
                                   limitby = (0, 1)).first()
-        if record:
+        try:
             if record.supply_item_pack.quantity == 1:
                 return record.supply_item_pack.name
             else:
                 return "%s (%s x %s)" % (record.supply_item_pack.name,
                                          record.supply_item_pack.quantity,
                                          record.supply_item.um)
-        else:
+        except:
             return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
@@ -1333,14 +1334,13 @@ def supply_item_rheader(r):
 
             T = current.T
 
-            tabs = [
-                    (T("Edit Details"), None),
+            tabs = [(T("Edit Details"), None),
                     (T("Packs"), "item_pack"),
                     (T("Alternative Items"), "item_alt"),
                     (T("In Inventories"), "inv_item"),
                     (T("Requested"), "req_item"),
                     (T("In Catalogs"), "catalog_item"),
-                   ]
+                    ]
             if item.kit == True:
                 tabs.append((T("Kit Items"), "kit_item"))
             rheader_tabs = s3_rheader_tabs(r, tabs)

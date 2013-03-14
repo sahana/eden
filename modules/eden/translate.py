@@ -77,7 +77,7 @@ class S3TranslateModel(S3Model):
         tablename = "translate_percentage"
         table = define_table(tablename,
                              Field("code", length=10, notnull=True),
-                             Field("module", length=10, notnull=True),
+                             Field("module", length=32, notnull=True),
                              Field("translated", "integer"),
                              Field("untranslated", "integer"),
                              *s3_meta_fields())
@@ -96,7 +96,7 @@ class S3TranslateModel(S3Model):
         # Pass names back to global scope (s3.*)
         return Storage()
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def translate_language_onaccept(form):
         """ Receive the uploaded csv file """
@@ -104,18 +104,18 @@ class S3TranslateModel(S3Model):
         import os
         from ..s3.s3translate import CsvToWeb2py
 
-        code = form.vars.code
+        vars = form.vars
+        code = vars.code
 
         csvfilename = os.path.join(current.request.folder, "uploads",
-                                   form.vars.file)
+                                   vars.file)
         csvfilelist = [csvfilename]
         C = CsvToWeb2py()
         # Merge the existing translations with the new translations
         C.convert_to_w2p(csvfilelist, "%s.py" % code, "m")
 
         utable = current.s3db.translate_update
-        query = (utable.code == code)
-        current.db(query).update(sbit=True)
+        current.db(utable.code == code).update(sbit=True)
 
         return
 

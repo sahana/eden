@@ -266,14 +266,16 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)
     set_handler("compose", s3base.S3Compose)
+    # @ToDo: Make work in Component Tabs:
     set_handler("copy", lambda r, **attr: \
                                redirect(URL(args="create",
                                             vars={"from_record":r.id})))
     set_handler("deduplicate", s3base.S3Merge)
-    set_handler("import", s3base.S3Importer)
     set_handler("filter", s3base.S3Filter)
-    set_handler("report", s3base.S3Report)
+    set_handler("import", s3base.S3Importer)
     set_handler("map", s3base.S3Map)
+    set_handler("profile", s3base.S3Profile)
+    set_handler("report", s3base.S3Report)
     
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method

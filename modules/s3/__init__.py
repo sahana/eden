@@ -90,6 +90,9 @@ from s3filter import *
 # Reporting
 from s3report import *
 
+# Profiles
+from s3profile import *
+
 # Synchronization
 from s3sync import *
 
