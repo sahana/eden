@@ -29,9 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-#import datetime
 import re
-#import string
 
 try:
     import json # try stdlib (Python 2.6)
@@ -42,27 +40,16 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-#from gluon.html import BUTTON
-#from gluon.serializers import json as jsons
 from gluon.sqlhtml import MultipleOptionsWidget
 from gluon.storage import Storage
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-#from s3crud import S3CRUD
 from s3rest import S3Method
-#from s3data import S3DataTable
-#from s3export import S3Exporter
-#from s3navigation import s3_search_tabs
-#from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
 from s3resource import S3ResourceField, S3URLQuery
-#from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime
 from s3utils import s3_unicode
 from s3validators import *
 from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
-
-#MAX_RESULTS = 1000
-#MAX_SEARCH_RESULTS = 200
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -165,19 +152,8 @@ class S3FilterWidget(object):
                              the widget
         """
 
-        _class = self._class
-
-        # Construct name and id for the widget
-        attr = self.attr
-        if "_name" not in attr:
-            flist = self.field
-            if type(flist) is not list:
-                flist = [flist]
-            colnames = [S3ResourceField(resource, f).colname for f in flist]
-            name = "%s-%s-%s" % (resource.alias, "-".join(colnames), _class)
-            attr["_name"] = name.replace(".", "_")
-        if "_id" not in attr:
-            attr["_id"] = attr["_name"]
+        # Initialize the widget attributes
+        self._attr(resource)
 
         # Extract the URL values to populate the widget
         variable = self.variable(resource, get_vars)
@@ -203,6 +179,26 @@ class S3FilterWidget(object):
         else:
             data = [data, widget]
         return TAG[""](*data)
+
+    # -------------------------------------------------------------------------
+    def _attr(self, resource):
+        """ Initialize and return the HTML attributes for this widget """
+
+        _class = self._class
+
+        # Construct name and id for the widget
+        attr = self.attr
+        if "_name" not in attr:
+            flist = self.field
+            if type(flist) is not list:
+                flist = [flist]
+            colnames = [S3ResourceField(resource, f).colname for f in flist]
+            name = "%s-%s-%s" % (resource.alias, "-".join(colnames), _class)
+            attr["_name"] = name.replace(".", "_")
+        if "_id" not in attr:
+            attr["_id"] = attr["_name"]
+
+        return attr
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -796,12 +792,6 @@ class S3LocationFilter(S3FilterWidget):
         return ["%s__%s" % (selector, operator) for selector in selectors]
 
 # =============================================================================
-class S3MapFilter(S3FilterWidget):
-    """ Map Location Filter Widget """
-
-    _class = "map-filter"
-
-# =============================================================================
 class S3OptionsFilter(S3FilterWidget):
 
     _class = "options-filter"
@@ -819,23 +809,127 @@ class S3OptionsFilter(S3FilterWidget):
             @param values: the search values from the URL query
         """
 
-        T = current.T
+        attr = self._attr(resource)
+        opts = self.opts
+        name = attr["_name"]
 
+        # Filter class (default+custom)
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (_class, attr["_class"])
+
+        # Get the options
+        ftype, options, noopt = self._options(resource)
+        if noopt:
+            return SPAN(noopt, _class="no-options-available")
+        else:
+            options = OrderedDict(options)
+
+        # Any-All-Option : for many-to-many fields the user can
+        # search for records containing all the options or any
+        # of the options:
+        if len(options) > 1 and ftype[:4] == "list":
+            if self.operator == "anyof":
+                filter_type = "any"
+            else:
+                filter_type = "all"
+                if self.operator == "belongs":
+                    self.operator = "contains"
+
+            any_all = DIV(T("Filter type "),
+                          INPUT(_name="%s_filter" % name,
+                                _id="%s_filter_any" % name,
+                                _type="radio",
+                                _value="any",
+                                value=filter_type),
+                          LABEL(T("Any"),
+                                _for="%s_filter_any" % name),
+                          INPUT(_name="%s_filter" % name,
+                                _id="%s_filter_all" % name,
+                                _type="radio",
+                                _value="all",
+                                value=filter_type),
+                          LABEL(T("All"),
+                                _for="%s_filter_all" % name),
+                          _class="s3-options-filter-anyall")
+        else:
+            any_all = ""
+
+        # Render the filter widget
+        dummy_field = Storage(name=name,
+                              type=ftype,
+                              requires=IS_IN_SET(options, multiple=True))
+
+        widget_type = opts["widget"]
+        if widget_type == "multiselect-bootstrap":
+            script = "/%s/static/scripts/bootstrap-multiselect.js" % \
+                        current.request.application
+            scripts = current.response.s3.scripts
+            if script not in scripts:
+                scripts.append(script)
+            widget = MultipleOptionsWidget.widget(dummy_field,
+                                                    values,
+                                                    **attr)
+            widget.add_class("multiselect-filter-bootstrap")
+        elif widget_type == "multiselect":
+            if "multiselect-filter-widget" not in _class:
+                attr["_class"] = "%s multiselect-filter-widget" % _class
+            w = S3MultiSelectWidget(
+                    filter = opts.get("filter", False),
+                    header = opts.get("header", False),
+                    selectedList = opts.get("selectedList", 3),
+                )
+            widget = w(dummy_field, values, **attr)
+        else:
+            if "s3-checkboxes-widget" not in _class:
+                attr["_class"] = "%s s3-checkboxes-widget" % _class
+            attr["cols"] = opts["cols"]
+            widget = s3_grouped_checkboxes_widget(dummy_field, values, **attr)
+
+        return TAG[""](any_all, widget)
+
+    # -------------------------------------------------------------------------
+    def ajax_options(self, resource):
+        """
+            Method to Ajax-retrieve the current options of this widget
+
+            @param resource: the S3Resource
+        """
+
+        attr = self._attr(resource)
+        ftype, options, noopt = self._options(resource)
+        if noopt:
+            return {attr["_id"]: noopt}
+        else:
+            return {attr["_id"]: [(k, s3_unicode(v)) for k,v in options]}
+
+    # -------------------------------------------------------------------------
+    def _options(self, resource):
+        """
+            Helper function to retrieve the current options for this
+            filter widget
+
+            @param resource: the S3Resource
+        """
+
+        T = current.T
         EMPTY = T("None")
+        NOOPT = T("No options available")
 
         attr = self.attr
         opts = self.opts
 
         # Resolve the field selector
-        field_name = self.field
-        if (isinstance(field_name, (list, tuple))):
-            field_name = field_name[0]
-        rfield = S3ResourceField(resource, field_name)
+        selector = self.field
+        if isinstance(selector, (tuple, list)):
+            selector = selector[0]
+
+        rfield = S3ResourceField(resource, selector)
         field = rfield.field
         colname = rfield.colname
-        field_type = rfield.ftype
+        ftype = rfield.ftype
 
-        # Find the options ----------------------------------------------------
+        # Find the options
 
         if opts.options is not None:
             # Custom dict of options {value: label} or a callable
@@ -843,52 +937,51 @@ class S3OptionsFilter(S3FilterWidget):
             options = opts.options
             if callable(options):
                 options = options()
-            opt_values = options.keys()
+            opt_keys = options.keys()
 
         else:
             # Determine the options from the field type
             options = None
-            if field_type == "boolean":
-                opt_values = (True, False)
+            if ftype == "boolean":
+                opt_keys = (True, False)
+
             else:
-                multiple = field_type[:5] == "list:"
+                multiple = ftype[:5] == "list:"
                 groupby = field if field and not multiple else None
                 virtual = field is None
-                rows = resource.select(fields=[field_name],
+                rows = resource.select(fields=[selector],
                                        start=None,
                                        limit=None,
                                        orderby=field,
                                        groupby=groupby,
                                        virtual=virtual)
-                opt_values = []
+                opt_keys = []
                 if rows:
-                    opt_extend = opt_values.extend
-                    opt_append = opt_values.append
                     if multiple:
+                        kextend = opt_keys.extend
                         for row in rows:
                             vals = row[colname]
                             if vals:
-                                opt_extend([v for v in vals
-                                            if v not in opt_values])
+                                kextend([v for v in vals
+                                           if v not in opt_keys])
                     else:
+                        kappend = opt_keys.append
                         for row in rows:
                             v = row[colname]
-                            if v not in opt_values:
-                                opt_append(v)
+                            if v not in opt_keys:
+                                kappend(v)
 
         # No options?
-        if len(opt_values) < 1 or \
-           len(opt_values) == 1 and not opt_values[0]:
-            msg = attr.get("_no_opts", T("No options available"))
-            return SPAN(msg, _class="no-options-available")
+        if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:
+            return (None, opts.get("no_opts", NOOPT))
 
-        # Represent the options -----------------------------------------------
+        # Represent the options
 
-        opt_list = []
+        opt_list = [] # list of tuples (key, value)
 
         # Custom represent? (otherwise fall back to field represent)
         represent = opts.represent
-        if not represent or field_type[:9] != "reference":
+        if not represent or ftype[:9] != "reference":
             represent = field.represent
 
         if options is not None:
@@ -900,14 +993,14 @@ class S3OptionsFilter(S3FilterWidget):
 
             if hasattr(represent, "bulk"):
                 # S3Represent => use bulk option
-                opt_dict = represent.bulk(opt_values,
+                opt_dict = represent.bulk(opt_keys,
                                           list_type=False,
                                           show_link=False)
-                if None in opt_values:
+                if None in opt_keys:
                     opt_dict[None] = EMPTY
                 elif None in opt_dict:
                     del opt_dict[None]
-                if "" in opt_values:
+                if "" in opt_keys:
                     opt_dict[""] = EMPTY
                 opt_list = opt_dict.items()
 
@@ -921,15 +1014,15 @@ class S3OptionsFilter(S3FilterWidget):
                 else:
                     repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
                                            (opt, represent(opt, **args))
-                opt_list = map(repr_opt, opt_values)
+                opt_list = map(repr_opt, opt_keys)
 
-        elif isinstance(represent, str) and field_type[:9] == "reference":
+        elif isinstance(represent, str) and ftype[:9] == "reference":
             # Represent is a string template to be fed from the
             # referenced record
 
             # Get the referenced table
             db = current.db
-            ktable = db[field_type[10:]]
+            ktable = db[ftype[10:]]
 
             k_id = ktable._id.name
 
@@ -939,7 +1032,7 @@ class S3OptionsFilter(S3FilterWidget):
             represent_fields = [ktable[fieldname] for fieldname in fieldnames]
 
             # Get the referenced records
-            query = (ktable.id.belongs([k for k in opt_values
+            query = (ktable.id.belongs([k for k in opt_keys
                                               if str(k).isdigit()])) & \
                     (ktable.deleted == False)
             rows = db(query).select(*represent_fields).as_dict(key=k_id)
@@ -947,7 +1040,7 @@ class S3OptionsFilter(S3FilterWidget):
             # Run all referenced records against the format string
             opt_list = []
             ol_append = opt_list.append
-            for opt_value in opt_values:
+            for opt_value in opt_keys:
                 if opt_value in rows:
                     opt_represent = represent % rows[opt_value]
                     if opt_represent:
@@ -956,92 +1049,20 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             # Straight string representations of the values (fallback)
             opt_list = [(opt_value, s3_unicode(opt_value))
-                        for opt_value in opt_values if opt_value]
+                        for opt_value in opt_keys if opt_value]
 
         # Sort the options
-        options = OrderedDict([("NONE" if o is None else o, v)
-                               for o, v in opt_list])
-
-        # Construct HTML classes for the widget
-        if "_class" in attr and attr["_class"]:
-            _class = "%s %s %s" % (attr["_class"],
-                                   "s3-checkboxes-widget",
-                                   self._class)
-        else:
-            _class = "%s %s" % ("s3-checkboxes-widget", self._class)
-
-        attr["_class"] = _class
-        attr["cols"] = opts["cols"]
-
-        # Dummy field
-        name = attr["_name"]
-        dummy_field = Storage(name=name,
-                              type=field_type,
-                              requires=IS_IN_SET(options, multiple=True))
-
-        # Any-All-Option : for many-to-many fields the user can search for
-        # records containing all the options or any of the options:
-        if len(options) > 1 and field_type[:4] == "list":
-            if self.operator == "anyof":
-                filter_type = "any"
+        opt_list.sort(key = lambda item: item[1])
+        options = []
+        empty = None
+        for k, v in opt_list:
+            if k is None:
+                empty = ("NONE", v)
             else:
-                filter_type = "all"
-                if self.operator == "belongs":
-                    self.operator = "contains"
-
-            any_all = DIV(
-                T("Filter type "),
-                INPUT(_name="%s_filter" % name,
-                      _id="%s_filter_any" % name,
-                      _type="radio",
-                      _value="any",
-                      value=filter_type),
-                LABEL(T("Any"),
-                      _for="%s_filter_any" % name),
-                INPUT(_name="%s_filter" % name,
-                      _id="%s_filter_all" % name,
-                      _type="radio",
-                      _value="all",
-                      value=filter_type),
-                LABEL(T("All"),
-                      _for="%s_filter_all" % name),
-                _class="s3-checkboxes-widget-filter"
-            )
-        else:
-            any_all = ""
-
-        if opts.widget in ("multiselect", "multiselect-bootstrap"):
-            # Multiselect Dropdown with Checkboxes
-            if opts.widget == "multiselect-bootstrap":
-                script = "/%s/static/scripts/bootstrap-multiselect.js" % \
-                    current.request.application
-                scripts = current.response.s3.scripts
-                if script not in scripts:
-                    scripts.append(script)
-                widget = MultipleOptionsWidget.widget(dummy_field,
-                                                      values,
-                                                      **attr)
-                widget.add_class("multiselect-filter-bootstrap")
-            else:
-                _class = attr.get("_class", None)
-                if _class:
-                    if "multiselect-filter-widget" not in _class:
-                        attr["_class"] = "%s multiselect-filter-widget" % _class
-                else:
-                    attr["_class"] = "multiselect-filter-widget"
-                w = S3MultiSelectWidget(filter = opts.get("filter", False),
-                                        header = opts.get("header", False),
-                                        selectedList = opts.get("selectedList", 3),
-                                        )
-                widget = w(dummy_field, values, **attr)
-        else:
-            # Grouped Checkboxes
-            widget = s3_grouped_checkboxes_widget(dummy_field,
-                                                  values,
-                                                  **attr)
-
-        # Render the filter widget
-        return TAG[""](any_all, widget)
+                options.append((k, v))
+        if empty:
+            options.append(empty)
+        return (ftype, options, None)
 
 # =============================================================================
 class S3FilterForm(object):
@@ -1114,14 +1135,20 @@ class S3FilterForm(object):
                 _class = "%s %s" % (submit[1], _class)
             else:
                 label = submit
-            url = self.opts.get("url", URL(vars={}))
+            # Where to request filtered data from:
+            submit_url = self.opts.get("url", URL(vars={}))
+            # Where to request updated options from:
+            ajax_url = self.opts.get("ajaxurl", URL(args=["filter.json"], vars={}))
             submit = TAG[""](
                         INPUT(_type="button",
                               _value=label,
                               _class=_class),
                         INPUT(_type="hidden",
+                              _class="filter-ajax-url",
+                              _value=ajax_url),
+                        INPUT(_type="hidden",
                               _class="filter-submit-url",
-                              _value=url))
+                              _value=submit_url))
 
             if ajax and target:
                 submit.append(INPUT(_type="hidden",
@@ -1214,22 +1241,15 @@ class S3Filter(S3Method):
     
         options = {}
 
-        # Filter-form
         filter_widgets = get_config("filter_widgets", None)
         if filter_widgets:
             fresource = current.s3db.resource(resource.tablename)
             
             for widget in filter_widgets:
                 if hasattr(widget, "ajax_options"):
-                    opts = widget.ajax_options(fresource,
-                                               r.get_vars)
+                    opts = widget.ajax_options(fresource)
                     if opts and isinstance(opts, dict):
                         options.update(opts)
-
-            target = "datalist"
-            output["list_filter_form"] = filter_form.html(fresource,
-                                                            r.get_vars,
-                                                            target=target)
 
         options = json.dumps(options)
         current.response.headers["Content-Type"] = "application/json"

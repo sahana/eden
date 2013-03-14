@@ -35,6 +35,14 @@ class datalist_dl_post():
         return homepage()
 
 # =============================================================================
+class datalist_dl_filter():
+    """ AJAX URL for CMS Posts Filter Form (for Homepage) """
+
+    def __call__(self):
+
+        return homepage()
+
+# =============================================================================
 def homepage():
     """
         Custom Homepage
@@ -89,25 +97,38 @@ def homepage():
     s3.dl_pagelength = 6  # 5 forces an AJAX call
 
     if "datalist_dl_post" in request.args:
-        ajax = True
+        # DataList pagination or Ajax-deletion request
+        request.args = ["datalist"]
+        ajax = "list"
+    elif "datalist_dl_filter" in request.args:
+        # FilterForm options update request
+        request.args = ["filter"]
+        ajax = "filter"
     else:
-        ajax = False
+        # Default
+        request.args = ["datalist"]
+        ajax = None
 
     def prep(r):
-        if ajax:
+        if ajax == "list":
             r.representation = "dl"
+        elif ajax == "filter":
+            r.representation = "json"
         return True
     s3.prep = prep
 
-    request.args = ["datalist"]
     output = current.rest_controller("cms", "post",
-                                     list_ajaxurl = URL(f="index", args="datalist_dl_post"))
+                                     list_ajaxurl = URL(f="index",
+                                                        args="datalist_dl_post"),
+                                     filter_ajax_url = URL(f="index",
+                                                           args="datalist_dl_filter",
+                                                           vars={}))
 
-    if ajax:
+    if ajax == "list":
         # Don't override view if this is an Ajax-deletion request
         if not "delete" in request.get_vars:
             response.view = "plain.html"
-    else:
+    elif not ajax:
         form = output["form"]
         # Remove duplicate Submit button
         form[0][-1] = ""
