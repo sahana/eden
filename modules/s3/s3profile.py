@@ -63,7 +63,7 @@ class S3Profile(S3CRUD):
                 # Redirect to the List View
                 redirect(r.url(method=""))
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, r.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -132,7 +132,7 @@ class S3Profile(S3CRUD):
             else:
                 # Method not supported for this resource
                 # @ToDo Some kind of 'Page not Configured'?
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, r.ERROR.BAD_METHOD)
 
             output["rows"] = rows
             try:
@@ -250,42 +250,12 @@ class S3Profile(S3CRUD):
             # Page-load
             start, limit = 0, 4
 
+        # Ajax-delete items?
         if representation == "dl" and r.http in ("DELETE", "POST"):
-            delete = get_vars.get("delete", None)
-            if delete is not None:
-
-                dresource = current.s3db.resource(resource, id=delete)
-
-                # Deleting in this resource allowed at all?
-                deletable = dresource.get_config("deletable", True)
-                if not deletable:
-                    r.error(403, current.manager.ERROR.NOT_PERMITTED)
-                # Permitted to delete this record?
-                authorised = current.auth.s3_has_permission("delete",
-                                                            dresource.table,
-                                                            record_id=delete)
-                if not authorised:
-                    r.unauthorised()
-
-                # Callback
-                ondelete = dresource.get_config("ondelete")
-
-                # Delete it
-                numrows = dresource.delete(ondelete=ondelete,
-                                           format=representation)
-                if numrows > 1:
-                    message = "%s %s" % (numrows,
-                                         current.T("records deleted"))
-                elif numrows == 1:
-                    message = self.crud_string(dresource.tablename,
-                                               "msg_record_deleted")
-                else:
-                    r.error(404, current.manager.error)
-
-                # Return a JSON message
-                # @note: make sure the view doesn't get overridden afterwards!
-                current.response.view = "xml.html"
-                return current.xml.json_message(message=message)
+            if "delete" in r.get_vars:
+                return self._dl_ajax_delete(r, resource)
+            else:
+                r.error(405, r.ERROR.BAD_METHOD)
 
         # dataList
         datalist, numrows, ids = resource.datalist(fields=list_fields,

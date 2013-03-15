@@ -927,12 +927,34 @@ class S3ContingencyTable(TABLE):
         # Lookup table for cell list values
         cell_lookup_table = {} # {{}, {}}
 
+        # Aggregate row headers and cells for sorting
         cells = report.cell
         rvals = report.row
-        rvals.sort(key=lambda r: r.value)
+        rows_list = []
+        for i in xrange(numrows):
+            row = rvals[i]
+            # Add representation value of the row header
+            row["text"] = represent(rows, row.value)
+            rows_list.append((row, cells[i]))
+
+        # Sort the rows
+        rfield = rfields[rows]
+        ftype = rfield.ftype
+        sortby = "value"
+        # In some cases, we need to sort after the lookup value:
+        if ftype == "integer":
+            requires = rfield.requires
+            if isinstance(requires, (tuple, list)):
+                requires = requires[0]
+            if isinstance(requires, IS_EMPTY_OR):
+                requires = requires.other
+            if isinstance(requires, IS_IN_SET):
+                sortby = "text"
+        elif ftype[:9] == "reference":
+            sortby = "text"
+        rows_list.sort(key=lambda r: r[0][sortby])
 
         cell_vals = Storage()
-
         for i in xrange(numrows):
 
             # Initialize row
@@ -941,15 +963,17 @@ class S3ContingencyTable(TABLE):
             add_cell = tr.append
 
             # Row header
-            row = rvals[i]
-            v = represent(rows, row.value)
+            row = rows_list[i][0]
+            v = row["text"]
             add_row_title(s3_truncate(unicode(v)))
             rowhdr = TD(v)
             add_cell(rowhdr)
 
+            row_cells = rows_list[i][1]
+
             # Result cells
             for j in xrange(numcols):
-                cell = cells[i][j]
+                cell = row_cells[j]
                 vals = []
                 cell_ids = []
                 add_value = vals.append
