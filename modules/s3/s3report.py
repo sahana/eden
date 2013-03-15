@@ -818,6 +818,9 @@ class S3ContingencyTable(TABLE):
             Constructor
 
             @param report: the S3Pivottable instance
+            @param show_totals: show totals for rows and columns
+            @param url: link cells to this base-URL
+            @param filter_query: use this S3ResourceQuery with the base-URL
             @param attributes: the HTML attributes for the table
         """
 
@@ -853,7 +856,7 @@ class S3ContingencyTable(TABLE):
         row_totals = []
         add_row_total = row_totals.append
 
-        # Layer titles
+        # Layer titles:
 
         # Get custom labels from report options
         layer_labels = Storage()
@@ -867,7 +870,7 @@ class S3ContingencyTable(TABLE):
                                 item[1],
                                 item[2])
                     layer_labels[(item[0], item[1])] = item[2]
-                    
+
         labels = []
         get_mname = S3Report.mname
 
@@ -900,35 +903,29 @@ class S3ContingencyTable(TABLE):
 
         titles = TR(layers_title, cols_title)
 
-        # Rows field title
-        row_label = get_label(rfields, rows, tablename, "rows")
-        rows_title = TH(row_label, _scope="col")
-        headers = TR(rows_title)
+        # Sort dimensions:
 
-        # Column headers
-        add_header = headers.append
-        values = report.col
-        for i in xrange(numcols):
-            value = values[i].value
-            v = represent(cols, value)
-            add_col_title(s3_truncate(unicode(v)))
-            colhdr = TH(v, _scope="col")
-            add_header(colhdr)
-
-        # Row totals header
-        if show_totals and cols is not None:
-            add_header(TH(TOTAL, _class="totals_header rtotal", _scope="col"))
-        thead = THEAD(titles, headers)
-
-        # Table body
-        tbody = TBODY()
-        add_row = tbody.append
-
-        # Lookup table for cell list values
-        cell_lookup_table = {} # {{}, {}}
-
-        # Aggregate row headers and cells for sorting
         cells = report.cell
+
+        def sortdim(dim, items):
+            """ Sort a dimension """
+
+            rfield = rfields[dim]
+            ftype = rfield.ftype
+            sortby = "value"
+            if ftype == "integer":
+                requires = rfield.requires
+                if isinstance(requires, (tuple, list)):
+                    requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if isinstance(requires, IS_IN_SET):
+                    sortby = "text"
+            elif ftype[:9] == "reference":
+                sortby = "text"
+            items.sort(key=lambda item: item[0][sortby])
+
+        # Sort rows
         rvals = report.row
         rows_list = []
         for i in xrange(numrows):
@@ -936,25 +933,48 @@ class S3ContingencyTable(TABLE):
             # Add representation value of the row header
             row["text"] = represent(rows, row.value)
             rows_list.append((row, cells[i]))
+        sortdim(rows, rows_list)
 
-        # Sort the rows
-        rfield = rfields[rows]
-        ftype = rfield.ftype
-        sortby = "value"
-        # In some cases, we need to sort after the lookup value:
-        if ftype == "integer":
-            requires = rfield.requires
-            if isinstance(requires, (tuple, list)):
-                requires = requires[0]
-            if isinstance(requires, IS_EMPTY_OR):
-                requires = requires.other
-            if isinstance(requires, IS_IN_SET):
-                sortby = "text"
-        elif ftype[:9] == "reference":
-            sortby = "text"
-        rows_list.sort(key=lambda r: r[0][sortby])
+        # Sort columns
+        cvals = report.col
+        cols_list = []
+        for j in xrange(numcols):
+            column = cvals[j]
+            column["text"] = represent(cols, column.value)
+            cols_list.append((column, j))
+        sortdim(cols, cols_list)
 
+        # Build the column headers:
+
+        # Header for the row-titles column
+        row_label = get_label(rfields, rows, tablename, "rows")
+        rows_title = TH(row_label, _scope="col")
+        headers = TR(rows_title)
+
+        add_header = headers.append
+
+        # Headers for the cell columns
+        for j in xrange(numcols):
+            v = cols_list[j][0].text
+            add_col_title(s3_truncate(unicode(v)))
+            colhdr = TH(v, _scope="col")
+            add_header(colhdr)
+
+        # Header for the row-totals column
+        if show_totals and cols is not None:
+            add_header(TH(TOTAL, _class="totals_header rtotal", _scope="col"))
+
+        thead = THEAD(titles, headers)
+
+        # Render the table body:
+
+        tbody = TBODY()
+        add_row = tbody.append
+
+        # Lookup table for cell list values
+        cell_lookup_table = {} # {{}, {}}
         cell_vals = Storage()
+
         for i in xrange(numrows):
 
             # Initialize row
@@ -973,7 +993,10 @@ class S3ContingencyTable(TABLE):
 
             # Result cells
             for j in xrange(numcols):
-                cell = row_cells[j]
+
+                cell_idx = cols_list[j][1]
+                cell = row_cells[cell_idx]
+
                 vals = []
                 cell_ids = []
                 add_value = vals.append
@@ -998,9 +1021,7 @@ class S3ContingencyTable(TABLE):
                         else:
                             add_value(unicode(value))
 
-                    # hold the references
                     layer_ids = []
-                    # get previous lookup values for this layer
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
                     if m == "count":
@@ -1009,7 +1030,6 @@ class S3ContingencyTable(TABLE):
                         colname = rfield.colname
                         has_fk = field is not None and s3_has_foreign_key(field)
                         for id in cell.records:
-                            # cell.records == [#, #, #]
 
                             record = report.records[id]
                             try:
@@ -1041,25 +1061,15 @@ class S3ContingencyTable(TABLE):
                                                 if prev_id not in layer_ids:
                                                     layer_ids.append(prev_id)
 
-                                    #if id is not None and id not in layer_ids:
-                                        #layer_ids.append(int(id))
-                                        #layer_values[id] = s3_unicode(represent(f, fvalue))
-
                     cell_ids.append(layer_ids)
                     cell_lookup_table[layer_idx] = layer_values
 
-                # @todo: with multiple layers - show the first, hide the rest
-                #        + render layer selector in the layer title corner to
-                #        + switch between layers
-                #        OR: give every layer a title row (probably better method)
                 vals = [DIV(v, _class="report-cell-value") for v in vals]
-
                 if any(cell_ids):
                     cell_attr = {"_data-records": cell_ids}
                     vals.append(DIV(_class="report-cell-zoom"))
                 else:
                     cell_attr = {}
-
                 add_cell(TD(vals, **cell_attr))
 
             # Row total
@@ -1069,7 +1079,8 @@ class S3ContingencyTable(TABLE):
 
             add_row(tr)
 
-        # Table footer
+        # Table footer:
+
         i = numrows
         _class = i % 2 and "odd" or "even"
         _class = "%s %s" % (_class, "totals_row")
@@ -1089,14 +1100,16 @@ class S3ContingencyTable(TABLE):
             add_total(TD(grand_totals))
         tfoot = TFOOT(col_total)
 
-        # Wrap up
+        # Wrap up:
+
         append = components.append
         append(thead)
         append(tbody)
         if show_totals:
             append(tfoot)
 
-        # Chart data
+        # Chart data:
+
         layer_label = s3_unicode(layer_label)
         BY = T("by")
         row_label = "%s %s" % (BY, s3_unicode(row_label))
