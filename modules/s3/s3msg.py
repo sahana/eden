@@ -453,8 +453,8 @@ class S3Msg(object):
                 current.session.confirmation = T("Check outbox for the message status")
                 redirect(url)
             else:
-                current.session.error = T("Error in message:%s")\
-                                            % current.session.error
+                current.session.error = T("Error in message:%s") % \
+                                            current.session.error
                 redirect(url)
 
         # Source forms
@@ -473,7 +473,7 @@ class S3Msg(object):
         lcustom = logform.custom
         ocustom = outboxform.custom
 
-        pe_row = TR(TD(LABEL("%s:" % ocustom.label.pe_id)),
+        pe_row = TR(TD(LABEL(ocustom.label.pe_id)),
                     _id="msg_outbox_pe_id__row")
         if recipient:
             ocustom.widget.pe_id["_class"] = "hide"
@@ -489,24 +489,23 @@ class S3Msg(object):
         form = DIV( lcustom.begin,
                     TABLE(
                         TBODY(
-                            TR(TD(LABEL("%s:" % \
-                                ocustom.label.pr_message_method)),
+                            TR(TD(LABEL(ocustom.label.pr_message_method)),
                                TD(ocustom.widget.pr_message_method),
                                TD(ocustom.comment.pr_message_method),
                                _id="msg_outbox_pr_message_method__row"
                             ),
                             pe_row,
-                            TR(TD(LABEL("%s:" % lcustom.label.subject)),
+                            TR(TD(LABEL(lcustom.label.subject)),
                                TD(lcustom.widget.subject),
                                TD(lcustom.comment.subject),
                                _id="msg_log_subject__row"
                             ),
-                            TR(TD(LABEL("%s:" % lcustom.label.message)),
+                            TR(TD(LABEL(lcustom.label.message)),
                                TD(lcustom.widget.message),
                                TD(lcustom.comment.message),
                                _id="msg_log_message__row"
                             ),
-                            # TR(TD(LABEL("%s:" % lcustom.label.priority)),
+                            # TR(TD(LABEL(lcustom.label.priority)),
                                # TD(lcustom.widget.priority),
                                # TD(lcustom.comment.priority),
                                # _id="msg_log_priority__row"
