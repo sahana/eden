@@ -6614,7 +6614,7 @@ class ArcRESTLayer(Layer):
             self.setup_folder_and_visibility(output)
             self.add_attributes_if_not_default(
                 output,
-                layers = (self.layers, (0,)),
+                layers = (self.layers, ([0],)),
                 transparent = (self.transparent, (True,)),
                 base = (self.base, (False,)),
                 _base = (self._base, (False,)),

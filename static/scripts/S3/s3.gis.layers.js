@@ -168,7 +168,7 @@ function addArcRESTLayer(layer) {
     var url = [layer.url];
     var layers;
     if (undefined != layer.layers) {
-        layers = layer.layers;
+        layers = layer.layers.join();
     } else {
         // Default layer
         layers = 0;

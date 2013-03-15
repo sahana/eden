@@ -43,7 +43,8 @@ div.dl-item {
 }
 
 div#alert-space {
-    padding-top: 90px;
+    /* Push down below Nav */
+    padding-top: 60px;
 }
 
 h4.latest-disasters {
