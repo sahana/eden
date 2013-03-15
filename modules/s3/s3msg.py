@@ -421,13 +421,14 @@ class S3Msg(object):
                 # Filter by Recipient Type
                 otable.pe_id.requires = IS_ONE_OF(db,
                                                   "pr_pentity.pe_id",
-                                                  orderby="instance_type",
+                                                  # Breaks PG
+                                                  #orderby="instance_type",
                                                   filterby="instance_type",
                                                   filter_opts=(recipient_type,))
             otable.pe_id.comment = DIV(_class="tooltip",
                                        _title="%s|%s" % \
-                                        (T("Recipients"),
-                                         T("Please enter the first few letters of the Person/Group for the autocomplete.")))
+                (T("Recipients"),
+                 T("Please enter the first few letters of the Person/Group for the autocomplete.")))
         otable.pe_id.writable = True
         otable.pe_id.label = T("Recipient(s)")
 
@@ -457,12 +458,6 @@ class S3Msg(object):
                 redirect(url)
 
         # Source forms
-        #crud = current.crud
-        #logform = crud.create(ltable,
-        #                      onvalidation = compose_onvalidation,
-        #                      formname = "msg_log/%s" % formid)
-        #outboxform = crud.create(otable,
-        #                         formname = "msg_outbox/%s" % formid)
         sqlform = S3SQLDefaultForm()
         logform = sqlform(request=request,
                           resource=s3db.resource("msg_log"),
