@@ -929,7 +929,6 @@ class S3ContingencyTable(TABLE):
 
         cells = report.cell
         rvals = report.row
-        rvals.sort(key=lambda r: r.value)
 
         cell_vals = Storage()
 
