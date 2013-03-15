@@ -924,11 +924,12 @@ class S3ContingencyTable(TABLE):
         tbody = TBODY()
         add_row = tbody.append
 
-        # lookup table for cell list values
+        # Lookup table for cell list values
         cell_lookup_table = {} # {{}, {}}
 
         cells = report.cell
         rvals = report.row
+        rvals.sort(key=lambda r: r.value)
 
         cell_vals = Storage()
 
