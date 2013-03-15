@@ -130,7 +130,7 @@ class S3CRUD(S3Method):
             else:
                 output = self.unapproved(r, **attr)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, r.ERROR.BAD_METHOD)
 
         return output
 
@@ -370,7 +370,7 @@ class S3CRUD(S3Method):
             return exporter(r, **attr)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -558,7 +558,7 @@ class S3CRUD(S3Method):
             return exporter(resource)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -728,7 +728,7 @@ class S3CRUD(S3Method):
             return self.import_url(r)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -752,7 +752,7 @@ class S3CRUD(S3Method):
 
         # Check if deletable
         if not deletable:
-            r.error(403, current.manager.ERROR.NOT_PERMITTED,
+            r.error(403, r.ERROR.NOT_PERMITTED,
                     next=r.url(method=""))
 
         # Get callback
@@ -811,7 +811,7 @@ class S3CRUD(S3Method):
             output.update(item=item)
 
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, r.ERROR.BAD_METHOD)
 
         return output
 
@@ -1126,7 +1126,7 @@ class S3CRUD(S3Method):
                             orderby=orderby)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1329,7 +1329,7 @@ class S3CRUD(S3Method):
                             orderby=orderby)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _datatable(self, r, **attr):
@@ -1544,7 +1544,7 @@ class S3CRUD(S3Method):
                          '"aaData": []}' % (totalrows, sEcho)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1621,44 +1621,12 @@ class S3CRUD(S3Method):
         # Prepare data list
         representation = r.representation
 
-        # Ajax-delete items
+        # Ajax-delete items?
         if representation == "dl" and r.http in ("DELETE", "POST"):
-            delete = get_vars.get("delete", None)
-            if delete is not None:
-
-                dresource = current.s3db.resource(self.resource, id=delete)
-
-                # Deleting in this resource allowed at all?
-                deletable = dresource.get_config("deletable", True)
-                if not deletable:
-                    r.error(403, current.manager.ERROR.NOT_PERMITTED)
-                # Permitted to delete this record?
-                authorised = current.auth.s3_has_permission("delete",
-                                                            dresource.table,
-                                                            record_id=delete)
-                if not authorised:
-                    r.unauthorised()
-
-                # Callback
-                ondelete = dresource.get_config("ondelete")
-
-                # Delete it
-                numrows = dresource.delete(ondelete=ondelete,
-                                           format=representation)
-                if numrows > 1:
-                    message = "%s %s" % (numrows,
-                                         current.T("records deleted"))
-                elif numrows == 1:
-                    message = self.crud_string(dresource.tablename,
-                                               "msg_record_deleted")
-                else:
-                    r.error(404, current.manager.error)
-
-                # Return a JSON message
-                # @note: make sure the view doesn't get overridden afterwards!
-                output["item"] = current.xml.json_message(message=message)
-                current.response.view = "xml.html"
-                return output
+            if "delete" in get_vars:
+                return {"item": self._dl_ajax_delete(r, resource)}
+            else:
+                r.error(405, r.ERROR.BAD_METHOD)
 
         if representation in ("html", "dl"):
 
@@ -1731,7 +1699,7 @@ class S3CRUD(S3Method):
                      )
                 data = dl
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
 
         if representation == "html":
@@ -1952,7 +1920,7 @@ class S3CRUD(S3Method):
                          '"aaData": []}' % (totalrows, sEcho)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -2042,7 +2010,7 @@ class S3CRUD(S3Method):
             current.response.view = "review.html"
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
 
@@ -2086,7 +2054,7 @@ class S3CRUD(S3Method):
         """
 
         if r.representation != "json":
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
         output = Storage()
         resource = self.resource
@@ -2103,12 +2071,12 @@ class S3CRUD(S3Method):
                 resource = current.s3db.resource(tablename,
                                                  components=components)
             except:
-                r.error(404, current.manager.ERROR.BAD_RESOURCE)
+                r.error(404, r.ERROR.BAD_RESOURCE)
         if alias:
             if alias in resource.components:
                 component = resource.components[alias]
             else:
-                r.error(404, current.manager.ERROR.BAD_RESOURCE)
+                r.error(404, r.ERROR.BAD_RESOURCE)
         else:
             component = resource
 
@@ -2118,7 +2086,7 @@ class S3CRUD(S3Method):
         try:
             data = json.load(source)
         except ValueError:
-            r.error(501, current.manager.ERROR.BAD_SOURCE)
+            r.error(501, r.ERROR.BAD_SOURCE)
 
         if not isinstance(data, list):
             single = True
@@ -2885,5 +2853,48 @@ class S3CRUD(S3Method):
         else:
             settings.custom_submit = [item]
         return
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _dl_ajax_delete(cls, r, resource):
+
+        delete = r.get_vars.get("delete", None)
+        if delete is not None:
+
+            dresource = current.s3db.resource(resource, id=delete)
+
+            # Deleting in this resource allowed at all?
+            deletable = dresource.get_config("deletable", True)
+            if not deletable:
+                r.error(403, r.ERROR.NOT_PERMITTED)
+                
+            # Permitted to delete this record?
+            authorised = current.auth.s3_has_permission("delete",
+                                                        dresource.table,
+                                                        record_id=delete)
+            if not authorised:
+                r.unauthorised()
+
+            # Callback
+            ondelete = dresource.get_config("ondelete")
+
+            # Delete it
+            numrows = dresource.delete(ondelete=ondelete,
+                                       format=r.representation)
+            if numrows > 1:
+                message = "%s %s" % (numrows,
+                                     current.T("records deleted"))
+            elif numrows == 1:
+                message = cls.crud_string(dresource.tablename,
+                                          "msg_record_deleted")
+            else:
+                r.error(404, current.manager.error)
+
+            # Return a JSON message
+            # @note: make sure the view doesn't get overridden afterwards!
+            current.response.view = "xml.html"
+            return current.xml.json_message(message=message)
+        else:
+            r.error(404, r.ERROR.BAD_RECORD)
 
 # END =========================================================================
