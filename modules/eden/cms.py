@@ -215,8 +215,9 @@ class S3ContentModel(S3Model):
                                        key="tag_id",
                                        actuate="hide"))
 
+        # For InlineForm to tag Posts to Events
         add_component("event_post",
-                      cms_post=Storage(alias="event",
+                      cms_post=Storage(name="event",
                                        joinby="post_id"))
 
         # ---------------------------------------------------------------------

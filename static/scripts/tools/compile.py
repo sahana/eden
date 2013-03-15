@@ -23,6 +23,7 @@ if theme != "default":
                  "list.html",
                  "list_create.html",
                  "map.html",
+                 "popup.html",
                  "report.html",
                  "search.html",
                  "update.html",

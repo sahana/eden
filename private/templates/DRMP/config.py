@@ -169,14 +169,12 @@ def customize_cms_post(**attr):
         "series_id",
         "body",
         "location_id",
-        # @ToDo
-        #S3SQLInlineComponent(
-        #    "event",
-        #    name = "event_id",
-        #    label = T("Disaster(s)"),
-        #    fields = ["event_id",
-        #              ],
-        #),
+        S3SQLInlineComponent(
+            "event",
+            label = T("Disaster(s)"),
+            fields = ["event_id"],
+            orderby = "event_id$name"
+        ),
         S3SQLInlineComponent(
             "document",
             name = "file",

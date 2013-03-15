@@ -26,6 +26,13 @@ form {
     max-width: none;
 }
 
+/* Imitate Bootstrap in jQueryUI Modal */
+#popup #submit_record__row {
+    text-align: right;
+}
+.ui-dialog-titlebar-close:after {
+    content: "x";
+}
 /* Over-ride widgets */
 /*
 div#dl-container {
