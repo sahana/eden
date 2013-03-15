@@ -4409,7 +4409,8 @@ class S3ProjectTaskModel(S3Model):
         rows = db(query).select(titable.hours)
         hours = 0
         for row in rows:
-            hours += row.hours
+            if row.hours:
+                hours += row.hours
 
         # Update the Task
         query = (ttable.id == task_id)

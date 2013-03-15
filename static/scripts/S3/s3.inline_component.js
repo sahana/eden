@@ -606,6 +606,7 @@ $(function() {
                 var subform = $(this).parent().parent();
                 var names = subform.attr('id').split('-');
                 inline_add(names.pop());
+                inline_catch_submit(false, 'none', 'none');
             }
         });
     };
