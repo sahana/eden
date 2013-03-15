@@ -216,9 +216,14 @@ class S3ContentModel(S3Model):
                                        actuate="hide"))
 
         # For InlineForm to tag Posts to Events
-        add_component("event_post",
-                      cms_post=Storage(name="event",
-                                       joinby="post_id"))
+        add_component("event_event_post", cms_post="post_id")
+
+        # For Profile to filter appropriately
+        add_component("event_event",
+                      cms_post=Storage(link="event_event_post",
+                                       joinby="post_id",
+                                       key="event_id",
+                                       actuate="hide"))
 
         # ---------------------------------------------------------------------
         # Modules <> Posts link table

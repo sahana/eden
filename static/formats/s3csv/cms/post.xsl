@@ -24,6 +24,7 @@
          Author...................Post created_by (email)
          Date.....................Post created_on (datetime)
          Attachment...............doc_document (URL to remote server to download)
+         Events...................Comma-separated list of Events to tag the Post to
          Roles....................Post Roles (not yet implemented)
 
     *********************************************************************** -->
@@ -206,6 +207,12 @@
                 </resource>
             </xsl:if>
 
+            <!-- Events -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="col[@field='Events']"/></xsl:with-param>
+                <xsl:with-param name="arg">event</xsl:with-param>
+            </xsl:call-template>
+
         </resource>
 
     </xsl:template>
@@ -221,6 +228,25 @@
             <data field="name"><xsl:value-of select="$Series"/></data>
         </resource>
 
+    </xsl:template>
+
+     <!-- ****************************************************************** -->
+    <xsl:template name="resource">
+        <xsl:param name="item"/>
+        <xsl:param name="arg"/>
+
+        <xsl:choose>
+            <!-- Event list -->
+            <xsl:when test="$arg='event'">
+                <resource name="event_event_post">
+                    <reference field="event_id" resource="event_event">
+                        <resource name="event_event">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->

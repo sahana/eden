@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon.http import redirect
 from gluon import current
 from gluon.html import *
+from gluon.http import redirect
 from gluon.storage import Storage
 
 from s3crud import S3CRUD

@@ -170,7 +170,7 @@ def customize_cms_post(**attr):
         "body",
         "location_id",
         S3SQLInlineComponent(
-            "event",
+            "event_post",
             label = T("Disaster(s)"),
             fields = ["event_id"],
             orderby = "event_id$name"

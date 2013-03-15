@@ -779,7 +779,7 @@ class S3EventCMSModel(S3Model):
         Link CMS Posts to Events
     """
 
-    names = ["event_post"]
+    names = ["event_event_post"]
 
     def model(self):
 
@@ -792,7 +792,7 @@ class S3EventCMSModel(S3Model):
         # Posts
         # @ToDo: Search Widget
 
-        tablename = "event_post"
+        tablename = "event_event_post"
         table = self.define_table(tablename,
                                   self.event_event_id(),
                                   self.cms_post_id(),
