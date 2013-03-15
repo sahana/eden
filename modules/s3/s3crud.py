@@ -1633,9 +1633,9 @@ class S3CRUD(S3Method):
                 if not deletable:
                     r.error(403, current.manager.ERROR.NOT_PERMITTED)
                 # Permitted to delete this record?
-                permitted = current.auth.s3_has_permission("delete",
-                                                           dresource.table,
-                                                           record_id=delete)
+                authorised = current.auth.s3_has_permission("delete",
+                                                            dresource.table,
+                                                            record_id=delete)
                 if not authorised:
                     r.unauthorised()
 

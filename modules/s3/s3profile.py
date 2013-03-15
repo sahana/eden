@@ -27,6 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from gluon.http import redirect
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
@@ -55,7 +56,7 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        if r.http == "GET":
+        if r.http in ("GET", "POST", "DELETE"):
             if r.record:
                 output = self.profile(r, **attr)
             else:
@@ -79,46 +80,67 @@ class S3Profile(S3CRUD):
         # Initialise Output
         output = dict()
 
-        # Get the options
+        # Get the page widgets
         widgets = current.s3db.get_config(tablename, "profile_widgets")
-        rows = []
-        if widgets:
-            append = rows.append
-            odd = True
-            for widget in widgets:
-                w_type = widget["type"]
-                if odd:
-                    row = DIV(_class="row profile")
-                colspan = widget.get("colspan", 1)
-                if w_type == "map":
-                    row.append(self._map(r, widget, **attr))
-                    if colspan == 2:
-                        append(row)
-                elif w_type == "comments":
-                    row.append(self._comments(r, widget, **attr))
-                    if colspan == 2:
-                        append(row)
-                elif w_type == "datalist":
-                    row.append(self._datalist(r, widget, **attr))
-                    if colspan == 2:
-                        append(row)
+        
+        # Index the widgets by their position in the config
+        for index, widget in enumerate(widgets):
+            widget["index"] = index
+            
+        if r.representation == "dl":
+            # Ajax-update of one datalist
+            get_vars = r.get_vars
+            index = r.get_vars.get("update", None)
+            if index:
+                try:
+                    index = int(index)
+                except ValueError:
+                    datalist = ""
                 else:
-                    raise
-                if odd:
-                    odd = False
-                else:
-                    odd = True
-                    append(row)
+                    datalist = self._datalist(r, widgets[index], **attr)
+            output["item"] = datalist
         else:
-            # @ToDo Some kind of 'Page not Configured'?
-            pass
+            # Default page-load
+            rows = []
+            if widgets:
+                append = rows.append
+                odd = True
+                for widget in widgets:
+                    w_type = widget["type"]
+                    if odd:
+                        row = DIV(_class="row profile")
+                    colspan = widget.get("colspan", 1)
+                    if w_type == "map":
+                        row.append(self._map(r, widget, **attr))
+                        if colspan == 2:
+                            append(row)
+                    elif w_type == "comments":
+                        row.append(self._comments(r, widget, **attr))
+                        if colspan == 2:
+                            append(row)
+                    elif w_type == "datalist":
+                        row.append(self._datalist(r, widget, **attr))
+                        if colspan == 2:
+                            append(row)
+                    else:
+                        raise
+                    if odd:
+                        odd = False
+                    else:
+                        odd = True
+                        append(row)
+            else:
+                # Method not supported for this resource
+                # @ToDo Some kind of 'Page not Configured'?
+                r.error(405, current.manager.ERROR.BAD_METHOD)
 
-        output["rows"] = rows
-        try:
-            output["title"] = r.record.name
-        except:
-            output["title"] = current.T("Profile Page")
-        current.response.view = self._view(r, "profile.html")
+            output["rows"] = rows
+            try:
+                output["title"] = r.record.name
+            except:
+                output["title"] = current.T("Profile Page")
+            current.response.view = self._view(r, "profile.html")
+            
         return output
 
     # -------------------------------------------------------------------------
@@ -169,10 +191,8 @@ class S3Profile(S3CRUD):
         if filter:
             resource.add_filter(filter)
 
-        listid = "profile-list-%s" % tablename
-        if filter:
-            # We may have multiple of the same resource with different filters
-            listid = "%s-%s" % (listid, filter.right)
+        # Use the widget-index to create a unique ID
+        listid = "profile-list-%s-%s" % (tablename, widget["index"])
 
         c, f = tablename.split("_", 1)
 
@@ -193,21 +213,84 @@ class S3Profile(S3CRUD):
         # 1st choice: Widget
         # 2nd choice: get_config
         # 3rd choice: Default
+        config = resource.get_config
         list_fields = widget.get("list_fields", 
-                                 resource.get_config("list_fields",
-                                                     [f for f in table.fields if table[f].readable]
-                                                     ))
+                                 config("list_fields", None))
         list_layout = widget.get("list_layout", 
-                                 resource.get_config("list_layout",
-                                                     None))
+                                 config("list_layout", None))
         orderby = widget.get("orderby",
-                             resource.get_config("list_orderby",
-                                                 ~resource.table.created_on))
+                             config("list_orderby",
+                                    ~resource.table.created_on))
+
+        # Page size
+        pagesize = 4
+        representation = r.representation
+        if representation == "dl":
+            # Ajax-update
+            get_vars = r.get_vars
+            record_id = get_vars.get("record", None)
+            if record_id is not None:
+                # Ajax-update of a single record
+                from s3resource import S3FieldSelector as FS
+                resource.add_filter(FS("id") == record_id)
+                start, limit = 0, 1
+            else:
+                # Ajax-update of full page
+                start = get_vars.get("start", None)
+                limit = get_vars.get("limit", None)
+                if limit is not None:
+                    try:
+                        start = int(start)
+                        limit = int(limit)
+                    except ValueError:
+                        start, limit = 0, 4
+                else:
+                    start = None
+        else:
+            # Page-load
+            start, limit = 0, 4
+
+        if representation == "dl" and r.http in ("DELETE", "POST"):
+            delete = get_vars.get("delete", None)
+            if delete is not None:
+
+                dresource = current.s3db.resource(resource, id=delete)
+
+                # Deleting in this resource allowed at all?
+                deletable = dresource.get_config("deletable", True)
+                if not deletable:
+                    r.error(403, current.manager.ERROR.NOT_PERMITTED)
+                # Permitted to delete this record?
+                authorised = current.auth.s3_has_permission("delete",
+                                                            dresource.table,
+                                                            record_id=delete)
+                if not authorised:
+                    r.unauthorised()
+
+                # Callback
+                ondelete = dresource.get_config("ondelete")
+
+                # Delete it
+                numrows = dresource.delete(ondelete=ondelete,
+                                           format=representation)
+                if numrows > 1:
+                    message = "%s %s" % (numrows,
+                                         current.T("records deleted"))
+                elif numrows == 1:
+                    message = self.crud_string(dresource.tablename,
+                                               "msg_record_deleted")
+                else:
+                    r.error(404, current.manager.error)
+
+                # Return a JSON message
+                # @note: make sure the view doesn't get overridden afterwards!
+                current.response.view = "xml.html"
+                return current.xml.json_message(message=message)
 
         # dataList
         datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                                   start=None,
-                                                   limit=4,
+                                                   start=start,
+                                                   limit=limit,
                                                    listid=listid,
                                                    orderby=orderby,
                                                    layout=list_layout)
@@ -220,8 +303,15 @@ class S3Profile(S3CRUD):
             data = msg
         else:
             # Render the list
-            dl = datalist.html()
+            ajaxurl = r.url(vars={"update": widget["index"]},
+                            representation="dl")
+            dl = datalist.html(ajaxurl = ajaxurl, pagesize = pagesize)
             data = dl
+
+        if representation == "dl":
+            # This is an Ajax-request, so we don't need the wrapper
+            current.response.view = "plain.html"
+            return data
 
         label = widget.get("label", "")
         if label:
