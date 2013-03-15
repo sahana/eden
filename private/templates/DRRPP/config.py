@@ -351,7 +351,9 @@ if($('[name=sub_drrpp_L1]').is(':checked')==false){
                               field = "theme.id",
                               options = s3db.project_theme_opts,
                               help_field = s3db.project_theme_helps,
-                              cols = 4
+                              cols = 4,
+                              # Don't group
+                              size = 30
                               ),
         S3SearchOptionsWidget(name = "project_search_hfa",
                               label = T("HFA"),
