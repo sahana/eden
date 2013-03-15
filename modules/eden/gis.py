@@ -1078,7 +1078,7 @@ class S3GISConfigModel(S3Model):
                              Field("name", length=64,
                                    notnull=True, unique=True,
                                    label = T("Name")),
-                             Field("image", "upload", autodelete=True,
+                             Field("image", "upload", autodelete=False,
                                    label = T("Image"),
                                    # upload folder needs to be visible to the download() function as well as the upload
                                    uploadfolder = os.path.join(current.request.folder,
