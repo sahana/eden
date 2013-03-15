@@ -64,6 +64,7 @@ from gluon.html import *
 
 from s3codec import S3Codec
 from s3crud import S3CRUD
+from s3forms import S3SQLDefaultForm
 from s3utils import s3_debug
 from s3validators import IS_IN_SET, IS_ONE_OF, IS_ONE_OF_EMPTY
 
@@ -317,7 +318,8 @@ class S3Msg(object):
         """
 
         T = current.T
-        vars = current.request.vars
+        request = current.request
+        vars = request.vars
         db = current.db
         s3db = current.s3db
         ltable = s3db.msg_log
@@ -391,7 +393,6 @@ class S3Msg(object):
                         contact_method_opts[row.contact_method] = all_contact_opts[row.contact_method]
                 if not contact_method_opts:
                     current.session.error = T("There are no contacts available for this person!")
-                    request = current.request
                     controller = request.controller
                     vars = request.get_vars
                     if controller == "hrm":
@@ -456,12 +457,22 @@ class S3Msg(object):
                 redirect(url)
 
         # Source forms
-        crud = current.crud
-        logform = crud.create(ltable,
-                              onvalidation = compose_onvalidation,
-                              formname = "msg_log/%s" % formid)
-        outboxform = crud.create(otable,
-                                 formname = "msg_outbox/%s" % formid)
+        #crud = current.crud
+        #logform = crud.create(ltable,
+        #                      onvalidation = compose_onvalidation,
+        #                      formname = "msg_log/%s" % formid)
+        #outboxform = crud.create(otable,
+        #                         formname = "msg_outbox/%s" % formid)
+        sqlform = S3SQLDefaultForm()
+        logform = sqlform(request=request,
+                          resource=s3db.resource("msg_log"),
+                          onvalidation=compose_onvalidation,
+                          message="Message Sent",
+                          format="html")
+        outboxform = sqlform(request=request,
+                             resource=s3db.resource("msg_outbox"),
+                             message="Message Sent",
+                             format="html")
 
         # Shortcuts
         lcustom = logform.custom

@@ -413,7 +413,7 @@ def customize_event_event(**attr):
                                     assessments_widget,
                                     activities_widget,
                                     reports_widget,
-                                    comments_widget,
+                                    #comments_widget,
                                     ],
                    )
 
