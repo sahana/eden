@@ -364,10 +364,36 @@ def req_controller():
         if r.component and r.component.name == "commit":
             table = r.component.table
             record = r.record
-            # Allow commitments to be added when doing so as a component
-            s3db.configure(table,
-                           listadd = True)
-
+            stable = s3db.org_site
+            commit_status = record.commit_status
+            
+            #Commits belonging to this request
+            rsites = []
+            query = (table.deleted == False)&(table.req_id == record.id)
+            req_sites = db(query).select(table.site_id)
+            for req_site in req_sites:
+                rsites += [req_site.site_id]
+            
+            #All the sites
+            commit_sites = db((stable.deleted == False)).select(stable.id,
+                                                              stable.code)
+            
+            #Sites which have not committed to this request yet
+            site_opts = {}
+            for site in commit_sites:
+                if (site.id not in site_opts) and (site.id not in rsites):
+                    site_opts[site.id] = site.code
+            
+            table.site_id.requires = IS_IN_SET(site_opts)
+            #Restrict from committing to completed requests
+            if (commit_status == 2) and settings.get_req_restrict_on_complete():
+                s3db.configure(table,
+                               listadd=False)
+            else:    
+                # Allow commitments to be added when doing so as a component
+                s3db.configure(table,
+                               listadd = True)
+                
             if type == 1: # Items
                 # Limit site_id to facilities the user has permissions for
                 auth.permitted_facilities(table=r.table,
