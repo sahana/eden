@@ -258,13 +258,14 @@ def template():
     s3.prep = prep
 
     def postp(r,output):
-        if "form" in output:
-            s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
-            tablename = r.tablename
-            if tablename == "cap_alert":
-                output["form"].update(_class="cap_template_form")
-            elif tablename == "cap_info":
-                output["form"].update(_class="cap_info_template_form")
+	if r.interactive:
+        	if "form" in output:
+            		s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
+            		tablename = r.tablename
+            		if tablename == "cap_alert":
+                		output["form"].add_class("cap_template_form")
+            		elif tablename == "cap_info":
+                		output["form"].add_class("cap_info_template_form")
         return output
     s3.postp = postp
 
