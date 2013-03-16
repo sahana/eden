@@ -419,6 +419,8 @@ settings.L10n.decimal_separator = "."
 #settings.req.req_type = ["Stock"]
 # Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
 #settings.req.summary = True
+#Uncomment to restrict adding new commits to Completed commits
+#settings.req.req_restrict_on_complete = True
 
 # Custom Crud Strings for specific req_req types
 #settings.req.req_crud_strings = dict()
