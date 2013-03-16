@@ -262,7 +262,10 @@ def template():
             s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
             tablename = r.tablename
             if tablename == "cap_alert":
-                output["form"].update(_class="cap_template_form")
+		try:
+                	output["form"].update(_class="cap_template_form")
+		except TypeError:
+			pass
             elif tablename == "cap_info":
                 output["form"].update(_class="cap_info_template_form")
         return output
