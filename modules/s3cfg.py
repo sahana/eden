@@ -772,7 +772,7 @@ class S3Config(Storage):
         """
             The From Address for all Outbound Emails
         """
-        return self.mail.get("sender", None)
+        return self.mail.get("sender", "'Sahana' <sahana@sahanafoundation.org>")
     def get_mail_approver(self):
         """
             The default Address to send Requests for New Users to be Approved

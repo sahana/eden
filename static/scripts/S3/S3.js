@@ -134,11 +134,13 @@ S3.addModals = function() {
         var url = this.href;
         S3.popup_loaded = function() {
             // Resize the iframe to fit the Dialog
-            var width = $('.ui-dialog').width() - 10;
+            var dummy = 0;
+        	var width = $('.ui-dialog').width() - 10;
+        	
             dialog.css({width: width});
         }
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded()"></iframe>')
+        var dialog = $('<iframe class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded()" style = "width:740px;"></iframe>')
                       .appendTo('body');
         dialog.dialog({
             // add a close listener to prevent adding multiple divs to the document
@@ -146,11 +148,12 @@ S3.addModals = function() {
                 // remove div with all data and events
                 dialog.remove();
             },
-            minHeight: 600,
+            minHeight: 500,
             modal: true,
             open: function(event, ui) {$('.ui-widget-overlay').bind('click', function(){ dialog.dialog('close'); });},
             title: title,
-            width: 600
+            width: 750,
+            closeText: ""
         });
         // Prevent browser from following link
         return false;

@@ -261,14 +261,15 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                                styleLargeHeader)
         currentRow.height = 500
         currentRow = sheet1.row(1)
-        currentRow.write(colCnt, request.now, styleNotes)
+        currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
+        currentRow.write(1, request.now, styleNotes)
         # Fix the size of the last column to display the date
         if 16 * COL_WIDTH_MULTIPLIER > width:
             sheet1.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
         totalCols = colCnt
-        rowCnt = 3
+        rowCnt = 2
         colCnt = 0
 
         subheading = None
