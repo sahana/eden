@@ -475,7 +475,8 @@ class S3RequestModel(S3Model):
             list_fields.append("commit_status")
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
-
+        list_fields.append((T("Committed By"), "commit.site_id"))
+        
         self.configure(tablename,
                        onaccept = self.req_onaccept,
                        ondelete = self.req_req_ondelete,
