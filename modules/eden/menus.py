@@ -887,6 +887,7 @@ class S3OptionsMenu(object):
                         M("Search", m="search"),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
+                        M("Search by skills", f="competency", args=["search"]),
                     ),
                     M("Teams", f="group",
                       check=[manager_mode, use_teams])(
