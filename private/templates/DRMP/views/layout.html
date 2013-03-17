@@ -65,45 +65,37 @@
  {{include}}
 {{else:}}
 <body data-spy='scroll' data-target='.bs-docs-sidebar'>
- <div class='navbar navbar-fixed-top'>
-  <div class='navbar-inner'>
-   <div class='container'>
-    <button type='button' class='btn btn-navbar' data-toggle='collapse' data-target='.nav-collapse'>
-     <span class='icon-bar'></span>
-     <span class='icon-bar'></span>
-     <span class='icon-bar'></span>
-    </button>
-    <a class='brand' href='/{{=appname}}/default/index'>DRMP</a>
-    <div class='nav-collapse collapse'>
-     <ul class='nav'>
-      <li class=''>
-       <a href='/{{=appname}}/default/index'>Home</a>
-      </li>
-      <li class=''>
-       <a href='/{{=appname}}/gis/index'>Map</a>
-      </li>
-      <li class=''>
-       <a href='/{{=appname}}/default/index/profile'>Profile</a>
-      </li>
-      <li class=''>
-       <a href='/{{=appname}}/default/index/more'>More</a>
-      </li>
-     </ul>
-    </div>
-   </div>
-  </div>
- </div>
- <div class='container'>
-  <div id='alert-space'>
-  {{if response.error:}}<div class='alert alert-error'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.error}}</div>{{pass}}
-  {{if response.warning:}}<div class='alert'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.warning}}</div>{{pass}}
-  {{if response.information:}}<div class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.information}}</div>{{pass}}
-  {{if response.confirmation:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.confirmation}}</div>{{pass}}
-  {{if response.flash:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.flash}}</div>{{pass}}
-  </div>
-  <a href='/{{=appname}}/default/index/secondary' class='first'><i class='icon icon-reorder' style='font-size: 30px;'></i></a>
-  {{include}}
- </div>
+ 	<div class='navbar navbar-fixed-top'>
+  		<div class='navbar-inner'>
+   			<div class='container'>
+    			<button type='button' class='btn btn-navbar' data-toggle='collapse' data-target='.nav-collapse'>
+    				<span class='icon-bar'></span>
+			    	<span class='icon-bar'></span>
+			    	<span class='icon-bar'></span>
+    			</button>
+    			<a class='brand' href='/{{=appname}}/default/index'>DRMP</a>
+    			<div class='nav-collapse collapse'>
+     				<ul class='nav'>
+      					<li class=''><a href='/{{=appname}}/default/index'> <i class="icon-home"></i> Home</a></li>
+      					<li class=''><a href='/{{=appname}}/gis/index'><i class="icon-map-marker"></i> Map</a></li>
+      					<li class=''><a href='/{{=appname}}/default/index/profile'><i class="icon-user"></i> Profile</a></li>
+						<li class=''><a href='/{{=appname}}/default/index/more'> <i class="icon-plus-sign"></i> More</a></li>
+     				</ul>
+    			</div>
+   			</div>
+  		</div>
+ 	</div>
+ 	<div class='container'>
+		<div id='alert-space'>
+		{{if response.error:}}<div class='alert alert-error'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.error}}</div>{{pass}}
+		{{if response.warning:}}<div class='alert'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.warning}}</div>{{pass}}
+		{{if response.information:}}<div class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.information}}</div>{{pass}}
+		{{if response.confirmation:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.confirmation}}</div>{{pass}}
+		{{if response.flash:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.flash}}</div>{{pass}}
+		</div>
+  	<a href='/{{=appname}}/default/index/secondary' class='first btn btn-small'><i class='icon icon-reorder' style='font-size: 25px;'></i></a>
+  		{{include}}
+ 	</div>
  <div id='footer'>
   {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}

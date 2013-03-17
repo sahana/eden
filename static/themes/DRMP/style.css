@@ -1,7 +1,13 @@
+/* @override 
+	http://tldrmp.aidiq.com/eden/static/themes/DRMP/eden.min.css
+	http://127.0.0.1:8001/eden/static/themes/DRMP/style.css */
+
 body {
-    background: none repeat scroll 0 0 #eeeeee;
-    /* 60px to make the container go all the way to the bottom of the topbar
-    padding-top: 60px;  */
+    font: 14px/21px 'Open Sans', sans-serif;
+    color: #666;
+    overflow-x: hidden;
+    background: url(../img/bg.png) #e6e6e6;
+    padding-top: 50px;
 }
 
 /* Over-ride ext */
@@ -54,12 +60,32 @@ div#alert-space {
     padding-top: 60px;
 }
 
-h4.latest-disasters {
-    text-align: center;
-}
-
+h4.latest-disasters,
 h4.latest-updates {
     text-align: center;
+    padding: 6px;
+    border-bottom: solid 1px #c9ccd0;
+    border-radius: 5px 5px 0 0;
+    background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8));
+    background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8);
+    background-image: -moz-linear-gradient(top,#f9f9fa,#e0e2e8);
+    background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8);
+    background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8);
+    background-image: linear-gradient(top,#f9f9fa,#e0e2e8);
+    -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+    -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+    -o-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
+    margin-bottom: -1px;
+    border: 1px solid #b2b2b2;
+}
+
+h4.latest-disasters,
+h4.latest-updates {
+	-moz-box-shadow: 0 2px 5px #827f7f;
+	-webkit-box-shadow: 0 2px 5px #827f7f;
+	box-shadow: 0 2px 5px #827f7f;
+
 }
 
 input.filter-search {
@@ -109,13 +135,19 @@ p.card-person {
     margin-bottom: -5px;
 }
 
-i.icon.icon-plus-sign.big-add {
-    font-size: 24px;
-    color: #0096fe;
-    float: right;
-    position: relative;
-    top: -31px;
+a i.icon.icon-plus-sign.big-add {
+	font-size: 24px;
+	color: #0096fe;
+	float: right;
+	position: relative;
+	top: -29px;
+	right: 8px;
 }
+
+a i.icon.icon-plus-sign.big-add:hover {
+    text-decoration: none;
+}
+
 
 i.icon.icon-paper-clip.fright {
     font-size: 17px;
@@ -203,24 +235,146 @@ div.card-header {
     padding: 5px;
 }
 
-div.thumbnail {
-    background: #fff;
-    margin-bottom: 8px;
-}
+/*------------------  The Front Page ------------------ */
 
-div.thumbnail.side-filter {
-    background-color: #fff;
-    position: relative;
-    top: 40px;
-    /*height: 300px;*/
-}
-
-/* Front Page */
 #datalist span.location-title {
     text-transform: uppercase;
 }
 
-/* Profile Page */
+div.card-holder-home {
+	-moz-box-shadow: 0 2px 5px #827f7f;
+	-webkit-box-shadow: 0 2px 5px #827f7f;
+	box-shadow: 0 2px 5px #827f7f;
+	
+}
+
+
+
+/*------------------  The New Card  ----------------------- */
+
+div.thumbnail {
+	background-color: #fff;
+	border-radius: 0px;
+	margin-bottom: 0;
+	-moz-box-shadow: 0 -1px 3px #d7d7d6;
+	-webkit-box-shadow: 0 -1px 3px #d7d7d6;
+	box-shadow: 0 -1px 3px #d7d7d6;
+}
+
+	
+/*div.thumbnail :after{
+	content: '';
+	position: absolute;
+	right: -4px;
+	top: 45px;
+	width: 0;
+	height: 0;
+	border-top: 30px solid transparent;
+	border-left: 30px solid transparent; 
+	border-right: 30px solid #BDC3C7; 
+	pointer-events: none;	
+}*/
+
+div.thumbnail:hover {
+	background-color: #f5f5f5;
+	-webkit-transition: all 0.2s ease-in-out;
+	-moz-transition: all 0.2s ease-in-out;
+	-ms-transition: all 0.2s ease-in-out;
+	-o-transition: all 0.2s ease-in-out;
+	transition: all 0.2s ease-in-out;
+	cursor: auto;
+}
+
+img.media-object {
+	height: 55px;	
+	
+}
+
+div.span5.card-details {
+	margin-left: 7px;
+}
+
+span.user_details {
+	width: 66px;
+	min-height: 84px;
+}
+
+p.citation {
+	float: left;
+	clear: left;
+	width: 58px;
+	font-size: 80%;
+	line-height: 11px;
+	text-align: center;
+}
+
+div#alert-space {
+	padding-top: 20px;
+}
+
+a i.icon-paper-clip.pull-right {
+	font-size: 20px;
+	margin: -1px;
+}
+
+a i.icon-paper-clip.pull-right:hover {
+	text-decoration: none;
+}
+
+span.date-title {
+	font: 11px "Helvetica Neue",Arial,sans-serif;
+	list-style: none outside none;
+	text-decoration: none;
+	text-transform: none;
+	color: #999;	
+}
+	
+span.card-title {
+	font-size: 14px;
+}
+
+span.location-title {
+	font: bold 13px "Helvetica Neue", Arial,sans-serif;
+	color: #333333;
+}
+
+p.card_comments {
+	font: 13px/17px "Georgia",Times;
+	color: #5c5c5c;
+	padding-top: 2px;
+}
+
+
+div.edit-bar.pull-right {
+	color: #8a8989;
+	font-size: 14px;
+}
+
+i.icon.icon-edit {
+	padding-right: 3px;
+}
+
+div.attachment.pull-right {
+	font-size: 21px;
+	padding: 10px;
+}
+
+
+/*------------------  Filter Styling ----------------------- */
+
+div.thumbnail.side-filter {
+    background-color: #fff;
+    position: relative;
+    top: 11px;
+    border-radius: 6px;
+	padding: 20px;
+	border: 1px solid #b2b2b2;
+}
+
+
+/*------------------  Profile Page Styling ----------------------- */
+
+
 h2.profile_header {
     font-size: 25px;
 	color: #666;
@@ -229,15 +383,24 @@ h2.profile_header {
     font-weight: normal;
 	font-style: normal;
 }
-div.row.profile {
-    margin-top: 5px;
+
+h4.Profile_Header {
+	font-size: 25px;
+	color: #666;
+	text-align: center;
+	font-weight: normal;
+	font-style: normal;
 }
+
 h4.profile-sub-header {
 	font-size: 20px;
 	color: #666;
 	text-align: center;
 	font-weight: normal;
 	font-style: normal;	
+}
+
+h4.profile-sub-header {
 	padding: 6px;
 	border-bottom: solid 1px #c9ccd0;
 	border-radius: 5px 5px 0 0;
@@ -252,24 +415,66 @@ h4.profile-sub-header {
 	-o-box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
 	box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),0 0 3px rgba(0,0,0,0.25);
 	margin-bottom: -1px;
+
 }
+
+div.row.profile {
+	margin-top: 5px;
+}
+
 a i.icon.icon-plus-sign.small-add {
-    color: #0096FE;
-    float: right;
-    font-size: 17px;
-    position: relative;
-    right: 9px;
-    top: 17px;
+	font-size: 17px;
+	color: #0096fe;
+	float: right;
+	position: relative;
+	top: 17px;
+	right: 9px;
+	
 }
+
+a i.icon.icon-plus-sign.small-add:hover{
+	text-decoration: none;
+	color: #2da7fc;
+}
+
 div.card-holder {
 	display: inline-block;
 	min-height: 383px;
-	width: 460px;
+	width: 460;
 	-moz-box-shadow: 0 2px 5px #827f7f;
 	-webkit-box-shadow: 0 2px 5px #827f7f;
 	box-shadow: 0 2px 5px #827f7f;
 	background-color: #f0f0ef;
 }
+
+div.thumbnail.map {
+	height: 383px;
+	
+}
+
+div.more_profile {
+	text-align: center;
+	padding: 5px;
+}
+
+p.empty_card-holder {
+	text-align: center;
+	font: 15px Georgia, "Times New Roman", Times, serif;
+	position: relative;
+	top: 144px;
+	opacity: 0.67;
+}
+
+i.icon-folder-open-alt {
+	font-size: 25px;
+}
+
+
+
+/*------------------  END OF PROFILE PAGE  ----------------------- */
+
+
+
 div.span5.card-details {
     margin-left: 7px;
 }
@@ -301,12 +506,4 @@ div.card-holder p.card_comments {
 	font: 13px/17px "Georgia",Times;
 	color: #5c5c5c;
 	padding-top: 2px;
-}
-p.citation {
-    clear: left;
-    float: left;
-    font-size: 80%;
-    line-height: 11px;
-    text-align: center;
-    width: 58px;
 }
