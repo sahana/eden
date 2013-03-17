@@ -85,7 +85,7 @@ i.icon.icon-assessment,
 i.icon.icon-disaster,
 i.icon.icon-training.material,
 i.icon.icon-plans  {
-    font-size: 17px;
+    font-size: 21px;
     display: inline-block;
     width: 130px;
     color: #333;
@@ -130,7 +130,6 @@ div.edit-bar.fright {
     font-size: 15px;
     position: relative;
     top: 4px;
-	float: right; /*temporary*/
 }
 
 div.attachment.fright {
@@ -142,6 +141,7 @@ div.media {
     margin-top: 8px;
     padding-right: 10px;
     font: 14px/20px Georgia,"Times New Roman",Palatino,serif;
+	color: #333;
 }
 
 div.card-person {
@@ -298,10 +298,10 @@ a i.icon-paper-clip.pull-right:hover {
 span.date-title {
 	font: 11px "Helvetica Neue",Arial,sans-serif;
 	list-style: none outside none;
-	text-decoration: none;
-	text-transform: none;
-	color: #999;
 	padding-left: 20px;
+	color: #ccc;
+	font-weight: 400;
+	
 }
 	
 span.card-title {
@@ -309,10 +309,17 @@ span.card-title {
 }
 
 span.location-title a {
-	font: bold 13px "Helvetica Neue", Arial,sans-serif;
-	color: #656665;
+	font: 14px "Helvetica Neue", Arial,sans-serif;
+	color: #999;
+	font-weight: 400;
 	padding: 0;
 }
+
+span.location-title a:hover {
+	color: #333;
+	text-decoration: none;
+}
+	
 
 p.card_comments {
 	font: 13px/17px "Georgia",Times;
@@ -463,7 +470,7 @@ div.card-holder span.location-title {
 }
 
 div.card-holder p.card_comments {
-	font: 13px/17px "Georgia",Times;
+	font: 14px/19px "Georgia",Times;
 	color: #5c5c5c;
-	padding-top: 2px;
+	padding-top: 6px;
 }
