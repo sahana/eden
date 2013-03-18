@@ -27,11 +27,11 @@
     font-size: 15px;
     font-weight: bold;
     border: 0;
+    color: black;
 }
 .chart-contents {
     background-color: #FFFDF6;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 8px;
     border: 1px solid #999;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -42,4 +42,10 @@
     color: #003399;
     text-decoration: underline;
     margin-bottom: 3px;
+}
+
+.legendLabel,
+.tickLabel {
+    font-size: 12px;
+    color: black;
 }

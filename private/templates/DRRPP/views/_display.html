@@ -2,6 +2,9 @@
  <div class='body-label-wrapper grid_12'>
   <span class='icon body-icon icon-doc'></span>
   <span class='body-label-text label-text'>{{try:}}{{=H2(title)}}{{except:}}{{pass}}</span>
+  {{if "edit_btn" in buttons:}}
+  <a class='edit-button medium' href='{{=buttons["edit_btn"].attributes["_href"]}}'></a>
+  {{pass}}
  </div>
  <div class='line grid_12 alpha omega'></div>
 <div id='rheader'>
@@ -26,9 +29,6 @@
     </div>
     <div class='clear'></div>
     <div class='form-controller grid_4 prefix_4 suffix_4 alpha omega'>
-     {{if "edit_btn" in buttons:}}
-     <div id='pdetail-edit-button' class='grid_2'><a class='edit-button medium' href='{{=buttons["edit_btn"].attributes["_href"]}}'></a></div>
-     {{pass}}
      {{if "delete_btn" in buttons:}}
      <div id='pdetail-delete-button' class='grid_2'><a class='delete-button medium' href='{{=buttons["delete_btn"].attributes["_href"]}}'></a></div>
      {{pass}}
