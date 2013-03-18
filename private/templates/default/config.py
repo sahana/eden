@@ -259,6 +259,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.auth_user_represent = "name"
 # Uncomment to restrict the export formats available
 #settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
+# Uncomment to include an Interim Save button on CRUD forms
+#settings.ui.interim_save = True
 
 # -----------------------------------------------------------------------------
 # Persons

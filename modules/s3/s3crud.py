@@ -49,6 +49,7 @@ except ImportError:
 
 from gluon import *
 from gluon.dal import Row
+from gluon.languages import lazyT
 from gluon.serializers import json as jsons
 from gluon.storage import Storage
 from gluon.tools import callback

@@ -56,9 +56,9 @@ div.dl-item {
     display: none;
 }
 
+/* Push down below Nav */
 div#alert-space {
-    /* Push down below Nav */
-    padding-top: 60px;
+    padding-top: 20px;
 }
 
 a i.icon.icon-plus-sign.big-add {
