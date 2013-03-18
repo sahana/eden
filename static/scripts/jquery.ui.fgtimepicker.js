@@ -36,6 +36,14 @@
                             /,`--'~\--'~\
                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                              ->T-Rex<-
+
+    S3 Modifications to resolve the name conflict with
+    jquery.ui.timepicker.addon.js (by nursix):
+
+    - renamed TimePicker => FGTimePicker ("Francois Gelinas' Timepicker")
+    - renamed $.timepicker => $.fgtimepicker
+    - renamed $.fn.timepicker => $.fn.fgtimepicker
+
 */
 
 (function ($) {
@@ -46,11 +54,11 @@
         tpuuid = new Date().getTime();
 
     /* Time picker manager.
-    Use the singleton instance of this class, $.timepicker, to interact with the time picker.
+    Use the singleton instance of this class, $.fgtimepicker, to interact with the time picker.
     Settings for (groups of) time pickers are maintained in an instance object,
     allowing multiple different settings on the same page. */
 
-    function Timepicker() {
+    function FGTimePicker() {
         this.debug = true; // Change this to true to start debugging
         this._curInst = null; // The current instance in use
         this._disabledInputs = []; // List of time picker inputs that have been disabled
@@ -126,7 +134,7 @@
         this.tpDiv = $('<div id="' + this._mainDivId + '" class="ui-timepicker ui-widget ui-helper-clearfix ui-corner-all " style="display: none"></div>');
     }
 
-    $.extend(Timepicker.prototype, {
+    $.extend(FGTimePicker.prototype, {
         /* Class name added to elements to indicate already configured with a time picker. */
         markerClassName: 'hasTimepicker',
 
@@ -206,10 +214,10 @@
             input.addClass(this.markerClassName).
                 keydown(this._doKeyDown).
                 keyup(this._doKeyUp).
-                bind("setData.timepicker", function (event, key, value) {
+                bind("setData.fgtimepicker", function (event, key, value) {
                     inst.settings[key] = value;
                 }).
-                bind("getData.timepicker", function (event, key) {
+                bind("getData.fgtimepicker", function (event, key) {
                     return this._get(inst, key);
                 });
             $.data(target, PROP_NAME, inst);
@@ -217,27 +225,27 @@
 
         /* Handle keystrokes. */
         _doKeyDown: function (event) {
-            var inst = $.timepicker._getInst(event.target);
+            var inst = $.fgtimepicker._getInst(event.target);
             var handled = true;
             inst._keyEvent = true;
-            if ($.timepicker._timepickerShowing) {
+            if ($.fgtimepicker._timepickerShowing) {
                 switch (event.keyCode) {
-                    case 9: $.timepicker._hideTimepicker();
+                    case 9: $.fgtimepicker._hideTimepicker();
                         handled = false;
                         break; // hide on tab out
                     case 13:
-                        $.timepicker._updateSelectedValue(inst);
-                        $.timepicker._hideTimepicker();
+                        $.fgtimepicker._updateSelectedValue(inst);
+                        $.fgtimepicker._hideTimepicker();
                             
 						return false; // don't submit the form
 						break; // select the value on enter
-                    case 27: $.timepicker._hideTimepicker();
+                    case 27: $.fgtimepicker._hideTimepicker();
                         break; // hide on escape
                     default: handled = false;
                 }
             }
             else if (event.keyCode == 36 && event.ctrlKey) { // display the time picker on ctrl+home
-                $.timepicker._showTimepicker(this);
+                $.fgtimepicker._showTimepicker(this);
             }
             else {
                 handled = false;
@@ -251,9 +259,9 @@
         /* Update selected time on keyUp */
         /* Added verion 0.0.5 */
         _doKeyUp: function (event) {
-            var inst = $.timepicker._getInst(event.target);
-            $.timepicker._setTimeFromField(inst);
-            $.timepicker._updateTimepicker(inst);
+            var inst = $.fgtimepicker._getInst(event.target);
+            $.fgtimepicker._setTimeFromField(inst);
+            $.fgtimepicker._updateTimepicker(inst);
         },
 
         /* Make attachments based on settings. */
@@ -265,23 +273,23 @@
                 inst.append = $('<span class="' + this._appendClass + '">' + appendText + '</span>');
                 input[isRTL ? 'before' : 'after'](inst.append);
             }
-            input.unbind('focus.timepicker', this._showTimepicker);
-            input.unbind('click.timepicker', this._adjustZIndex);
+            input.unbind('focus.fgtimepicker', this._showTimepicker);
+            input.unbind('click.fgtimepicker', this._adjustZIndex);
 
             if (inst.trigger) { inst.trigger.remove(); }
 
             var showOn = this._get(inst, 'showOn');
             if (showOn == 'focus' || showOn == 'both') { // pop-up time picker when in the marked field
-                input.bind("focus.timepicker", this._showTimepicker);
-                input.bind("click.timepicker", this._adjustZIndex);
+                input.bind("focus.fgtimepicker", this._showTimepicker);
+                input.bind("click.fgtimepicker", this._adjustZIndex);
             }
             if (showOn == 'button' || showOn == 'both') { // pop-up time picker when 'button' element is clicked
                 var button = this._get(inst, 'button');
-                $(button).bind("click.timepicker", function () {
-                    if ($.timepicker._timepickerShowing && $.timepicker._lastInput == input[0]) {
-                        $.timepicker._hideTimepicker();
+                $(button).bind("click.fgtimepicker", function () {
+                    if ($.fgtimepicker._timepickerShowing && $.fgtimepicker._lastInput == input[0]) {
+                        $.fgtimepicker._hideTimepicker();
                     } else if (!inst.input.is(':disabled')) {
-                        $.timepicker._showTimepicker(input[0]);
+                        $.fgtimepicker._showTimepicker(input[0]);
                     }
                     return false;
                 });
@@ -296,9 +304,9 @@
             if (divSpan.hasClass(this.markerClassName))
                 return;
             divSpan.addClass(this.markerClassName).append(inst.tpDiv).
-                bind("setData.timepicker", function(event, key, value){
+                bind("setData.fgtimepicker", function(event, key, value){
                     inst.settings[key] = value;
-                }).bind("getData.timepicker", function(event, key){
+                }).bind("getData.fgtimepicker", function(event, key){
                     return this._get(inst, key);
                 });
             $.data(target, PROP_NAME, inst);
@@ -310,8 +318,8 @@
 
         _adjustZIndex: function(input) {
             input = input.target || input;
-            var inst = $.timepicker._getInst(input);
-            inst.tpDiv.css('zIndex', $.timepicker._getZIndex(input) +1);
+            var inst = $.fgtimepicker._getInst(input);
+            inst.tpDiv.css('zIndex', $.fgtimepicker._getZIndex(input) +1);
         },
 
         /* Pop-up the time picker for a given input field.
@@ -321,27 +329,27 @@
             input = input.target || input;
             if (input.nodeName.toLowerCase() != 'input') { input = $('input', input.parentNode)[0]; } // find from button/image trigger
 
-            if ($.timepicker._isDisabledTimepicker(input) || $.timepicker._lastInput == input) { return; } // already here
+            if ($.fgtimepicker._isDisabledTimepicker(input) || $.fgtimepicker._lastInput == input) { return; } // already here
 
             // fix v 0.0.8 - close current timepicker before showing another one
-            $.timepicker._hideTimepicker();
+            $.fgtimepicker._hideTimepicker();
 
-            var inst = $.timepicker._getInst(input);
-            if ($.timepicker._curInst && $.timepicker._curInst != inst) {
-                $.timepicker._curInst.tpDiv.stop(true, true);
+            var inst = $.fgtimepicker._getInst(input);
+            if ($.fgtimepicker._curInst && $.fgtimepicker._curInst != inst) {
+                $.fgtimepicker._curInst.tpDiv.stop(true, true);
             }
-            var beforeShow = $.timepicker._get(inst, 'beforeShow');
+            var beforeShow = $.fgtimepicker._get(inst, 'beforeShow');
             extendRemove(inst.settings, (beforeShow ? beforeShow.apply(input, [input, inst]) : {}));
             inst.lastVal = null;
-            $.timepicker._lastInput = input;
+            $.fgtimepicker._lastInput = input;
 
-            $.timepicker._setTimeFromField(inst);
+            $.fgtimepicker._setTimeFromField(inst);
 
             // calculate default position
-            if ($.timepicker._inDialog) { input.value = ''; } // hide cursor
-            if (!$.timepicker._pos) { // position below input
-                $.timepicker._pos = $.timepicker._findPos(input);
-                $.timepicker._pos[1] += input.offsetHeight; // add the height
+            if ($.fgtimepicker._inDialog) { input.value = ''; } // hide cursor
+            if (!$.fgtimepicker._pos) { // position below input
+                $.fgtimepicker._pos = $.fgtimepicker._findPos(input);
+                $.fgtimepicker._pos[1] += input.offsetHeight; // add the height
             }
             var isFixed = false;
             $(input).parents().each(function () {
@@ -349,30 +357,30 @@
                 return !isFixed;
             });
             if (isFixed && $.browser.opera) { // correction for Opera when fixed and scrolled
-                $.timepicker._pos[0] -= document.documentElement.scrollLeft;
-                $.timepicker._pos[1] -= document.documentElement.scrollTop;
+                $.fgtimepicker._pos[0] -= document.documentElement.scrollLeft;
+                $.fgtimepicker._pos[1] -= document.documentElement.scrollTop;
             }
 
-            var offset = { left: $.timepicker._pos[0], top: $.timepicker._pos[1] };
+            var offset = { left: $.fgtimepicker._pos[0], top: $.fgtimepicker._pos[1] };
 
-            $.timepicker._pos = null;
+            $.fgtimepicker._pos = null;
             // determine sizing offscreen
             inst.tpDiv.css({ position: 'absolute', display: 'block', top: '-1000px' });
-            $.timepicker._updateTimepicker(inst);
+            $.fgtimepicker._updateTimepicker(inst);
 
 
             // position with the ui position utility, if loaded
             if ( ( ! inst.inline )  && ( typeof $.ui.position == 'object' ) ) {
                 inst.tpDiv.position({
                     of: inst.input,
-                    my: $.timepicker._get( inst, 'myPosition' ),
-                    at: $.timepicker._get( inst, 'atPosition' ),
+                    my: $.fgtimepicker._get( inst, 'myPosition' ),
+                    at: $.fgtimepicker._get( inst, 'atPosition' ),
                     // offset: $( "#offset" ).val(),
                     // using: using,
                     collision: 'flip'
                 });
                 var offset = inst.tpDiv.offset();
-                $.timepicker._pos = [offset.top, offset.left];
+                $.fgtimepicker._pos = [offset.top, offset.left];
             }
 
 
@@ -382,18 +390,18 @@
 
             // fix width for dynamic number of time pickers
             // and adjust position before showing
-            offset = $.timepicker._checkOffset(inst, offset, isFixed);
-            inst.tpDiv.css({ position: ($.timepicker._inDialog && $.blockUI ?
+            offset = $.fgtimepicker._checkOffset(inst, offset, isFixed);
+            inst.tpDiv.css({ position: ($.fgtimepicker._inDialog && $.blockUI ?
 			    'static' : (isFixed ? 'fixed' : 'absolute')), display: 'none',
                 left: offset.left + 'px', top: offset.top + 'px'
             });
             if ( ! inst.inline ) {
-                var showAnim = $.timepicker._get(inst, 'showAnim');
-                var duration = $.timepicker._get(inst, 'duration');
+                var showAnim = $.fgtimepicker._get(inst, 'showAnim');
+                var duration = $.fgtimepicker._get(inst, 'duration');
 
                 var postProcess = function () {
-                    $.timepicker._timepickerShowing = true;
-                    var borders = $.timepicker._getBorders(inst.tpDiv);
+                    $.fgtimepicker._timepickerShowing = true;
+                    var borders = $.fgtimepicker._getBorders(inst.tpDiv);
                     inst.tpDiv.find('iframe.ui-timepicker-cover'). // IE6- only
 					css({ left: -borders[0], top: -borders[1],
 					    width: inst.tpDiv.outerWidth(), height: inst.tpDiv.outerHeight()
@@ -401,18 +409,18 @@
                 };
 
                 // Fixed the zIndex problem for real (I hope) - FG - v 0.2.9
-                $.timepicker._adjustZIndex(input);
-                //inst.tpDiv.css('zIndex', $.timepicker._getZIndex(input) +1);
+                $.fgtimepicker._adjustZIndex(input);
+                //inst.tpDiv.css('zIndex', $.fgtimepicker._getZIndex(input) +1);
 
                 if ($.effects && $.effects[showAnim]) {
-                    inst.tpDiv.show(showAnim, $.timepicker._get(inst, 'showOptions'), duration, postProcess);
+                    inst.tpDiv.show(showAnim, $.fgtimepicker._get(inst, 'showOptions'), duration, postProcess);
                 }
                 else {
                     inst.tpDiv.show((showAnim ? duration : null), postProcess);
                 }
                 if (!showAnim || !duration) { postProcess(); }
                 if (inst.input.is(':visible') && !inst.input.is(':disabled')) { inst.input.focus(); }
-                $.timepicker._curInst = inst;
+                $.fgtimepicker._curInst = inst;
             }
         },
 
@@ -450,7 +458,7 @@
         },
 
         _rebindDialogEvents: function (inst) {
-            var borders = $.timepicker._getBorders(inst.tpDiv),
+            var borders = $.fgtimepicker._getBorders(inst.tpDiv),
                 self = this;
             inst.tpDiv
 			.find('iframe.ui-timepicker-cover') // IE6- only
@@ -463,13 +471,13 @@
             // the binding for the minute cells also exists in _updateMinuteDisplay
             .find('.ui-timepicker-minute-cell')
                 .unbind()
-                .bind("click", { fromDoubleClick:false }, $.proxy($.timepicker.selectMinutes, this))
-                .bind("dblclick", { fromDoubleClick:true }, $.proxy($.timepicker.selectMinutes, this))
+                .bind("click", { fromDoubleClick:false }, $.proxy($.fgtimepicker.selectMinutes, this))
+                .bind("dblclick", { fromDoubleClick:true }, $.proxy($.fgtimepicker.selectMinutes, this))
             .end()
             .find('.ui-timepicker-hour-cell')
                 .unbind()
-                .bind("click", { fromDoubleClick:false }, $.proxy($.timepicker.selectHours, this))
-                .bind("dblclick", { fromDoubleClick:true }, $.proxy($.timepicker.selectHours, this))
+                .bind("click", { fromDoubleClick:false }, $.proxy($.fgtimepicker.selectHours, this))
+                .bind("dblclick", { fromDoubleClick:true }, $.proxy($.fgtimepicker.selectHours, this))
             .end()
 			.find('.ui-timepicker td a')
                 .unbind()
@@ -491,13 +499,13 @@
 				.trigger('mouseover')
 			.end()
             .find('.ui-timepicker-now').bind("click", function(e) {
-                    $.timepicker.selectNow(e);
+                    $.fgtimepicker.selectNow(e);
             }).end()
             .find('.ui-timepicker-deselect').bind("click",function(e) {
-                    $.timepicker.deselectTime(e);
+                    $.fgtimepicker.deselectTime(e);
             }).end()
             .find('.ui-timepicker-close').bind("click",function(e) {
-                    $.timepicker._hideTimepicker();
+                    $.fgtimepicker._hideTimepicker();
             }).end();
         },
 
@@ -653,8 +661,8 @@
                 // then letting the browser interpret the inline events)
                 // yes I know, duplicate code, sorry
 /*                .find('.ui-timepicker-minute-cell')
-                    .bind("click", { fromDoubleClick:false }, $.proxy($.timepicker.selectMinutes, this))
-                    .bind("dblclick", { fromDoubleClick:true }, $.proxy($.timepicker.selectMinutes, this));
+                    .bind("click", { fromDoubleClick:false }, $.proxy($.fgtimepicker.selectMinutes, this))
+                    .bind("dblclick", { fromDoubleClick:true }, $.proxy($.fgtimepicker.selectMinutes, this));
 */
 
         },
@@ -826,8 +834,8 @@
                 inst.append.remove();
                 inst.trigger.remove();
                 $target.removeClass(this.markerClassName)
-                    .unbind('focus.timepicker', this._showTimepicker)
-                    .unbind('click.timepicker', this._adjustZIndex);
+                    .unbind('focus.fgtimepicker', this._showTimepicker)
+                    .unbind('click.fgtimepicker', this._adjustZIndex);
             } else if (nodeName == 'div' || nodeName == 'span')
                 $target.removeClass(this.markerClassName).empty();
         },
@@ -951,14 +959,14 @@
 
         /* Close time picker if clicked elsewhere. */
         _checkExternalClick: function (event) {
-            if (!$.timepicker._curInst) { return; }
+            if (!$.fgtimepicker._curInst) { return; }
             var $target = $(event.target);
-            if ($target[0].id != $.timepicker._mainDivId &&
-				$target.parents('#' + $.timepicker._mainDivId).length == 0 &&
-				!$target.hasClass($.timepicker.markerClassName) &&
-				!$target.hasClass($.timepicker._triggerClass) &&
-				$.timepicker._timepickerShowing && !($.timepicker._inDialog && $.blockUI))
-                $.timepicker._hideTimepicker();
+            if ($target[0].id != $.fgtimepicker._mainDivId &&
+				$target.parents('#' + $.fgtimepicker._mainDivId).length == 0 &&
+				!$target.hasClass($.fgtimepicker.markerClassName) &&
+				!$target.hasClass($.fgtimepicker._triggerClass) &&
+				$.fgtimepicker._timepickerShowing && !($.fgtimepicker._inDialog && $.blockUI))
+                $.fgtimepicker._hideTimepicker();
         },
 
         /* Hide the time picker from view.
@@ -970,11 +978,11 @@
                 var showAnim = this._get(inst, 'showAnim');
                 var duration = this._get(inst, 'duration');
                 var postProcess = function () {
-                    $.timepicker._tidyDialog(inst);
+                    $.fgtimepicker._tidyDialog(inst);
                     this._curInst = null;
                 };
                 if ($.effects && $.effects[showAnim]) {
-                    inst.tpDiv.hide(showAnim, $.timepicker._get(inst, 'showOptions'), duration, postProcess);
+                    inst.tpDiv.hide(showAnim, $.fgtimepicker._get(inst, 'showOptions'), duration, postProcess);
                 }
                 else {
                     inst.tpDiv[(showAnim == 'slideDown' ? 'slideUp' :
@@ -1054,7 +1062,7 @@
             }
 
 
-            $.timepicker._updateTimepicker(inst);
+            $.fgtimepicker._updateTimepicker(inst);
         },
 
         /* Update or retrieve the settings for an existing time picker.
@@ -1068,7 +1076,7 @@
         _optionTimepicker: function(target, name, value) {
             var inst = this._getInst(target);
             if (arguments.length == 2 && typeof name == 'string') {
-                return (name == 'defaults' ? $.extend({}, $.timepicker._defaults) :
+                return (name == 'defaults' ? $.extend({}, $.fgtimepicker._defaults) :
                     (inst ? (name == 'all' ? $.extend({}, inst.settings) :
                     this._get(inst, name)) : null));
             }
@@ -1210,7 +1218,7 @@
                 showMinutes = (this._get(inst, 'showMinutes') == true);
 
             // don't select if disabled
-            if ( $.timepicker._isDisabledTimepicker($target.attr('id')) ) { return false }
+            if ( $.fgtimepicker._isDisabledTimepicker($target.attr('id')) ) { return false }
 
             $td.parents('.ui-timepicker-hours:first').find('a').removeClass('ui-state-active');
             $td.children('a').addClass('ui-state-active');
@@ -1227,7 +1235,7 @@
 
             inst._hoursClicked = true;
             if ((inst._minutesClicked) || (fromDoubleClick) || (showMinutes == false)) {
-                $.timepicker._hideTimepicker();
+                $.fgtimepicker._hideTimepicker();
             }
             // return false because if used inline, prevent the url to change to a hashtag
             return false;
@@ -1243,7 +1251,7 @@
                 showHours = (this._get(inst, 'showHours') == true);
 
             // don't select if disabled
-            if ( $.timepicker._isDisabledTimepicker($target.attr('id')) ) { return false }
+            if ( $.fgtimepicker._isDisabledTimepicker($target.attr('id')) ) { return false }
 
             $td.parents('.ui-timepicker-minutes:first').find('a').removeClass('ui-state-active');
             $td.children('a').addClass('ui-state-active');
@@ -1253,7 +1261,7 @@
 
             inst._minutesClicked = true;
             if ((inst._hoursClicked) || (fromDoubleClick) || (showHours == false)) {
-                $.timepicker._hideTimepicker();
+                $.fgtimepicker._hideTimepicker();
                 // return false because if used inline, prevent the url to change to a hashtag
                 return false;
             }
@@ -1362,7 +1370,7 @@
 
             return new Date(0, 0, 0, inst.hours, inst.minutes, 0);
         },
-        /* This might look unused but it's called by the $.fn.timepicker function with param getTime */
+        /* This might look unused but it's called by the $.fn.fgtimepicker function with param getTime */
         /* added v 0.2.3 - gitHub issue #5 - Thanks edanuff */
         _getTimeTimepicker : function(input) {
             var inst = this._getInst(input);
@@ -1387,29 +1395,29 @@
     @param  options  string - a command, optionally followed by additional parameters or
     Object - settings for attaching new timepicker functionality
     @return  jQuery object */
-    $.fn.timepicker = function (options) {
+    $.fn.fgtimepicker = function (options) {
 
         /* Initialise the time picker. */
-        if (!$.timepicker.initialized) {
-            $(document).mousedown($.timepicker._checkExternalClick).
-			find('body').append($.timepicker.tpDiv);
-            $.timepicker.initialized = true;
+        if (!$.fgtimepicker.initialized) {
+            $(document).mousedown($.fgtimepicker._checkExternalClick).
+			find('body').append($.fgtimepicker.tpDiv);
+            $.fgtimepicker.initialized = true;
         }
 
 
 
         var otherArgs = Array.prototype.slice.call(arguments, 1);
         if (typeof options == 'string' && (options == 'getTime' || options == 'getTimeAsDate' || options == 'getHour' || options == 'getMinute' ))
-            return $.timepicker['_' + options + 'Timepicker'].
-			    apply($.timepicker, [this[0]].concat(otherArgs));
+            return $.fgtimepicker['_' + options + 'Timepicker'].
+			    apply($.fgtimepicker, [this[0]].concat(otherArgs));
         if (options == 'option' && arguments.length == 2 && typeof arguments[1] == 'string')
-            return $.timepicker['_' + options + 'Timepicker'].
-                apply($.timepicker, [this[0]].concat(otherArgs));
+            return $.fgtimepicker['_' + options + 'Timepicker'].
+                apply($.fgtimepicker, [this[0]].concat(otherArgs));
         return this.each(function () {
             typeof options == 'string' ?
-			$.timepicker['_' + options + 'Timepicker'].
-				apply($.timepicker, [this].concat(otherArgs)) :
-			$.timepicker._attachTimepicker(this, options);
+			$.fgtimepicker['_' + options + 'Timepicker'].
+				apply($.fgtimepicker, [this].concat(otherArgs)) :
+			$.fgtimepicker._attachTimepicker(this, options);
         });
     };
 
@@ -1422,10 +1430,10 @@
         return target;
     };
 
-    $.timepicker = new Timepicker(); // singleton instance
-    $.timepicker.initialized = false;
-    $.timepicker.uuid = new Date().getTime();
-    $.timepicker.version = "0.3.2";
+    $.fgtimepicker = new FGTimePicker(); // singleton instance
+    $.fgtimepicker.initialized = false;
+    $.fgtimepicker.uuid = new Date().getTime();
+    $.fgtimepicker.version = "0.3.2";
 
     // Workaround for #4055
     // Add another global to avoid noConflict issues with inline event handlers

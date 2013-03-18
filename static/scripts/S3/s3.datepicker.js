@@ -15,8 +15,11 @@ $(document).ready(function() {
         isRTL: S3.rtl
     });
 
-    // Time fields - use jquery.ui.timepicker
-    $('input.time').timepicker({
+    // Time fields - use jquery.ui.fgtimepicker
+    // (could also be migrated to jquery.ui.timepicker.addon.js,
+    //  just use .timepicker instead - but this one seems easier
+    //  to use than a slider)
+    $('input.time').fgtimepicker({
         hourText: i18n.hour,
         minuteText: i18n.minute,
         defaultTime: ''
