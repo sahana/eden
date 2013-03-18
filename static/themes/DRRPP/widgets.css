@@ -93,6 +93,11 @@ label {
 	float: left;
 	letter-spacing: -0.1px;
 }
+
+.s3-checkboxes-widget-filter label {
+    float: none;
+}
+
 .form-text {
 	width: 370px;
 }
@@ -312,11 +317,14 @@ label.radio-label, label.checkbox-label {
 	height: 15px;
 	display: inline-block;
 }
+
+input[value="Save"],
 .save-button.medium {
 	background: url(img/m-save.png) no-repeat;
 	width: 90px;
 	height: 45px;
 	border: 0;
+	font-size: 0;
 }
 .publish-button.medium {
 	background: url(img/m-publish.png) no-repeat;
@@ -336,6 +344,8 @@ label.radio-label, label.checkbox-label {
 	height: 45px;
 	border: 0;
 	display: inline-block;
+	float: right;
+	margin-top: -10px;
 }
 .delete-button.medium {
 	background: url(img/m-delete.png) no-repeat;
@@ -344,14 +354,19 @@ label.radio-label, label.checkbox-label {
 	border: 0;
 	display: inline-block;
 }
+
+td>a.advanced-lnk,
+td>a.simple-lnk,
 .save-search-button {
 	background: url(img/s-button.png) repeat;
     color: #fff;
 	font-weight: bold;
+	font-size: 100%;
 	width: 140px;
 	height: 24px;
     margin: 4px !important;
 	border: 0;
+	padding: 2px;
 }
 .report-submit-button,
 .search-button,
@@ -511,4 +526,16 @@ div.form-container form .embeddedComponent input[name*="partnerorganisation_i_co
 div.form-container form .embeddedComponent input[name*="urldocument_i_url"],
 div.form-container form .embeddedComponent input[name*="document_i_comments"] {
     width: 250px;
+}
+
+textarea.comments {
+    height: 200px;
+}
+
+/*Hide Cook Island Fields by Default*/
+#project_project_sub_drrpp_L1__row1,
+#project_project_sub_drrpp_L1__row,
+#project_project_drrpp_pifacc__subheading,
+#project_project_drrpp_jnap__subheading {
+    display: none;
 }

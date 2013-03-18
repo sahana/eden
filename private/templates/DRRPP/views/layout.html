@@ -36,7 +36,7 @@
  {{else:}}{{representation = ""}}{{pass}}
 {{except:}}{{representation = ""}}{{pass}}
 {{if representation == "popup":}}
- <body>
+ <body id = 'popup'>
  {{if s3.debug:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
  {{else:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.min.js"]))}}{{pass}}
  {{if response.flash or response.confirmation:}}
@@ -57,6 +57,7 @@
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="user", args="logout")}}'>Logout</a>
    {{pass}}
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="contact")}}'>Contact</a>
+   <a class='header-top-menu-btn' href='static/themes/DRRPP/DRR_Portal_User_Manual.pdf'>User Manual</a>
   </div>
  </div>
  <div class='clear'></div>
