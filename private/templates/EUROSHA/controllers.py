@@ -20,13 +20,14 @@ class index():
         T = current.T
         db = current.db
         auth = current.auth
+        s3db = current.s3db
         s3 = response.s3
         appname = request.application
         settings = current.deployment_settings
 
         has_module = settings.has_module
         if has_module("cr"):
-            table = current.s3db.cr_shelter
+            table = s3db.cr_shelter
             SHELTERS = s3.crud_strings["cr_shelter"].title_list
         else:
             SHELTERS = ""
@@ -86,14 +87,17 @@ class index():
         roles = current.session.s3.roles
         system_roles = auth.get_system_roles()
         AUTHENTICATED = system_roles.AUTHENTICATED
+        table = s3db.org_organisation
+        has_permission = auth.s3_has_permission
         if AUTHENTICATED in roles and \
-           auth.s3_has_permission("read", current.s3db.org_organisation):
+           has_permission("read", table):
             org_items = self.organisation()
             datatable_ajax_source = "/%s/default/organisation.aadata" % \
                                     appname
             s3.actions = None
-            auth.permission.controller = "org"
-            auth.permission.function = "site"
+            permit = auth.permission
+            permit.controller = "org"
+            permit.function = "site"
             permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
             manage_facility_box = ""
             if permitted_facilities:
@@ -125,13 +129,17 @@ class index():
                 else:
                     manage_facility_box = DIV()
 
+            if has_permission("create", table):
+                create = A(T("Add Organization"),
+                           _href = URL(c="org", f="organisation",
+                                       args=["create"]),
+                           _id = "add-btn",
+                           _class = "action-btn",
+                           _style = "margin-right: 10px;")
+            else:
+                create = ""
             org_box = DIV(H3(T("Organizations")),
-                          A(T("Add Organization"),
-                            _href = URL(c="org", f="organisation",
-                                        args=["create"]),
-                            _id = "add-btn",
-                            _class = "action-btn",
-                            _style = "margin-right: 10px;"),
+                          create,
                           org_items,
                           _id = "org_box",
                           _class = "menu_box fleft"
