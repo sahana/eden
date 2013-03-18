@@ -1,6 +1,5 @@
 /* @override 
-	http://tldrmp.aidiq.com/eden/static/themes/DRMP/eden.min.css
-	http://127.0.0.1:8001/eden/static/themes/DRMP/style.css */
+	http://tldrmp.aidiq.com/eden/static/themes/DRMP/eden.min.css */
 
 
 body {
@@ -308,6 +307,8 @@ div.thumbnail {
 	-moz-box-shadow: 0 -1px 3px #d7d7d6;
 	-webkit-box-shadow: 0 -1px 3px #d7d7d6;
 	box-shadow: 0 -1px 3px #d7d7d6;
+	border: none;
+	
 }
 
 	
@@ -332,11 +333,6 @@ div.thumbnail:hover {
 	-o-transition: all 0.2s ease-in-out;
 	transition: all 0.2s ease-in-out;
 	cursor: auto;
-}
-
-img.media-object {
-	height: 55px;
-	
 }
 
 div.span5.card-details {
