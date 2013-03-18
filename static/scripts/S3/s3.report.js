@@ -280,15 +280,13 @@ function reportRenderBreakdown(json, dim) {
         concat = '&';
     }
 
-    var odata = [];
-    var xmax = 0;
+    var odata = [], xmax = 0;
     for (var c=0; c < cols.length; c++) {
         // every col gives a series
-        var series = {label: cols[c][2]};
-        var values = [];
+        var series = {label: cols[c][2]}, values = [], index, value;
         for (var r=0; r < rows.length; r++) {
-            var index = (r + 1) * (cols.length + 1) - c;
-            var value = get_data(r, c);
+            index = (rows.length - r) * (cols.length + 1) - c;
+            value = get_data(r, c);
             if (value > xmax) {
                 xmax = value;
             }
@@ -298,10 +296,10 @@ function reportRenderBreakdown(json, dim) {
         odata.push(series);
     }
 
-    var yaxis_ticks = [];
+    var yaxis_ticks = [], label;
     for (r=0; r < rows.length; r++) {
-        var label = rows[r][2];
-        index = (r + 1) * (cols.length + 1) + 1;
+        label = rows[r][2];
+        index = (rows.length - r) * (cols.length + 1) + 1;
         yaxis_ticks.push([index, label]);
     }
 

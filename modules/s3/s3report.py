@@ -911,6 +911,8 @@ class S3ContingencyTable(TABLE):
             """ Sort a dimension """
 
             rfield = rfields[dim]
+            if not rfield:
+                return
             ftype = rfield.ftype
             sortby = "value"
             if ftype == "integer":
@@ -1090,7 +1092,8 @@ class S3ContingencyTable(TABLE):
 
         # Column totals
         for j in xrange(numcols):
-            col = report.col[j]
+            cell_idx = cols_list[j][1]
+            col = report.col[cell_idx]
             totals = get_total(col, layers, append=add_col_total)
             add_total(TD(IS_NUMBER.represent(totals)))
 
