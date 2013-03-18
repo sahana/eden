@@ -505,9 +505,12 @@ class S3DateFilter(S3RangeFilter):
         id = attr["_id"]
         input_elements = DIV()
         ie_append = input_elements.append
+
+        hide_time = self.opts.get("hide_time", False)
+        widget_class = S3DateTimeWidget(hide_time=hide_time) 
+
         for operator in self.operator:
             input_id = "%s-%s" % (id, operator)
-
             # Populate with the value, if given
             # if user has not set any of the limits, we get [] in values.
             variable = _variable(selector, operator)
@@ -517,12 +520,11 @@ class S3DateFilter(S3RangeFilter):
                     value = value[0]
             else:
                 value = None
-
-            picker = S3DateTimeWidget()(field,
-                                        value,
-                                        _name=input_id,
-                                        _id=input_id,
-                                        _class = self._input_class)
+            picker = widget_class(field,
+                                  value,
+                                  _name=input_id,
+                                  _id=input_id,
+                                  _class = self._input_class)
 
             ie_append(current.T(input_labels[operator]) + ":")
             ie_append(picker)

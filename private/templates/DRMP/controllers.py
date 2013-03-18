@@ -92,7 +92,8 @@ def homepage():
                                       #widget="multiselect-bootstrap",
                                       cols=3),
                       S3DateFilter("created_on",
-                                   label=T("Filter by Date")),
+                                   label=T("Filter by Date"),
+                                   hide_time=True),
                       ]
 
     s3db.configure("cms_post",

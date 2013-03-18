@@ -244,6 +244,9 @@ class S3DateTimeWidget(FormWidget):
         widget = INPUT(**attr)
         widget.add_class(self._class)
 
+        if self.opts.get("hide_time", False):
+            widget.add_class("hide-time")
+
         return TAG[""](widget, requires = field.requires)
 
     # -------------------------------------------------------------------------
@@ -312,8 +315,8 @@ class S3DateTimeWidget(FormWidget):
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
                 
         # Closest minute step
+        minute_step = opts.get("minute_step", 5)
         if not hide_time:
-            minute_step = opts.get("minute_step", 5)
             step = minute_step * 60
             seconds = (start - start.min).seconds
             rounding = (seconds + step / 2) // step * step
