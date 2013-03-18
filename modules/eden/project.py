@@ -417,7 +417,7 @@ class S3ProjectModel(S3Model):
         configure(tablename,
                   super_entity="doc_entity",
                   deduplicate=self.project_project_deduplicate,
-                  onvalidation=self.project_project_onvalidation,
+                  #onvalidation=self.project_project_onvalidation,
                   onaccept=self.project_project_onaccept,
                   create_next=create_next,
                   search_method=project_search,
@@ -609,14 +609,14 @@ class S3ProjectModel(S3Model):
             )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def project_project_onvalidation(form):
-        """ Form validation """
+    #@staticmethod
+    #def project_project_onvalidation(form):
+    #    """ Form validation """
 
-        if not form.vars.code and "name" in form.vars:
-            # Populate code from name
-            form.vars.code = form.vars.name
-        return
+    #    if not form.vars.code and "name" in form.vars:
+    #        # Populate code from name
+    #        form.vars.code = form.vars.name
+    #    return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2862,6 +2862,7 @@ class S3ProjectThemeModel(S3Model):
                             label=T("Sectors to which this Theme can apply"),
                             fields=["sector_id"],
                         ),
+                        "comments"
                     )
 
         configure(tablename,
@@ -3090,6 +3091,9 @@ class S3ProjectDRRPPModel(S3Model):
 
         NONE = current.messages["NONE"]
 
+        local_currencies = current.deployment_settings.get_fin_currencies().keys()
+        local_currencies.remove("USD")
+
         project_rfa_opts = self.project_rfa_opts()
         project_pifacc_opts = self.project_pifacc_opts()
         project_jnap_opts = self.project_jnap_opts()
@@ -3114,6 +3118,15 @@ class S3ProjectDRRPPModel(S3Model):
                      Field("duration", "integer",
                            represent = lambda v: v or NONE,
                            label = T("Duration (months)")),
+                     Field("local_budget", "double",
+                           label = T("Total Funding (Local Currency)"),
+                           represent = lambda v: \
+                            IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                     s3_currency("local_currency",
+                                 label = T("Local Currency"),
+                                 requires = IS_IN_SET(local_currencies,
+                                                      zero=None)
+                                 ),
                      Field("activities", "text",
                            represent = lambda v: v or NONE,
                            label = T("Activities")),

@@ -1147,7 +1147,7 @@ function s3FormatRequest(representation, tableid, url) {
     } else {
         url = s3AppendUrlQuery(url, representation, '');
     }
-    window.location = url;
+    window.open(url);
 }
 
 function s3_gis_search_layer_loadend(event) {

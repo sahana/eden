@@ -432,8 +432,13 @@ div#map {
 }
 
 /* Form Popup */
+body#popup {
+    min-width: auto;
+    height: auto;
+}
 div#popup {
     background: #fff;
+    width: 725px;
 }
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
