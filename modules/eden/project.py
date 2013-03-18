@@ -417,7 +417,6 @@ class S3ProjectModel(S3Model):
         configure(tablename,
                   super_entity="doc_entity",
                   deduplicate=self.project_project_deduplicate,
-                  #onvalidation=self.project_project_onvalidation,
                   onaccept=self.project_project_onaccept,
                   create_next=create_next,
                   search_method=project_search,
@@ -607,16 +606,6 @@ class S3ProjectModel(S3Model):
         return Storage(
                 project_project_id = lambda: dummy("project_id"),
             )
-
-    # -------------------------------------------------------------------------
-    #@staticmethod
-    #def project_project_onvalidation(form):
-    #    """ Form validation """
-
-    #    if not form.vars.code and "name" in form.vars:
-    #        # Populate code from name
-    #        form.vars.code = form.vars.name
-    #    return
 
     # -------------------------------------------------------------------------
     @staticmethod

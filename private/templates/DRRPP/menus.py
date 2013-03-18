@@ -64,7 +64,8 @@ class S3MainMenu(default.S3MainMenu):
                        vars=dict(_next=login_next), **attr),
                     MT("Register", c="default", f="index", args="register"),
                     MT("About", c="default", f="index", args="about"),
-                    MT("User Manual", url = ("static","themes", "DRRPP", "DRR_Portal_User_Manual.pdf") ),
+                    MT("User Manual",
+                       url=("static", "themes", "DRRPP", "DRR_Portal_User_Manual.pdf")),
                     MT("Contact", c="default", f="index", args="contact"),
                 )
         else:
@@ -84,7 +85,8 @@ class S3MainMenu(default.S3MainMenu):
                        check=s3_has_role(ADMIN) | s3_has_role(ORG_ADMIN)),
                     MT("Logout", c="default", f="user", args="logout", _id="auth_menu_logout"),
                     MT("About", c="default", f="index", args="about"),
-                    MT("User Manual", url = ("static","themes", "DRRPP", "DRR_Portal_User_Manual.pdf") ),
+                    MT("User Manual",
+                       url=("static", "themes", "DRRPP", "DRR_Portal_User_Manual.pdf")),
                     MT("Contact", c="default", f="index", args="contact"),
                 )
 

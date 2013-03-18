@@ -432,7 +432,7 @@ div#map {
 }
 
 /* Form Popup */
-body#popup {
+body.popup {
     min-width: auto;
     height: auto;
 }
@@ -861,7 +861,7 @@ li input + a {
 }
 
 /* Popup text for represents of Long text fields */
-.popup {
+.showall {
     display: none;
     position: absolute;
     border-style: solid;

@@ -47,7 +47,7 @@
  {{else:}}{{representation = ""}}{{pass}}
 {{except:}}{{representation = ""}}{{pass}}
 {{if representation == "popup":}}
- <body>
+ <body class='popup'>
  {{if s3.debug:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
  {{else:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.min.js"]))}}{{pass}}
  {{if response.flash or response.confirmation:}}

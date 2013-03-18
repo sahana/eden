@@ -449,7 +449,7 @@ def s3_comments_represent(text, show_link=True):
         represent = DIV(
                         DIV(text,
                             _id=unique,
-                            _class="hide popup",
+                            _class="hide showall",
                             _onmouseout="$('#%s').hide();" % unique
                            ),
                         A("%s..." % text[:76],

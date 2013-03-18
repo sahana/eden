@@ -164,7 +164,7 @@ def formstyle(self, xfields):
     return form
 
 settings.ui.formstyle_row = formstyle_row
-#settings.ui.formstyle = form_style # Breaks e.g. org/organisation/create
+#settings.ui.formstyle = formstyle # Breaks e.g. org/organisation/create
 settings.ui.formstyle = formstyle_row
 
 # -----------------------------------------------------------------------------
@@ -726,10 +726,9 @@ settings.ui.customize_pr_person = customize_pr_person
 # -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
     """
-        Customize pr_person controller
+        Customize org_organisation controller to just show Name field
     """
 
-    s3db = current.s3db
     s3 = current.response.s3
 
     # Custom PreP
@@ -741,7 +740,7 @@ def customize_org_organisation(**attr):
         else:
             output = True
         if r.interactive and r.method == "create":
-            table = s3db.org_organisation
+            table = current.s3db.org_organisation
             for field in table:
                 if field.name != "name":
                     field.readable = field.writable = False

@@ -1,4 +1,5 @@
 /* Custom JS for DRRPPP Template */
+
 $(document).ready(function(){
     // If no Cook Islands are checked, then check them all
     // NOT WANTED
@@ -6,35 +7,35 @@ $(document).ready(function(){
     //    $('[name=sub_drrpp_L1]').attr('checked','checked')
     //}
     
-    var selCountry = $("#sub_defaultlocation_defaultlocation_i_location_id_edit_none");
-    var CookIslandsInline = "#project_project_sub_defaultlocation__row tr.read-row td:contains('Cook Islands')"
+    var selCountry = $('#sub_defaultlocation_defaultlocation_i_location_id_edit_none');
+    var CookIslandsInline = '#project_project_sub_defaultlocation__row tr.read-row td:contains("Cook Islands")';
         
-    function ToggleCookIslandFields () {
+    function ToggleCookIslandFields() {
         var Show;
         if ($(CookIslandsInline).length < 1) {
             // Cook Islands not in list - show/hide based on select option
-            Show = selCountry.children("option:selected").text() == "Cook Islands";
+            Show = selCountry.children('option:selected').text() == 'Cook Islands';
         } else {
             Show = true; 
         }
         if (Show) {
-            $("#project_project_sub_drrpp_L1__row1").show();
-            $("#project_project_sub_drrpp_L1__row").show();
-            $("#project_project_drrpp_pifacc__subheading").show();
-            $("#project_project_sub_drrpp_pifacc__row1").show();
-            $("#project_project_sub_drrpp_pifacc__row").show();
-            $("#project_project_drrpp_jnap__subheadin").show();
-            $("#project_project_sub_drrpp_jnap__row1").show();
-            $("#project_project_sub_drrpp_jnap__row").show();
+            $('#project_project_sub_drrpp_L1__row1').show();
+            $('#project_project_sub_drrpp_L1__row').show();
+            $('#project_project_drrpp_pifacc__subheading').show();
+            $('#project_project_sub_drrpp_pifacc__row1').show();
+            $('#project_project_sub_drrpp_pifacc__row').show();
+            $('#project_project_drrpp_jnap__subheading').show();
+            $('#project_project_sub_drrpp_jnap__row1').show();
+            $('#project_project_sub_drrpp_jnap__row').show();
         } else {
-            $("#project_project_sub_drrpp_L1__row1").hide();
-            $("#project_project_sub_drrpp_L1__row").hide();
-            $("#project_project_drrpp_pifacc__subheading").hide();
-            $("#project_project_sub_drrpp_pifacc__row1").hide();
-            $("#project_project_sub_drrpp_pifacc__row").hide();
-            $("#project_project_drrpp_jnap__subheadin").hide();
-            $("#project_project_sub_drrpp_jnap__row1").hide();
-            $("#project_project_sub_drrpp_jnap__row").hide();
+            $('#project_project_sub_drrpp_L1__row1').hide();
+            $('#project_project_sub_drrpp_L1__row').hide();
+            $('#project_project_drrpp_pifacc__subheading').hide();
+            $('#project_project_sub_drrpp_pifacc__row1').hide();
+            $('#project_project_sub_drrpp_pifacc__row').hide();
+            $('#project_project_drrpp_jnap__subheading').hide();
+            $('#project_project_sub_drrpp_jnap__row1').hide();
+            $('#project_project_sub_drrpp_jnap__row').hide();
         };
     }
     

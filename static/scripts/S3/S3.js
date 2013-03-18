@@ -134,9 +134,7 @@ S3.addModals = function() {
         var url = this.href;
         S3.popup_loaded = function() {
             // Resize the iframe to fit the Dialog
-            var dummy = 0;
-        	var width = $('.ui-dialog').width() - 10;
-        	
+            var width = $('.ui-dialog').width() - 10;
             dialog.css({width: width});
         }
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
