@@ -196,8 +196,10 @@ def index():
 
     # Check logged in AND permissions
     roles = session.s3.roles
+    table = s3db.org_organisation
+    has_permission = auth.s3_has_permission
     if AUTHENTICATED in roles and \
-       auth.s3_has_permission("read", s3db.org_organisation):
+       has_permission("read", table):
         org_items = organisation()
         datatable_ajax_source = "/%s/default/organisation.aadata" % \
                                 appname
@@ -236,13 +238,17 @@ def index():
             else:
                 manage_facility_box = DIV()
 
+        if has_permission("create", table):
+            create = A(T("Add Organization"),
+                       _href = URL(c="org", f="organisation",
+                                   args=["create"]),
+                       _id = "add-btn",
+                       _class = "action-btn",
+                       _style = "margin-right: 10px;")
+        else:
+            create = ""
         org_box = DIV(H3(T("Organizations")),
-                      A(T("Add Organization"),
-                        _href = URL(c="org", f="organisation",
-                                    args=["create"]),
-                        _id = "add-btn",
-                        _class = "action-btn",
-                        _style = "margin-right: 10px;"),
+                      create,
                       org_items,
                       _id = "org_box",
                       _class = "menu_box fleft"

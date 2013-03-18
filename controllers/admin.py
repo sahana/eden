@@ -91,6 +91,7 @@ def user():
 
     s3db.configure(tablename,
                    main="first_name",
+                   create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
                    )
@@ -104,8 +105,7 @@ def user():
             session.error = T("Cannot disable your own account!")
             redirect(URL(args=[]))
 
-        query = (table.id == r.id)
-        db(query).update(registration_key = "disabled")
+        db(table.id == r.id).update(registration_key = "disabled")
         session.confirmation = T("User Account has been Disabled")
         redirect(URL(args=[]))
 
@@ -114,7 +114,7 @@ def user():
             session.error = T("Can only approve 1 record at a time!")
             redirect(URL(args=[]))
 
-        user = table[r.id]
+        user = db(table.id == r.id).select(limitby=(0, 1)).first()
         auth.s3_approve_user(user)
 
         session.confirmation = T("User Account has been Approved")
@@ -125,7 +125,7 @@ def user():
             session.error = T("Can only update 1 record at a time!")
             redirect(URL(args=[]))
 
-        user = table[r.id]
+        user = db(table.id == r.id).select(limitby=(0, 1)).first()
         auth.s3_link_user(user)
 
         session.confirmation = T("User has been (re)linked to Person and Human Resource record")
@@ -220,6 +220,8 @@ def user():
                            sortby = [[2, "asc"], [1, "asc"]],
                            # Password confirmation
                            create_onvalidation = user_create_onvalidation)
+        elif r.representation == "xls":
+            lappend((T("Status"), "registration_key"))
 
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
