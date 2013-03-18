@@ -421,7 +421,7 @@ def render_homepage_events(listid, resource, rfields, record, **attr):
                            _class="icon icon-edit",
                            ),
                          _href=URL(c="event", f="event",
-                                   args=[record_id, "profile"]),
+                                   args=[record_id, "update"]),
                          ),
                        A(I(" ",
                            _class="icon icon-remove-sign",
@@ -434,10 +434,13 @@ def render_homepage_events(listid, resource, rfields, record, **attr):
 
     # Render the item
     item = DIV(edit_bar,
-               H5(name),
-               SPAN(date,
-                    _class="date-title",
-                    ),
+               A(H5(name),
+                 SPAN(date,
+                      _class="date-title",
+                      ),
+                 _href=URL(c="event", f="event",
+                           args=[record_id, "profile"]),
+                 ),
                _class=item_class,
                _id=item_id,
                )

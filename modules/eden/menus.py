@@ -885,9 +885,9 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
+                        M("Search by skills", f="competency", args=["search"]),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
-                        M("Search by skills", f="competency", args=["search"]),
                     ),
                     M("Teams", f="group",
                       check=[manager_mode, use_teams])(
@@ -987,6 +987,7 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
+                        M("Search by skills", f="competency", args=["search"]),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),

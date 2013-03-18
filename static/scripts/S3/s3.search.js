@@ -29,14 +29,13 @@ S3.search.saveCurrentSearch = function(event) {
 			var recordId = data.created[0];
 
 			// Set the id of the new hyperlink to the id the button had
-			id = (btn.attr('id') != undefined) ? btn.attr('id') : '';
+			var id = (btn.attr('id') != undefined) ? btn.attr('id') : '';
 
 			// Create a new hyperlink pointing to the new record
 			// under the current users' profile
-			var link = $('<a/>')
-				.attr('id', id)
-				.attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
-				.text(i18n.edit_saved_search);
+			var link = $('<a/>').attr('id', id)
+                                .attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
+                                .text(i18n.edit_saved_search);
 
 			// replace the Save button with the hyperlink
 			btn.replaceWith(link);
