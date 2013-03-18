@@ -9,7 +9,7 @@ env:
 # command to install dependencies
 install:
   - pip install -q Django==$DJANGO --use-mirrors
-  - pip install pep8 --use-mirrors
+#  - pip install pep8 --use-mirrors
   - pip install -r requirements.txt --use-mirrors
 before_script:
   - "pep8 --exclude=migrations --ignore=E501,E225 src"
