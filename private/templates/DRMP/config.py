@@ -364,7 +364,7 @@ def customize_event_event(**attr):
                          type = "datalist",
                          tablename = "cms_post",
                          filter = S3FieldSelector("series_id$name") == "Alert",
-                         icon = "icon-warning-sign",
+                         icon = "icon-alert",
                          list_layout = render_profile_posts,
                          )
     map_widget = dict(label = "Location",
@@ -382,21 +382,21 @@ def customize_event_event(**attr):
                               type = "datalist",
                               tablename = "cms_post",
                               filter = S3FieldSelector("series_id$name") == "Assessment",
-                              icon = "icon-file-alt",
+                              icon = "icon-info-sign",
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
                              type = "datalist",
                              tablename = "cms_post",
                              filter = S3FieldSelector("series_id$name") == "Activity",
-                             icon = "icon-wrench",
+                             icon = "icon-activity",
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
                           type = "datalist",
                           tablename = "cms_post",
                           filter = S3FieldSelector("series_id$name") == "Report",
-                          icon = "icon-file-alt",
+                          icon = "icon-report",
                           list_layout = render_profile_posts,
                           )
     comments_widget = dict(label = "Comments",

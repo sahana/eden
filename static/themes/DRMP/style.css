@@ -1,13 +1,8 @@
-/* @override 
-	http://tldrmp.aidiq.com/eden/static/themes/DRMP/eden.min.css
-	http://127.0.0.1:8001/eden/static/themes/DRMP/style.css */
-
-
 body {
     font: 14px/21px 'Open Sans', sans-serif;
     color: #666;
     overflow-x: hidden;
-    background: url(../img/bg.png) #e6e6e6;
+    background: url(img/bg.png) #e6e6e6;
     padding-top: 50px;
 }
 
@@ -83,14 +78,15 @@ i.icon.icon-incident,
 i.icon.icon-report,
 i.icon.icon-assessment,
 i.icon.icon-disaster,
-i.icon.icon-training.material,
+i.icon.icon-training_material,
 i.icon.icon-plans  {
     font-size: 21px;
     display: inline-block;
     width: 130px;
     color: #333;
 
-}/* Activity */
+}
+/* Activity */
 /*.icon-truck:*/
 .icon-activity:before  {
     content: "\f0d1";
@@ -105,19 +101,20 @@ i.icon.icon-plans  {
 .icon-report:before {
     content: "\f0f6";
 }
-/*training.material*/
+/* Training Material */
 /*icon-book*/
-i.icon.icon-training.material:before {
+i.icon.icon-training_material:before {
 	content: "\f02d";
 }
 
-/*assessment*/
+/* Assessment */
 /*icon-info-sign*/
 i.icon.icon-assessment:before{
 	content: "\f05a";
 }
-/*disaster*/
-/*incident*/
+/* Disaster */
+/* Incident */
+/*icon-warning-sign*/
 i.icon.icon-incident:before,
 i.icon.icon-disaster:before {
 	content: "\f071";

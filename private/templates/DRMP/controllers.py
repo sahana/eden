@@ -317,9 +317,6 @@ def render_homepage_posts(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        #delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       #_href=URL(c="cms", f="post", args=[record_id, "delete"]),
-                       #)
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
                        _class="dl-item-delete",
                       )
@@ -346,7 +343,7 @@ def render_homepage_posts(listid, resource, rfields, record, **attr):
     item = DIV(DIV(I(SPAN(" %s" % current.T(series),
                           _class="card-title",
                           ),
-                     _class="icon icon-%s" % series.lower(),
+                     _class="icon icon-%s" % series.lower().replace(" ", "_"),
                      ),
                    SPAN(A(location,
                           _href=location_url,
