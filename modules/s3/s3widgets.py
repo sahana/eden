@@ -186,128 +186,229 @@ class S3DateWidget(FormWidget):
 # =============================================================================
 class S3DateTimeWidget(FormWidget):
     """
-        Standard DateTime widget, based on the widget above, but instead of using
-        jQuery datepicker we use Anytime.
+        Date and/or time picker widget based on jquery.ui.datepicker and
+        jquery.ui.timepicker.addon.js.
     """
 
-    def __init__(self,
-                 format = None,
-                 past=876000,     # how many hours into the past the date can be set to
-                 future=876000    # how many hours into the future the date can be set to
-                ):
+    def __init__(self, **opts):
+        """
+            Constructor
 
-        self.format = format
-        self.past = past
-        self.future = future
+            @param opts: the widget options
 
+            @keyword date_format: the date format (falls back to
+                                  deployment_settings.L10n.date_format)
+            @keyword time_format: the time format (falls back to
+                                  deployment_settings.L10n.time_format)
+            @keyword separator: the date/time separator (falls back to
+                                deployment_settings.L10n.datetime_separator)
+
+            @keyword min: the earliest selectable datetime (datetime, overrides "past")
+            @keyword max: the latest selectable datetime (datetime, overrides "future")
+            @keyword past: the earliest selectable datetime relative to now (hours)
+            @keyword future: the latest selectable datetime relative to now (hours)
+
+            @keyword min_year: the earliest year in the drop-down (default: now-10 years)
+            @keyword max_year: the latest year in the drop-down (default: now+10 years)
+
+            @keyword hide_time: Hide the time selector (default: False)
+            @keyword minute_step: number of minutes per slider step (default: 5)
+
+            @keyword weeknumber: show week number in calendar widget (default: False)
+            @keyword month_selector: show drop-down selector for month (default: False)
+            @keyword year_selector: show drop-down selector for year (default: True)
+            @keyword buttons: show the button panel (default: True)
+        """
+
+        self.opts = Storage(opts)
+        self._class = "datetimepicker"
+
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
+        """
+            Widget builder.
 
-        self.injectJS(field, value, **attributes)
+            @param field: the Field
+            @param value: the current value
+            @param attributes: the HTML attributes for the widget
+        """
 
-        default = dict(_type = "text",
-                       # Prevent default "datetime" calendar from showing up:
-                       _class = "anytime",
-                       value = value,
-                       old_value = value)
+        self.inject_script(field, value, **attributes)
 
-        # FormWidget._attributes will override what's supplied in default with
-        # what's in attributes. Caller may want to supply additional classes.
-        # Don't force them to know we're using anytime.
-        classes = attributes.get("_class", None)
-        if classes and "anytime" not in classes:
-            attributes["_class"] = "%s %s" % (classes, "anytime")
-
+        default = dict(_type = "text", _class=self._class, value = value)
         attr = StringWidget._attributes(field, default, **attributes)
-               
-        return TAG[""](
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        
+        if "_id" not in attr:
+            attr["_id"] = str(field).replace(".", "_")
 
-    def injectJS(self, field, value, **attributes):
-	
-        settings = current.deployment_settings
-        if self.format:
-            # default: "%Y-%m-%d %T"
-            format = str(self.format)
-        else:
-            format = str(settings.get_L10n_datetime_format())
-        request = current.request
+        widget = INPUT(**attr)
+        widget.add_class(self._class)
+
+        return TAG[""](widget, requires = field.requires)
+
+    # -------------------------------------------------------------------------
+    def inject_script(self, field, value, **attributes):
+        """
+            Helper function to inject the document-ready-JavaScript for
+            this widget.
+
+            @param field: the Field
+            @param value: the current value
+            @param attributes: the HTML attributes for the widget
+        """
+
         s3 = current.response.s3
-        if isinstance(value, datetime.datetime):
-            datevalue = value
-            value = value.strftime(format)
-        elif value is None:
-            value = ""
-        else:
-            from dateutil import parser
-            datevalue = parser.parse(value, ignoretz=True)
+        opts = self.opts
 
-        # If _id is supplied, use it for the selector string.
         if "_id" in attributes:
             selector = attributes["_id"]
         else:
             selector = str(field).replace(".", "_")
 
-        now = request.utcnow
-        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-        if offset:
-            now = now + datetime.timedelta(seconds=offset)
-        timedelta = datetime.timedelta
-        earliest = now - timedelta(hours = self.past)
-        latest = now + timedelta(hours = self.future)
+        settings = current.deployment_settings
+        date_format = opts.get("date_format",
+                               settings.get_L10n_date_format())
+        time_format = opts.get("time_format",
+                               settings.get_L10n_time_format())
+        separator = opts.get("separator",
+                             settings.get_L10n_datetime_separator())
+        datetime_format = "%s%s%s" % (date_format, separator, time_format)
 
-        # Round to the nearest half hour
-        if value:
-            start = datevalue
-        elif earliest < now < latest:
-            start = now
+        hide_time = opts.get("hide_time", False)
+        if hide_time:
+            limit = "Date"
+            widget = "datepicker"
+            dtformat = date_format
         else:
+            limit = "DateTime"
+            widget = "datetimepicker"
+            dtformat = datetime_format
+
+        min_hour = opts.get("min_hour", 0)
+        max_hour = opts.get("max_hour", 23)
+
+        now = current.request.utcnow
+        timedelta = datetime.timedelta
+
+        if "min" in opts:
+            earliest = opts["min"]
+        else:
+            past = opts.get("past", 876000)
+            earliest = now - timedelta(hours = past)
+        if "max" in opts:
+            earliest = opts["max"]
+        else:
+            future = opts.get("future", 876000)
+            latest = now + timedelta(hours = future)
+
+        # Initial value
+        if earliest <= now and now <= latest:
+            start = now
+        elif now < earliest:
             start = earliest
-        seconds = (start - start.min).seconds
-        rounding = (seconds + (30 * 60) / 2) // (30 * 60) * (30 * 60)
-        rounded = start + datetime.timedelta(0, rounding - seconds, -start.microsecond)
+        elif now > latest:
+            start = latest
+            
+        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
+                
+        # Closest minute step
+        if not hide_time:
+            minute_step = opts.get("minute_step", 5)
+            step = minute_step * 60
+            seconds = (start - start.min).seconds
+            rounding = (seconds + step / 2) // step * step
+            rounded = start + datetime.timedelta(0, rounding - seconds, -start.microsecond)
+            if rounded < earliest:
+                rounded = earliest
+            elif rounded > latest:
+                rounded = latest
+            if offset:
+                rounded += datetime.timedelta(seconds=offset)
+            rounded = rounded.strftime(dtformat)
+            rounding = \
+"""if (!$('#%(selector)s').val()){
+  $('#%(selector)s').val('%(rounded)s')
+}""" % dict(selector=selector, rounded=rounded)
+        else:
+            rounding = ""
 
-        rounded = rounded.strftime(format)
-        earliest = earliest.strftime(format)
-        latest = latest.strftime(format)
+        if offset:
+            earliest += datetime.timedelta(seconds=offset)
+            latest += datetime.timedelta(seconds=offset)
+        ISO = "%Y-%m-%dT%H:%M:%S"
+        earliest = earliest.strftime(ISO)
+        latest = latest.strftime(ISO)
 
-        script_dir = "/%s/static/scripts" % request.application
-        if s3.debug and \
-           "%s/anytime.js" % script_dir not in s3.scripts:
-            s3.scripts.append("%s/anytime.js" % script_dir)
-            s3.stylesheets.append("plugins/anytime.css")
-        elif "%s/anytimec.js" % script_dir not in s3.scripts:
-            s3.scripts.append("%s/anytimec.js" % script_dir)
-            s3.stylesheets.append("plugins/anytimec.css")
+        # Translate Python format-strings
+        date_format = settings.get_L10n_date_format().replace("%Y", "yy") \
+                                                     .replace("%y", "y") \
+                                                     .replace("%m", "mm") \
+                                                     .replace("%d", "dd") \
+                                                     .replace("%b", "M")
 
+        time_format = settings.get_L10n_time_format().replace("%p", "TT") \
+                                                     .replace("%I", "hh") \
+                                                     .replace("%H", "HH") \
+                                                     .replace("%M", "mm") \
+                                                     .replace("%S", "ss")
+
+        separator = settings.get_L10n_datetime_separator()
         firstDOW = settings.get_L10n_firstDOW()
+        year_range = "%s:%s" % (opts.get("min_year", "-10"),
+                                opts.get("max_year", "+10"))
+
+        # Boolean options
+        getopt = lambda opt, default: opts.get(opt, default) and "true" or "false"
+
         s3.jquery_ready.append(
-'''$('#%(selector)s').click(function(){
-if (!$('#%(selector)s').val()){
- $('#%(selector)s').val('%(rounded)s')
- $('#%(selector)s').AnyTime_picker({
-  askSecond:false,
-  firstDOW:%(firstDOW)s,
-  earliest:'%(earliest)s',
-  latest:'%(latest)s',
-  format:'%(format)s'
- }).focus()
-}})
-clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(e){
- $('#%(selector)s').val('')
-})
+"""$('#%(selector)s').click(function(){
+%(rounding)s
+$('#%(selector)s').%(widget)s({
+  showSecond: false,
+  firstDay: %(firstDOW)s,
+  min%(limit)s: new Date(Date.parse('%(earliest)s')),
+  max%(limit)s: new Date(Date.parse('%(latest)s')),
+  dateFormat: '%(date_format)s',
+  timeFormat: '%(time_format)s',
+  separator: '%(separator)s',
+  stepMinute: %(minute_step)s,
+  showWeek: %(weeknumber)s,
+  showButtonPanel: %(buttons)s,
+  changeMonth: %(month_selector)s,
+  changeYear: %(year_selector)s,
+  yearRange: '%(year_range)s',
+  useLocalTimezone: true
+}).focus();});
+clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
+ $('#%(selector)s').val('');
+});
 if($('#%(selector)s_clear').length == 0){
 $('#%(selector)s').after(clear_button)
-}''' % \
-        dict(rounded=rounded,
-             selector=selector,
-             firstDOW=firstDOW,
-             earliest=earliest,
-             latest=latest,
-             format=format.replace("%M", "%i")))
+}""" % \
+            dict(selector=selector,
+                 rounding=rounding,
+                 widget=widget,
+                 limit=limit,
+                 minute_step=minute_step,
 
+                 date_format=date_format,
+                 time_format=time_format,
+                 separator=separator,
+                 
+                 weeknumber = getopt("weeknumber", False),
+                 month_selector = getopt("month_selector", False),
+                 year_selector = getopt("year_selector", True),
+                 buttons = getopt("buttons", True),
 
+                 firstDOW=firstDOW,
+                 earliest=earliest,
+                 latest=latest,
+                 year_range=year_range,
+            )
+        )
+
+        return
+        
 # =============================================================================
 class S3BooleanWidget(BooleanWidget):
     """

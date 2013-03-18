@@ -360,8 +360,8 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             attr.update(_class="anytime")
             requires = IS_EMPTY_OR(IS_DATETIME(format=settings.get_L10n_datetime_format()))
             calendar_widget = S3DateTimeWidget()
-            calendar_widget.injectJS("id-" + self.attr["_name"] + "_min", None)
-            calendar_widget.injectJS("id-" + self.attr["_name"] + "_max", None)
+            calendar_widget.inject_script("id-" + self.attr["_name"] + "_min", None)
+            calendar_widget.inject_script("id-" + self.attr["_name"] + "_max", None)
 	    
         else:
             raise SyntaxError("Unsupported search field type")
