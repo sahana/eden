@@ -116,6 +116,7 @@ i.icon.icon-training.material:before {
 i.icon.icon-assessment:before{
 	content: "\f05a";
 }
+
 /*disaster*/
 /*incident*/
 i.icon.icon-incident:before,
@@ -227,6 +228,75 @@ input.btn.btn-primary.filter-submit {
 }
 
 
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	background-color: hsl(0, 0%, 79%) !important;
+	background-repeat: repeat-x;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#134134134", endColorstr="#c9c9c9");
+	background-image: -khtml-gradient(linear, left top, left bottom, from(#134134134), to(#c9c9c9));
+	background-image: -moz-linear-gradient(top, #134134134, #c9c9c9);
+	background-image: -ms-linear-gradient(top, #134134134, #c9c9c9);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #134134134), color-stop(100%, #c9c9c9));
+	background-image: -webkit-linear-gradient(top, #134134134, #c9c9c9);
+	background-image: -o-linear-gradient(top, #134134134, #c9c9c9);
+	background-image: linear-gradient(#134134134, #c9c9c9);
+	border-color: #c9c9c9 #c9c9c9 hsl(0, 0%, 68.5%);
+	color: #333 !important;
+	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.69);
+	-webkit-font-smoothing: antialiased;
+
+}
+
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all:hover {
+	color: #333333;
+	background-color: #e6e6e6;
+	*background-color: #d9d9d9;
+	
+}
+
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	margin-bottom: 10px;
+
+}
+
+
+#datalist-filter-form table tbody tr td {
+	border: none;
+	
+}
+input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
+input#post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
+	width: 100px;
+	margin-left: 10px;
+	margin-right: 10px;
+	font-size: 12px;
+}
+
+input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime{
+	margin-right: 10px;
+	margin-left: 17px;
+}
+label#post-cms_post_series_id-options-filter__label,
+label#post-cms_post_created_on-date-filter__label,
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_created_on-date-filter__label {
+	padding: 7px 7px 7px 0;
+	font-weight: bold;
+}
+
+input.btn.btn-primary.filter-submit.filter-ajax {
+	margin-top: 15px;
+	margin-bottom: -15px;
+
+}
+
+input#post-cms_post_created_on-date-filter-le_clear,
+input#post-cms_post_created_on-date-filter-ge_clear {
+	font-size: 11px;
+	font-weight: normal;
+	font-style: normal;
+	color: #5d5d5b;
+}
 
 /*------------------  The New Card (profile page) ----------------------- */
 
