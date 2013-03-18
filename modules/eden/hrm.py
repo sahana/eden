@@ -40,6 +40,7 @@ __all__ = ["S3HRModel",
            "hrm_map_popup",
            "hrm_service_record",
            "hrm_rheader",
+           "hrm_competency_controller",
            "hrm_training_event_controller",
            "hrm_training_controller",
            "hrm_configure_pr_group_membership",
@@ -4535,6 +4536,92 @@ def hrm_training_controller():
                                      csv_stylesheet=("hrm", "training.xsl"),
                                      csv_template=("hrm", "training"))
     return output
+
+# =============================================================================
+def hrm_competency_controller():
+    """ RESTful CRUD controller used to allow searching for people by Skill"""
+
+    if current.session.s3.hrm.mode is not None:
+        current.session.error = current.T("Access denied")
+        redirect(URL(f="index"))
+
+    T = current.T
+    auth = current.auth
+    db = current.db
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    stable = s3db.hrm_skill
+    hrm_skill_opts = {}
+    if auth.s3_has_permission("read", stable):
+        skills = db(stable.deleted == False).select(stable.id, stable.name)
+
+        for skill in skills:
+            hrm_skill_opts[skill.id] = skill.name
+
+    hrm_competency_opts = {}
+    ctable = s3db.hrm_competency_rating
+    if auth.s3_has_permission("read", ctable):
+        records = db(ctable.deleted == False).select(ctable.id, ctable.name)
+
+        for record in records:
+            hrm_competency_opts[record.id] = record.name
+
+    # @ToDo:we need this hierarchical, so that selecting a Skill  
+    # provides just the appropriate set of Competency Ratings for that skill
+    hrm_skill_search = S3Search(
+        advanced=(hrm_skill_simple_search_widget("advanced"),
+                  S3SearchOptionsWidget(
+                      name="human_competency",
+                      label=T("Skills"),
+                      field="skill_id",
+                      cols = 2,
+                      options = hrm_skill_opts,
+                      ),
+                  S3SearchOptionsWidget(
+                      name="human_competency_rating",
+                      label=T("Competency"),
+                      field="competency_id",
+                      cols = 2,
+                      options = hrm_competency_opts,
+                  )
+                  )
+    )    
+
+    s3db.configure(tablename = "hrm_competency", \
+                   search_method = hrm_skill_search)
+
+    def postp(r,output):
+
+        # Custom action button to add the member to a team    
+        S3CRUD.action_buttons(r)
+        
+        args = ["[id]", "group_membership"]
+        s3.actions.append(dict(label=str(T("Add to a Team")),
+                                         _class="action-btn",
+                                         url = URL(f = "person",
+                                                   args = args))
+                          )
+
+        return output
+
+    s3.postp = postp    
+    return current.rest_controller()
+
+# ---------------------------------------------------------------------        
+def hrm_skill_simple_search_widget(type):
+
+    T = current.T
+    return s3search.S3SearchSimpleWidget(
+                name = "human_competency_%s" % type,
+                label = T("Name"),
+                comment = T("You can search by job title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+                field = ["person_id$first_name",
+                         "person_id$middle_name",
+                         "person_id$last_name",
+                         "job_role_id$name",
+                         "job_title_id$name",
+                        ])
 
 # =============================================================================
 def hrm_configure_pr_group_membership():

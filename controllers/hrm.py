@@ -826,6 +826,15 @@ def experience():
     output = s3_rest_controller()
     return output
 
+# -----------------------------------------------------------------------------
+def competency():
+    """ RESTful CRUD controller used to allow searching for people by Skill"""
+
+    table = s3db.hrm_human_resource
+    s3.filter = ((table.type == 1) & \
+                 (s3db.hrm_competency.person_id == table.person_id))
+    return s3db.hrm_competency_controller()
+
 # =============================================================================
 def skill_competencies():
     """

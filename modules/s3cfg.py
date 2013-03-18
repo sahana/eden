@@ -1453,6 +1453,12 @@ class S3Config(Storage):
         return self.req.get("req_form_name", "Requisition Form")
     def get_req_shortname(self):
         return self.req.get("req_shortname", "REQ")
+    def get_req_restrict_on_complete(self):
+        """
+            To restrict adding new commits to the Completed commits.
+        """
+        return self.req.get("req_restrict_on_complete", False)
+    
 
     # -------------------------------------------------------------------------
     # Supply
