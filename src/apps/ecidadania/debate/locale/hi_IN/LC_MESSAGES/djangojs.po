@@ -1,22 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
+# Savita Seetaraman <savita.seetaraman5@gmail.com>, 2013.
 # Vishrut Mehta <vishrut.mehta009@gmail.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-11 10:52+0100\n"
-"PO-Revision-Date: 2013-03-06 10:18+0000\n"
-"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Hindi (India) (http://www.transifex.com/projects/p/ecidadania/"
-"language/hi_IN/)\n"
-"Language: hi_IN\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2013-03-13 09:32+0100\n"
+"PO-Revision-Date: 2013-03-14 07:32+0000\n"
+"Last-Translator: savitats <savita.seetaraman5@gmail.com>\n"
+"Language-Team: Hindi (India) (http://www.transifex.com/projects/p/ecidadania/language/hi_IN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: hi_IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: static/js/debate_board.js:12
@@ -40,9 +40,8 @@ msgid "There has been an error."
 msgstr "वहाँ एक त्रुटि हुई."
 
 #: static/js/debate_board.js:17
-#, fuzzy
 msgid "Could't delete column or row."
-msgstr "नोट को हटाया नहीं जा सका."
+msgstr "स्तंभ या पंक्ति को हटाया नहीं किया जा सका."
 
 #: static/js/debate_board.js:18
 msgid "Couldn't create note."
@@ -66,12 +65,11 @@ msgstr "नोट को हटाया नहीं जा सका."
 
 #: static/js/debate_board.js:23
 msgid "There must be at least one column or row in the table."
-msgstr ""
+msgstr "कम से कम एक स्तंभ या तालिका में पंक्ति होना चाहिए."
 
 #: static/js/debate_board.js:24
-#, fuzzy
 msgid "Couln't create row or column."
-msgstr "नोट बनाने के लिए नहीं किया जा सका."
+msgstr "स्तंभ या पंक्ति नहीं बना सका."
 
 #: static/js/debate_board.js:25
 msgid "Are you sure?"
@@ -83,14 +81,14 @@ msgstr "टिप्पणी"
 
 #: static/js/debate_board.js:29
 msgid "Delete note"
-msgstr ""
+msgstr "नोट हटाना"
 
 #: static/js/debate_board.js:30
 msgid "Caution"
-msgstr ""
+msgstr "सावधानी"
 
 #: static/js/debate_board.js:31
 msgid ""
 "You are adding too much columns. We put no limit,     but too many columns "
 "will be a problem in smaller screens."
-msgstr ""
+msgstr "आप बहुत ज्यादा कॉलम जोड़ रहे हैं. हम कोई सीमा नहीं रखा है, लेकिन बहुत अधिक कॉलम छोटे परदे में एक समस्या हो जाएगी."

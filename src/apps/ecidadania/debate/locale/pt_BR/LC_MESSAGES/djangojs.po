@@ -1,22 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Enrico Nicoletto <enrico.BR@gmx.co.uk>, 2013.
+# Felipe Vieira <felipe29vieira@gmail.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-11 10:52+0100\n"
-"PO-Revision-Date: 2013-03-06 10:18+0000\n"
-"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/"
-"ecidadania/language/pt_BR/)\n"
-"Language: pt_BR\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2013-03-13 09:32+0100\n"
+"PO-Revision-Date: 2013-03-14 16:12+0000\n"
+"Last-Translator: felipevieira <felipe29vieira@gmail.com>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/ecidadania/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #: static/js/debate_board.js:12
@@ -40,9 +40,8 @@ msgid "There has been an error."
 msgstr "Ocorreu um erro."
 
 #: static/js/debate_board.js:17
-#, fuzzy
 msgid "Could't delete column or row."
-msgstr "Não foi possível excluir a nota."
+msgstr "Não foi possível remover coluna ou linha"
 
 #: static/js/debate_board.js:18
 msgid "Couldn't create note."
@@ -66,12 +65,11 @@ msgstr "Não foi possível excluir a nota."
 
 #: static/js/debate_board.js:23
 msgid "There must be at least one column or row in the table."
-msgstr ""
+msgstr "Deve haver pelo menos uma coluna ou linha na tabela"
 
 #: static/js/debate_board.js:24
-#, fuzzy
 msgid "Couln't create row or column."
-msgstr "Não foi possível criar a nota."
+msgstr "Não foi possível criar linha ou coluna"
 
 #: static/js/debate_board.js:25
 msgid "Are you sure?"
@@ -83,14 +81,14 @@ msgstr "Comentário"
 
 #: static/js/debate_board.js:29
 msgid "Delete note"
-msgstr ""
+msgstr "Excluir nota"
 
 #: static/js/debate_board.js:30
 msgid "Caution"
-msgstr ""
+msgstr "Atenção"
 
 #: static/js/debate_board.js:31
 msgid ""
 "You are adding too much columns. We put no limit,     but too many columns "
 "will be a problem in smaller screens."
-msgstr ""
+msgstr "Vocês está inserindo muitas colunas. Nós não estabelecemos limite, mas muitas colunas serão um problema em telas menores"

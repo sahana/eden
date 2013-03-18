@@ -1,21 +1,20 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-11 10:52+0100\n"
-"PO-Revision-Date: 2013-03-06 10:18+0000\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2013-03-13 09:32+0100\n"
+"PO-Revision-Date: 2013-03-11 09:55+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
-"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/"
-"ecidadania/language/mk_MK/)\n"
-"Language: mk_MK\n"
+"Language-Team: Macedonian (Macedonia) (http://www.transifex.com/projects/p/ecidadania/language/mk_MK/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: mk_MK\n"
 "Plural-Forms: nplurals=2; plural=(n % 10 == 1 && n % 100 != 11) ? 0 : 1;\n"
 
 #: static/js/debate_board.js:12
@@ -39,9 +38,8 @@ msgid "There has been an error."
 msgstr "Грешка."
 
 #: static/js/debate_board.js:17
-#, fuzzy
 msgid "Could't delete column or row."
-msgstr "Не може да се избрише мислењето."
+msgstr ""
 
 #: static/js/debate_board.js:18
 msgid "Couldn't create note."
@@ -68,9 +66,8 @@ msgid "There must be at least one column or row in the table."
 msgstr ""
 
 #: static/js/debate_board.js:24
-#, fuzzy
 msgid "Couln't create row or column."
-msgstr "Не може да се креира мислење."
+msgstr ""
 
 #: static/js/debate_board.js:25
 msgid "Are you sure?"
@@ -82,7 +79,7 @@ msgstr "Коментар"
 
 #: static/js/debate_board.js:29
 msgid "Delete note"
-msgstr ""
+msgstr "Избриши мислење"
 
 #: static/js/debate_board.js:30
 msgid "Caution"

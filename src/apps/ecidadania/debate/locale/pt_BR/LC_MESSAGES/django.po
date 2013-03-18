@@ -1,22 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Felipe Vieira <felipe29vieira@gmail.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-11 10:51+0100\n"
-"PO-Revision-Date: 2013-02-21 17:56+0000\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2013-03-13 09:32+0100\n"
+"PO-Revision-Date: 2013-03-14 16:10+0000\n"
 "Last-Translator: felipevieira <felipe29vieira@gmail.com>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/"
-"ecidadania/language/pt_BR/)\n"
-"Language: pt_BR\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/ecidadania/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #: models.py:42 models.py:111
@@ -74,17 +73,10 @@ msgstr "Como criar um debate"
 
 #: templates/debate/debate_add.html:52
 msgid ""
-"To create a debate, you must fill the fields with any criteria necessary for "
-"it,\n"
-"                    in this docuemntation page we have an example of a "
-"debate that you can follow to create yours.\n"
-"                    For the rest of the fields, just follow their respective "
-"instructions."
-msgstr ""
-"Para criar um debate, você deve preencher os campos com o critério "
-"necessário,⏎ nesta página de documentação nos temos um exemplo de um debate "
-"que você pode usar como modelo no momento da criação do seu.⏎ Para o "
-"restante dos campos, apenas siga suas respectivas instruções"
+"To create a debate, you must fill the fields with any criteria necessary for it,\n"
+"                    in this docuemntation page we have an example of a debate that you can follow to create yours.\n"
+"                    For the rest of the fields, just follow their respective instructions."
+msgstr "Para criar um debate, você deve preencher os campos com o critério necessário,⏎ nesta página de documentação nos temos um exemplo de um debate que você pode usar como modelo no momento da criação do seu.⏎ Para o restante dos campos, apenas siga suas respectivas instruções"
 
 #: templates/debate/debate_add.html:58
 msgid "Close"
@@ -131,6 +123,26 @@ msgstr "Cancelar"
 msgid "Save"
 msgstr "Salvar"
 
+#: templates/debate/debate_confirm_delete.html:4
+#: templates/debate/debate_confirm_delete.html:21
+msgid "Delete debate"
+msgstr "Remover debate"
+
+#: templates/debate/debate_confirm_delete.html:23
+msgid ""
+"Are you sure you want to delete this debate? This action cannot be undone."
+msgstr "Tem certeza que deseja remover esse debate? Esta ação não pode ser desfeita"
+
+#: templates/debate/debate_confirm_delete.html:26
+#: templates/debate/debate_list.html:34
+msgid "Go back"
+msgstr "Retroceder"
+
+#: templates/debate/debate_confirm_delete.html:27
+#: templates/debate/debate_list.html:23
+msgid "Delete"
+msgstr "Excluir"
+
 #: templates/debate/debate_list.html:7
 msgid "Debates in "
 msgstr "Debates ativos"
@@ -143,23 +155,19 @@ msgstr "Debates ativos"
 msgid "Edit"
 msgstr "Editar"
 
-#: templates/debate/debate_list.html:27
+#: templates/debate/debate_list.html:30
 msgid "There are no debates."
 msgstr "Não há debates."
 
-#: templates/debate/debate_list.html:31
-msgid "Go back"
-msgstr "Retroceder"
-
-#: templates/debate/debate_list.html:37
+#: templates/debate/debate_list.html:40
 msgid "previous"
 msgstr "anterior"
 
-#: templates/debate/debate_list.html:40
+#: templates/debate/debate_list.html:43
 msgid "of"
 msgstr "de"
 
-#: templates/debate/debate_list.html:43
+#: templates/debate/debate_list.html:46
 msgid "next"
 msgstr "próximo"
 
@@ -172,9 +180,7 @@ msgstr "Impossível visualizar esse debate"
 msgid ""
 "It seems that the debate you're trying to access is either <strong>not "
 "started</strong> or it <strong>expired</strong>."
-msgstr ""
-"Parece que o debate que você está tentando acessar <strong>não foi iniciado</"
-"strong> ou <strong>expirou</strong>."
+msgstr "Parece que o debate que você está tentando acessar <strong>não foi iniciado</strong> ou <strong>expirou</strong>."
 
 #: templates/debate/debate_outdated.html:20
 msgid "Started on:"

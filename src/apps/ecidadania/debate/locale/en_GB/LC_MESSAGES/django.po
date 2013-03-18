@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-11 10:51+0100\n"
+"POT-Creation-Date: 2013-03-13 09:32+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,6 +126,26 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
+#: templates/debate/debate_confirm_delete.html:4
+#: templates/debate/debate_confirm_delete.html:21
+msgid "Delete debate"
+msgstr ""
+
+#: templates/debate/debate_confirm_delete.html:23
+msgid ""
+"Are you sure you want to delete this debate? This action cannot be undone."
+msgstr ""
+
+#: templates/debate/debate_confirm_delete.html:26
+#: templates/debate/debate_list.html:34
+msgid "Go back"
+msgstr ""
+
+#: templates/debate/debate_confirm_delete.html:27
+#: templates/debate/debate_list.html:23
+msgid "Delete"
+msgstr ""
+
 #: templates/debate/debate_list.html:7
 msgid "Debates in "
 msgstr ""
@@ -138,23 +158,19 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: templates/debate/debate_list.html:27
+#: templates/debate/debate_list.html:30
 msgid "There are no debates."
 msgstr ""
 
-#: templates/debate/debate_list.html:31
-msgid "Go back"
-msgstr ""
-
-#: templates/debate/debate_list.html:37
+#: templates/debate/debate_list.html:40
 msgid "previous"
 msgstr ""
 
-#: templates/debate/debate_list.html:40
+#: templates/debate/debate_list.html:43
 msgid "of"
 msgstr ""
 
-#: templates/debate/debate_list.html:43
+#: templates/debate/debate_list.html:46
 msgid "next"
 msgstr ""
 
