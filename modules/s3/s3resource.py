@@ -6406,7 +6406,8 @@ class S3Pivottable(object):
     # -------------------------------------------------------------------------
     def compact(self, n=50, layer=None, least=False, represent=False):
         """
-            Get the top/least n numeric results for this layer
+            Get the top/least n numeric results for a layer, used to
+            generate the input data for charts.
 
             @param n: maximum dimension size, extracts the n-1 top/least
                       rows/cols and aggregates the rest under "__other__"
@@ -6415,8 +6416,6 @@ class S3Pivottable(object):
             @param represent: represent the row/col dimension values as
                               strings using the respective field
                               representation
-
-            @todo: move to client-side to make "Others" expandable
         """
 
         default = {"rows": [], "cols": [], "cells": []}
@@ -6431,10 +6430,11 @@ class S3Pivottable(object):
             least = not least
         numeric = lambda x: isinstance(x, (int, long, float))
 
+        rfields = self.rfields
         OTHER = "__other__"
 
-        # Find the top/least n rows/cols
         def top(tl, length=10, least=False):
+            """ Find the top/least n rows/cols """
             try:
                 if len(tl) > length:
                     m = length - 1
@@ -6449,33 +6449,82 @@ class S3Pivottable(object):
                 pass
             return tl
 
+        def sortdim(dim, items):
+            """ Sort a dimension """
+
+            rfield = rfields[dim]
+            if not rfield:
+                return
+            ftype = rfield.ftype
+            sortby = "value"
+            if ftype == "integer":
+                requires = rfield.requires
+                if isinstance(requires, (tuple, list)):
+                    requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if isinstance(requires, IS_IN_SET):
+                    sortby = "text"
+            elif ftype[:9] == "reference":
+                sortby = "text"
+            items.sort(key=lambda item: item[2][sortby])
+
+        if represent:
+            row_repr = self._represent(self.rows)
+            col_repr = self._represent(self.cols)
+        else:
+            row_repr = col_repr = lambda v: s3_unicode(v)
+
+        others = s3_unicode(current.T("Others"))
+        
         irows = self.row
         icols = self.col
         rows = []
         cols = []
+
+        # Group and sort the rows
         is_numeric = None
         for i in xrange(self.numrows):
             r = irows[i]
             total = r[layer]
             if is_numeric is None:
                 is_numeric = numeric(total)
-            if is_numeric:
-                rows.append((i, total))
-            else:
-                rows.append((i, len(r["records"])))
-        for i in xrange(len(self.col)):
-            c = self.col[i]
-            total = c[layer]
-            if is_numeric:
-                cols.append((i, total))
-            else:
-                cols.append((i, len(c["records"])))
+            if not is_numeric:
+                total = len(r["records"])
+            header = Storage(value = r.value,
+                             text = r.text
+                                    if "text" in r else row_repr(r.value))
+            rows.append((i, total, header))
         rows = top(rows, n, least=least)
-        cols = top(cols, n, least=least)
-        row_indices = [i for i, t in rows]
-        col_indices = [i for i, t in cols]
+        last = rows.pop(-1) if rows[-1][0] == OTHER else None
+        sortdim(self.rows, rows)
+        if last:
+            last = (last[0], last[1], Storage(value=None, text=others))
+            rows.append(last)
+        row_indices = [i[0] for i in rows]
 
-        # Group the cell results
+        # Group and sort the cols
+        is_numeric = None
+        for i in xrange(self.numcols):
+            c = icols[i]
+            total = c[layer]
+            if is_numeric is None:
+                is_numeric = numeric(total)
+            if not is_numeric:
+                total = len(c["records"])
+            header = Storage(value = c.value,
+                             text = c.text
+                                    if "text" in c else col_repr(c.value))
+            cols.append((i, total, header))
+        cols = top(cols, n, least=least)
+        last = cols.pop(-1) if cols[-1][0] == OTHER else None
+        sortdim(self.cols, cols)
+        if last:
+            last = (last[0], last[1], Storage(value=None, text=others))
+            cols.append(last)
+        col_indices = [i[0] for i in cols]
+
+        # Group and sort the cells
         icell = self.cell
         cells = {}
         for i in xrange(self.numrows):
@@ -6494,36 +6543,29 @@ class S3Pivottable(object):
                 else:
                     orow[cidx].append(value)
 
-        if represent:
-            row_repr = self._represent(self.rows)
-            col_repr = self._represent(self.cols)
-
         # Aggregate the grouped values
         orows = []
         ocols = []
         ocells = []
         ctotals = True
-        others = s3_unicode(current.T("Others"))
-        for rindex, rtotal in rows:
+        rappend = orows.append
+        cappend = ocols.append
+        for ri, rt, rh in rows:
             orow = []
-            rdim = irows[rindex]["value"] if rindex != OTHER else None
             if represent:
-                repr_str = row_repr(rdim) if rindex != OTHER else others
-                orows.append((rindex, s3_unicode(rdim), repr_str, rtotal))
+                rappend((ri, s3_unicode(rh.value), rh.text, rt))
             else:
-                orows.append((rindex, s3_unicode(rdim), rtotal))
-            for cindex, ctotal in cols:
-                value = cells[rindex][cindex]
+                rappend((ri, s3_unicode(rh.value), rt))
+            for ci, ct, ch in cols:
+                value = cells[ri][ci]
                 if type(value) is list:
                     value = self._aggregate(value, method)
                 orow.append(value)
                 if ctotals:
-                    cdim = icols[cindex]["value"] if cindex != OTHER else None
                     if represent:
-                        repr_str = col_repr(cdim) if cindex != OTHER else others
-                        ocols.append((cindex, s3_unicode(cdim), repr_str, ctotal))
+                        cappend((ci, s3_unicode(ch.value), ch.text, ct))
                     else:
-                        ocols.append((cindex, s3_unicode(cdim), ctotal))
+                        cappend((ci, s3_unicode(ch.value), ct))
             ctotals = False
             ocells.append(orow)
 
