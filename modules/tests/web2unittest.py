@@ -723,36 +723,21 @@ class SeleniumUnitTest(Web2UnitTest):
                 return False
         # Throbber has closed and data was found, return
         for i in range(10):
-            # For each autocomplete on the form the menu will have an id starting from 0
-            automenu = 0
-            try:
-                menu = browser.find_element_by_id("ui-menu-%s" % automenu)
-            except:
-                menu = None
-            while menu:
-                # Try and get the value directly
-                menu_items = menu.text.splitlines()
-                autoitem = 0
-                for linkText in menu_items:
-                    if needle in linkText:
-                        # Found the text, now need to click on it to get the db id
-                        menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
-                        menuitem.click()
-                        time.sleep(15)
-                        # The id is copied into the value attribute so use that
-                        db_id = browser.find_element_by_id(autocomplete)
-                        value = db_id.get_attribute("value")
-                        if value:
-                            return int(value)
-                        else:
-                            return False
-                    autoitem += 1
-                automenu += 1
-                try:
-                    menu = browser.find_element_by_id("ui-menu-%s" % automenu)
-                except:
-                    menu = None
-                # end of looping through each autocomplete menu
+            # For each autocomplete on the form the menu will have an id starting from 1
+            menu_identifier = "//ul[contains(@class,'ui-autocomplete')]"
+            results_identifier = "/li[@class='ui-menu-item']/a"
+            menu_results = browser.find_elements_by_xpath(menu_identifier + results_identifier)
+            for j in range(len(menu_results)):
+                if search == menu_results[j].text:
+                    menu_results[j].click()
+                    time.sleep(3)
+                    db_id = browser.find_element_by_id(autocomplete)
+                    value = db_id.get_attribute("value")
+                    if value:
+                        return int(value)
+                    else:
+                        return False
+            
             time.sleep(sleeptime)
 
     # -------------------------------------------------------------------------
