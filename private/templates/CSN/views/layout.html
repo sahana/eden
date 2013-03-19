@@ -101,7 +101,7 @@
   {{if response.confirmation:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.confirmation}}</div>{{pass}}
   {{if response.flash:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.flash}}</div>{{pass}}
   </div>
-  <a href='/{{=appname}}/default/index/secondary' class='first'><i class='icon icon-reorder' style='font-size: 30px;'></i></a>
+  {{#<a href='/=appname/default/index/secondary' class='first'><i class='icon icon-reorder' style='font-size: 30px;'></i></a>}}
   {{include}}
  </div>
  <div id='footer'>

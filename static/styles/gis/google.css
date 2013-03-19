@@ -3,16 +3,10 @@
     bottom: 2px;
     left: auto;  
 }
-.olLayerGoogleV3.olLayerGoogleCopyright {
-    bottom: 0px;
-    /* Leave space for the MousePosition */
-    right: 110px !important;
-}
 .olLayerGooglePoweredBy {
     left: 2px;
     bottom: 2px;   
 }
-.olLayerGoogleV3.olLayerGooglePoweredBy {
-    bottom: 0px !important;
+.olForeignContainer div.olControlMousePosition {
+    bottom: 28px;
 }
-

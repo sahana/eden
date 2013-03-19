@@ -130,6 +130,9 @@ settings.ui.hide_report_filter_options = True
 # Uncomment to restrict the export formats available
 settings.ui.export_formats = ["xls", "xml"]
 
+# Uncomment to include an Interim Save button on CRUD forms
+settings.ui.interim_save = True
+
 # -----------------------------------------------------------------------------
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
@@ -213,7 +216,7 @@ def customize_project_project(**attr):
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
 
     # Don't show export buttons for XLS/XML    
-    s3.formats = Storage(xls= None, xml = None)
+    s3.formats = Storage(xls=None, xml=None)
     
     # Remove rheader
     attr["rheader"] = None

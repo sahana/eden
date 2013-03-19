@@ -318,7 +318,7 @@ label.radio-label, label.checkbox-label {
 	display: inline-block;
 }
 
-input[value="Save"],
+/*input[value="Save"],*/
 .save-button.medium {
 	background: url(img/m-save.png) no-repeat;
 	width: 90px;
@@ -367,6 +367,22 @@ td>a.simple-lnk,
     margin: 4px !important;
 	border: 0;
 	padding: 2px;
+}
+.crud-submit-button,
+.interim-save {
+	background: url(img/s-button.png) repeat;
+    color: #fff;
+    font-family: 'Exo',sans-serif;
+	font-size: 20px;
+	height: 45px;
+	border: 0;
+}
+.crud-submit-button {
+	width: 90px;
+}
+.interim-save {
+	width: 240px;
+    margin: 4px !important;
 }
 .report-submit-button,
 .search-button,

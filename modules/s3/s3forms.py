@@ -2613,7 +2613,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         else:
             fields = [table.id, table.name]
 
-        filter = opts.get("script", None)
+        filter = opts.get("filter", None)
         if filter:
             s3db = current.s3db
             linktable = s3db[filter["linktable"]]
