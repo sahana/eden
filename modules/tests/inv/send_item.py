@@ -69,7 +69,7 @@ class SendItem(InvTestFunctions):
                ]
         item_data = [
                      [("send_inv_item_id",
-                       "Blankets - 123457 - Australian Red Cross",
+                       "Blankets - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
