@@ -817,12 +817,40 @@ $(document).ready(function() {
             // Ajax-refresh the target object (@todo: support multiple)
             var target = $(this).nextAll('input.filter-submit-target[type="hidden"]').val();
             if ($('#' + target).hasClass('dl')) {
+
+                // Ajax-reload the datalist
                 dlAjaxReload(target, queries);
+                
+            } else if ($('#' + target).hasClass('dataTable')) {
+                
+                // Experimental: Ajax-reloading of the datatable
+                var ajaxurl = null;
+                var config = $('input#' + target + '_configurations');
+                if (config.length) {
+                    var settings = JSON.parse($(config).val());
+                    var ajaxurl = settings['ajaxUrl'];
+                    if (typeof ajaxurl != 'undefined') {
+                        ajaxurl = S3.search.filterURL(ajaxurl, queries);
+                    } else {
+                        ajaxurl = null;
+                    }
+                }
+                if (ajaxurl) {
+                    $('#' + target).dataTable().fnReloadAjax(ajaxurl);
+                } else {
+                    url = S3.search.filterURL(url, queries);
+                    window.location.href = url;
+                }
+                
             } else {
+
+                // All other targets
                 url = S3.search.filterURL(url, queries);
                 window.location.href = url;
+                
             }
         } else {
+            
             // Page reload
             url = S3.search.filterURL(url, queries);
             window.location.href = url;
