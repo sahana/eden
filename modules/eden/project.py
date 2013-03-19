@@ -4828,12 +4828,12 @@ def project_time_day(row):
 
     now = current.request.utcnow
     week = datetime.timedelta(days=7)
-    if thisdate < (now - week):
+    #if thisdate < (now - week):
         # Ignore data older than the last week
         # - should already be filtered in controller anyway
-        return default
+    #    return default
 
-    return thisdate.date().strftime("%d %B")
+    return thisdate.date().strftime("%d %B %y")
 
 # =============================================================================
 def project_time_week(row):
