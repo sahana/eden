@@ -77,6 +77,11 @@ def project():
         # Location Filter
         s3db.gis_location_filter(r)
         
+        if r.component and r.component.name == "project_taks":
+            list_fields = s3db.get_config("project_task",
+                                          "list_fields")
+            list_fields.insert(3, (T("Activity"), "activity.name"))
+        
         if r.interactive:
             if not r.component or r.component_name == "activity":
                 # Filter Themes/Activity Types based on Sector
@@ -130,10 +135,6 @@ def project():
 
                 elif r.component_name == "task":
                     table = r.component.table
-                    tablename = r.component.tablename
-                    list_fields = s3db.get_config(tablename,
-                                                  "list_fields")
-                    list_fields.insert(3, (T("Activity"), "activity.name"))
                     if not auth.s3_has_role("STAFF"):
                         # Hide fields to avoid confusion (both of inputters & recipients)
                         field = table.source
