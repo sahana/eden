@@ -67,7 +67,7 @@ class SendReceiveItem(InvTestFunctions):
                ]
         item_data = [
                      [("send_inv_item_id",
-                       "Blankets - 123457 - Australian Red Cross",
+                       "Blankets - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
@@ -75,7 +75,7 @@ class SendReceiveItem(InvTestFunctions):
                       ),
                      ],
                      [("send_inv_item_id",
-                       "Jerry Cans - 123461 - Australian Red Cross",
+                       "Jerry Cans - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
@@ -83,7 +83,7 @@ class SendReceiveItem(InvTestFunctions):
                       ),
                      ],
                      [("send_inv_item_id",
-                       "Kitchen Sets - 123458 - Australian Red Cross",
+                       "Kitchen Sets - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
@@ -140,7 +140,7 @@ class SendReceiveItem(InvTestFunctions):
                ]
         item_data = [
                      [("send_inv_item_id",
-                       "Blankets - 123457 - Australian Red Cross",
+                       "Blankets - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
@@ -148,7 +148,7 @@ class SendReceiveItem(InvTestFunctions):
                       ),
                      ],
                      [("send_inv_item_id",
-                       "Jerry Cans - 123461 - Australian Red Cross",
+                       "Jerry Cans - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
@@ -156,7 +156,7 @@ class SendReceiveItem(InvTestFunctions):
                       ),
                      ],
                      [("send_inv_item_id",
-                       "Kitchen Sets - 123458 - Australian Red Cross",
+                       "Kitchen Sets - Australian Red Cross",
                        "inv_widget",
                       ),
                       ("quantity",
