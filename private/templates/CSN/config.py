@@ -85,6 +85,9 @@ settings.base.theme = "CSN"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
+# Mouse Position: 'normal', 'mgrs' or None
+settings.gis.mouse_position = None
+
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([

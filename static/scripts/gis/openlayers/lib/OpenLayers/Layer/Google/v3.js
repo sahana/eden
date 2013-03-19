@@ -144,7 +144,10 @@ OpenLayers.Layer.Google.v3 = {
                     map.div.appendChild(container);
                     if (!cache.rendered) {
                         google.maps.event.addListenerOnce(this.mapObject, 'tilesloaded', function() {
-                            cache.googleControl.appendChild(map.viewPortDiv);
+                            // FB: Needed when Google layer is not the default base layer
+                            if (cache.displayed != undefined) {
+                                cache.googleControl.appendChild(map.viewPortDiv);
+                            }
                             cache.rendered = true;
                         });
                     } else {
@@ -156,7 +159,7 @@ OpenLayers.Layer.Google.v3 = {
                 cache.displayed = this.id;
             } else {
                 if (cache.googleControl.hasChildNodes()) {
-                    map.div.appendChild(map.viewPortDiv);
+                   map.div.appendChild(map.viewPortDiv);
                     map.div.removeChild(container);
                 }
                 delete cache.displayed;

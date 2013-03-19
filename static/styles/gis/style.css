@@ -14,6 +14,24 @@ div.olLayerDiv {
    -khtml-user-select: none;
 }
 
+.olLayerGoogleCopyright {
+    left: 2px;
+    bottom: 2px;
+}
+.olLayerGoogleV3.olLayerGoogleCopyright {
+    right: auto !important;
+}
+.olLayerGooglePoweredBy {
+    left: 2px;
+    bottom: 15px;
+}
+.olLayerGoogleV3.olLayerGooglePoweredBy {
+    bottom: 15px !important;
+}
+/* GMaps should not set styles on its container */
+.olForeignContainer {
+    opacity: 1 !important;
+}
 .olControlAttribution {
     font-size: smaller;
     right: 3px;
@@ -87,7 +105,7 @@ div.olControlMousePosition {
 
 .olControlOverviewMapExtentRectangle {
     overflow: hidden;
-    background-image: url(../../img/gis/openlayers/blank.gif);
+    background-image: url(../../img/gis/openlayers/theme_default/blank.gif);
     cursor: move;
     border: 2px dotted red;
 }
@@ -100,33 +118,33 @@ div.olControlMousePosition {
 }
 
 .olLayerGeoRSSDescription {
-    float: left;
-    width: 100%;
-    overflow: auto;
-    font-size: 1.0em;
+    float:left;
+    width:100%;
+    overflow:auto;
+    font-size:1.0em;
 }
 .olLayerGeoRSSClose {
-    float: right;
-    color: gray;
-    font-size: 1.2em;
-    margin-right: 6px;
-    font-family: sans-serif;
+    float:right;
+    color:gray;
+    font-size:1.2em;
+    margin-right:6px;
+    font-family:sans-serif;
 }
 .olLayerGeoRSSTitle {
-    float: left;
-    font-size: 1.2em;
+    float:left;font-size:1.2em;
 }
 
 .olPopupContent {
-    padding: 5px;
+    padding:5px;
     overflow: auto;
-}    
+}
 
 .olControlNavigationHistory {
    background-image: url(../../img/gis/openlayers/theme_default/navigation_history.png);
    background-repeat: no-repeat;
-   width: 24px;
+   width:  24px;
    height: 24px;
+
 }
 .olControlNavigationHistoryPreviousItemActive {
   background-position: 0 0;
@@ -169,12 +187,10 @@ div.olControlSaveFeaturesItemInactive {
     filter: alpha(opacity=50);
 }
 
-/* Handled in geoexplorer.css */
-/*
 .olControlPanPanel {
     top: 10px;
     left: 5px;
-}  
+}
 
 .olControlPanPanel div {
     background-image: url(../../img/gis/openlayers/theme_default/pan-panel.png);
@@ -236,7 +252,6 @@ div.olControlSaveFeaturesItemInactive {
     left: 0;
     background-position: 0 18px;
 }
-*/
 
 /*
  * When a potential text is bigger than the image it move the image
@@ -247,8 +262,8 @@ div.olControlSaveFeaturesItemInactive {
 }
 
 .olPopupCloseBox {
-    background: url(../../img/gis/openlayers/theme_default/close.gif) no-repeat;
-    cursor: pointer;
+  background: url(../../img/gis/openlayers/theme_default/close.gif) no-repeat;
+  cursor: pointer;
 }
 
 .olFramedCloudPopupContent {
@@ -311,10 +326,6 @@ div.olControlSaveFeaturesItemInactive {
     padding-bottom: 5px;
     padding-right: 10px;
     background-color: darkblue;
-    /*
-    padding-right: 75px;
-    width: 100%;
-    height: 100%; */
 }
 
 .olControlLayerSwitcher .layersDiv .baseLbl,
@@ -474,4 +485,31 @@ a.olControlZoomOut {
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;
     transition: opacity 0.2s linear;
+}
+
+/* Turn on GPU support where available */
+.olTileImage {
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    -moz-perspective: 1000;
+    -ms-perspective: 1000;
+    perspective: 1000;
+}
+
+/* when replacing tiles, do not show tile and backbuffer at the same time */
+.olTileImage.olTileReplacing {
+    display: none;
+}
+
+/* override any max-width image settings (e.g. bootstrap.css) */
+img.olTileImage {
+    max-width: none;
 }

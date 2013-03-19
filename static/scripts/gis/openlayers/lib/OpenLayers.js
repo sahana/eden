@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2013 by OpenLayers Contributors (see authors.txt for
  * full list of contributors). Published under the 2-clause BSD license.
  * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
@@ -132,6 +132,7 @@
             jsFiles = [
                 "OpenLayers/BaseTypes/Class.js",
                 "OpenLayers/Util.js",
+                "OpenLayers/Util/vendorPrefix.js",
                 "OpenLayers/Animation.js",
                 "OpenLayers/BaseTypes.js",
                 "OpenLayers/BaseTypes/Bounds.js",
@@ -175,6 +176,7 @@
                 //"OpenLayers/Layer/KaMapCache.js",
                 //"OpenLayers/Layer/Markers.js",
                 // Works with Markers not Vectors
+                //"OpenLayers/Layer/Text.js",
                 //"OpenLayers/Layer/Text.js",
                 //"OpenLayers/Layer/WorldWind.js",
                 "OpenLayers/Layer/ArcGIS93Rest.js",
@@ -289,11 +291,11 @@
                 "OpenLayers/Protocol/WFS/v1.js",
                 "OpenLayers/Protocol/WFS/v1_0_0.js",
                 "OpenLayers/Protocol/WFS/v1_1_0.js",
-                "OpenLayers/Protocol/CSW.js", 
-                "OpenLayers/Protocol/CSW/v2_0_2.js",
+                //"OpenLayers/Protocol/CSW.js", 
+                //"OpenLayers/Protocol/CSW/v2_0_2.js",
                 "OpenLayers/Protocol/Script.js",
-                "OpenLayers/Protocol/SOS.js",
-                "OpenLayers/Protocol/SOS/v1_0_0.js",
+                //"OpenLayers/Protocol/SOS.js",
+                //"OpenLayers/Protocol/SOS/v1_0_0.js",
                 "OpenLayers/Layer/PointTrack.js",
                 "OpenLayers/Style.js",
                 "OpenLayers/Style2.js",
@@ -304,13 +306,14 @@
                 "OpenLayers/Format/XML.js",
                 "OpenLayers/Format/XML/VersionedOGC.js",
                 "OpenLayers/Format/Context.js",
-                "OpenLayers/Format/ArcXML.js",
-                "OpenLayers/Format/ArcXML/Features.js",
+                //"OpenLayers/Format/ArcXML.js",
+                //"OpenLayers/Format/ArcXML/Features.js",
                 "OpenLayers/Format/GML.js",
                 "OpenLayers/Format/GML/Base.js",
                 "OpenLayers/Format/GML/v2.js",
                 "OpenLayers/Format/GML/v3.js",
                 "OpenLayers/Format/Atom.js",
+                //"OpenLayers/Format/EncodedPolyline.js",
                 "OpenLayers/Format/KML.js",
                 "OpenLayers/Format/GeoRSS.js",
                 "OpenLayers/Format/WFS.js",
@@ -318,6 +321,10 @@
                 "OpenLayers/Format/OWSCommon/v1.js",
                 "OpenLayers/Format/OWSCommon/v1_0_0.js",
                 "OpenLayers/Format/OWSCommon/v1_1_0.js",
+                "OpenLayers/Format/WCSCapabilities.js",
+                "OpenLayers/Format/WCSCapabilities/v1.js",
+                "OpenLayers/Format/WCSCapabilities/v1_0_0.js",
+                "OpenLayers/Format/WCSCapabilities/v1_1_0.js",
                 "OpenLayers/Format/WFSCapabilities.js",
                 "OpenLayers/Format/WFSCapabilities/v1.js",
                 "OpenLayers/Format/WFSCapabilities/v1_0_0.js",
@@ -326,7 +333,7 @@
                 "OpenLayers/Format/WMSDescribeLayer.js",
                 "OpenLayers/Format/WMSDescribeLayer/v1_1.js",
                 "OpenLayers/Format/WKT.js",
-                "OpenLayers/Format/CQL.js",
+                //"OpenLayers/Format/CQL.js",
                 "OpenLayers/Format/OSM.js",
                 "OpenLayers/Format/GPX.js",
                 "OpenLayers/Format/Filter.js",
@@ -341,22 +348,22 @@
                 "OpenLayers/Format/OWSCommon/v1.js",
                 "OpenLayers/Format/OWSCommon/v1_0_0.js",
                 "OpenLayers/Format/OWSCommon/v1_1_0.js",
-                "OpenLayers/Format/CSWGetDomain.js",
-                "OpenLayers/Format/CSWGetDomain/v2_0_2.js",
-                "OpenLayers/Format/CSWGetRecords.js",
-                "OpenLayers/Format/CSWGetRecords/v2_0_2.js",
-                "OpenLayers/Format/WFST.js",
-                "OpenLayers/Format/WFST/v1.js",
-                "OpenLayers/Format/WFST/v1_0_0.js",
-                "OpenLayers/Format/WFST/v1_1_0.js",
+                //"OpenLayers/Format/CSWGetDomain.js",
+                //"OpenLayers/Format/CSWGetDomain/v2_0_2.js",
+                //"OpenLayers/Format/CSWGetRecords.js",
+                //"OpenLayers/Format/CSWGetRecords/v2_0_2.js",
+                //"OpenLayers/Format/WFST.js",
+                //"OpenLayers/Format/WFST/v1.js",
+                //"OpenLayers/Format/WFST/v1_0_0.js",
+                //"OpenLayers/Format/WFST/v1_1_0.js",
                 "OpenLayers/Format/Text.js",
                 "OpenLayers/Format/JSON.js",
                 "OpenLayers/Format/GeoJSON.js",
-                "OpenLayers/Format/WMC.js",
-                "OpenLayers/Format/WMC/v1.js",
-                "OpenLayers/Format/WMC/v1_0_0.js",
-                "OpenLayers/Format/WMC/v1_1_0.js",
-                "OpenLayers/Format/WCSGetCoverage.js",
+                //"OpenLayers/Format/WMC.js",
+                //"OpenLayers/Format/WMC/v1.js",
+                //"OpenLayers/Format/WMC/v1_0_0.js",
+                //"OpenLayers/Format/WMC/v1_1_0.js",
+                //"OpenLayers/Format/WCSGetCoverage.js",
                 "OpenLayers/Format/WMSCapabilities.js",
                 "OpenLayers/Format/WMSCapabilities/v1.js",
                 "OpenLayers/Format/WMSCapabilities/v1_1.js",
@@ -366,21 +373,21 @@
                 "OpenLayers/Format/WMSCapabilities/v1_3_0.js",
                 "OpenLayers/Format/WMSCapabilities/v1_1_1_WMSC.js",
                 "OpenLayers/Format/WMSGetFeatureInfo.js",
-                "OpenLayers/Format/SOSCapabilities.js",
-                "OpenLayers/Format/SOSCapabilities/v1_0_0.js",
-                "OpenLayers/Format/SOSGetFeatureOfInterest.js",
-                "OpenLayers/Format/SOSGetObservation.js",
-                "OpenLayers/Format/OWSContext.js",
-                "OpenLayers/Format/OWSContext/v0_3_1.js",
-                "OpenLayers/Format/WMTSCapabilities.js",
-                "OpenLayers/Format/WMTSCapabilities/v1_0_0.js",
-                "OpenLayers/Format/WPSCapabilities.js",
-                "OpenLayers/Format/WPSCapabilities/v1_0_0.js",
-                "OpenLayers/Format/WPSDescribeProcess.js",
-                "OpenLayers/Format/WPSExecute.js",
-                "OpenLayers/Format/XLS.js",
-                "OpenLayers/Format/XLS/v1.js",
-                "OpenLayers/Format/XLS/v1_1_0.js",
+                //"OpenLayers/Format/SOSCapabilities.js",
+                //"OpenLayers/Format/SOSCapabilities/v1_0_0.js",
+                //"OpenLayers/Format/SOSGetFeatureOfInterest.js",
+                //"OpenLayers/Format/SOSGetObservation.js",
+                //"OpenLayers/Format/OWSContext.js",
+                //"OpenLayers/Format/OWSContext/v0_3_1.js",
+                //"OpenLayers/Format/WMTSCapabilities.js",
+                //"OpenLayers/Format/WMTSCapabilities/v1_0_0.js",
+                //"OpenLayers/Format/WPSCapabilities.js",
+                //"OpenLayers/Format/WPSCapabilities/v1_0_0.js",
+                //"OpenLayers/Format/WPSDescribeProcess.js",
+                //"OpenLayers/Format/WPSExecute.js",
+                //"OpenLayers/Format/XLS.js",
+                //"OpenLayers/Format/XLS/v1.js",
+                //"OpenLayers/Format/XLS/v1_1_0.js",
                 "OpenLayers/Format/OGCExceptionReport.js",
                 "OpenLayers/Control/GetFeature.js",
                 //"OpenLayers/Control/NavToolbar.js",
@@ -399,7 +406,10 @@
                 "OpenLayers/Symbolizer/Raster.js",
                 "OpenLayers/Lang.js",
                 "OpenLayers/Lang/en.js",
-                "OpenLayers/Spherical.js"
+                "OpenLayers/Spherical.js",
+                "OpenLayers/TileManager.js",
+                //"OpenLayers/WPSClient.js",
+                //"OpenLayers/WPSProcess.js"
             ]; // etc.
         }
 
@@ -432,5 +442,10 @@
 
 /**
  * Constant: VERSION_NUMBER
+ *
+ * This constant identifies the version of OpenLayers.
+ *
+ * When asking questions or reporting issues, make sure to include the output of
+ *     OpenLayers.VERSION_NUMBER in the question or issue-description.
  */
-OpenLayers.VERSION_NUMBER="Release 2.12";
+OpenLayers.VERSION_NUMBER="Release 2.13 dev";

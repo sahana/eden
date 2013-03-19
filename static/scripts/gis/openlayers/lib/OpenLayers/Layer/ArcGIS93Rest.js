@@ -1,8 +1,7 @@
-/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2013 by OpenLayers Contributors (see authors.txt for
  * full list of contributors). Published under the 2-clause BSD license.
  * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
-
 
 /**
  * @requires OpenLayers/Layer/Grid.js
@@ -133,9 +132,6 @@ OpenLayers.Layer.ArcGIS93Rest = OpenLayers.Class(OpenLayers.Layer.Grid, {
         // ArcGIS Server only wants the numeric portion of the projection ID.
         var projWords = this.projection.getCode().split(":");
         var srid = projWords[projWords.length - 1];
-        if (srid == 900913) {
-            srid = 3857;
-        }
 
         var imageSize = this.getImageSize(); 
         var newParams = {

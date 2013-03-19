@@ -197,7 +197,7 @@ settings.L10n.decimal_separator = "."
 # lon<0 have a duplicate at lon+360
 # lon>0 have a duplicate at lon-360
 #settings.gis.duplicate_features = True
-# Mouse Position: 'normal', 'mgrs' or 'off'
+# Mouse Position: 'normal', 'mgrs' or None
 #settings.gis.mouse_position = "mgrs"
 # PoIs to export in KML/OSM feeds from Admin locations
 #settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]

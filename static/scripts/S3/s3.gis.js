@@ -62,21 +62,19 @@ S3.gis.show_map = function() {
         s3_gis_setCenter(S3.gis.bottom_left, S3.gis.top_right);
     }
 
-    //Ext.onReady(function() {
-        // Build the OpenLayers map
-        addMap();
+    // Build the OpenLayers map
+    addMap();
 
-        // Add the GeoExt UI
-        addMapUI();
+    // Add the GeoExt UI
+    addMapUI();
 
-        // If we were instantiated with bounds, use these now
-        if ( S3.gis.bounds ) {
-            map.zoomToExtent(S3.gis.bounds);
-        }
+    // If we were instantiated with bounds, use these now
+    if ( S3.gis.bounds ) {
+        map.zoomToExtent(S3.gis.bounds);
+    }
 
-        // Toolbar Tooltips
-        Ext.QuickTips.init();
-    //}
+    // Toolbar Tooltips
+    Ext.QuickTips.init();
 };
 
 // Configure the Viewport
@@ -223,7 +221,6 @@ function addMapUI() {
             }
         });
     });
-
 }
 
 // Put into a Container to allow going fullscreen from a BorderLayout

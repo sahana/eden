@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2013 by OpenLayers Contributors (see authors.txt for
  * full list of contributors). Published under the 2-clause BSD license.
  * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
@@ -1039,14 +1039,16 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
         var child, grandchildren, grandchild;
         var children = node.childNodes;
 
-        for (var i=0; i < children.length; ++i) {
+        for(var i=0, len=children.length; i<len; ++i) {
             child = children[i];
-            if (child.nodeType == 1) {
+            if(child.nodeType == 1) {
                 grandchildren = child.childNodes;
+                //if(grandchildren.length >= 1 && grandchildren.length <= 3) {
+                //    var grandchild;
                 var name = (child.prefix) ?
                         child.nodeName.split(":")[1] :
                         child.nodeName;
-                if (grandchildren.length >= 1) {
+                if(grandchildren.length >= 1) {
                     var grandchild, value;
                     switch (grandchildren.length) {
                         case 1:
@@ -1070,15 +1072,26 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
                                 }
                             }
                             break;
+                        //case 3:
                         default:
+                            //grandchild = grandchildren[1];
                             // Assume this is HTML - we want all nodes
                             value = "";
-                            for (var j=0; j < grandchildren.length; ++j) {
+                            for(var j=0, len=grandchildren.length; j<len; ++j) {
                                 grandchild = grandchildren[j];
                                 value += OpenLayers.Util.getXmlNodeValue(grandchild); 
                             }
                             break;
                     }
+                    //if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
+                    //    var name = (child.prefix) ?
+                    //            child.nodeName.split(":")[1] :
+                    //            child.nodeName;
+                    //    var value = OpenLayers.Util.getXmlNodeValue(grandchild);
+                    //    if (value) {
+                    //        value = value.replace(this.regExes.trimSpace, "");
+                    //        attributes[name] = value;
+                    //    }
                     if (value) {
                         attributes[name] = value;
                     }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2013 by OpenLayers Contributors (see authors.txt for
  * full list of contributors). Published under the 2-clause BSD license.
  * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
@@ -86,8 +86,13 @@ OpenLayers.Layer = OpenLayers.Class({
      * element - {DOMElement} A reference to layer.events.element.
      *
      * Supported map event types:
-     * loadstart - Triggered when layer loading starts.
-     * loadend - Triggered when layer loading ends.
+     * loadstart - Triggered when layer loading starts.  When using a Vector 
+     *     layer with a Fixed or BBOX strategy, the event object includes 
+     *     a *filter* property holding the OpenLayers.Filter used when 
+     *     calling read on the protocol.
+     * loadend - Triggered when layer loading ends.  When using a Vector layer
+     *     with a Fixed or BBOX strategy, the event object includes a 
+     *     *response* property holding an OpenLayers.Protocol.Response object.
      * visibilitychanged - Triggered when layer visibility is changed.
      * move - Triggered when layer moves (triggered with every mousemove
      *     during a drag).
@@ -119,7 +124,7 @@ OpenLayers.Layer = OpenLayers.Class({
  
     /**
      * Property: alpha
-     * {Boolean} The layer's images have an alpha channel.  Default is false. 
+     * {Boolean} The layer's images have an alpha channel.  Default is false.
      */
     alpha: false,
 
@@ -328,6 +333,11 @@ OpenLayers.Layer = OpenLayers.Class({
 
         this.metadata = {};
         
+        options = OpenLayers.Util.extend({}, options);
+        // make sure we respect alwaysInRange if set on the prototype
+        if (this.alwaysInRange != null) {
+            options.alwaysInRange = this.alwaysInRange;
+        }
         this.addOptions(options);
 
         this.name = name;
@@ -729,12 +739,6 @@ OpenLayers.Layer = OpenLayers.Class({
             this.visibility = visibility;
             this.display(visibility);
             this.redraw();
-            if (this.map != null) {
-                this.map.events.triggerEvent("changelayer", {
-                    layer: this,
-                    property: "visibility"
-                });
-            }
             this.events.triggerEvent("visibilitychanged");
         }
     },
@@ -751,6 +755,11 @@ OpenLayers.Layer = OpenLayers.Class({
     display: function(display) {
         if (display != (this.div.style.display != "none")) {
             this.div.style.display = (display && this.calculateInRange()) ? "block" : "none";
+            if(this.map){
+                this.map.events.triggerEvent("changelayer", {
+                    layer: this, property: "visibility"
+                });
+            }
         }
     },
 
@@ -844,7 +853,7 @@ OpenLayers.Layer = OpenLayers.Class({
                 alwaysInRange = false;
             }
         }
-        if(this.alwaysInRange == null) {
+        if(this.options.alwaysInRange == null) {
             this.alwaysInRange = alwaysInRange;
         }
 

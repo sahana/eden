@@ -332,6 +332,8 @@ class GIS(object):
                 #response.warning += "%s: %s %s\n" % (T("Layer"),
                 #                                     name,
                 #                                     T("includes a GroundOverlay or ScreenOverlay which aren't supported in OpenLayers yet, so it may not work properly."))
+                # Code to support GroundOverlay:
+                # https://github.com/openlayers/openlayers/pull/759
                 pass
 
     # -------------------------------------------------------------------------
@@ -6990,8 +6992,8 @@ class GoogleLayer(Layer):
                 # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
                 add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % apikey)
             else:
-                # v3 API (3.7 is frozen, 3.8 release & 3.9 is nightly)
-                add_script("http://maps.google.com/maps/api/js?v=3.7&sensor=false")
+                # v3 API (3.10 is frozen, 3.11 release & 3.12 is nightly)
+                add_script("http://maps.google.com/maps/api/js?v=3.11&sensor=false")
                 if "StreetviewButton" in output:
                     # Streetview doesn't work with v2 API
                     output["StreetviewButton"] = str(T("Click where you want to open Streetview"))
