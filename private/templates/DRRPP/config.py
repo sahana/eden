@@ -451,7 +451,8 @@ def customize_project_project(**attr):
             "location",
             label = T("Countries"),
             fields = ["location_id"],
-            orderby = "location_id$name"
+            orderby = "location_id$name",
+            render_list = True
         ),
         "drrpp.L1",
         s3forms.S3SQLInlineComponentCheckbox(

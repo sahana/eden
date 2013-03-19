@@ -1691,6 +1691,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         audit = component.audit
         permit = component.permit
         tablename = component.tablename
+
         for i in xrange(len(items)):
             has_rows = True
             item = items[i]
@@ -1820,12 +1821,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Don't render a subform for NONE
             return NONE
 
-        thead = self._render_headers(data,
-                                     readonly=True,
-                                     _class="label-row")
-
-        trs = []
-
         fields = data["fields"]
         items = data["data"]
 
@@ -1835,23 +1830,50 @@ class S3SQLInlineComponent(S3SQLSubForm):
         prefix, name = component.prefix, component.name
 
         xml_decode = current.xml.xml_decode
-        for item in items:
-            if "_id" in item:
-                record_id = item["_id"]
-            else:
-                continue
-            audit("read", prefix, name,
-                  record=record_id, representation="html")
-            trow = TR(_class="read-row")
-            for f in fields:
-                text = xml_decode(item[f["name"]]["text"])
-                trow.append(XML(xml_decode(text)))
-            trs.append(trow)
+        
+        if len(fields) == 1 and self.options.get("render_list", False):
 
-        return TABLE(thead,
-                     TBODY(trs),
-                     TFOOT(),
-                     _class="embeddedComponent")
+            # Render as comma-separated list of values (no header)
+            elements = []
+            for item in items:
+                if "_id" in item:
+                    record_id = item["_id"]
+                else:
+                    continue
+                audit("read", prefix, name,
+                      record=record_id, representation="html")
+                t = []
+                for f in fields:
+                    t.append([XML(xml_decode(item[f["name"]]["text"])), " "])
+                elements.append([TAG[""](list(chain.from_iterable(t))[:-1]), ", "])
+                
+            return DIV(list(chain.from_iterable(elements))[:-1],
+                       _class="embeddedComponent")
+
+        else:
+
+            # Render as table with each item in an individual row (+headers)
+            thead = self._render_headers(data,
+                                         readonly=True,
+                                         _class="label-row")
+            trs = []
+            for item in items:
+                if "_id" in item:
+                    record_id = item["_id"]
+                else:
+                    continue
+                audit("read", prefix, name,
+                    record=record_id, representation="html")
+                trow = TR(_class="read-row")
+                for f in fields:
+                    text = xml_decode(item[f["name"]]["text"])
+                    trow.append(XML(xml_decode(text)))
+                trs.append(trow)
+
+            return TABLE(thead,
+                         TBODY(trs),
+                         TFOOT(),
+                         _class="embeddedComponent")
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):
