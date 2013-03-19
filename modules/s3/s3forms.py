@@ -28,6 +28,7 @@
 """
 
 import os
+from itertools import chain
 
 try:
     import json # try stdlib (Python 2.6+)
@@ -2828,6 +2829,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         audit = component.audit
         prefix, name = component.prefix, component.name
 
+        xml_decode = current.xml.xml_decode
         vals = []
         for item in items:
             if "_id" in item:
@@ -2836,10 +2838,11 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 continue
             audit("read", prefix, name,
                   record=record_id, representation="html")
-            vals.append(item[fieldname]["text"])
+            vals.append(XML(xml_decode(item[fieldname]["text"])))
 
         vals.sort()
-        represent = ", ".join(vals)
+        represent = TAG[""](list(chain.from_iterable(
+                                [[v, ", "] for v in vals]))[:-1])
         return TABLE(TBODY(TR(TD(represent),
                               #_class="read-row"
                               )),

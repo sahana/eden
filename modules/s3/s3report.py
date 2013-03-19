@@ -1201,12 +1201,14 @@ class S3ContingencyTable(TABLE):
                             value = convert(datetime.datetime, value)
                     except TypeError, ValueError:
                         pass
-                return current.manager.represent(lfield.field, value,
-                                                 strip_markup=True)
+
+                value = current.manager.represent(lfield.field, value,
+                                                  strip_markup=True)
+                return current.xml.xml_decode(value)
         if value is None:
             return default
         else:
-            return unicode(value)
+            return s3_unicode(value)
 
     # -------------------------------------------------------------------------
     @staticmethod

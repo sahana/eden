@@ -4125,40 +4125,47 @@ def s3_checkboxes_widget(field,
     rows = []
     rappend = rows.append
     count = len(options)
-    mods = count % cols
-    num_of_rows = count / cols
-    if mods:
-        num_of_rows += 1
+    if count == 0:
+        rows = TR(TD(SPAN(current.T("no options available"),
+                          _class="no-options-available"),
+                     INPUT(_type="hidden",
+                           _name=field.name,
+                           _value=None)))
+    else:
+        mods = count % cols
+        num_of_rows = count / cols
+        if mods:
+            num_of_rows += 1
 
-    for r in range(num_of_rows):
-        cells = []
-        cappend = cells.append
+        for r in range(num_of_rows):
+            cells = []
+            cappend = cells.append
 
-        for k, v in options[r * cols:(r + 1) * cols]:
-            input_id = "id-%s-%s" % (field_name, input_index)
+            for k, v in options[r * cols:(r + 1) * cols]:
+                input_id = "id-%s-%s" % (field_name, input_index)
 
-            title = help_text.get(str(k), None)
-            if title:
-                label_attr = dict(_title=title)
-            else:
-                label_attr = {}
+                title = help_text.get(str(k), None)
+                if title:
+                    label_attr = dict(_title=title)
+                else:
+                    label_attr = {}
 
-            cappend(TD(INPUT(_type="checkbox",
-                             _name=field_name,
-                             _id=input_id,
-                             hideerror=True,
-                             _value=s3_unicode(k).encode("utf-8"),
-                             value=(k in values)),
-                       LABEL(v,
-                             _for=input_id,
-                             **label_attr)))
+                cappend(TD(INPUT(_type="checkbox",
+                                _name=field_name,
+                                _id=input_id,
+                                hideerror=True,
+                                _value=s3_unicode(k).encode("utf-8"),
+                                value=(k in values)),
+                        LABEL(v,
+                                _for=input_id,
+                                **label_attr)))
 
-            input_index += 1
+                input_index += 1
 
-        rappend(TR(cells))
+            rappend(TR(cells))
 
-    if rows:
-        rows[-1][0][0]["hideerror"] = False
+        if rows:
+            rows[-1][0][0]["hideerror"] = False
 
     return TABLE(*rows, **attributes)
 
