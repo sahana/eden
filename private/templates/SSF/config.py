@@ -313,9 +313,14 @@ settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
 
-# Project Tracking
+# Project 
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #settings.project.drr = True
+
+# Uncomment this to use settings suitable for detailed Task management
+settings.project.mode_task = True
+# Uncomment this to use Activities for projects
+settings.project.activities = True
 
 # Save Search Widget
 #settings.save_search.widget = False
