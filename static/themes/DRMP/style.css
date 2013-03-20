@@ -162,8 +162,8 @@ div.card-person a {
 }
 
 a.card-organisation {
-	font-size: 12px;
-	text-transform: uppercase;
+	font-size: 10px;
+
 }
 
 div.card-header {
@@ -392,7 +392,7 @@ div.thumbnail {
 	background-color: #fff;
 	border-radius: 0px;
 	border: none;
-	margin-bottom: 6px;
+	margin-bottom: 4px;
 	border: 1px solid #b2b2b2;
 	border-radius: 5px;
 	-moz-box-shadow: 0 1px 1px #aaaaa7;
@@ -447,6 +447,7 @@ p.citation {
 	font-size: 80%;
 	line-height: 11px;
 	text-align: center;
+	
 }
 
 a i.icon-paper-clip.pull-right {
