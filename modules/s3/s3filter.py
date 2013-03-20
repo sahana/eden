@@ -810,8 +810,6 @@ class S3LocationFilter(S3FilterWidget):
         """
 
         prefix = self._prefix
-        alias = resource.alias if resource.parent else None
-        
         label = None
 
         if "levels" in self.opts:
@@ -827,7 +825,7 @@ class S3LocationFilter(S3FilterWidget):
                 continue
             if not label:
                 label = rfield.label
-            selectors.append(prefix(rfield.selector, alias=alias))
+            selectors.append(prefix(rfield.selector))
         if selectors:
             return label, "|".join(selectors)
         else:
