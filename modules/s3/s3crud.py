@@ -1199,9 +1199,11 @@ class S3CRUD(S3Method):
                                            _class="filter-form",
                                            _id="%s-filter-form" % target)
                 fresource = current.s3db.resource(resource.tablename)
+                alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               r.get_vars,
-                                                              target=target)
+                                                              target=target,
+                                                              alias=alias)
             else:
                 # Render as empty string to avoid the exception in the view
                 output["list_filter_form"] = ""
