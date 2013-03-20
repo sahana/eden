@@ -60,6 +60,10 @@ i.icon-cog {
 	font-size: 20px;
 }
 
+textarea#cms_post_body.text.input-xlarge {
+	height: 100px;
+}
+
 .navbar .nav > li > a  {
     border-left: 1px solid #313131
 }
