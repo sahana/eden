@@ -265,7 +265,8 @@ if len(pop_list) > 0:
     grandTotalStart = datetime.datetime.now()
     for pop_setting in pop_list:
         start = datetime.datetime.now()
-        bi.clear_tasks()
+        # Clear Tasklist
+        bi.tasks = []
         # Import data specific to the prepopulate setting
         if isinstance(pop_setting, str):
             path = os.path.join(request.folder,

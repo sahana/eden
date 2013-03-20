@@ -731,7 +731,7 @@ class S3PersonModel(S3Model):
                                        #"picture",
                                        "gender",
                                        "age_group",
-                                       (messages.ORGANISATION, "hrm_human_resource:organisation_id$name")
+                                       (messages.ORGANISATION, "hrm_human_resource:organisation_id$name"),
                                        ],
                         crud_form = crud_form,
                         onvalidation=self.pr_person_onvalidation,

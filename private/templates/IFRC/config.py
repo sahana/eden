@@ -5,8 +5,8 @@ from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3 import IS_ONE_OF, s3forms
 
-settings = current.deployment_settings
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for IFRC

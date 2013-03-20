@@ -4652,7 +4652,9 @@ def hrm_configure_pr_group_membership():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
-    phone_label = current.deployment_settings.get_ui_label_mobile_phone()
+    settings = current.deployment_settings
+    phone_label = settings.get_ui_label_mobile_phone()
+    site_label = settings.get_org_site_label()
     list_fields = ["id",
                    "group_id$description",
                    "group_head",
@@ -4661,6 +4663,9 @@ def hrm_configure_pr_group_membership():
                    "person_id$last_name",
                    (T("Email"), "person_id$email.value"),
                    (phone_label, "person_id$phone.value"),
+                   (current.messages.ORGANISATION,
+                    "person_id$hrm_human_resource:organisation_id$name"),
+                   (site_label, "person_id$hrm_human_resource:site_id$name"),
                    ]
     if current.request.function == "group_membership":
         list_fields.insert(1, "group_id")
@@ -4722,7 +4727,10 @@ def hrm_group_controller():
         if r.interactive or r.representation == "xls":
             if r.component_name == "group_membership":
                 hrm_configure_pr_group_membership()
-                
+                if r.representation == "xls":
+                    # Modify Title of Report to show Team Name
+                    s3.crud_strings.pr_group_membership.title_list = r.record.name
+
         return True
     s3.prep = prep
 
@@ -4734,7 +4742,8 @@ def hrm_group_controller():
                 update_url = URL(args=["[id]", "group_membership"])
                 S3CRUD.action_buttons(r, update_url=update_url)
                 if current.deployment_settings.has_module("msg") and \
-                   current.auth.permission.has_permission("update", c="hrm", f="compose"):
+                   current.auth.permission.has_permission("update", c="hrm",
+                                                          f="compose"):
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),

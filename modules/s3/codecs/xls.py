@@ -43,8 +43,8 @@ except ImportError:
     raise
 
 from gluon import *
-from gluon.storage import Storage
 from gluon.contenttype import contenttype
+from gluon.storage import Storage
 
 from ..s3codec import S3Codec
 from ..s3utils import s3_unicode, s3_strip_markup
