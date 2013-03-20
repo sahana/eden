@@ -351,6 +351,11 @@ def req_controller():
                         # Inline Forms
                         s3.req_inline_form(type, method)
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+                    
+            # Prevent Items from being added to closed or cancelled requests
+            if r.record.closed or r.record.cancel:
+                s3db.configure("req_req_item",
+                               insertable = False)
 
         elif r.representation == "plain":
             # Map Popups
@@ -1384,6 +1389,7 @@ def send_req():
 
     req_id = request.args[0]
     site_id = request.vars.get("site_id", None)
+    site_name = s3db.org_site_represent(site_id, show_link=False)
 
     ritable = s3db.req_req_item
     iitable = s3db.inv_inv_item
@@ -1463,6 +1469,9 @@ def send_req():
              (iitable.deleted == False) & \
              (iitable.item_pack_id == sip_id_field)
     orderby = ii_expiry_field | ii_purchase_field
+    
+    no_match = True
+    
     for ritem in req_items:
         rim = ritem.req_req_item
         rim_id = rim.id
@@ -1470,6 +1479,10 @@ def send_req():
                 (ii_item_id_field == rim.item_id)
         inv_items = db(query).select(*iifields,
                                      orderby=orderby)
+        
+        if len(inv_items) == 0:
+            break;
+        no_match = False
         one_match = len(inv_items) == 1
         # Get the Quantity Needed
         quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
@@ -1555,10 +1568,14 @@ def send_req():
                    #comments = comment,
                    )
 
+    if no_match:
+        current.session.warning = "%s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!" % site_name
+
     # Redirect to view the list of items in the Send
     redirect(URL(c = "inv",
                  f = "send",
-                 args = [send_id, "track_item"]))
+                 args = [send_id, "track_item"])
+             )
 
 # =============================================================================
 def commit_item_json():

@@ -54,10 +54,14 @@
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="login")}}'>Login</a>
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="register")}}'>Register</a>
    {{else:}}
+   {{system_roles = auth.get_system_roles()}}
+   {{if auth.s3_has_role(system_roles.ADMIN) or auth.s3_has_role(system_roles.ORG_ADMIN):}}
+    <a class='header-top-menu-btn' href='{{=URL(r=request, c="admin")}}'>Admin</a>
+   {{pass}}
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="user", args="logout")}}'>Logout</a>
    {{pass}}
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="contact")}}'>Contact</a>
-   <a class='header-top-menu-btn' href='static/themes/DRRPP/DRR_Portal_User_Manual.pdf'>User Manual</a>
+   <a class='header-top-menu-btn' href='{{="/%s/static/themes/DRRPP/DRR_Portal_User_Manual.pdf" % request.application}}'>User Manual</a>
   </div>
  </div>
  <div class='clear'></div>
