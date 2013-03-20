@@ -1,5 +1,6 @@
 /* @override 
-	http://tldrmp.aidiq.com/eden/static/themes/DRMP/eden.min.css */
+	http://tldrmp.aidiq.com/eden/static/themes/DRMP/eden.min.css
+	http://127.0.0.1:8001/eden/static/themes/DRMP/style.css */
 
 
 body {
@@ -58,6 +59,10 @@ div.dl-item {
 div#alert-space {
     /* Push down below Nav */
     padding-top: 60px;
+}
+
+div.alert.alert-success {
+	border: 1px solid #b2b2b2;
 }
 
 a i.icon.icon-plus-sign.big-add {
@@ -130,6 +135,7 @@ div.edit-bar.fright {
     font-size: 15px;
     position: relative;
     top: 4px;
+	float: right;
 }
 
 div.attachment.fright {
@@ -146,7 +152,7 @@ div.media {
 
 div.card-person {
     font-size: 12px;
-    color: #868686;
+    color: #009700;
 }
 
 p.card-organisation {
@@ -190,6 +196,11 @@ h4.latest-disasters,
 h4.latest-updates {
 	 border: 1px solid #b2b2b2;
 }
+
+#event_datalist a:hover  {
+	text-decoration: none;
+}
+
 
 div.card-holder-home {
 	border: 1px solid #b2b2b2;
@@ -335,6 +346,11 @@ div.thumbnail:hover {
 	cursor: auto;
 }
 
+img.media-object {
+	border-radius: 4px;
+	
+}
+
 div.span5.card-details {
 	margin-left: 7px;
 }
@@ -408,6 +424,20 @@ div.attachment.pull-right {
 	font-size: 21px;
 	padding: 10px;
 }
+
+a i.icon.icon-edit,
+a i.icon.icon-remove-sign {
+	color: #999;
+	
+}
+
+a i.icon.icon-edit:hover,
+a i.icon.icon-remove-sign:hover {
+	color: #0095fe;
+	text-decoration: none;
+	
+}
+
 
 
 /*------------------  Profile Page Styling ----------------------- */
