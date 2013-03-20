@@ -40,6 +40,7 @@ form {
 .ui-dialog-titlebar-close:after {
     content: "x";
 }
+
 /* Over-ride widgets */
 /*
 div#dl-container {
@@ -56,18 +57,24 @@ div.dl-item {
     display: none;
 }
 
+textarea#cms_post_body.text.input-xlarge {
+	height: 100px;
+}
+
 /* Push down below Nav */
 div#alert-space {
     padding-top: 20px;
 }
+div.alert.alert-success {
+	border: 1px solid #b2b2b2;
+}
 
-a i.icon.icon-plus-sign.big-add {
-	font-size: 24px;
-	color: #0096fe;
+a.btn.btn-primary.main-add {
+	font-size: 15px;
 	float: right;
 	position: relative;
-	top: -29px;
-	right: 8px;
+	right: 13px;
+	top: 24px;
 }
 
 a i.icon.icon-plus-sign.big-add:hover {
@@ -75,7 +82,7 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 
-/*------------------  Card Icons ------------------ */
+/* Card Icons */
 
 i.icon.icon-activity,
 i.icon.icon-alert,
@@ -85,12 +92,13 @@ i.icon.icon-assessment,
 i.icon.icon-disaster,
 i.icon.icon-training_material,
 i.icon.icon-plans  {
-    font-size: 21px;
+    font-size: 14px;
     display: inline-block;
     width: 130px;
-    color: #333;
-
+    color: #413b3b;
+    padding-left: 8px;
 }
+
 /* Activity */
 /*.icon-truck:*/
 .icon-activity:before  {
@@ -125,13 +133,14 @@ i.icon.icon-disaster:before {
 	content: "\f071";
 }
 
-/*------------ Home Card styling --------------*/
+/* Home Cards */
 
 div.edit-bar.fright {
     color: #8a8989;
     font-size: 15px;
     position: relative;
-    top: 4px;
+    top: 1px;
+	float: right;
 }
 
 div.attachment.fright {
@@ -140,25 +149,28 @@ div.attachment.fright {
 }
 
 div.media {
-    margin-top: 8px;
+    margin-top: 11px;
     padding-right: 10px;
-    font: 14px/20px Georgia,"Times New Roman",Palatino,serif;
+    font: 14px/20px "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
 	color: #333;
 }
 
-div.card-person {
-    font-size: 12px;
-    color: #868686;
+div.card-person a {
+    font-size: 11px;
 }
 
-p.card-organisation {
-    font-size: 12px;
-    color: #aeaeab;
+a.card-organisation {
+    font-size: 10px;
 }
 
 
-div.card-header {  
-    padding: 5px;
+div.card-header {
+    background-color: #f3f3f3;
+	border-bottom: 1px solid #e0e0df;
+	padding: 5px;
+	margin: -3px -4px;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
 }
 
 div.thumbnail.disaster {
@@ -175,7 +187,7 @@ i.icon.icon-paper-clip.fright {
 h4.latest-disasters,
 h4.latest-updates {
     text-align: center;
-    padding: 6px;
+    padding: 15px 6px;
     border-bottom: solid 1px #c9ccd0;
     border-radius: 5px 5px 0 0;
     background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8));
@@ -193,12 +205,73 @@ h4.latest-updates {
 	 border: 1px solid #b2b2b2;
 }
 
-div.card-holder-home {
-	border: 1px solid #b2b2b2;
-	
+#event_datalist a:hover  {
+	text-decoration: none;
 }
 
-/*------------------  Filter Styling ----------------------- */
+/* Modals */
+
+div.modal-header {
+	text-align: center;
+	padding: 6px 6px 6px 25px;
+	border-bottom: solid 1px #c9ccd0;
+	border-radius: 5px 5px 0 0;
+	background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8));
+	background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: -moz-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8);
+	background-image: linear-gradient(top,#f9f9fa,#e0e2e8);
+	margin-bottom: -1px;
+	font-size: 20px;
+}
+
+table.embeddedComponent {
+	border: 0;
+}
+#add-row-defaultevent_post td, 
+#add-row-filedocument td {
+	border: 0;
+	padding-left: 0;
+}
+
+table.embeddedComponent {
+	display: inline-block;
+	margin-bottom: 10px;
+	-webkit-border-radius: 4px;
+	   -moz-border-radius: 4px;
+	        border-radius: 4px;
+			margin-top: 1px;
+}
+
+#sub_defaultevent_post_defaultevent_post_i_event_id_edit_none,
+input#sub_filedocument_filedocument_i_file_edit_none.upload {
+	padding-top: 6px;
+	padding-left: 4px;
+}
+
+#myModal form.form-horizontal div.modal-body {
+	padding-top: 22px;
+}
+
+div#cms_post_body__row.control-group, 
+div#cms_post_series_id__row.control-group,
+div#cms_post_location_id__row.control-group,
+div#cms_post_sub_filedocument__row.control-group {
+	margin-bottom: 5px;
+}
+
+#sub-filedocument table.embeddedComponent thead tr.label-row,
+#sub-defaultevent_post table.embeddedComponent thead tr.label-row {
+	display: none;	
+}
+
+#myModal div.modal-header button.close {
+	padding-right: 6px;
+}
+
+/*  Filter Styling  */
+
 
 div.thumbnail.side-filter {
     background-color: #fff;
@@ -250,18 +323,16 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all:hover {
 	color: #333333;
 	background-color: #e6e6e6;
 	*background-color: #d9d9d9;
-	
 }
 
 button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
 	margin-bottom: 10px;
-
 }
 
 #datalist-filter-form table tbody tr td {
 	border: none;
-	
 }
+
 input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
 input#post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
 	width: 100px;
@@ -299,31 +370,24 @@ input#post-cms_post_created_on-date-filter-ge_clear {
 	color: #5d5d5b;
 }
 
-/*------------------  The New Card (profile page) ----------------------- */
+/* The New Card (profile page) */
 
 div.thumbnail {
 	background-color: #fff;
-	border-radius: 0px;
+	border-radius: 0;
 	margin-bottom: 0;
 	-moz-box-shadow: 0 -1px 3px #d7d7d6;
 	-webkit-box-shadow: 0 -1px 3px #d7d7d6;
 	box-shadow: 0 -1px 3px #d7d7d6;
 	border: none;
+	margin-bottom: 4px;
+	border: 1px solid #b2b2b2;
+	border-radius: 5px;
+	-moz-box-shadow: 0 1px 1px #aaaaa7;
+	-webkit-box-shadow: 0 1px 1px #aaaaa7;
+	box-shadow: 0 1px 1px #aaaaa7;
 }
 	
-/*div.thumbnail :after{
-	content: '';
-	position: absolute;
-	right: -4px;
-	top: 45px;
-	width: 0;
-	height: 0;
-	border-top: 30px solid transparent;
-	border-left: 30px solid transparent; 
-	border-right: 30px solid #BDC3C7; 
-	pointer-events: none;	
-}*/
-
 div.thumbnail:hover {
 	background-color: #f5f5f5;
 	-webkit-transition: all 0.2s ease-in-out;
@@ -332,6 +396,12 @@ div.thumbnail:hover {
 	-o-transition: all 0.2s ease-in-out;
 	transition: all 0.2s ease-in-out;
 	cursor: auto;
+}
+
+img.media-object {
+	border-radius: 8px;
+	width: 48px;
+	height: 48px;
 }
 
 div.span5.card-details {
@@ -362,12 +432,10 @@ a i.icon-paper-clip.pull-right:hover {
 }
 
 span.date-title {
-	font: 11px "Helvetica Neue",Arial,sans-serif;
+	font: 400 11px "Helvetica Neue",Arial,sans-serif;
 	list-style: none outside none;
 	padding-left: 20px;
-	color: #ccc;
-	font-weight: 400;
-	
+	color: #7a7a7a;
 }
 	
 span.card-title {
@@ -375,10 +443,10 @@ span.card-title {
 }
 
 span.location-title a {
-	font: 14px "Helvetica Neue", Arial,sans-serif;
-	color: #999;
-	font-weight: 400;
+	font: 400 12px "Helvetica Neue", Arial,sans-serif;
+	color: #777;
 	padding: 0;
+	text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
 }
 
 span.location-title a:hover {
@@ -408,7 +476,19 @@ div.attachment.pull-right {
 	padding: 10px;
 }
 
-/*------------------  Profile Page Styling ----------------------- */
+a i.icon.icon-edit,
+a i.icon.icon-remove-sign {
+	color: #999;
+}
+
+a i.icon.icon-edit:hover,
+a i.icon.icon-remove-sign:hover {
+	color: #0095fe;
+	text-decoration: none;
+}
+
+/* Profile Page */
+
 h2.profile_header {
     font-size: 25px;
 	color: #666;
@@ -497,7 +577,8 @@ p.empty_card-holder {
 i.icon-folder-open-alt {
 	font-size: 25px;
 }
-/*------------------  END OF PROFILE PAGE  ----------------------- */
+/* END OF PROFILE PAGE */
+
 
 div.span5.card-details {
     margin-left: 7px;

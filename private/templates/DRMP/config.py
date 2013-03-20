@@ -517,4 +517,19 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = None
         )),
+    ("project", Storage(
+            name_nice = T("Projects"),
+            restricted = True,
+            module_type = None
+        )),
+    ("asset", Storage(
+            name_nice = T("Assets"),
+            restricted = True,
+            module_type = None
+        )),
+    ("supply", Storage(
+            name_nice = "Supply",
+            restricted = True,
+            module_type = None
+        )),
 ])

@@ -10,6 +10,8 @@ from s3.s3crud import S3CRUD
 from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
 from s3.s3utils import s3_avatar_represent
 
+THEME = "DRMP"
+
 # =============================================================================
 class index():
     """ Custom Home Page """
@@ -123,8 +125,6 @@ def homepage():
             r.representation = "dl"
         elif ajax == "filter":
             r.representation = "json"
-        else:
-            s3.stylesheets.append("bootstrap/bootstrap-responsive.css")
         return True
     s3.prep = prep
 
@@ -449,13 +449,15 @@ def render_homepage_events(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-class secondary():
-    """ Custom Navigation """
+class glossary():
+    """
+        Custom page
+    """
 
     def __call__(self):
 
         view = path.join(current.request.folder, "private", "templates",
-                         "DRMP", "views", "secondary.html")
+                         THEME, "views", "glossary.html")
         try:
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")
@@ -463,6 +465,10 @@ class secondary():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-        return dict()
+        title = current.T("Glossary")
+
+        return dict(
+                title = title,
+            )
 
 # END =========================================================================
