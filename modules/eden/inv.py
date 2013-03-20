@@ -667,11 +667,11 @@ S3OptionsFilter({
                            #(T("Category"), "item_category"),
                            "item_id$item_category_id",
                            "quantity",
+                           "owner_org_id",
                            "pack_value",
                            (T("Total Value"), "total_value"),
                            "currency",
                            "bin",
-                           "owner_org_id",
                            "supply_org_id",
                            "status",
                            ]
@@ -1084,6 +1084,24 @@ class S3TrackingModel(S3Model):
                                    readable = show_transport,
                                    writable = show_transport,
                                    represent = s3_string_represent,
+                                   ),
+                             Field("transported_by",
+                                   label = T("Transported by"),
+                                   readable = show_transport,
+                                   writable = show_transport,
+                                   represent = s3_string_represent,
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Transported by"),
+                                                                   T("Freight company or organisation providing transport"))),
+                                   ),
+                             Field("transport_ref",
+                                   label = T("Transport Reference"),
+                                   readable = show_transport,
+                                   writable = show_transport,
+                                   represent = s3_string_represent,
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Transport Reference"),
+                                                                   T("Consignment Number, Tracking Number, etc"))),
                                    ),
                              Field("driver_name",
                                    label = T("Name of Driver"),
@@ -3336,10 +3354,12 @@ def inv_send_rheader(r):
                 address = address.addr_street
             else:
                 address = current.messages["NONE"]
-            rData = TABLE(
-                          TR(TD(T(settings.get_inv_send_form_name().upper()),
+            rData = TABLE(TR(TD(T(settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
+                             ),
+                          TR(TH("%s: " % table.status.label),
+                             table.status.represent(status),
                              ),
                           TR(TH("%s: " % table.send_ref.label),
                              TD(table.send_ref.represent(record.send_ref)),
@@ -3351,18 +3371,21 @@ def inv_send_rheader(r):
                              TH("%s: " % table.delivery_date.label),
                              table.delivery_date.represent(record.delivery_date),
                              ),
-                          TR(TH("%s: " % table.site_id.label),
-                             table.site_id.represent(record.site_id),
-                             TH("%s: " % table.to_site_id.label),
+                          TR(TH("%s: " % table.to_site_id.label),
                              table.to_site_id.represent(record.to_site_id),
+                             TH("%s: " % table.site_id.label),
+                             table.site_id.represent(record.site_id),
+                             ),
+                          TR(TH("%s: " % gtable.addr_street.label),
+                             address,
+                             ),
+                          TR(TH("%s: " % table.transported_by.label),
+                             table.transported_by.represent(record.transported_by),
+                             TH("%s: " % table.transport_ref.label),
+                             table.transport_ref.represent(record.transport_ref),
                              ),
                           TR(TH("%s: " % table.sender_id.label),
                              table.sender_id.represent(record.sender_id),
-                             TH("%s: " % gtable.addr_street.label),
-                             address,
-                             ),
-                          TR(TH("%s: " % table.status.label),
-                             table.status.represent(status),
                              TH("%s: " % table.recipient_id.label),
                              table.recipient_id.represent(record.recipient_id),
                              ),
@@ -3831,6 +3854,8 @@ class S3AdjustModel(S3Model):
                          4 : T("Expired"),
                          5 : T("Found"),
                          6 : T("Transfer Ownership"),
+                         7 : T("Issued without Record"),
+                         7 : T("Distributed without Record"),
                         }
 
         # CRUD strings
@@ -4113,6 +4138,7 @@ def inv_adj_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
+            
             rheader = DIV(TABLE(
                             TR(TH("%s: " % table.adjuster_id.label),
                                table.adjuster_id.represent(record.adjuster_id),
@@ -4124,11 +4150,8 @@ def inv_adj_rheader(r):
                                TH("%s: " % table.category.label),
                                table.category.represent(record.category),
                                ),
-                            ),
-                            rheader_tabs
-                            )
+                           ))
 
-            rfooter = TAG[""]()
             if record.status == 0: # In process
                 if current.auth.s3_has_permission("update", "inv_adj",
                                                   record_id=record.id):
@@ -4138,7 +4161,7 @@ def inv_adj_rheader(r):
                     # row = current.db(query).select(aitable.id,
                                                    # limitby=(0, 1)).first()
                     # if row == None:
-                    close_btn = A( T("Close Adjustment"),
+                    close_btn = A( T("Complete Adjustment"),
                                   _href = URL(c = "inv",
                                               f = "adj_close",
                                               args = [record.id]
@@ -4147,13 +4170,16 @@ def inv_adj_rheader(r):
                                   _class = "action-btn"
                                   )
                     close_btn_confirm = SCRIPT("S3ConfirmClick('#adj_close', '%s')"
-                                              % T("Do you want to close this adjustment?") )
-                    rfooter.append(close_btn)
-                    rfooter.append(close_btn_confirm)
+                                              % T("Do you want to complete & close this adjustment?") )
+                    rheader.append(close_btn)
+                    rheader.append(close_btn_confirm)
+
+            rheader.append(rheader_tabs)
+
                     # else:
                         # msg = T("You need to check all the revised quantities before you can close this adjustment")
                         # rfooter.append(SPAN(msg))
-            current.response.s3.rfooter = rfooter
+
             return rheader
     return None
 

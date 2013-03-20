@@ -1168,6 +1168,7 @@ class S3Search(S3CRUD):
             "data": json.dumps({
                 "$_pr_saved_search": [
                     {
+                        "name": "TEMP",
                         "controller": r.controller,
                         "function": r.function,
                         "prefix": resource.prefix,
@@ -1405,7 +1406,7 @@ i18n.edit_saved_search="%s"
                     search_url_vars = query.serialize_url(resource)
                 search_url = r.url(method = "", vars = search_url_vars)
 
-                if settings.get_save_search_widget():
+                if query and settings.get_save_search_widget():
                     # Create a Save Search widget
                     save_search = self.save_search_widget(r, query, **attr)
 

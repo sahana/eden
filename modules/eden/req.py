@@ -304,6 +304,12 @@ class S3RequestModel(S3Model):
                                              label = T("Transit Status")),
                                   req_status("fulfil_status",
                                              label = T("Fulfil. Status")),
+                                  Field("closed", "boolean",
+                                        label = T("Closed"),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Closed"),
+                                                                        T("No more items may be added to this request"))),
+                                        default = False),
                                   Field("cancel", "boolean",
                                         label = T("Cancel"),
                                         default = False),
@@ -1185,6 +1191,7 @@ S3OptionsFilter({
 
             supply_item_represent = table.item_id.represent
             item_pack_represent = table.item_pack_id.represent
+            no_match = True
             for req_item in req_items:
                 # Convert inv item quantity to req item quantity
                 item_id = req_item.item_id
@@ -1194,6 +1201,7 @@ S3OptionsFilter({
                     inv_quantity = NONE
 
                 if inv_quantity != NONE:
+                    no_match = False
                     if inv_quantity < req_item.quantity:
                         status = SPAN(T("Partial"), _class = "req_status_partial")
                     else:
@@ -1234,6 +1242,11 @@ S3OptionsFilter({
                 output["items"] = items
                 #s3.actions = [req_item_inv_item_btn]
                 s3.no_sspag = True # pag won't work
+
+            if no_match:
+                current.response.warning = \
+                    T("%(site)s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!") % \
+                        dict(site=site_name)
         else:
             output["items"] = s3.crud_strings.req_req_item.msg_list_empty
 
