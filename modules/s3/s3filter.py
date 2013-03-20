@@ -507,10 +507,15 @@ class S3DateFilter(S3RangeFilter):
         ie_append = input_elements.append
 
         hide_time = self.opts.get("hide_time", False)
-        widget_class = S3DateTimeWidget(hide_time=hide_time) 
 
         for operator in self.operator:
+            opts = {}
             input_id = "%s-%s" % (id, operator)
+            if operator == "ge":
+                opts["set_min"] = "%s-%s" % (id, "le")
+            elif operator == "le":
+                opts["set_max"] = "%s-%s" % (id, "ge")
+            widget_class = S3DateTimeWidget(hide_time=hide_time, **opts)
             # Populate with the value, if given
             # if user has not set any of the limits, we get [] in values.
             variable = _variable(selector, operator)

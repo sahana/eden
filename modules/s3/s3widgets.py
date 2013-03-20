@@ -218,6 +218,9 @@ class S3DateTimeWidget(FormWidget):
             @keyword month_selector: show drop-down selector for month (default: False)
             @keyword year_selector: show drop-down selector for year (default: True)
             @keyword buttons: show the button panel (default: True)
+
+            @keyword set_min: set a minimum for another datetime widget
+            @keyword set_max: set a maximum for another datetime widget
         """
 
         self.opts = Storage(opts)
@@ -260,7 +263,7 @@ class S3DateTimeWidget(FormWidget):
             @param attributes: the HTML attributes for the widget
         """
 
-        s3 = current.response.s3
+        ISO = "%Y-%m-%dT%H:%M:%S"
         opts = self.opts
 
         if "_id" in attributes:
@@ -277,6 +280,7 @@ class S3DateTimeWidget(FormWidget):
                              settings.get_L10n_datetime_separator())
         datetime_format = "%s%s%s" % (date_format, separator, time_format)
 
+        # Option to hide the time slider
         hide_time = opts.get("hide_time", False)
         if hide_time:
             limit = "Date"
@@ -287,11 +291,10 @@ class S3DateTimeWidget(FormWidget):
             widget = "datetimepicker"
             dtformat = datetime_format
 
-        min_hour = opts.get("min_hour", 0)
-        max_hour = opts.get("max_hour", 23)
-
+        # Limits
         now = current.request.utcnow
         timedelta = datetime.timedelta
+        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
         if "min" in opts:
             earliest = opts["min"]
@@ -299,48 +302,56 @@ class S3DateTimeWidget(FormWidget):
             past = opts.get("past", 876000)
             earliest = now - timedelta(hours = past)
         if "max" in opts:
-            earliest = opts["max"]
+            latest = opts["max"]
         else:
             future = opts.get("future", 876000)
             latest = now + timedelta(hours = future)
 
-        # Initial value
-        if earliest <= now and now <= latest:
-            start = now
-        elif now < earliest:
-            start = earliest
-        elif now > latest:
-            start = latest
-            
-        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-                
-        # Closest minute step
+        # Closest minute step as default
         minute_step = opts.get("minute_step", 5)
         if not hide_time:
+            if earliest <= now and now <= latest:
+                start = now
+            elif now < earliest:
+                start = earliest
+            elif now > latest:
+                start = latest
             step = minute_step * 60
             seconds = (start - start.min).seconds
             rounding = (seconds + step / 2) // step * step
-            rounded = start + datetime.timedelta(0, rounding - seconds, -start.microsecond)
+            rounded = start + timedelta(0, rounding - seconds,
+                                            -start.microsecond)
             if rounded < earliest:
                 rounded = earliest
             elif rounded > latest:
                 rounded = latest
             if offset:
-                rounded += datetime.timedelta(seconds=offset)
-            rounded = rounded.strftime(dtformat)
-            rounding = \
-"""if (!$('#%(selector)s').val()){
-  $('#%(selector)s').val('%(rounded)s')
-}""" % dict(selector=selector, rounded=rounded)
+                rounded += timedelta(seconds=offset)
+            default = rounded.strftime(dtformat)
         else:
-            rounding = ""
-
+            default = ""
+            
+        # Add timezone offset to limits
         if offset:
-            earliest += datetime.timedelta(seconds=offset)
-            latest += datetime.timedelta(seconds=offset)
-        ISO = "%Y-%m-%dT%H:%M:%S"
-        earliest = earliest.strftime(ISO)
-        latest = latest.strftime(ISO)
+            earliest += timedelta(seconds=offset)
+            latest += timedelta(seconds=offset)
+
+        # Update limits of another widget?
+        set_min = opts.get("set_min", None)
+        set_max = opts.get("set_max", None)
+        onclose = """function(selectedDate) {"""
+        onclear = ""
+        if set_min:
+            onclose += """$('#%s').%s('option', 'minDate', selectedDate);""" % \
+                       (set_min, widget)
+            onclear += """$('#%s').%s('option', 'minDate', null);""" % \
+                       (set_min, widget)
+        if set_max:
+            onclose += """$('#%s').%s('option', 'maxDate', selectedDate);""" % \
+                       (set_max, widget)
+            onclear += """$('#%s').%s('option', 'minDate', null);""" % \
+                       (set_max, widget)
+        onclose += """}"""
 
         # Translate Python format-strings
         date_format = settings.get_L10n_date_format().replace("%Y", "yy") \
@@ -356,6 +367,8 @@ class S3DateTimeWidget(FormWidget):
                                                      .replace("%S", "ss")
 
         separator = settings.get_L10n_datetime_separator()
+
+        # Other options
         firstDOW = settings.get_L10n_firstDOW()
         year_range = "%s:%s" % (opts.get("min_year", "-10"),
                                 opts.get("max_year", "+10"))
@@ -363,36 +376,33 @@ class S3DateTimeWidget(FormWidget):
         # Boolean options
         getopt = lambda opt, default: opts.get(opt, default) and "true" or "false"
 
-        s3.jquery_ready.append(
-"""$('#%(selector)s').click(function(){
-%(rounding)s
-$('#%(selector)s').%(widget)s({
-  showSecond: false,
-  firstDay: %(firstDOW)s,
-  min%(limit)s: new Date(Date.parse('%(earliest)s')),
-  max%(limit)s: new Date(Date.parse('%(latest)s')),
-  dateFormat: '%(date_format)s',
-  timeFormat: '%(time_format)s',
-  separator: '%(separator)s',
-  stepMinute: %(minute_step)s,
-  showWeek: %(weeknumber)s,
-  showButtonPanel: %(buttons)s,
-  changeMonth: %(month_selector)s,
-  changeYear: %(year_selector)s,
-  yearRange: '%(year_range)s',
-  useLocalTimezone: true
-}).focus();});
+        current.response.s3.jquery_ready.append(
+"""$('#%(selector)s').%(widget)s({
+   showSecond: false,
+   firstDay: %(firstDOW)s,
+   min%(limit)s: new Date(Date.parse('%(earliest)s')),
+   max%(limit)s: new Date(Date.parse('%(latest)s')),
+   dateFormat: '%(date_format)s',
+   timeFormat: '%(time_format)s',
+   separator: '%(separator)s',
+   stepMinute: %(minute_step)s,
+   showWeek: %(weeknumber)s,
+   showButtonPanel: %(buttons)s,
+   changeMonth: %(month_selector)s,
+   changeYear: %(year_selector)s,
+   yearRange: '%(year_range)s',
+   useLocalTimezone: true,
+   defaultValue: '%(default)s',
+   onClose: %(onclose)s
+});
 clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
- $('#%(selector)s').val('');
+ $('#%(selector)s').val('');%(onclear)s
 });
 if($('#%(selector)s_clear').length == 0){
-$('#%(selector)s').after(clear_button)
+ $('#%(selector)s').after(clear_button)
 }""" % \
             dict(selector=selector,
-                 rounding=rounding,
                  widget=widget,
-                 limit=limit,
-                 minute_step=minute_step,
 
                  date_format=date_format,
                  time_format=time_format,
@@ -404,9 +414,16 @@ $('#%(selector)s').after(clear_button)
                  buttons = getopt("buttons", True),
 
                  firstDOW=firstDOW,
-                 earliest=earliest,
-                 latest=latest,
                  year_range=year_range,
+                 minute_step=minute_step,
+                 
+                 limit=limit,
+                 earliest=earliest.strftime(ISO),
+                 latest=latest.strftime(ISO),
+                 default=default,
+
+                 onclose=onclose,
+                 onclear=onclear,
             )
         )
 
