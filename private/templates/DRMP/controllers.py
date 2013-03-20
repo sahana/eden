@@ -279,7 +279,7 @@ def render_homepage_posts(listid, resource, rfields, record, **attr):
     author_id = raw["cms_post.created_by"]
     organisation = record["auth_user.organisation_id"]
     organisation_id = raw["auth_user.organisation_id"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id])
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
     # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
     avatar = s3_avatar_represent(author_id,
                                  _class="media-object",
@@ -327,6 +327,7 @@ def render_homepage_posts(listid, resource, rfields, record, **attr):
                    delete_btn,
                    _class="edit-bar fright",
                    )
+    # @ToDo: Dropdown of available documents
     document = raw["doc_document.file"]
     if document:
         doc_url = URL(c="default", f="download",
