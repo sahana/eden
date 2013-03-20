@@ -131,6 +131,7 @@ class S3FilterWidget(object):
         """
 
         self.field = field
+        self.alias = None
 
         attributes = Storage()
         options = Storage()
@@ -143,14 +144,17 @@ class S3FilterWidget(object):
         self.opts = options
 
     # -------------------------------------------------------------------------
-    def __call__(self, resource, get_vars=None):
+    def __call__(self, resource, get_vars=None, alias=None):
         """
             Entry point for the form builder
 
             @param resource: the S3Resource to render with widget for
             @param get_vars: the GET vars (URL query vars) to prepopulate
                              the widget
+            @param alias: the resource alias to use
         """
+
+        self.alias = alias
 
         # Initialize the widget attributes
         self._attr(resource)
@@ -225,8 +229,7 @@ class S3FilterWidget(object):
             return operators
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _prefix(selector):
+    def _prefix(self, selector):
         """
             Helper method to prefix an unprefixed field selector
 
@@ -236,14 +239,16 @@ class S3FilterWidget(object):
             @return: the prefixed selector
         """
 
+        alias = self.alias
+        if alias is None:
+            alias = "~"
         if "." not in selector.split("$", 1)[0]:
-            return "~.%s" % selector
+            return "%s.%s" % (alias, selector)
         else:
             return selector
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def _selector(cls, resource, fields):
+    def _selector(self, resource, fields):
         """
             Helper method to generate a filter query selector for the
             given field(s) in the given resource.
@@ -255,7 +260,7 @@ class S3FilterWidget(object):
                      field selectors could be resolved
         """
 
-        prefix = cls._prefix
+        prefix = self._prefix
         label = None
 
         if not fields:
@@ -805,6 +810,8 @@ class S3LocationFilter(S3FilterWidget):
         """
 
         prefix = self._prefix
+        alias = resource.alias if resource.parent else None
+        
         label = None
 
         if "levels" in self.opts:
@@ -820,7 +827,7 @@ class S3LocationFilter(S3FilterWidget):
                 continue
             if not label:
                 label = rfield.label
-            selectors.append(prefix(rfield.selector))
+            selectors.append(prefix(rfield.selector, alias=alias))
         if selectors:
             return label, "|".join(selectors)
         else:
@@ -1141,12 +1148,15 @@ class S3FilterForm(object):
         self.opts = options
 
     # -------------------------------------------------------------------------
-    def html(self, resource, get_vars=None, target=None):
+    def html(self, resource, get_vars=None, target=None, alias=None):
         """
             Render this filter form as HTML
 
             @param resource: the S3Resource
             @param get_vars: the request GET vars (URL query dict)
+            @param target: the HTML element ID of the target object for
+                           this filter form (e.g. a datatable)
+            @param alias: the resource alias to use in widgets
         """
 
         formstyle = self.opts.get("formstyle", None)
@@ -1156,7 +1166,7 @@ class S3FilterForm(object):
         rows = []
         rappend = rows.append
         for f in self.widgets:
-            widget = f(resource, get_vars)
+            widget = f(resource, get_vars, alias=alias)
             label = f.opts["label"]
             comment = f.opts["comment"]
             widget_id = f.attr["_id"]

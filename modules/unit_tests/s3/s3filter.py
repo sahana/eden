@@ -65,26 +65,33 @@ class S3FilterWidgetTests(unittest.TestCase):
         fields = "name"
         s3db = current.s3db
 
+        widget = S3FilterWidget()
+
         resource = s3db.resource("org_organisation")
-        label, selector = S3FilterWidget._selector(resource, fields)
+        label, selector = widget._selector(resource, fields)
         self.assertEqual(selector, "~.name")
+
+        widget.alias = "organisation"
+        label, selector = widget._selector(resource, fields)
+        self.assertEqual(selector, "organisation.name")
+        widget.alias = None
 
         fields = "nonexistent_component.name"
 
         resource = s3db.resource("org_organisation")
-        label, selector = S3FilterWidget._selector(resource, fields)
+        label, selector = widget._selector(resource, fields)
         self.assertEqual(selector, None)
 
         fields = ["name", "organisation_id$name"]
 
         resource = s3db.resource("org_office")
-        label, selector = S3FilterWidget._selector(resource, fields)
+        label, selector = widget._selector(resource, fields)
         self.assertEqual(selector, "~.name|~.organisation_id$name")
 
         fields = []
 
         resource = s3db.resource("org_organisation")
-        label, selector = S3FilterWidget._selector(resource, fields)
+        label, selector = widget._selector(resource, fields)
         self.assertEqual(selector, None)
 
     def testVariable(self):
