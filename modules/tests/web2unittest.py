@@ -338,7 +338,7 @@ class SeleniumUnitTest(Web2UnitTest):
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
             elem.click()
-            time.sleep(2) # Give it time to dissolve
+            time.sleep(1) # Give it time to dissolve
         except:
             pass
 
@@ -694,7 +694,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
     # -------------------------------------------------------------------------
     def w_autocomplete(self,
-                       search,
+                       value,
                        autocomplete,
                        needle = None,
                        quiet = True,
@@ -706,11 +706,11 @@ class SeleniumUnitTest(Web2UnitTest):
         autocomplete_id = "dummy_%s" % autocomplete
         throbber_id = "dummy_%s_throbber" % autocomplete
         if needle == None:
-            needle = search
+            needle = value
 
         elem = browser.find_element_by_id(autocomplete_id)
         elem.clear()
-        elem.send_keys(search)
+        elem.send_keys(value)
         # Give time for the throbber to appear
         time.sleep(1)
         # Now wait for throbber to close
@@ -724,17 +724,18 @@ class SeleniumUnitTest(Web2UnitTest):
         # Throbber has closed and data was found, return
         for i in range(10):
             # For each autocomplete on the form the menu will have an id starting from 1
-            menu_identifier = "//ul[contains(@class,'ui-autocomplete')]"
-            results_identifier = "/li[@class='ui-menu-item']/a"
-            menu_results = browser.find_elements_by_xpath(menu_identifier + results_identifier)
-            for j in range(len(menu_results)):
-                if search == menu_results[j].text:
-                    menu_results[j].click()
+            autocomplete_xpath = "//ul[contains(@class,'ui-autocomplete')]"
+            results_xpath = "/li[@class='ui-menu-item']/a"
+            autocomplete_results = browser.find_elements_by_xpath(autocomplete_xpath + results_xpath)
+            for j in range(len(autocomplete_results)):
+                # If the value is in the result - might not be a match as AC may be a represent 
+                if value in autocomplete_results[j].text:
+                    autocomplete_results[j].click()
                     time.sleep(3)
                     db_id = browser.find_element_by_id(autocomplete)
-                    value = db_id.get_attribute("value")
-                    if value:
-                        return int(value)
+                    id = db_id.get_attribute("value")
+                    if id:
+                        return int(id)
                     else:
                         return False
             

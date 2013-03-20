@@ -57,7 +57,7 @@ class CreateProject(SeleniumUnitTest):
                       "International Federation of Red Cross and Red Crescent Societies (IFRC)", 
                       "automatic"),
                      ( "name",
-                       "Community Strengthening through Dance4" ),
+                       "Community Strengthening through Dancing" ),
                      ( "comments",
                        "Host National Society")
                     ]

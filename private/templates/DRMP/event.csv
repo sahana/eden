@@ -1,8 +1,8 @@
-"Name","Description","Exercise","Zero Hour","Closed","Country","L1","L2","L3","KV:XX"
-"Flood Manufahi",,,,,,,,,
-"Cyclone Simone",,,"2012-08","True",,,,,
-"Drought Tibar",,,"2012-04","True",,,,,
-"Dili Tsunami",,,,,,,,,
-"Same Earthquake",,,,,,,,,
-"Aileu Floods",,,,,,,,,
-"Drought Zumalai",,,,,,,,,
+Name,Description,Exercise,Zero Hour,Closed,Country,L1,L2,L3,KV:XX
+Flood Manufahi,,,,,,,,,
+Cyclone Simone,,,2012-08,TRUE,,,,,
+Drought Tibar,,,2012-04,TRUE,,,,,
+Dili Tsunami,,,,TRUE,,,,,
+Same Earthquake,,,,TRUE,,,,,
+Aileu Floods,,,,TRUE,,,,,
+Drought Zumalai,,,,TRUE,,,,,

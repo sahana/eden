@@ -115,7 +115,8 @@ class SearchStaff(SeleniumUnitTest):
                 "value": True
             },),
             {"tablename":"hrm_human_resource", "filters":[("type",1)]},
-            manual_check=functools.partial(_kwsearch, keyword=key, items=1, column=9)
+            # "Basics of First Aid" is getting truncated
+            manual_check=functools.partial(_kwsearch, keyword="Basics of Fir", items=1, column=9)
         )
 
            
