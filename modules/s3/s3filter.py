@@ -478,13 +478,16 @@ class S3DateFilter(S3RangeFilter):
         """
 
         attr = self.attr
+
+        # CSS class and element ID
         _class = self._class
         if "_class" in attr and attr["_class"]:
             _class = "%s %s" % (attr["_class"], _class)
         else:
             _class = _class
-        attr["_class"] = _class
+        _id = attr["_id"]
 
+        # Determine the field type
         rfield = S3ResourceField(resource, self.field)
         field = rfield.field
         if field is None:
@@ -494,28 +497,31 @@ class S3DateFilter(S3RangeFilter):
                           requires = IS_DATE_IN_RANGE(format = dtformat))
             field._tablename = rfield.tname
 
-        input_class = self._input_class
-        input_labels = self.input_labels
-        input_elements = DIV()
-
-        selector = self.selector
-
-        _variable = self._variable
-
-        id = attr["_id"]
-        input_elements = DIV()
-        ie_append = input_elements.append
-
+        # Options
         hide_time = self.opts.get("hide_time", False)
 
+        # Generate the input elements
+        selector = self.selector
+        _variable = self._variable
+        input_class = self._input_class
+        input_labels = self.input_labels
+        input_elements = DIV(_id=_id, _class=_class)
+        append = input_elements.append
         for operator in self.operator:
-            opts = {}
-            input_id = "%s-%s" % (id, operator)
-            if operator == "ge":
-                opts["set_min"] = "%s-%s" % (id, "le")
-            elif operator == "le":
-                opts["set_max"] = "%s-%s" % (id, "ge")
-            widget_class = S3DateTimeWidget(hide_time=hide_time, **opts)
+
+            input_id = "%s-%s" % (_id, operator)
+
+            # Determine the widget class
+            if rfield.ftype == "date":
+                widget = S3DateWidget()
+            else:
+                opts = {}
+                if operator == "ge":
+                    opts["set_min"] = "%s-%s" % (_id, "le")
+                elif operator == "le":
+                    opts["set_max"] = "%s-%s" % (_id, "ge")
+                widget = S3DateTimeWidget(hide_time=hide_time, **opts)
+                
             # Populate with the value, if given
             # if user has not set any of the limits, we get [] in values.
             variable = _variable(selector, operator)
@@ -525,14 +531,16 @@ class S3DateFilter(S3RangeFilter):
                     value = value[0]
             else:
                 value = None
-            picker = widget_class(field,
-                                  value,
-                                  _name=input_id,
-                                  _id=input_id,
-                                  _class = self._input_class)
 
-            ie_append(current.T(input_labels[operator]) + ":")
-            ie_append(picker)
+            # Render the widget
+            picker = widget(field, value,
+                            _name=input_id,
+                            _id=input_id,
+                            _class=input_class)
+
+            # Append label and widget
+            append(current.T(input_labels[operator]) + ":")
+            append(picker)
 
         return input_elements
 
