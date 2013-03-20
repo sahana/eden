@@ -131,6 +131,7 @@ class S3FilterWidget(object):
         """
 
         self.field = field
+        self.alias = None
 
         attributes = Storage()
         options = Storage()
