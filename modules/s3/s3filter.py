@@ -196,7 +196,14 @@ class S3FilterWidget(object):
             flist = self.field
             if type(flist) is not list:
                 flist = [flist]
-            colnames = [S3ResourceField(resource, f).colname for f in flist]
+            colnames = []
+            for f in flist:
+                rfield = S3ResourceField(resource, f)
+                colname = rfield.colname
+                if colname:
+                    colnames.append(colname)
+                else:
+                    colnames.append(rfield.fname)
             name = "%s-%s-%s" % (resource.alias, "-".join(colnames), _class)
             attr["_name"] = name.replace(".", "_")
         if "_id" not in attr:
@@ -256,8 +263,8 @@ class S3FilterWidget(object):
             @param resource: the S3Resource
             @param fields: the field selectors (as strings)
 
-            @return: the field label and the filter query selector, or None if none of the
-                     field selectors could be resolved
+            @return: the field label and the filter query selector, or None
+                     if none of the field selectors could be resolved
         """
 
         prefix = self._prefix
@@ -272,6 +279,9 @@ class S3FilterWidget(object):
             try:
                 rfield = S3ResourceField(resource, field)
             except (AttributeError, TypeError):
+                continue
+            if not rfield.field and not rfield.virtual:
+                # Unresolvable selector
                 continue
             if not label:
                 label = rfield.label
@@ -495,12 +505,15 @@ class S3DateFilter(S3RangeFilter):
         # Determine the field type
         rfield = S3ResourceField(resource, self.field)
         field = rfield.field
-        if field is None:
+        if rfield.virtual:
             # S3DateTimeWidget doesn't support virtual fields
             dtformat = current.deployment_settings.get_L10n_date_format()
             field = Field(rfield.fname, "datetime",
                           requires = IS_DATE_IN_RANGE(format = dtformat))
             field._tablename = rfield.tname
+        else:
+            # Unresolvable selector
+            return ""
 
         # Options
         hide_time = self.opts.get("hide_time", False)
@@ -718,26 +731,26 @@ class S3LocationFilter(S3FilterWidget):
         if "label" not in opts:
             opts["label"] = T("Filter by Location")
 
+        ftype = "reference gis_location"
+        default = (ftype, levels.keys(), opts.get("no_opts", NOOPT))
+            
         # Resolve the field selector
         field_name = self.field
         rfield = S3ResourceField(resource, field_name)
         field = rfield.field
-        colname = rfield.colname
-        ftype = "reference gis_location"
-        fields = [field_name]
-        fappend = fields.append
-        for level in levels:
-            fappend("%s$%s" % (field_name, level))
+        if not field or rfield.ftype[:len(ftype)] != ftype:
+            # must be a real reference to gis_location
+            return default
+        fields = [field_name] + ["%s$%s" % (field_name, l) for l in levels]
 
         # Find the options
         rows = resource.select(fields=fields,
                                start=None,
                                limit=None,
                                virtual=False)
-
         # No options?
         if not rows:
-            return (ftype, levels.keys(), opts.get("no_opts", NOOPT))
+            return default
 
         # Intialise Options Storage & Hierarchy
         hierarchy = {}
@@ -1002,7 +1015,7 @@ class S3OptionsFilter(S3FilterWidget):
             if ftype == "boolean":
                 opt_keys = (True, False)
 
-            else:
+            elif field or rfield.virtual:
                 multiple = ftype[:5] == "list:"
                 groupby = field if field and not multiple else None
                 virtual = field is None
@@ -1027,6 +1040,8 @@ class S3OptionsFilter(S3FilterWidget):
                             v = row[colname]
                             if v not in opt_keys:
                                 kappend(v)
+            else:
+                opt_keys = []
 
         # No options?
         if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:

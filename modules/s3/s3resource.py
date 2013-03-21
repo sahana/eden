@@ -3271,24 +3271,22 @@ class S3Resource(object):
             else:
                 f = field
             if isinstance(f, S3ResourceField):
-                rfields.append(f)
+                rfield = f
             elif isinstance(f, str):
                 try:
                     rfield = S3ResourceField(self, f)
-                except:
+                except (AttributeError, SyntaxError):
                     continue
-                else:
-                    rfields.append(rfield)
             elif isinstance(f, S3FieldSelector):
                 try:
-                    rfield = f.resolve(resource)
+                    rfield = S3ResourceField(self, f.name)
                     rfield.op = f.op
-                except:
+                except (AttributeError, SyntaxError):
                     continue
-                else:
-                    rfields.append(rfield)
             else:
                 raise SyntaxError("Invalid field: %s" % str(f))
+            if rfield.field or rfield.virtual:
+                rfields.append(rfield)
 
         # Get field attributes
         attr = {}
@@ -3543,25 +3541,31 @@ class S3Resource(object):
             else:
                 label, selector = None, s
 
-            selector = prefix(selector)
-
             # Resolve the selector
-            try:
-                if isinstance(selector, str):
+            if isinstance(selector, str):
+                selector = prefix(selector)
+                try:
                     rfield = S3ResourceField(self, selector, label=label)
-                elif isinstance(selector, S3FieldSelector):
-                    rfield = selector.resolve(self)
-                    if label is not None:
-                        rfield.label = label
-                elif isinstance(selector, S3ResourceField):
-                    rfield = selector
-                    if label is not None:
-                        rfield.label = label
-                else:
+                except (AttributeError, SyntaxError):
                     continue
-            except (AttributeError, SyntaxError):
+            elif isinstance(selector, S3FieldSelector):
+                try:
+                    rfield = selector.resolve(self)
+                except (AttributeError, SyntaxError):
+                    continue
+            elif isinstance(selector, S3ResourceField):
+                rfield = selector
+            else:
                 continue
 
+            # Unresolvable selector?
+            if rfield.field is None and not rfield.virtual:
+                continue
+
+            # Replace default label
+            if label is not None:
+                rfield.label = label
+                
             # Skip components
             if skip_components:
                 head = rfield.selector.split("$", 1)[0]
@@ -4248,12 +4252,18 @@ class S3FieldSelector(object):
     def represent(self, resource):
 
         try:
-            lfield = S3ResourceField(resource, self.name)
+            rfield = S3ResourceField(resource, self.name)
         except:
-            return "#undef#_%s" % self.name
-        if self.op is not None:
-            return "%s.%s()" % (lfield.colname, self.op)
-        return lfield.colname
+            colname = None
+        else:
+            colname = rfield.colname
+        if colname:
+            if self.op is not None:
+                return "%s.%s()" % (colname, self.op)
+            else:
+                return colname
+        else:
+            return "(%s?)" % self.name
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -4269,8 +4279,10 @@ class S3FieldSelector(object):
                       the value from the row otherwise
         """
 
-        t = type(field)
+        error = lambda fn: KeyError("Field not found: %s" % fn)
 
+        t = type(field)
+        
         if t is Field:
             f = field
             colname = str(field)
@@ -4278,18 +4290,22 @@ class S3FieldSelector(object):
 
         elif t is S3FieldSelector:
             rfield = S3ResourceField(resource, field.name)
+            colname = rfield.colname
+            if not colname:
+                # unresolvable selector
+                raise error(field.name)
+            fname = rfield.fname
             f = rfield.field
             tname = rfield.tname
-            fname = rfield.fname
-            colname = rfield.colname
 
         elif t is S3ResourceField:
+            colname = field.colname
+            if not colname:
+                # unresolved selector
+                return None
+            fname = field.fname
             f = field.field
             tname = field.tname
-            fname = field.fname
-            if not fname:
-                return None
-            colname = field.colname
 
         else:
             return field
@@ -4304,7 +4320,7 @@ class S3FieldSelector(object):
                 try:
                     value = row[colname]
                 except (KeyError, AttributeError):
-                    raise KeyError("Field not found: %s" % colname)
+                    raise error(colname)
         elif fname in row:
             value = row[fname]
         elif colname in row:
@@ -4313,7 +4329,7 @@ class S3FieldSelector(object):
              tname in row and fname in row[tname]:
             value = row[tname][fname]
         else:
-            raise KeyError("Field not found: %s" % colname)
+            raise error(colname)
 
         if callable(value):
             # Lazy virtual field
@@ -4339,6 +4355,375 @@ class S3FieldSelector(object):
         return S3ResourceField(resource, self.name)
 
 # =============================================================================
+class S3FieldPath(object):
+    """ Helper class to parse field selectors """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def resolve(cls, resource, selector, tail=None):
+        """
+            Resolve a selector (=field path) against a resource
+
+            @param resource: the S3Resource to resolve against
+            @param selector: the field selector string
+            @param tail: tokens to append to the selector
+            
+            The general syntax for a selector is:
+
+            selector = {[alias].}{[key]$}[field|selector]
+
+            (Parts in {} are optional, | indicates alternatives)
+
+            * Alias can be:
+
+            ~           refers to the resource addressed by the
+                        preceding parts of the selector (=last
+                        resource)
+            component   alias of a component of the last resource
+            linktable   alias of a link table of the last resource
+            table       name of a table that has a foreign key for
+                        the last resource (auto-detect the key)
+            key:table   same as above, but specifying the foreign key
+
+            * Key can be:
+
+            key         the name of a foreign key in the last resource
+            context     a context expression
+            
+            * Field can be:
+
+            fieldname   the name of a field or virtual field of the
+                        last resource
+            context     a context expression
+
+            A "context expression" is a name enclosed in parentheses:
+
+            (context)
+
+            During parsing, context expressions get replaced by the
+            string which has been configured for this name for the
+            last resource with:
+
+            s3db.configure(tablename, context = dict(name = "string"))
+
+            With context expressions, the same selector can be used
+            for different resources, each time resolving into the
+            specific field path. However, the field addressed must
+            be of the same type in all resources to form valid
+            queries.
+            
+            If a context name can not be resolved, resolve() will
+            still succeed - but the S3FieldPath returned will have
+            colname=None and ftype="context" (=unresolvable context).
+        """
+
+        if not selector:
+            raise SyntaxError("Invalid selector: %s" % selector)
+        tokens = re.split("(\.|\$)", selector)
+        if tail:
+            tokens.extend(tail)
+        parser = cls(resource, None, tokens)
+        parser.original = selector
+        return parser
+
+    # -------------------------------------------------------------------------
+    def __init__(self, resource, table, tokens):
+        """
+            Constructor - not to be called directly, use resolve() instead
+
+            @param resource: the S3Resource
+            @param table: the table
+            @param tokens: the tokens as list
+        """
+
+        if table is None:
+            table = resource.table
+
+        # Initialize
+        self.original = None
+        self.tname = table._tablename
+        self.fname = None
+        self.field = None
+        self.ftype = None
+        self.virtual = False
+        self.colname = None
+        self.left = Storage()
+        self.join = Storage()
+
+        self.distinct = False
+        self.multiple = True
+
+        head = tokens.pop(0)
+        tail = None
+
+        field_not_found = lambda f: AttributeError("Field not found: %s" % f)
+
+        if head[0] == "(" and head[-1] == ")":
+
+            # Context expression
+            head = head.strip("()")
+            self.fname = head
+            self.ftype = "context"
+
+            context = resource.get_config("context")
+            if context and head in context:
+                tail = self.resolve(resource, context[head], tail=tokens)
+            else:
+                # unresolvable
+                pass
+
+        elif tokens:
+
+            # Resolve the tail
+            op = tokens.pop(0)
+            if tokens:
+                if op == ".":
+                    # head is a component or linktable alias, and tokens is
+                    # a field expression in the component/linked table
+                    if not resource:
+                        resource = current.s3db.resource(table, components=[])
+                    ktable, j, l, m, d = self._resolve_alias(resource, head)
+                    if j is not None and l is not None:
+                        self.join[ktable._tablename] = j
+                        self.left[ktable._tablename] = l
+                    self.multiple = m
+                    self.distinct = d
+                    tail = S3FieldPath(None, ktable, tokens)
+
+                else:
+                    # head is a foreign key in the current table and tokens is
+                    # a field expression in the referenced table
+                    ktable, join, left = self._resolve_key(table, head)
+                    if join is not None and left is not None:
+                        self.join[ktable._tablename] = join
+                        self.left[ktable._tablename] = left
+                    tail = S3FieldPath(None, ktable, tokens)
+                    self.distinct = True
+            else:
+                raise SyntaxError("trailing operator")
+
+        if tail is None:
+
+            # End of the expression
+            if self.ftype != "context":
+                # Expression is resolved, head is a field name:
+                self.field = self._resolve_field(table, head)
+                if not self.field:
+                    self.virtual = True
+                    self.ftype = "virtual"
+                else:
+                    self.virtual = False
+                    self.ftype = str(self.field.type)
+                self.fname = head
+                self.colname = "%s.%s" % (self.tname, self.fname)
+
+        else:
+
+            # Read field data from tail
+            self.tname = tail.tname
+            self.fname = tail.fname
+            self.field = tail.field
+            self.ftype = tail.ftype
+            self.virtual = tail.virtual
+            self.colname = tail.colname
+            
+            self.distinct |= tail.distinct
+            self.multiple |= tail.multiple
+
+            self.join.update(tail.join)
+            self.left.update(tail.left)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _resolve_field(table, fieldname):
+        """
+            Resolve a field name against the table, recognizes "id" as
+            table._id.name, and "uid" as current.xml.UID.
+
+            @param table: the Table
+            @param fieldname: the field name
+
+            @return: the Field
+        """
+
+        if fieldname == "uid":
+            fieldname == current.xml.UID
+        if fieldname == "id":
+            field = table._id
+        elif fieldname in table.fields:
+            field = ogetattr(table, fieldname)
+        else:
+            field = None
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _resolve_key(table, fieldname):
+        """
+            Resolve a foreign key into the referenced table and the
+            join and left join between the current table and the
+            referenced table
+
+            @param table: the current Table
+            @param fieldname: the fieldname of the foreign key
+
+            @return: tuple of (referenced table, join, left join)
+            @raise: AttributeError is either the field or
+                    the referended table are not found
+            @raise: SyntaxError if the field is not a foreign key
+        """
+
+        if fieldname in table.fields:
+            f = table[fieldname]
+        else:
+            raise AttributeError("key not found: %s" % fieldname)
+
+        ktablename, pkey, multiple = s3_get_foreign_key(f, m2m=False)
+
+        if not ktablename:
+            raise SyntaxError("%s is not a foreign key" % f)
+
+        ktable = current.s3db.table(ktablename,
+                                    AttributeError("undefined table %s" % ktablename),
+                                    db_only=True)
+
+        pkey = ktable[pkey] if pkey else ktable._id
+
+        join = (f == pkey)
+        left = [ktable.on(join)]
+
+        return ktable, join, left
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _resolve_alias(resource, alias):
+        """
+            Resolve a table alias into the linked table (component, linktable
+            or free join), and the joins and left joins between the current
+            resource and the linked table.
+
+            @param resource: the current S3Resource
+            @param alias: the alias
+
+            @return: tuple of (linked table, joins, left joins, multiple,
+                     distinct), the two latter being flags to indicate
+                     possible ambiguous query results (needed by the query
+                     builder)
+            @raise: AttributeError if one of the key fields or tables
+                    can not be found
+            @raise: SyntaxError if the alias can not be resolved (e.g.
+                    because on of the keys isn't a foreign key, points
+                    to the wrong table or is ambiguous)
+        """
+
+        # Alias for this resource?
+        if alias in ("~", resource.alias):
+            return resource.table, None, None, False, False
+
+        multiple = True
+        s3db = current.s3db
+
+        tablename = resource.tablename
+    
+        # Try to attach the component
+        if alias not in resource.components and \
+           alias not in resource.links:
+            _alias = alias
+            hook = s3db.get_component(tablename, alias)
+            if not hook:
+                _alias = s3db.get_alias(tablename, alias)
+                if _alias:
+                    hook = s3db.get_component(tablename, _alias)
+            if hook:
+                resource._attach(tablename, hook)
+                
+        components = resource.components
+        links = resource.links
+
+        if alias in components:
+
+            # Is a component
+            component = components[alias]
+
+            ktable = component.table
+            join = component.get_join()
+            left = component.get_left_join()
+            multiple = component.multiple
+
+        elif alias in links:
+
+            # Is a linktable
+            link = links[alias]
+
+            ktable = link.table
+            join = link.get_join()
+            left = link.get_left_join()
+
+        else:
+
+            # Is a free join
+            DELETED = current.manager.DELETED
+
+            table = resource.table
+            tablename = resource.tablename
+
+            pkey = fkey = None
+
+            # Find the table
+            fkey, kname = (alias.split(":") + [None])[:2]
+            if not kname:
+                fkey, kname = kname, fkey
+
+            ktable = s3db.table(kname,
+                                AttributeError("table not found: %s" % kname),
+                                db_only=True)
+
+            if fkey is None:
+
+                # Autodetect left key
+                for fname in ktable.fields:
+                    tn, key, m = s3_get_foreign_key(ktable[fname], m2m=False)
+                    if not tn:
+                        continue
+                    if tn == tablename:
+                        if fkey is not None:
+                            raise SyntaxError("ambiguous foreign key in %s" %
+                                              alias)
+                        else:
+                            fkey = fname
+                            if key:
+                                pkey = key
+                if fkey is None:
+                    raise SyntaxError("no foreign key for %s in %s" %
+                                      (tablename, kname))
+
+            else:
+
+                # Check left key
+                if fkey not in ktable.fields:
+                    raise AttributeError("no field %s in %s" % (fkey, kname))
+                
+                tn, pkey, m = s3_get_foreign_key(ktable[fkey], m2m=False)
+                if tn and tn != tablename:
+                    raise SyntaxError("%s.%s is not a foreign key for %s" %
+                                      (kname, fkey, tablename))
+                elif not tn:
+                    raise SyntaxError("%s.%s is not a foreign key" %
+                                      (kname, fkey))
+
+            # Default primary key
+            if pkey is None:
+                pkey = table._id.name
+                    
+            # Build join
+            join = (table[pkey] == ktable[fkey])
+            if DELETED in ktable.fields:
+                join &= ktable[DELETED] != True
+            left = ktable.on(join)
+
+        return ktable, join, left, multiple, True
+
+# =============================================================================
 class S3ResourceField(object):
     """ Helper class to resolve a field selector against a resource """
 
@@ -4354,7 +4739,7 @@ class S3ResourceField(object):
         self.resource = resource
         self.selector = selector
 
-        lf = self.resolve(resource, selector)
+        lf = S3FieldPath.resolve(resource, selector)
 
         self.tname = lf.tname
         self.fname = lf.fname
@@ -4367,8 +4752,11 @@ class S3ResourceField(object):
 
         self.field = lf.field
 
+        self.virtual = False
+        self.represent = s3_unicode
+        self.requires = None
+
         if self.field is not None:
-            self.virtual = False
             field = self.field
             self.ftype = str(field.type)
             if resource.linked is not None and self.ftype == "id":
@@ -4379,11 +4767,11 @@ class S3ResourceField(object):
             else:
                 self.represent = field.represent
             self.requires = field.requires
-        else:
+        elif self.colname:
             self.virtual = True
             self.ftype = "virtual"
-            self.represent = s3_unicode
-            self.requires = None
+        else:
+            self.ftype = "context"
 
         # Fall back to the field label
         if label is None:
@@ -4397,11 +4785,13 @@ class S3ResourceField(object):
                 f = self.field
                 if f:
                     label = f.label
-                else:
+                elif fname:
                     label = " ".join([s.strip().capitalize()
                                       for s in fname.split("_") if s])
-        self.label = label
+                else:
+                    label = None
 
+        self.label = label
         self.show = True
 
     # -------------------------------------------------------------------------
@@ -4415,224 +4805,6 @@ class S3ResourceField(object):
                "field='%s' " \
                "type='%s'>" % \
                (self.selector, self.label, self.tname, self.fname, self.ftype)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def resolve(resource, selector, join=None, left=None):
-        """ Resolve a field selector against a resource """
-
-        s3db = current.s3db
-
-        distinct = False
-
-        original = selector
-        tablename = resource._alias
-
-        if join is None:
-            join = Storage()
-        if left is None:
-            left = Storage()
-
-        if "$" in selector:
-            selector, tail = selector.split("$", 1)
-            distinct = True
-        else:
-            tail = None
-        if "." in selector:
-            tn, fn = selector.split(".", 1)
-        else:
-            tn = None
-            fn = selector
-
-        multiple = True
-        if tn and tn not in ("~", resource.alias):
-            # Field in a component
-            if tn not in resource.components:
-                hook = s3db.get_component(resource.tablename, tn)
-                if hook:
-                    resource._attach(tn, hook)
-            if tn in resource.components:
-                c = resource.components[tn]
-            elif tn in resource.links:
-                c = resource.links[tn]
-            else:
-                raise AttributeError("%s is not a component of %s" % (tn, tablename))
-            distinct = True
-            j = c.get_join()
-            l = c.get_left_join()
-            tn = c._alias
-            join[tn] = j
-            left[tn] = l
-            table = c.table
-            multiple = c.multiple
-        else:
-            # Field in the master table
-            tn = tablename
-            if tail:
-                original = "%s$%s" % (fn, tail)
-            else:
-                original = fn
-            table = resource.table
-
-        if table is None:
-            raise AttributeError("undefined table %s" % tn)
-        else:
-            # Resolve the field name
-            if fn == "uid":
-                fn = current.xml.UID
-            if fn == "id":
-                f = table._id
-            elif fn in table.fields or fn == "id":
-                f = table[fn]
-            else:
-                f = None
-
-        if tail:
-            # Field in a referenced table
-            ktablename = None
-            if not f:
-                # Link table reference
-                # table <-- pkey -- lkey -- ltable -- rkey -- fkey --> ktable
-
-                # Find the link table name
-                LSEP = ":"
-                lname = lkey = rkey = fkey = None
-                if LSEP in fn:
-                    lname, rkey = fn.rsplit(LSEP, 1)
-                    if LSEP in lname:
-                        lkey, lname = lname.split(LSEP, 1)
-                    ltable = s3db.table(lname)
-                    if not ltable and lkey is None:
-                        (lkey, lname, rkey) = (lname, rkey, lkey)
-                else:
-                    ltable = None
-                    lname = fn
-
-                if ltable is None:
-                    ltable = s3db.table(lname,
-                                        SyntaxError("%s.%s is not a foreign key" % (tn, fn)),
-                                        db_only=True)
-
-                # Get the primary key
-                pkey = table._id.name
-
-                # Check the left key
-                if lkey is None:
-                    search_lkey = True
-                else:
-                    if lkey not in ltable.fields:
-                        raise AttributeError("No field %s in %s" % (lkey, lname))
-                    lkey_field = ltable[lkey]
-                    _tn, pkey, multiple = s3_get_foreign_key(lkey_field, m2m=False)
-                    if _tn and _tn != tn:
-                        raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" % (lname, lkey, tn))
-                    elif not _tn:
-                        raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
-                    search_lkey = False
-
-                # Check the right key
-                if rkey is None:
-                    search_rkey = True
-                else:
-                    if rkey not in ltable.fields:
-                        raise AttributeError("No field %s in %s" % (rkey, lname))
-                    rkey_field = ltable[rkey]
-                    ktablename, fkey, multiple = s3_get_foreign_key(rkey_field, m2m=False)
-                    if not ktablename:
-                        raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
-                    search_rkey = False
-
-                # Key search
-                if search_lkey or search_rkey:
-                    for fname in ltable.fields:
-                        ktn, key, multiple = s3_get_foreign_key(ltable[fname], m2m=False)
-                        if not ktn:
-                            continue
-                        if search_lkey and ktn == tn:
-                            if lkey is not None:
-                                raise SyntaxError("Ambiguous link: please specify left key in %s" % tn)
-                            else:
-                                lkey = fname
-                                if key:
-                                    pkey = key
-                        if search_rkey and ktn != tn:
-                            if rkey is not None:
-                                raise SyntaxError("Ambiguous link: please specify right key in %s" % tn)
-                            else:
-                                ktablename = ktn
-                                rkey = fname
-                                fkey = key
-                    if lkey is None:
-                        raise SyntaxError("Invalid link: no foreign key for %s in %s" % (tn, lname))
-                    else:
-                        lkey_field = ltable[lkey]
-                    if rkey is None:
-                        raise SyntaxError("Invalid link: no foreign key found in" % lname)
-                    else:
-                        rkey_field = ltable[rkey]
-
-                # Load the referenced table
-                ktable = s3db.table(ktablename,
-                                    AttributeError("Undefined table: %s" % ktablename),
-                                    db_only=True)
-
-                # Resolve fkey, if still unknown
-                if not fkey:
-                    fkey = ktable._id.name
-
-                # Construct the joins
-                lq = (table[pkey] == ltable[lkey])
-                DELETED = current.manager.DELETED
-                if DELETED in ltable.fields:
-                    lq &= ltable[DELETED] != True
-                rq = (ltable[rkey] == ktable[fkey])
-                distinct = True
-                join[ktablename] = lq & rq
-                left[ktablename] = [ltable.on(lq), ktable.on(rq)]
-
-            else:
-                # Simple forward reference
-                # table -- f -- pkey --> ktable
-
-                # Find the referenced table
-                ktablename, pkey, multiple = s3_get_foreign_key(f, m2m=False)
-                if not ktablename:
-                    raise SyntaxError("%s is not a foreign key" % f)
-
-                ktable = s3db.table(ktablename,
-                                    AttributeError("Undefined table %s" % ktablename),
-                                    db_only=True)
-                if pkey is None:
-                    pkey = ktable._id
-                else:
-                    pkey = ktable[pkey]
-
-                # Construct the joins
-                j = (f == pkey)
-                join[ktablename] = j
-                left[ktablename] = [ktable.on(j)]
-
-            # Resolve the tail
-            kresource = s3db.resource(ktablename, vars=[])
-            field = S3ResourceField.resolve(kresource, tail, join=join, left=left)
-            field.update(selector=original,
-                         distinct=field.distinct or distinct,
-                         multiple=field.multiple or multiple)
-            return field
-
-        else:
-            # Done, return the field
-            colname = str(f) if f else "%s.%s" % (tn, fn)
-            field = Storage(selector=original,
-                            tname = tn,
-                            fname = fn,
-                            colname = colname,
-                            field=f,
-                            join=join,
-                            left=left,
-                            distinct=distinct,
-                            multiple=multiple)
-            return field
 
     # -------------------------------------------------------------------------
     def extract(self, row, represent=False, lazy=False):
@@ -4924,7 +5096,7 @@ class S3ResourceQuery(object):
                 return None
             lfield = rfield.field
             if lfield is None:
-                return None # virtual field
+                return None # virtual field or unresolvable
             lfield = l.expr(lfield)
         elif isinstance(l, Field):
             lfield = l
@@ -4937,7 +5109,7 @@ class S3ResourceQuery(object):
                 return None
             rfield = rfield.field
             if rfield is None:
-                return None # virtual field
+                return None # virtual field or unresolvable
             rfield = r.expr(rfield)
         else:
             rfield = r
@@ -5065,6 +5237,9 @@ class S3ResourceQuery(object):
                 return None
             if lfield.field is not None:
                 real = True
+            elif not lfield.virtual:
+                # Unresolvable expression => skip
+                return None
         else:
             lfield = left
             if isinstance(left, Field):
@@ -5075,8 +5250,11 @@ class S3ResourceQuery(object):
                 rfield = right.resolve(resource)
             except (AttributeError, KeyError, SyntaxError):
                 return None
-            if rfield.field is None:
+            if rfield.virtual:
                 real = False
+            elif rfield.field is None:
+                # Unresolvable expression => skip
+                return None
         else:
             rfield = right
         if virtual and real:

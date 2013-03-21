@@ -743,6 +743,82 @@ class ResourceFieldTests(unittest.TestCase):
     """ Test field selector resolution with S3ResourceField """
 
     # -------------------------------------------------------------------------
+    def testResolveContextSimple(self):
+
+        resource = current.s3db.resource("org_office")
+        resource.configure(context = {"organisation": "organisation_id"})
+
+        selector = "(organisation)$name"
+
+        f = S3ResourceField(resource, selector)
+        
+        # Check field
+        self.assertEqual(f.selector, selector)
+        self.assertEqual(str(f.field), "org_organisation.name")
+        self.assertEqual(f.tname, "org_organisation")
+        self.assertEqual(f.fname, "name")
+        self.assertEqual(f.colname, "org_organisation.name")
+
+        tname = f.tname
+
+        # Check join
+        join = f.join
+        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(tname in join)
+        self.assertEqual(str(join[tname]), "(org_office.organisation_id = org_organisation.id)")
+
+        # Check left join
+        left = f.left
+        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(tname in left)
+        self.assertTrue(isinstance(left[tname], list))
+
+        self.assertEqual(len(f.left[tname]), 1)
+        self.assertEqual(str(f.left[tname][0]), "org_organisation ON "
+                                                "(org_office.organisation_id = org_organisation.id)")
+
+        # Check distinct
+        self.assertTrue(f.distinct)
+        
+    # -------------------------------------------------------------------------
+    def testResolveContextComplex(self):
+
+        resource = current.s3db.resource("pr_person")
+        resource.configure(context = {"organisation": "person_id:hrm_human_resource.organisation_id"})
+
+        selector = "(organisation)$name"
+
+        f = S3ResourceField(resource, selector)
+
+        # Check field
+        self.assertEqual(f.selector, selector)
+        self.assertEqual(str(f.field), "org_organisation.name")
+        self.assertEqual(f.tname, "org_organisation")
+        self.assertEqual(f.fname, "name")
+        self.assertEqual(f.colname, "org_organisation.name")
+
+        tname = f.tname
+
+        # Check join
+        join = f.join
+        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(tname in join)
+        self.assertEqual(str(join[tname]), "(hrm_human_resource.organisation_id = org_organisation.id)")
+
+        # Check left join
+        left = f.left
+        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(tname in left)
+        self.assertTrue(isinstance(left[tname], list))
+
+        self.assertEqual(len(f.left[tname]), 1)
+        self.assertEqual(str(f.left[tname][0]), "org_organisation ON "
+                                                "(hrm_human_resource.organisation_id = org_organisation.id)")
+
+        # Check distinct
+        self.assertTrue(f.distinct)
+
+    # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testResolveSelectorInnerField(self):
         """ Resolution of a selector for a field in master table """
@@ -751,7 +827,6 @@ class ResourceFieldTests(unittest.TestCase):
         selector = "name"
 
         f = S3ResourceField(resource, selector)
-        self.assertNotEqual(f, None)
 
         # Check field
         self.assertEqual(f.selector, selector)

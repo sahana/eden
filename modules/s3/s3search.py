@@ -53,7 +53,7 @@ from s3crud import S3CRUD
 from s3data import S3DataTable
 from s3export import S3Exporter
 from s3navigation import s3_search_tabs
-from s3resource import S3FieldSelector, S3Resource, S3ResourceField, S3URLQuery
+from s3resource import S3FieldSelector, S3Resource
 from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime
 from s3validators import *
 from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget

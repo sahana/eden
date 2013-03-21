@@ -687,6 +687,55 @@ class S3Model(object):
             components[alias] = hook
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def get_alias(cls, tablename, link):
+        """
+            Find a component alias from the link table alias.
+
+            @param tablename: the name of the master table
+            @param link: the alias of the link table
+        """
+
+        components = current.model.components
+        
+        table = cls.table(tablename)
+        if not table:
+            return None
+
+        def get_alias(hooks, alias):
+            for alias in hooks:
+                hook = hooks[alias]
+                if hook.linktable:
+                    prefix, name = hook.linktable.split("_", 1)
+                    if name == link:
+                        return alias
+            return None
+
+        hooks = components.get(tablename, None)
+        if hooks:
+            alias = get_alias(hooks, link)
+            if alias:
+                return alias
+        else:
+            hooks = []
+                        
+        supertables = cls.get_config(tablename, "super_entity")
+        if supertables:
+            if not isinstance(supertables, (list, tuple)):
+                supertables = [supertables]
+            for s in supertables:
+                table = cls.table(s)
+                if table is None:
+                    continue
+                hooks = components.get(table._tablename, [])
+                if hooks:
+                    alias = get_alias(hooks, link)
+                    if alias:
+                        return alias
+                        
+        return None
+
+    # -------------------------------------------------------------------------
     # Resource Methods
     # -------------------------------------------------------------------------
     @classmethod
