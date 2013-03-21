@@ -2038,8 +2038,8 @@ class S3CommitModel(S3Model):
                                         # These are copied automatically from the Req
                                         readable=False,
                                         writable=False),
-                                  s3_date(default = "now"),
-                                  s3_date("date_available",
+                                  s3_datetime(default = "now"),    
+                                  s3_datetime("date_available",    
                                           label = T("Date Available")),
                                   self.pr_person_id("committer_id",
                                             default = auth.s3_logged_in_person(),

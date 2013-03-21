@@ -41,7 +41,7 @@ __all__ = ["S3WarehouseModel",
            "inv_tracking_status",
            "inv_adj_rheader",
            ]
-
+import itertools
 from gluon import *
 from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
@@ -1126,9 +1126,9 @@ class S3TrackingModel(S3Model):
                                    label = T("Time Out"),
                                    represent = s3_string_represent,
                                    ),
-                             s3_date(label = T("Date Sent"),
+                             s3_datetime(label = T("Date Sent"),
                                      writable = False),
-                             s3_date("delivery_date",
+                             s3_datetime("delivery_date",
                                      label = T("Estimated Delivery Date"),
                                      writable = False),
                              Field("status", "integer",
@@ -1253,6 +1253,11 @@ class S3TrackingModel(S3Model):
                    method="form",
                    action=self.inv_send_form)
 
+        # custom methods
+        set_method("inv", "send",
+                   method= "timeline",
+                   action = self.inv_timeline)
+
         # Redirect to the Items tabs after creation
         if current.request.controller == "req":
             c = "req"
@@ -1353,7 +1358,7 @@ class S3TrackingModel(S3Model):
                              s3_date("eta",
                                      label = T("Date Expected"),
                                      writable = False),
-                             s3_date(label = T("Date Received"),
+                             s3_datetime(label = T("Date Received"),
                                      comment = DIV(_class="tooltip",
                                                    _title="%s|%s" % (T("Date Received"),
                                                                      T("Will be filled automatically when the Shipment has been Received"))),
@@ -1555,6 +1560,11 @@ class S3TrackingModel(S3Model):
         set_method("inv", "recv",
                    method="cert",
                    action=self.inv_recv_donation_cert )
+
+        # custom methods
+        set_method("inv", "recv",
+                   method= "timeline",
+                   action = self.inv_timeline)
 
         # ---------------------------------------------------------------------
         # Kits
@@ -1849,8 +1859,8 @@ S3OptionsFilter({
                   onaccept = self.inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
                   )
-
-        # ---------------------------------------------------------------------
+ 
+        #---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return Storage(inv_get_shipping_code = self.inv_get_shipping_code,
@@ -3043,7 +3053,121 @@ S3OptionsFilter({
                                            comments = "%sQuantity was: %s" % (inv_item_table.comments, trackTotal))
         return True
 
+    # ------Timeline -------------------------------------------------------------------------
+    @staticmethod
+    def inv_timeline(r, **attr):
+        """
+            Display the Incidents on a Simile Timeline
 
+            http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
+
+            @ToDo: Play button
+            http://www.simile-widgets.org/wiki/Timeline_Moving_the_Timeline_via_Javascript
+        """
+       
+        if r.representation == "html"  and  (r.name == "recv" or r.name == "send") :
+            
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+            request = current.request
+            response = current.response
+            s3 = response.s3
+            now = request.utcnow   
+
+            # Add core Simile Code
+            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
+
+            # Add our controlled script
+            if s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
+            # Add our data
+            # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
+            # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
+           
+            rows1 = db(db.inv_send.id > 0).select()     # select rows from inv_send
+            rows2 = db(db.inv_recv.id > 0).select()     # select rows form inv_recv
+           
+            if r.record:
+                # Single record
+                rows = [r.record]
+            else:
+                # Multiple records
+                # @ToDo: Load all records & sort to closest in time
+                # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
+                r.resource.load(limit=2000)
+                rows = r.resource._rows
+            
+            
+            data = {'dateTimeFormat': 'iso8601',
+                    'events': []
+                    }
+
+            tl_start = now
+            tl_end = now
+            events = []
+            if r.name is "send" :
+                rr = (rows, rows2)
+            else:
+                rr = (rows1, rows)
+            for (row_send, row_recv) in itertools.izip_longest(rr[0], rr[0]):
+                # send  Dates
+                start = row_send.date  or "" 
+                if start:
+                    if start < tl_start:
+                        tl_start = start
+                    if start > tl_end:
+                        tl_end = start
+                    start = start.isoformat()
+                # recv date
+                end = row_recv.date or "" 
+                if end:
+                    if end > tl_end:
+                        tl_end = end
+                    end = end.isoformat()
+                    
+                # append events
+                events.append({'start': start,
+                            'end': end,
+                            # 'title': row.name,
+                            # 'caption': row.comments or "",
+                            # 'description': row.comments or "",
+                               # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                               # 'color' : 'blue'
+                            })
+
+            data["events"] = events
+            data = json.dumps(data)
+
+            code = "".join((
+'''S3.timeline.data=''', data, '''
+S3.timeline.tl_start="''', tl_start.isoformat(), '''"
+S3.timeline.tl_end="''', tl_end.isoformat(), '''"
+S3.timeline.now="''', now.isoformat(), '''"
+'''))
+
+            # Control our code in static/scripts/S3/s3.timeline.js
+            s3.js_global.append(code)
+
+            # Create the DIV
+            item = DIV(_id="s3timeline", _style="height:400px;border:1px solid #aaa;font-family:Trebuchet MS,sans-serif;font-size:85%;")
+
+            output = dict(item = item)
+
+            # Maintain RHeader for consistency
+            if "rheader" in attr:
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
+
+            output["title"] = T("Incident Timeline")
+            response.view = "timeline.html"
+            return output
+
+        else:
+            raise HTTP(501, "bad method")
 # =============================================================================
 def inv_tabs(r):
     """
