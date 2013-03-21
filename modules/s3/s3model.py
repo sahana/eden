@@ -69,6 +69,8 @@ class S3Model(object):
 
         self.cache = (current.cache.ram, 60)
 
+        self.context = None
+
         # Initialize current.model
         if not hasattr(current, "model"):
             current.model = Storage(config = Storage(),

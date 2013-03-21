@@ -49,9 +49,8 @@ from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR
 
 from s3crud import S3CRUD
-from s3resource import S3TypeConverter
 from s3search import S3Search
-from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode
+from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER, IS_IN_SET
 
 

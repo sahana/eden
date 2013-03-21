@@ -49,6 +49,7 @@ from gluon.dal import Row
 from gluon.sqlhtml import SQLTABLE
 from gluon.storage import Storage
 from gluon.tools import Crud
+from gluon.languages import lazyT
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
@@ -1098,6 +1099,7 @@ def s3_jaro_winkler(str1, str2):
 
         @param str1: the first string
         @param str2: the second string
+        @status: currently unused
     """
 
     jaro_winkler_marker_char = chr(1)
@@ -1240,6 +1242,7 @@ def s3_jaro_winkler_distance_row(row1, row2):
         Calculate the percentage match for two db records
 
         @todo: parameter description?
+        @status: currently unused
     """
 
     dw = 0
@@ -1522,6 +1525,108 @@ class SQLTABLES3(SQLTABLE):
         components.append(TBODY(*tbody))
 
 # =============================================================================
+class Traceback(object):
+    """ Generate the traceback for viewing error Tickets """
+
+    def __init__(self, text):
+        """ Traceback constructor """
+
+        self.text = text
+
+    # -------------------------------------------------------------------------
+    def xml(self):
+        """ Returns the xml """
+
+        output = self.make_links(CODE(self.text).xml())
+        return output
+
+    # -------------------------------------------------------------------------
+    def make_link(self, path):
+        """ Create a link from a path """
+
+        tryFile = path.replace("\\", "/")
+
+        if os.path.isabs(tryFile) and os.path.isfile(tryFile):
+            (folder, filename) = os.path.split(tryFile)
+            (base, ext) = os.path.splitext(filename)
+            app = current.request.args[0]
+
+            editable = {"controllers": ".py", "models": ".py", "views": ".html"}
+            l_ext = ext.lower()
+            f_endswith = folder.endswith
+            for key in editable.keys():
+                check_extension = f_endswith("%s/%s" % (app, key))
+                if l_ext == editable[key] and check_extension:
+                    return A('"' + tryFile + '"',
+                             _href=URL("edit/%s/%s/%s" % \
+                                           (app, key, filename))).xml()
+        return ""
+
+    # -------------------------------------------------------------------------
+    def make_links(self, traceback):
+        """ Make links using the given traceback """
+
+        lwords = traceback.split('"')
+
+        # Make the short circuit compatible with <= python2.4
+        result = (len(lwords) != 0) and lwords[0] or ""
+
+        i = 1
+
+        while i < len(lwords):
+            link = self.make_link(lwords[i])
+
+            if link == "":
+                result += '"' + lwords[i]
+            else:
+                result += link
+
+                if i + 1 < len(lwords):
+                    result += lwords[i + 1]
+                    i = i + 1
+
+            i = i + 1
+
+        return result
+
+# =============================================================================
+def URL2(a=None, c=None, r=None):
+    """
+        Modified version of URL from gluon/html.py
+            - used by views/layout_iframe.html for our jquery function
+
+        @example:
+
+        >>> URL(a="a",c="c")
+        "/a/c"
+
+        generates a url "/a/c" corresponding to application a & controller c
+        If r=request is passed, a & c are set, respectively,
+        to r.application, r.controller
+
+        The more typical usage is:
+
+        URL(r=request) that generates a base url with the present
+        application and controller.
+
+        The function (& optionally args/vars) are expected to be added
+        via jquery based on attributes of the item.
+    """
+    application = controller = None
+    if r:
+        application = r.application
+        controller = r.controller
+    if a:
+        application = a
+    if c:
+        controller = c
+    if not (application and controller):
+        raise SyntaxError, "not enough information to build the url"
+    #other = ""
+    url = "/%s/%s" % (application, controller)
+    return url
+
+# =============================================================================
 class S3DateTime(object):
     """
         Toolkit for date+time parsing/representation
@@ -1619,6 +1724,204 @@ class S3DateTime(object):
             return offset
         else:
             return None
+
+# =============================================================================
+class S3TypeConverter(object):
+    """ Universal data type converter """
+
+    @classmethod
+    def convert(cls, a, b):
+        """
+            Convert b into the data type of a
+
+            @raise TypeError: if any of the data types are not supported
+                              or the types are incompatible
+            @raise ValueError: if the value conversion fails
+        """
+
+        if isinstance(a, lazyT):
+            a = str(a)
+        if b is None:
+            return None
+        if type(a) is type:
+            if a in (str, unicode):
+                return cls._str(b)
+            if a is int:
+                return cls._int(b)
+            if a is bool:
+                return cls._bool(b)
+            if a is long:
+                return cls._long(b)
+            if a is float:
+                return cls._float(b)
+            if a is datetime.datetime:
+                return cls._datetime(b)
+            if a is datetime.date:
+                return cls._date(b)
+            if a is datetime.time:
+                return cls._time(b)
+            raise TypeError
+        if type(b) is type(a) or isinstance(b, type(a)):
+            return b
+        if isinstance(a, (list, tuple)):
+            if isinstance(b, (list, tuple)):
+                return b
+            elif isinstance(b, basestring):
+                if "," in b:
+                    b = b.split(",")
+                else:
+                    b = [b]
+            else:
+                b = [b]
+            if len(a):
+                cnv = cls.convert
+                return [cnv(a[0], item) for item in b]
+            else:
+                return b
+        if isinstance(b, (list, tuple)):
+            cnv = cls.convert
+            return [cnv(a, item) for item in b]
+        if isinstance(a, basestring):
+            return cls._str(b)
+        if isinstance(a, bool):
+            return cls._bool(b)
+        if isinstance(a, int):
+            return cls._int(b)
+        if isinstance(a, long):
+            return cls._long(b)
+        if isinstance(a, float):
+            return cls._float(b)
+        if isinstance(a, datetime.datetime):
+            return cls._datetime(b)
+        if isinstance(a, datetime.date):
+            return cls._date(b)
+        if isinstance(a, datetime.time):
+            return cls._time(b)
+        raise TypeError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _bool(b):
+        """ Convert into bool """
+
+        if isinstance(b, bool):
+            return b
+        if isinstance(b, basestring):
+            if b.lower() in ("true", "1"):
+                return True
+            elif b.lower() in ("false", "0"):
+                return False
+        if isinstance(b, (int, long)):
+            if b == 0:
+                return False
+            else:
+                return True
+        raise TypeError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _str(b):
+        """ Convert into string """
+
+        if isinstance(b, basestring):
+            return b
+        if isinstance(b, datetime.date):
+            raise TypeError # @todo: implement
+        if isinstance(b, datetime.datetime):
+            raise TypeError # @todo: implement
+        if isinstance(b, datetime.time):
+            raise TypeError # @todo: implement
+        return str(b)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _int(b):
+        """ Convert into int """
+
+        if isinstance(b, int):
+            return b
+        return int(b)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _long(b):
+        """ Convert into long """
+
+        if isinstance(b, long):
+            return b
+        return long(b)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _float(b):
+        """ Convert into float """
+
+        if isinstance(b, long):
+            return b
+        return float(b)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _datetime(b):
+        """ Convert into datetime.datetime """
+
+        if isinstance(b, datetime.datetime):
+            return b
+        elif isinstance(b, basestring):
+            try:
+                # ISO Format is standard (e.g. in URLs)
+                tfmt = current.xml.ISOFORMAT
+                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
+            except ValueError:
+                try:
+                    # Try localized datetime format
+                    tfmt = str(current.deployment_settings.get_L10n_datetime_format())
+                    (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
+                except ValueError:
+                    # dateutil as last resort
+                    try:
+                        dt = current.xml.decode_iso_datetime(b)
+                    except:
+                        raise ValueError
+                    else:
+                        return dt
+            return datetime.datetime(y, m, d, hh, mm, ss)
+        else:
+            raise TypeError
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _date(cls, b):
+        """ Convert into datetime.date """
+
+        if isinstance(b, datetime.date):
+            return b
+        elif isinstance(b, basestring):
+            format = current.deployment_settings.get_L10n_date_format()
+            validator = IS_DATE(format=format)
+            value, error = validator(b)
+            if error:
+                # May be specified as datetime-string?
+                value = cls._datetime(b).date()
+            return value
+        else:
+            raise TypeError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _time(b):
+        """ Convert into datetime.time """
+
+        if isinstance(b, datetime.time):
+            return b
+        elif isinstance(b, basestring):
+            validator = IS_TIME()
+            value, error = validator(v)
+            if error:
+                raise ValueError
+            return value
+        else:
+            raise TypeError
 
 # =============================================================================
 class S3MultiPath:
@@ -2101,108 +2404,6 @@ class S3MultiPath:
                 return True
             else:
                 return False
-
-# =============================================================================
-class Traceback(object):
-    """ Generate the traceback for viewing error Tickets """
-
-    def __init__(self, text):
-        """ Traceback constructor """
-
-        self.text = text
-
-    # -------------------------------------------------------------------------
-    def xml(self):
-        """ Returns the xml """
-
-        output = self.make_links(CODE(self.text).xml())
-        return output
-
-    # -------------------------------------------------------------------------
-    def make_link(self, path):
-        """ Create a link from a path """
-
-        tryFile = path.replace("\\", "/")
-
-        if os.path.isabs(tryFile) and os.path.isfile(tryFile):
-            (folder, filename) = os.path.split(tryFile)
-            (base, ext) = os.path.splitext(filename)
-            app = current.request.args[0]
-
-            editable = {"controllers": ".py", "models": ".py", "views": ".html"}
-            l_ext = ext.lower()
-            f_endswith = folder.endswith
-            for key in editable.keys():
-                check_extension = f_endswith("%s/%s" % (app, key))
-                if l_ext == editable[key] and check_extension:
-                    return A('"' + tryFile + '"',
-                             _href=URL("edit/%s/%s/%s" % \
-                                           (app, key, filename))).xml()
-        return ""
-
-    # -------------------------------------------------------------------------
-    def make_links(self, traceback):
-        """ Make links using the given traceback """
-
-        lwords = traceback.split('"')
-
-        # Make the short circuit compatible with <= python2.4
-        result = (len(lwords) != 0) and lwords[0] or ""
-
-        i = 1
-
-        while i < len(lwords):
-            link = self.make_link(lwords[i])
-
-            if link == "":
-                result += '"' + lwords[i]
-            else:
-                result += link
-
-                if i + 1 < len(lwords):
-                    result += lwords[i + 1]
-                    i = i + 1
-
-            i = i + 1
-
-        return result
-
-# =============================================================================
-def URL2(a=None, c=None, r=None):
-    """
-        Modified version of URL from gluon/html.py
-            - used by views/layout_iframe.html for our jquery function
-
-        @example:
-
-        >>> URL(a="a",c="c")
-        "/a/c"
-
-        generates a url "/a/c" corresponding to application a & controller c
-        If r=request is passed, a & c are set, respectively,
-        to r.application, r.controller
-
-        The more typical usage is:
-
-        URL(r=request) that generates a base url with the present
-        application and controller.
-
-        The function (& optionally args/vars) are expected to be added
-        via jquery based on attributes of the item.
-    """
-    application = controller = None
-    if r:
-        application = r.application
-        controller = r.controller
-    if a:
-        application = a
-    if c:
-        controller = c
-    if not (application and controller):
-        raise SyntaxError, "not enough information to build the url"
-    #other = ""
-    url = "/%s/%s" % (application, controller)
-    return url
 
 # =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):

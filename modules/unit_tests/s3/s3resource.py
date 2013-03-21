@@ -554,6 +554,175 @@ class ResourceFilterQueryTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class ResourceContextFilterTests(unittest.TestCase):
+    """ Test global context filter """
+
+    def setUp(self):
+
+        # Two organisations with offices and human resources,
+        # one person record linked to both organisation contexts
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="CONTEXTORG1">
+        <data field="name">ContextFilterTestOrg1</data>
+        <resource name="org_office" uuid="CONTEXT1OFFICE1">
+            <data field="name">Context1Office1</data>
+        </resource>
+        <resource name="org_office" uuid="CONTEXT1OFFICE2">
+            <data field="name">Context1Office2</data>
+        </resource>
+        <resource name="hrm_human_resource" uuid="CONTEXT1HR1">
+            <reference field="person_id" resource="pr_person">
+                <resource name="pr_person" uuid="CONTEXT1PERSON">
+                    <data field="first_name">Context1</data>
+                    <data field="last_name">Person</data>
+                </resource>
+            </reference>
+        </resource>
+        <resource name="hrm_human_resource" uuid="CONTEXT1HR2">
+            <reference field="person_id" resource="pr_person">
+                <resource name="pr_person" uuid="CONTEXT12PERSON">
+                    <data field="first_name">Context12</data>
+                    <data field="last_name">Person</data>
+                </resource>
+            </reference>
+        </resource>
+    </resource>
+    <resource name="org_organisation" uuid="CONTEXTORG2">
+        <data field="name">ContextFilterTestOrg2</data>
+        <resource name="org_office" uuid="CONTEXT2OFFICE1">
+            <data field="name">Context2Office1</data>
+        </resource>
+        <resource name="hrm_human_resource" uuid="CONTEXT2HR1">
+            <reference field="person_id" resource="pr_person">
+                <resource name="pr_person" uuid="CONTEXT2PERSON">
+                    <data field="first_name">Context2</data>
+                    <data field="last_name">Person</data>
+                </resource>
+            </reference>
+        </resource>
+        <resource name="hrm_human_resource" uuid="CONTEXT2HR2">
+            <reference field="person_id" resource="pr_person" uuid="CONTEXT12PERSON"/>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        current.auth.override = True
+        resource = current.s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+        
+    # -------------------------------------------------------------------------
+    def testContextFilter(self):
+        """ Test global context filter """
+        
+        s3db = current.s3db
+
+        # Configure contexts
+        s3db.configure("org_office",
+                       context = {"organisation":
+                                    "organisation_id"})
+        s3db.configure("pr_person",
+                       context = {"organisation":
+                                    "human_resource.organisation_id"})
+                                    
+        # Without global context filter
+        s3db.context = None
+                                    
+        resource = s3db.resource("org_office",
+                                 uid=["CONTEXT1OFFICE1",
+                                      "CONTEXT1OFFICE2",
+                                      "CONTEXT2OFFICE1"],
+                                 context=True)
+        rows = resource.select(["name"], start=None, limit=None)
+        items = resource.extract(rows, ["name"])
+        self.assertEqual(len(items), 3)
+        names = [item.values()[0] for item in items]
+        self.assertTrue("Context1Office1" in names)
+        self.assertTrue("Context1Office2" in names)
+        self.assertTrue("Context2Office1" in names)
+
+        resource = s3db.resource("pr_person",
+                                 uid=["CONTEXT1PERSON",
+                                      "CONTEXT2PERSON",
+                                      "CONTEXT12PERSON"],
+                                 context=True)
+        rows = resource.select(["first_name"], start=None, limit=None)
+        items = resource.extract(rows, ["first_name"])
+        self.assertEqual(len(items), 3)
+        names = [item.values()[0] for item in items]
+        self.assertTrue("Context1" in names)
+        self.assertTrue("Context2" in names)
+        self.assertTrue("Context12" in names)
+
+        # Global context filter 1
+        s3db.context = S3FieldSelector("(organisation)$uuid").belongs(["CONTEXTORG1"])
+
+        resource = s3db.resource("org_office",
+                                 uid=["CONTEXT1OFFICE1",
+                                      "CONTEXT1OFFICE2",
+                                      "CONTEXT2OFFICE1"],
+                                 context=True)
+        rows = resource.select(["name"], start=None, limit=None)
+        items = resource.extract(rows, ["name"])
+        self.assertEqual(len(items), 2)
+        names = [item.values()[0] for item in items]
+        self.assertTrue("Context1Office1" in names)
+        self.assertTrue("Context1Office2" in names)
+        self.assertFalse("Context2Office1" in names)
+
+        resource = s3db.resource("pr_person",
+                                 uid=["CONTEXT1PERSON",
+                                      "CONTEXT2PERSON",
+                                      "CONTEXT12PERSON"],
+                                 context=True)
+        rows = resource.select(["first_name"], start=None, limit=None)
+        items = resource.extract(rows, ["first_name"])
+        self.assertEqual(len(items), 2)
+        names = [item.values()[0] for item in items]
+        self.assertTrue("Context1" in names)
+        self.assertFalse("Context2" in names)
+        self.assertTrue("Context12" in names)
+        
+        # Global context filter 2
+        s3db.context = S3FieldSelector("(organisation)$uuid").belongs(["CONTEXTORG2"])
+        
+        resource = s3db.resource("org_office",
+                                 uid=["CONTEXT1OFFICE1",
+                                      "CONTEXT1OFFICE2",
+                                      "CONTEXT2OFFICE1"],
+                                 context=True)
+        rows = resource.select(["name"], start=None, limit=None)
+        items = resource.extract(rows, ["name"])
+        self.assertEqual(len(items), 1)
+        names = [item.values()[0] for item in items]
+        self.assertFalse("Context1Office1" in names)
+        self.assertFalse("Context1Office2" in names)
+        self.assertTrue("Context2Office1" in names)
+
+        resource = s3db.resource("pr_person",
+                                 uid=["CONTEXT1PERSON",
+                                      "CONTEXT2PERSON",
+                                      "CONTEXT12PERSON"],
+                                 context=True)
+        rows = resource.select(["first_name"], start=None, limit=None)
+        items = resource.extract(rows, ["first_name"])
+        self.assertEqual(len(items), 2)
+        names = [item.values()[0] for item in items]
+        self.assertFalse("Context1" in names)
+        self.assertTrue("Context2" in names)
+        self.assertTrue("Context12" in names)
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.s3db.context = None
+        current.db.rollback()
+        current.auth.override = False
+
+# =============================================================================
 class URLQuerySerializerTests(unittest.TestCase):
     """ Test URL serialization of resource queries """
 
@@ -2943,6 +3112,7 @@ if __name__ == "__main__":
 
         ResourceFilterJoinTests,
         ResourceFilterQueryTests,
+        ResourceContextFilterTests,
 
         URLQueryParserTests,
 

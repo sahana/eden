@@ -72,13 +72,12 @@ from gluon import *
 #from gluon.http import HTTP, redirect
 #from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
 from gluon.dal import Row, Rows, Table, Field, Expression
-from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3data import S3DataTable, S3DataList
 from s3fields import S3Represent, S3RepresentLazy
-from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper
+from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter
 from s3validators import IS_ONE_OF
 
 DEBUG = False
@@ -137,7 +136,8 @@ class S3Resource(object):
                  components=None,
                  include_deleted=False,
                  approved=True,
-                 unapproved=False):
+                 unapproved=False,
+                 context=False):
         """
             Constructor
 
@@ -163,6 +163,7 @@ class S3Resource(object):
 
             @param approved: include approved records
             @param unapproved: include unapproved records
+            @param context: apply context filters
         """
 
         s3db = current.s3db
@@ -303,6 +304,8 @@ class S3Resource(object):
 
             # Build query
             self.build_query(id=id, uid=uid, filter=filter, vars=vars)
+            if context:
+                self.add_filter(s3db.context)
 
         # Component - attach link table
         elif linktable is not None:
@@ -5075,6 +5078,8 @@ class S3ResourceQuery(object):
             r = r.query(resource)
             if l is None or r is None:
                 return None
+            elif l is False or r is False:
+                return l if r is False else r if l is False else False
             else:
                 return l & r
         elif op == self.OR:
@@ -5082,12 +5087,16 @@ class S3ResourceQuery(object):
             r = r.query(resource)
             if l is None or r is None:
                 return None
+            elif l is False or r is False:
+                return l if r is False else r if l is False else False
             else:
                 return l | r
         elif op == self.NOT:
             l = l.query(resource)
             if l is None:
                 return None
+            elif l is False:
+                return False
             else:
                 return ~l
 
@@ -5097,10 +5106,11 @@ class S3ResourceQuery(object):
                 rfield = S3ResourceField(resource, l.name)
             except:
                 return None
-            lfield = rfield.field
-            if lfield is None:
-                return None # virtual field or unresolvable
-            lfield = l.expr(lfield)
+            if rfield.virtual:
+                return None
+            elif not rfield.field:
+                return False
+            lfield = l.expr(rfield.field)
         elif isinstance(l, Field):
             lfield = l
         else:
@@ -5111,9 +5121,11 @@ class S3ResourceQuery(object):
             except:
                 return None
             rfield = rfield.field
-            if rfield is None:
-                return None # virtual field or unresolvable
-            rfield = r.expr(rfield)
+            if rfield.virtual:
+                return None
+            elif not rfield.field:
+                return False
+            rfield = r.expr(rfield.field)
         else:
             rfield = r
 
@@ -5976,6 +5988,7 @@ class S3ResourceFilter(object):
             self.distinct |= distinct
 
             left, distinct = f.joins(self.resource, left=True)
+
             for tn in left:
                 join = left[tn]
                 if alias not in self.left:
@@ -5985,6 +5998,7 @@ class S3ResourceFilter(object):
 
         else:
             self._add_query(f, component=component, master=master)
+
         return
 
     # -------------------------------------------------------------------------
@@ -6000,6 +6014,8 @@ class S3ResourceFilter(object):
                            (False=filter the component only)
         """
 
+        if not q:
+            return
         resource = self.resource
         if component and component in resource.components:
             c = resource.components[component]
@@ -7067,206 +7083,6 @@ class S3Pivottable(object):
 
         else:
             return None
-
-# =============================================================================
-# Utility classes - move?
-# =============================================================================
-class S3TypeConverter(object):
-    """ Universal data type converter """
-
-    @classmethod
-    def convert(cls, a, b):
-        """
-            Convert b into the data type of a
-
-            @raise TypeError: if any of the data types are not supported
-                              or the types are incompatible
-            @raise ValueError: if the value conversion fails
-        """
-
-        if isinstance(a, lazyT):
-            a = str(a)
-        if b is None:
-            return None
-        if type(a) is type:
-            if a in (str, unicode):
-                return cls._str(b)
-            if a is int:
-                return cls._int(b)
-            if a is bool:
-                return cls._bool(b)
-            if a is long:
-                return cls._long(b)
-            if a is float:
-                return cls._float(b)
-            if a is datetime.datetime:
-                return cls._datetime(b)
-            if a is datetime.date:
-                return cls._date(b)
-            if a is datetime.time:
-                return cls._time(b)
-            raise TypeError
-        if type(b) is type(a) or isinstance(b, type(a)):
-            return b
-        if isinstance(a, (list, tuple)):
-            if isinstance(b, (list, tuple)):
-                return b
-            elif isinstance(b, basestring):
-                if "," in b:
-                    b = b.split(",")
-                else:
-                    b = [b]
-            else:
-                b = [b]
-            if len(a):
-                cnv = cls.convert
-                return [cnv(a[0], item) for item in b]
-            else:
-                return b
-        if isinstance(b, (list, tuple)):
-            cnv = cls.convert
-            return [cnv(a, item) for item in b]
-        if isinstance(a, basestring):
-            return cls._str(b)
-        if isinstance(a, bool):
-            return cls._bool(b)
-        if isinstance(a, int):
-            return cls._int(b)
-        if isinstance(a, long):
-            return cls._long(b)
-        if isinstance(a, float):
-            return cls._float(b)
-        if isinstance(a, datetime.datetime):
-            return cls._datetime(b)
-        if isinstance(a, datetime.date):
-            return cls._date(b)
-        if isinstance(a, datetime.time):
-            return cls._time(b)
-        raise TypeError
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _bool(b):
-        """ Convert into bool """
-
-        if isinstance(b, bool):
-            return b
-        if isinstance(b, basestring):
-            if b.lower() in ("true", "1"):
-                return True
-            elif b.lower() in ("false", "0"):
-                return False
-        if isinstance(b, (int, long)):
-            if b == 0:
-                return False
-            else:
-                return True
-        raise TypeError
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _str(b):
-        """ Convert into string """
-
-        if isinstance(b, basestring):
-            return b
-        if isinstance(b, datetime.date):
-            raise TypeError # @todo: implement
-        if isinstance(b, datetime.datetime):
-            raise TypeError # @todo: implement
-        if isinstance(b, datetime.time):
-            raise TypeError # @todo: implement
-        return str(b)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _int(b):
-        """ Convert into int """
-
-        if isinstance(b, int):
-            return b
-        return int(b)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _long(b):
-        """ Convert into long """
-
-        if isinstance(b, long):
-            return b
-        return long(b)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _float(b):
-        """ Convert into float """
-
-        if isinstance(b, long):
-            return b
-        return float(b)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _datetime(b):
-        """ Convert into datetime.datetime """
-
-        if isinstance(b, datetime.datetime):
-            return b
-        elif isinstance(b, basestring):
-            try:
-                # ISO Format is standard (e.g. in URLs)
-                tfmt = current.xml.ISOFORMAT
-                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
-            except ValueError:
-                try:
-                    # Try localized datetime format
-                    tfmt = str(current.deployment_settings.get_L10n_datetime_format())
-                    (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
-                except ValueError:
-                    # dateutil as last resort
-                    try:
-                        dt = current.xml.decode_iso_datetime(b)
-                    except:
-                        raise ValueError
-                    else:
-                        return dt
-            return datetime.datetime(y, m, d, hh, mm, ss)
-        else:
-            raise TypeError
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def _date(cls, b):
-        """ Convert into datetime.date """
-
-        if isinstance(b, datetime.date):
-            return b
-        elif isinstance(b, basestring):
-            format = current.deployment_settings.get_L10n_date_format()
-            validator = IS_DATE(format=format)
-            value, error = validator(b)
-            if error:
-                # May be specified as datetime-string?
-                value = cls._datetime(b).date()
-            return value
-        else:
-            raise TypeError
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _time(b):
-        """ Convert into datetime.time """
-
-        if isinstance(b, datetime.time):
-            return b
-        elif isinstance(b, basestring):
-            validator = IS_TIME()
-            value, error = validator(v)
-            if error:
-                raise ValueError
-            return value
-        else:
-            raise TypeError
 
 # =============================================================================
 class S3RecordMerger(object):

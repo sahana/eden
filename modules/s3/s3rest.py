@@ -583,7 +583,9 @@ class S3Request(object):
                                    components=components,
                                    approved=approved,
                                    unapproved=unapproved,
-                                   include_deleted=include_deleted)
+                                   include_deleted=include_deleted,
+                                   #context=True,
+                                   )
 
         self.tablename = self.resource.tablename
         table = self.table = self.resource.table
