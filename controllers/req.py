@@ -353,7 +353,7 @@ def req_controller():
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
             # Prevent Items from being added to closed or cancelled requests
-            if r.record.closed or r.record.cancel:
+            if r.record and (r.record.closed or r.record.cancel):
                 s3db.configure("req_req_item",
                                insertable = False)
 
