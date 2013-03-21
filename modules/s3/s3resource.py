@@ -4624,7 +4624,7 @@ class S3FieldPath(object):
         s3db = current.s3db
 
         tablename = resource.tablename
-    
+
         # Try to attach the component
         if alias not in resource.components and \
            alias not in resource.links:
@@ -4635,7 +4635,7 @@ class S3FieldPath(object):
                 if _alias:
                     hook = s3db.get_component(tablename, _alias)
             if hook:
-                resource._attach(tablename, hook)
+                resource._attach(_alias, hook)
                 
         components = resource.components
         links = resource.links
@@ -4659,7 +4659,7 @@ class S3FieldPath(object):
             join = link.get_join()
             left = link.get_left_join()
 
-        else:
+        elif "_" in alias:
 
             # Is a free join
             DELETED = current.manager.DELETED
@@ -4720,6 +4720,9 @@ class S3FieldPath(object):
             if DELETED in ktable.fields:
                 join &= ktable[DELETED] != True
             left = ktable.on(join)
+
+        else:
+            raise SyntaxError("Invalid tablename: %s" % alias)
 
         return ktable, join, left, multiple, True
 
