@@ -76,11 +76,37 @@
    <a class='brand' href='/{{=appname}}/default/index'>DRMP</a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li class=''><a href='/{{=appname}}/default/index'> <i class="icon-home"></i> Home</a></li>
-     <li class=''><a href='/{{=appname}}/gis/index'><i class="icon-map-marker"></i> Map</a></li>
-     <li class=''><a href='/{{=appname}}/default/index/profile'><i class="icon-user"></i> Profile</a></li>
-     <li class=''><a href='/{{=appname}}/default/index/more'> <i class="icon-plus-sign"></i> More</a></li>
+     <li class=''><a href='/{{=appname}}/default/index'> <i class='icon-home'></i> {{=T("Home")}}</a></li>
+     <li class=''><a href='/{{=appname}}/gis/index'><i class='icon-map-marker'></i> {{=T("Map")}}</a></li>
+     <li class=''><a href='/{{=appname}}/project/project/datalist'><i class='icon-map-marker'></i> {{=T("Projects")}}</a></li>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle top-level' id='profiles' data-toggle='dropdown'><i class='icon-user'></i> {{=T("Profiles")}}<b class='caret'></b></a>
+      <ul class='dropdown-menu' role='menu' aria-labelledby='profiles'>
+       <li role='menuitem'><a href='/{{=appname}}/event/event/datalist' tabindex='-1' class='menu-item'><i class='icon-warning-sign'></i> {{=T("Disasters")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/org/organisation/datalist' tabindex='-1' class='menu-item'><i class='icon-group'></i> {{=T("Stakeholders")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/gis/location/datalist' tabindex='-1' class='menu-item'><i class='icon-globe'></i> {{=T("Locations")}}</a></li>
+      </ul>
+     </li>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle top-level' id='more' data-toggle='dropdown'><i class='icon-plus-sign'></i> {{=T("More")}}<b class='caret'></b></a>
+      <ul class='dropdown-menu' role='menu' aria-labelledby='more'>
+       <li role='menuitem'><a href='/{{=appname}}/asset/asset/datalist' tabindex='-1' class='menu-item'><i class='icon-folder-close-alt'></i> {{=T("Resource Inventory")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/hrm/staff/datalist' tabindex='-1' class='menu-item'><i class='icon-book'></i> {{=T("Contact Directory")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/default/index/glossary' tabindex='-1' class='menu-item'><i class='icon-list'></i> {{=T("Glossary")}}</a></li>
+      </ul>
+     </li>
     </ul>
+    {{if auth.is_logged_in():}}
+    <div class='pull-right'>
+     <ul class='nav pull-right'>
+      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
+       <ul class='dropdown-menu'>
+        <li><a href='/{{=appname}}/default/person'><i class='icon-cog'></i> {{=T("Preferences")}}</a></li>
+        <li class='divider'></li>
+        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
+       </ul>
+      </li>
+     </ul>
+    </div>
+    {{pass}}
    </div>
   </div>
  </div>
@@ -93,7 +119,6 @@
   {{if response.confirmation:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.confirmation}}</div>{{pass}}
   {{if response.flash:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.flash}}</div>{{pass}}
  </div>
- {{#<a href='/=appname/default/index/secondary' class='first btn btn-small'><i class='icon icon-reorder' style='font-size: 25px;'></i></a>}}
  {{include}}
 </div>
  <div id='footer'>

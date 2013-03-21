@@ -31,12 +31,14 @@
 __all__ = ["S3Importer",
            "S3ImportJob",
            "S3ImportItem",
+           "S3BulkImporter",
            ]
 
 import cPickle
 import os
 import sys
 import tempfile
+import uuid
 from copy import deepcopy
 from datetime import datetime
 try:
@@ -65,7 +67,7 @@ from gluon.tools import callback
 
 from s3crud import S3CRUD
 from s3resource import S3Resource
-from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
+from s3utils import s3_debug, s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3xml import S3XML
 
 DEBUG = False
@@ -1727,7 +1729,6 @@ class S3ImportItem(object):
         self.error = None
 
         # Identification
-        import uuid
         self.item_id = uuid.uuid4() # unique ID for this item
         self.id = None
         self.uid = None
@@ -2372,7 +2373,7 @@ class S3ImportItem(object):
                 field = u.get("field", None)
                 if isinstance(field, (list, tuple)):
                     pkey, fkey = field
-                    query = table.id == self.id
+                    query = (table.id == self.id)
                     row = db(query).select(table[pkey],
                                            limitby=(0, 1)).first()
                     if row:
@@ -2443,6 +2444,7 @@ class S3ImportItem(object):
         if not self.table:
             return
 
+        db = current.db
         items = self.job.items
         for reference in self.references:
 
@@ -2480,8 +2482,8 @@ class S3ImportItem(object):
                 if item:
                     fk = item.id
             if fk and pkey != "id":
-                row = current.db(ktable._id == fk).select(ktable[pkey],
-                                                          limitby=(0, 1)).first()
+                row = db(ktable._id == fk).select(ktable[pkey],
+                                                  limitby=(0, 1)).first()
                 if not row:
                     fk = None
                     continue
@@ -2517,8 +2519,8 @@ class S3ImportItem(object):
 
         if not value or not self.table:
             return
-        db = current.db
         if self.id and self.permitted:
+            db = current.db
             fieldtype = str(self.table[field].type)
             if fieldtype.startswith("list:reference"):
                 query = (self.table.id == self.id)
@@ -2763,7 +2765,6 @@ class S3ImportJob():
                 except:
                     pass
         else:
-            import uuid
             self.job_id = uuid.uuid4() # unique ID for this job
 
     # -------------------------------------------------------------------------
@@ -3353,5 +3354,393 @@ class S3ImportJob():
             if item.load_parent is not None:
                 item.parent = self.items[item.load_parent]
                 item.load_parent = None
+
+# =============================================================================
+class S3BulkImporter(object):
+    """
+        Import CSV files of data to pre-populate the database.
+        Suitable for use in Testing, Demos & Simulations
+
+        http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
+    """
+
+    def __init__(self):
+        """ Constructor """
+
+        import csv
+        from xml.sax.saxutils import unescape
+
+        self.csv = csv
+        self.unescape = unescape
+        self.importTasks = []
+        self.specialTasks = []
+        self.tasks = []
+        self.alternateTables = {
+            "hrm_group_membership": {"tablename": "pr_group_membership",
+                                     "prefix": "pr",
+                                     "name": "group_membership"},
+            "hrm_person": {"tablename": "pr_person",
+                           "prefix": "pr",
+                           "name": "person"},
+            "member_person": {"tablename": "pr_person",
+                              "prefix": "pr",
+                              "name": "person"},
+            }
+        self.errorList = []
+        self.resultList = []
+
+    # -------------------------------------------------------------------------
+    def load_descriptor(self, path):
+        """
+            Load the descriptor file and then all the import tasks in that file
+            into the importTasks property.
+            The descriptor file is the file called tasks.cfg in path.
+            The file consists of a comma separated list of:
+            application, resource name, csv filename, xsl filename.
+        """
+
+        source = open(os.path.join(path, "tasks.cfg"), "r")
+        values = self.csv.reader(source)
+        for details in values:
+            if details == []:
+                continue
+            prefix = details[0][0].strip('" ')
+            if prefix == "#": # comment
+                continue
+            if prefix == "*": # specialist function
+                self.extractSpecialistLine(path, details)
+            else: # standard importer
+                self.extractImporterLine(path, details)
+
+    # -------------------------------------------------------------------------
+    def extractImporterLine(self, path, details):
+        """
+            Extract the details for an import Task
+        """
+
+        argCnt = len(details)
+        if argCnt == 4 or argCnt == 5:
+             # remove any spaces and enclosing double quote
+            app = details[0].strip('" ')
+            res = details[1].strip('" ')
+            request = current.request
+
+            csvFileName = details[2].strip('" ')
+            if csvFileName[:7] == "http://":
+                csv = csvFileName
+            else:
+                (csvPath, csvFile) = os.path.split(csvFileName)
+                if csvPath != "":
+                    path = os.path.join(request.folder,
+                                        "private",
+                                        "templates",
+                                        csvPath)
+                csv = os.path.join(path, csvFile)
+
+            xslFileName = details[3].strip('" ')
+            templateDir = os.path.join(request.folder,
+                                       "static",
+                                       "formats",
+                                       "s3csv")
+            # Try the app directory in the templates directory first
+            xsl = os.path.join(templateDir, app, xslFileName)
+            _debug("%s %s" % (xslFileName, xsl))
+            if os.path.exists(xsl) == False:
+                # Now try the templates directory
+                xsl = os.path.join(templateDir, xslFileName)
+                _debug ("%s %s" % (xslFileName, xsl))
+                if os.path.exists(xsl) == False:
+                    # Use the same directory as the csv file
+                    xsl = os.path.join(path, xslFileName)
+                    _debug ("%s %s" % (xslFileName, xsl))
+                    if os.path.exists(xsl) == False:
+                        self.errorList.append(
+                        "Failed to find a transform file %s, Giving up." % xslFileName)
+                        return
+            vars = None
+            if argCnt == 5:
+                vars = details[4]
+            self.tasks.append([1, app, res, csv, xsl, vars])
+            self.importTasks.append([app, res, csv, xsl, vars])
+        else:
+            self.errorList.append(
+            "prepopulate error: job not of length 4. %s job ignored" % task)
+
+    # -------------------------------------------------------------------------
+    def extractSpecialistLine(self, path, details):
+        """
+            Store a single import job into the importTasks property
+        """
+
+        function = details[1].strip('" ')
+        csv = None
+        if len(details) == 3:
+            fileName = details[2].strip('" ')
+            (csvPath, csvFile) = os.path.split(fileName)
+            if csvPath != "":
+                path = os.path.join(current.request.folder,
+                                    "private",
+                                    "templates",
+                                    csvPath)
+            csv = os.path.join(path, csvFile)
+        extraArgs = None
+        if len(details) == 4:
+            extraArgs = details[3].strip('" ')
+        self.tasks.append([2, function, csv, extraArgs])
+        self.specialTasks.append([function, csv, extraArgs])
+
+    # -------------------------------------------------------------------------
+    def execute_import_task(self, task):
+        """
+            Execute each import job, in order
+        """
+
+        start = datetime.now()
+        if task[0] == 1:
+            db = current.db
+            s3db = current.s3db
+            request = current.request
+            response = current.response
+            errorString = "prepopulate error: file %s missing"
+            # Store the view
+            view = response.view
+
+            _debug ("Running job %s %s (filename=%s transform=%s)" % (task[1], task[2], task[3], task[4]))
+            prefix = task[1]
+            name = task[2]
+            tablename = "%s_%s" % (prefix, name)
+            if tablename in self.alternateTables:
+                details = self.alternateTables[tablename]
+                if "tablename" in details:
+                    tablename = details["tablename"]
+                s3db.table(tablename)
+                if "loader" in details:
+                    loader = details["loader"]
+                    if loader is not None:
+                        loader()
+                if "prefix" in details:
+                    prefix = details["prefix"]
+                if "name" in details:
+                    name = details["name"]
+
+            try:
+                resource = s3db.resource(tablename)
+            except AttributeError:
+                # Table cannot be loaded
+                self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)
+                return
+
+            # Check if the source file is accessible
+            filename = task[3]
+            if filename[:7] == "http://":
+                import urllib2
+                req = urllib2.Request(url=filename)
+                try:
+                    f = urllib2.urlopen(req)
+                except urllib2.HTTPError, e:
+                    self.errorList.append("Could not access %s: %s" % (filename, e.read()))
+
+                    return
+                except:
+                    self.errorList.append(errorString % filename)
+                    return
+                else:
+                    csv = f
+            else:
+                try:
+                    csv = open(filename, "r")
+                except IOError:
+                    self.errorList.append(errorString % filename)
+                    return
+
+            # Check if the stylesheet is accessible
+            try:
+                open(task[4], "r")
+            except IOError:
+                self.errorList.append(errorString % task[4])
+                return
+
+            extra_data = None
+            if task[5]:
+                try:
+                    extradata = self.unescape(task[5], {"'": '"'})
+                    extradata = json.loads(extradata)
+                    extra_data = extradata
+                except:
+                    self.errorList.append("WARNING:5th parameter invalid, parameter %s ignored" % task[5])
+            try:
+                # @todo: add extra_data and file attachments
+                result = resource.import_xml(csv,
+                                             format="csv",
+                                             stylesheet=task[4],
+                                             extra_data=extra_data)
+            except SyntaxError, e:
+                self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %
+                                     (e, filename, task[4]))
+                return
+
+            if not resource.error:
+                db.commit()
+            else:
+                # Must roll back if there was an error!
+                error = resource.error
+                self.errorList.append("%s - %s: %s" % (
+                                      task[3], resource.tablename, error))
+                errors = current.xml.collect_errors(resource)
+                if errors:
+                    self.errorList.extend(errors)
+                db.rollback()
+
+            # Restore the view
+            response.view = view
+            end = datetime.now()
+            duration = end - start
+            csvName = task[3][task[3].rfind("/") + 1:]
+            try:
+                # Python-2.7
+                duration = '{:.2f}'.format(duration.total_seconds()/60)
+                msg = "%s import job completed in %s mins" % (csvName, duration)
+            except AttributeError:
+                # older Python
+                msg = "%s import job completed in %s" % (csvName, duration)
+            self.resultList.append(msg)
+            if response.s3.debug:
+                s3_debug(msg)
+
+    # -------------------------------------------------------------------------
+    def execute_special_task(self, task):
+        """
+            Execute import tasks which require a custom function,
+            such as import_role
+        """
+
+        start = datetime.now()
+        s3 = current.response.s3
+        if task[0] == 2:
+            fun = task[1]
+            csv = task[2]
+            extraArgs = task[3]
+            if csv is None:
+                if extraArgs is None:
+                    error = s3[fun]()
+                else:
+                    error = s3[fun](extraArgs)
+            elif extraArgs is None:
+                error = s3[fun](csv)
+            else:
+                error = s3[fun](csv, extraArgs)
+            if error:
+                self.errorList.append(error)
+            end = datetime.now()
+            duration = end - start
+            try:
+                # Python-2.7
+                duration = '{:.2f}'.format(duration.total_seconds()/60)
+                msg = "%s import job completed in %s mins" % (fun, duration)
+            except AttributeError:
+                # older Python
+                msg = "%s import job completed in %s" % (fun, duration)
+            self.resultList.append(msg)
+            if s3.debug:
+                s3_debug(msg)
+
+    # -------------------------------------------------------------------------
+    def import_role(self, filename):
+        """ Import Roles from CSV """
+
+        # Check if the source file is accessible
+        try:
+            openFile = open(filename, "r")
+        except IOError:
+            return "Unable to open file %s" % filename
+
+        auth = current.auth
+        acl = auth.permission
+        create_role = auth.s3_create_role
+
+        def parseACL(_acl):
+            permissions = _acl.split("|")
+            aclValue = 0
+            for permission in permissions:
+                if permission == "READ":
+                    aclValue = aclValue | acl.READ
+                if permission == "CREATE":
+                    aclValue = aclValue | acl.CREATE
+                if permission == "UPDATE":
+                    aclValue = aclValue | acl.UPDATE
+                if permission == "DELETE":
+                    aclValue = aclValue | acl.DELETE
+                if permission == "ALL":
+                    aclValue = aclValue | acl.ALL
+            return aclValue
+
+        reader = self.csv.DictReader(openFile)
+        roles = {}
+        acls = {}
+        args = {}
+        for row in reader:
+            if row != None:
+                role = row["role"]
+                if "description" in row:
+                    desc = row["description"]
+                else:
+                    desc = ""
+                rules = {}
+                extra_param = {}
+                if "controller" in row and row["controller"]:
+                    rules["c"] = row["controller"]
+                if "function" in row and row["function"]:
+                    rules["f"] = row["function"]
+                if "table" in row and row["table"]:
+                    rules["t"] = row["table"]
+                if row["oacl"]:
+                    rules["oacl"] = parseACL(row["oacl"])
+                if row["uacl"]:
+                    rules["uacl"] = parseACL(row["uacl"])
+                #if "org" in row and row["org"]:
+                    #rules["organisation"] = row["org"]
+                #if "facility" in row and row["facility"]:
+                    #rules["facility"] = row["facility"]
+                if "entity" in row and row["entity"]:
+                    rules["entity"] = row["entity"]
+                if "hidden" in row and row["hidden"]:
+                    extra_param["hidden"] = row["hidden"]
+                if "system" in row and row["system"]:
+                    extra_param["system"] = row["system"]
+                if "protected" in row and row["protected"]:
+                    extra_param["protected"] = row["protected"]
+                if "uid" in row and row["uid"]:
+                    extra_param["uid"] = row["uid"]
+            if role in roles:
+                acls[role].append(rules)
+            else:
+                roles[role] = [role,desc]
+                acls[role] = [rules]
+            if len(extra_param) > 0 and role not in args:
+                args[role] = extra_param
+        for rulelist in roles.values():
+            if rulelist[0] in args:
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]],
+                            **args[rulelist[0]])
+            else:
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]])
+
+    # -------------------------------------------------------------------------
+    def perform_tasks(self, path):
+        """
+            Load and then execute the import jobs that are listed in the
+            descriptor file (tasks.cfg)
+        """
+
+        self.load_descriptor(path)
+        for task in self.tasks:
+            if task[0] == 1:
+                self.execute_import_task(task)
+            elif task[0] == 2:
+                self.execute_special_task(task)
 
 # END =========================================================================

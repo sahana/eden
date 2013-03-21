@@ -131,6 +131,7 @@ class S3FilterWidget(object):
         """
 
         self.field = field
+        self.alias = None
 
         attributes = Storage()
         options = Storage()
@@ -143,14 +144,17 @@ class S3FilterWidget(object):
         self.opts = options
 
     # -------------------------------------------------------------------------
-    def __call__(self, resource, get_vars=None):
+    def __call__(self, resource, get_vars=None, alias=None):
         """
             Entry point for the form builder
 
             @param resource: the S3Resource to render with widget for
             @param get_vars: the GET vars (URL query vars) to prepopulate
                              the widget
+            @param alias: the resource alias to use
         """
+
+        self.alias = alias
 
         # Initialize the widget attributes
         self._attr(resource)
@@ -225,8 +229,7 @@ class S3FilterWidget(object):
             return operators
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _prefix(selector):
+    def _prefix(self, selector):
         """
             Helper method to prefix an unprefixed field selector
 
@@ -236,14 +239,16 @@ class S3FilterWidget(object):
             @return: the prefixed selector
         """
 
+        alias = self.alias
+        if alias is None:
+            alias = "~"
         if "." not in selector.split("$", 1)[0]:
-            return "~.%s" % selector
+            return "%s.%s" % (alias, selector)
         else:
             return selector
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def _selector(cls, resource, fields):
+    def _selector(self, resource, fields):
         """
             Helper method to generate a filter query selector for the
             given field(s) in the given resource.
@@ -255,7 +260,7 @@ class S3FilterWidget(object):
                      field selectors could be resolved
         """
 
-        prefix = cls._prefix
+        prefix = self._prefix
         label = None
 
         if not fields:
@@ -478,13 +483,16 @@ class S3DateFilter(S3RangeFilter):
         """
 
         attr = self.attr
+
+        # CSS class and element ID
         _class = self._class
         if "_class" in attr and attr["_class"]:
             _class = "%s %s" % (attr["_class"], _class)
         else:
             _class = _class
-        attr["_class"] = _class
+        _id = attr["_id"]
 
+        # Determine the field type
         rfield = S3ResourceField(resource, self.field)
         field = rfield.field
         if field is None:
@@ -494,23 +502,31 @@ class S3DateFilter(S3RangeFilter):
                           requires = IS_DATE_IN_RANGE(format = dtformat))
             field._tablename = rfield.tname
 
+        # Options
+        hide_time = self.opts.get("hide_time", False)
+
+        # Generate the input elements
+        selector = self.selector
+        _variable = self._variable
         input_class = self._input_class
         input_labels = self.input_labels
-        input_elements = DIV()
-
-        selector = self.selector
-
-        _variable = self._variable
-
-        id = attr["_id"]
-        input_elements = DIV()
-        ie_append = input_elements.append
-
-        hide_time = self.opts.get("hide_time", False)
-        widget_class = S3DateTimeWidget(hide_time=hide_time) 
-
+        input_elements = DIV(_id=_id, _class=_class)
+        append = input_elements.append
         for operator in self.operator:
-            input_id = "%s-%s" % (id, operator)
+
+            input_id = "%s-%s" % (_id, operator)
+
+            # Determine the widget class
+            if rfield.ftype == "date":
+                widget = S3DateWidget()
+            else:
+                opts = {}
+                if operator == "ge":
+                    opts["set_min"] = "%s-%s" % (_id, "le")
+                elif operator == "le":
+                    opts["set_max"] = "%s-%s" % (_id, "ge")
+                widget = S3DateTimeWidget(hide_time=hide_time, **opts)
+                
             # Populate with the value, if given
             # if user has not set any of the limits, we get [] in values.
             variable = _variable(selector, operator)
@@ -520,14 +536,16 @@ class S3DateFilter(S3RangeFilter):
                     value = value[0]
             else:
                 value = None
-            picker = widget_class(field,
-                                  value,
-                                  _name=input_id,
-                                  _id=input_id,
-                                  _class = self._input_class)
 
-            ie_append(current.T(input_labels[operator]) + ":")
-            ie_append(picker)
+            # Render the widget
+            picker = widget(field, value,
+                            _name=input_id,
+                            _id=input_id,
+                            _class=input_class)
+
+            # Append label and widget
+            append(current.T(input_labels[operator]) + ":")
+            append(picker)
 
         return input_elements
 
@@ -1128,12 +1146,15 @@ class S3FilterForm(object):
         self.opts = options
 
     # -------------------------------------------------------------------------
-    def html(self, resource, get_vars=None, target=None):
+    def html(self, resource, get_vars=None, target=None, alias=None):
         """
             Render this filter form as HTML
 
             @param resource: the S3Resource
             @param get_vars: the request GET vars (URL query dict)
+            @param target: the HTML element ID of the target object for
+                           this filter form (e.g. a datatable)
+            @param alias: the resource alias to use in widgets
         """
 
         formstyle = self.opts.get("formstyle", None)
@@ -1143,7 +1164,7 @@ class S3FilterForm(object):
         rows = []
         rappend = rows.append
         for f in self.widgets:
-            widget = f(resource, get_vars)
+            widget = f(resource, get_vars, alias=alias)
             label = f.opts["label"]
             comment = f.opts["comment"]
             widget_id = f.attr["_id"]

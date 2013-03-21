@@ -1242,9 +1242,11 @@ S3OptionsFilter({
                 output["items"] = items
                 #s3.actions = [req_item_inv_item_btn]
                 s3.no_sspag = True # pag won't work
-                
+
             if no_match:
-                current.response.warning = "%s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!" % site_name
+                current.response.warning = \
+                    T("%(site)s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!") % \
+                        dict(site=site_name)
         else:
             output["items"] = s3.crud_strings.req_req_item.msg_list_empty
 

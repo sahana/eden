@@ -731,7 +731,7 @@ class S3PersonModel(S3Model):
                                        #"picture",
                                        "gender",
                                        "age_group",
-                                       (messages.ORGANISATION, "hrm_human_resource:organisation_id$name")
+                                       (messages.ORGANISATION, "hrm_human_resource:organisation_id$name"),
                                        ],
                         crud_form = crud_form,
                         onvalidation=self.pr_person_onvalidation,
@@ -2376,7 +2376,7 @@ class S3SavedSearch(S3Model):
             )
 
         # By default we set the name to match the friendly query string
-        if (not vars.name or vars.name =="TEMP") and vars.query:
+        if (not vars.name or vars.name == "TEMP") and vars.query:
             vars.name = vars.query
 
     # -------------------------------------------------------------------------

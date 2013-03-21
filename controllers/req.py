@@ -351,7 +351,7 @@ def req_controller():
                         # Inline Forms
                         s3.req_inline_form(type, method)
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
-                    
+
             # Prevent Items from being added to closed or cancelled requests
             if r.record and (r.record.closed or r.record.cancel):
                 s3db.configure("req_req_item",
@@ -988,7 +988,7 @@ def req_skill():
     # Post-process
     def postp(r, output):
         if r.interactive:
-            response.s3.actions = [
+            s3.actions = [
                 dict(url = URL(c="req", f="req",
                                args=["req_skill", "[id]"]),
                      _class = "action-btn",
@@ -1469,9 +1469,9 @@ def send_req():
              (iitable.deleted == False) & \
              (iitable.item_pack_id == sip_id_field)
     orderby = ii_expiry_field | ii_purchase_field
-    
+
     no_match = True
-    
+
     for ritem in req_items:
         rim = ritem.req_req_item
         rim_id = rim.id
@@ -1479,7 +1479,7 @@ def send_req():
                 (ii_item_id_field == rim.item_id)
         inv_items = db(query).select(*iifields,
                                      orderby=orderby)
-        
+
         if len(inv_items) == 0:
             break;
         no_match = False
@@ -1569,7 +1569,9 @@ def send_req():
                    )
 
     if no_match:
-        current.session.warning = "%s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!" % site_name
+        session.warning = \
+            T("%(site)s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!") % \
+                dict(site=site_name)
 
     # Redirect to view the list of items in the Send
     redirect(URL(c = "inv",

@@ -87,3 +87,31 @@ i.icon-cog {
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5) inset;
 }
 
+/* Dropdown menu styling */
+
+ul.dropdown-menu {
+	padding: 12px;
+	height: auto;
+	line-height: 1.2;
+	font-size: 16px;
+	border: none;
+	text-transform: none;
+	border: 1px solid #b2b2b2;
+	border-top: none;
+	margin-top: -0.5px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	background-color: #e4e5e4;
+}
+
+.navbar .nav > li > .dropdown-menu:before {
+	display: none;
+}
+
+.navbar .nav > li > .dropdown-menu:after {
+	display: none;
+}
+
+ul.dropdown-menu li {
+	margin-top: 8px;
+}

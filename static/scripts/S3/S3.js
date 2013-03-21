@@ -120,6 +120,10 @@ S3.addModals = function() {
             // DIV-based formstyle
             caller = $(this).parent().parent().attr('id');
         }
+        if (!caller) {
+            // Bootstrap formstyle
+            caller = $(this).parent().parent().prev().attr('id');
+        }
         caller = caller.replace(/__row/, '');
         // Avoid Duplicate callers
         var url_out = attr;

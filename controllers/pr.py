@@ -132,10 +132,9 @@ def person():
         elif r.interactive:
             if r.representation == "popup":
                 # Hide "pe_label" and "missing" fields in person popups
-                r.table.pe_label.readable = False
-                r.table.pe_label.writable = False
-                r.table.missing.readable = False
-                r.table.missing.writable = False
+                table = r.table
+                table.pe_label.readable = table.pe_label.writable = False
+                table.missing.readable = table.missing.writable = False
 
                 # S3SQLCustomForm breaks popup return, so disable
                 s3db.clear_config("pr_person", "crud_form")
@@ -166,8 +165,7 @@ def person():
                             raise HTTP(404)
 
             elif r.id:
-                r.table.volunteer.readable = True
-                r.table.volunteer.writable = True
+                r.table.volunteer.readable = r.table.volunteer.writable = True
 
         return True
     s3.prep = prep
@@ -187,7 +185,7 @@ def person():
                    list_fields=["id",
                                 "group_id",
                                 "group_head",
-                                "description"
+                                "description",
                                 ])
 
     # Basic tabs
@@ -203,7 +201,7 @@ def person():
             (T("Skills"), "competency"),
             (T("Training"), "training"),
             (T("Saved Searches"), "saved_search"),
-        ]
+            ]
 
     # Configuration tabs
     tabs.append((T("Map Settings"), "config"))

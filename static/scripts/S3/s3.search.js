@@ -777,7 +777,7 @@ $(document).ready(function() {
             }
         }
     });
-
+    
     // Filter-form submission
     $('.filter-submit').click(function() {
         try {

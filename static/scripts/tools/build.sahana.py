@@ -477,7 +477,7 @@ def docss():
     for file in ["bootstrap.css",
                  "bootstrap-responsive.css",
                  "font-awesome.css",
-                 "bootstrap-multiselect.css",
+                 #"bootstrap-multiselect.css",
                  ]:
         listCSS.append("../../styles/bootstrap/%s" % file)
 
