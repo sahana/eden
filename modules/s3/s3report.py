@@ -677,6 +677,8 @@ class S3Report(S3CRUD):
                 label, selector = None, s
             selector = prefix(selector)
             rfield = resource.resolve_selector(selector)
+            if not rfield.field and not rfield.virtual:
+                continue
             if label is not None:
                 rfield.label = label
             else:

@@ -1534,8 +1534,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     for joins in orderby_rfield.left.values():
                         left.extend(joins)
                     left = component.sortleft(left)
-                if orderby_dir[:3].lower() == "des":
-                    orderby = ~orderby
+                    if orderby_dir[:3].lower() == "des":
+                        orderby = ~orderby
             else:
                 orderby = None
 
