@@ -36,6 +36,18 @@ def index():
                 incidents=incidents)
 
 # -----------------------------------------------------------------------------
+def zone():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def zone_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def station():
     """ Fire Station """
 

@@ -22,6 +22,7 @@
          Site.................boolean.........Layer Site (use Site for location)
          Trackable............boolean.........Layer Trackable
          Polygons.............boolean.........Layer Polygons
+         Style................string..........Layer Style
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
@@ -138,6 +139,7 @@
             <data field="filter_value"><xsl:value-of select="col[@field='Filter Value']"/></data>
             <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
             <data field="popup_fields"><xsl:value-of select="col[@field='Popup Fields']"/></data>
+            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
         </resource>
 

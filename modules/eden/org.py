@@ -3366,6 +3366,11 @@ def org_office_controller():
 
             elif r.id:
                 table.obsolete.readable = table.obsolete.writable = True
+            elif r.representation == "geojson":
+                marker_fn = s3db.get_config("org_office", marker_fn)
+                if marker_fn:
+                    # Load these models now as they'll be needed when we encode
+                    mtable = s3db.gis_marker
 
         return True
     s3.prep = prep

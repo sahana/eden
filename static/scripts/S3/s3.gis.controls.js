@@ -10,14 +10,44 @@
 // Add Controls to the OpenLayers map
 // (to be called after the layers are added)
 function addControls() {
-    map.addControl(new OpenLayers.Control.ScaleLine());
+    // The default controls (normally added in OpenLayers.Map, but brought here for greater control)
+    // Navigation or TouchNavigation depending on what is in build
+    //if (OpenLayers.Control.Navigation) {
+        map.addControl(new OpenLayers.Control.Navigation());
+    //} else if (OpenLayers.Control.TouchNavigation) {
+    //    map.addControl(new OpenLayers.Control.TouchNavigation());
+    //}
+    if (S3.gis.zoomcontrol == undefined) {
+        //if (OpenLayers.Control.Zoom) {
+            map.addControl(new OpenLayers.Control.Zoom());
+        //} else if (OpenLayers.Control.PanZoom) {
+        //    map.addControl(new OpenLayers.Control.PanZoom());
+        //}
+    }
+    //if (OpenLayers.Control.ArgParser) {
+        map.addControl(new OpenLayers.Control.ArgParser());
+    //}
+    //if (OpenLayers.Control.Attribution) {
+        map.addControl(new OpenLayers.Control.Attribution());
+    //}
+
+    // Additional Controls
+    // (since the default is enabled, we provide no config in the enabled case)
+    if (S3.gis.scaleline == undefined) {
+        map.addControl(new OpenLayers.Control.ScaleLine());
+    }
     if (S3.gis.mouse_position == 'mgrs') {
         map.addControl(new OpenLayers.Control.MGRSMousePosition());
     } else if (S3.gis.mouse_position) {
         map.addControl(new OpenLayers.Control.MousePosition());
     }
-    map.addControl(new OpenLayers.Control.Permalink());
-    map.addControl(new OpenLayers.Control.OverviewMap({mapOptions: S3.gis.options}));
+    if (S3.gis.permalink == undefined) {
+        map.addControl(new OpenLayers.Control.Permalink());
+    }
+    if (S3.gis.overview == undefined) {
+        S3.gis.options.controls = null;
+        map.addControl(new OpenLayers.Control.OverviewMap({mapOptions: S3.gis.options}));
+    }
 
     // Popup Controls
     addPopupControls();

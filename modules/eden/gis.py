@@ -1948,7 +1948,7 @@ class S3LayerEntityModel(S3Model):
                                   Field("description", label=T("Description")),
                                   #role_required(),       # Single Role
                                   ##roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                                )
+                                  )
 
         crud_strings[tablename] = Storage(
                     title_create = T("Add Layer"),
@@ -2007,15 +2007,15 @@ class S3LayerEntityModel(S3Model):
         # =====================================================================
         #  Layer Config link table
 
-        # Style is a JSON object with the following structure (only the 3 starred elements are currently parsed):
+        # Style is a JSON object with the following structure (only the starred elements are currently parsed):
         #Style = [{
         #   low: float,   //*
         #   high: float,  //*
         #   fill: string, //*
-        #   fill_opacity: float,
-        #   stroke: stroke
-        #   stroke_opacity: float
-        #   stroke_width: float or int, // OpenLayers wants int, SLD wants float
+        #   fill_opacity: float, //*
+        #   stroke: string, //* (will default to fill, if not set)
+        #   stroke_opacity: float,
+        #   stroke_width: float or int, //* OpenLayers wants int, SLD wants float
         #   marker: {
         #       image: string,
         #       height: int,
@@ -2066,8 +2066,8 @@ class S3LayerEntityModel(S3Model):
                     msg_list_empty = T("No Profiles currently have Configurations for this Layer"))
 
         self.configure(tablename,
-                        onvalidation=self.layer_config_onvalidation,
-                        onaccept=self.layer_config_onaccept)
+                        onvalidation=self.gis_layer_config_onvalidation,
+                        onaccept=self.gis_layer_config_onaccept)
 
         # =====================================================================
         #  Layer Symbology link table
@@ -2106,12 +2106,12 @@ class S3LayerEntityModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage(
                 gis_layer_types = layer_types,
-                gis_layer_config_onaccept = self.layer_config_onaccept
+                gis_layer_config_onaccept = self.gis_layer_config_onaccept
             )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def layer_config_onvalidation(form):
+    def gis_layer_config_onvalidation(form):
         """
             Ensure that Style JSON can be loaded by json.loads()
         """
@@ -2122,7 +2122,7 @@ class S3LayerEntityModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def layer_config_onaccept(form):
+    def gis_layer_config_onaccept(form):
         """
             If this is the default base layer then remove this flag from all
             others in this config.
@@ -2178,7 +2178,8 @@ class S3FeatureLayerModel(S3Model):
         table = self.define_table(tablename,
                                   self.super_link("layer_id", "gis_layer_entity"),
                                   name_field()(),
-                                  Field("description", label=T("Description")),
+                                  Field("description",
+                                        label=T("Description")),
                                   # Kept for backwards-compatibility
                                   Field("module",
                                         readable=False,
@@ -2192,26 +2193,30 @@ class S3FeatureLayerModel(S3Model):
                                         default = False,
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Trackable"),
-                                                                        T("Whether the resource should be tracked using S3Track rather than just using the Base Location")))),
+                                                                        T("Whether the resource should be tracked using S3Track rather than just using the Base Location"))),
+                                        ),
                                   # REST Query added to Map JS to call back to server
                                   Field("controller",
                                         requires = IS_NOT_EMPTY(),
                                         label = T("Controller"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s /" % (T("Controller"),
-                                                                          T("Part of the URL to call to access the Features")))),
+                                                                          T("Part of the URL to call to access the Features"))),
+                                        ),
                                   Field("function",
                                         requires = IS_NOT_EMPTY(),
                                         label = T("Function"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s /" % (T("Function"),
-                                                                          T("Part of the URL to call to access the Features")))),
+                                                                          T("Part of the URL to call to access the Features"))),
+                                        ),
                                   Field("filter",
                                         label = T("REST Filter"),
                                         comment = DIV(_class="stickytip",
                                                       _title="%s|%s" % (T("REST Filter"),
                                                                         "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
-                                                                          T("Uses the REST Query Format defined in")))),
+                                                                          T("Uses the REST Query Format defined in"))),
+                                        ),
                                   # SQL Query to determine icon for feed export (e.g. type=1)
                                   # - currently unused
                                   # @ToDo: Have both be REST-style with this being used for both & optional additional params available for main map (e.g. obsolete=False&time_between...)
@@ -2221,29 +2226,40 @@ class S3FeatureLayerModel(S3Model):
                                         label = T("Filter Value"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s /" % (T("Filter Value"),
-                                                                          T("If you want several values, then separate with")))),
+                                                                          T("If you want several values, then separate with"))),
+                                        ),
                                   # @ToDo: Replace with s3.crud_strings[tablename]?
                                   Field("popup_label",
                                         label = T("Popup Label"),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Popup Label"),
-                                                                      T("Used in onHover Tooltip & Cluster Popups to differentiate between types.")))),
+                                                                      T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
+                                        ),
                                   Field("popup_fields",
                                         default = "name",
                                         label = T("Popup Fields"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Popup Fields"),
-                                                                        T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records.")))),
+                                                                        T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records."))),
+                                        ),
                                   Field("use_site",
                                         default = False,
                                         label = T("Use Site?"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Use Site?"),
-                                                                        T("Select this if you need this resource to be mapped from site_id instead of location_id.")))),
+                                                                        T("Select this if you need this resource to be mapped from site_id instead of location_id."))),
+                                        ),
                                   gis_layer_folder()(),
                                   Field("polygons", "boolean", default=False,
                                         represent = s3_yes_no_represent,
                                         label=T("Display Polygons?")),
+                                  Field("style",
+                                        label=T("Style"),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Style"),
+                                                                        #T("Either a JSON style to apply to all features or a field to lookup the style from."))),
+                                                                        T("A JSON style to apply to features (normally used for Polygons)."))),
+                                        ),
                                   gis_opacity()(),
                                   # @ToDo: Expose the Graphic options
                                   gis_refresh()(),
@@ -2272,6 +2288,7 @@ class S3FeatureLayerModel(S3Model):
 
         self.configure(tablename,
                         onaccept=gis_layer_onaccept,
+                        onvalidation=self.gis_layer_feature_onvalidation,
                         super_entity="gis_layer_entity",
                         deduplicate=self.gis_layer_feature_deduplicate,
                         list_fields=["id",
@@ -2316,6 +2333,17 @@ class S3FeatureLayerModel(S3Model):
         return Storage(
             )
 
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_feature_onvalidation(form):
+        """
+            Ensure that Style JSON can be loaded by json.loads()
+        """
+
+        vars = form.vars
+        if "style" in vars and vars.style:
+            vars.style = vars.style.replace("'", "\"")
 
     # -------------------------------------------------------------------------
     @staticmethod

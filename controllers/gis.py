@@ -102,9 +102,6 @@ def define_map(height = None,
     else:
         wms_browser = None
 
-    # 'normal', 'mgrs' or 'off'
-    mouse_position = settings.get_gis_mouse_position()
-
     # http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting
     print_service = settings.get_gis_print_service()
     if print_service:
@@ -123,8 +120,7 @@ def define_map(height = None,
                        legend=legend,
                        search=search,
                        catalogue_layers=catalogue_layers,
-                       mouse_position = mouse_position,
-                       print_tool = print_tool
+                       print_tool = print_tool,
                        )
 
     return map

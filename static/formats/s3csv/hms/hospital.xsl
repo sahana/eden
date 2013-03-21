@@ -39,7 +39,7 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Indexes for faster processing -->

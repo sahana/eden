@@ -42,6 +42,7 @@ class S3TransportModel(S3Model):
     """
 
     names = ["transport_airport",
+             "transport_heliport",
              "transport_seaport",
              ]
 
@@ -53,6 +54,8 @@ class S3TransportModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        location_id = self.gis_location_id
+        organisation_id = self.org_organisation_id
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -70,7 +73,7 @@ class S3TransportModel(S3Model):
 
         tablename = "transport_airport"
         table = define_table(tablename,
-                             self.super_link("site_id", "org_site"),
+                             super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64, # Mayon Compatibility
                                    label=T("Name")),
@@ -84,9 +87,8 @@ class S3TransportModel(S3Model):
                                    #notnull=True,
                                    #unique=True,
                                    label=T("Code")),
-                             self.org_organisation_id(widget=S3OrganisationAutocompleteWidget(
-                                default_from_profile=True)),
-                             self.gis_location_id(),
+                             organisation_id(),
+                             location_id(),
                              Field("restrictions", "text",
                                    label=T("Restrictions")),
                              Field("ils", "boolean",
@@ -135,16 +137,17 @@ class S3TransportModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
+        ADD_AIRPORT = T("Add New Airport")
         crud_strings[tablename] = Storage(
             title_create=T("Add Airport"),
             title_display=T("Airport Details"),
             title_list=T("Airports"),
             title_update=T("Edit Airport"),
-            title_search=T("Search Facilities"),
-            title_upload=T("Import Facilities"),
-            subtitle_create=T("Add New Airport"),
+            title_search=T("Search Airports"),
+            title_upload=T("Import Airports"),
+            subtitle_create=ADD_AIRPORT,
             label_list_button=T("List Airports"),
-            label_create_button=T("Add New Airport"),
+            label_create_button=ADD_AIRPORT,
             label_delete_button=T("Delete Airport"),
             msg_record_created=T("Airport added"),
             msg_record_modified=T("Airport updated"),
@@ -156,9 +159,61 @@ class S3TransportModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
+        # Heliports
+        #
+        tablename = "transport_heliport"
+        table = define_table(tablename,
+                             super_link("site_id", "org_site"),
+                             Field("name", notnull=True,
+                                   length=64, # Mayon Compatibility
+                                   label=T("Name")),
+                             Field("code",
+                                   length=10,
+                                   # Deployments that don't wants office codes can hide them
+                                   #readable=False,
+                                   #writable=False,
+                                   # Mayon compatibility
+                                   # @ToDo: Deployment Setting to add validator to make these unique
+                                   #notnull=True,
+                                   #unique=True,
+                                   label=T("Code")),
+                             organisation_id(),
+                             location_id(),
+                             Field("obsolete", "boolean",
+                                   label=T("Obsolete"),
+                                   represent=lambda bool: \
+                                     (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
+                                   default=False,
+                                   readable=False,
+                                   writable=False),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        ADD_HELIPORT = T("Add New Heliport")
+        crud_strings[tablename] = Storage(
+            title_create=T("Add Heliport"),
+            title_display=T("Heliport Details"),
+            title_list=T("Heliports"),
+            title_update=T("Edit Heliport"),
+            title_search=T("Search Heliports"),
+            title_upload=T("Import Heliports"),
+            subtitle_create=ADD_HELIPORT,
+            label_list_button=T("List Heliports"),
+            label_create_button=ADD_HELIPORT,
+            label_delete_button=T("Delete Heliport"),
+            msg_record_created=T("Heliport added"),
+            msg_record_modified=T("Heliport updated"),
+            msg_record_deleted=T("Heliport deleted"),
+            msg_list_empty=T("No Heliports currently registered"))
+
+        configure(tablename,
+                  super_entity="org_site"
+                  )
+
+        # ---------------------------------------------------------------------
         # Seaports
         #
-
         ownership_opts = {
             1: T("Public"),
             2: T("Private")
@@ -171,7 +226,7 @@ class S3TransportModel(S3Model):
 
         tablename = "transport_seaport"
         table = define_table(tablename,
-                             self.super_link("site_id", "org_site"),
+                             super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64, # Mayon Compatibility
                                    label=T("Name")),
@@ -283,9 +338,8 @@ class S3TransportModel(S3Model):
                                    represent = lambda opt: \
                                     unit_opts.get(opt, UNKNOWN_OPT)),
 
-                             self.org_organisation_id(widget=S3OrganisationAutocompleteWidget(
-                                default_from_profile=True)),
-                             self.gis_location_id(),
+                             organisation_id(),
+                             location_id(),
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \
@@ -296,16 +350,17 @@ class S3TransportModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
+        ADD_SEAPORT = T("Add New Seaport")
         crud_strings[tablename] = Storage(
             title_create=T("Add Seaport"),
             title_display=T("Seaport Details"),
             title_list=T("Seaports"),
             title_update=T("Edit Seaport"),
-            title_search=T("Search Facilities"),
-            title_upload=T("Import Facilities"),
-            subtitle_create=T("Add New Seaport"),
+            title_search=T("Search Seaports"),
+            title_upload=T("Import Seaports"),
+            subtitle_create=ADD_SEAPORT,
             label_list_button=T("List Seaports"),
-            label_create_button=T("Add New Seaport"),
+            label_create_button=ADD_SEAPORT,
             label_delete_button=T("Delete Seaport"),
             msg_record_created=T("Seaport added"),
             msg_record_modified=T("Seaport updated"),

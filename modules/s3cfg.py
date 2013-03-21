@@ -465,7 +465,23 @@ class S3Config(Storage):
     def get_gis_marker_max_width(self):
         return self.gis.get("marker_max_width", 30)
     def get_gis_mouse_position(self):
+        """
+            What style of Coordinates for the current Mouse Position
+            should be shown on the Map?
+
+            'normal', 'mgrs' or False
+        """
         return self.gis.get("mouse_position", "normal")
+    def get_gis_overview(self):
+        """
+            Should the Map display an Overview Map?
+        """
+        return self.gis.get("overview", True)
+    def get_gis_permalink(self):
+        """
+            Should the Map display a Permalink control?
+        """
+        return self.gis.get("permalink", True)
     def get_gis_poi_resources(self):
         """
             List of resources (tablenames) to import/export as PoIs from Admin Locations
@@ -481,6 +497,11 @@ class S3Config(Storage):
         return self.gis.get("geoserver_username", "admin")
     def get_gis_geoserver_password(self):
         return self.gis.get("geoserver_password", "")
+    def get_gis_scaleline(self):
+        """
+            Should the Map display a ScaleLine control?
+        """
+        return self.gis.get("scaleline", True)
     def get_gis_spatialdb(self):
         db_type = self.get_database_type()
         if db_type != "postgres":
@@ -488,6 +509,11 @@ class S3Config(Storage):
             return False
         else:
             return self.gis.get("spatialdb", False)
+    def get_gis_zoomcontrol(self):
+        """
+            Should the Map display a Zoom control?
+        """
+        return self.gis.get("zoomcontrol", True)
 
     # -------------------------------------------------------------------------
     # L10N Settings

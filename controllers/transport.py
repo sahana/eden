@@ -42,6 +42,32 @@ def airport():
     return s3_rest_controller(rheader=transport_rheader)
 
 # -----------------------------------------------------------------------------
+def heliport():
+    """ RESTful CRUD controller """
+
+    # Pre-processor
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
+        if r.interactive:
+            if r.component:
+                # remove CRUD generated buttons in the tabs
+                s3db.configure("inv_inv_item",
+                               create=False,
+                               listadd=False,
+                               editable=False,
+                               deletable=False,
+                               )
+            elif r.method == "update":
+                field = r.table.obsolete
+                field.readable = field.writable = True
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader=transport_rheader)
+
+# -----------------------------------------------------------------------------
 def seaport():
     """ RESTful CRUD controller """
 

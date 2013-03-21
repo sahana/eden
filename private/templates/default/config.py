@@ -3,8 +3,9 @@
 from gluon import current
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-settings = current.deployment_settings
+
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings
@@ -199,8 +200,16 @@ settings.L10n.decimal_separator = "."
 #settings.gis.duplicate_features = True
 # Mouse Position: 'normal', 'mgrs' or None
 #settings.gis.mouse_position = "mgrs"
+# Uncomment to hide the Overview map
+#settings.gis.overview = False
+# Uncomment to hide the permalink control
+#settings.gis.permalink = False
 # PoIs to export in KML/OSM feeds from Admin locations
 #settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]
+# Uncomment to hide the ScaleLine control
+#settings.gis.scaleline = False
+# Uncomment to hide the Zoom control
+#settings.gis.zoomcontrol = False
 
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"

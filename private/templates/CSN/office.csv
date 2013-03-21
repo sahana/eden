@@ -1,2 +1,23 @@
-Name,Organisation,Branch,Type,Country,Building,Address,Postcode,L1,L2,L3,L4,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
-Century City Mall,Westfield,,Mall,US,,,,California,Los Angeles,Los Angeles,Century City,34.06028,-118.41835,,,,,
+"Organisation","Name","Type","Country","Address","Postcode","L1","L2","L3","L4","Lat","Lon","Phone1","Comments"
+"Dorchester Collection","The Beverly Hills Hotel","Hotel","US","9641 Sunset Boulevard",90210,"California","Los Angeles","Los Angeles","Beverly Hills",34.08149,-118.41387,"310-276-2251","http://www.beverlyhillshotel.com"
+"City National Bank","Beverly Hills Main","Bank","US","400 North Roxbury Drive",90210,"California","Los Angeles","Los Angeles","Beverly Hills",34.06698,-118.40608,,"https://www.cnb.com/sitepages/locator.aspx"
+"City National Bank","Beverly Hills / Wilshire","Bank","US","8641 Wilshire Boulevard",90211,"California","Los Angeles","Los Angeles","Beverly Hills",34.06603,-118.37882,,
+"City National Bank","Brentwood","Bank","US","11677 San Vicente Blvd. Suite 103",90049,"California","Los Angeles","Los Angeles","Brentwood",34.05390,-118.46530,
+"City National Bank","Century City","Bank","US","1800 Century Park East",90067,"California","Los Angeles","Los Angeles","Century City",34.06275,-118.41554,,
+"City National Bank","Century City Towers","Bank","US","2029 Century Park East",90067,"California","Los Angeles","Los Angeles","Century City",34.05929,-118.41281,,
+"City National Bank","Los Angeles - Fairfax","Bank","US","6100 Wilshire Boulevard",90048,"California","Los Angeles","Los Angeles",,34.06289,-118.36160,,
+"City National Bank","Sunset/Doheny","Bank","US","9229 Sunset Blvd",90069,"California","Los Angeles","Los Angeles","West Hollywood",34.09036,-118.39319,,
+"City National Bank","West Los Angeles","Bank","US","11500 West Olympic Boulevard",90064,"California","Los Angeles","Los Angeles",,34.03645,-118.44411,,
+"City National Bank","Westwood","Bank","US","10889 Wilshire Boulevard",90024,"California","Los Angeles","Los Angeles","Westwood",34.05888,-118.44340,,
+"Target","LA Beverly","Retail","US","8480 Beverly Blvd Ste 1A",90048,"California","Los Angeles","Los Angeles","Beverly Hills",34.07379,-118.37579,"323-602-0637","http://www.target.com/store-locator/find-stores"
+"Target","LA Westwood","Retail","US","10861 Weyburn Ave",90024,"California","Los Angeles","Los Angeles","Westwood",34.06274,-118.44388,"310-893-2360","http://www.target.com/store-locator/find-stores"
+"Target","West Hollywood","Retail","US","7100 Santa Monica Blvd Ste 201",90046,"California","Los Angeles","Los Angeles","West Hollywood",34.09001,-118.34468,"323-603-0004",
+"Walmart","Los Angeles Walmart Store #2960","Retail","US","4101 Crenshaw Blvd",90008,"California","Los Angeles","Los Angeles",,34.01055,-118.33588,"323-299-8014","http://www.walmart.com/storeLocator/ca_storefinder.do"
+"Wells Fargo","9000 Sunset","Bank","US","9000 W Sunset Blvd",90069,"California","Los Angeles","Los Angeles","West Hollywood",34.09059,-118.38768,"310-246-2560","https://www.wellsfargo.com/locator/search/"
+"Wells Fargo","Beverley Hills","Bank","US","9600 Santa Monica Blvd",90210,"California","Los Angeles","Los Angeles","Beverly Hills",34.06977,-118.40536,"310-550-7183",
+"Wells Fargo","Cedars Sinai","Bank","US","8625 W 3rd St",90048,"California","Los Angeles","Los Angeles",,34.07382,-118.38050,"310-657-3951",
+"Wells Fargo","Century City","Bank","US","1801 Avenue of the Stars",90067,"California","Los Angeles","Los Angeles","Century City",34.06082,-118.41842,"310-553-5294",
+"Wells Fargo","Century Park East","Bank","US","1840 Century Park E",90067,"California","Los Angeles","Los Angeles","Century City",34.06231,-118.41466,"310-286-0381",
+"Wells Fargo","Wilshire Crescent","Bank","US","9354 Wilshire Blvd",90212,"California","Los Angeles","Los Angeles","Beverly Hills",34.06692,-118.39577,"310-285-0082",
+"Westfield","Century City Shopping Mall","Retail","US",,,"California","Los Angeles","Los Angeles","Century City",34.06028,-118.41835,,
+"Westfield","Culver City Shopping Mall","Retail","US","6000 Sepulveda Boulevard",90230,"California","Los Angeles","Los Angeles","Culver City",33.98568,-118.39383,"310-390-5073",

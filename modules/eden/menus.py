@@ -730,6 +730,20 @@ class S3OptionsMenu(object):
                         M("Import Stations", m="import"),
                         M("Import Vehicles", f="station_vehicle", m="import"),
                     ),
+                    M("Fire Zones", f="zone")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Map", m="map"),
+                        #M("Search", m="search"),
+                        #M("Import", m="import"),
+                    ),
+                    M("Zone Types", f="zone_type")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Map", m="map"),
+                        #M("Search", m="search"),
+                        #M("Import", m="import"),
+                    ),
                     M("Water Sources", f="water_source")(
                         M("New", m="create"),
                         M("List All"),
