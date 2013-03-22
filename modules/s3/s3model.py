@@ -70,6 +70,7 @@ class S3Model(object):
         self.cache = (current.cache.ram, 60)
 
         self.context = None
+        self.classes = Storage()
 
         # Initialize current.model
         if not hasattr(current, "model"):
@@ -127,11 +128,11 @@ class S3Model(object):
         name = self.__class__.__name__
         response = current.response
         if LOCK not in response:
-            response[LOCK] = []
+            response[LOCK] = {}
         if name in response[LOCK]:
             raise RuntimeError("circular model reference deadlock in %s" % name)
         else:
-            response[LOCK].append(name)
+            response[LOCK][name] = True
         return
 
     # -------------------------------------------------------------------------
@@ -142,7 +143,7 @@ class S3Model(object):
         response = current.response
         if LOCK in response:
             if name in response[LOCK]:
-                response[LOCK].remove(name)
+                response[LOCK].pop(name, None)
             if not response[LOCK]:
                 del response[LOCK]
         return
@@ -187,10 +188,18 @@ class S3Model(object):
         if s3 is None:
             s3 = current.response.s3 = Storage()
 
-        if not db_only and tablename in s3:
-            return s3[tablename]
+        s3db = current.s3db
+        models = current.models
+
+        if not db_only:
+            if tablename in s3:
+                return s3[tablename]
+            elif s3db is not None and tablename in s3db.classes:
+                prefix, name = s3db.classes[tablename]
+                return models.__dict__[prefix].__dict__[name]
 
         db = current.db
+        found = None
         if hasattr(db, tablename):
             return ogetattr(db, tablename)
         elif ogetattr(db, "_lazy_tables") and \
@@ -198,7 +207,6 @@ class S3Model(object):
             return ogetattr(db, tablename)
         else:
             prefix, name = tablename.split("_", 1)
-            models = current.models
             if hasattr(models, prefix):
                 module = models.__dict__[prefix]
                 loaded = False
@@ -218,10 +226,13 @@ class S3Model(object):
                             generic.append(n)
                     else:
                         if n == tablename:
+                            s3db.classes[tablename] = (prefix, n)
+                            found = model
                             loaded = True
-                        s3[n] = model
                 if not loaded:
                     [module.__dict__[n](prefix) for n in generic]
+        if found:
+            return found
         if not db_only and tablename in s3:
             return s3[tablename]
         elif hasattr(db, tablename):
