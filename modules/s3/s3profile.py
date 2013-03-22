@@ -34,6 +34,7 @@ from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3data import S3DataList
+from s3resource import S3FieldSelector
 
 # =============================================================================
 class S3Profile(S3CRUD):
@@ -181,12 +182,28 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
+        context = widget.get("context", None)
+        if context:
+            context = "(%s)$id" % context
+            current.s3db.context = S3FieldSelector(context) == r.id
 
         tablename = widget.get("tablename", None)
-        resource = current.s3db.resource(tablename)
+        resource = current.s3db.resource(tablename, context=True)
         table = resource.table
 
-        # @ToDo: Can we automate some of filter through link_table to the primary resource?
+        # Config Options:
+        # 1st choice: Widget
+        # 2nd choice: get_config
+        # 3rd choice: Default
+        config = resource.get_config
+        list_fields = widget.get("list_fields", 
+                                 config("list_fields", None))
+        list_layout = widget.get("list_layout", 
+                                 config("list_layout", None))
+        orderby = widget.get("orderby",
+                             config("list_orderby",
+                                    ~resource.table.created_on))
+
         filter = widget.get("filter", None)
         if filter:
             resource.add_filter(filter)
@@ -209,19 +226,6 @@ class S3Profile(S3CRUD):
         else:
             create = "" 
 
-        # Config Options:
-        # 1st choice: Widget
-        # 2nd choice: get_config
-        # 3rd choice: Default
-        config = resource.get_config
-        list_fields = widget.get("list_fields", 
-                                 config("list_fields", None))
-        list_layout = widget.get("list_layout", 
-                                 config("list_layout", None))
-        orderby = widget.get("orderby",
-                             config("list_orderby",
-                                    ~resource.table.created_on))
-
         # Page size
         pagesize = 4
         representation = r.representation
@@ -231,8 +235,7 @@ class S3Profile(S3CRUD):
             record_id = get_vars.get("record", None)
             if record_id is not None:
                 # Ajax-update of a single record
-                from s3resource import S3FieldSelector as FS
-                resource.add_filter(FS("id") == record_id)
+                resource.add_filter(S3FieldSelector("id") == record_id)
                 start, limit = 0, 1
             else:
                 # Ajax-update of full page

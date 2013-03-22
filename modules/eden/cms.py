@@ -202,7 +202,9 @@ class S3ContentModel(S3Model):
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
-                  onaccept = self.post_onaccept)
+                  onaccept = self.post_onaccept,
+                  context = {"event": "event.id"},
+                  )
 
         # Components
         add_component("cms_comment", cms_post="post_id")
