@@ -323,6 +323,9 @@ class S3Profile(S3CRUD):
         icon = widget.get("icon", "")
         if icon:
             icon = TAG[""](I(_class=icon), " ")
+        context = widget.get("context", None)
+        if context:
+            context = "(%s)$id=%s" % (context, r.id)
 
         # Default to showing all the resources in datalist widgets as separate layers
         feature_resources = []
@@ -347,6 +350,10 @@ class S3Profile(S3CRUD):
                     filter_url = filter.serialize_url(resource)
                     for f in filter_url:
                         map_url = "%s%s=%s" % (map_url, f, filter_url[f])
+                    if context:
+                        map_url = "%s&%s" % (map_url, context)
+                elif context:
+                    map_url = "%s?%s" % (map_url, context)
 
             id = "profile_map-%s" % tablename
             if filter:
