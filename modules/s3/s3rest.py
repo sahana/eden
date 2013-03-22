@@ -584,7 +584,7 @@ class S3Request(object):
                                    approved=approved,
                                    unapproved=unapproved,
                                    include_deleted=include_deleted,
-                                   #context=True,
+                                   context=True,
                                    )
 
         self.tablename = self.resource.tablename
