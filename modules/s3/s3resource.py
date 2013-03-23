@@ -4439,6 +4439,8 @@ class S3FieldPath(object):
             @param tokens: the tokens as list
         """
 
+        s3db = current.s3db
+        
         if table is None:
             table = resource.table
 
@@ -4468,6 +4470,8 @@ class S3FieldPath(object):
             self.fname = head
             self.ftype = "context"
 
+            if not resource:
+                resource = s3db.resource(table, components=[])
             context = resource.get_config("context")
             if context and head in context:
                 tail = self.resolve(resource, context[head], tail=tokens)
@@ -4484,7 +4488,7 @@ class S3FieldPath(object):
                     # head is a component or linktable alias, and tokens is
                     # a field expression in the component/linked table
                     if not resource:
-                        resource = current.s3db.resource(table, components=[])
+                        resource = s3db.resource(table, components=[])
                     ktable, j, l, m, d = self._resolve_alias(resource, head)
                     if j is not None and l is not None:
                         self.join[ktable._tablename] = j
@@ -4639,7 +4643,7 @@ class S3FieldPath(object):
                     hook = s3db.get_component(tablename, _alias)
             if hook:
                 resource._attach(_alias, hook)
-                
+
         components = resource.components
         links = resource.links
 
@@ -5584,7 +5588,7 @@ class S3URLQuery(object):
             
         for key, value in vars.iteritems():
 
-            if not key.find(".") > 0:
+            if not("." in key or key[0] == "(" and ")" in key):
                 continue
 
             selectors, op, invert = cls.parse_expression(key)

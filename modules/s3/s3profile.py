@@ -184,7 +184,7 @@ class S3Profile(S3CRUD):
 
         context = widget.get("context", None)
         if context:
-            context = "(%s)$id" % context
+            context = "(%s)" % context
             current.s3db.context = S3FieldSelector(context) == r.id
 
         tablename = widget.get("tablename", None)
@@ -325,7 +325,7 @@ class S3Profile(S3CRUD):
             icon = TAG[""](I(_class=icon), " ")
         context = widget.get("context", None)
         if context:
-            context = "(%s)$id=%s" % (context, r.id)
+            context = "(%s)=%s" % (context, r.id)
 
         # Default to showing all the resources in datalist widgets as separate layers
         feature_resources = []
