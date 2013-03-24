@@ -839,8 +839,8 @@ def schedule_parser():
                                        table.source_task_id,
                                        limitby=(0, 1)).first()
     s3task.schedule_task("msg_parse_workflow",
-                         vars={"workflow": record.workflow,
-                               "source": record.source},
+                         vars={"workflow": record.workflow_task_id,
+                               "source": record.source_task_id},
                          period=300,  # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
