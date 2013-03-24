@@ -1007,8 +1007,6 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     return f()
 
 # =============================================================================
-# Comments
-#
 def s3_comments(name="comments", **attr):
     """
         Return a standard Comments field
@@ -1034,14 +1032,11 @@ def s3_comments(name="comments", **attr):
     return f()
 
 # =============================================================================
-# Currency field
-#
-# @ToDo: Move to a Finance module
-#
-
 def s3_currency(name="currency", **attr):
     """
         Return a standard Currency field
+
+        @ToDo: Move to a Finance module
     """
 
     settings = current.deployment_settings
@@ -1062,9 +1057,6 @@ def s3_currency(name="currency", **attr):
     return f()
 
 # =============================================================================
-# Date field
-#
-
 def s3_date(name="date", **attr):
     """
         Return a standard Date field
@@ -1193,9 +1185,6 @@ def s3_date(name="date", **attr):
     return f()
 
 # =============================================================================
-# Datetime field
-#
-
 def s3_datetime(name="date", **attr):
     """
         Return a standard Datetime field

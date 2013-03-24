@@ -41,7 +41,9 @@ __all__ = ["S3WarehouseModel",
            "inv_tracking_status",
            "inv_adj_rheader",
            ]
+
 import itertools
+
 from gluon import *
 from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
@@ -1127,10 +1129,12 @@ class S3TrackingModel(S3Model):
                                    represent = s3_string_represent,
                                    ),
                              s3_datetime(label = T("Date Sent"),
-                                     writable = False),
+                                         represent = "date",
+                                         writable = False),
                              s3_datetime("delivery_date",
-                                     label = T("Estimated Delivery Date"),
-                                     writable = False),
+                                         represent = "date",
+                                         label = T("Estimated Delivery Date"),
+                                         writable = False),
                              Field("status", "integer",
                                    requires = IS_NULL_OR(
                                                 IS_IN_SET(shipment_status)
@@ -1248,12 +1252,12 @@ class S3TrackingModel(S3Model):
         add_component("inv_track_item",
                       inv_send="send_id")
 
+        # Custom methods
         # Generate Consignment Note
         set_method("inv", "send",
                    method="form",
                    action=self.inv_send_form)
 
-        # custom methods
         set_method("inv", "send",
                    method= "timeline",
                    action = self.inv_timeline)
@@ -1359,10 +1363,11 @@ class S3TrackingModel(S3Model):
                                      label = T("Date Expected"),
                                      writable = False),
                              s3_datetime(label = T("Date Received"),
-                                     comment = DIV(_class="tooltip",
-                                                   _title="%s|%s" % (T("Date Received"),
-                                                                     T("Will be filled automatically when the Shipment has been Received"))),
-                                     ),
+                                         represent = "date",
+                                         comment = DIV(_class="tooltip",
+                                                       _title="%s|%s" % (T("Date Received"),
+                                                                         T("Will be filled automatically when the Shipment has been Received"))),
+                                         ),
                              send_ref(),
                              recv_ref(),
                              purchase_ref(),
@@ -1552,6 +1557,7 @@ class S3TrackingModel(S3Model):
         add_component("inv_track_item",
                       inv_recv="recv_id")
 
+        # Custom methods
         # Print Forms
         set_method("inv", "recv",
                    method="form",
@@ -1561,7 +1567,6 @@ class S3TrackingModel(S3Model):
                    method="cert",
                    action=self.inv_recv_donation_cert )
 
-        # custom methods
         set_method("inv", "recv",
                    method= "timeline",
                    action = self.inv_timeline)
@@ -3053,7 +3058,7 @@ S3OptionsFilter({
                                            comments = "%sQuantity was: %s" % (inv_item_table.comments, trackTotal))
         return True
 
-    # ------Timeline -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_timeline(r, **attr):
         """
@@ -3065,7 +3070,8 @@ S3OptionsFilter({
             http://www.simile-widgets.org/wiki/Timeline_Moving_the_Timeline_via_Javascript
         """
        
-        if r.representation == "html"  and  (r.name == "recv" or r.name == "send") :
+        if r.representation == "html"  and  (r.name == "recv" or \
+                                             r.name == "send"):
             
             T = current.T
             db = current.db
