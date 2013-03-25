@@ -3319,22 +3319,27 @@ def inv_rheader(r):
 
         # Get item data
         table = s3db["inv_inv_item"]
-        irecord = table[record.item_id]
+        irecord = table[record.send_inv_item_id]
+
+        if irecord:
+            item_data = TABLE(
+                            TR(
+                                TH("%s: " % table.item_id.label),
+                                table.item_id.represent(irecord.item_id),
+                                TH( "%s: " % table.item_pack_id.label),
+                                table.item_pack_id.represent(irecord.item_pack_id),
+                            ),
+                            TR(
+                                TH( "%s: " % table.site_id.label),
+                                TD(table.site_id.represent(irecord.site_id),
+                                   _colspan=3),
+                            )
+                        )
+        else:
+            item_data = T("Item not found")
 
         # Header
-        rheader = DIV(
-                    TABLE(
-                        TR(
-                            TH("%s: " % table.item_id.label),
-                               table.item_id.represent(irecord.item_id),
-                               TH( "%s: " % table.item_pack_id.label),
-                               table.item_pack_id.represent(irecord.item_pack_id),
-                        ),
-                        TR(
-                            TH( "%s: " % table.site_id.label),
-                            TD(table.site_id.represent(irecord.site_id), _colspan=3),
-                        ),
-                    ), rheader_tabs)
+        rheader = DIV(item_data, rheader_tabs)
 
     # Build footer
     inv_rfooter(r, record)
