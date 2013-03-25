@@ -152,7 +152,7 @@ class ViewSpaceIndex(DetailView):
         post_ids = [int(obj['object_pk']) for obj in posts_by_score]
         top_posts = Post.objects.filter(space=place.id).in_bulk(post_ids)
         # print top_posts.values()[0].title
-# o_list = Comment.objects.annotate(ocount=Count('object_pk'))
+        # o_list = Comment.objects.annotate(ocount=Count('object_pk'))
 
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
