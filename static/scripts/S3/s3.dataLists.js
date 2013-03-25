@@ -135,6 +135,7 @@ function dlAjaxDeleteItem(anchor) {
     $.ajax({
         'url': dlURLAppend(ajaxurl, 'delete=' + record_id),
         'success': function(data) {
+            // data['uuid'] holds the record UUID
             $(item).remove();
             // Also update the layer on the Map (if any)
             if (typeof map != 'undefined') {
