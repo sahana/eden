@@ -1,5 +1,5 @@
 /*
-    event_tools.js - Javascript containing tools for the event forms
+    map_tools.js - Javascript containing tools for the event and proposal forms
     like maps and FX.
                            
     License: GPLv3
