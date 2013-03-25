@@ -1138,7 +1138,7 @@ def newAssessment():
                                                        request.post_vars)
                 response.confirmation = \
                     s3.crud_strings["survey_complete"].msg_record_created
-            r.method="create"
+            r.method = "create"
         return True
     s3.prep = prep
 
