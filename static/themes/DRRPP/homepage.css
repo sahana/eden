@@ -67,6 +67,10 @@
 .front-latest-info-date {
 	margin-right: 15px;
 }
+.front-latest-desc,
+.front-latest-info {
+    font-family: Calibri, sans-serif;
+}
 
 /* Login */
 .front-login-text {

@@ -393,6 +393,12 @@ def homepage(module=None, *match, **attr):
         else:
             name = module
 
-    return layout(name, c=c, f="index", **attr)
+    if "f" in attr:
+        f = attr["f"]
+        del attr["f"]
+    else:
+        f = "index"
+
+    return layout(name, c=c, f=f, **attr)
 
 # END =========================================================================
