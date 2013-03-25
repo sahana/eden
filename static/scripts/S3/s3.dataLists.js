@@ -143,10 +143,17 @@ function dlAjaxDeleteItem(anchor) {
                 Ext.iterate(layers, function(key, val, obj) {
                     if (key.s3_layer_id == needle) {
                         var layer = layers[val];
-                        Ext.iterate(layer.strategies, function(key, val, obj) {
-                            if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                                // Reload the layer
-                                layer.strategies[val].refresh();
+                        //Ext.iterate(layer.strategies, function(key, val, obj) {
+                        //    if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                        //        // Reload the layer
+                        //        layer.strategies[val].refresh();
+                        //    }
+                        //});
+                        var uuid = data['uuid']; // The record UUID
+                        Ext.iterate(layer.features, function(key, val, obj) {
+                            if (key.attributes.id == uuid) {
+                                // Remove this feature
+                                layer.removeFeatures([key]);
                             }
                         });
                     }
