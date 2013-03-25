@@ -230,7 +230,7 @@
                 "OpenLayers/Control/MousePosition.js",
                 "OpenLayers/Control/OverviewMap.js",
                 "OpenLayers/Control/KeyboardDefaults.js",
-                //"OpenLayers/Control/PanZoom.js",
+                "OpenLayers/Control/PanZoom.js",
                 //"OpenLayers/Control/PanZoomBar.js",
                 "OpenLayers/Control/ArgParser.js",
                 "OpenLayers/Control/Permalink.js",

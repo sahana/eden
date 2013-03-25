@@ -5,6 +5,7 @@
 
 /**
  * @requires OpenLayers/Renderer/Elements.js
+ * @requires OpenLayers/Console.js
  */
 
 /**
@@ -203,7 +204,7 @@ OpenLayers.Renderer.VML = OpenLayers.Class(OpenLayers.Renderer.Elements, {
      * geometry - {<OpenLayers.Geometry>}
      */
     setStyle: function(node, style, options, geometry) {
-        style = style  || node._style;
+        style = style || node._style;
         options = options || node._options;
         var fillColor = style.fillColor;
 
@@ -249,8 +250,12 @@ OpenLayers.Renderer.VML = OpenLayers.Class(OpenLayers.Renderer.Elements, {
         }
 
         // fill 
-        if (options.isFilled) { 
-            node.fillcolor = fillColor; 
+        if (options.isFilled) {
+            if (!style.externalGraphic) {
+				node.fillcolor = fillColor;
+			} else {
+				node.fillcolor = "none";
+			}
         } else { 
             node.filled = "false"; 
         }
@@ -266,21 +271,44 @@ OpenLayers.Renderer.VML = OpenLayers.Class(OpenLayers.Renderer.Elements, {
             }
             fill.opacity = style.fillOpacity;
 
-            if (node._geometryClass === "OpenLayers.Geometry.Point" &&
-                    style.externalGraphic) {
-
-                // override fillOpacity
-                if (style.graphicOpacity) {
-                    fill.opacity = style.graphicOpacity;
-                }
-                
-                fill.src = style.externalGraphic;
-                fill.type = "frame";
-                
-                if (!(style.graphicWidth && style.graphicHeight)) {
-                  fill.aspect = "atmost";
-                }                
-            }
+            if (style.externalGraphic) {
+				// reuse the fill node if the same externalGraphic with the same size has already been used
+				if (fill.src != style.externalGraphic ||
+					((fill.size) ? parseFloat(fill.size.value.split(",")[1]): 0) != (style.pointRadius * 2) * 72 / 96) {
+					// override fillOpacity
+					if (style.graphicOpacity) {
+						fill.opacity = style.graphicOpacity;
+					}
+					
+					fill.src = style.externalGraphic;
+					fill.type = (node._geometryClass === "OpenLayers.Geometry.Point") ? "frame" : "tile";
+					
+					// to follow SLD spec we need to know image size
+					// to get the image size we must load the image
+					var img = new Image();
+					
+					img.onload = OpenLayers.Function.bind(function() {
+						var height = img.height * 72 / 96;
+						var width = img.width * 72 / 96;
+						if (style.pointRadius) {
+							var aspect = width / height;
+							height = (style.pointRadius * 2) * 72 / 96;
+							width = height * aspect;
+						}
+						fill.size = width + "pt," + height + "pt";
+					});
+					
+					// load the image
+					img.src = style.externalGraphic;
+					
+					if (!(style.graphicWidth && style.graphicHeight)) {
+						fill.aspect = "atmost";
+					}
+				}
+			} else if (style.graphicName && node._geometryClass !== "OpenLayers.Geometry.Point") {
+				//this can also happen if a rule based style applies to both points and other types of geometries. TODO: better handling of rule based styles!
+				OpenLayers.Console.error('WellKnownName is not yet supported as GraphicFill by the VML renderer!');
+			}
             if (fill.parentNode != node) {
                 node.appendChild(fill);
             }
