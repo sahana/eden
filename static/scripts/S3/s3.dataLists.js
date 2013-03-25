@@ -143,19 +143,24 @@ function dlAjaxDeleteItem(anchor) {
                 Ext.iterate(layers, function(key, val, obj) {
                     if (key.s3_layer_id == needle) {
                         var layer = layers[val];
-                        //Ext.iterate(layer.strategies, function(key, val, obj) {
-                        //    if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                        //        // Reload the layer
-                        //        layer.strategies[val].refresh();
-                        //    }
-                        //});
-                        var uuid = data['uuid']; // The record UUID
-                        Ext.iterate(layer.features, function(key, val, obj) {
-                            if (key.attributes.id == uuid) {
-                                // Remove this feature
+                        var found = false;
+                        var uuid = data['uuid']; // The Record UUID
+                        Ext.iterate(layer.feaures, function(key, val, obj) {
+                            if (key.properties.id == uuid) {
+                                // Remove the feature
                                 layer.removeFeatures([key]);
+                                found = true;
                             }
                         });
+                        if (!found) {
+                            // Feature was in a Cluster: refresh the layer
+                            Ext.iterate(layer.strategies, function(key, val, obj) {
+                                if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                    // Reload the layer
+                                    layer.strategies[val].refresh();
+                                }
+                            });
+                        }
                     }
                 });
             }

@@ -5131,7 +5131,7 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def simplify(wkt,
-                 tolerance=0.01,
+                 tolerance=None,
                  preserve_topology=True,
                  output="wkt",
                  decimals=4
@@ -5167,6 +5167,9 @@ class GIS(object):
             wkt = wkt[10] if wkt else wkt
             s3_debug("Invalid Shape: %s" % wkt)
             return None
+
+        if not tolerance:
+            tolerance = current.deployment_settings.get_gis_simplify_tolerance()
 
         shape = shape.simplify(tolerance, preserve_topology)
 
@@ -6161,26 +6164,25 @@ S3.gis.layers_feature_resources[%i]={
 
         if catalogue_layers:
             # Add all Layers from the Catalogue
-            layer_types = [
-                ArcRESTLayer,
-                BingLayer,
-                EmptyLayer,
-                GoogleLayer,
-                OSMLayer,
-                TMSLayer,
-                WMSLayer,
-                XYZLayer,
-                JSLayer,
-                ThemeLayer,
-                GeoJSONLayer,
-                GPXLayer,
-                CoordinateLayer,
-                GeoRSSLayer,
-                KMLLayer,
-                OpenWeatherMapLayer,
-                WFSLayer,
-                FeatureLayer,
-            ]
+            layer_types = [ArcRESTLayer,
+                           BingLayer,
+                           EmptyLayer,
+                           GoogleLayer,
+                           OSMLayer,
+                           TMSLayer,
+                           WMSLayer,
+                           XYZLayer,
+                           JSLayer,
+                           ThemeLayer,
+                           GeoJSONLayer,
+                           GPXLayer,
+                           CoordinateLayer,
+                           GeoRSSLayer,
+                           KMLLayer,
+                           OpenWeatherMapLayer,
+                           WFSLayer,
+                           FeatureLayer,
+                           ]
         else:
             # Add just the default Base Layer
             s3.gis.base = True
@@ -6853,7 +6855,7 @@ class FeatureLayer(Layer):
                       #"type": "feature",
                       "name": self.safe_name,
                       "url": url,
-                     }
+                      }
             self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)

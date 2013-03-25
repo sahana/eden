@@ -2011,6 +2011,7 @@ class S3LayerEntityModel(S3Model):
         #Style = [{
         #   low: float,   //*
         #   high: float,  //*
+        #   external_graphic: string, //*
         #   fill: string, //*
         #   fill_opacity: float, //*
         #   stroke: string, //* (will default to fill, if not set)

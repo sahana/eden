@@ -523,6 +523,18 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.attributes.marker_url) {
                     // Use marker from feature
                     url = feature.attributes.marker_url;
+                } else if (feature.layer && (undefined != feature.layer.s3_style)) {
+                    var style = feature.layer.s3_style;
+                    if (Object.prototype.toString.call(style) !== '[object Array]') {
+                        // Polygon Layer
+                        if (undefined != style.external_graphic) {
+                            url = S3.Ap.concat('/static/img/' + style.external_graphic);
+                        }
+                    }
+                    if (undefined == url) {
+                        // default
+                        url = marker_url;
+                    }
                 } else {
                     // per-Layer Marker for Unclustered Point
                     url = marker_url;

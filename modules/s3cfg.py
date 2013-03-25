@@ -400,9 +400,11 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # GIS (Map) Settings
+    #
     def get_gis_api_bing(self):
         """ API key for Bing """
         return self.gis.get("api_bing", None)
+
     def get_gis_api_google(self):
         """
             API key for Google
@@ -410,25 +412,82 @@ class S3Config(Storage):
             - defaults to localhost
         """
         return self.gis.get("api_google", "ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw")
+
     def get_gis_api_yahoo(self):
-        """ API key for Yahoo """
+        """
+            API key for Yahoo
+            - deprecated
+        """
         return self.gis.get("api_yahoo", None)
-    def get_gis_countries(self):
-        return self.gis.get("countries", [])
+
     def get_gis_building_name(self):
         " Display Building Name when selecting Locations "
         return self.gis.get("building_name", True)
+
     def get_gis_check_within_parent_boundaries(self):
         """
             Whether location Lat/Lons should be within the boundaries of the parent
         """
         return self.gis.get("check_within_parent_boundaries", True)
+
+    def get_gis_countries(self):
+        """
+            Which country codes should be accessible to the location selector?
+        """
+        return self.gis.get("countries", [])
+
+    def get_gis_display_l0(self):
+        return self.gis.get("display_L0", False)
+    def get_gis_display_l1(self):
+        return self.gis.get("display_L1", True)
+
+    def get_gis_duplicate_features(self):
+        """
+            Display duplicate features either side of the International date line?
+        """
+        return self.gis.get("duplicate_features", False)
+
+    def get_gis_edit_group(self):
+        " Edit Location Groups "
+        return self.gis.get("edit_GR", False)
+
+    def get_gis_geoserver_url(self):
+        return self.gis.get("geoserver_url", "")
+    def get_gis_geoserver_username(self):
+        return self.gis.get("geoserver_username", "admin")
+    def get_gis_geoserver_password(self):
+        return self.gis.get("geoserver_password", "")
+        
     def get_gis_latlon_selector(self):
-        " Display a Lat/Lon boxes when selecting Locations "
+        " Display Lat/Lon form fields when selecting Locations "
         return self.gis.get("latlon_selector", True)
+
+    def get_gis_map_height(self):
+        """
+            Height of the Embedded Map
+            Change this if-required for your theme
+            NB API can override this in specific modules
+        """
+        return self.gis.get("map_height", 600)
+
+    def get_gis_map_width(self):
+        """
+            Width of the Embedded Map
+            Change this if-required for your theme
+            NB API can override this in specific modules
+        """
+        return self.gis.get("map_width", 1000)
+
     def get_gis_map_selector(self):
         " Display a Map-based tool to select Locations "
         return self.gis.get("map_selector", True)
+
+    def get_gis_marker_max_height(self):
+        return self.gis.get("marker_max_height", 35)
+
+    def get_gis_marker_max_width(self):
+        return self.gis.get("marker_max_width", 30)
+
     def get_gis_menu(self):
         """
             Should we display a menu of GIS configurations?
@@ -437,33 +496,7 @@ class S3Config(Storage):
             e.g. T("Events") or T("Regions")
         """
         return self.gis.get("menu", False)
-    def get_gis_display_l0(self):
-        return self.gis.get("display_L0", False)
-    def get_gis_display_l1(self):
-        return self.gis.get("display_L1", True)
-    def get_gis_duplicate_features(self):
-        return self.gis.get("duplicate_features", False)
-    def get_gis_edit_group(self):
-        " Edit Location Groups "
-        return self.gis.get("edit_GR", False)
-    def get_gis_map_height(self):
-        """
-            Height of the Embedded Map
-            Change this if-required for your theme
-            NB API can override this in specific modules
-        """
-        return self.gis.get("map_height", 600)
-    def get_gis_map_width(self):
-        """
-            Width of the Embedded Map
-            Change this if-required for your theme
-            NB API can override this in specific modules
-        """
-        return self.gis.get("map_width", 1000)
-    def get_gis_marker_max_height(self):
-        return self.gis.get("marker_max_height", 35)
-    def get_gis_marker_max_width(self):
-        return self.gis.get("marker_max_width", 30)
+
     def get_gis_mouse_position(self):
         """
             What style of Coordinates for the current Mouse Position
@@ -472,16 +505,19 @@ class S3Config(Storage):
             'normal', 'mgrs' or False
         """
         return self.gis.get("mouse_position", "normal")
+
     def get_gis_overview(self):
         """
             Should the Map display an Overview Map?
         """
         return self.gis.get("overview", True)
+
     def get_gis_permalink(self):
         """
             Should the Map display a Permalink control?
         """
         return self.gis.get("permalink", True)
+
     def get_gis_poi_resources(self):
         """
             List of resources (tablenames) to import/export as PoIs from Admin Locations
@@ -489,26 +525,38 @@ class S3Config(Storage):
         """
         return self.gis.get("poi_resources",
                             ["cr_shelter", "hms_hospital", "org_office"])
+
     def get_gis_print_service(self):
+        """
+            URL for a Print Service
+        """
         return self.gis.get("print_service", "")
-    def get_gis_geoserver_url(self):
-        return self.gis.get("geoserver_url", "")
-    def get_gis_geoserver_username(self):
-        return self.gis.get("geoserver_username", "admin")
-    def get_gis_geoserver_password(self):
-        return self.gis.get("geoserver_password", "")
+
+    def get_gis_simplify_tolerance(self):
+        """
+            Default Tolerance for the Simplification of Polygons
+            - a lower value means less simplification, which is suitable for higher-resolution local activities
+            - a higher value is suitable for global views
+        """
+        return self.gis.get("simplify_tolerance", 0.01)
+
     def get_gis_scaleline(self):
         """
             Should the Map display a ScaleLine control?
         """
         return self.gis.get("scaleline", True)
+
     def get_gis_spatialdb(self):
+        """
+            Does the database have Spatial extensions?
+        """
         db_type = self.get_database_type()
         if db_type != "postgres":
             # Only Postgres supported currently
             return False
         else:
             return self.gis.get("spatialdb", False)
+
     def get_gis_zoomcontrol(self):
         """
             Should the Map display a Zoom control?
@@ -519,8 +567,10 @@ class S3Config(Storage):
     # L10N Settings
     def get_L10n_default_language(self):
         return self.L10n.get("default_language", "en")
+
     def get_L10n_display_toolbar(self):
         return self.L10n.get("display_toolbar", True)
+
     def get_L10n_languages(self):
         return self.L10n.get("languages",
                              OrderedDict([

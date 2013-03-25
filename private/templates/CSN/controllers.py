@@ -7,7 +7,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
-from s3.s3search import S3DateFilter, S3OptionsFilter, S3TextFilter
+from s3.s3filter import S3DateFilter, S3OptionsFilter, S3TextFilter
 from s3.s3utils import s3_avatar_represent
 
 # =============================================================================
@@ -208,10 +208,12 @@ def filter_formstyle(row_id, label, widget, comment):
         return widget
 
 # -----------------------------------------------------------------------------
-def render_homepage_posts(rfields, record, **attr):
+def render_homepage_posts(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for CMS Posts on the Homepage
 
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
@@ -376,10 +378,12 @@ def render_homepage_posts(rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_homepage_events(rfields, record, **attr):
+def render_homepage_events(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for Events on the Homepage
+        Custom dataList item renderer for CMS Posts on the Homepage
 
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
         @param attr: additional HTML attributes for the item
