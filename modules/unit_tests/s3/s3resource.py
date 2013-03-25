@@ -623,10 +623,10 @@ class ResourceContextFilterTests(unittest.TestCase):
         # Configure contexts
         s3db.configure("org_office",
                        context = {"organisation":
-                                    "organisation_id"})
+                                  "organisation_id"})
         s3db.configure("pr_person",
                        context = {"organisation":
-                                    "human_resource.organisation_id"})
+                                  "human_resource.organisation_id"})
                                     
         # Without global context filter
         s3db.context = None

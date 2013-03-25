@@ -132,94 +132,104 @@ def location():
     tablename = "gis_location"
     table = s3db[tablename]
 
-    # Location Search Method
-    gis_location_adv_search = (s3base.S3SearchSimpleWidget(
-            name = "location_search_text_advanced",
-            label = T("Search"),
-            #comment = T("Search for a Location by name, including local names."),
-            comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = "name"
-            ),
-            s3base.S3SearchOptionsWidget(
-                name="location_search_L0",
-                field="L0",
-                label = COUNTRY,
-                cols = 3,
-            ),
-            s3base.S3SearchOptionsWidget(
-                name="location_search_L1",
-                field="L1",
-                location_level="L1",
-                cols = 3,
-            ),
-            s3base.S3SearchOptionsWidget(
-                name="location_search_L2",
-                field="L2",
-                location_level="L2",
-                cols = 3,
-            ),
-            s3base.S3SearchOptionsWidget(
-                name = "location_search_level",
-                label = T("Level"),
-                field = "level",
-                cols = 2
-            ),
-            # NB This currently only works for locations with the country as direct parent (i.e. mostly L1s)
-            #s3base.S3SearchOptionsWidget(
-            #    name = "location_search_country",
-            #    label = COUNTRY,
-            #    field = "parent",
-            #    cols = 2
-            #),
-        )
-    gis_location_search = s3base.S3LocationSearch(
-        simple = (s3base.S3SearchSimpleWidget(
-            name="location_search_text_simple",
-            label = T("Search"),
-            #comment = T("Search for a Location by name, including local names."),  # How? These aren't fields in this table or in a table that we link to.
-            comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = ["name"]
+    if "search" in request.args or\
+       "report" in request.args:
+        # Location Search Method
+        gis_location_adv_search = (s3base.S3SearchSimpleWidget(
+                name = "location_search_text_advanced",
+                label = T("Search"),
+                #comment = T("Search for a Location by name, including local names."),
+                comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
+                field = "name"
+                ),
+                s3base.S3SearchOptionsWidget(
+                    name="location_search_L0",
+                    field="L0",
+                    label = COUNTRY,
+                    cols = 3,
+                ),
+                s3base.S3SearchOptionsWidget(
+                    name="location_search_L1",
+                    field="L1",
+                    location_level="L1",
+                    cols = 3,
+                ),
+                s3base.S3SearchOptionsWidget(
+                    name="location_search_L2",
+                    field="L2",
+                    location_level="L2",
+                    cols = 3,
+                ),
+                s3base.S3SearchOptionsWidget(
+                    name = "location_search_level",
+                    label = T("Level"),
+                    field = "level",
+                    cols = 2
+                ),
+                # NB This currently only works for locations with the country as direct parent (i.e. mostly L1s)
+                #s3base.S3SearchOptionsWidget(
+                #    name = "location_search_country",
+                #    label = COUNTRY,
+                #    field = "parent",
+                #    cols = 2
+                #),
             )
-        ),
-        advanced = (
-            gis_location_adv_search
+        gis_location_search = s3base.S3LocationSearch(
+            simple = (s3base.S3SearchSimpleWidget(
+                name="location_search_text_simple",
+                label = T("Search"),
+                #comment = T("Search for a Location by name, including local names."),  # How? These aren't fields in this table or in a table that we link to.
+                comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
+                field = ["name"]
+                )
+            ),
+            advanced = (
+                gis_location_adv_search
+            )
         )
-    )
+        s3db.configure(tablename,
+                       # Custom Search Method
+                       search_method=gis_location_search,
+                       )
 
-    class S3LocationVirtualFields:
-        def population(self):
-            """
-                Used by the Report
-            """
-            table = current.s3db.gis_location_tag
-            query = (table.location_id == self.gis_location.id) & \
-                    (table.tag == "population")
-            location = current.db(query).select(table.value,
-                                                limitby=(0, 1)).first()
-            if location:
-                return int(location.value)
-            else:
-                return None
 
-    table.virtualfields.append(S3LocationVirtualFields())
+    if "report" in request.args:
+        class S3LocationVirtualFields:
+            def population(self):
+                """
+                    Used by the Report
+                """
+                table = current.s3db.gis_location_tag
+                query = (table.location_id == self.gis_location.id) & \
+                        (table.tag == "population")
+                location = current.db(query).select(table.value,
+                                                    limitby=(0, 1)).first()
+                if location:
+                    return int(location.value)
+                else:
+                    return None
+
+        table.virtualfields.append(S3LocationVirtualFields())
+
+        s3db.configure(tablename,
+                       report_options=Storage(
+                                search=gis_location_adv_search,
+                                rows=["name"],
+                                cols=[],
+                                fact=[("population", "sum", T("Total Population"))],
+                                defaults=Storage(
+                                                rows="name",
+                                                cols=None,
+                                                fact="sum:population",
+                                                totals=True
+                                                )
+                                ),
+                        )
+
     s3db.configure(tablename,
-                    # Don't include Bulky Location Selector in List Views
-                    listadd=False,
-                    # Custom Search Method
-                    search_method=gis_location_search,
-                    report_options=Storage(
-                            search=gis_location_adv_search,
-                            rows=["name"],
-                            cols=[],
-                            fact=[("population", "sum", T("Total Population"))],
-                            defaults=Storage(
-                                            rows="name",
-                                            cols=None,
-                                            fact="sum:population",
-                                            totals=True
-                                            )
-                            ),
-                    )
+                   # Don't include Bulky Location Selector in List Views
+                   listadd=False,
+                   )
 
     # Custom Methods
     set_method = s3db.set_method
@@ -279,12 +289,11 @@ def location():
             if r.method in (None, "list") and r.record is None:
                 # List
                 pass
-            elif r.method in ("delete", "search"):
+            elif r.method in ("delete", "search", "profile"):
                 pass
             else:
                 if r.method == "report":
                     s3.filter = (table.level !=None)
-                s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
                 # Add Map to allow locations to be found this way
                 config = gis.get_config()
                 lat = config.lat
@@ -293,11 +302,13 @@ def location():
                 feature_queries = []
 
                 if r.method == "create":
+                    s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
                     add_feature = True
                     add_feature_active = True
                     table.inherited.readable = False
                 else:
                     if r.method == "update":
+                        s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
                         add_feature = True
                         add_feature_active = False
                     else:

@@ -125,10 +125,7 @@
   {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
- {{s3.jquery_ready.append("$('a.first').pageslide()")}}
 {{pass}}
-{{if s3.debug:}}{{s3.scripts.append(URL(c="static", f="themes", args=["DRMP", "js", "jquery.pageslide.js"]))}}
-{{else:}}{{s3.scripts.append(URL(c="static", f="themes", args=["DRMP", "js", "jquery.pageslide.min.js"]))}}{{pass}}
 {{include "bootstrap_js.html"}}
 {{include "scripts.html"}}
 </body>

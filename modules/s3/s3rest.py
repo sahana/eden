@@ -433,7 +433,7 @@ class S3Request(object):
         Class to handle RESTful requests
     """
 
-    INTERACTIVE_FORMATS = ("html", "iframe", "popup")
+    INTERACTIVE_FORMATS = ("html", "iframe", "popup", "dl")
     DEFAULT_REPRESENTATION = "html"
 
     # -------------------------------------------------------------------------

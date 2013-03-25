@@ -222,7 +222,7 @@ class S3CRUD(S3Method):
                     field.comment = None
                     field.default = value
                     field.update = value
-                    if r.http=="POST":
+                    if r.http == "POST":
                         r.post_vars.update({fkey: value})
                     field.readable = False
                     field.writable = False
