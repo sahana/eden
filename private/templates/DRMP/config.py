@@ -225,6 +225,7 @@ def customize_cms_post(**attr):
                            "created_by",
                            "created_by$organisation_id",
                            "document.file",
+                           "event_post.event_id",
                            ]
 
             s3db.configure("cms_post",
@@ -352,6 +353,7 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     series = record["cms_post.series_id"]
     date = record["cms_post.created_on"]
     body = record["cms_post.body"]
+    event_id = raw["event_event_post.event_id"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id])
@@ -386,11 +388,19 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = db.cms_post
     if permit("update", table, record_id=record_id):
+        vars = {"refresh": listid,
+                "record": record_id,
+                "~.series_id$name": series,
+                }
+        f = current.request.function
+        if f == "event" and event_id:
+            vars["(event)"] = event_id
+        if f == "location" and location_id:
+            vars["(location)"] = location_id
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="cms", f="post",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
+                               vars=vars),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.cms_post.title_update,
                      )
