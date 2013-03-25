@@ -1490,23 +1490,17 @@ class S3Resource(object):
         if rows:
             data = self.extract(rows, selectors,
                                 represent=True, raw_data=True)
-            return S3DataList(self,
-                              fields,
-                              data,
-                              listid=listid,
-                              start=start,
-                              total=numrows,
-                              limit=limit,
-                              layout=layout), numrows, ids
         else:
-            return S3DataList(self,
-                              fields,
-                              {},
-                              listid=listid,
-                              start=start,
-                              total=numrows,
-                              limit=limit,
-                              layout=layout), 0, []
+            data = []
+            
+        return S3DataList(self,
+                          fields,
+                          data,
+                          listid=listid,
+                          start=start,
+                          total=numrows,
+                          limit=limit,
+                          layout=layout), numrows, ids
 
     # -------------------------------------------------------------------------
     def pivottable(self, rows, cols, layers):

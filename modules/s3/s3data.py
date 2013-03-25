@@ -883,6 +883,11 @@ class S3DataList(object):
              ajaxurl=None):
         """
             Render list data as HTML (nested DIVs)
+
+            @param start: index of the first item (in this page)
+            @param limit: (actual) number of items (in this page)
+            @param pagesize: maximum number of items per page
+            @param ajaxurl: the URL to Ajax-update the datalist
         """
 
         T = current.T
