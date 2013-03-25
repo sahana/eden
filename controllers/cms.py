@@ -86,41 +86,66 @@ def blog():
 def post():
     """ RESTful CRUD controller """
 
-    tablename = "cms_post"
-    table = s3db[tablename]
-
     # Filter out those posts which are part of a series
+    #tablename = "cms_post"
+    #table = s3db[tablename]
     #s3.filter = (table.series_id == None)
-
-    _module = request.get_vars.get("module", None)
-    if _module:
-        table.name.default = "%s Home Page" % _module
-        table.location_id.readable = table.location_id.writable = False
-        _crud = s3.crud_strings[tablename]
-        _crud.title_create = T("New Page")
-        _crud.title_update = T("Edit Page")
-        url = URL(c=_module, f="index")
-        s3db.configure(tablename,
-                       create_next = url,
-                       update_next = url)
-    else:
-        page = request.get_vars.get("page", None)
-        if page:
-            table.name.default = page
-            table.name.readable = table.name.writable = False
-            _crud = s3.crud_strings[tablename]
-            _crud.title_create = T("New Page")
-            _crud.title_update = T("Edit Page")
-            url = URL(c="default", f="index", vars={"page": page})
-            s3db.configure(tablename,
-                           create_next = url,
-                           update_next = url)
 
     # Custom Method to add Comments
     s3db.set_method(module, resourcename,
                     method="discuss",
                     action=discuss)
 
+    def prep(r):
+        if r.interactive:
+            table = r.table
+            if r.method in ("create", "update"):
+                # Filter from a Profile page?"
+                series = request.get_vars.get("~.series_id$name", None)
+                if series:
+                    # Lookup ID
+                    stable = db.cms_series
+                    row = db(stable.name == series).select(stable.id,
+                                                           limitby=(0, 1)
+                                                           ).first()
+                    if row:
+                        field = table.series_id
+                        field.default = row.id
+                        field.readable = field.writable = False
+                # Context from a Profile page?"
+                location_id = request.get_vars.get("(location)", None)
+                if location_id:
+                    field = table.location_id
+                    field.default = location_id
+                    field.readable = field.writable = False
+
+            _module = request.get_vars.get("module", None)
+            if _module:
+                table.name.default = "%s Home Page" % _module
+                table.location_id.readable = table.location_id.writable = False
+                _crud = s3.crud_strings[tablename]
+                _crud.title_create = T("New Page")
+                _crud.title_update = T("Edit Page")
+                url = URL(c=_module, f="index")
+                s3db.configure(tablename,
+                               create_next = url,
+                               update_next = url)
+            else:
+                page = request.get_vars.get("page", None)
+                if page:
+                    table.name.default = page
+                    table.name.readable = table.name.writable = False
+                    _crud = s3.crud_strings[tablename]
+                    _crud.title_create = T("New Page")
+                    _crud.title_update = T("Edit Page")
+                    url = URL(c="default", f="index", vars={"page": page})
+                    s3db.configure(tablename,
+                                   create_next = url,
+                                   update_next = url)
+
+        return True
+    s3.prep = prep
+    
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
 # -----------------------------------------------------------------------------

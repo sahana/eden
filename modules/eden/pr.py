@@ -2402,7 +2402,6 @@ class S3SavedSearch(S3Model):
 
         for field_filter, values in filters.items():
             field_selector, filter = field_filter.split("__")
-            lf = S3FieldSelector(field_selector).resolve(resource)
             if field_selector.endswith(".id"):
                 field_selector = field_selector[:-3]
 
@@ -2419,30 +2418,30 @@ class S3SavedSearch(S3Model):
 
                 labels = []
                 for selector in selectors:
-                    field = S3ResourceField(resource, selector)
-
-                    labels.append(s3_unicode(field.label))
+                    rfield = S3ResourceField(resource, selector)
+                    labels.append(s3_unicode(rfield.label))
 
                 # Represent the value as a unicode string
                 for index, value in enumerate(values):
                     values[index] = s3_unicode(value)
             else:
-                field = S3ResourceField(resource, field_selector)
-                labels = [s3_unicode(field.label)]
+                rfield = S3ResourceField(resource, field_selector)
+                labels = [s3_unicode(rfield.label)]
 
                 for index, value in enumerate(values):
-                    # Some represents need ints
-                    if s3_has_foreign_key(field.field):
-                        try:
-                            value = int(value)
-                        except:
-                            pass
-
-                    rep_value = represent(lf.field,
-                                          value,
-                                          strip_markup=True,
-                                          )
-                    values[index] = rep_value
+                    if not rfield.field:
+                        values[index] = s3_unicode(value)
+                    else:
+                        # Some represents need ints
+                        if s3_has_foreign_key(rfield.field):
+                            try:
+                                value = int(value)
+                            except ValueError:
+                                pass
+                        rep_value = represent(rfield.field,
+                                              value,
+                                              strip_markup=True)
+                        values[index] = rep_value
 
             # Join the nice labels back together
             field_labels.append("|".join(labels))

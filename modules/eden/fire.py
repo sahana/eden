@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden Fire Station Model
+""" Sahana Eden Fire Models
 
     @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
@@ -27,12 +27,132 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3FireStationModel"]
+__all__ = ["S3FireModel",
+           "S3FireStationModel",
+           ]
 
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
+
+# =============================================================================
+class S3FireModel(S3Model):
+    """
+        Fire Zones: Burn Perimeter, Burnt zone, Evacuation Zone, etc
+    """
+
+    names = ["fire_zone_type",
+             "fire_zone",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # -----------------------------------------------------------
+        # Fire Zone Types
+        tablename = "fire_zone_type"
+        table = define_table(tablename,
+                             Field("name",
+                                   label=T("Name")),
+                             # @ToDo: Currently unused - apply in layer_feature for now
+                             Field("style", "text",
+                                   label=T("Style")),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        ADD_ZONE_TYPE = T("Add Zone Type")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_ZONE_TYPE,
+            title_display = T("Zone Type Details"),
+            title_list = T("Zone Types"),
+            title_update = T("Edit Zone Type"),
+            title_search = T("Search Zone Types"),
+            title_upload = T("Import Zone Types"),
+            subtitle_create = T("Add New Zone Type"),
+            label_list_button = T("List Zone Types"),
+            label_create_button = T("Add New Zone Type"),
+            label_delete_button = T("Delete Zone Type"),
+            msg_record_created = T("Zone Type added"),
+            msg_record_modified = T("Zone Type updated"),
+            msg_record_deleted = T("Zone Type deleted"),
+            msg_list_empty = T("No Zone Types currently registered"))
+
+        zone_type_represent = S3Represent(lookup=tablename)
+
+        self.configure(tablename,
+                       deduplicate = self.fire_zone_type_duplicate,
+                       )
+
+        # -----------------------------------------------------------
+        # Fire Zones
+        tablename = "fire_zone"
+        table = define_table(tablename,
+                             Field("name",
+                                   label=T("Name")),
+                             Field("zone_type_id", db.fire_zone_type,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "fire_zone_type.id",
+                                                          zone_type_represent,
+                                                          sort=True)),
+                                   represent = zone_type_represent,
+                                   comment = S3AddResourceLink(c="fire",
+                                                               f="zone_type",
+                                                               label=ADD_ZONE_TYPE,
+                                                               tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                                   label=T("Type")),
+                             self.gis_location_id(
+                                widget = S3LocationSelectorWidget(polygon=True)
+                                ),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Zone"),
+            title_display = T("Zone Details"),
+            title_list = T("Zones"),
+            title_update = T("Edit Zone"),
+            title_search = T("Search Zones"),
+            title_upload = T("Import Zones"),
+            subtitle_create = T("Add New Zone"),
+            label_list_button = T("List Zones"),
+            label_create_button = T("Add New Zone"),
+            label_delete_button = T("Delete Zone"),
+            msg_record_created = T("Zone added"),
+            msg_record_modified = T("Zone updated"),
+            msg_record_deleted = T("Zone deleted"),
+            msg_list_empty = T("No Zones currently registered"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def fire_zone_type_duplicate(item):
+        """
+            Zone Type record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "fire_zone_type":
+            table = item.table
+            query = (table.name == item.data.name)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3FireStationModel(S3Model):

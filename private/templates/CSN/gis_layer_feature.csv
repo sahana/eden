@@ -1,8 +1,14 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Site","Trackable","Folder","Visible","Enabled"
-"Alerts",,"cms","post","US","incident","Danger Area","Alert","title/body","post.series_id$name=Alert",,,,,,"False",
-"Incident Reports",,"cms","post","US","incident","Danger Area","Incident","body","post.series_id$name=Incident",,,,,,"False",
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Polygons","Style","Folder","Visible","Enabled"
+"Airports","All Active Airports","transport","airport","US","airport","Airport","Airport","name","airport.obsolete=False","obsolete","False",,,,"False",
+"Evacuation Zones",,"fire","zone","US",,,"Evacuation Zone","name","zone.zone_type_id$name=Evacuation",,,"True","{'fill_opacity':0,'stroke_width':1,'stroke':'FFFF00'}",,"False",
+"Fire Perimeter",,"fire","zone","US",,,"Fire Perimeter","name","zone.zone_type_id$name=Fire",,,"True","{'fill_opacity':0,'stroke_width':1,'stroke':'FF0000'}",,"False",
+"Heliports","All Active Heliports","transport","heliport","US","helicopter","Heliport","Heliport","name","heliport.obsolete=False","obsolete","False",,,,"False",
+"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False","obsolete","False",,,,"False",
+"Offices","All Active Offices","org","office","US","WellsFargo","Building","Office","name/organisation_id","office.obsolete=False","obsolete","False",,,,"False",
+"Shelters","All Active Shelters","cr","shelter","US","shelter","Campground","Shelter","name/population/capacity_day","shelter.status__ne=1","status",2,,,,"False",
+"Alerts",,"cms","post","US","wildfire","Danger Area","Alert","title/body","post.series_id$name=Alert",,,,,,"False",
+"Incident Reports",,"cms","post","US","wildfire","Danger Area","Incident","body","post.series_id$name=Incident",,,,,,"False",
 "News Media",,"cms","post","US","news","Information","News","title/body","post.series_id$name=News",,,,,,"False",
 "Updates",,"cms","post","US","information","Information","Update","body","post.series_id$name=Update",,,,,,"False",
 "Twitter",,"cms","post","US","twitter","Information","Twitter","body","post.series_id$name=Twitter",,,,,,"False",
-"Ushahidi",,"cms","post","US","ushahidi","Information","Ushahidi","body","post.series_id$name=Ushahidi",,,,,,"False",
 "YouTube",,"cms","post","US","youtube","Information","YouTube","body","post.series_id$name=YouTube",,,,,,"False",

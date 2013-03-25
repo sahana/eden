@@ -1835,10 +1835,8 @@ class S3Compose(S3CRUD):
 
         if field:
             records = resource.select([field])
-            if records:
-                rfield = resource.resolve_selector(field)
-                items = resource.extract(records, [field])
-                recipients = [item[rfield.colname] for item in items]
+            items = resource.extract(records, [field])
+            recipients = [item.values()[0] for item in items]
 
         if recipients:
             self.recipients = recipients

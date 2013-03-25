@@ -114,7 +114,8 @@ function dlAjaxDeleteItem(anchor) {
         return;
     }
     var item_id = $(item).attr('id');
-    var record_id = item_id.split('-').pop();
+    var item_list = item_id.split('-');
+    var record_id = item_list.pop();
 
     var datalist = $(item).closest('.dl');
     var pagination = $(datalist).find('input.dl-pagination');
@@ -135,6 +136,34 @@ function dlAjaxDeleteItem(anchor) {
         'url': dlURLAppend(ajaxurl, 'delete=' + record_id),
         'success': function(data) {
             $(item).remove();
+            // Also update the layer on the Map (if any)
+            if (typeof map != 'undefined') {
+                var layers = map.layers;
+                var needle = item_list.join('_');
+                Ext.iterate(layers, function(key, val, obj) {
+                    if (key.s3_layer_id == needle) {
+                        var layer = layers[val];
+                        var found = false;
+                        var uuid = data['uuid']; // The Record UUID
+                        Ext.iterate(layer.feaures, function(key, val, obj) {
+                            if (key.properties.id == uuid) {
+                                // Remove the feature
+                                layer.removeFeatures([key]);
+                                found = true;
+                            }
+                        });
+                        if (!found) {
+                            // Feature was in a Cluster: refresh the layer
+                            Ext.iterate(layer.strategies, function(key, val, obj) {
+                                if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                    // Reload the layer
+                                    layer.strategies[val].refresh();
+                                }
+                            });
+                        }
+                    }
+                });
+            }
         },
         'error': function(request, status, error) {
             var msg;

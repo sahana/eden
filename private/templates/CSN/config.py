@@ -12,8 +12,8 @@ from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_repres
 from s3.s3validators import IS_LOCATION
 from s3.s3widgets import S3LocationAutocompleteWidget
 
-settings = current.deployment_settings
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for CSN
@@ -87,6 +87,14 @@ settings.base.theme = "CSN"
 
 # Mouse Position: 'normal', 'mgrs' or None
 settings.gis.mouse_position = None
+# Uncomment to hide the Overview map
+settings.gis.overview = False
+# Uncomment to hide the permalink control
+settings.gis.permalink = False
+# Uncomment to hide the ScaleLine control
+#settings.gis.scaleline = False
+# Uncomment to hide the Zoom control
+settings.gis.zoomcontrol = False
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
@@ -392,6 +400,55 @@ def customize_cms_post(**attr):
 
 settings.ui.customize_cms_post = customize_cms_post
 
+# -----------------------------------------------------------------------------
+def org_office_marker_fn(record):
+    """
+        Function to decide which Marker to use for Offices
+        @ToDo: Legend
+        @ToDo: Use Symbology
+    """
+
+    db = current.db
+    otable = db.org_organisation
+    organisation = db(otable.id == record.organisation_id).select(otable.name,
+                                                                  limitby=(0, 1)).first()
+    
+    if organisation:
+        name = organisation.name
+        if name == "City National Bank":
+            name = "CNB"
+        elif name == "Dorchester Collection":
+            name = "hotel"
+        else:
+            name = name.replace(" ", "")
+        marker = name
+
+    mtable = db.gis_marker
+    try:
+        marker = db(mtable.name == marker).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
+                                                  cache=current.s3db.cache,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    except:
+        marker = None
+    return marker
+
+# -----------------------------------------------------------------------------
+def customize_org_office(**attr):
+    """
+        Customize org_office controller
+        - Marker fn
+    """
+
+    current.s3db.configure("org_office",
+                           marker_fn = org_office_marker_fn,
+                           )
+
+    return attr
+
+settings.ui.customize_org_office = customize_org_office
 # =============================================================================
 # Template Modules
 # Comment/uncomment modules here to disable/enable them
@@ -487,6 +544,21 @@ settings.modules = OrderedDict([
     ("irs", Storage(
             name_nice = "Ushahidi Reports",
             #description = "Incident Reports",
+            restricted = True,
+            module_type = None
+        )),
+    ("transport", Storage(
+            name_nice = T("Transport"),
+            restricted = True,
+            module_type = None
+        )),
+    ("hms", Storage(
+            name_nice = T("Hospitals"),
+            restricted = True,
+            module_type = None
+        )),
+    ("fire", Storage(
+            name_nice = T("Fire"),
             restricted = True,
             module_type = None
         )),

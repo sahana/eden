@@ -357,7 +357,7 @@
                 <data field="name"><xsl:value-of select="$l2"/></data>
                 <data field="level"><xsl:text>L2</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -453,7 +453,7 @@
                 <data field="name"><xsl:value-of select="$l3"/></data>
                 <data field="level"><xsl:text>L3</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L2']!=''">
+                    <xsl:when test="$l2!=''">
                         <!-- Parent to L2 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -461,7 +461,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -558,7 +558,7 @@
                 <data field="name"><xsl:value-of select="$l4"/></data>
                 <data field="level"><xsl:text>L4</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L3']!=''">
+                    <xsl:when test="$l3!=''">
                         <!-- Parent to L3 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -566,7 +566,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L2']!=''">
+                    <xsl:when test="$l2!=''">
                         <!-- Parent to L2 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -574,7 +574,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -672,7 +672,7 @@
                 <data field="name"><xsl:value-of select="$l5"/></data>
                 <data field="level"><xsl:text>L5</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L4']!=''">
+                    <xsl:when test="$l4!=''">
                         <!-- Parent to L4 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -680,7 +680,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L3']!=''">
+                    <xsl:when test="$l3!=''">
                         <!-- Parent to L3 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -688,7 +688,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L2']!=''">
+                    <xsl:when test="$l2!=''">
                         <!-- Parent to L2 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -696,7 +696,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -822,7 +822,7 @@
                     <xsl:call-template name="KeyValue"/>
                 </xsl:for-each>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L5']!=''">
+                    <xsl:when test="$l5!=''">
                         <!-- Parent to L5 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -830,7 +830,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L4']!=''">
+                    <xsl:when test="$l4!=''">
                         <!-- Parent to L4 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -838,7 +838,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L3']!=''">
+                    <xsl:when test="$l3!=''">
                         <!-- Parent to L3 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -846,7 +846,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L2']!=''">
+                    <xsl:when test="$l2!=''">
                         <!-- Parent to L2 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -854,7 +854,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">

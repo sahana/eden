@@ -2,6 +2,9 @@
  * Used by the Map (modules/s3gis.py)
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
+ *
+ * @ToDo: Restructure as more of a class so less methods are visible to the global scope
+ *
  */
 
 /* Global vars */
@@ -23,6 +26,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
 S3.gis.projection_current = new OpenLayers.Projection('EPSG:' + S3.gis.projection);
 S3.gis.options = {
+    // We will add these ourselves later for better control
+    controls: [],
     displayProjection: S3.gis.proj4326,
     projection: S3.gis.projection_current,
     // Use Manual stylesheet download (means can be done in HEAD to not delay pageload)

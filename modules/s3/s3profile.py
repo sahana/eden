@@ -34,6 +34,7 @@ from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3data import S3DataList
+from s3resource import S3FieldSelector
 
 # =============================================================================
 class S3Profile(S3CRUD):
@@ -82,7 +83,7 @@ class S3Profile(S3CRUD):
 
         # Get the page widgets
         widgets = current.s3db.get_config(tablename, "profile_widgets")
-        
+
         # Index the widgets by their position in the config
         for index, widget in enumerate(widgets):
             widget["index"] = index
@@ -140,7 +141,7 @@ class S3Profile(S3CRUD):
             except:
                 output["title"] = current.T("Profile Page")
             current.response.view = self._view(r, "profile.html")
-            
+
         return output
 
     # -------------------------------------------------------------------------
@@ -181,33 +182,14 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
+        context = widget.get("context", None)
+        if context:
+            context = "(%s)" % context
+            current.s3db.context = S3FieldSelector(context) == r.id
 
         tablename = widget.get("tablename", None)
-        resource = current.s3db.resource(tablename)
+        resource = current.s3db.resource(tablename, context=True)
         table = resource.table
-
-        # @ToDo: Can we automate some of filter through link_table to the primary resource?
-        filter = widget.get("filter", None)
-        if filter:
-            resource.add_filter(filter)
-
-        # Use the widget-index to create a unique ID
-        listid = "profile-list-%s-%s" % (tablename, widget["index"])
-
-        c, f = tablename.split("_", 1)
-
-        # Permission to create new items?
-        if current.auth.s3_has_permission("create", table):
-            create = A(I(_class="icon icon-plus-sign small-add"),
-                       _href=URL(c=c, f=f,
-                                 args=["create.popup"],
-                                 vars={"refresh": listid}
-                                 # @ToDo: Set defaults based on Filter (Disaster & Type)
-                                 ),
-                       _class="s3_modal",
-                       )
-        else:
-            create = "" 
 
         # Config Options:
         # 1st choice: Widget
@@ -222,6 +204,32 @@ class S3Profile(S3CRUD):
                              config("list_orderby",
                                     ~resource.table.created_on))
 
+        filter = widget.get("filter", None)
+        if filter:
+            resource.add_filter(filter)
+
+        # Use the widget-index to create a unique ID
+        listid = "profile-list-%s-%s" % (tablename, widget["index"])
+
+        c, f = tablename.split("_", 1)
+
+        # Permission to create new items?
+        # @ToDo: Special check for creating resources on Organisation profile
+        if current.auth.s3_has_permission("create", table):
+            if filter:
+                vars = filter.serialize_url(filter)
+            else:
+                vars = Storage()
+            vars.refresh = listid
+            if context:
+                vars[context] = r.id
+            create = A(I(_class="icon icon-plus-sign small-add"),
+                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
+                       _class="s3_modal",
+                       )
+        else:
+            create = "" 
+
         # Page size
         pagesize = 4
         representation = r.representation
@@ -231,8 +239,7 @@ class S3Profile(S3CRUD):
             record_id = get_vars.get("record", None)
             if record_id is not None:
                 # Ajax-update of a single record
-                from s3resource import S3FieldSelector as FS
-                resource.add_filter(FS("id") == record_id)
+                resource.add_filter(S3FieldSelector("id") == record_id)
                 start, limit = 0, 1
             else:
                 # Ajax-update of full page
@@ -264,19 +271,17 @@ class S3Profile(S3CRUD):
                                                    listid=listid,
                                                    orderby=orderby,
                                                    layout=list_layout)
+        # Render the list
+        ajaxurl = r.url(vars={"update": widget["index"]},
+                        representation="dl")
+        data = datalist.html(ajaxurl=ajaxurl, pagesize=pagesize)
         if numrows == 0:
             msg = P(I(_class="icon-folder-open-alt"),
                     BR(),
                     S3CRUD.crud_string(resource.tablename,
                                        "msg_no_match"),
                     _class="empty_card-holder")
-            data = msg
-        else:
-            # Render the list
-            ajaxurl = r.url(vars={"update": widget["index"]},
-                            representation="dl")
-            dl = datalist.html(ajaxurl = ajaxurl, pagesize = pagesize)
-            data = dl
+            data.insert(1, msg)
 
         if representation == "dl":
             # This is an Ajax-request, so we don't need the wrapper
@@ -320,6 +325,9 @@ class S3Profile(S3CRUD):
         icon = widget.get("icon", "")
         if icon:
             icon = TAG[""](I(_class=icon), " ")
+        context = widget.get("context", None)
+        if context:
+            context = "(%s)=%s" % (context, r.id)
 
         # Default to showing all the resources in datalist widgets as separate layers
         feature_resources = []
@@ -344,18 +352,20 @@ class S3Profile(S3CRUD):
                     filter_url = filter.serialize_url(resource)
                     for f in filter_url:
                         map_url = "%s%s=%s" % (map_url, f, filter_url[f])
+                    if context:
+                        map_url = "%s&%s" % (map_url, context)
+                elif context:
+                    map_url = "%s?%s" % (map_url, context)
 
-            id = "profile_map-%s" % tablename
-            if filter:
-                id = "%s-%s" % (id, filter.right)
+            listid = "profile-list-%s-%s" % (tablename, widget["index"])
             fappend({"name"      : T(widget["label"]),
-                     "id"        : id,
+                     "id"        : listid,
                      "tablename" : tablename,
                      "url"       : map_url,
                      "active"    : True,          # Is the feed displayed upon load or needs ticking to load afterwards?
                      #"marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
                      #"opacity"   : 1,            # Optional
-                     #"cluster_distance",         # Optional
+                     "cluster_distance" : 150,
                      #"cluster_threshold"         # Optional
                      })
 

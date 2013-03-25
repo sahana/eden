@@ -5240,7 +5240,11 @@ class GIS(object):
                  search = False,
                  googleEarth = False,
                  googleStreetview = False,
-                 mouse_position = "normal",
+                 mouse_position = None,
+                 overview = None,
+                 permalink = None,
+                 scaleline = None,
+                 zoomcontrol = None,
                  print_tool = {},
                  mgrs = {},
                  window = False,
@@ -5308,7 +5312,11 @@ class GIS(object):
             @param search: Show the Geonames search box
             @param googleEarth: Include a Google Earth Panel
             @param googleStreetview: Include the ability to click to open up StreetView in a popup at that location
-            @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal' (default), 'mgrs' (MGRS), False (off)
+            @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal', 'mgrs', False (defaults to checking deployment_settings, which defaults to 'normal')
+            @param overview: Show the Overview Map (defaults to checking deployment_settings, which defaults to True)
+            @param permalink: Show the Permalink control (defaults to checking deployment_settings, which defaults to True)
+            @param scaleline: Show the ScaleLine control (defaults to checking deployment_settings, which defaults to True)
+            @param zoomcontrol: Show the Zoom control (defaults to checking deployment_settings, which defaults to True)
             @param print_tool: Show a print utility (NB This requires server-side support: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting)
                 {"url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
                  "mapTitle": string,       # Title for the Printed Map (optional)
@@ -5422,11 +5430,16 @@ class GIS(object):
         maxResolution = config.maxResolution
         maxExtent = config.maxExtent
         numZoomLevels = config.zoom_levels
-        marker_default = Storage(image = config.marker_image,
-                                 height = config.marker_height,
-                                 width = config.marker_width,
-                                 url = URL(c="static", f="img",
-                                           args=["markers", config.marker_image]))
+
+        if config.marker_image:
+            marker_default = '''
+S3.gis.marker_default='%s'
+S3.gis.marker_default_height=%i
+S3.gis.marker_default_width=%i
+''' % (config.marker_image, config.marker_height, config.marker_width)
+        else:
+            marker_default = ""
+
         markers = {}
 
         #####
@@ -5450,12 +5463,11 @@ class GIS(object):
             #    DIV(_id="status_osm"),
             #    _style="border: 0px none ;", _valign="top",
             #),
-            TD(
-                # Somewhere to report whether KML feed is using cached copy or completely inaccessible
-                DIV(_id="status_kml"),
-                # Somewhere to report if Files are not found
-                DIV(_id="status_files"),
-                _style="border: 0px none ;", _valign="top",
+            TD(# Somewhere to report whether KML feed is using cached copy or completely inaccessible
+               DIV(_id="status_kml"),
+               # Somewhere to report if Files are not found
+               DIV(_id="status_files"),
+               _style="border: 0px none ;", _valign="top",
             )
         )))
 
@@ -5598,12 +5610,47 @@ class GIS(object):
             wms_browser_url = ""
 
         # Mouse Position
+        # 'normal', 'mgrs' or 'off'
+        if mouse_position is None:
+            mouse_position = settings.get_gis_mouse_position()
         if not mouse_position:
             mouse_position = ""
         elif mouse_position == "mgrs":
             mouse_position = '''S3.gis.mouse_position='mgrs'\n'''
         else:
             mouse_position = '''S3.gis.mouse_position=true\n'''
+
+        # Overview Map
+        if overview is None:
+            overview = settings.get_gis_overview()
+        if overview:
+            overview = ""
+        else:
+            overview = '''S3.gis.overview=false\n'''
+
+        # Permalink
+        if permalink is None:
+            permalink = settings.get_gis_permalink()
+        if permalink:
+            permalink = ""
+        else:
+            permalink = '''S3.gis.permalink=false\n'''
+
+        # ScaleLine
+        if scaleline is None:
+            scaleline = settings.get_gis_scaleline()
+        if scaleline:
+            scaleline = ""
+        else:
+            scaleline = '''S3.gis.scaleline=false\n'''
+
+        # Zoom control
+        if zoomcontrol is None:
+            zoomcontrol = settings.get_gis_zoomcontrol()
+        if zoomcontrol:
+            zoomcontrol = ""
+        else:
+            zoomcontrol = '''S3.gis.zoomcontrol=false\n'''
 
         # OSM Authoring
         pe_id = auth.s3_user_pe_id(auth.user.id) if auth.s3_logged_in() else None
@@ -6243,6 +6290,10 @@ i18n.gis_feature_info="%s"
             '''S3.gis.max_w=%i\n''' % settings.get_gis_marker_max_width(),
             '''S3.gis.max_h=%i\n''' % settings.get_gis_marker_max_height(),
             mouse_position,
+            overview,
+            permalink,
+            scaleline,
+            zoomcontrol,
             duplicate_features,
             wms_browser_name,
             wms_browser_url,
@@ -6250,9 +6301,7 @@ i18n.gis_feature_info="%s"
             mgrs_url,
             draw_feature,
             draw_polygon,
-            '''S3.gis.marker_default='%s'\n''' % marker_default.image,
-            '''S3.gis.marker_default_height=%i\n''' % marker_default.height,
-            '''S3.gis.marker_default_width=%i\n''' % marker_default.width,
+            marker_default,
             osm_auth,
             layers_feature_queries,
             layers_feature_resources,
@@ -6494,7 +6543,9 @@ class Layer(object):
                 base = False
             else:
                 record["_base"] = False
-            record["style"] = _config.style
+            if "style" not in record:
+                # Take from the layer_config
+                record["style"] = _config.style
             if tablename in ["gis_layer_bing", "gis_layer_google"]:
                 # SubLayers handled differently
                 append(record)
@@ -6786,19 +6837,28 @@ class FeatureLayer(Layer):
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:
                 url = "%s&track=1" % url
+            style = self.style
+            if style:
+                try:
+                    # JSON Object?
+                    style = json.loads(style)
+                except:
+                    # Fieldname to pass to URL for server-side lookup
+                    url = "%s&style=%s" % (url, style)
+                    style = None
 
             # Mandatory attributes
-            output = {
-                "id": self.layer_id,
-                # Defaults client-side if not-provided
-                #"type": "feature",
-                "name": self.safe_name,
-                "url": url,
-            }
-            #
+            output = {"id": self.layer_id,
+                      # Defaults client-side if not-provided
+                      #"type": "feature",
+                      "name": self.safe_name,
+                      "url": url,
+                     }
             self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
+            if style:
+                output["style"] = style
 
             return output
 
@@ -6913,12 +6973,11 @@ class GeoRSSLayer(Layer):
                                                   url)
 
             # Mandatory attributes
-            output = {
-                    "id": self.layer_id,
-                    "type": "georss",
-                    "name": name_safe,
-                    "url": url,
-                }
+            output = {"id": self.layer_id,
+                      "type": "georss",
+                      "name": name_safe,
+                      "url": url,
+                      }
             self.marker.add_attributes_to_output(output)
 
             # Attributes which are defaulted client-side if not set
@@ -7037,11 +7096,10 @@ class GPXLayer(Layer):
                       args=self.track)
 
             # Mandatory attributes
-            output = {
-                    "id": self.layer_id,
-                    "name": self.safe_name,
-                    "url": url,
-                }
+            output = {"id": self.layer_id,
+                      "name": self.safe_name,
+                      "url": url,
+                      }
             self.marker.add_attributes_to_output(output)
             self.add_attributes_if_not_default(
                 output,
@@ -7212,11 +7270,10 @@ class OSMLayer(Layer):
                 # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
                 return {}
 
-            output = {
-                    "id": self.layer_id,
-                    "name": self.safe_name,
-                    "url1": self.url1,
-                }
+            output = {"id": self.layer_id,
+                      "name": self.safe_name,
+                      "url1": self.url1,
+                      }
             self.add_attributes_if_not_default(
                 output,
                 base = (self.base, (True,)),
@@ -7295,21 +7352,17 @@ class ThemeLayer(Layer):
                  self.id)
 
             # Mandatory attributes
-            output = {
-                "id": self.layer_id,
-                "type": "theme",
-                "name": self.safe_name,
-                "url": url,
-            }
+            output = {"id": self.layer_id,
+                      "type": "theme",
+                      "name": self.safe_name,
+                      "url": url,
+                      }
             self.setup_folder_and_visibility(output)
             self.setup_clustering(output)
             style = self.style
             if style:
                 style = json.loads(style)
-            self.add_attributes_if_not_default(
-                output,
-                style = (style, (None,)),
-            )
+                output["style"] = style
 
             return output
 
@@ -7325,13 +7378,12 @@ class TMSLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-            output = {
-                    "id": self.layer_id,
-                    "type": "tms",
-                    "name": self.safe_name,
-                    "url": self.url,
-                    "layername": self.layername
-                }
+            output = {"id": self.layer_id,
+                      "type": "tms",
+                      "name": self.safe_name,
+                      "url": self.url,
+                      "layername": self.layername
+                      }
             self.add_attributes_if_not_default(
                 output,
                 _base = (self._base, (False,)),
@@ -7447,11 +7499,10 @@ class XYZLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-            output = {
-                    "id": self.layer_id,
-                    "name": self.safe_name,
-                    "url": self.url
-                }
+            output = {"id": self.layer_id,
+                      "name": self.safe_name,
+                      "url": self.url
+                      }
             self.add_attributes_if_not_default(
                 output,
                 _base = (self._base, (False,)),
@@ -8001,51 +8052,43 @@ class S3ImportPOI(S3Method):
 
             form = FORM(
                     TABLE(
-                        TR(
-                            TD(T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
-                               _colspan=3),
-                            ),
-                        TR(
-                            TD(B("%s: " % T("File"))),
-                            TD(INPUT(_type="file", _name="file", _size="50")),
-                            TD(SPAN("*", _class="req",
-                                        _style="padding-right: 5px;"))
-                            ),
-                        TR(
-                            TD(),
-                            TD(T("or")),
-                            TD(),
-                            ),
-                        TR(
-                            TD(B("%s: " % T("Host"))),
-                            TD(INPUT(_type="text", _name="host",
-                                     _id="host", _value="localhost")),
-                            TD(),
-                            ),
-                        TR(
-                            TD(B("%s: " % T("Database"))),
-                            TD(INPUT(_type="text", _name="database",
-                                     _id="database", _value="osm")),
-                            TD(),
-                            ),
-                        TR(
-                            TD(B("%s: " % T("User"))),
-                            TD(INPUT(_type="text", _name="user",
-                                     _id="user", _value="osm")),
-                            TD(),
-                            ),
-                        TR(
-                            TD(B("%s: " % T("Password"))),
-                            TD(INPUT(_type="text", _name="password",
-                                     _id="password", _value="planet")),
-                            TD(),
-                            ),
-                        TR(
-                            TD(B("%s: " % T("Ignore Errors?"))),
-                            TD(INPUT(_type="checkbox", _name="ignore_errors",
-                                     _id="ignore_errors")),
-                            TD(),
-                            ),
+                        TR(TD(T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
+                              _colspan=3),
+                           ),
+                        TR(TD(B("%s: " % T("File"))),
+                           TD(INPUT(_type="file", _name="file", _size="50")),
+                           TD(SPAN("*", _class="req",
+                                   _style="padding-right: 5px;"))
+                           ),
+                        TR(TD(),
+                           TD(T("or")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("Host"))),
+                           TD(INPUT(_type="text", _name="host",
+                                    _id="host", _value="localhost")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("Database"))),
+                           TD(INPUT(_type="text", _name="database",
+                                    _id="database", _value="osm")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("User"))),
+                           TD(INPUT(_type="text", _name="user",
+                                    _id="user", _value="osm")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("Password"))),
+                           TD(INPUT(_type="text", _name="password",
+                                    _id="password", _value="planet")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("Ignore Errors?"))),
+                           TD(INPUT(_type="checkbox", _name="ignore_errors",
+                                    _id="ignore_errors")),
+                           TD(),
+                           ),
                         res_select,
                         TR(TD(),
                            TD(INPUT(_type="submit", _value=T("Import"))),

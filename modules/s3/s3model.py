@@ -69,6 +69,9 @@ class S3Model(object):
 
         self.cache = (current.cache.ram, 60)
 
+        self.context = None
+        self.classes = Storage()
+
         # Initialize current.model
         if not hasattr(current, "model"):
             current.model = Storage(config = Storage(),
@@ -125,11 +128,11 @@ class S3Model(object):
         name = self.__class__.__name__
         response = current.response
         if LOCK not in response:
-            response[LOCK] = []
+            response[LOCK] = {}
         if name in response[LOCK]:
             raise RuntimeError("circular model reference deadlock in %s" % name)
         else:
-            response[LOCK].append(name)
+            response[LOCK][name] = True
         return
 
     # -------------------------------------------------------------------------
@@ -140,7 +143,7 @@ class S3Model(object):
         response = current.response
         if LOCK in response:
             if name in response[LOCK]:
-                response[LOCK].remove(name)
+                response[LOCK].pop(name, None)
             if not response[LOCK]:
                 del response[LOCK]
         return
@@ -185,10 +188,18 @@ class S3Model(object):
         if s3 is None:
             s3 = current.response.s3 = Storage()
 
-        if not db_only and tablename in s3:
-            return s3[tablename]
+        s3db = current.s3db
+        models = current.models
+
+        if not db_only:
+            if tablename in s3:
+                return s3[tablename]
+            elif s3db is not None and tablename in s3db.classes:
+                prefix, name = s3db.classes[tablename]
+                return models.__dict__[prefix].__dict__[name]
 
         db = current.db
+        found = None
         if hasattr(db, tablename):
             return ogetattr(db, tablename)
         elif ogetattr(db, "_lazy_tables") and \
@@ -196,7 +207,6 @@ class S3Model(object):
             return ogetattr(db, tablename)
         else:
             prefix, name = tablename.split("_", 1)
-            models = current.models
             if hasattr(models, prefix):
                 module = models.__dict__[prefix]
                 loaded = False
@@ -216,10 +226,13 @@ class S3Model(object):
                             generic.append(n)
                     else:
                         if n == tablename:
+                            s3db.classes[tablename] = (prefix, n)
+                            found = model
                             loaded = True
-                        s3[n] = model
                 if not loaded:
                     [module.__dict__[n](prefix) for n in generic]
+        if found:
+            return found
         if not db_only and tablename in s3:
             return s3[tablename]
         elif hasattr(db, tablename):
@@ -685,6 +698,55 @@ class S3Model(object):
             hook = hooks[alias]
             hook["supertable"] = supertable
             components[alias] = hook
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_alias(cls, tablename, link):
+        """
+            Find a component alias from the link table alias.
+
+            @param tablename: the name of the master table
+            @param link: the alias of the link table
+        """
+
+        components = current.model.components
+        
+        table = cls.table(tablename)
+        if not table:
+            return None
+
+        def get_alias(hooks, alias):
+            for alias in hooks:
+                hook = hooks[alias]
+                if hook.linktable:
+                    prefix, name = hook.linktable.split("_", 1)
+                    if name == link:
+                        return alias
+            return None
+
+        hooks = components.get(tablename, None)
+        if hooks:
+            alias = get_alias(hooks, link)
+            if alias:
+                return alias
+        else:
+            hooks = []
+                        
+        supertables = cls.get_config(tablename, "super_entity")
+        if supertables:
+            if not isinstance(supertables, (list, tuple)):
+                supertables = [supertables]
+            for s in supertables:
+                table = cls.table(s)
+                if table is None:
+                    continue
+                hooks = components.get(table._tablename, [])
+                if hooks:
+                    alias = get_alias(hooks, link)
+                    if alias:
+                        return alias
+                        
+        return None
 
     # -------------------------------------------------------------------------
     # Resource Methods

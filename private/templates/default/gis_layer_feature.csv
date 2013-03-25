@@ -1,5 +1,6 @@
 "Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Site","Trackable","Folder","Visible","Enabled"
 "Airports","All Active Airports","transport","airport","US","airport","Airport","Airport","name","airport.obsolete=False","obsolete","False",,,,"False",
+"Heliports","All Active Heliports","transport","heliport","US","helicopter","Heliport","Heliport","name","heliport.obsolete=False","obsolete","False",,,,"False",
 "Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False","obsolete","False",,,,"False",
 "Incident Reports",,"irs","ireport","US","incident","Danger Area","Incident","name/category",,,,,,,"False",
 "Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","office.obsolete=False","obsolete","False",,,,"False",

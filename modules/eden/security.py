@@ -63,9 +63,9 @@ class S3SecurityModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE = T("Add Zone Type")
+        ADD_ZONE_TYPE = T("Add Zone Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE,
+            title_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
@@ -80,6 +80,12 @@ class S3SecurityModel(S3Model):
             msg_record_deleted = T("Zone Type deleted"),
             msg_list_empty = T("No Zone Types currently registered"))
 
+        zone_type_represent = S3Represent(lookup=tablename)
+
+        self.configure(tablename,
+                       deduplicate = self.security_zone_type_duplicate,
+                       )
+
         # -----------------------------------------------------------
         # Security Zones
         tablename = "security_zone"
@@ -89,12 +95,12 @@ class S3SecurityModel(S3Model):
                              Field("zone_type_id", db.security_zone_type,
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "security_zone_type.id",
-                                                          self.security_zone_type_represent,
+                                                          zone_type_represent,
                                                           sort=True)),
-                                   represent = self.security_zone_type_represent,
+                                   represent = zone_type_represent,
                                    comment = S3AddResourceLink(c="security",
                                                                f="zone_type",
-                                                               label=ADD_ZONE,
+                                                               label=ADD_ZONE_TYPE,
                                                                tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                                    label=T("Type")),
                              self.gis_location_id(
@@ -120,6 +126,8 @@ class S3SecurityModel(S3Model):
             msg_record_modified = T("Zone updated"),
             msg_record_deleted = T("Zone deleted"),
             msg_list_empty = T("No Zones currently registered"))
+
+        zone_represent = S3Represent(lookup=tablename)
 
         # -----------------------------------------------------------
         # Security Staff Types
@@ -148,6 +156,8 @@ class S3SecurityModel(S3Model):
             msg_record_deleted = T("Staff Type deleted"),
             msg_list_empty = T("No Staff Types currently registered"))
 
+        staff_type_represent = S3Represent(lookup=tablename)
+
         # -----------------------------------------------------------
         # Security Staff
         tablename = "security_staff"
@@ -156,7 +166,7 @@ class S3SecurityModel(S3Model):
                              Field("staff_type_id", "list:reference security_staff_type",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "security_staff_type.id",
-                                                          self.security_staff_type_represent,
+                                                          staff_type_represent,
                                                           sort=True,
                                                           multiple=True)),
                                    represent = self.security_staff_type_multirepresent,
@@ -168,9 +178,9 @@ class S3SecurityModel(S3Model):
                               Field("zone_id", db.security_zone,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "security_zone.id",
-                                                          self.security_zone_represent,
+                                                          zone_represent,
                                                           sort=True)),
-                                    represent = self.security_zone_represent,
+                                    represent = zone_represent,
                                     comment = S3AddResourceLink(c="security",
                                                                 f="zone",
                                                                 label=ADD_ZONE,
@@ -207,62 +217,23 @@ class S3SecurityModel(S3Model):
         #
         return Storage()
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def security_zone_type_represent(id, row=None):
-        """ Represent a security zone type in option fields or list views """
+    def security_zone_type_duplicate(item):
+        """
+            Zone Type record duplicate detection, used for the deduplicate hook
 
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
+            @param item: the S3ImportItem to check
+        """
 
-        db = current.db
-        table = db.security_zone_type
-        record = db(table.id == id).select(table.name,
+        if item.tablename == "security_zone_type":
+            table = item.table
+            query = (table.name == item.data.name)
+            row = current.db(query).select(table.id,
                                            limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def security_zone_represent(id, row=None):
-        """ Represent a security zone in option fields or list views """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.security_zone
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def security_staff_type_represent(id, row=None):
-        """ Represent a staff type zone in option fields """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.security_staff_type
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod

@@ -2030,12 +2030,12 @@ S3.gis.tab="%s"''' % s3.gis.tab
                             features = [row.wkt]
                         else:
                             features = []
-                        map_popup = gis.show_map(
-                                                 lat = map_lat,
+                        map_popup = gis.show_map(lat = map_lat,
                                                  lon = map_lon,
                                                  # Same as a single zoom on a cluster
                                                  zoom = zoom + 2,
                                                  features = features,
+                                                 #catalogue_layers = True,
                                                  add_feature = True,
                                                  add_feature_active = not polygon,
                                                  add_polygon = polygon,
@@ -2046,7 +2046,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  window = True,
                                                  window_hide = True,
                                                  location_selector = True
-                                                )
+                                                 )
                 else:
                     # Bad location_id
                     response.error = T("Invalid Location!")
@@ -2077,18 +2077,18 @@ S3.gis.tab="%s"''' % s3.gis.tab
                 #addr_street_encoded = ""
                 postcode = ""
                 if map_selector:
-                    map_popup = gis.show_map(
-                                             add_feature = True,
+                    map_popup = gis.show_map(add_feature = True,
                                              add_feature_active = not polygon,
                                              add_polygon = polygon,
                                              add_polygon_active = polygon,
+                                             #catalogue_layers = True,
                                              toolbar = True,
                                              collapsed = True,
                                              search = True,
                                              window = True,
                                              window_hide = True,
                                              location_selector = True
-                                            )
+                                             )
             else:
                 # No Permission to create a location, so don't render a row
                 return ""
@@ -2527,7 +2527,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
                                       _id="gis_location_wkt",
                                       _name="gis_location_wkt")
             wkt_input_row = TAG[""](
-                                TR(TD(LABEL("%s (WGS84)" % T("Polygon"))),
+                                TR(TD(LABEL(T("Polygon"))),
                                    TD(),
                                    _id="gis_location_wkt_label__row",
                                    _class="box_middle %s" % hidden),

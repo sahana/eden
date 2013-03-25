@@ -1,0 +1,8 @@
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,REST Filter,Filter Field,Filter Value,Polygons,Folder,Visible,Enabled,Cluster Distance
+Offices,All Active Offices,org,office,US,office,Building,Office,name/organisation_id,~.obsolete=False,obsolete,False,,,False,50
+Projects,,project,location,US,project,,Project,name/location_id/multi_activity_type_id,,,,,,False,,,50
+Alerts,,cms,post,US,marker_red,Danger Area,Alert,body,~.series_id$name=Alert,,,,,False,,50
+Incidents,,cms,post,US,marker_red,Danger Area,Incident,body,~.series_id$name=Incident,,,,,False,,50
+Assessments,,cms,post,US,marker_red,Information,News,body,~.series_id$name=Assessment,,,,,False,,,50
+Activities,,cms,post,US,marker_red,Information,Update,body,~.series_id$name=Activity,,,,,False,,,50
+Reports,,cms,post,US,marker_red,Information,Twitter,body,~.series_id$name=Report,,,,,False,,,50

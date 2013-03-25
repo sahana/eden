@@ -433,7 +433,7 @@ class S3Request(object):
         Class to handle RESTful requests
     """
 
-    INTERACTIVE_FORMATS = ("html", "iframe", "popup")
+    INTERACTIVE_FORMATS = ("html", "iframe", "popup", "dl")
     DEFAULT_REPRESENTATION = "html"
 
     # -------------------------------------------------------------------------
@@ -583,7 +583,9 @@ class S3Request(object):
                                    components=components,
                                    approved=approved,
                                    unapproved=unapproved,
-                                   include_deleted=include_deleted)
+                                   include_deleted=include_deleted,
+                                   context=True,
+                                   )
 
         self.tablename = self.resource.tablename
         table = self.table = self.resource.table

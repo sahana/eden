@@ -1255,7 +1255,8 @@ class CsvToWeb2py:
             from subprocess import call
             from tempfile import NamedTemporaryFile
 
-            w2pfilename = os.path.join(current.request.folder, "languages", w2pfilename)
+            w2pfilename = os.path.join(current.request.folder, "languages",
+                                       w2pfilename)
 
             # Dictionary to store (location,translated string)
             # with untranslated string as the key
@@ -1300,6 +1301,7 @@ class CsvToWeb2py:
             call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
 
             # Convert the po file to w2p language file
+            # @ToDo: Catch errors, otherwise we lose output file!
             call(["po2web2py", "-i", pofilename, "-o", w2pfilename], shell=True)
 
             # Remove intermediate files

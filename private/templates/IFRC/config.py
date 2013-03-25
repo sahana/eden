@@ -178,6 +178,7 @@ settings.gis.display_L0 = True
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
+    ("vi", "Tiếng Việt"),
 ])
 # Default Language
 settings.L10n.default_language = "en-gb"

@@ -112,11 +112,12 @@ class S3CampDataModel(S3Model):
                   deduplicate = self.cr_shelter_type_duplicate,
                   )
 
+        represent = S3Represent(lookup=tablename)
         shelter_type_id = S3ReusableField("shelter_type_id", table,
                                           requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
-                                                                  self.cr_shelter_type_represent)),
-                                          represent = self.cr_shelter_type_represent,
+                                                                  represent)),
+                                          represent = represent,
                                           comment=S3AddResourceLink(c="cr",
                                                                     f="shelter_type",
                                                                     label=ADD_SHELTER_TYPE),
@@ -572,25 +573,6 @@ class S3CampDataModel(S3Model):
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.cr_shelter_type
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -222,7 +222,7 @@ class S3CRUD(S3Method):
                     field.comment = None
                     field.default = value
                     field.update = value
-                    if r.http=="POST":
+                    if r.http == "POST":
                         r.post_vars.update({fkey: value})
                     field.readable = False
                     field.writable = False
@@ -2854,6 +2854,8 @@ class S3CRUD(S3Method):
     @classmethod
     def _dl_ajax_delete(cls, r, resource):
 
+        UID = current.xml.UID
+
         delete = r.get_vars.get("delete", None)
         if delete is not None:
 
@@ -2875,6 +2877,11 @@ class S3CRUD(S3Method):
             ondelete = dresource.get_config("ondelete")
 
             # Delete it
+            uid = None
+            if UID in dresource.table:
+                rows = dresource.select([UID], start=0, limit=1)
+                if rows:
+                    uid = rows[0][UID]
             numrows = dresource.delete(ondelete=ondelete,
                                        format=r.representation)
             if numrows > 1:
@@ -2889,7 +2896,7 @@ class S3CRUD(S3Method):
             # Return a JSON message
             # @note: make sure the view doesn't get overridden afterwards!
             current.response.view = "xml.html"
-            return current.xml.json_message(message=message)
+            return current.xml.json_message(message=message, uuid=uid)
         else:
             r.error(404, r.ERROR.BAD_RECORD)
 
