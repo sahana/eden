@@ -125,7 +125,7 @@ def add_new_debate(request, space_url):
 @permission_required('debate.change_debate')
 def edit_debate(request, space_url, debate_id):
 
-
+    pk = debate_id
     place = get_object_or_404(Space, url=space_url)
 
     if has_operation_permission(request.user, place, 'debate.change_debate', \
