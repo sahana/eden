@@ -1249,8 +1249,7 @@ class S3TrackingModel(S3Model):
                                   ondelete = "RESTRICT")
 
         # Components
-        add_component("inv_track_item",
-                      inv_send="send_id")
+        add_component("inv_track_item", inv_send="send_id")
 
         # Custom methods
         # Generate Consignment Note
@@ -1554,8 +1553,7 @@ class S3TrackingModel(S3Model):
                   sortby=[[6, "desc"], [1, "asc"]])
 
         # Components
-        add_component("inv_track_item",
-                      inv_recv="recv_id")
+        add_component("inv_track_item", inv_recv="recv_id")
 
         # Custom methods
         # Print Forms
@@ -2130,7 +2128,9 @@ S3OptionsFilter({
                         list_fields.insert(6, "currency")
                     if record.req_ref and r.interactive:
                         tracktable.virtualfields.append(InvQuantityNeededVirtualField())
-                        list_fields.insert(4, (T("Quantity Needed"), "quantity_needed"))
+                        list_fields.insert(4, (T("Quantity Needed"),
+                                               "quantity_needed"))
+
                 s3db.configure("inv_track_item",
                                list_fields=list_fields,
                                )
@@ -3298,43 +3298,52 @@ def inv_rheader(r):
         # Header
         rheader = DIV(
                     TABLE(
-                        TR(
-                            TH("%s: " % table.item_id.label),
-                            table.item_id.represent(record.item_id),
-                            TH( "%s: " % table.item_pack_id.label),
-                            table.item_pack_id.represent(record.item_pack_id),
-                        ),
-                        TR(
-                            TH( "%s: " % table.site_id.label),
-                            TD(table.site_id.represent(record.site_id), _colspan=3),
-                        ),
-                    ), rheader_tabs)
+                        TR(TH("%s: " % table.item_id.label),
+                           table.item_id.represent(record.item_id),
+                           TH("%s: " % table.item_pack_id.label),
+                           table.item_pack_id.represent(record.item_pack_id),
+                           ),
+                        TR(TH("%s: " % table.site_id.label),
+                           TD(table.site_id.represent(record.site_id),
+                              _colspan=3),
+                           ),
+                        ), rheader_tabs)
 
     elif tablename == "inv_track_item":
         # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "inv_item/"),
-               ]
+                ]
         rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
 
-        # Get item data
-        table = s3db["inv_inv_item"]
-        irecord = table[record.item_id]
-
+        # Get site data
+        table = s3db.inv_inv_item
+        irecord = db(table.id == record.send_inv_item_id).select(table.site_id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
         # Header
-        rheader = DIV(
-                    TABLE(
-                        TR(
-                            TH("%s: " % table.item_id.label),
-                               table.item_id.represent(irecord.item_id),
-                               TH( "%s: " % table.item_pack_id.label),
-                               table.item_pack_id.represent(irecord.item_pack_id),
-                        ),
-                        TR(
-                            TH( "%s: " % table.site_id.label),
-                            TD(table.site_id.represent(irecord.site_id), _colspan=3),
-                        ),
-                    ), rheader_tabs)
+        if irecord:
+            rheader = DIV(
+                        TABLE(
+                            TR(TH("%s: " % table.item_id.label),
+                               table.item_id.represent(record.item_id),
+                               TH("%s: " % table.item_pack_id.label),
+                               table.item_pack_id.represent(record.item_pack_id),
+                            ),
+                            TR(TH( "%s: " % table.site_id.label),
+                               TD(table.site_id.represent(irecord.site_id),
+                                  _colspan=3),
+                               ),
+                            ), rheader_tabs)
+        else:
+            rheader = DIV(
+                        TABLE(
+                            TR(TH("%s: " % table.item_id.label),
+                               table.item_id.represent(record.item_id),
+                               TH("%s: " % table.item_pack_id.label),
+                               table.item_pack_id.represent(record.item_pack_id),
+                            ),
+                            ), rheader_tabs)
 
     # Build footer
     inv_rfooter(r, record)

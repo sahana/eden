@@ -64,7 +64,7 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage(),
             homepage("project"),
-            homepage("req")(
+            homepage("req", f="req_item", m="search")(
                 MM("Request Supplies", f="req", m="create", vars={"type": 1}),
                 MM("Request People", f="req", m="create", vars={"type": 3})
             ),
