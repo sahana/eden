@@ -203,7 +203,10 @@ class S3ContentModel(S3Model):
         configure(tablename,
                   super_entity="doc_entity",
                   onaccept = self.post_onaccept,
-                  context = {"event": "event.id"},
+                  context = {"event": "event.id",
+                             "location": "location_id",
+                             "organisation": "created_by$organisation_id",
+                             },
                   )
 
         # Components

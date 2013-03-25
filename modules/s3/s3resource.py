@@ -1499,7 +1499,14 @@ class S3Resource(object):
                               limit=limit,
                               layout=layout), numrows, ids
         else:
-            return None, 0, []
+            return S3DataList(self,
+                              fields,
+                              {},
+                              listid=listid,
+                              start=start,
+                              total=numrows,
+                              limit=limit,
+                              layout=layout), 0, []
 
     # -------------------------------------------------------------------------
     def pivottable(self, rows, cols, layers):

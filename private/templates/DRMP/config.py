@@ -138,78 +138,119 @@ def customize_cms_post(**attr):
         Customize cms_post controller
     """
 
-    s3db = current.s3db
-    table = s3db.cms_post
+    s3 = current.response.s3
 
-    field = table.series_id
-    field.label = T("Type")
-    field.readable = field.writable = True
-    #field.requires = field.requires.other
-    #field = table.name
-    #field.readable = field.writable = False
-    #field = table.title
-    #field.readable = field.writable = False
-    field = table.avatar
-    field.default = True
-    #field.readable = field.writable = False
-    field = table.replies
-    field.default = False
-    #field.readable = field.writable = False
-    field = table.location_id
-    field.represent = location_represent
-    field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
-    field.widget = S3LocationAutocompleteWidget(level="L3")
-    table.created_by.represent = s3_auth_user_represent_name
-    field = table.body
-    field.label = T("Text")
-    field.widget = None
-    #table.comments.readable = table.comments.writable = False
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        if r.interactive:
+            s3db = current.s3db
+            table = s3db.cms_post
 
-    crud_form = S3SQLCustomForm(
-        "series_id",
-        "body",
-        "location_id",
-        S3SQLInlineComponent(
-            "event_post",
-            label = T("Disaster(s)"),
-            fields = ["event_id"],
-            orderby = "event_id$name"
-        ),
-        S3SQLInlineComponent(
-            "document",
-            name = "file",
-            label = T("Files"),
-            fields = ["file",
-                      #"comments",
-                      ],
-        ),
-    )
+            field = table.series_id
+            field.label = T("Type")
+            field.readable = field.writable = True
+            #field.requires = field.requires.other
+            #field = table.name
+            #field.readable = field.writable = False
+            #field = table.title
+            #field.readable = field.writable = False
+            field = table.avatar
+            field.default = True
+            #field.readable = field.writable = False
+            field = table.replies
+            field.default = False
+            #field.readable = field.writable = False
+            field = table.location_id
+            field.represent = location_represent
+            field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
+            field.widget = S3LocationAutocompleteWidget(level="L3")
+            table.created_by.represent = s3_auth_user_represent_name
+            field = table.body
+            field.label = T("Text")
+            field.widget = None
+            #table.comments.readable = table.comments.writable = False
 
-    # Return to List view after create/update/delete
-    url_next = URL(c="default", f="index", args=None)
+            # Filter from a Profile page?"
+            event_id = current.request.get_vars.get("(event)", None)
+            if event_id:
+                crud_form = S3SQLCustomForm(
+                    "series_id",
+                    "body",
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                )
+                def create_onaccept(form):
+                    table = current.s3db.event_event_post
+                    table.insert(event_id=event_id, post_id=form.vars.id)
 
-    list_fields = ["series_id",
-                   "location_id",
-                   "created_on",
-                   "body",
-                   "created_by",
-                   "created_by$organisation_id",
-                   "document.file",
-                   ]
+                s3db.configure("cms_post",
+                               create_onaccept = create_onaccept, 
+                               )
+            else:
+                crud_form = S3SQLCustomForm(
+                    "series_id",
+                    "body",
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "event_post",
+                        label = T("Disaster(s)"),
+                        fields = ["event_id"],
+                        orderby = "event_id$name",
+                    ),
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                )
 
-    s3db.configure("cms_post",
-                   create_next = url_next,
-                   delete_next = url_next,
-                   update_next = url_next,
-                   crud_form = crud_form,
-                   list_fields = list_fields,
-                   )
+            # Return to List view after create/update/delete
+            url_next = URL(c="default", f="index", args=None)
 
-    crud_settings = current.response.s3.crud
-    crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
-    # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
-    #crud_settings.submit_style = "btn btn-primary"
+            list_fields = ["series_id",
+                           "location_id",
+                           "created_on",
+                           "body",
+                           "created_by",
+                           "created_by$organisation_id",
+                           "document.file",
+                           "event_post.event_id",
+                           ]
+
+            s3db.configure("cms_post",
+                           create_next = url_next,
+                           delete_next = url_next,
+                           update_next = url_next,
+                           crud_form = crud_form,
+                           list_fields = list_fields,
+                           )
+
+            crud_settings = current.response.s3.crud
+            crud_settings.formstyle = "bootstrap"
+            crud_settings.submit_button = T("Save changes")
+            # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
+            #crud_settings.submit_style = "btn btn-primary"
+
+        # Call standard prep
+        # (Done afterwards to ensure type field gets hidden)
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        return True
+    s3.prep = custom_prep
 
     return attr
 
@@ -312,6 +353,7 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     series = record["cms_post.series_id"]
     date = record["cms_post.created_on"]
     body = record["cms_post.body"]
+    event_id = raw["event_event_post.event_id"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id])
@@ -346,11 +388,19 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = db.cms_post
     if permit("update", table, record_id=record_id):
+        vars = {"refresh": listid,
+                "record": record_id,
+                "~.series_id$name": series,
+                }
+        f = current.request.function
+        if f == "event" and event_id:
+            vars["(event)"] = event_id
+        if f == "location" and location_id:
+            vars["(location)"] = location_id
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="cms", f="post",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
+                               vars=vars),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.cms_post.title_update,
                      )
@@ -613,17 +663,20 @@ def customize_gis_location(**attr):
     alerts_widget = dict(label = "Alerts",
                          type = "datalist",
                          tablename = "cms_post",
+                         context = "location",
                          filter = S3FieldSelector("series_id$name") == "Alert",
                          icon = "icon-alert",
                          list_layout = render_profile_posts,
                          )
     map_widget = dict(label = "Location",
                       type = "map",
+                      context = "location",
                       icon = "icon-map-marker",
                       )
     incidents_widget = dict(label = "Incidents",
                             type = "datalist",
                             tablename = "cms_post",
+                            context = "location",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
                             list_layout = render_profile_posts,
@@ -631,6 +684,7 @@ def customize_gis_location(**attr):
     assessments_widget = dict(label = "Assessments",
                               type = "datalist",
                               tablename = "cms_post",
+                              context = "location",
                               filter = S3FieldSelector("series_id$name") == "Assessment",
                               icon = "icon-info-sign",
                               list_layout = render_profile_posts,
@@ -638,6 +692,7 @@ def customize_gis_location(**attr):
     activities_widget = dict(label = "Activities",
                              type = "datalist",
                              tablename = "cms_post",
+                             context = "location",
                              filter = S3FieldSelector("series_id$name") == "Activity",
                              icon = "icon-activity",
                              list_layout = render_profile_posts,
@@ -645,6 +700,7 @@ def customize_gis_location(**attr):
     reports_widget = dict(label = "Reports",
                           type = "datalist",
                           tablename = "cms_post",
+                          context = "location",
                           filter = S3FieldSelector("series_id$name") == "Report",
                           icon = "icon-report",
                           list_layout = render_profile_posts,
@@ -779,17 +835,20 @@ def customize_org_organisation(**attr):
     alerts_widget = dict(label = "Alerts",
                          type = "datalist",
                          tablename = "cms_post",
+                         context = "organisation",
                          filter = S3FieldSelector("series_id$name") == "Alert",
                          icon = "icon-alert",
                          list_layout = render_profile_posts,
                          )
     map_widget = dict(label = "Location",
                       type = "map",
+                      context = "organisation",
                       icon = "icon-map-marker",
                       )
     incidents_widget = dict(label = "Incidents",
                             type = "datalist",
                             tablename = "cms_post",
+                            context = "organisation",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
                             list_layout = render_profile_posts,
@@ -797,6 +856,7 @@ def customize_org_organisation(**attr):
     assessments_widget = dict(label = "Assessments",
                               type = "datalist",
                               tablename = "cms_post",
+                              context = "organisation",
                               filter = S3FieldSelector("series_id$name") == "Assessment",
                               icon = "icon-info-sign",
                               list_layout = render_profile_posts,
@@ -804,6 +864,7 @@ def customize_org_organisation(**attr):
     activities_widget = dict(label = "Activities",
                              type = "datalist",
                              tablename = "cms_post",
+                             context = "organisation",
                              filter = S3FieldSelector("series_id$name") == "Activity",
                              icon = "icon-activity",
                              list_layout = render_profile_posts,
@@ -811,6 +872,7 @@ def customize_org_organisation(**attr):
     reports_widget = dict(label = "Reports",
                           type = "datalist",
                           tablename = "cms_post",
+                          context = "organisation",
                           filter = S3FieldSelector("series_id$name") == "Report",
                           icon = "icon-report",
                           list_layout = render_profile_posts,

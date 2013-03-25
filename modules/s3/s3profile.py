@@ -83,7 +83,7 @@ class S3Profile(S3CRUD):
 
         # Get the page widgets
         widgets = current.s3db.get_config(tablename, "profile_widgets")
-        
+
         # Index the widgets by their position in the config
         for index, widget in enumerate(widgets):
             widget["index"] = index
@@ -141,7 +141,7 @@ class S3Profile(S3CRUD):
             except:
                 output["title"] = current.T("Profile Page")
             current.response.view = self._view(r, "profile.html")
-            
+
         return output
 
     # -------------------------------------------------------------------------
@@ -214,13 +214,17 @@ class S3Profile(S3CRUD):
         c, f = tablename.split("_", 1)
 
         # Permission to create new items?
+        # @ToDo: Special check for creating resources on Organisation profile
         if current.auth.s3_has_permission("create", table):
+            if filter:
+                vars = filter.serialize_url(filter)
+            else:
+                vars = Storage()
+            vars.refresh = listid
+            if context:
+                vars[context] = r.id
             create = A(I(_class="icon icon-plus-sign small-add"),
-                       _href=URL(c=c, f=f,
-                                 args=["create.popup"],
-                                 vars={"refresh": listid}
-                                 # @ToDo: Set defaults based on Filter (Disaster & Type)
-                                 ),
+                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
                        _class="s3_modal",
                        )
         else:
@@ -267,19 +271,17 @@ class S3Profile(S3CRUD):
                                                    listid=listid,
                                                    orderby=orderby,
                                                    layout=list_layout)
+        # Render the list
+        ajaxurl = r.url(vars={"update": widget["index"]},
+                        representation="dl")
+        data = datalist.html(ajaxurl=ajaxurl, pagesize=pagesize)
         if numrows == 0:
             msg = P(I(_class="icon-folder-open-alt"),
                     BR(),
                     S3CRUD.crud_string(resource.tablename,
                                        "msg_no_match"),
                     _class="empty_card-holder")
-            data = msg
-        else:
-            # Render the list
-            ajaxurl = r.url(vars={"update": widget["index"]},
-                            representation="dl")
-            dl = datalist.html(ajaxurl = ajaxurl, pagesize = pagesize)
-            data = dl
+            data.insert(1, msg)
 
         if representation == "dl":
             # This is an Ajax-request, so we don't need the wrapper
@@ -355,17 +357,15 @@ class S3Profile(S3CRUD):
                 elif context:
                     map_url = "%s?%s" % (map_url, context)
 
-            id = "profile_map-%s" % tablename
-            if filter:
-                id = "%s-%s" % (id, filter.right)
+            listid = "profile-list-%s-%s" % (tablename, widget["index"])
             fappend({"name"      : T(widget["label"]),
-                     "id"        : id,
+                     "id"        : listid,
                      "tablename" : tablename,
                      "url"       : map_url,
                      "active"    : True,          # Is the feed displayed upon load or needs ticking to load afterwards?
                      #"marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
                      #"opacity"   : 1,            # Optional
-                     #"cluster_distance",         # Optional
+                     "cluster_distance" : 150,
                      #"cluster_threshold"         # Optional
                      })
 

@@ -3689,7 +3689,7 @@ def cluster_distance():
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (CLUSTER_DISTANCE,
                                                            T("The number of pixels apart that features need to be before they are clustered."))),
-                           requires = IS_INT_IN_RANGE(1, 30),
+                           requires = IS_INT_IN_RANGE(1, 51),
                            default = 20)
 
 # =============================================================================
