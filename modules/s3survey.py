@@ -2130,7 +2130,7 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
         self.field.requires = IS_IN_SET(self.getList())
         value = self.getAnswer()
         s3 = current.response.s3
-        valueList = s3.survey_json2list(value)
+        valueList = current.s3db.survey_json2list(value)
         self.field.name = self.question.code
         input = CheckboxesWidget.widget(self.field, valueList, **self.attr)
         self.field.name = "value"

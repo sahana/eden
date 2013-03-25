@@ -8,7 +8,6 @@
 
     @todo: open template from the dataTables into the section tab not update
     @todo: in the pages that add a link to a template make the combobox display the label not the numbers
-    @todo: restrict the deletion of a template to only those with status Pending
 """
 
 module = request.controller
@@ -206,7 +205,7 @@ def templateSummary():
                 dummy, template_id = request.vars.viewing.split(".")
             else:
                 template_id = r.id
-            form = s3.survey_build_template_summary(template_id)
+            form = s3db.survey_build_template_summary(template_id)
             output["items"] = form
             output["sortby"] = [[0, "asc"]]
             output["title"] = crud_strings.title_analysis_summary
@@ -337,12 +336,12 @@ def series():
 
     # Load Model
     table = s3db.survey_series
-    s3.survey_answerlist_dataTable_pre()
+    s3db.survey_answerlist_dataTable_pre()
 
     def prep(r):
         if r.interactive:
             if r.method == "create":
-                allTemplates = s3.survey_getAllTemplates()
+                allTemplates = s3db.survey_getAllTemplates()
                 if len(allTemplates) == 0:
                     session.warning = T("You need to create a template before you can create a series")
                     redirect(URL(c="survey", f="template", args=[], vars={}))
@@ -358,23 +357,23 @@ def series():
             # Set the minimum end_date to the same as the start_date
             s3.jquery_ready.append(
 '''S3.start_end_date('survey_series_start_date','survey_series_end_date')''')
-            s3.survey_serieslist_dataTable_post(r)
+            s3db.survey_serieslist_dataTable_post(r)
 
         elif r.component_name == "complete":
             if r.method == "update":
                 if r.http == "GET":
-                    form = s3.survey_buildQuestionnaireFromSeries(r.id,
+                    form = s3db.survey_buildQuestionnaireFromSeries(r.id,
                                                                   r.component_id)
                     output["form"] = form
                 elif r.http == "POST":
                     if "post_vars" in request and len(request.post_vars) > 0:
-                        id = s3.survey_save_answers_for_series(r.id,
+                        id = s3db.survey_save_answers_for_series(r.id,
                                                                r.component_id, # Update
                                                                request.post_vars)
                         response.confirmation = \
                             s3.crud_strings["survey_complete"].msg_record_modified
             else:
-                s3.survey_answerlist_dataTable_post(r)
+                s3db.survey_answerlist_dataTable_post(r)
         return output
     s3.postp = postp
 
@@ -385,7 +384,7 @@ def series():
                    listadd=False,
                    deletable=False)
 
-    output = s3_rest_controller(rheader=s3.survey_series_rheader)
+    output = s3_rest_controller(rheader=s3db.survey_series_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -412,7 +411,7 @@ def export_all_responses():
     # otherwise xlwt will crash if it comes across a T string
     T.lazy = False
 
-    seriesName = s3.survey_getSeriesName(series_id)
+    seriesName = s3db.survey_getSeriesName(series_id)
     sectionBreak = False
 
     filename = "%s_All_responses.xls" % seriesName
@@ -423,9 +422,9 @@ def export_all_responses():
     col = 0
     completeRow = {}
     nextRow = 2
-    qstnList = s3.survey_getAllQuestionsForSeries(series_id)
+    qstnList = s3db.survey_getAllQuestionsForSeries(series_id)
     if len(qstnList) > 256:
-        sectionList = s3.survey_getAllSectionsForSeries(series_id)
+        sectionList = s3db.survey_getAllSectionsForSeries(series_id)
         sectionBreak = True
     if sectionBreak:
         sheets = {}
@@ -445,10 +444,10 @@ def export_all_responses():
         row = 0
         sheet.write(row,col,qstn["code"])
         row += 1
-        widgetObj = s3.survey_getWidgetFromQuestion(qstn["qstn_id"])
+        widgetObj = s3db.survey_getWidgetFromQuestion(qstn["qstn_id"])
         sheet.write(row,col,widgetObj.fullName())
         # For each question get the response
-        allResponses = s3.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
+        allResponses = s3db.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
                                                                   series_id)
         for answer in allResponses:
             value = answer["value"]
@@ -1134,11 +1133,12 @@ def newAssessment():
                 # The URL is bad, without a series id we're lost so list all series
                 redirect(URL(c="survey", f="series", args=[], vars={}))
             if "post_vars" in request and len(request.post_vars) > 0:
-                id = s3.survey_save_answers_for_series(series_id,
+                id = s3db.survey_save_answers_for_series(series_id,
                                                        None, # Insert
                                                        request.post_vars)
                 response.confirmation = \
                     s3.crud_strings["survey_complete"].msg_record_created
+            r.method="create"
         return True
     s3.prep = prep
 
@@ -1161,8 +1161,8 @@ def newAssessment():
             # delete this error.
             elif response.error and not output["form"]["error"]:
                 response.error = None
-            s3.survey_answerlist_dataTable_post(r)
-            form = s3.survey_buildQuestionnaireFromSeries(series_id, None)
+            s3db.survey_answerlist_dataTable_post(r)
+            form = s3db.survey_buildQuestionnaireFromSeries(series_id, None)
             urlimport = URL(c=module, f="complete", args=["import"],
                             vars={"viewing":"%s.%s" % ("survey_series", series_id),
                                   "single_pass":True}
