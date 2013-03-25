@@ -134,6 +134,7 @@ function dlAjaxDeleteItem(anchor) {
     $.ajax({
         'url': dlURLAppend(ajaxurl, 'delete=' + record_id),
         'success': function(data) {
+            // data['uuid'] holds the record UUID
             $(item).remove();
         },
         'error': function(request, status, error) {
