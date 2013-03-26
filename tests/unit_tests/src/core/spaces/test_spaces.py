@@ -202,7 +202,7 @@ class ListSpacesTest(ECDTestCase):
         self.foo_space.users.add(self.bar_admin)
         self.login('bar_admin', 'bar_admin_password')
         response = self.get(self.url)
-        spaces_returned = response.context[0].dicts[0]['spaces_list']
+        spaces_returned = response.context[0].dicts[0]['space_list']
         self.assertEqual(len(spaces_returned), 2)
         self.assertTrue(self.foo_space in spaces_returned)
         self.assertTrue(self.bar_space in spaces_returned)   
