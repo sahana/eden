@@ -78,7 +78,8 @@ TEST_APPS = (
     'django_nose',
 )
 
-# Override django's default test runner to use Nose test runner instead.            
+# Override django's default test runner to use Nose test runner instead.
+
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 NOSE_ARGS = ['tests.unit_tests', '-s', '--cov-report', 'term-missing']
 

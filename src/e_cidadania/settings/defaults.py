@@ -59,7 +59,7 @@ USE_I18N = True
 USE_L10N = True
 
 # Calendar
-FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
+FIRST_WEEK_DAY = 0  # '0' for Monday, '6' for Sunday
 
 # Configuration related to media and static content directories
 MEDIA_ROOT = cwd + '/uploads/'
@@ -92,7 +92,7 @@ SECRET_KEY = '8nwcwmtau*bnu0u=shmdkda^-tpn55ch%qeqc8xn#-77r8c*0a'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    #'django.template.loaders.eggs.Loader',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -108,7 +108,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 MIDDLEWARE_CLASSES = (
     # GZipMiddleware compresses content for modern browsers
     'django.middleware.gzip.GZipMiddleware',
-    # ConditionalGetMiddleware adds support for modern browsers to conditionaly 
+    # ConditionalGetMiddleware adds support for modern browsers to conditionaly
     # GET responses
     'django.middleware.http.ConditionalGetMiddleware',
     'django.middleware.common.CommonMiddleware',
