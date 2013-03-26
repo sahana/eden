@@ -35,7 +35,7 @@ PONDERATIONS = (
 
 
 class Poll(models.Model):
-    
+
     """
     Data model for Polls. It stores the question and some data like the space
     and dates. The most important field is "participants". It allows us to
@@ -84,9 +84,9 @@ class Poll(models.Model):
 class Choice(models.Model):
     poll = models.ForeignKey(Poll)
     choice_text = models.CharField(_('Choice'), max_length=200, blank=True, null=True, help_text=_('Enter choice to be voted upon'))
-    #votes = models.IntegerField(blank=True, null=True, default='0')
+    # votes = models.IntegerField(blank=True, null=True, default='0')
     votes = models.ManyToManyField(User, blank=True, null=True)
-    
+
     @models.permalink
     def get_absolute_url(self):
         if self.space is not None:
@@ -113,7 +113,7 @@ class Voting(models.Model):
 
     proposalsets = models.ManyToManyField(ProposalSet, blank=True, null=True)
 
-    proposals = models.ManyToManyField(Proposal, blank = True, null=True, limit_choices_to = {'proposalset__isnull': True})
+    proposals = models.ManyToManyField(Proposal, blank=True, null=True, limit_choices_to={'proposalset__isnull': True})
 
     @models.permalink
     def get_absolute_url(self):
@@ -142,4 +142,3 @@ class ConfirmVote(models.Model):
     def get_approve_url(self):
         site = Site.objects.all()[0]
         return "http://%s%svote/approve/%s" % (site.domain, self.proposal.get_absolute_url(), self.token)
-

@@ -17,22 +17,22 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-"""  
+"""
 This file contains all the URLs that e_cidadania will inherit when the user
 access to '/spaces/'.
 """
 from django.conf.urls import *
 
 from core.spaces.views.spaces import ViewSpaceIndex, ListSpaces, \
-                                    DeleteSpace, EditRole
+    DeleteSpace, EditRole
 from core.spaces.views.documents import ListDocs, DeleteDocument, \
-                                    AddDocument, EditDocument
+    AddDocument, EditDocument
 from core.spaces.views.events import ListEvents, DeleteEvent, ViewEvent, \
-                                    AddEvent, EditEvent
+    AddEvent, EditEvent
 from core.spaces.views.rss import SpaceFeed
 from core.spaces.views.intent import ValidateIntent
 from core.spaces.views.news import ListPosts, YearlyPosts, MonthlyPosts, \
-                                    RedirectArchive
+    RedirectArchive
 from core.spaces.url_names import *
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
@@ -41,7 +41,7 @@ urlpatterns = patterns('',
 
     # RSS Feed
     url(r'^(?P<space_url>\w+)/rss/$', SpaceFeed(), name=SPACE_FEED),
-    
+
     # News
     url(r'^(?P<space_url>\w+)/news/',
         include('apps.ecidadania.news.urls')),
@@ -49,7 +49,7 @@ urlpatterns = patterns('',
     # Proposals
     url(r'^(?P<space_url>\w+)/proposal/',
         include('apps.ecidadania.proposals.urls')),
-    
+
     # Calendar
     url(r'^(?P<space_url>\w+)/calendar/',
         include('apps.ecidadania.cal.urls')),
@@ -57,7 +57,7 @@ urlpatterns = patterns('',
     # Debates
     url(r'^(?P<space_url>\w+)/debate/',
         include('apps.ecidadania.debate.urls')),
-    
+
     # Votes
     url(r'^(?P<space_url>\w+)/voting/',
         include('apps.ecidadania.voting.urls')),
@@ -120,7 +120,7 @@ urlpatterns += patterns('',
 
     url(r'^(?P<space_url>\w+)/delete/', DeleteSpace.as_view(),
         name=SPACE_DELETE),
-    
+
     url(r'^(?P<space_url>\w+)/news/$', RedirectArchive.as_view(),
         name=SPACE_NEWS),
 
@@ -138,7 +138,7 @@ urlpatterns += patterns('',
 
     url(r'^$', ListSpaces.as_view(), name=SPACE_LIST),
 
-    #url(_(r'^go/'), GoToSpace.as_view(), name=GOTO_SPACE),
+    # url(_(r'^go/'), GoToSpace.as_view(), name=GOTO_SPACE),
 
     url(r'^(?P<space_url>\w+)/roles/', EditRole.as_view(),
         name=EDIT_ROLES),
