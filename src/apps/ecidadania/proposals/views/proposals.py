@@ -95,7 +95,7 @@ class AddProposal(FormView):
 class EditProposal(UpdateView):
 
     """
-    The proposal can be edited by space and global admins, but also by their
+    The proposal can not only be edited by space and global admins, but also by their
     creator.
 
     :rtype: HTML Form
