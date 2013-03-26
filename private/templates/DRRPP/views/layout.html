@@ -56,7 +56,7 @@
    {{else:}}
    {{system_roles = auth.get_system_roles()}}
    {{if auth.s3_has_role(system_roles.ADMIN) or auth.s3_has_role(system_roles.ORG_ADMIN):}}
-    <a class='header-top-menu-btn' href='{{=URL(r=request, c="admin")}}'>Admin</a>
+    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="index", args="admin")}}'>Admin</a>
    {{pass}}
    <a class='header-top-menu-btn' href='{{=URL(r=request, c="default", f="user", args="logout")}}'>Logout</a>
    {{pass}}
@@ -73,7 +73,7 @@
     <ul class='sub-menu'>
      <li><a href='{{=URL(r=request, c="project", f="project", args="create")}}'>Add Project</a></li>
      <li><a href='{{=URL(r=request, c="project", f="framework", args="create")}}'>Add Policies &amp; Strategies</a></li>
-     <li><a href='{{=URL(r=request, c="project", f="project", args="import")}}'>Add Project Offline</a></li>
+     <li><a href='/{{=appname}}/static/themes/DRRPP/DRR_Project_Portal_New_Project_Form.doc'>Add Project Offline</a></li>
     </ul>
    </li>
    <li><a href='{{=URL(r=request, c="project", f="project", args="search")}}'>Project List</a></li>
