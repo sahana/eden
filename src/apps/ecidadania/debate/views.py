@@ -198,34 +198,33 @@ def create_note(request, space_url):
     place = get_object_or_404(Space, url=space_url)
         
     if request.method == "POST" and request.is_ajax:
-    if has_operation_permission(request.user, place, 'note.add_note', \
+        if has_operation_permission(request.user, place, 'note.add_note', \
         allow=['admins','mods','users']):
             if note_form.is_valid():
-                    note_form_uncommited = note_form.save(commit=False)
-                    note_form_uncommited.author = request.user
-                    note_form_uncommited.debate = get_object_or_404(Debate,
-                        pk=request.POST['debateid'])
-                    note_form_uncommited.title = request.POST['title']
-                    note_form_uncommited.message = request.POST['message']
-                    note_form_uncommited.column = get_object_or_404(Column,
-                        pk=request.POST['column'])
-                    note_form_uncommited.row = get_object_or_404(Row,
-                        pk=request.POST['row'])
-                    note_form_uncommited.save()
+                note_form_uncommited = note_form.save(commit=False)
+                note_form_uncommited.author = request.user
+                note_form_uncommited.debate = get_object_or_404(Debate,
+                    pk=request.POST['debateid'])
+                note_form_uncommited.title = request.POST['title']
+                note_form_uncommited.message = request.POST['message']
+                note_form_uncommited.column = get_object_or_404(Column,
+                    pk=request.POST['column'])
+                note_form_uncommited.row = get_object_or_404(Row,
+                    pk=request.POST['row'])
+                note_form_uncommited.save()
 
-                    response_data = {}
-                    response_data['id'] = note_form_uncommited.id
-                    response_data['message'] = note_form_uncommited.message
-                    response_data['title'] = note_form_uncommited.title
-            msg = "The note has been created."
-                    return HttpResponse(json.dumps(response_data),
-                                        mimetype="application/json")
+                response_data = {}
+                response_data['id'] = note_form_uncommited.id
+                response_data['message'] = note_form_uncommited.message
+                response_data['title'] = note_form_uncommited.title
+                msg = "The note has been created."
+                return HttpResponse(json.dumps(response_data),
+                                    mimetype="application/json")
 
             else:
-                    msg = "The note form didn't validate. This fields gave errors: " \
-                        + str(note_form.errors)
-    else:
-        msg = "The petition was not POST."
+                msg = "The note form didn't validate. This fields gave errors: " + str(note_form.errors)
+        else:
+            msg = "The petition was not POST."
         
     return HttpResponse(json.dumps(msg), mimetype="application/json")
 
@@ -266,19 +265,18 @@ def update_note(request, space_url):
             note = get_object_or_404(Note, pk=request.POST['noteid'])
             note_form = UpdateNoteForm(request.POST or None, instance=note)
             if note_form.is_valid():
-                    note_form_uncommited = note_form.save(commit=False)
-                    note_form_uncommited.title = request.POST['title']
-                    note_form_uncommited.message = request.POST['message']
-                    note_form_uncommited.last_mod_author = request.user
-        
-                    note_form_uncommited.save()
-                    msg = "The note has been updated."
+                note_form_uncommited = note_form.save(commit=False)
+                note_form_uncommited.title = request.POST['title']
+                note_form_uncommited.message = request.POST['message']
+                note_form_uncommited.last_mod_author = request.user
+    
+                note_form_uncommited.save()
+                msg = "The note has been updated."
             else:
-                    msg = "The form is not valid, check field(s): " + note_form.errors
-    return HttpResponse(msg)
-    else:
-        msg = "There was some error in the petition."
-        
+                msg = "The form is not valid, check field(s): " + note_form.errors
+            return HttpResponse(msg)
+        else:
+            msg = "There was some error in the petition."
     return HttpResponse(msg)
 
 
