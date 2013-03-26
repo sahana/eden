@@ -53,7 +53,7 @@ Probable cause: the script is not being executed from the project root (usually 
         print "\n >> Populating variables with applications...\n"
         for app in self.applications:
             appdata = app.split('.')  # Separate all components
-            #appdata.pop(0) # Remove project name, it's useless. This was for django <= 1.3
+            # appdata.pop(0) # Remove project name, it's useless. This was for django <= 1.3
             app_path_list = appdata  # This will leave us with an useful route to the application
             app_path = '/'.join(app_path_list)
             appname = app_path_list[-1]  # Get the application name (last value)

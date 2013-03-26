@@ -12,6 +12,6 @@ install:
   - pip install pep8 --use-mirrors
   - pip install -r src/requirements.txt --use-mirrors
 before_script:
-  - "pep8 --exclude=migrations --ignore=E501,E225 src"
+  - "pep8 --exclude=migrations --ignore=E501,E225,E128,E127 --exclude=thirdparty src"
 # command to run tests
 script: python src/manage.py test

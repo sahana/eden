@@ -30,6 +30,7 @@ from apps.thirdparty.tagging.fields import TagField
 from apps.thirdparty.tagging.models import Tag
 from core.spaces.models import Space
 
+
 class Debate(models.Model):
 
     """
@@ -70,6 +71,7 @@ class Debate(models.Model):
             'space_url': self.space.url,
             'debate_id': str(self.id)})
 
+
 class Column(models.Model):
     """
     Debate column object. The debate table is done mixing columns and rows. The column
@@ -82,6 +84,7 @@ class Column(models.Model):
 
     def __unicode__(self):
         return self.criteria
+
 
 class Row(models.Model):
     """

@@ -43,13 +43,13 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
     url(r'^(?P<voting_id>\d+)/edit/$', EditVoting.as_view(),
         name=EDIT_VOTING),
-        
+
     url(r'^poll/(?P<poll_id>\d+)/delete/$', DeletePoll.as_view(),
         name=DELETE_POLL),
-        
+
     url(r'^(?P<voting_id>\d+)/delete/$', DeleteVoting.as_view(),
         name=DELETE_VOTING),
-        
+
     url(r'^poll/(?P<pk>\d+)/$', ViewPoll.as_view(), name=VIEW_POLL),
 
     url(r'^poll/(?P<pk>\d+)/results/$', ViewPollResults.as_view(),
@@ -64,7 +64,3 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
     url(r'^vote/validate/(?P<token>\w+)/$', 'voting.validate_voting',
         name=VALIDATE_VOTE),
 )
-
-
-
-

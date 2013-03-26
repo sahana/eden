@@ -71,7 +71,7 @@ class AddVoting(FormView):
         """
         space = get_object_or_404(Space, url=self.kwargs['space_url'])
         kwargs = super(AddVoting, self).get_form_kwargs()
-        kwargs['current_space'] = space 
+        kwargs['current_space'] = space
         return kwargs
 
     def get_success_url(self):
@@ -89,7 +89,6 @@ class AddVoting(FormView):
             return super(AddVoting, self).form_valid(form)
         else:
             template_name = 'not_allowed.html'
-
 
     def get_context_data(self, **kwargs):
         context = super(AddVoting, self).get_context_data(**kwargs)
@@ -185,6 +184,7 @@ class DeleteVoting(DeleteView):
         context['get_place'] = self.space
         return context
 
+
 class ListVotings(ListView):
 
     """
@@ -225,8 +225,8 @@ def vote_voting(request, space_url):
     space = get_object_or_404(Space, url=space_url)
     voteform = VoteForm(request.POST)
 
-    if has_operation_permission(request.user, space,'voting.change_voting', allow=['admins', 'mods',
-        'users']):
+    if has_operation_permission(request.user, space, 'voting.change_voting', allow=['admins', 'mods',
+                                                                                    'users']):
         if request.method == 'POST' and voteform.is_valid():
             # Generate the objetct
             token = hashlib.md5("%s%s%s" % (request.user, space,
@@ -251,6 +251,7 @@ def vote_voting(request, space_url):
     else:
         return HttpResponse("Error P02: Couldn't emit the vote. You're not \
             allowed.")
+
 
 def validate_voting(request, token):
 

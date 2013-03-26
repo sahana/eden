@@ -100,7 +100,7 @@ urlpatterns += patterns('',
     # WARNING: This URLs aren't supposed to be here, but apparently on development
     # they are needed
 
-    #This url is for comments
+    # This url is for comments
 
     url(r'^comments/', include('django.contrib.comments.urls')),
 )

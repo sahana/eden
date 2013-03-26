@@ -45,7 +45,7 @@ def _get_cache_key_for_model(model, key):
 
     if not isinstance(key, basestring):
         raise TypeError('key must be  str or a unicode string')
-    
+
     return model.__name__ + '_' + key
 
 

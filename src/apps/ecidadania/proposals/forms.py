@@ -101,7 +101,7 @@ class ProposalMergeForm(ModelForm):
             print "form - set id: " + p_set
             super(ProposalMergeForm, self).__init__(*args, **kwargs)
             if self.instance:
-                #self.fields['merged_proposals'].widget = forms.SelectMultiple()
+                # self.fields['merged_proposals'].widget = forms.SelectMultiple()
                 print Proposal.objects.filter(proposalset=p_set)
                 self.fields['merged_proposals'].queryset = Proposal.objects.filter(proposalset=p_set)
 
