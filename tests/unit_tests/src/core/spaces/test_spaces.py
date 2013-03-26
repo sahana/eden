@@ -139,7 +139,7 @@ class DeleteSpaceTest(ECDTestCase):
         """
         space = self.bar_space
         general_user = self.login('test_user', 'test_password')
-        url = self.getURL(url_names.DELETE_SPACE, kwargs={'space_url': space.url})
+        url = self.getURL(url_names.SPACE_DELETE, kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseRedirect(response)
         self.assertEqual(url, response.request['PATH_INFO'])
@@ -153,7 +153,7 @@ class DeleteSpaceTest(ECDTestCase):
                                       logged_in=True)
         self.assertTrue(self.isLoggedIn(user))
         
-        url = self.getURL(url_names.DELETE_SPACE, kwargs={'space_url': space.url})
+        url = self.getURL(url_names.SPACE_DELETE, kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
@@ -177,7 +177,7 @@ class ListSpacesTest(ECDTestCase):
         #We have a public space as well as a private space.
         self.private_space = self.foo_space
         self.public_space = self.bar_space
-        self.url = self.getURL(url_names.LIST_SPACES)
+        self.url = self.getURL(url_names.SPACE_LIST)
                
     def testOnlyPublicSpacesAreListedForAnonymousUser(self):
         """
