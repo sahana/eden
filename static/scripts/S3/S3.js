@@ -207,7 +207,11 @@ $(document).ready(function() {
                 return false;
             }
         });
-        $('input:text:visible:first').focus();
+        
+        if (S3.FocusOnFirstField != false) {
+            //Focus On First Field
+            $('input:text:visible:first').focus();
+        };
     }
 
     // Accept comma as thousands separator
