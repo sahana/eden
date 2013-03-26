@@ -117,7 +117,7 @@ def add_new_debate(request, space_url):
                                'rowform': row_formset,
                                'colform': column_formset,
                                'get_place': place,
-			                         'debateid': current_debate_id},
+                                     'debateid': current_debate_id},
                               context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
@@ -169,7 +169,7 @@ def edit_debate(request, space_url, debate_id):
                                    'rowform': row_formset,
                                    'colform': column_formset,
                                    'get_place': place,
-				                           'debateid': debate_id},
+                                           'debateid': debate_id},
                                   context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
@@ -198,32 +198,32 @@ def create_note(request, space_url):
     place = get_object_or_404(Space, url=space_url)
         
     if request.method == "POST" and request.is_ajax:
-	if has_operation_permission(request.user, place, 'note.add_note', \
-		allow=['admins','mods','users']):
-        	if note_form.is_valid():
-            		note_form_uncommited = note_form.save(commit=False)
-            		note_form_uncommited.author = request.user
-            		note_form_uncommited.debate = get_object_or_404(Debate,
-                		pk=request.POST['debateid'])
-            		note_form_uncommited.title = request.POST['title']
-            		note_form_uncommited.message = request.POST['message']
-            		note_form_uncommited.column = get_object_or_404(Column,
-                		pk=request.POST['column'])
-            		note_form_uncommited.row = get_object_or_404(Row,
-                		pk=request.POST['row'])
-            		note_form_uncommited.save()
+    if has_operation_permission(request.user, place, 'note.add_note', \
+        allow=['admins','mods','users']):
+            if note_form.is_valid():
+                    note_form_uncommited = note_form.save(commit=False)
+                    note_form_uncommited.author = request.user
+                    note_form_uncommited.debate = get_object_or_404(Debate,
+                        pk=request.POST['debateid'])
+                    note_form_uncommited.title = request.POST['title']
+                    note_form_uncommited.message = request.POST['message']
+                    note_form_uncommited.column = get_object_or_404(Column,
+                        pk=request.POST['column'])
+                    note_form_uncommited.row = get_object_or_404(Row,
+                        pk=request.POST['row'])
+                    note_form_uncommited.save()
 
-            		response_data = {}
-            		response_data['id'] = note_form_uncommited.id
-            		response_data['message'] = note_form_uncommited.message
-            		response_data['title'] = note_form_uncommited.title
-			msg = "The note has been created."
-            		return HttpResponse(json.dumps(response_data),
-                                		mimetype="application/json")
+                    response_data = {}
+                    response_data['id'] = note_form_uncommited.id
+                    response_data['message'] = note_form_uncommited.message
+                    response_data['title'] = note_form_uncommited.title
+            msg = "The note has been created."
+                    return HttpResponse(json.dumps(response_data),
+                                        mimetype="application/json")
 
-        	else:
-            		msg = "The note form didn't validate. This fields gave errors: " \
-            			+ str(note_form.errors)
+            else:
+                    msg = "The note form didn't validate. This fields gave errors: " \
+                        + str(note_form.errors)
     else:
         msg = "The petition was not POST."
         
@@ -261,21 +261,21 @@ def update_note(request, space_url):
                             mimetype="application/json")
 
     if request.method == "POST" and request.is_ajax:
-    	if has_operation_permission(request.user, place, 'note.change_note',
-		allow=['admins','mods']) or request.user == note.author:
-        	note = get_object_or_404(Note, pk=request.POST['noteid'])
-        	note_form = UpdateNoteForm(request.POST or None, instance=note)
-        	if note_form.is_valid():
-            		note_form_uncommited = note_form.save(commit=False)
-            		note_form_uncommited.title = request.POST['title']
-            		note_form_uncommited.message = request.POST['message']
-            		note_form_uncommited.last_mod_author = request.user
+        if has_operation_permission(request.user, place, 'note.change_note',
+        allow=['admins','mods']) or request.user == note.author:
+            note = get_object_or_404(Note, pk=request.POST['noteid'])
+            note_form = UpdateNoteForm(request.POST or None, instance=note)
+            if note_form.is_valid():
+                    note_form_uncommited = note_form.save(commit=False)
+                    note_form_uncommited.title = request.POST['title']
+                    note_form_uncommited.message = request.POST['message']
+                    note_form_uncommited.last_mod_author = request.user
         
-            		note_form_uncommited.save()
-            		msg = "The note has been updated."
-        	else:
-            		msg = "The form is not valid, check field(s): " + note_form.errors
-	return HttpResponse(msg)
+                    note_form_uncommited.save()
+                    msg = "The note has been updated."
+            else:
+                    msg = "The form is not valid, check field(s): " + note_form.errors
+    return HttpResponse(msg)
     else:
         msg = "There was some error in the petition."
         
@@ -295,7 +295,7 @@ def update_position(request, space_url):
 
     if request.method == "POST" and request.is_ajax:
         if has_operation_permission(request.user, place, 'note.change_note', \
-		allow=['admins','mods']) or request.user == note.author:
+        allow=['admins','mods']) or request.user == note.author:
             if position_form.is_valid():
                 position_form_uncommited = position_form.save(commit=False)
                 position_form_uncommited.column = get_object_or_404(Column,
@@ -321,7 +321,7 @@ def delete_note(request, space_url):
     place = get_object_or_404(Space, url=space_url)
 
     if has_operation_permission(request.user, place, 'note.delete_note', \
-	allow=['admins','mods']) or note.author == request.user:
+    allow=['admins','mods']) or note.author == request.user:
         ctype = ContentType.objects.get_for_model(Note)
         all_comments = Comment.objects.filter(is_public=True,
                 is_removed=False, content_type=ctype,
@@ -416,29 +416,29 @@ class ListDebates(ListView):
 
 class DeleteDebate(DeleteView):
 
-	"""
-	Delete an existent debate. Debate deletion is only reserved to spaces
-	administrators or site admins.
-	"""
-	context_object_name = "get_place"
+    """
+    Delete an existent debate. Debate deletion is only reserved to spaces
+    administrators or site admins.
+    """
+    context_object_name = "get_place"
 
-	def get_success_url(self):
-		space = self.kwargs['space_url']
-		return '/spaces/%s' % (space)
+    def get_success_url(self):
+        space = self.kwargs['space_url']
+        return '/spaces/%s' % (space)
 
-	def get_object(self):
-		self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-		if has_operation_permission(self.request.user, self.space, 'debate.delete_debate', allow=['admins', 'mods']):
-			return get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-		else:
-			self.template_name = 'not_allowed.html'
+    def get_object(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        if has_operation_permission(self.request.user, self.space, 'debate.delete_debate', allow=['admins', 'mods']):
+            return get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+        else:
+            self.template_name = 'not_allowed.html'
 
-	def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):
 
-		"""
-		Get extra context data for ViewDebate view.
-		"""
-		context = super(DeleteDebate, self).get_context_data(**kwargs)
-		context['get_place'] = self.space
-		return context
+        """
+        Get extra context data for ViewDebate view.
+        """
+        context = super(DeleteDebate, self).get_context_data(**kwargs)
+        context['get_place'] = self.space
+        return context
 

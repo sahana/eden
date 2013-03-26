@@ -254,13 +254,13 @@ def vote_poll(request, poll_id, space_url):
     space = get_object_or_404(Space, url=space_url)
     poll = get_object_or_404(Poll, pk=poll_id)
     try :
-	choice = get_object_or_404(Choice, pk=request.POST['choice'])
+    choice = get_object_or_404(Choice, pk=request.POST['choice'])
     except KeyError:
-    	return render_to_response('voting/poll_detail.html', {
-		    'poll': poll,
-		    'get_place': space,
-		    'error_message': "You didn't select a choice.",
-		    }, context_instance=RequestContext(request))
+        return render_to_response('voting/poll_detail.html', {
+            'poll': poll,
+            'get_place': space,
+            'error_message': "You didn't select a choice.",
+            }, context_instance=RequestContext(request))
 
 
     if request.method == 'POST' and has_space_permission(request.user, space,
