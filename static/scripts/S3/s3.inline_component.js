@@ -9,6 +9,12 @@ $(function() {
 
     // Utilities --------------------------------------------------------------
 
+    // Mark an inline row as changed
+    var inline_mark_changed = function(element) {
+        var subform = $(element).closest('tr.inline-form');
+        $(subform).addClass('changed');
+    };
+
     // Get the real input name
     var inline_get_field = function(formname) {
         var selector = '#sub-' + formname;
@@ -286,20 +292,19 @@ $(function() {
 
         inline_remove_errors(formname);
 
-        // Hide the edit-row
-        $('#edit-row-' + formname).addClass('hide');
-
-        // Reset the row index
-        $('#edit-row-' + formname).data('rowindex', null);
-
+        var $edit = $('#edit-row-' + formname);
+        
+        // Hide and reset the edit-row
+        $edit.addClass('hide');
+        $edit.data('rowindex', null);
+        $edit.removeClass('changed');
+        
         // Show the read-row
         $('#read-row-' + rowname).removeClass('hide');
 
         // Enable the add-row
         enable_inline_add(formname);
 
-        // Reset catch-submit
-        inline_catch_submit(false, 'none', 'none');
     };
 
     // Add a new row
@@ -359,6 +364,9 @@ $(function() {
                 default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                 $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
             }
+            // Unmark changed
+            $('#add-row-' + formname).removeClass('changed');
+            
             // Add edit-button
             var edit = '#edt-' + formname + '-none';
             if ($(edit).length !== 0) {
@@ -443,6 +451,9 @@ $(function() {
                 default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                 $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
             }
+            // Unmark changed
+            $('#edit-row-' + formname).removeClass('changed');
+            
             // Add edit-button
             var edit = '#edt-' + formname + '-none';
             if ($(edit).length !== 0) {
@@ -514,71 +525,61 @@ $(function() {
 
     // Event handlers ---------------------------------------------------------
 
-    // Submit the inline form which has currently the focus
-    var inline_row_submit = function() {
-        if ('none' != inline_current_formname) {
-            var success = false;
-            if ('none' == inline_current_rowindex) {
-                success = inline_add(inline_current_formname);
+    // Submit all changed inline-rows, and then the main form
+    var inline_submit_all = function() {
+        var $form = $(this);
+        $form.find('tr.inline-form.changed').each(function() {
+            var formname = $(this).attr('id').split('-').pop();
+            if ($(this).hasClass('add-row')) {
+                success = inline_add(formname);
             } else {
-                success = inline_update(inline_current_formname, inline_current_rowindex);
+                var rowindex = $(this).data('rowindex');
+                success = inline_update(formname, rowindex);
             }
-            if (success) {
-                var subform_id = '#sub-' + inline_current_formname;
-                inline_catch_submit(false, 'none', 'none');
-                $(subform_id).closest('form').submit();
-            }
-        } else {
-            return true;
+        });
+        if (success) {
+            $('form').unbind('submit', inline_submit_all);
+            $form.submit();
         }
-        return false;
-    };
-
-    // When an inline-form has focus, then pressing 'enter' should
-    // submit this inline-form, and not the master form
-    var inline_catch_submit = function(toggle, formname, rowindex) {
+    }
+    
+    // Catch form-submit if any inline-row has been changed
+    var inline_catch_submit = function(toggle, element) {
+        var form = $(element).closest('form');
         if (toggle) {
-            inline_current_formname = formname;
-            inline_current_rowindex = rowindex;
-            $('form').unbind('submit', inline_row_submit);
-            $('form').bind('submit', inline_row_submit);
+            $('form').unbind('submit', inline_submit_all);
+            $('form').bind('submit', inline_submit_all);
         } else {
-            inline_current_formname = 'none';
-            inline_current_rowindex = 'none';
-            $('form').unbind('submit', inline_row_submit);
+            $('form').unbind('submit', inline_submit_all);
         }
-    };
+    }
 
     // Events -----------------------------------------------------------------
 
     var inline_form_events = function() {
 
-        // Enforce submission of the inline-row if changed
-        var enforce_inline_submit = function(i, add) {
-            var subform = $(i).parent().closest('tr.inline-form');
-            var names = subform.attr('id').split('-');
-            var rowindex = subform.data('rowindex');
-            if (add) {
-                rowindex = 'none';
-            }
-            inline_catch_submit(true, names.pop(), rowindex);
-        };
+        // Change-events
         $('.edit-row input[type="text"], .edit-row textarea').bind('input', function() {
-            enforce_inline_submit(this, false);
+            inline_mark_changed(this);
+            inline_catch_submit(true, this);
         });
         $('.edit-row input[type!="text"], .edit-row select').bind('focusin', function() {
             $('.edit-row input[type!="text"], .edit-row select').one('change', function() {
-                enforce_inline_submit(this, false);
+                inline_mark_changed(this);
+                inline_catch_submit(true, this);
             });
         });
         $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
-            enforce_inline_submit(this, true);
+            inline_mark_changed(this);
+            inline_catch_submit(true, this);
         });
         $('.add-row input[type!="text"], .add-row select').bind('focusin', function() {
             $('.add-row input[type!="text"], .add-row select').one('change', function() {
-                enforce_inline_submit(this, true);
+                inline_mark_changed(this);
+                inline_catch_submit(true, this);
             });
         });
+
         // Submit the inline-row instead of the main form if pressing Enter
         $('.edit-row input').keypress(function(e) {
             if (e.which == 13) {
@@ -606,7 +607,6 @@ $(function() {
                 var subform = $(this).parent().parent();
                 var names = subform.attr('id').split('-');
                 inline_add(names.pop());
-                inline_catch_submit(false, 'none', 'none');
             }
         });
     };
@@ -619,10 +619,7 @@ $(function() {
             var names = $(this).attr('id').split('-');
             var rowindex = names.pop();
             var formname = names.pop();
-            var success = inline_add(formname);
-            if (success) {
-                inline_catch_submit(false, 'none', 'none');
-            }
+            inline_add(formname);
             return false;
         });
         $('.inline-cnc').unbind('click');
@@ -632,7 +629,6 @@ $(function() {
             var formname = names.pop();
             var rowindex = $('#edit-row-' + formname).data('rowindex');
             inline_cancel(formname, rowindex);
-            inline_catch_submit(false, 'none', 'none');
             return false;
         });
         $('.inline-rdy').unbind('click');
@@ -641,10 +637,7 @@ $(function() {
             var zero = names.pop();
             var formname = names.pop();
             var rowindex = $('#edit-row-' + formname).data('rowindex');
-            var success = inline_update(formname, rowindex);
-            if (success) {
-                inline_catch_submit(false, 'none', 'none');
-            }
+            inline_update(formname, rowindex);
             return false;
         });
         $('.inline-edt').unbind('click');
@@ -653,7 +646,6 @@ $(function() {
             var rowindex = names.pop();
             var formname = names.pop();
             inline_edit(formname, rowindex);
-            inline_catch_submit(false, 'none', 'none');
             return false;
         });
         $('.inline-rmv').unbind('click');
@@ -662,7 +654,6 @@ $(function() {
             var rowindex = names.pop();
             var formname = names.pop();
             inline_remove(formname, rowindex);
-            inline_catch_submit(false, 'none', 'none');
             return false;
         });
     };
