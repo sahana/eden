@@ -291,6 +291,11 @@ def customize_project_project(**attr):
     # Custom Search Fields
     S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
     S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
+    status_search_widget = S3SearchOptionsWidget(name = "project_search_status",
+                              label = T("Status"),
+                              field = "status_id",
+                              cols = 4,
+                              )
     simple = [
         S3SearchSimpleWidget(name = "project_search_text_advanced",
                              label = T("Search Projects"),
@@ -303,11 +308,7 @@ def customize_project_project(**attr):
                                       "theme.name",
                                       ]
                              ),
-        S3SearchOptionsWidget(name = "project_search_status",
-                              label = T("Status"),
-                              field = "status_id",
-                              cols = 4,
-                              )
+        status_search_widget,
         ]
 
     project_hfa_opts = s3db.project_hfa_opts()
@@ -427,7 +428,7 @@ def customize_project_project(**attr):
         crud_strings[tablename].title_report  = T("Project Matrix")
         report_fact_fields = [(field, "count") for field in report_fields]
         report_fact_default = "theme.name"
-    report_options = Storage(search = advanced,
+    report_options = Storage(search = [status_search_widget] + advanced,
                              rows = report_fields,
                              cols = report_fields,
                              fact = report_fact_fields,

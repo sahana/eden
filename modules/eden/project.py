@@ -261,6 +261,12 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Projects currently registered"))
 
         # Search Method
+        status_search_widget = S3SearchOptionsWidget(
+                name = "project_search_status",
+                label = T("Status"),
+                field = "status_id",
+                cols = 4,
+                )
         simple = [
             S3SearchSimpleWidget(name = "project_search_text_advanced",
                                  label = T("Description"),
@@ -270,12 +276,7 @@ class S3ProjectModel(S3Model):
                                           "description",
                                           ]
                                  ),
-            S3SearchOptionsWidget(
-                name = "project_search_status",
-                label = T("Status"),
-                field = "status_id",
-                cols = 4,
-                )
+            status_search_widget,
             ]
         advanced = list(simple)
         append = advanced.append
@@ -422,7 +423,7 @@ class S3ProjectModel(S3Model):
                   search_method=project_search,
                   list_fields=list_fields,
                   report_options=Storage(
-                    search=advanced,
+                    search = [status_search_widget] + advanced,
                     rows=report_fields,
                     cols=report_fields,
                     fact=report_fact_fields,

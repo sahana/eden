@@ -231,7 +231,7 @@ $(document).ready(function() {
         div.next('table').toggleClass('hide');
         div.toggleClass('expanded');
     })
-    .each(function() {
+    $('.search_select_letter_label, .s3-grouped-checkboxes-widget-label').each(function() {
         widget = $(this).next();
         if ($(':checked', widget).length < 1) {
         	$(this).click();

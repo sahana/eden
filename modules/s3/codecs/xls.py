@@ -56,7 +56,7 @@ class S3XLS(S3Codec):
     """
 
     # Customizable styles
-    COL_WIDTH_MULTIPLIER = 360
+    COL_WIDTH_MULTIPLIER = 250
     LARGE_HEADER_COLOUR = 0x2C
     HEADER_COLOUR = 0x2C
     SUB_HEADER_COLOUR = 0x18
@@ -251,7 +251,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 continue
             colCnt += 1
             headerRow.write(colCnt, str(label), styleHeader)
-            width = len(label) * COL_WIDTH_MULTIPLIER
+            width = min(len(label) * COL_WIDTH_MULTIPLIER, 2000)
             fieldWidth.append(width)
             sheet1.col(colCnt).width = width
         # Title row
