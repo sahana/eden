@@ -207,9 +207,9 @@ $(document).ready(function() {
                 return false;
             }
         });
-        
+
         if (S3.FocusOnFirstField != false) {
-            //Focus On First Field
+            // Focus On First Field
             $('input:text:visible:first').focus();
         };
     }

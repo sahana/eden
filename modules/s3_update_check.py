@@ -69,12 +69,11 @@ def update_check():
     try:
         import matplotlib
     except(ImportError):
-        warnings.append("S3Chart unresolved dependency: matplotlib required for charting")
-    # Not currently needed
-    #try:
-        #import numpy
-    #except(ImportError):
-        #warnings.append("S3Resource unresolved dependency: numpy required for pivot table reports")
+        warnings.append("S3Chart unresolved dependency: matplotlib required for charting in Survey module")
+    try:
+        import numpy
+    except(ImportError):
+        warnings.append("Stats unresolved dependency: numpy required for Stats module support")
     try:
         import tweepy
     except(ImportError):

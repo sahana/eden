@@ -409,7 +409,7 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     if permit("delete", table, record_id=record_id):
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
                        _class="dl-item-delete",
-                      )
+                       )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,

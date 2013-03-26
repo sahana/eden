@@ -181,7 +181,6 @@
 "member_reader","Members Reader",,,,"pr_address",,"READ","READ|UPDATE",,,,"Need to specify explicitly to see other entities"
 "member_reader","Members Reader",,,,"pr_contact",,"READ","READ|UPDATE",,,,
 "member_reader","Members Reader",,,,"pr_contact_emergency",,"READ","READ|UPDATE",,,,
-"member_reader","Members Reader",,,,"pr_group_membership",,"READ",,,,,
 "member_reader","Members Reader",,,,"pr_person",,"READ","READ|UPDATE",,,,
 "member_data_entry","Members Data Entry",,"member",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_data_entry","Members Data Entry",,"org",,,,"READ",,,,,"Used to filter organisation fields"
@@ -191,7 +190,6 @@
 "member_data_entry","Members Data Entry",,,,"pr_address",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_data_entry","Members Data Entry",,,,"pr_contact",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_data_entry","Members Data Entry",,,,"pr_contact_emergency",,"READ|CREATE","READ|CREATE|UPDATE",,,,
-"member_data_entry","Members Data Entry",,,,"pr_group_membership",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_data_entry","Members Data Entry",,,,"pr_person",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "member_editor","Members Editor",,"member",,,,"READ|CREATE|UPDATE",,,,,
 "member_editor","Members Editor",,"org",,,,"READ|UPDATE",,,,,"Used to filter organisation fields"
@@ -201,7 +199,6 @@
 "member_editor","Members Editor",,,,"pr_address",,"READ|CREATE|UPDATE",,,,,
 "member_editor","Members Editor",,,,"pr_contact",,"READ|CREATE|UPDATE",,,,,
 "member_editor","Members Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE",,,,,
-"member_editor","Members Editor",,,,"pr_group_membership",,"READ|CREATE|UPDATE",,,,,
 "member_editor","Members Editor",,,,"pr_person",,"READ|CREATE|UPDATE",,,,,
 "member_super","Members Super Editor",,"member",,,,"READ|CREATE|UPDATE|DELETE",,,,,
 "member_super","Members Super Editor",,"org",,,,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
@@ -212,7 +209,6 @@
 "member_super","Members Super Editor",,,,"pr_address",,"READ|CREATE|UPDATE|DELETE",,,,,
 "member_super","Members Super Editor",,,,"pr_contact",,"READ|CREATE|UPDATE|DELETE",,,,,
 "member_super","Members Super Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE|DELETE",,,,,
-"member_super","Members Super Editor",,,,"pr_group_membership",,"READ|CREATE|UPDATE|DELETE",,,,,
 "member_super","Members Super Editor",,,,"pr_person",,"READ|CREATE|UPDATE|DELETE",,,,,
 "message_editor","Message Editor",,"event","compose",,,"READ|CREATE|UPDATE",,,,,
 "message_editor","Message Editor",,"hrm","compose",,,"READ|CREATE|UPDATE",,,,,
