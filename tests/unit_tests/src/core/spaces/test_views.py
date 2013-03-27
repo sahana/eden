@@ -89,10 +89,10 @@ class ViewSpaceIndexTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
 
-	superuser=self.create_super_user()
-	self.login('admin','admin_pass')
-	self.assertTrue(self.isLoggedIn(superuser))
-	self.assertTrue(superuser.is_superuser)
+        superuser=self.create_super_user()
+        self.login('admin','admin_pass')
+        self.assertTrue(self.isLoggedIn(superuser))
+        self.assertTrue(superuser.is_superuser)
         response = self.get(url)
         self.assertResponseOK(response)
 
