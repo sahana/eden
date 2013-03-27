@@ -32,6 +32,8 @@ class ViewSpaceIndexTest(ECDTestCase):
     
     def setUp(self):
         super(ViewSpaceIndexTest, self).init()
+	self.admin_space=self.foo_space
+	self.user_space=self.bar_space
     
     def testUserAccess(self):
         """
@@ -81,8 +83,9 @@ class ViewSpaceIndexTest(ECDTestCase):
         self.assertContains(response, "Hello anonymous user.")
         
         admin = self.login(self.admin_username, self.admin_password)
+	self.assertTrue(self.isLoggedIn(admin))
+#       self.assertTrue(admin.is_superuser)
         self.logout()
-        self.assertTrue(admin.is_superuser)
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertContains(response, "Hello anonymous user.")
