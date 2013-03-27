@@ -109,20 +109,25 @@ class S3CRUD(S3Method):
             output = self.read(r, **attr)
         elif method == "update":
             output = self.update(r, **attr)
+            
+        # Standard list view: list-type and hide-filter set by controller
+        # (default: list_type="datatable", hide_filter=False)
         elif method == "list":
-            output = self.select(r, **attr)
-            #output = self.select_filter(r, **attr)
+            #output = self.select(r, **attr)
+            output = self.select_filter(r, **attr)
 
-        # Temporary code for testing
-        elif method == "datatable":
+        # URL Methods to explicitly choose list-type and hide-filter in the URL
+        elif method in ("datatable", "datatable_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datatable"
+            _attr["hide_filter"] = method == "datatable"
             output = self.select_filter(r, **_attr)
-        elif method == "datalist":
+        elif method in ("datalist", "datalist_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datalist"
+            _attr["hide_filter"] = method == "datalist"
             output = self.select_filter(r, **_attr)
-
+            
         elif method == "validate":
             output = self.validate(r, **attr)
         elif method == "review":
@@ -1175,8 +1180,9 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
+            hide_filter = attr.get("hide_filter", False)
             filter_widgets = get_config("filter_widgets", None)
-            if filter_widgets:
+            if filter_widgets and not hide_filter:
 
                 # Where to retrieve filtered data from:
                 filter_submit_url = attr.get("filter_submit_url",

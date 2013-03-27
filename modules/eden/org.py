@@ -2317,22 +2317,22 @@ class S3OfficeModel(S3Model):
                   onaccept=self.org_office_onaccept,
                   deduplicate=self.org_office_duplicate,
                   search_method=office_search,
-                  # Experimental: filter form (used by S3CRUD.select_dl)
-                  filter_widgets=[
-                       S3TextFilter(["name", "email", "comments"],
-                                    label=T("Search"),
-                                    comment=T("Search for office by text.")),
-                       S3OptionsFilter("organisation_id",
-                                       label=messages.ORGANISATION,
-                                       comment=T("Search for office by organization."),
-                                       represent="%(name)s",
-                                       cols=3,
-                                       widget="multiselect"),
-                       S3OptionsFilter("location_id$L1",
-                                       location_level="L1",
-                                       cols=3,
-                                       widget="multiselect")
-                  ],
+                  ## Experimental: filter form
+                  #filter_widgets=[
+                       #S3TextFilter(["name", "email", "comments"],
+                                    #label=T("Search"),
+                                    #comment=T("Search for office by text.")),
+                       #S3OptionsFilter("organisation_id",
+                                       #label=messages.ORGANISATION,
+                                       #comment=T("Search for office by organization."),
+                                       #represent="%(name)s",
+                                       #cols=3,
+                                       #widget="multiselect"),
+                       #S3OptionsFilter("location_id$L1",
+                                       #location_level="L1",
+                                       #cols=3,
+                                       #widget="multiselect")
+                  #],
                   list_fields=["id",
                                "name",
                                "organisation_id", # Filtered in Component views
