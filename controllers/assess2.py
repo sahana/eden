@@ -268,9 +268,9 @@ def rat_tables():
     module = "assess"
 
     # Load the models we depend on
-    if deployment_settings.has_module("cr"):
+    if settings.has_module("cr"):
         shelter_id = s3db.shelter_id
-    if deployment_settings.has_module("hrm"):
+    if settings.has_module("hrm"):
         human_resource_id = s3db.hrm_human_resource_id
     else:
         human_resource_id = s3db.pr_person_id
@@ -1941,7 +1941,7 @@ def impact_tables():
 def index():
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -2334,7 +2334,7 @@ def mobile_basic_assess():
     form, form_accepted, assess_id = custom_assess(custom_assess_fields)
 
     if form_accepted:
-        form = FORM(H1(deployment_settings.get_system_name_short()),
+        form = FORM(H1(settings.get_system_name_short()),
                     H2(T("Short Assessment")),
                     P(T("Assessment Reported")),
                     A(T("Report Another Assessment..."),

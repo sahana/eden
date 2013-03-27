@@ -59,13 +59,13 @@ def scenario_rheader(r, tabs=[]):
         if r.name == "scenario":
             # Scenario Controller
             tabs = [(T("Scenario Details"), None)]
-            if deployment_settings.has_module("hrm"):
+            if settings.has_module("hrm"):
                 tabs.append((T("Human Resources"), "human_resource"))
-            if deployment_settings.has_module("asset"):
+            if settings.has_module("asset"):
                 tabs.append((T("Assets"), "asset"))
             tabs.append((T("Organizations"), "organisation"))
             tabs.append((T("Facilities"), "site"))
-            if deployment_settings.has_module("project"):
+            if settings.has_module("project"):
                 tabs.append((T("Tasks"), "task"))
             tabs.append((T("Map Configuration"), "config"))
 

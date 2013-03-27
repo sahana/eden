@@ -20,6 +20,6 @@ div.survey_map-legend td {
 }
 
 div.survey_scrollable {
-    width:900px;
-    overflow:scroll;
+    width: 900px;
+    overflow: scroll;
 }

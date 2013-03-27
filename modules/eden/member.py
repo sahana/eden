@@ -571,8 +571,20 @@ class MemberVirtualFields:
             OVERDUE = T("overdue")
             LAPSED = T("expired")
             lapsed = datetime.timedelta(days=183) # 6 months
-
+            year = datetime.timedelta(days=365)
             now = current.request.utcnow.date()
+
+            if not paid_date:
+                # Never renewed since Membership started
+                # => due within 1 year
+                due = start_date + year
+                if now < due:
+                    return PAID
+                elif now > (due + lapsed):
+                    return LAPSED
+                else:
+                    return OVERDUE
+
             now_month = now.month
             start_month = start_date.month
             if now_month > start_month:
@@ -585,14 +597,8 @@ class MemberVirtualFields:
                 else:
                     due = datetime.date((now.year - 1), start_month, start_day)
             else:
+                # now_month < start_month
                 due = datetime.date((now.year - 1), start_month, start_date.day)
-
-            if not paid_date:
-                # Never paid
-                if (now - due) > lapsed:
-                    return LAPSED
-                else:
-                    return OVERDUE
 
             if paid_date >= due:
                 return PAID
