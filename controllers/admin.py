@@ -12,7 +12,7 @@ resourcename = request.function
 def index():
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -42,7 +42,7 @@ def role():
         if r.representation != "html":
             return False
         handler = s3base.S3RoleManager()
-        modules = deployment_settings.modules
+        modules = settings.modules
         handler.controllers = Storage([(m, modules[m])
                                         for m in modules
                                         if modules[m].restricted])
@@ -395,7 +395,7 @@ def acl():
     table.group_id.requires = IS_ONE_OF(db, "auth_group.id", "%(role)s")
     table.group_id.represent = lambda opt: opt and db.auth_group[opt].role or opt
 
-    table.controller.requires = IS_EMPTY_OR(IS_IN_SET(current.deployment_settings.modules.keys(),
+    table.controller.requires = IS_EMPTY_OR(IS_IN_SET(settings.modules.keys(),
                                                       zero="ANY"))
     table.controller.represent = lambda opt: opt and \
         "%s (%s)" % (opt,

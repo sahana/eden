@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Projects - Stylesheet to migrate from DRRPP v1 to v2
+         Stylesheet to migrate from DRRPP v1 to v2
     *********************************************************************** -->
 
     <xsl:output method="xml"/>
@@ -266,6 +266,15 @@
                 </xsl:otherwise>
             </xsl:choose>
 
+        </resource>
+
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$LeadOrganisation"/>
+            </xsl:attribute>
+            <data field="name">
+                <xsl:value-of select="$LeadOrganisation"/>
+            </data>
         </resource>
 
         <xsl:call-template name="splitList">
@@ -539,20 +548,31 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_funding']">
 
-        <resource name="project_organisation">
-            <data field="role">3</data>
-            <data field="amount"><xsl:value-of select="data[@field='amount']/@value"/></data>
-            <reference field="organisation_id" resource="org_organisation">
+        <xsl:variable name="Org" select="reference[@field='organisation_id']"/>
+        <xsl:variable name="Project" select="reference[@field='project_id']/@uuid"/>
+
+        <xsl:if test="$Org!='' and $Project!=''">
+            <resource name="project_organisation">
+                <data field="role">3</data>
+                <data field="amount"><xsl:value-of select="data[@field='amount']/@value"/></data>
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Org"/>
+                    </xsl:attribute>
+                </reference>
+                <reference field="project_id" resource="project_project">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Project"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+            <resource name="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[@field='organisation_id']"/>
+                    <xsl:value-of select="$Org"/>
                 </xsl:attribute>
-            </reference>
-            <reference field="project_id" resource="project_project">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[@field='project_id']/@uuid"/>
-                </xsl:attribute>
-            </reference>
-        </resource>
+                <data field="name"><xsl:value-of select="$Org"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -609,20 +629,31 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_impl_org']">
 
-        <resource name="project_organisation">
-            <data field="role">2</data>
-            <data field="comments"><xsl:value-of select="data[@field='role']"/></data>
-            <reference field="organisation_id" resource="org_organisation">
+        <xsl:variable name="Org" select="reference[@field='organisation_id']"/>
+        <xsl:variable name="Project" select="reference[@field='project_id']/@uuid"/>
+
+        <xsl:if test="$Org!='' and $Project!=''">
+            <resource name="project_organisation">
+                <data field="role">2</data>
+                <data field="comments"><xsl:value-of select="data[@field='role']"/></data>
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Org"/>
+                    </xsl:attribute>
+                </reference>
+                <reference field="project_id" resource="project_project">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Project"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+            <resource name="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[@field='organisation_id']"/>
+                    <xsl:value-of select="$Org"/>
                 </xsl:attribute>
-            </reference>
-            <reference field="project_id" resource="project_project">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="reference[@field='project_id']/@uuid"/>
-                </xsl:attribute>
-            </reference>
-        </resource>
+                <data field="name"><xsl:value-of select="$Org"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -711,27 +742,29 @@
 
         <xsl:variable name="Project" select="reference[@field='project_id']/@uuid"/>
 
-        <resource name="project_output">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('OUTPUT',data[@field='output'])"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="data[@field='output']"/></data>
-            <xsl:choose>
-                <xsl:when test="data[@field='status']='Proposed'">
-                    <data field="status">1</data>
-                </xsl:when>
-                <xsl:when test="data[@field='status']='Achieved'">
-                    <data field="status">2</data>
-                </xsl:when>
-            </xsl:choose>
-            <xsl:if test="$Project!=''">
-                <reference field="project_id" resource="project_project">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Project"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
-        </resource>
+        <xsl:if test="$Project!=''">
+            <resource name="project_output">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('OUTPUT',data[@field='output'])"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="data[@field='output']"/></data>
+                <xsl:choose>
+                    <xsl:when test="data[@field='status']='Proposed'">
+                        <data field="status">1</data>
+                    </xsl:when>
+                    <xsl:when test="data[@field='status']='Achieved'">
+                        <data field="status">2</data>
+                    </xsl:when>
+                </xsl:choose>
+                <xsl:if test="$Project!=''">
+                    <reference field="project_id" resource="project_project">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Project"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

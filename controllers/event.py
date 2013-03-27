@@ -165,11 +165,11 @@ def event_rheader(r):
         if r.name == "incident":
             # Incident Controller
             tabs = [(T("Incident Details"), None)]
-            if deployment_settings.has_module("project"):
+            if settings.has_module("project"):
                 tabs.append((T("Tasks"), "task"))
-            if deployment_settings.has_module("hrm"):
+            if settings.has_module("hrm"):
                 tabs.append((T("Human Resources"), "human_resource"))
-            if deployment_settings.has_module("asset"):
+            if settings.has_module("asset"):
                 tabs.append((T("Assets"), "asset"))
             tabs.append((T("Facilities"), "site"))
             tabs.append((T("Map Configuration"), "config"))
