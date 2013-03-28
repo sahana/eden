@@ -938,26 +938,37 @@ ul.x-tree-root-ct {
 
 /* Search Form */
 .search_select_letter_label,
-.s3-grouped-checkboxes-widget-label {
+.s3-grouped-checkboxes-widget-label,
+.s3-groupedopts-label {
     margin: 10px 0 0 7px;
     padding-left: 20px;
     background: url(../../img/icon_blue_plus15px.png) no-repeat;
     cursor: pointer;
 }
 .search_select_letter_label.expanded,
-.s3-grouped-checkboxes-widget-label.expanded {
+.s3-grouped-checkboxes-widget-label.expanded,
+.s3-groupedopts-label.expanded {
     background: url(../../img/icon_blue_minus15px.png) no-repeat;
 }
 
 .search_select_letter_widget,
-.s3-grouped-checkboxes-widget .s3-checkboxes-widget {
+.s3-grouped-checkboxes-widget .s3-checkboxes-widget,
+div.s3-groupedopts-widget table {
     margin-left: 2em;
 }
 
 div.form-container form fieldset .search_select_letter_widget label,
-div.form-container form fieldset  .s3-checkboxes-widget label {
+div.form-container form fieldset  .s3-checkboxes-widget label,
+div.form-container form fieldset  .s3-groupedopts-widget label {
     white-space: nowrap;
     text-align: left;
+}
+.s3-groupedopts-widget label {
+    margin-left: 5px;
+}
+.s3-groupedopts-widget tr > td {
+    padding-top: 5px;
+    padding-right: 10px;
 }
 /* Checkboxes with title attributes */
 /*
@@ -975,7 +986,9 @@ div.form-container form fieldset  .s3-checkboxes-widget label {
 }
 
 .checkboxes-widget-s3 input,
-.s3-checkboxes-widget input {
+.s3-checkboxes-widget input,
+.s3-groupedopts-widget input
+{
     float: left;
 }
 .s3-checkboxes-widget-filter input {
@@ -993,6 +1006,7 @@ div.form-container form fieldset  .s3-checkboxes-widget label {
     border-top: 0px;
 }
 .filter-form table.s3-checkboxes-widget td,
+.filter-form table.s3-groupopts-widget td
 .search_form table.s3-checkboxes-widget td,
 .search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,
