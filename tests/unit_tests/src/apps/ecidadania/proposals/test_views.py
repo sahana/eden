@@ -18,20 +18,22 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from src.core.spaces.models import Space
-from src.apps.ecidadania.proposals.models import Proposal
+from src.apps.ecidadania.proposals.models import Proposal, ProposalSet
 
 from tests.test_utils import ECDTestCase
 
 
 class ListProposalViewsTest(ECDTestCase):
-    """Tests the views of proposals app.
+    """
+        Tests the views of proposals app.
     """
     
     def setUp(self):
         self.init()
         
     def testListProposalsView(self):
-        """Tests ListProposal view.
+        """
+            Tests ListProposal view.
         """
         user = self.create_user('test_user', 'abcde')
         other_user = self.create_user('other_test_user', 'acsrsd')
@@ -63,4 +65,47 @@ class ListProposalViewsTest(ECDTestCase):
         self.assertResponseOK(response)
         self.assertEqual(len(response.context[0].dicts[0]['proposal']), 
                          len(other_proposals_list))
+        
+class ListProposalSetViewsTest(ECDTestCase):
+    """
+        Tests the views of proposalsets app.
+    """
+    
+    def setUp(self):
+        self.init()
+        
+    def testListProposalSetView(self):
+        """
+            Tests ListProposalSet view.
+        """
+        user = self.create_user('test_user', 'abcde')
+        other_user = self.create_user('other_test_user', 'acsrsd')
+        space_properties = {'name': 'test_space', 'url': 'test_space_url',
+                            'author': user, 'public': True}
+        space1 = self.seed(Space, properties=space_properties)
+        
+        space_properties.update({'name': 'other_space', 'url': 'other_test_url',
+                                'author': other_user, 'public': True})
+        space2 = self.seed(Space, space_properties)
+        
+        proposalset_properties = {'space': space1, 'author': user}
+        proposalset1 = self.seed(ProposalSet, properties=proposalset_properties)
+        proposalset2 = self.seed(ProposalSet, properties=proposalset_properties)
+        proposalsets_list = [proposalset1, proposalset2]
+        
+        proposalset_properties.update({'space': space2, 'author': other_user})
+        proposalset3 = self.seed(ProposalSet, properties=proposalset_properties)
+        proposalset4 = self.seed(ProposalSet, properties=proposalset_properties)
+        proposalset5 = self.seed(ProposalSet, properties=proposalset_properties)
+        other_proposalsets_list = [proposalset3, proposalset4, proposalset5]
+        url = self.getURL('list-proposalset', kwargs={'space_url':space1.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertEqual(len(response.context[0].dicts[0]['setlist']), 
+                         len(proposalsets_list))
+        url = self.getURL('list-proposalset', kwargs={'space_url': space2.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertEqual(len(response.context[0].dicts[0]['setlist']), 
+                         len(other_proposalsets_list))
         
