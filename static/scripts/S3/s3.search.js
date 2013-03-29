@@ -336,7 +336,7 @@ S3.search.quoteValue = function(value) {
 S3.search.getCurrentFilters = function() {
 
     // @todo: allow form selection (=support multiple filter forms per page)
-    
+
     var queries = [];
 
     // Text widgets
@@ -357,6 +357,7 @@ S3.search.getCurrentFilters = function() {
 
     // Options widgets
     $('.options-filter:visible,' +
+      '.options-filter.groupedopts-filter-widget.active,' +
       '.options-filter.multiselect-filter-widget.active,' +
       '.options-filter.multiselect-filter-bootstrap.active').each(function() {
         var id = $(this).attr('id');
@@ -542,29 +543,75 @@ S3.search.updateOptions = function(options) {
 
     for (filter_id in options) {
         var widget = $('#' + filter_id);
+
         if (widget.length) {
-            var newopts = options[filter_id], i;
+            var newopts = options[filter_id], i, j;
 
             // OptionsFilter
             if ($(widget).hasClass('options-filter')) {
                 if ($(widget)[0].tagName.toLowerCase() == 'select') {
                     // Standard SELECT
-                    var selected = $(widget).val(), k, v, s=[], opts='';
-                    for (i=0; i<newopts.length; i++) {
-                        k = newopts[i][0].toString();
-                        v = newopts[i][1];
-                        if (selected && $.inArray(k, selected) >= 0) {
-                            s.push(k);
+                    var selected = $(widget).val(),
+                        s=[], opts='', group, item, value, label, tooltip;
+
+                    // Update HTML
+                    if (newopts.hasOwnProperty('empty')) {
+
+                        // @todo: implement
+
+                    } else
+
+                    if (newopts.hasOwnProperty('groups')) {
+                        for (i=0; i<newopts.groups.length; i++) {
+                            group = newopts.groups[i];
+                            if (group.label) {
+                                opts += '<optgroup label="' + group.label + '">';
+                            }
+                            for (j=0; j<group.items.length; j++) {
+                                item = group.items[j];
+                                value = item[0].toString();
+                                if (selected && $.inArray(value, selected) >= 0) {
+                                    s.push(value);
+                                }
+                                opts += '<option value="' + value + '"';
+                                tooltip = item[3];
+                                if (tooltip) {
+                                    opts += ' title="' + tooltip + '"';
+                                }
+                                label = item[1];
+                                opts += '>' + label + '</option>';
+                            }
+                            if (group.label) {
+                                opts += '</optgroup>';
+                            }
                         }
-                        opts += '<option value="' + k + '">' + v + '</option>';
+
+                    } else {
+                        for (i=0; i<newopts.length; i++) {
+                            item = newopts[i];
+                            value = item[0].toString();
+                            label = item[1];
+                            if (selected && $.inArray(value, selected) >= 0) {
+                                s.push(value);
+                            }
+                            opts += '<option value="' + value + '">' + label + '</option>';
+                        }
                     }
                     $(widget).html(opts);
+
+                    // Update SELECTed value
                     if (s) {
                         $(widget).val(s);
                     }
-                    if (typeof(widget.multiselect) !== undefined) {
+
+                    // Refresh UI widgets
+                    if (widget.hasClass('groupedopts-filter-widget') && typeof widget.groupedopts != 'undefined') {
+                        widget.groupedopts('refresh');
+                    } else
+                    if (widget.hasClass('multiselect-filter-widget') && typeof widget.multiselect != 'undefined') {
                         widget.multiselect('refresh');
                     }
+
                 } else {
                     // other widget types of options filter (e.g. grouped_checkboxes)
                 }
@@ -608,10 +655,10 @@ S3.search.ajaxUpdateOptions = function(form) {
  */
 $(document).ready(function() {
 
-    // Activate drop-down checklist widgets:
-    
     // Mark active, otherwise submit can't find them
     $('.multiselect-filter-widget:visible').addClass('active');
+    $('.groupedopts-filter-widget:visible').addClass('active');
+
     $('.multiselect-filter-widget').each(function() {
         if ($(this).find('option').length > 5) {
             $(this).multiselect({
@@ -776,7 +823,7 @@ $(document).ready(function() {
             }
         }
     });
-    
+
     // Filter-form submission
     $('.filter-submit').click(function() {
         try {
@@ -808,10 +855,10 @@ $(document).ready(function() {
                 }
             });
         } catch(err) {}
-        
+
         var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val();
         var queries = S3.search.getCurrentFilters();
-        
+
         if ($(this).hasClass('filter-ajax')) {
             // Ajax-refresh the target object (@todo: support multiple)
             var target = $(this).nextAll('input.filter-submit-target[type="hidden"]').val();
@@ -819,9 +866,9 @@ $(document).ready(function() {
 
                 // Ajax-reload the datalist
                 dlAjaxReload(target, queries);
-                
+
             } else if ($('#' + target).hasClass('dataTable')) {
-                
+
                 // Experimental: Ajax-reloading of the datatable
                 var ajaxurl = null;
                 var config = $('input#' + target + '_configurations');
@@ -840,16 +887,16 @@ $(document).ready(function() {
                     url = S3.search.filterURL(url, queries);
                     window.location.href = url;
                 }
-                
+
             } else {
 
                 // All other targets
                 url = S3.search.filterURL(url, queries);
                 window.location.href = url;
-                
+
             }
         } else {
-            
+
             // Page reload
             url = S3.search.filterURL(url, queries);
             window.location.href = url;

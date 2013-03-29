@@ -49,7 +49,7 @@ from s3rest import S3Method
 from s3resource import S3ResourceField, S3URLQuery
 from s3utils import s3_unicode
 from s3validators import *
-from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
+from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3GroupedOptionsWidget, s3_grouped_checkboxes_widget
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -733,7 +733,7 @@ class S3LocationFilter(S3FilterWidget):
 
         ftype = "reference gis_location"
         default = (ftype, levels.keys(), opts.get("no_opts", NOOPT))
-            
+
         # Resolve the field selector
         field_name = self.field
         rfield = S3ResourceField(resource, field_name)
@@ -938,8 +938,8 @@ class S3OptionsFilter(S3FilterWidget):
             if script not in scripts:
                 scripts.append(script)
             widget = MultipleOptionsWidget.widget(dummy_field,
-                                                    values,
-                                                    **attr)
+                                                  values,
+                                                  **attr)
             widget.add_class("multiselect-filter-bootstrap")
         elif widget_type == "multiselect":
             if "multiselect-filter-widget" not in _class:
@@ -951,10 +951,16 @@ class S3OptionsFilter(S3FilterWidget):
                 )
             widget = w(dummy_field, values, **attr)
         else:
-            if "s3-checkboxes-widget" not in _class:
-                attr["_class"] = "%s s3-checkboxes-widget" % _class
-            attr["cols"] = opts["cols"]
-            widget = s3_grouped_checkboxes_widget(dummy_field, values, **attr)
+            if "groupedopts-filter-widget" not in _class:
+                attr["_class"] = "%s groupedopts-filter-widget" % _class
+            w = S3GroupedOptionsWidget(
+                    options = options,
+                    multiple = True,
+                    cols = opts["cols"],
+                    size = opts["size"] or 12,
+                    help_field = opts["help_field"],
+                )
+            widget = w(dummy_field, values, **attr)
 
         return TAG[""](any_all, widget)
 
@@ -966,13 +972,30 @@ class S3OptionsFilter(S3FilterWidget):
             @param resource: the S3Resource
         """
 
+        opts = self.opts
         attr = self._attr(resource)
         ftype, options, noopt = self._options(resource)
-        if noopt:
-            return {attr["_id"]: noopt}
-        else:
-            return {attr["_id"]: [(k, s3_unicode(v)) for k,v in options]}
 
+        if noopt:
+            options = {attr["_id"]: noopt}
+        else:
+            widget_type = opts["widget"]
+            if widget_type in ("multiselect-bootstrap", "multiselect"):
+                # Produce a simple list of tuples
+                options = {attr["_id"]: [(k, s3_unicode(v))
+                                         for k, v in options]}
+            else:
+                # Use the widget method to group and sort the options
+                widget = S3GroupedOptionsWidget(
+                                options = options,
+                                multiple = True,
+                                cols = opts["cols"],
+                                size = opts["size"] or 12,
+                                help_field = opts["help_field"])
+                options = {attr["_id"]:
+                           widget._options({"type": ftype}, [])}
+        return options
+        
     # -------------------------------------------------------------------------
     def _options(self, resource):
         """
@@ -983,8 +1006,8 @@ class S3OptionsFilter(S3FilterWidget):
         """
 
         T = current.T
-        EMPTY = T("None")
         NOOPT = T("No options available")
+        EMPTY = T("None")
 
         attr = self.attr
         opts = self.opts
@@ -1123,7 +1146,7 @@ class S3OptionsFilter(S3FilterWidget):
             opt_list = [(opt_value, s3_unicode(opt_value))
                         for opt_value in opt_keys if opt_value]
 
-        # Sort the options
+        none = opts["none"]
         opt_list.sort(key = lambda item: item[1])
         options = []
         empty = None
@@ -1132,8 +1155,10 @@ class S3OptionsFilter(S3FilterWidget):
                 empty = ("NONE", v)
             else:
                 options.append((k, v))
-        if empty:
+        if empty and none:
             options.append(empty)
+
+        # Sort the options
         return (ftype, options, None)
 
 # =============================================================================
@@ -1297,7 +1322,7 @@ class S3Filter(S3Method):
             @param r: the S3Request
             @param attr: additional controller parameters
         """
-        
+
         r.error(501, current.manager.ERROR.NOT_IMPLEMENTED)
 
     # -------------------------------------------------------------------------
@@ -1313,13 +1338,13 @@ class S3Filter(S3Method):
 
         resource = self.resource
         get_config = resource.get_config
-    
+
         options = {}
 
         filter_widgets = get_config("filter_widgets", None)
         if filter_widgets:
             fresource = current.s3db.resource(resource.tablename)
-            
+
             for widget in filter_widgets:
                 if hasattr(widget, "ajax_options"):
                     opts = widget.ajax_options(fresource)
@@ -1329,5 +1354,5 @@ class S3Filter(S3Method):
         options = json.dumps(options)
         current.response.headers["Content-Type"] = "application/json"
         return options
-        
+
 # END =========================================================================
