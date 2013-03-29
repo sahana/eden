@@ -352,9 +352,9 @@ OpenLayers.Renderer.SVG = OpenLayers.Class(OpenLayers.Renderer.Elements, {
 				var pid = this.createImagePattern(style);
 				node.setAttributeNS(null, "fill", "url(#" + pid + ")");
 				node.setAttributeNS(null, "fill-opacity", 1);
-			} else if (style.graphicName && node._geometryClass !== "OpenLayers.Geometry.Point") {
+			//} else if (style.graphicName && node._geometryClass !== "OpenLayers.Geometry.Point") {
 				//this can also happen if a rule based style applies to both points and other types of geometries. TODO: better handling of rule based styles!
-				OpenLayers.Console.error('WellKnownName is not yet supported as GraphicFill by the SVG renderer!');
+			//	OpenLayers.Console.error('WellKnownName is not yet supported as GraphicFill by the SVG renderer!');
 				//var pid = this.createMarkPattern(style);
 				//node.setAttributeNS(null, "fill", "url(#" + pid + ")");
 				//node.setAttributeNS(null, "fill-opacity", 1);

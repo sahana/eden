@@ -94,7 +94,7 @@ settings.gis.permalink = False
 # Uncomment to hide the ScaleLine control
 #settings.gis.scaleline = False
 # Uncomment to modify the Simplify Tolerance
-settings.gis.simplify_tolerance = 0.001
+settings.gis.simplify_tolerance = None
 # Uncomment to hide the Zoom control
 settings.gis.zoomcontrol = False
 

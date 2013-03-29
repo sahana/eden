@@ -305,9 +305,9 @@ OpenLayers.Renderer.VML = OpenLayers.Class(OpenLayers.Renderer.Elements, {
 						fill.aspect = "atmost";
 					}
 				}
-			} else if (style.graphicName && node._geometryClass !== "OpenLayers.Geometry.Point") {
+			//} else if (style.graphicName && node._geometryClass !== "OpenLayers.Geometry.Point") {
 				//this can also happen if a rule based style applies to both points and other types of geometries. TODO: better handling of rule based styles!
-				OpenLayers.Console.error('WellKnownName is not yet supported as GraphicFill by the VML renderer!');
+			//	OpenLayers.Console.error('WellKnownName is not yet supported as GraphicFill by the VML renderer!');
 			}
             if (fill.parentNode != node) {
                 node.appendChild(fill);

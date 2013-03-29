@@ -1,7 +1,7 @@
 "Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Polygons","Style","Folder","Visible","Enabled","Cluster Distance"
 "Airports","All Active Airports","transport","airport","US","airport","Airport","Airport","name","airport.obsolete=False","obsolete","False",,,,"False",,1
-"Evacuation Zones",,"fire","zone","US",,,"Evacuation Zone","name","zone.zone_type_id$name=Evacuation",,,"True","{'fill_opacity':0,'stroke_width':1,'stroke':'FFFF00','external_graphic':'stripe-yellow.png'}",,"False",,1
-"Fire Perimeter",,"fire","zone","US",,,"Fire Perimeter","name","zone.zone_type_id$name=Fire",,,"True","{'fill_opacity':0,'stroke_width':1,'stroke':'FF0000','external_graphic':'stripe-red.png'}",,"False",,1
+"Evacuation Zones",,"fire","zone","US",,,"Evacuation Zone","name","zone.zone_type_id$name=Evacuation",,,"True","{'fill':'FFFF00','fill_opacity':0.5,'stroke_width':1}",,"False",,1
+"Fire Perimeter",,"fire","zone","US",,,"Fire Perimeter","name","zone.zone_type_id$name=Fire",,,"True","{'fill':'FF0000','fill_opacity':0.5,'stroke_width':1}",,"False",,1
 "Heliports","All Active Heliports","transport","heliport","US","helicopter","Heliport","Heliport","name","heliport.obsolete=False","obsolete","False",,,,"False",,1
 "Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False","obsolete","False",,,,"False",,1
 "Offices","All Active Offices","org","office","US","WellsFargo","Building","Office","name/organisation_id","office.obsolete=False","obsolete","False",,,,"False",,1

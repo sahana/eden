@@ -5171,7 +5171,8 @@ class GIS(object):
         if not tolerance:
             tolerance = current.deployment_settings.get_gis_simplify_tolerance()
 
-        shape = shape.simplify(tolerance, preserve_topology)
+        if tolerance:
+            shape = shape.simplify(tolerance, preserve_topology)
 
         # Limit the number of decimal places
         formatter = ".%sf" % decimals
@@ -6426,19 +6427,21 @@ class Marker(object):
         """
             Called by Layer.as_dict()
         """
-        output["marker_image"] = self.image
-        output["marker_height"] = self.height
-        output["marker_width"] = self.width
+
+        if self.image:
+            output["marker_image"] = self.image
+            output["marker_height"] = self.height
+            output["marker_width"] = self.width
 
     def as_dict(self):
         """
             Called by gis.get_marker()
         """
-        output = Storage(
-                        image = self.image,
-                        height = self.height,
-                        width = self.width,
-                    )
+
+        output = Storage(image = self.image,
+                         height = self.height,
+                         width = self.width,
+                         )
         return output
 
 # =============================================================================
