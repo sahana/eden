@@ -522,7 +522,7 @@ def main(argv):
         dojs(warnings=closure_warnings)
         docss()
     else:
-        if parameter1 == "CSS":
+        if parameter1 in ("CSS", "css"):
             docss()
         else:
             dojs(parameter2, warnings=closure_warnings)
