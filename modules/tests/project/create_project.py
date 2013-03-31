@@ -90,6 +90,10 @@ class CreateProject(SeleniumUnitTest):
                             driver.find_element_by_id("rheader_tab_location"))
             elem.click()
 
+            add_button = self.browser.find_element_by_id("show-add-btn")
+            if add_button.is_displayed():
+                add_button.click()
+
             self.create("project_location",
                         [( "location_id",
                         "Aileu Vila",
@@ -121,6 +125,10 @@ class CreateProject(SeleniumUnitTest):
                         )
 
             time.sleep(2)
+            add_button = self.browser.find_element_by_id("show-add-btn")
+            if add_button.is_displayed():
+                add_button.click()
+
             self.create("project_beneficiary",
                         [( "parameter_id",
                         "Teachers",
@@ -134,7 +142,9 @@ class CreateProject(SeleniumUnitTest):
 
             # Show Add Form
             time.sleep(2)
-            self.browser.find_element_by_id("show-add-btn").click()
+            add_button = self.browser.find_element_by_id("show-add-btn")
+            if add_button.is_displayed():
+                add_button.click()            
 
             self.create("project_beneficiary",
                         [( "parameter_id",

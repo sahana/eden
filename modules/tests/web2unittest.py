@@ -687,7 +687,7 @@ class SeleniumUnitTest(Web2UnitTest):
                   row = 1,
                   action = None,
                   column = 1,
-                  tableID = "list",
+                  tableID = "datatable",
                   ):
 
         return dt_action(row, action, column, tableID)

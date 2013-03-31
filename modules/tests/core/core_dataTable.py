@@ -76,7 +76,7 @@ def dt_filter(reporter,
     elem.send_keys(search_string)
 
     time.sleep(1) # give time for the list_processing element to appear
-    waiting_elem = browser.find_element_by_id("list_processing")
+    waiting_elem = browser.find_element_by_id("datatable_processing")
     sleep_time = 0
     while (waiting_elem.value_of_css_property("visibility") == "visible"):
         time.sleep(1)
@@ -333,7 +333,7 @@ def dt_links(reporter,
 def dt_action(row = 1,
               action = None,
               column = 1,
-              tableID = "list",
+              tableID = "datatable",
              ):
     """ click the action button in the dataTable """
 
