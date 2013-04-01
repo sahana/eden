@@ -1794,10 +1794,12 @@ class S3LocationSelectorWidget(FormWidget):
     """
 
     def __init__(self,
+                 catalog_layers=False,
                  hide_address=False,
                  site_type=None,
                  polygon=False):
 
+        self.catalog_layers = catalog_layers
         self.hide_address = hide_address
         self.site_type = site_type
         self.polygon = polygon
@@ -2035,7 +2037,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  # Same as a single zoom on a cluster
                                                  zoom = zoom + 2,
                                                  features = features,
-                                                 #catalogue_layers = True,
+                                                 catalogue_layers = self.catalog_layers,
                                                  add_feature = True,
                                                  add_feature_active = not polygon,
                                                  add_polygon = polygon,
@@ -2081,7 +2083,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                              add_feature_active = not polygon,
                                              add_polygon = polygon,
                                              add_polygon_active = polygon,
-                                             #catalogue_layers = True,
+                                             catalogue_layers = self.catalog_layers,
                                              toolbar = True,
                                              collapsed = True,
                                              search = True,
@@ -2520,7 +2522,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
                                       _id="gis_location_wkt",
                                       _name="gis_location_wkt",
                                       _disabled="disabled")
-                if wkt:
+                if not wkt:
                     hidden = "hide"
             else:
                 wkt_widget = TEXTAREA(_class="wkt-input",

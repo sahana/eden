@@ -929,6 +929,7 @@ function s3_gis_edit_tab() {
     $('#gis_location_postcode').prop('disabled', false);
     $('#gis_location_lat').prop('disabled', false);
     $('#gis_location_lon').prop('disabled', false);
+    $('#gis_location_wkt').prop('disabled', false);
     $('#gis_location_L5_ac').prop('disabled', false);
     $('#gis_location_L4_ac').prop('disabled', false);
     $('#gis_location_L3_ac').prop('disabled', false);
