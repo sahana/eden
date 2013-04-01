@@ -40,7 +40,8 @@
 
         _destroy: function() {
             // remove generated elements & reset other changes
-            // @todo: implement!
+            this.menu.remove();
+            this.element.show();
         },
 
         refresh: function() {
