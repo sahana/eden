@@ -17,4 +17,4 @@ before_script:
   - "python bootstrap.py"
   - "python bin/buildout"
 # command to run tests
-script: python src/manage.py test
+script: cd src && ../bin/django test
