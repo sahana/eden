@@ -1257,7 +1257,18 @@ class S3FilterForm(object):
 
             rappend(formstyle(None, "", submit, ""))
 
-        form = FORM(TABLE(TBODY(rows)), **self.attr)
+        # Adapt to formstyle: only render a TABLE if formstyle returns TRs
+        if rows:
+            elements = rows[0]
+            if not isinstance(elements, (list, tuple)):
+                elements = elements.elements()
+            n = len(elements)
+            if n > 0 and elements[0].tag == "tr" or \
+               n > 1 and elements[0].tag == "" and elements[1].tag == "tr":
+                form = FORM(TABLE(TBODY(rows)), **self.attr)
+            else:
+                form = FORM(DIV(rows), **self.attr)
+
         return form
 
     # -------------------------------------------------------------------------

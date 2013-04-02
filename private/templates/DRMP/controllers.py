@@ -239,10 +239,9 @@ def filter_formstyle(row_id, label, widget, comment):
     """
 
     if label:
-        return DIV(TR(label),
-                   TR(widget))
+        return DIV(label, widget)
     else:
-        return widget
+        return DIV(widget)
 
 # -----------------------------------------------------------------------------
 def render_homepage_posts(listid, resource, rfields, record, **attr):
