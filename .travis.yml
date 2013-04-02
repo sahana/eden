@@ -10,6 +10,7 @@ env:
 install:
   - pip install -q Django==$DJANGO --use-mirrors
   - pip install pep8 --use-mirrors
+  - pip install django-nose --use-mirrors
   - pip install -r src/requirements.txt --use-mirrors
 before_script:
   - "pep8 --exclude=migrations --ignore=E501,E225,E128,E127 --exclude=thirdparty src"
