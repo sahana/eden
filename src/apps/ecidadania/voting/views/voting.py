@@ -261,7 +261,6 @@ def validate_voting(request, space_url, token):
     error page.
     """
     space = get_object_or_404(Space, url=space_url)
-    voting = get_object_or_404(Voting, pk=voting_id)
     try:
         token = ConfirmVote.object.get(token=token)
     except:
