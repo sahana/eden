@@ -225,8 +225,7 @@ def vote_voting(request, space_url):
     space = get_object_or_404(Space, url=space_url)
     voteform = VoteForm(request.POST)
 
-    if has_operation_permission(request.user, space, 'voting.change_voting', allow=['admins', 'mods',
-                                                                                    'users']):
+    if has_operation_permission(request.user, space, 'voting.change_voting', allow=['admins', 'mods', 'users']):
         if request.method == 'POST' and voteform.is_valid():
             # Generate the objetct
             token = hashlib.md5("%s%s%s" % (request.user, space,
@@ -253,7 +252,7 @@ def vote_voting(request, space_url):
             allowed.")
 
 
-def validate_voting(request, token):
+def validate_voting(request, space_url, token):
 
     """
     Validate the votes done in a votation process. This function checks if the
