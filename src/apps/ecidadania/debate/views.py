@@ -348,8 +348,10 @@ class ViewDebate(DetailView):
         debate = get_or_insert_object_in_cache(Debate, key, pk=key)
 
         # Check debate dates
-        if datetime.date.today() >= debate.end_date \
-                or datetime.date.today() < debate.start_date:
+        if datetime.date.today() >= debate.end_date:
+            self.template_name = 'debate/debate_expired_view.html'
+            return debate
+        elif datetime.date.today() < debate.start_date:
             self.template_name = 'debate/debate_outdated.html'
             return debate
             # We can't return none, if we do, the platform cannot show
