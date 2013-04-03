@@ -20,6 +20,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 from apps.thirdparty.tagging.fields import TagField
 from apps.thirdparty.tagging.models import Tag
@@ -80,6 +81,10 @@ class Poll(models.Model):
             return ('view-polls', (), {
                 'poll_id': str(self.id)})
 
+    def clean(self):
+        if self.start_date > self.end_date:
+            raise ValidationError('The start date can not be before the end date.')
+
 
 class Choice(models.Model):
     poll = models.ForeignKey(Poll)
@@ -124,6 +129,10 @@ class Voting(models.Model):
         else:
             return ('view-votings', (), {
                 'voting_id': str(self.id)})
+
+    def clean(self):
+        if self.start_date > self.end_date:
+            raise ValidationError('The start date can not be before the end date.')
 
 
 class ConfirmVote(models.Model):
