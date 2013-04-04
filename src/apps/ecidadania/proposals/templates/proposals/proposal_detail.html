@@ -23,21 +23,19 @@
                 type: "POST",
                 url: "../support/",
                 data: { propid: proposal },
-               success: function(data)
-               {
-               var cur_votes = $("div.span1 p");
-               cur_votes.text(cur_votes.text()*1+1);
-               $("div.span1 button").attr('disabled', 'disabled');
-
-               }
-
+                success: function(data) {
+                    var cur_votes = $("div.span1 p");
+                    cur_votes.text(cur_votes.text()*1+1);
+                    $("div.span1 button").attr('disabled', 'disabled');
+                }
             });
 
             request.fail(function(jqXHR, textStatus) {
-                $("#jsnotify").notify("create", {
-                    title:"Couldn't vote the proposal",
+                $.gritter.add({
+                    title:"Coulnd't vote the proposal",
                     text:"There has been an error." + textStatus,
-                    icon:"alert.png"
+                    icon:"http://ecidadania.org/static/assets/icons/alert.png",
+                    expires: 0
                 });
             })
         }
