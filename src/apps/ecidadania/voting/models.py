@@ -83,7 +83,7 @@ class Poll(models.Model):
 
     def clean(self):
         if self.start_date > self.end_date:
-            raise ValidationError('The start date can not be before the end date.')
+            raise ValidationError('The start date can not be after the end date.')
 
 
 class Choice(models.Model):
@@ -132,7 +132,7 @@ class Voting(models.Model):
 
     def clean(self):
         if self.start_date > self.end_date:
-            raise ValidationError('The start date can not be before the end date.')
+            raise ValidationError('The start date can not be after the end date.')
 
 
 class ConfirmVote(models.Model):
