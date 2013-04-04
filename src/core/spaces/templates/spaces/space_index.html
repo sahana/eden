@@ -453,6 +453,15 @@
                                 {% endfor %}
                             </ul>
                             <h4>{% trans "Most commented" %}</h4>
+                            <ul class='unstyled'>
+                                {% for proposal in mostcommentedproposal %}
+                                    {% for most_proposal in proposal %}
+                                        <li><a href="{{ most_proposal.get_absolute_url}}">{{ most_proposal.title }}</a> {% trans "by"%} {{ most_proposal.author }} {% trans "on" %} <a href="{{ most_proposal.proposalset.get_absolute_url }}">{{ proposalset }}</a> {% trans     "at" %} {{ most_proposal.pub_date|date:"d F Y"}}</li>
+                                    {% endfor %}
+                                    {% empty %}
+                                        <li>{% trans "No proposal sets available."%}</li>
+                                {% endfor %} 
+                            </ul>
                             <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
                         <div class="span4">
