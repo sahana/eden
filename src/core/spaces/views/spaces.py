@@ -154,13 +154,6 @@ class ViewSpaceIndex(DetailView):
         # print top_posts.values()[0].title
         o_list = Comment.objects.annotate(ocount=Count('object_pk'))
         
-        #comment_list = {}
-        #most_commented = []
-        #for proposal in Proposal.objects.filter(space=place.id):
-        #    comment_list[proposal.pk]=Comment.objects.filter(object_pk=proposal.pk).count()
-        #for p in dict(sorted(comment_list.items(), key = itemgetter(1))):
-        #    most_commented.append(Proposal.objects.filter(pk=p))
-        
         comment_list = {}
         most_commented = []
         for proposal in Proposal.objects.filter(space=place.id):
