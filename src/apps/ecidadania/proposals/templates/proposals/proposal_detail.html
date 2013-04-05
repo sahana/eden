@@ -27,6 +27,8 @@
                     var cur_votes = $("div.span1 p");
                     cur_votes.text(cur_votes.text()*1+1);
                     $("div.span1 button").attr('disabled', 'disabled');
+                    $("div.span1 button").tooltip('show');
+                    setTimeout(function(){$("div.span1 button").tooltip('hide')},2000);
                 }
             });
 
@@ -59,7 +61,7 @@
             <div class="row proposal-wrapper">
                 <div class="span1">
                     <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ proposal.support_votes.count }}</p>
-                    <button style="margin-left:-15px;" onclick="upvote({{ proposal.id }})" class="btn btn-small" {% if user in proposal.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
+                    <button style="margin-left:-15px;" onclick="upvote({{ proposal.id }})" class="btn btn-small" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="{% trans 'Thanks for supporting!' %}" {% if user in proposal.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
                 </div>
                 <div class="span10">
                     <div class="proposal-title">{{ proposal.title }}</div>
