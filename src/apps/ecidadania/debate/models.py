@@ -73,8 +73,9 @@ class Debate(models.Model):
             'debate_id': str(self.id)})
 
     def clean(self):
-	if self.start_date > self.end_date:
-	    raise ValidationError('The start date can not be after the end date.')
+        if self.start_date > self.end_date:
+            raise ValidationError('The start date can not be after the end date.')
+
 
 class Column(models.Model):
     """
