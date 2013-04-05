@@ -63,7 +63,7 @@ class ViewProposal(DetailView):
             return proposal
         elif has_space_permission(self.request.user, place,
             allow=['admins', 'mods', 'users']) \
-                or has_all_permissions(request.user):
+                or has_all_permissions(self.request.user):
             return proposal
         else:
             self.template_name = 'not_allowed.html'
