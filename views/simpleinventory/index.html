@@ -1,0 +1,56 @@
+
+{{extend "layout.html"}}
+<link rel = "stylesheet" href ="{{=URL('static','styles/multicolumn.css')}}">
+<h2>Key Items</h2>
+<br/><br/>
+
+<div>
+	
+<h3>General Needs	
+	
+</div>
+
+
+<section class = "box">
+
+<section class="wrapper">
+<header>
+	<p> Urgent </p>
+</header>
+	<ul class = "multicolumn">
+ 
+	 {{for item in red :}}
+	 <li id = "red">{{=item.name}}</li>
+	 {{pass}}
+	</ul>
+
+	</section>
+
+
+
+<section class="wrapper">	
+	<header>
+		<p> Need </p>
+	</header>
+<ul class = "multicolumn">
+ 
+    {{for item in yellow :}}
+    <li id = "yellow">{{=item.name}}</li>
+    {{pass}}
+</ul>
+</section>
+
+<section class="wrapper">
+	<header>
+		<p> No-need </p>
+	</header>
+<ul class = "multicolumn">
+    {{for item in green :}}
+    <li id = "green">{{=item.name}}</li>
+    {{pass}}
+</ul>
+</section>
+
+
+
+</section>

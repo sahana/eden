@@ -1,0 +1,62 @@
+
+section.box {
+	
+	margin-left : 20px;
+	
+}
+
+section.wrapper {
+	
+	margin :20px;
+	margin-left : 10px;
+	display : block;
+	float : left;
+}
+
+section.wrapper > header {
+	text-transform : uppercase;
+	font-size : 1.7em;
+	font-family : serif;
+	text-align : left;
+	
+	font-family:Tahoma;
+	
+}
+
+
+ul.multicolumn {
+	display : block;
+	float : left;
+	margin-right : 30px;
+}
+
+ul.multicolumn > li {
+text-align:center;
+list-style-type:none;
+
+margin-bottom  : 3px;
+width:120px;
+padding:15px;
+line-height:15px;
+position:relative; /* IE needs this in order to recognize links in all columns */
+text-transform:uppercase;
+font-size : 1.3em;
+
+}
+#red {
+
+background-color : #ff0017;
+color : white;
+display : block;
+}
+#yellow {
+
+background-color: #fffd56;
+color : black;
+display : block;
+}
+#green {
+background-color : #01dd46;
+display : block;
+color : white;
+}

@@ -358,7 +358,7 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     
-    def training(self):
+     def training(self):
         return M(c="training")(
                     M("Courses", f="course")(
                         M("New", m="create"),
@@ -1850,13 +1850,11 @@ class S3OptionsMenu(object):
         """ simple inventory menu"""
         
         return M(c="simpleinventory")(
-                    M("Items", f="items")(
+                    M("Items", f="index")(
                          M("New", m="create"),
                          M("List All"),
                         
-                     ),
-                    M("status",f = "index") 
-                     
+                     )
                 )
     
     
