@@ -217,24 +217,44 @@ class EditRoleTest(ECDTestCase):
         self.private_space = self.foo_space
         self.public_space = self.bar_space
 
-    def testAdminCanAccessPrivateView(self):
+    def testSuperuserCanAccessPrivateView(self):
+        space=self.private_space
+        self.root=self.create_super_user(logged_in=True)
+        self.assertTrue(self.isLoggedIn(self.root))
+        url = self.getURL('edit-roles', kwargs={'space_url': space.url})
+        response = self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response,"Please select the         users that will be administrators")
+        self.logout()
+
+    def testSuperuserCanAccessPrivateView(self):
+        space=self.public_space
+        self.root=self.create_super_user(logged_in=True)
+        self.assertTrue(self.isLoggedIn(self.root))
+        url = self.getURL('edit-roles', kwargs={'space_url': space.url})
+        response = self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response,"Please select the         users that will be administrators")
+        self.logout()
+
+    def testAdminCannotAccessPrivateView(self):
         space = self.private_space
         self.login('foo_admin', 'foo_admin_password')
         self.assertTrue(self.isLoggedIn(self.foo_admin))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 
-    def testAdminCanAccessPublicView(self):
+    def testAdminCannotAccessPublicView(self):
         space = self.public_space
         self.login('bar_admin', 'bar_admin_password')
         self.assertTrue(self.isLoggedIn(self.bar_admin))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 
     def testModCannotAccessPrivateView(self):
@@ -242,9 +262,9 @@ class EditRoleTest(ECDTestCase):
         self.login('foo_mod', 'foo_mod_password')
         self.assertTrue(self.isLoggedIn(self.foo_mod))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 
     def testModCannotAccessPublicView(self):
@@ -252,9 +272,9 @@ class EditRoleTest(ECDTestCase):
         self.login('bar_mod', 'bar_mod_password')
         self.assertTrue(self.isLoggedIn(self.bar_mod))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 
 
@@ -263,9 +283,9 @@ class EditRoleTest(ECDTestCase):
         self.login('foo_user', 'foo_user_password')
         self.assertTrue(self.isLoggedIn(self.foo_user))
         url=self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response=self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 
     def testUserCannotAccessPublicView(self):
@@ -273,29 +293,29 @@ class EditRoleTest(ECDTestCase):
         self.login('bar_user', 'bar_user_password')
         self.assertTrue(self.isLoggedIn(self.bar_user))
         url = self.getURL('edit-roles',kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 	
     def testOtherUserCannotAccessPrivateView(self):
         space = self.private_space
         self.unreg_user = self.create_user('unreg_user', 'unreg_password')
-	self.login('unreg_user', 'unreg_password')
+        self.login('unreg_user', 'unreg_password')
         self.assertTrue(self.isLoggedIn(self.unreg_user))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
 
     def testOtherUserCannotAccessPublicView(self):
         space = self.public_space
         self.unreg_user = self.create_user('unreg_user', 'unreg_password')
-	self.login('unreg_user', 'unreg_password')
+        self.login('unreg_user', 'unreg_password')
         self.assertTrue(self.isLoggedIn(self.unreg_user))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
-        response=self.get(url)
-        self.assertResponseRedirect(response)
-        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
+        response=self.get(url,follow=True)
+        self.assertResponseOK(response)
+        self.assertContains(response, "you don't have permissions for accessing to some area.")
         self.logout()
