@@ -29,7 +29,8 @@ class ListDebatesViewsTest(ECDTestCase):
     
     def setUp(self):
         self.init()
-        
+	
+	        
     def testListDebatesView(self):
         """Tests ListDebates view.
         """
@@ -87,3 +88,101 @@ class ListDebatesViewsTest(ECDTestCase):
                                              'space_url': self.foo_space.url})
         response = self.get(url)
         self.assertResponseNotFound(response)
+
+
+    def deleteDebateTest(self):
+        """
+        Check if admin can delete from private space
+        """
+        space = self.foo_space
+        self.login('foo_admin', 'foo_admin_password')
+        self.assertTrue(self.isLoggedIn(self.foo_admin))
+        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
+
+	"""
+        Check if admin can delete from public space
+        """
+
+        space = self.bar_space
+        self.login('bar_admin','bar_admin_password')
+        self.assertTrue(self.isLoggedIn(self.bar_admin))
+        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
+
+        """
+        Check if registered user cannot delete from private space
+        """
+        space = self.foo_space
+        self.login('foo_user', 'foo_user_password')
+        self.assertTrue(self.isLoggedIn(self.foo_user))
+        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
+
+        """
+        Check if registered user cannot delete from public space
+        """
+        space = self.bar_space
+        self.login('bar_user', 'bar_user_password')
+        self.assertTrue(self.isLoggedIn(self.bar_user))
+        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
+
+        """
+        Check if mods can delete from private space
+        """
+        space = self.foo_space
+        self.login('foo_mod', 'foo_mod_password')
+        self.assertTrue(self.isLoggedIn(self.foo_mod))
+        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
+
+        """
+        Check if mods can delete from public space
+        """
+        space = self.bar_space
+        self.login('bar_mod', 'bar_mod_password')
+        self.assertTrue(self.isLoggedIn(self.bar_mod))
+        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
+
+        """
+        Check if unregistered users cannot delete from public space
+        """
+        space = self.bar_space
+        self.unreg_user = self.create_user('unreg_user', 'unreg_user_password')
+        self.assertTrue(self.isLoggedIn(self.unreg_user))
+        url = self.getURL('delete-debate', kwargs={'space_url':space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
+
+        """
+        Check if unregistered users cannot delete from private space
+        """
+        space = self.foo_space
+        self.login('unreg_user', 'unreg_user_password')
+        self.assertTrue(self.isLoggedIn(self.unreg_user))
+        url = self.getURL('delete-debate', kwargs={'space_url':space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
