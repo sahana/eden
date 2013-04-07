@@ -287,21 +287,4 @@ class EditRoletest(ECDTestCase):
         response=self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
-
-
-
-
-
-    
-
-
-
-
-
         
-
-
-
-	
-	
-
