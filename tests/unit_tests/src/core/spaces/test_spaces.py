@@ -224,6 +224,8 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
 
     def adminCanAccessPublicView(self):
         space = self.public_space
@@ -232,6 +234,8 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
 
     def modCannotAccessPrivateView(self):
         space = self.private_space
@@ -241,6 +245,7 @@ class EditRoleTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
     def modCannotAccessPublicView(self):
         space = self.public_space
@@ -250,6 +255,7 @@ class EditRoleTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
 
     def userCannotAccessPrivateView(self):
@@ -260,6 +266,7 @@ class EditRoleTest(ECDTestCase):
         response=self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
     def userCannotAccessPublicView(self):
         space = self.public_space
@@ -269,6 +276,7 @@ class EditRoleTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 	
     def otherUserCannotAccessPrivateView(self):
         space = self.private_space
@@ -278,6 +286,7 @@ class EditRoleTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
     def otherUserCannotAccessPublicView(self):
         space = self.public_space
@@ -287,4 +296,5 @@ class EditRoleTest(ECDTestCase):
         response=self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
         
