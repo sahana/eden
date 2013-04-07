@@ -207,7 +207,7 @@ class ListSpacesTest(ECDTestCase):
         self.assertTrue(self.foo_space in spaces_returned)
         self.assertTrue(self.bar_space in spaces_returned)   
 
-class EditRoletest(ECDTestCase):
+class EditRoleTest(ECDTestCase):
     """
         Tests if only admin can edit roles of people
     """	
@@ -217,7 +217,7 @@ class EditRoletest(ECDTestCase):
         self.private_space=self.foo_space
         self.public_space=self.bar_space
 
-    def AdminCanAccessPrivateView(self):
+    def adminCanAccessPrivateView(self):
         space=self.private_space
         self.login('foo_admin','foo_admin_password')
         self.assertTrue(self.isLoggedIn(self.foo_admin))
@@ -225,7 +225,7 @@ class EditRoletest(ECDTestCase):
         response=self.get(url)
         self.assertResponseOK(response)
 
-    def AdminCanAccessPublicView(self):
+    def adminCanAccessPublicView(self):
         space=self.public_space
         self.login('bar_admin','bar_admin_password')
         self.assertTrue(self.isLoggedIn(self.bar_admin))
@@ -233,7 +233,7 @@ class EditRoletest(ECDTestCase):
         response=self.get(url)
         self.assertResponseOK(response)
 
-    def ModCannotAccessPrivateView(self):
+    def modCannotAccessPrivateView(self):
         space=self.private_space
         self.login('foo_mod','foo_mod_password')
         self.asserTrue(self.isLoggedIn(self.foo_mod))
@@ -242,7 +242,7 @@ class EditRoletest(ECDTestCase):
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
 
-    def ModCannotAccessPublicView(self):
+    def modCannotAccessPublicView(self):
         space=self.public_space
         self.login('bar_mod','bar_mod_password')
         self.asserTrue(self.isLoggedIn(self.bar_mod))
@@ -252,7 +252,7 @@ class EditRoletest(ECDTestCase):
         self.assertTemplateUsed(response, 'not_allowed.html')
 
 
-    def UserCannotAccessPrivateView(self):
+    def userCannotAccessPrivateView(self):
         space=self.private_space
         self.login('foo_user','foo_user_password')
         self.asserTrue(self.isLoggedIn(self.foo_user))
@@ -261,7 +261,7 @@ class EditRoletest(ECDTestCase):
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
 
-    def UserCannotAccessPublicView(self):
+    def userCannotAccessPublicView(self):
         space=self.public_space
         self.login('bar_user','bar_user_password')
         self.asserTrue(self.isLoggedIn(self.bar_user))
@@ -270,7 +270,7 @@ class EditRoletest(ECDTestCase):
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
 	
-    def OtherUserCannotAccessPrivateView(self):
+    def otherUserCannotAccessPrivateView(self):
         space=self.private_space
         self.unreg_user=self.create_user('unreg_user','unreg_password')
         self.asserTrue(self.isLoggedIn(self.unreg_user))
@@ -279,7 +279,7 @@ class EditRoletest(ECDTestCase):
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
 
-    def OtherUserCannotAccessPublicView(self):
+    def otherUserCannotAccessPublicView(self):
         space=self.public_space
         self.unreg_user=self.create_user('unreg_user','unreg_password')
         self.asserTrue(self.isLoggedIn(self.unreg_user))
