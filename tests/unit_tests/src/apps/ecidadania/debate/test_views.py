@@ -94,7 +94,7 @@ class ListDebatesViewsTest(ECDTestCase):
         """
         Check if admin can delete from private space
         """
-	space=self.foo_space
+        space=self.foo_space
         self.login('foo_admin','foo_admin_password')
         self.assertTrue(isLoggedIn(self.foo_admin))
         url=self.getURL('delete-debate',kwargs={'space_url':space.url})
@@ -110,7 +110,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.login('bar_admin','bar_admin_password')
         self.assertTrue(isLoggedIn(self.bar_admin))
         url=self.getURL('delete-debate',kwargs={'space_url':space.url})
-	response=self.get(url)
+        response=self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
 
