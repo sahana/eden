@@ -82,7 +82,7 @@ class ListDebatesViewsTest(ECDTestCase):
         #print context['columns']
         self.assertEqual(len(context['notes']), 1)
         self.assertEqual(len(context['columns']), 1)
-        self.assertEqual(len(context['rows']), 2)
+        self.assertEqual(len(context['rows']), 1)
         
         url = self.getURL('view-debate',(), {'debate_id': 5,
                                              'space_url': self.foo_space.url})
