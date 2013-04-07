@@ -90,7 +90,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.assertResponseNotFound(response)
 
 
-    def DeleteDebatetest(self):
+    def deleteDebateTest(self):
         """
         Check if admin can delete from private space
         """
