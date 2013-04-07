@@ -103,22 +103,26 @@ class ViewPoll(DetailView):
     template_name = 'voting/poll_detail.html'
 
     def get_object(self):
-        space = get_object_or_404(Space, url=self.kwargs['space_url'])
         poll = get_object_or_404(Poll, pk=self.kwargs['pk'])
-
-        if self.request.user in poll.participants.all() \
-            or datetime.date.today() >= poll.end_date \
-                or datetime.date.today() < poll.start_date:
-            return HttpResponseRedirect(reverse(urln_voting.VIEW_RESULT,
-                kwargs={'space_url': space.url, 'pk': poll.id}))
-        else:
-            return poll
+        return poll
 
     def get_context_data(self, **kwargs):
         context = super(ViewPoll, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space,
             url=self.kwargs['space_url'])
         return context
+
+    def get(self, request, **kwargs):
+        self.object = self.get_object()
+        if self.request.user in self.object.participants.all() \
+            or datetime.date.today() >= self.object.end_date \
+                or datetime.date.today() < self.object.start_date:
+            return HttpResponseRedirect(reverse(urln_voting.VIEW_RESULT,
+                kwargs={'space_url': self.kwargs['space_url'],
+                        'pk': self.kwargs['pk']}))
+        else:
+            context = self.get_context_data(object=self.object)
+            return self.render_to_response(context)
 
 
 class ViewPollResults(DetailView):
