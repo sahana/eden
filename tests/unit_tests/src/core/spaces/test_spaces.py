@@ -244,7 +244,7 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseRedirect(response)
-        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
         self.logout()
 
     def testModCannotAccessPublicView(self):
@@ -254,7 +254,7 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseRedirect(response)
-        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
         self.logout()
 
 
@@ -265,7 +265,7 @@ class EditRoleTest(ECDTestCase):
         url=self.getURL('edit-roles', kwargs={'space_url': space.url})
         response=self.get(url)
         self.assertResponseRedirect(response)
-        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
         self.logout()
 
     def testUserCannotAccessPublicView(self):
@@ -275,7 +275,7 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles',kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseRedirect(response)
-        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
         self.logout()
 	
     def testOtherUserCannotAccessPrivateView(self):
@@ -286,7 +286,7 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response = self.get(url)
         self.assertResponseRedirect(response)
-        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
         self.logout()
 
     def testOtherUserCannotAccessPublicView(self):
@@ -297,5 +297,5 @@ class EditRoleTest(ECDTestCase):
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response=self.get(url)
         self.assertResponseRedirect(response)
-        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.assertTemplateNotUsed(response, 'spaces/user_groups.html')
         self.logout()
