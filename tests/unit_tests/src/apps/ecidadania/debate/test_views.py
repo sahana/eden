@@ -101,6 +101,7 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
 
 	"""
         Check if admin can delete from public space
@@ -113,6 +114,7 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
 
         """
         Check if registered user cannot delete from private space
@@ -124,6 +126,7 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
         """
         Check if registered user cannot delete from public space
@@ -135,6 +138,7 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
         """
         Check if mods can delete from private space
@@ -146,6 +150,7 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
 
         """
         Check if mods can delete from public space
@@ -157,6 +162,7 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+        self.logout()
 
         """
         Check if unregistered users cannot delete from public space
@@ -168,12 +174,13 @@ class ListDebatesViewsTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
 
         """
         Check if unregistered users cannot delete from private space
         """
         space = self.foo_space
-        self.unreg_user=self.create_user('unreg_user', 'unreg_user_password')
+        self.login('unreg_user', 'unreg_user_password')
         self.assertTrue(self.isLoggedIn(self.unreg_user))
         url = self.getURL('delete-debate', kwargs={'space_url':space.url})
         response = self.get(url)
