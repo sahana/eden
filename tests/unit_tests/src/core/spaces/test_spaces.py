@@ -216,7 +216,6 @@ class EditRoletest(ECDTestCase):
         self.init()
         self.private_space=self.foo_space
         self.public_space=self.bar_space
-	print "yes"
 
     def AdminCanAccessPrivateView(self):
         space=self.private_space
@@ -224,7 +223,6 @@ class EditRoletest(ECDTestCase):
         self.assertTrue(self.isLoggedIn(self.foo_admin))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response=self.get(url)
-	print response
         self.assertResponseOK(response)
 
     def AdminCanAccessPublicView(self):
@@ -233,12 +231,11 @@ class EditRoletest(ECDTestCase):
         self.assertTrue(self.isLoggedIn(self.bar_admin))
         url = self.getURL('edit-roles', kwargs={'space_url': space.url})
         response=self.get(url)
-	print response
         self.assertResponseOK(response)
 
     def ModCannotAccessPrivateView(self):
         space=self.private_space
-	self.login('foo_mod','foo_mod_password')
+        self.login('foo_mod','foo_mod_password')
         self.asserTrue(self.isLoggedIn(self.foo_mod))
         url=self.getURL('edit-roles',kwargs={'space-url':space.url})
         response=self.get(url)
@@ -247,7 +244,7 @@ class EditRoletest(ECDTestCase):
 
     def ModCannotAccessPublicView(self):
         space=self.public_space
-	self.login('bar_mod','bar_mod_password')
+        self.login('bar_mod','bar_mod_password')
         self.asserTrue(self.isLoggedIn(self.bar_mod))
         url=self.getURL('edit-roles',kwargs={'space-url':space.url})
         response=self.get(url)
@@ -266,7 +263,7 @@ class EditRoletest(ECDTestCase):
 
     def UserCannotAccessPublicView(self):
         space=self.public_space
-	self.login('bar_user','bar_user_password')
+        self.login('bar_user','bar_user_password')
         self.asserTrue(self.isLoggedIn(self.bar_user))
         url=self.getURL('edit-roles',kwargs={'space-url':space.url})
         response=self.get(url)
@@ -276,7 +273,6 @@ class EditRoletest(ECDTestCase):
     def OtherUserCannotAccessPrivateView(self):
         space=self.private_space
         self.unreg_user=self.create_user('unreg_user','unreg_password')
-	self.login
         self.asserTrue(self.isLoggedIn(self.unreg_user))
         url=self.getURL('edit-roles',kwargs={'space-url':space.url})
         response=self.get(url)
