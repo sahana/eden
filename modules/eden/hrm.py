@@ -663,7 +663,8 @@ class S3HRModel(S3Model):
 
         table = current.s3db.pr_group
         query = (table.deleted == False) & \
-                    (table.pe_id != None)
+                    (table.pe_id != None) & \
+                        (table.group_type == 3)
 
         opts = current.db(query).select(table.id,
                                         table.name)
