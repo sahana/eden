@@ -463,6 +463,13 @@ class S3HRModel(S3Model):
                         cols = 3,
                         options = self.hrm_course_opts,
                       ),
+                      S3SearchOptionsWidget(
+                        name="human_resource_search_teams",
+                        label=T("Teams"),
+                        field="person_id$group_membership.group_id",
+                        cols = 3, 
+                        options = self.hrm_team_opts,
+                      ),
                       # S3SearchSkillsWidget(
                         # name="human_resource_search_skills",
                         # label=T("Skills"),
@@ -646,7 +653,26 @@ class S3HRModel(S3Model):
         for opt in opts:
             _dict[opt.id] = opt.name
         return _dict
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_team_opts():
+        """
+            Provide the options for the HRM teams search filter
+        """
 
+        table = current.s3db.pr_group
+        query = (table.deleted == False) & \
+                    (table.pe_id != None) & \
+                        (table.group_type == 3)
+
+        opts = current.db(query).select(table.id,
+                                        table.name)
+        _dict = {}
+        for opt in opts:
+            _dict[opt.id] = opt.name
+        return _dict
+    
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm_human_resource_ondelete(row):
