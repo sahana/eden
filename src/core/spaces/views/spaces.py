@@ -159,7 +159,14 @@ class ViewSpaceIndex(DetailView):
         for proposal in Proposal.objects.filter(space=place.id):
             comment_list[proposal.pk]=Comment.objects.filter(object_pk=proposal.pk).count()
         for p in dict(sorted(comment_list.items(), key = itemgetter(1))):
-                most_commented.append(Proposal.objects.filter(pk=p))
+            most_commented.append(Proposal.objects.filter(pk=p))
+        
+        highlighted = {}
+        highlight = []
+        for i in Proposal.objects.filter(space=place.id):
+            highlighted[i.pk] = i.support_votes.count
+        for p in dict(sorted(highlighted.items(), key = itemgetter(1))):
+            highlight.append(Proposal.objects.filter(pk=p))
         
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
@@ -172,6 +179,7 @@ class ViewSpaceIndex(DetailView):
                                                     .order_by('-views')[:5]
         context['mostcommented'] = top_posts
         context['mostcommentedproposal'] = most_commented
+        context['highlightedproposal'] = highlight
 
         # context['mostcommented'] = sorted(o_list,
         #     key=lambda k: k['ocount'])[:10]
