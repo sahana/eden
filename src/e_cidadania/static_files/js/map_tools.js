@@ -1,10 +1,10 @@
 /*
-    proposal_tools.js - Javascript containing tools for the proposal forms
+    map_tools.js - Javascript containing tools for the event and proposal forms
     like maps and FX.
                            
     License: GPLv3
     Copyright: 2011 Cidadania S. Coop. Galega
-    Author: Oscar Carballal Prego <oscar.carballal@cidadania.coop>
+    Author: Vishrut Mehta <vishrut.mehta009@gmail.com>
 */
 
 // Translation scrings

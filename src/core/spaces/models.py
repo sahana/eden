@@ -187,6 +187,10 @@ class Event(models.Model):
         help_text=_('Select the date where the event is celebrated.'))
     description = models.TextField(_('Description'), blank=True, null=True)
     location = models.TextField(_('Location'), blank=True, null=True)
+    latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
+        max_digits=17, decimal_places=15, help_text =_('Specify it in decimal'))
+    longitude = models.DecimalField(_('Longitude'), blank=True, null=True,
+        max_digits=17, decimal_places=15, help_text =_('Specify it in decimal'))
 
     def is_due(self):
         if self.pub_date < datetime.now():
