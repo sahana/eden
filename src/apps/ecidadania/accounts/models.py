@@ -57,8 +57,8 @@ class UserProfile(BaseProfile):
     firstname = models.CharField(_('Name'), max_length=50, blank=True)
     surname = models.CharField(_('Surname'), max_length=200, blank=True)
     gender = models.CharField(_('Gender'), max_length=1, choices=GENDER,
-                              blank=True)
-    birthdate = models.DateField(_('Birth date'), blank=True, null=True)
+        blank=True)    
+    birthdate = models.DateField(_('Birth date'), blank=True, null=True, help_text='dd/mm/yyyy')    
     country = models.ForeignKey(Country, null=True)
     region = ChainedForeignKey(
         Region,
@@ -79,11 +79,14 @@ class UserProfile(BaseProfile):
     # Detailed overview of the address
     address = models.CharField(_('Address'), max_length=100)
     address_number = models.CharField(_('Number'), max_length=3, blank=True,
-                                      null=True)
-    address_floor = models.CharField(_('Floor'), max_length=3)
+        null=True, validators=[RegexValidator(regex='^[0-9]*$',
+        message='Invalid characters in the building number.')])
+    address_floor = models.CharField(_('Floor'), max_length=3,
+        validators=[RegexValidator(regex='^[0-9]*$', message='Invalid \
+            characters in the floor number.')])
     address_letter = models.CharField(_('Letter'), max_length=2, null=True,
-                                      blank=True)
-
+        blank=True, validators=[RegexValidator(regex='^[A-Za-z]*$'  )])
+    
     phone = models.CharField(_('Phone 1'), max_length=9, null=True,
                              validators=[RegexValidator(
                                          regex='^[0-9]*$',

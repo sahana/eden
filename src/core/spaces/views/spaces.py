@@ -44,6 +44,8 @@ from apps.ecidadania.debate.models import Debate
 from apps.ecidadania.voting.models import Poll, Voting
 from helpers.cache import get_or_insert_object_in_cache
 
+from operator import itemgetter
+
 # Please take in mind that the create_space view can't be replaced by a CBV
 # (class-based view) since it manipulates two forms at the same time. Apparently
 # that creates some trouble in the django API. See this ticket:
@@ -155,7 +157,14 @@ class ViewSpaceIndex(DetailView):
         top_posts = Post.objects.filter(space=place.id).in_bulk(post_ids)
         # print top_posts.values()[0].title
         # o_list = Comment.objects.annotate(ocount=Count('object_pk'))
-
+        
+        comment_list = {}
+        most_commented = []
+        for proposal in Proposal.objects.filter(space=place.id):
+            comment_list[proposal.pk]=Comment.objects.filter(object_pk=proposal.pk).count()
+        for p in dict(sorted(comment_list.items(), key = itemgetter(1))):
+                most_commented.append(Proposal.objects.filter(pk=p))
+        
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposalsets'] = ProposalSet.objects.filter(space=place.id)
@@ -167,6 +176,8 @@ class ViewSpaceIndex(DetailView):
                                                     .order_by('-views')[:5]
         # context['mostcommented'] = [top_posts.get(id,None) for id in post_ids]
         context['mostcommented'] = filter(None, map(lambda x: top_posts.get(x, None), post_ids))
+        context['mostcommentedproposal'] = most_commented
+
         # context['mostcommented'] = sorted(o_list,
         #     key=lambda k: k['ocount'])[:10]
         # print sorted(o_list, key=lambda k: k['ocount'])[:10]

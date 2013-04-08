@@ -96,7 +96,7 @@ class AddProposal(FormView):
 class EditProposal(UpdateView):
 
     """
-    The proposal can be edited by space and global admins, but also by their
+    The proposal can be edited not only by the space and global admins, but also by its
     creator.
 
     :rtype: HTML Form
@@ -240,5 +240,4 @@ def merge_proposal(request, space_url, set_id):
         merged_form = ProposalMergeForm(initial={'set_id': set_id})
 
     return render_to_response("proposals/proposal_merged.html",
-        {'form': merged_form, 'get_place': get_place, 'form_field': form_field},
-        context_instance=RequestContext(request))
+        {'form': merged_form, 'get_place': get_place, 'form_field': form_field}, context_instance=RequestContext(request))
