@@ -20,7 +20,9 @@
 from src.core.spaces.models import Space
 from src.apps.ecidadania.debate.models import Debate
 
+from django.contrib.auth.models import *
 from tests.test_utils import ECDTestCase
+from django.contrib.auth.models import Group, Permission
 
 
 class ListDebatesViewsTest(ECDTestCase):
@@ -94,39 +96,86 @@ class ListDebatesViewsTest(ECDTestCase):
         """
         Check if admin can delete from private space
         """
-        space = self.foo_space
+
+	
+        space=self.foo_space
         self.login('foo_admin', 'foo_admin_password')
+        self.foo_admin.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.foo_admin.save()
+        space.save()
         self.assertTrue(self.isLoggedIn(self.foo_admin))
-        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+                                             'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
-        self.logout()
-
-	"""
-        Check if admin can delete from public space
         """
-
-        space = self.bar_space
-        self.login('bar_admin','bar_admin_password')
-        self.assertTrue(self.isLoggedIn(self.bar_admin))
-        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
-        response = self.get(url)
-        self.assertResponseOK(response)
-        self.assertTemplateNotUsed(response, 'not_allowed.html')
-        self.logout()
-
+        When the admin doesn't have delete_debate permissions
         """
-        Check if registered user cannot delete from private space
-        """
-        space = self.foo_space
-        self.login('foo_user', 'foo_user_password')
-        self.assertTrue(self.isLoggedIn(self.foo_user))
-        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        self.foo_admin.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.foo_admin.save()
+        space.save()
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
         self.logout()
+
+
+        """
+        Check if admin can delete from public space
+        """
+
+
+        space = self.bar_space
+        self.login('bar_admin','bar_admin_password')
+        self.bar_admin.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.bar_admin.save()
+        space.save()
+        self.assertTrue(self.isLoggedIn(self.bar_admin))
+        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+                                             'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
+        """
+        When the admin doesn't have debate_delete permissions
+        """
+        self.bar_admin.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.bar_admin.save()
+        space.save()
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
+
+
+        """
+        Check if registered user cannot delete from private space
+        """
+
+
+        space = self.foo_space
+        self.login('foo_user', 'foo_user_password')
+        self.assertTrue(self.isLoggedIn(self.foo_user))
+        self.foo_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.foo_user.save()
+        space.save()
+        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+                                             'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        """
+        When the user doesn't have debate_delete permissions
+        """
+        self.foo_user.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.foo_user.save()
+        space.save()
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
+
 
         """
         Check if registered user cannot delete from public space
@@ -134,55 +183,136 @@ class ListDebatesViewsTest(ECDTestCase):
         space = self.bar_space
         self.login('bar_user', 'bar_user_password')
         self.assertTrue(self.isLoggedIn(self.bar_user))
-        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        self.bar_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.bar_user.save()
+        space.save()
+        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+                                             'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        """
+        When the user doesn't have delete_debate permissions
+        """
+        self.bar_user.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.bar_user.save()
+        space.save()
+        response=self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed('not_allowed.html')
         self.logout()
+
 
         """
         Check if mods can delete from private space
         """
+
+
         space = self.foo_space
         self.login('foo_mod', 'foo_mod_password')
         self.assertTrue(self.isLoggedIn(self.foo_mod))
-        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        self.foo_mod.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.foo_mod.save()
+        space.save()
+        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+                                             'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+        """
+        When the mod doesn't have delete_debate permissions
+        """
+        self.foo_mod.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.foo_mod.save()
+        space.save()
+        response=self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed('not_allowed.html')
         self.logout()
+
 
         """
         Check if mods can delete from public space
         """
+
+
         space = self.bar_space
         self.login('bar_mod', 'bar_mod_password')
         self.assertTrue(self.isLoggedIn(self.bar_mod))
-        url = self.getURL('delete-debate', kwargs={'space_url': space.url})
+        self.bar_mod.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.bar_mod.save()
+        space.save()
+        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+                                             'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+        """
+        When the mod doesn't have delete_debate permissions
+        """
+        self.bar_mod.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.bar_mod.save()
+        space.save()
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
         self.logout()
+
 
         """
         Check if unregistered users cannot delete from public space
         """
+
+
         space = self.bar_space
         self.unreg_user = self.create_user('unreg_user', 'unreg_user_password')
+        self.login('unreg_user','unreg_user_password')
         self.assertTrue(self.isLoggedIn(self.unreg_user))
-        url = self.getURL('delete-debate', kwargs={'space_url':space.url})
+        self.unreg_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.unreg_user.save()
+        space.save()
+        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+                                             'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        """
+        When the unreg-user doesn't have delete_debate permissions
+        """
+        self.unreg_user.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.unreg_user.save()
+        space.save()
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
         self.logout()
 
+
         """
         Check if unregistered users cannot delete from private space
         """
+
+
         space = self.foo_space
         self.login('unreg_user', 'unreg_user_password')
         self.assertTrue(self.isLoggedIn(self.unreg_user))
-        url = self.getURL('delete-debate', kwargs={'space_url':space.url})
+        self.unreg_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
+        self.unreg_user.save()
+        space.save()
+        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+                                             'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
+        """
+        When the unreg_user doesn't have delete_debate permissions 
+        """
+        self.unreg_user.user_permissions.remove(Permission.objects.get(codename='delete_debate'))
+        self.unreg_user.save()
+        space.save()
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        self.logout()
+
+
