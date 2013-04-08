@@ -23,6 +23,7 @@ from src.apps.ecidadania.debate.models import Debate
 from django.contrib.auth.models import *
 from tests.test_utils import ECDTestCase
 from django.contrib.auth.models import Group, Permission
+from src.apps.ecidadania.debate import url_names
 
 
 class ListDebatesViewsTest(ECDTestCase):
@@ -31,8 +32,8 @@ class ListDebatesViewsTest(ECDTestCase):
     
     def setUp(self):
         self.init()
-	
-	        
+    
+            
     def testListDebatesView(self):
         """Tests ListDebates view.
         """
@@ -56,14 +57,14 @@ class ListDebatesViewsTest(ECDTestCase):
         debate4 = self.seed(Debate, properties=debate_properties)
         debate5 = self.seed(Debate, properties=debate_properties)
         other_debates_list = [debate3, debate4, debate5]
-        url = self.getURL('list-debates', kwargs={'space_url':space1.url})
+        url = self.getURL(url_names.DEBATE_LIST, kwargs={'space_url':space1.url})
         response = self.get(url)
         #print self.printResponse(response)
         self.assertResponseOK(response)
         self.assertEqual(len(response.context[0].dicts[0]['debate_list']), 
                          len(debates_list))
         
-        url = self.getURL('list-debates', kwargs={'space_url': space2.url})
+        url = self.getURL(url_names.DEBATE_LIST, kwargs={'space_url': space2.url})
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertEqual(len(response.context[0].dicts[0]['debate_list']), 
@@ -72,7 +73,7 @@ class ListDebatesViewsTest(ECDTestCase):
     def testViewDebate(self):
         """Tests ViewDebate view.
         """
-        url = self.getURL('view-debate',(), {'debate_id': self.foo_debate.id,
+        url = self.getURL(url_names.DEBATE_VIEW,(), {'debate_id': self.foo_debate.id,
                                              'space_url': self.foo_space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -86,7 +87,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.assertEqual(len(context['columns']), 1)
         self.assertEqual(len(context['rows']), 1)
         
-        url = self.getURL('view-debate',(), {'debate_id': 5,
+        url = self.getURL(url_names.DEBATE_VIEW,(), {'debate_id': 5,
                                              'space_url': self.foo_space.url})
         response = self.get(url)
         self.assertResponseNotFound(response)
@@ -97,14 +98,14 @@ class ListDebatesViewsTest(ECDTestCase):
         Check if admin can delete from private space
         """
 
-	
+    
         space=self.foo_space
         self.login('foo_admin', 'foo_admin_password')
         self.foo_admin.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.foo_admin.save()
         space.save()
         self.assertTrue(self.isLoggedIn(self.foo_admin))
-        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.foo_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -132,7 +133,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.bar_admin.save()
         space.save()
         self.assertTrue(self.isLoggedIn(self.bar_admin))
-        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.bar_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -160,7 +161,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.foo_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.foo_user.save()
         space.save()
-        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.foo_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -186,7 +187,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.bar_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.bar_user.save()
         space.save()
-        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.bar_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -214,7 +215,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.foo_mod.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.foo_mod.save()
         space.save()
-        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.foo_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -242,7 +243,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.bar_mod.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.bar_mod.save()
         space.save()
-        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.bar_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -271,7 +272,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.unreg_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.unreg_user.save()
         space.save()
-        url = self.getURL('delete-debate',(), {'debate_id': self.bar_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.bar_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -299,7 +300,7 @@ class ListDebatesViewsTest(ECDTestCase):
         self.unreg_user.user_permissions.add(Permission.objects.get(codename='delete_debate'))
         self.unreg_user.save()
         space.save()
-        url = self.getURL('delete-debate',(), {'debate_id': self.foo_debate.id,
+        url = self.getURL(url_names.DEBATE_DELETE,(), {'debate_id': self.foo_debate.id,
                                              'space_url': space.url})
         response = self.get(url)
         self.assertResponseOK(response)
@@ -314,5 +315,3 @@ class ListDebatesViewsTest(ECDTestCase):
         self.assertResponseOK(response)
         self.assertTemplateUsed(response, 'not_allowed.html')
         self.logout()
-
-
