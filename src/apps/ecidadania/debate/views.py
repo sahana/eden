@@ -428,8 +428,8 @@ class DeleteDebate(DeleteView):
         return '/spaces/%s' % (space)
 
     def get_object(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        if has_operation_permission(self.request.user, self.space, 'debate.delete_debate', allow=['admins', 'mods']):
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        if has_operation_permission(self.request.user, space, 'debate.delete_debate', allow=['admins', 'mods']):
             return get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         else:
             self.template_name = 'not_allowed.html'
@@ -440,5 +440,6 @@ class DeleteDebate(DeleteView):
         Get extra context data for ViewDebate view.
         """
         context = super(DeleteDebate, self).get_context_data(**kwargs)
-        context['get_place'] = self.space
+        space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = space
         return context

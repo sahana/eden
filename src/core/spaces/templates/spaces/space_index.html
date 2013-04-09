@@ -367,7 +367,7 @@
                                         <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></li>
                                     {% endif %}
                                 {% empty %}
-                                    <li>{% trans "No debates closed yet." %}</li>
+                                    <li>{% trans "No debates closed yet."  %}</li>
                                 {% endfor %}
                             </ul>
                         </div>
@@ -461,6 +461,15 @@
                                 {% endfor %} 
                             </ul>
                             <h4>{% trans "Highlighted proposals" %}</h4>
+                            <ul class="unstyle">
+                                {% for p in highlightedproposal %}
+                                {% for h_proposal in p %}
+                                <li><a href="{{ h_proposal.get_absolute_url}}">{{ h_proposal.title }}</a> {% trans "by"%} {{ h_proposal.author }} {% trans "on" %} <a href="{{ h_proposal.proposalset.get_absolute_url }}">{{ proposalset }}</a> {% trans "at" %} {{ h_proposal.pub_date|date:"d F Y"}}</li>
+        
+                                {% endfor %}
+                                {% endfor %}
+
+                            </ul>
                         </div>
                         <div class="span4">
                             {% if user_is_admin %}

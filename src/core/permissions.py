@@ -33,9 +33,10 @@ def has_operation_permission(user, space, object_permission, allow):
     :object_permission: Specific operation permission
     :allow: List of users to allow, can be: admins, mods or users
     """
-    return has_all_permissions(user) \
-        or (has_space_permission(user, space, allow)
-    and user.has_perm(object_permission))
+    print "All permisssions: %s" % has_all_permissions(user)
+    print "Space permission: %s" % has_space_permission(user, space, allow)
+    print "has_perm: %s" % user.has_perm(object_permission)
+    return has_all_permissions(user) or (has_space_permission(user, space, allow) and user.has_perm(object_permission))
 
 
 def has_space_permission(user, space, allow=[]):
