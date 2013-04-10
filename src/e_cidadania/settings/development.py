@@ -28,14 +28,6 @@ from e_cidadania.settings.defaults import *
 # EMAIL_HOST_PASSWORD= ""
 # DEFAULT_FROM_EMAIL = ""
 # EMAIL_USE_TLS = True
-EMAIL_HOST = "mail.ecidadania.org"
-EMAIL_PORT= 25
-EMAIL_HOST_USER="info@ecidadania.org"
-EMAIL_HOST_PASSWORD="MbNu?@HWfBRvKhr"
-DEFAULT_FROM_EMAIL = "info@ecidadania.org"
-SERVER_EMAIL = "info@ecidadania.org"
-EMAIL_USE_TLS = True
-
 
 # Time and zone configuration
 TIME_ZONE = 'Europe/London'
