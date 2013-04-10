@@ -17,12 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from e_cidadania import settings
 """
 This file contains various check functions for the permission system integrated
 inside the spaces module and also some checks for the django auth
 system.
 """
+from e_cidadania import settings
+
 
 def has_operation_permission(user, space, object_permission, allow):
 
@@ -40,8 +41,9 @@ def has_operation_permission(user, space, object_permission, allow):
         User has object permission: %s.
         """ % (has_all_permissions(user), has_space_permission(user, space,
         allow), user.has_perm(object_permission))
-    
+
     return has_all_permissions(user) or (has_space_permission(user, space, allow) and user.has_perm(object_permission))
+
 
 def has_space_permission(user, space, allow=[]):
 

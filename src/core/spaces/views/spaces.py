@@ -161,16 +161,16 @@ class ViewSpaceIndex(DetailView):
         most_commented = []
         for proposal in Proposal.objects.filter(space=place.id):
             comment_list[proposal.pk]=Comment.objects.filter(object_pk=proposal.pk).count()
-        for p in dict(sorted(comment_list.items(), key = itemgetter(1))):
+        for p in dict(sorted(comment_list.items(), key=itemgetter(1))):
             most_commented.append(Proposal.objects.filter(pk=p))
-        
+
         highlighted = {}
         highlight = []
         for i in Proposal.objects.filter(space=place.id):
             highlighted[i.pk] = i.support_votes.count
-        for p in dict(sorted(highlighted.items(), key = itemgetter(1))):
+        for p in dict(sorted(highlighted.items(), key=itemgetter(1))):
             highlight.append(Proposal.objects.filter(pk=p))
-        
+
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposalsets'] = ProposalSet.objects.filter(space=place.id)
