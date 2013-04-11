@@ -401,10 +401,10 @@ class S3ProjectModel(S3Model):
             #append("drr.hfa")
         append((T("Themes"), "theme.name"))
         if multi_orgs:
-            table.virtualfields.append(S3ProjectOrganisationFundingVirtualFields())
+            table.total_organisation_amount = Field.Lazy(self.project_total_organisation_amount)
             append((T("Total Funding Amount"), "total_organisation_amount"))
         if multi_budgets:
-            table.virtualfields.append(S3ProjectBudgetVirtualFields())
+            table.total_annual_budget = Field.Lazy(self.project_total_annual_budget)
             append((T("Total Annual Budget"), "total_annual_budget"))
         append("start_date")
         append("end_date")
@@ -610,6 +610,42 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_total_organisation_amount(row):
+        """ Total of project_organisation amounts for project"""
+
+        if "project_project" in row:
+            project_id = row["project_project.id"]
+        elif "id" in row:
+            project_id = row["id"]
+        else:
+            return 0
+
+        table = current.s3db.project_organisation
+        query = (table.deleted != True) & \
+                (table.project_id == project_id)
+        sum_field = table.amount.sum()
+        return current.db(query).select(sum_field).first()[sum_field]
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_total_annual_budget(row):
+        """ Total of all annual budgets for project"""
+
+        if "project_project" in row:
+            project_id = row["project_project.id"]
+        elif "id" in row:
+            project_id = row["id"]
+        else:
+            return 0
+
+        table = current.s3db.project_annual_budget
+        query = (table.deleted != True) & \
+                (table.project_id == project_id)
+        sum_field = table.amount.sum()
+        return current.db(query).select(sum_field).first()[sum_field]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def project_project_onaccept(form):
         """
             After DB I/O tasks for Project records
@@ -778,7 +814,7 @@ class S3ProjectModel(S3Model):
             if len(_countries) == 1:
                 country = _countries[0]
                 if country in countries:
-                    budget = project.project_project.total_annual_budget
+                    budget = project.project_project.total_annual_budget()
                     theme = project.project_theme_project.theme_id
                     percentage = project.project_theme_project.percentage
                     countries[country][theme] += budget * percentage
@@ -789,7 +825,7 @@ class S3ProjectModel(S3Model):
                     for theme in themes:
                         countries[country][theme.id] = 0
                     # Add value for this record
-                    budget = project.project_project.total_annual_budget
+                    budget = project.project_project.total_annual_budget()
                     theme = project.project_theme_project.theme_id
                     percentage = project.project_theme_project.percentage
                     countries[country][theme] += budget * percentage
@@ -4674,34 +4710,6 @@ def task_notify(form):
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
     return
-
-# =============================================================================
-class S3ProjectOrganisationFundingVirtualFields:
-    """ Virtual fields for the project_project table """
-
-    def total_organisation_amount(self):
-        """ Total of project_organisation amounts for project"""
-
-        table = current.s3db.project_organisation
-        query = (table.deleted != True) & \
-                (table.project_id == self.project_project.id)
-        sum_field = table.amount.sum()
-        return current.db(query).select(sum_field).first()[sum_field]
-
-# =============================================================================
-class S3ProjectBudgetVirtualFields:
-    """
-        Virtual fields for the project_project table when multi_budgets=True
-    """
-
-    def total_annual_budget(self):
-        """ Total of all annual budgets for project"""
-
-        table = current.s3db.project_annual_budget
-        query = (table.deleted != True) & \
-                (table.project_id == self.project_project.id)
-        sum_field = table.amount.sum()
-        return current.db(query).select(sum_field).first()[sum_field]
 
 # =============================================================================
 class S3ProjectBeneficiaryVirtualFields:
