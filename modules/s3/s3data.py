@@ -570,6 +570,7 @@ class S3DataTable(object):
             @param orderby: the sort details see aaSort at http://datatables.net/ref
             @param rfields: The list of resource fields
             @param attr: dictionary of attributes which can be passed in
+                   dt_lengthMenu: The menu options for the number of records to be shown 
                    dt_displayLength : The default number of records that will be shown
                    dt_sDom : The Datatable DOM initialisation variable, describing
                              the order in which elements are displayed.
@@ -622,7 +623,9 @@ class S3DataTable(object):
         # sent in a json object stored in an hidden input field. This object
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
-        config.id = id
+        config.lengthMenu = attr.get("dt_lengthMenu",
+                                        [[ 25, 50, -1], [ 25, 50, str(current.T("All"))]]
+                                        )
         config.displayLength = attr.get("dt_displayLength",
                                         current.manager.ROWSPERPAGE)
         config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
