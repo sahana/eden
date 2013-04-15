@@ -2415,7 +2415,7 @@ S3OptionsFilter({
                                             if e not in realm])
                         if not realm:
                             del realms[group_id]
-                    elif pe_id is 0:
+                    elif pe_id == 0:
                         # Site-wide
                         realms[group_id] = None
                     elif pe_id not in realm:
