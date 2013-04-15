@@ -622,7 +622,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                 opt_append(v)
 
         # Translate empty-option
-        EMPTY = T("None")
+        try:
+            EMPTY = field.represent(None)
+        except:
+            EMPTY = T("None")
 
         # Append empty-option if field can be empty
         #if field:
@@ -1468,7 +1471,8 @@ i18n.edit_saved_search="%s"
         if s3.dataTable_iDisplayLength:
             display_length = s3.dataTable_iDisplayLength
         else:
-            display_length = 25
+            display_length = attr.get("dt_displayLength",25)
+           
 
         # Server-side pagination?
         if not s3.no_sspag:
@@ -1526,13 +1530,20 @@ i18n.edit_saved_search="%s"
             s3.no_formats = True
         else:
             # Data table
-            dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
+            dt_config = {}
+            dt_sDom = s3.get("dataTable_sDom")
+            if dt_sDom:
+                dt_config["dt_sDom"] = dt_sDom
+            dt_length_menu = attr.get("dt_lengthMenu")
+            if dt_length_menu:
+                dt_config["dt_lengthMenu"] = dt_length_menu
             datatable = dt.html(totalrows, displayrows, "list",
                                 dt_pagination=dt_pagination,
                                 dt_displayLength=display_length,
                                 dt_permalink=search_url,
-                                dt_sDom = dt_sDom,
-                                dt_bFilter = dt_bFilter)
+                                dt_bFilter = dt_bFilter,
+                                **dt_config
+                                )
         output["items"] = datatable
         output["sortby"] = sortby
 
