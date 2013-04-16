@@ -238,7 +238,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
 
         # Header row
         colCnt = -1
-        headerRow = sheet1.row(2)
+        headerRow = sheet1.row(0)
         fieldWidth = []
         for selector in lfields:
             if selector == report_groupby:
@@ -255,21 +255,21 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
             fieldWidth.append(width)
             sheet1.col(colCnt).width = width
         # Title row
-        currentRow = sheet1.row(0)
-        if colCnt > 0:
-            sheet1.write_merge(0, 0, 0, colCnt, str(title),
-                               styleLargeHeader)
-        currentRow.height = 500
-        currentRow = sheet1.row(1)
-        currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
-        currentRow.write(1, request.now, styleNotes)
+        # currentRow = sheet1.row(0)
+        #if colCnt > 0:
+        #    sheet1.write_merge(0, 0, 0, colCnt, str(title),
+        #                       styleLargeHeader)
+        #currentRow.height = 500
+        #currentRow = sheet1.row(1)
+        #currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
+        #currentRow.write(1, request.now, styleNotes)
         # Fix the size of the last column to display the date
         if 16 * COL_WIDTH_MULTIPLIER > width:
             sheet1.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
         totalCols = colCnt
-        rowCnt = 2
+        rowCnt = 0
         colCnt = 0
 
         subheading = None
@@ -367,7 +367,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                     sheet1.col(colCnt - 1).width = width
                 colCnt += 1
         sheet1.panes_frozen = True
-        sheet1.horz_split_pos = 3
+        sheet1.horz_split_pos = 1
 
         output = StringIO()
         book.save(output)

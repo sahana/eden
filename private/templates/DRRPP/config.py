@@ -140,12 +140,15 @@ def formstyle_row(id, label, widget, comment, hidden=False):
         hide = "hide"
     else:
         hide = ""
-    row = DIV(DIV(comment, label,
-                  _id=id + "1",
+    row = DIV(DIV(label,
+                  _id=id + "_label",
                   _class="w2p_fl %s" % hide),
               DIV(widget,
-                  _id=id,
+                  _id=id + "_widget",
                   _class="w2p_fw %s" % hide),
+              DIV(comment,
+                  _id=id + "_comment",
+                  _class="w2p_fc %s" % hide),
               _class = "w2p_r",
               )
     return row
@@ -176,6 +179,7 @@ def customize_project_project(**attr):
         Customize project_project controller
     """
 
+    db = current.db
     s3db = current.s3db
     s3 = current.response.s3
     tablename = "project_project"
@@ -221,6 +225,10 @@ def customize_project_project(**attr):
     # Remove rheader
     attr["rheader"] = None
     
+    #Only show 10 Project by default to improve load time
+    attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, current.T("All")]]
+    s3.dataTable_iDisplayLength = 10
+    
     # Custom PreP
     standard_prep = s3.prep
     def custom_prep(r):
@@ -240,7 +248,20 @@ def customize_project_project(**attr):
 
             # JS to show/hide Cook Island fileds
             s3.scripts.append("/%s/static/themes/DRRPP/js/drrpp.js" % current.request.application)
-
+            
+            if r.method == "read":
+                table_pl = s3db.project_location
+                table_l = s3db.gis_location
+                countries = [ r.name for r in 
+                              db( ( table_pl.project_id == r.record.id ) &
+                                  ( table_pl.location_id == table_l.id ) 
+                               ).select(table_l.name)
+                             ]
+                if not ("Cook Islands" in countries and len(countries) == 1):
+                    s3db.project_drrpp.L1.readable = False
+                    s3db.project_drrpp.pifacc.readable = False
+                    s3db.project_drrpp.jnap.readable = False
+                       
         elif r.representation == "xls":
             # All readable Fields should be exported
             list_fields = ["id",
@@ -341,11 +362,11 @@ def customize_project_project(**attr):
                               field = "location.location_id",
                               cols = 3
                               ),
-        S3SearchOptionsWidget(name = "project_search_L1",
-                              label = T("Cook Islands"),
-                              field = "drrpp.L1",
-                              cols = 3
-                              ),
+        #S3SearchOptionsWidget(name = "project_search_L1",
+        #                      label = T("Cook Islands"),
+        #                      field = "drrpp.L1",
+        #                      cols = 3
+        #                      ),
         S3SearchOptionsWidget(name = "project_search_hazard",
                               label = T("Hazard"),
                               field = "hazard.id",
@@ -422,8 +443,8 @@ def customize_project_project(**attr):
     # Report Settings for charts
     if "chart" in current.request.vars:
         crud_strings[tablename].title_report  = T("Project Graph")
-        report_fact_fields = [("project.id", "count")]
-        report_fact_default = "project.id"
+        report_fact_fields = [("project.name", "count")]
+        report_fact_default = "project.name"
     else:
         crud_strings[tablename].title_report  = T("Project Matrix")
         report_fact_fields = [(field, "count") for field in report_fields]

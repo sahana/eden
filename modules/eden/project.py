@@ -154,7 +154,8 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Statuses currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename,
+                                none = T("Unknown"))
         status_id = S3ReusableField("status_id", table,
                                     label = T("Status"),
                                     sortby = "name",
@@ -3135,10 +3136,10 @@ class S3ProjectDRRPPModel(S3Model):
                         ),
                      Field("parent_project",
                            represent = lambda v: v or NONE,
-                           label = T("Parent Project"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Parent Project"),
-                                                           T("The parent project or programme which this project is implemented under"))), 
+                           label = T("Name of a programme or another project which this project is implemented as part of"),
+                           #comment = DIV(_class="tooltip",
+                           #              _title="%s|%s" % (T("Parent Project"),
+                           #                                T("The parent project or programme which this project is implemented under"))), 
                            
                      ),
                      Field("duration", "integer",
