@@ -548,74 +548,79 @@ class S3Resource(object):
             @return: the rows (with count/getids option a tuple (rows, count, ids))
         """
 
+        # Init
+        
         db = current.db
         table = self.table
+        tablename = table._tablename
+        pkey = str(table._id)
 
         # Get the query and filters
+        
         query = self.get_query()
         vfltr = self.get_filter()
         rfilter = self.rfilter
-
-        # Handle distinct-attribute (must respect rfilter.distinct)
-        distinct = self.rfilter.distinct | distinct
+        distinct = rfilter.distinct | distinct
 
         # Fields to select
+        
         if fields is None:
             fields = [f.name for f in self.readable_fields()]
         else:
             fields = list(fields)
-        # Add fields needed for filters
+
+        # Add virtual fields from filters (to get the tables joined)
         for f in rfilter.get_fields():
             if f not in fields:
                 fields.append(f)
+                
         # Resolve all field selectors
+        
         lfields, joins, ljoins, d = self.resolve_selectors(fields)
 
+        # Distinct
+        
         distinct = distinct | d
         attributes = {"distinct": distinct}
 
-        # Left joins
-        left_joins = left
-        if left_joins is None:
-            left_joins = []
-        elif not isinstance(left, list):
-            left_joins = [left_joins]
-        joined_tables = [str(join.first) for join in left_joins]
+        # Collect the left joins
+        
+        left_joins = {}
 
-        # Add the left joins from the field query
-        ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
-        for join in ljoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
+        # Left joins from caller
+        if left:
+            if not isinstance(left, (tuple, list)):
+                left = [left]
+            for join in left:
+                tname = str(join.first)
+                if tname not in left_joins:
+                    left_joins[tname] = join
 
-        # Add the left joins from the filter
-        fjoins = rfilter.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
+        # Left joins from filter
+        left = rfilter.get_left_joins()
+        for join in left:
+            tname = str(join.first)
+            if tname not in left_joins:
+                left_joins[tname] = join
+        try:
+            filter_joins = self.sortleft(left_joins.values())
+        except:
+            filter_joins = left_joins.values()
 
-        # Sort left joins and add to attributes
-        if left_joins:
-            try:
-                left_joins = self.sortleft(left_joins)
-            except:
-                pass
-            attributes["left"] = left_joins
+        # Left joins from fields
+        left = [j for tn in ljoins for j in ljoins[tn]]
+        for join in left:
+            tname = str(join.first)
+            if tname not in left_joins:
+                left_joins[tname] = join
 
-        # Joins
+        # Collect the inner joins
         for join in joins.values():
             if str(join) not in str(query):
                 query &= join
 
-        # Orderby
-        if orderby is not None:
-            attributes["orderby"] = orderby
-
         # Limitby
+        
         if vfltr is None:
             limitby = self.limitby(start=start, limit=limit)
             if limitby is not None:
@@ -625,131 +630,130 @@ class S3Resource(object):
             # => apply start/limit in vfltr instead
             limitby = None
 
-        # Column names and headers
-        colnames = [f.colname for f in lfields]
-        headers = dict(map(lambda f: (f.colname, f.label), lfields))
-
-        # Fields in the query
+        # Determine the fields for the SELECT
+        
+        qfields = {}
+        if groupby:
+            if isinstance(groupby, (list, tuple)):
+                gfields = [str(f) for f in groupby]
+            else:
+                gfields = str(groupby)
+        else:
+            gfields = []
         load = current.s3db.table
-        qfields = []
-        qtables = []
-        gfields = [str(g) for g in groupby] \
-                  if isinstance(groupby, (list, tuple)) else str(groupby)
+        primary_keys = {tablename: self._id}
         for f in lfields:
             field = f.field
             tname = f.tname
-            if field is None:
-                continue
+            fname = str(field)
             qtable = load(tname)
-            if qtable is None:
-                continue
-            if tname not in qtables:
-                # Make sure the primary key of the table this field
-                # belongs to is included in the SELECT
-                qtables.append(tname)
-
-                # @todo: is this really needed?
-                # if tname is an alias, get primary key from id instead of _id
-                if hasattr(qtable, "_ot") and qtable._ot != tname:
-                    pkey = qtable.id
-                else:    
-                    pkey = qtable._id
-                    
-                if not groupby:
-                    qfields.append(pkey)
-                if str(field) == str(pkey):
-                    continue
-            if not groupby or str(field) in gfields:
-                qfields.append(field)
-
-        if distinct or getids or left_joins:
-            if orderby:
-                # For GROUPBY id (which we need here for left joins), we need
-                # all ORDERBY-fields to appear in an aggregation function, or
-                # otherwise the ORDERBY can be ambiguous.
-                qfield_names = [str(f) for f in qfields]
-                if isinstance(groupby, (list, tuple)):
-                    groups = ",".join([str(f) for f in groupby])
-                elif not groupby:
-                    groups = ""
-                else:
-                    groups = groupby
-
-                if isinstance(orderby, str):
-                    orderby_fields = orderby.split(",")
-                elif not isinstance(orderby, (list, tuple)):
-                    orderby_fields = [orderby]
-                else:
-                    orderby_fields = orderby
-
-                orderby = []
-                for orderby_field in orderby_fields:
-
-                    if type(orderby_field) is Expression:
-                        f = orderby_field.first
-                        op = orderby_field.op
-                        if op == db._adapter.AGGREGATE:
-                            # Already an aggregation
-                            orderby.append(orderby_field)
-                            continue
-                        elif type(f) is Field and op == db._adapter.INVERT:
-                            direction = "desc"
-                        else:
-                            # Other expression - not supported
-                            continue
-                    elif type(orderby_field) is Field:
-                        direction = "asc"
-                        f = orderby_field
-                    elif isinstance(orderby_field, str):
-                        fn, direction = (orderby_field.strip().split() + ["asc"])[:2]
-                        tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
-                        try:
-                            f = db[tn][fn]
-                        except (AttributeError, KeyError):
-                            continue
-                    else:
-                        continue
-
-                    fname = str(f)
-                    kname = str(self._id)
-                    direction = direction.strip().lower()[:3]
-                    if kname in qfield_names and fname == kname or \
-                       kname in groups:
-                        expression = f if direction == "asc" else ~f
-                    else:
-                        expression = f.min() if direction == "asc" else ~(f.max())
-                    orderby.append(expression)
-
-                    # If the ORDERBY-field is not in SELECT, then add it.
-                    # According to SQL documentation, this is /not/ required - you
-                    # can have fields in the ORDERBY which are not in the SELECT,
-                    # however postgresql does seem to need it
-                    if str(f) not in qfield_names:
-                        qfields.append(f)
-                        qfield_names.append(str(f))
+            if field is not None:
+                if tname != tablename or fname == pkey:
+                    primary_keys[tname] = None
+                if not groupby or fname in gfields:
+                    qfields[fname] = field
             else:
-                # In DISTINCT without ORDERBY, the DAL adapter for postgresql
-                # would automatically add all primary keys as ORDERBY, which
-                # would though make DISTINCT pointless here - adding a default
-                # ORDERBY id will prevent this.
-                if str(self._id) not in [str(f) for f in qfields]:
-                    qfields.insert(0, self._id)
-                attributes["orderby"] = self._id
+                if tname not in primary_keys:
+                    primary_keys[tname] = qtable._id
+        if not groupby:
+            for pk in primary_keys.values():
+                if pk is not None:
+                    qfields[str(pk)] = pk
 
+        # Handle ORDERBY from caller
+        
+        if orderby is not None:
+            attributes["orderby"] = orderby
+
+        # In DISTINCT without ORDERBY, the DAL adapter for postgresql
+        # would automatically add all primary keys as ORDERBY, which
+        # would make DISTINCT pointless - adding a default ORDERBY id
+        # will prevent this:
+        if distinct and not orderby:
+            attributes["orderby"] = self._id
+
+        # For GROUPBY id (which we need here for left joins), we need
+        # all ORDERBY-fields to appear in an aggregation function, or
+        # otherwise the ORDERBY can be ambiguous.
+        if orderby:
+            if isinstance(orderby, str):
+                orderby_fields = orderby.split(",")
+            elif not isinstance(orderby, (list, tuple)):
+                orderby_fields = [orderby]
+            else:
+                orderby_fields = orderby
+            orderby = []
+            for orderby_field in orderby_fields:
+                if type(orderby_field) is Expression:
+                    f = orderby_field.first
+                    op = orderby_field.op
+                    if op == db._adapter.AGGREGATE:
+                        # Already an aggregation
+                        orderby.append(orderby_field)
+                        continue
+                    elif type(f) is Field and op == db._adapter.INVERT:
+                        direction = "desc"
+                    else:
+                        # Other expression - not supported
+                        continue
+                elif type(orderby_field) is Field:
+                    direction = "asc"
+                    f = orderby_field
+                elif isinstance(orderby_field, str):
+                    fn, direction = (orderby_field.strip().split() + ["asc"])[:2]
+                    tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
+                    try:
+                        f = db[tn][fn]
+                    except (AttributeError, KeyError):
+                        continue
+                else:
+                    continue
+                fname = str(f)
+                direction = direction.strip().lower()[:3]
+                if pkey in qfields and fname == pkey or pkey in gfields:
+                    expression = f if direction == "asc" else ~f
+                else:
+                    expression = f.min() if direction == "asc" else ~(f.max())
+                orderby.append(expression)
+                # If the ORDERBY-field is not in SELECT, then add it.
+                # According to SQL documentation, this is /not/ required - you
+                # can have fields in the ORDERBY which are not in the SELECT,
+                # however postgresql does seem to need it:
+                if distinct and fname not in qfields:
+                    qfields[fname] = f
+                # Make sure the table for this ORDERBY-field is joined
+                # even when only filtering:
+                tname = fname.split(".", 1)[0]
+                if tname != tablename and tname in left_joins:
+                    filter_joins.append(left_joins[tname])
+
+        # Handler GROUPBY from caller
+        
         if groupby:
             attributes["distinct"] = False
             attributes["groupby"] = groupby
             attributes["orderby"] = orderby
 
-        # Temporarily deactivate virtual fields
+        # Sort the left joins and add to attributes
+        
+        if left_joins:
+            try:
+                left_joins = self.sortleft(left_joins.values())
+            except:
+                left_joins = left_joins.values()
+            attributes["left"] = left_joins
+
+        # Temporarily deactivate (mandatory) virtual fields
+        
         osetattr = object.__setattr__
         if not virtual:
             vf = table.virtualfields
             osetattr(table, "virtualfields", [])
 
-        # Count the rows
+        # Count the rows and get the IDs
+        
         numrows = ids = None
-        if limitby is not None:
+        if vfltr is None:
             # No virtual filter
 
             if getids or left_joins:
@@ -759,15 +763,17 @@ class S3Resource(object):
                 # - the IDs of all records matching the query
                 # - the IDs of all records in the target page
 
-                # We don't need virtual fields here
+                # We don't need virtual fields here, so deactivate
+                # even if virtual is True
                 if virtual:
                     vf = table.virtualfields
                     osetattr(table, "virtualfields", [])
 
-                rows = db(query).select(self._id,
-                                        left=attributes.get("left", None),
+                _id = self._id
+                rows = db(query).select(_id,
+                                        left=filter_joins,
                                         orderby=orderby,
-                                        groupby=self._id,
+                                        groupby=_id,
                                         cacheable=True)
 
                 # Restore the virtual fields
@@ -775,44 +781,40 @@ class S3Resource(object):
                     osetattr(table, "virtualfields", vf)
 
                 numrows = len(rows)
-                row_ids = [row[table._id] for row in rows]
+                row_ids = [row[_id] for row in rows]
 
                 # Create a simplified query for the page
-                # (this will improve performance of the second select):
+                # (to improve performance of the second query):
                 if left_joins:
-                    page = row_ids[limitby[0]:limitby[1]]
+                    if limitby:
+                        page = row_ids[limitby[0]:limitby[1]]
+                        del attributes["limitby"]
+                    else:
+                        page = row_ids
                     query = table._id.belongs(page)
-                    del attributes["limitby"]
 
-                # If the caller asked for the IDs, then de-duplicate the list:
-                if getids:
-                    ids = list(set(row_ids))
+                # De-duplicate the ID list (this seems superfluous since
+                # we group by ID, therefore commented):
+                #if getids:
+                    #ids = list(set(row_ids))
 
             elif count:
                 c = self._id.count()
                 row = db(query).select(c,
                                        distinct=distinct,
-                                       left=attributes.get("left", None)).first()
+                                       left=filter_joins).first()
                 numrows = row[c]
                 ids = []
         else:
-            # No limitby present => count/collect ids from the rows
+            # Virtual filter => count/collect ids from the rows
             numrows = ids = None
 
         # Retrieve the rows
-        attributes["cacheable"] = cacheable
-
-        hasids = False
-
+        
+        hasids = pkey in qfields
         if numrows != 0:
-            pkey = str(table._id)
-            for qf in qfields:
-                if str(qf) == pkey:
-                    hasids = True
-                    break
-
-            rows = db(query).select(*qfields, **attributes)
-
+            attributes["cacheable"] = cacheable
+            rows = db(query).select(*(qfields.values()), **attributes)
             if vfltr is None:
                 if (getids or left_joins) and ids is None and hasids:
                     ids = list(set([row[table._id] for row in rows]))
@@ -821,13 +823,15 @@ class S3Resource(object):
                 if count and numrows is None:
                     numrows = len(rows)
         else:
-            rows = [] # None?
+            rows = []
            
         # Restore virtual fields
+        
         if not virtual:
             osetattr(table, "virtualfields", vf)
 
         # Apply virtual fields filter
+        
         if rows and vfltr is not None:
 
             if count:
@@ -846,6 +850,8 @@ class S3Resource(object):
                 ids = list(set([row[table._id] for row in rows]))
                 numrows = len(ids)
 
+        # Result
+        
         if not getids:
             ids = []
         if count or getids:

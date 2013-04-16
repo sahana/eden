@@ -1042,7 +1042,7 @@ def s3_flatlist(nested):
     for item in nested:
         if isinstance(item, collections.Iterable) and \
            not isinstance(item, basestring):
-            for sub in flatlist(item):
+            for sub in s3_flatlist(item):
                 yield sub
         else:
             yield item

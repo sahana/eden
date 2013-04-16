@@ -50,7 +50,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
-from s3utils import s3_flatlist, s3_truncate, s3_unicode, S3MarkupStripper
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_truncate, s3_unicode, S3MarkupStripper
 from s3validators import IS_NUMBER
 
 DEBUG = False
