@@ -170,16 +170,16 @@ def person():
         return True
     s3.prep = prep
 
-    def postp(r, output):
-        if r.component_name == "saved_search" and r.method in (None, "search"):
-            s3_action_buttons(r)
-            s3.actions.append(
-                dict(url=URL(args=r.args + ["[id]", "load"]),
-                     label=str(T("Load")),
-                     _class="action-btn")
-            )
-        return output
-    s3.postp = postp
+    # def postp(r, output):
+        # if r.component_name == "saved_search" and r.method in (None, "search"):
+            # s3_action_buttons(r)
+            # s3.actions.append(
+                # dict(url=URL(args=r.args + ["[id]", "load"]),
+                     # label=str(T("Load")),
+                     # _class="action-btn")
+            # )
+        # return output
+    # s3.postp = postp
 
     s3db.configure("pr_group_membership",
                    list_fields=["id",

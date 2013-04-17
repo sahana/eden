@@ -437,6 +437,9 @@ td>a.simple-lnk,
 }
 
 /* Zebra */
+.create>form>table>tbody>tr:nth-child(odd),
+.update>form>table>tbody>tr:nth-child(odd),
+.read>form>table>tbody>tr:nth-child(odd),
 .odd {
 	background: #d1e0e5;
 }
@@ -457,17 +460,7 @@ td>a.simple-lnk,
     background: url(img/icon_help15px.png) no-repeat scroll 0 0 transparent;
     height: 16px;
     float: left;
-    margin: 2px 0 0 -20px;
-    width: 16px;
-}
-.tooltip:hover,
-.tooltipbody:hover,
-.stickytip:hover,
-.ajaxtip:hover {
-    background: url(img/icon_help15px.png) no-repeat scroll 0 0 transparent;
-    height: 16px;
-    float: left;
-    margin: 2px 0 0 -20px;
+    margin: 0 10px;
     width: 16px;
 }
 div.dataTables_info {
@@ -502,9 +495,7 @@ div.w2p_fw {
 }
 div.w2p_fc {
     float: left;
-    clear: left;
-    width: 15px;
-    margin: 0 5px;
+    margin: 8px 5px 0 0;
 }
 
 /* Styling for Inline Components */
@@ -548,10 +539,12 @@ textarea.comments {
     height: 200px;
 }
 
-/*Hide Cook Island Fields by Default*/
-#project_project_sub_drrpp_L1__row1,
-#project_project_sub_drrpp_L1__row,
+/*Hide Cook Island Fields by Default
+#project_project_sub_drrpp_L1__row_label,
+#project_project_sub_drrpp_L1__row_widget,
+#project_project_sub_drrpp_L1__row_comment,
 #project_project_drrpp_pifacc__subheading,
 #project_project_drrpp_jnap__subheading {
     display: none;
 }
+*/

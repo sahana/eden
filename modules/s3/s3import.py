@@ -1858,6 +1858,9 @@ class S3ImportItem(object):
             Detect whether this is an update or a new record
         """
 
+        if self.id:
+            return
+
         RESOLVER = "deduplicate"
 
         METHOD = self.METHOD
@@ -1865,9 +1868,6 @@ class S3ImportItem(object):
         DELETE = METHOD["DELETE"]
 
         UID = current.xml.UID
-
-        if self.id:
-            return
 
         table = self.table
 
@@ -1892,8 +1892,8 @@ class S3ImportItem(object):
             if self.data and resolve:
                 resolve(self)
             if self.id and self.method in (UPDATE, DELETE):
-                query = (table._id == self.id)
-                self.original = current.db(query).select(limitby=(0, 1)).first()
+                self.original = current.db(table._id == self.id).select(limitby=(0, 1)
+                                                                        ).first()
                 if original and UID in original:
                     self.uid = original[UID]
                     self.data.update({UID:self.uid})

@@ -1323,7 +1323,8 @@ class S3ProjectActivityModel(S3Model):
         if item.tablename != "project_activity":
             return
         data = item.data
-        if "project_id" in data and "name" in data:
+        if "project_id" in data and \
+           "name" in data:
             # Match activity by project_id and name
             project_id = data.project_id
             name = data.name
@@ -2121,12 +2122,40 @@ class S3ProjectHazardModel(S3Model):
             msg_record_created = T("Hazard added to Project"),
             msg_record_modified = T("Hazard updated"),
             msg_record_deleted = T("Hazard removed from Project"),
-            msg_list_empty = T("No Hazards found for this Project")
-        )
+            msg_list_empty = T("No Hazards found for this Project"))
+
+        self.configure(tablename,
+                       deduplicate=self.project_hazard_project_deduplicate,
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict(
             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_hazard_project_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_hazard_project":
+            return
+
+        data = item.data
+        if "project_id" in data and \
+           "hazard_id" in data:
+            project_id = data.project_id
+            hazard_id = data.hazard_id
+            table = item.table
+            query = (table.project_id == project_id) & \
+                    (table.hazard_id == hazard_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
 
 # =============================================================================
 class S3ProjectSectorModel(S3Model):
@@ -2579,7 +2608,6 @@ class S3ProjectLocationModel(S3Model):
         data = item.data
         if "project_id" in data and \
            "location_id" in data:
-            # Match location by project_id and location_id
             project_id = data.project_id
             location_id = data.location_id
             table = item.table
@@ -2800,7 +2828,6 @@ class S3ProjectOrganisationModel(S3Model):
         data = item.data
         if "project_id" in data and \
            "organisation_id" in data:
-            # Match project by org_id and project_id
             table = item.table
             project_id = data.project_id
             organisation_id = data.organisation_id
@@ -2959,6 +2986,7 @@ class S3ProjectThemeModel(S3Model):
         )
 
         configure(tablename,
+                  deduplicate=self.project_theme_project_deduplicate,
                   onaccept = self.project_theme_project_onaccept
                   )
 
@@ -3041,6 +3069,31 @@ class S3ProjectThemeModel(S3Model):
                                  theme_id = theme_id,
                                  percentage = percentages[theme_id])
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_theme_project_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_theme_project":
+            return
+
+        data = item.data
+        if "project_id" in data and \
+           "theme_id" in data:
+            project_id = data.project_id
+            theme_id = data.theme_id
+            table = item.table
+            query = (table.project_id == project_id) & \
+                    (table.theme_id == theme_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
+
 # =============================================================================
 class S3ProjectDRRModel(S3Model):
     """
@@ -3083,15 +3136,16 @@ class S3ProjectDRRModel(S3Model):
     def hfa_opts_represent(opt):
         """ Option representation """
 
-        NONE = current.messages["NONE"]
-
-        opts = opt
+        if not opt:
+            return current.messages["NONE"]
         if isinstance(opt, int):
             opts = [opt]
         elif not isinstance(opt, (list, tuple)):
-            return NONE
-        elif opt[0] is None:
-            return NONE
+            return current.messages["NONE"]
+        else:
+            opts = opt
+        if opts[0] is None:
+            return current.messages["NONE"]
         vals = ["HFA %s" % o for o in opts]
         return ", ".join(vals)
 
