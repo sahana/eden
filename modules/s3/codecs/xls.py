@@ -105,11 +105,13 @@ class S3XLS(S3Codec):
         filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
 
-        rows = resource.select(list_fields,
-                               left=left,
-                               start=None,
-                               limit=None,
-                               orderby=orderby)
+        rows, count, ids = resource.select(list_fields,
+                                           left=left,
+                                           start=None,
+                                           limit=None,
+                                           count=True,
+                                           getids=True,
+                                           orderby=orderby)
 
         items = resource.extract(rows, list_fields,
                                  represent=True, show_links=False)

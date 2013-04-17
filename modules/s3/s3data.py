@@ -25,15 +25,41 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+    
+    @group Data Representations: S3DataTable,
+                                 S3DataList,
+                                 S3PivotTable
 """
 
-#from gluon import *
+import datetime
+import time
+
+from itertools import product
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import current
 from gluon.dal import Expression, Field
 from gluon.html import *
 from gluon.storage import Storage
+from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
-from s3utils import s3_unicode
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_truncate, s3_unicode, S3MarkupStripper
+from s3validators import IS_NUMBER
+
+DEBUG = False
+if DEBUG:
+    print >> sys.stderr, "S3 Data Representations: DEBUG MODE"
+    def _debug(m):
+        print >> sys.stderr, m
+else:
+    _debug = lambda m: None
 
 # =============================================================================
 class S3DataTable(object):
@@ -994,5 +1020,1191 @@ class S3DataList(object):
                                                          field_class)))
 
         return item
+
+# =============================================================================
+class S3PivotTable(object):
+    """ Class representing a pivot table of a resource """
+
+    #: Supported aggregation methods
+    METHODS = {
+        "list": "List",
+        "count": "Count",
+        "min": "Minimum",
+        "max": "Maximum",
+        "sum": "Total",
+        "avg": "Average",
+        #"std": "Standard Deviation"
+    }
+
+    def __init__(self, resource, rows, cols, layers):
+        """
+            Constructor
+
+            @param resource: the S3Resource
+            @param rows: field selector for the rows dimension
+            @param cols: field selector for the columns dimension
+            @param layers: list of tuples of (field selector, method)
+                           for the aggregation layers
+        """
+
+        # Initialize ----------------------------------------------------------
+        #
+        if not rows and not cols:
+            raise SyntaxError("No rows or columns specified for pivot table")
+
+        self.resource = resource
+
+        self.lfields = None
+        self.dfields = None
+        self.rfields = None
+
+        self.rows = rows
+        self.cols = cols
+        self.layers = layers
+
+        # API variables -------------------------------------------------------
+        #
+        self.records = None
+        """ All records in the pivot table as a Storage like:
+                {
+                 <record_id>: <Row>
+                }
+        """
+
+        self.empty = False
+        """ Empty-flag (True if no records could be found) """
+        self.numrows = None
+        """ The number of rows in the pivot table """
+        self.numcols = None
+        """ The number of columns in the pivot table """
+
+        self.cell = None
+        """ Array of pivot table cells in [rows[columns]]-order, each
+            cell is a Storage like:
+                {
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <aggregated_value>, ...per layer
+                }
+        """
+        self.row = None
+        """ List of row headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.col = None
+        """ List of column headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.totals = Storage()
+        """ The grand total values for each layer, as a Storage like:
+                {
+                 (<fact>, <method): <total value>, ...per layer
+                }
+        """
+
+        # Get the fields ------------------------------------------------------
+        #
+        s3db = current.s3db
+        tablename = resource.tablename
+        get_config = s3db.get_config
+
+        # The "report_fields" table setting defines which additional
+        # fields shall be included in the report base layer. This is
+        # useful to provide easy access to the record data behind a
+        # pivot table cell.
+        fields = get_config(tablename, "report_fields", [])
+
+        self._get_fields(fields=fields)
+
+        if DEBUG:
+            _start = datetime.datetime.now()
+            _debug("S3PivotTable %s starting" % tablename)
+
+        # Retrieve the records ------------------------------------------------
+        #
+        records = resource.select(self.dfields,
+                                  start=None, limit=None, cacheable=True)
+
+        # Generate the report -------------------------------------------------
+        #
+        if records:
+            try:
+                pkey = resource.table._id
+                # Extract unique rows (otherwise the renderer will loose
+                # data due to naive de-duplication):
+                e = resource.extract(records, self.dfields)
+                self.records = Storage([(i[str(pkey)], i) for i in e])
+            except KeyError:
+                raise KeyError("Could not retrieve primary key values of %s" %
+                               resource.tablename)
+
+            # Generate the data frame -----------------------------------------
+            #
+            df = []
+            insert = df.append
+
+            item_list = []
+            seen = item_list.append
+
+            expand = self._expand
+
+            for row in e:
+                item = expand(row)
+                for i in item:
+                    tag = str(i)
+                    if tag not in item_list:
+                        seen(tag)
+                        insert(i)
+
+            # Group the records -----------------------------------------------
+            #
+            tfields = self.tfields
+            hpkey = tfields[self.pkey]
+            hrows = self.rows and tfields[self.rows] or None
+            hcols = self.cols and tfields[self.cols] or None
+
+            matrix, rnames, cnames = self._pivot(df, hpkey, hrows, hcols)
+
+            # Initialize columns and rows -------------------------------------
+            #
+            if cols:
+                self.col = [Storage({"value": v}) for v in cnames]
+                self.numcols = len(self.col)
+            else:
+                self.col = [Storage({"value": None})]
+                self.numcols = 1
+
+            if rows:
+                self.row = [Storage({"value": v}) for v in rnames]
+                self.numrows = len(self.row)
+            else:
+                self.row = [Storage({"value": None})]
+                self.numrows = 1
+
+            # Add the layers --------------------------------------------------
+            #
+            add_layer = self._add_layer
+            layers = list(self.layers)
+            for f, m in self.layers:
+                add_layer(matrix, f, m)
+
+        else:
+            # No items to report on -------------------------------------------
+            #
+            self.empty = True
+
+        if DEBUG:
+            duration = datetime.datetime.now() - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("S3PivotTable completed in %s seconds" % duration)
+
+    # -------------------------------------------------------------------------
+    # API methods
+    # -------------------------------------------------------------------------
+    def __len__(self):
+        """ Total number of records in the report """
+
+        items = self.records
+        if items is None:
+            return 0
+        else:
+            return len(self.records)
+
+    # -------------------------------------------------------------------------
+    def html(self,
+             show_totals=True,
+             url=None,
+             filter_query=None,
+             **attributes):
+        """
+            Render this pivot table as HTML
+
+            @param show_totals: show totals for rows and columns
+            @param url: link cells to this base-URL
+            @param filter_query: use this S3ResourceQuery with the base-URL
+            @param attributes: the HTML attributes for the table
+        """
+
+        T = current.T
+        TOTAL = T("Total")
+
+        components = []
+
+        layers = self.layers
+        resource = self.resource
+        tablename = resource.tablename
+
+        cols = self.cols
+        rows = self.rows
+        numcols = self.numcols
+        numrows = self.numrows
+        rfields = self.rfields
+
+        get_label = self._get_label
+        get_total = self._totals
+        represent = lambda f, v, d="": \
+                    self._represent(rfields, f, v, default=d)
+
+        layer_label = None
+        col_titles = []
+        add_col_title = col_titles.append
+        col_totals = []
+        add_col_total = col_totals.append
+        row_titles = []
+        add_row_title = row_titles.append
+        row_totals = []
+        add_row_total = row_totals.append
+
+        # Layer titles:
+
+        # Get custom labels from report options
+        layer_labels = Storage()
+        report_options = resource.get_config("report_options", None)
+        if report_options and "fact" in report_options:
+            layer_opts = report_options["fact"]
+            for item in layer_opts:
+                if isinstance(item, (tuple, list)) and len(item) == 3:
+                    if not "." in item[0].split("$")[0]:
+                        item = ("%s.%s" % (resource.alias, item[0]),
+                                item[1],
+                                item[2])
+                    layer_labels[(item[0], item[1])] = item[2]
+
+        labels = []
+        get_mname = self._mname
+
+        for layer in layers:
+            if layer in layer_labels:
+                # Custom label
+                label = layer_labels[layer]
+                if not labels:
+                    layer_label = label
+                labels.append(s3_unicode(label))
+            else:
+                # Construct label from field-label and method
+                label = get_label(rfields, layer[0], tablename, "fact")
+                mname = get_mname(layer[1])
+                if not labels:
+                    m = layer[1] == "list" and get_mname("count") or mname
+                    layer_label = "%s (%s)" % (label, m)
+                labels.append("%s (%s)" % (label, mname))
+
+        layers_title = TH(" / ".join(labels))
+
+        # Columns field title
+        if cols:
+            col_label = get_label(rfields, cols, tablename, "cols")
+            _colspan = numcols + 1
+        else:
+            col_label = ""
+            _colspan = numcols
+        cols_title = TH(col_label, _colspan=_colspan, _scope="col")
+
+        titles = TR(layers_title, cols_title)
+
+        # Sort dimensions:
+
+        cells = self.cell
+
+        def sortdim(dim, items):
+            """ Sort a dimension """
+
+            rfield = rfields[dim]
+            if not rfield:
+                return
+            ftype = rfield.ftype
+            sortby = "value"
+            if ftype == "integer":
+                requires = rfield.requires
+                if isinstance(requires, (tuple, list)):
+                    requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if isinstance(requires, IS_IN_SET):
+                    sortby = "text"
+            elif ftype[:9] == "reference":
+                sortby = "text"
+            items.sort(key=lambda item: item[0][sortby])
+
+        # Sort rows
+        rvals = self.row
+        rows_list = []
+        for i in xrange(numrows):
+            row = rvals[i]
+            # Add representation value of the row header
+            row["text"] = represent(rows, row.value)
+            rows_list.append((row, cells[i]))
+        sortdim(rows, rows_list)
+
+        # Sort columns
+        cvals = self.col
+        cols_list = []
+        for j in xrange(numcols):
+            column = cvals[j]
+            column["text"] = represent(cols, column.value)
+            cols_list.append((column, j))
+        sortdim(cols, cols_list)
+
+        # Build the column headers:
+
+        # Header for the row-titles column
+        row_label = get_label(rfields, rows, tablename, "rows")
+        rows_title = TH(row_label, _scope="col")
+        headers = TR(rows_title)
+
+        add_header = headers.append
+
+        # Headers for the cell columns
+        for j in xrange(numcols):
+            v = cols_list[j][0].text
+            add_col_title(s3_truncate(unicode(v)))
+            colhdr = TH(v, _scope="col")
+            add_header(colhdr)
+
+        # Header for the row-totals column
+        if show_totals and cols is not None:
+            add_header(TH(TOTAL, _class="totals_header rtotal", _scope="col"))
+
+        thead = THEAD(titles, headers)
+
+        # Render the table body:
+
+        tbody = TBODY()
+        add_row = tbody.append
+
+        # Lookup table for cell list values
+        cell_lookup_table = {} # {{}, {}}
+        cell_vals = Storage()
+
+        for i in xrange(numrows):
+
+            # Initialize row
+            _class = i % 2 and "odd" or "even"
+            tr = TR(_class=_class)
+            add_cell = tr.append
+
+            # Row header
+            row = rows_list[i][0]
+            v = row["text"]
+            add_row_title(s3_truncate(unicode(v)))
+            rowhdr = TD(v)
+            add_cell(rowhdr)
+
+            row_cells = rows_list[i][1]
+
+            # Result cells
+            for j in xrange(numcols):
+
+                cell_idx = cols_list[j][1]
+                cell = row_cells[cell_idx]
+
+                vals = []
+                cell_ids = []
+                add_value = vals.append
+                for layer_idx, layer in enumerate(layers):
+                    f, m = layer
+                    value = cell[layer]
+                    if m == "list":
+                        if isinstance(value, list):
+                            l = [represent(f, v, d="-") for v in value]
+                        elif value is None:
+                            l = ["-"]
+                        else:
+                            if type(value) in (int, float):
+                                l = IS_NUMBER.represent(value)
+                            else:
+                                l = unicode(value)
+                        #add_value(", ".join(l))
+                        add_value(UL([LI(v) for v in l]))
+                    else:
+                        if type(value) in (int, float):
+                            add_value(IS_NUMBER.represent(value))
+                        else:
+                            add_value(unicode(value))
+
+                    layer_ids = []
+                    layer_values = cell_lookup_table.get(layer_idx, {})
+
+                    if m == "count":
+                        rfield = rfields[f]
+                        field = rfield.field
+                        colname = rfield.colname
+                        has_fk = field is not None and s3_has_foreign_key(field)
+                        for id in cell.records:
+
+                            record = self.records[id]
+                            try:
+                                fvalue = record[colname]
+                            except AttributeError:
+                                fvalue = None
+
+                            if fvalue is not None:
+                                if has_fk:
+                                    if type(fvalue) is not list:
+                                        fvalue = [fvalue]
+                                    # list of foreign keys
+                                    for fk in fvalue:
+                                        if fk is not None and fk not in layer_ids:
+                                            layer_ids.append(int(fk))
+                                            layer_values[fk] = s3_unicode(field.represent(fk))
+                                else:
+                                    if type(fvalue) is not list:
+                                        fvalue = [fvalue]
+                                    for val in fvalue:
+                                        if val is not None:
+                                            if val not in cell_vals:
+                                                next_id = len(cell_vals)
+                                                cell_vals[val] = next_id
+                                                layer_ids.append(next_id)
+                                                layer_values[next_id] = s3_unicode(represent(f, val))
+                                            else:
+                                                prev_id = cell_vals[val]
+                                                if prev_id not in layer_ids:
+                                                    layer_ids.append(prev_id)
+
+                    cell_ids.append(layer_ids)
+                    cell_lookup_table[layer_idx] = layer_values
+
+                vals = [DIV(v, _class="report-cell-value") for v in vals]
+                if any(cell_ids):
+                    cell_attr = {"_data-records": cell_ids}
+                    vals.append(DIV(_class="report-cell-zoom"))
+                else:
+                    cell_attr = {}
+                add_cell(TD(vals, **cell_attr))
+
+            # Row total
+            totals = get_total(row, layers, append=add_row_total)
+            if show_totals and cols is not None:
+                add_cell(TD(totals))
+
+            add_row(tr)
+
+        # Table footer:
+
+        i = numrows
+        _class = i % 2 and "odd" or "even"
+        _class = "%s %s" % (_class, "totals_row")
+        col_total = TR(_class=_class)
+        add_total = col_total.append
+        add_total(TH(TOTAL, _class="totals_header", _scope="row"))
+
+        # Column totals
+        for j in xrange(numcols):
+            cell_idx = cols_list[j][1]
+            col = self.col[cell_idx]
+            totals = get_total(col, layers, append=add_col_total)
+            add_total(TD(IS_NUMBER.represent(totals)))
+
+        # Grand total
+        if cols is not None:
+            grand_totals = get_total(self.totals, layers)
+            add_total(TD(grand_totals))
+        tfoot = TFOOT(col_total)
+
+        # Wrap up:
+
+        append = components.append
+        append(thead)
+        append(tbody)
+        if show_totals:
+            append(tfoot)
+
+        # Chart data:
+
+        layer_label = s3_unicode(layer_label)
+        BY = T("by")
+        row_label = "%s %s" % (BY, s3_unicode(row_label))
+        if col_label:
+            col_label = "%s %s" % (BY, s3_unicode(col_label))
+        if filter_query and hasattr(filter_query, "serialize_url"):
+            filter_vars = filter_query.serialize_url(resource=self.resource)
+        else:
+            filter_vars = {}
+        hide_opts = current.deployment_settings.get_ui_hide_report_options()
+        json_data = json.dumps(dict(t=layer_label,
+                                    x=col_label,
+                                    y=row_label,
+                                    r=self.rows,
+                                    c=self.cols,
+                                    d=self.compact(n=50, represent=True),
+                                    u=url,
+                                    f=filter_vars,
+                                    h=hide_opts,
+                                    cell_lookup_table=cell_lookup_table))
+        self.report_data = Storage(row_label=row_label,
+                                   col_label=col_label,
+                                   layer_label=layer_label,
+                                   json_data=json_data)
+
+        return TABLE(components, **attributes)
+
+    # -------------------------------------------------------------------------
+    def compact(self, n=50, layer=None, least=False, represent=False):
+        """
+            Get the top/least n numeric results for a layer, used to
+            generate the input data for charts.
+
+            @param n: maximum dimension size, extracts the n-1 top/least
+                      rows/cols and aggregates the rest under "__other__"
+            @param layer: the layer
+            @param least: use the least n instead of the top n results
+            @param represent: represent the row/col dimension values as
+                              strings using the respective field
+                              representation
+        """
+
+        default = {"rows": [], "cols": [], "cells": []}
+
+        if self.empty or layer and layer not in self.layers:
+            return default
+        elif not layer:
+            layer = self.layers[0]
+
+        method = layer[-1]
+        if method == "min":
+            least = not least
+        numeric = lambda x: isinstance(x, (int, long, float))
+
+        rfields = self.rfields
+        OTHER = "__other__"
+
+        def top(tl, length=10, least=False):
+            """ Find the top/least n rows/cols """
+            try:
+                if len(tl) > length:
+                    m = length - 1
+                    l = list(tl)
+                    l.sort(lambda x, y: int(y[1]-x[1]))
+                    if least:
+                        l.reverse()
+                    ts = (OTHER, self._aggregate([t[1] for t in l[m:]], method))
+                    l = l[:m] + [ts]
+                    return l
+            except (TypeError, ValueError):
+                pass
+            return tl
+
+        def sortdim(dim, items):
+            """ Sort a dimension """
+
+            rfield = rfields[dim]
+            if not rfield:
+                return
+            ftype = rfield.ftype
+            sortby = "value"
+            if ftype == "integer":
+                requires = rfield.requires
+                if isinstance(requires, (tuple, list)):
+                    requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if isinstance(requires, IS_IN_SET):
+                    sortby = "text"
+            elif ftype[:9] == "reference":
+                sortby = "text"
+            items.sort(key=lambda item: item[2][sortby])
+
+        if represent:
+            row_repr = self._represent_method(self.rows)
+            col_repr = self._represent_method(self.cols)
+        else:
+            row_repr = col_repr = lambda v: s3_unicode(v)
+
+        others = s3_unicode(current.T("Others"))
+
+        irows = self.row
+        icols = self.col
+        rows = []
+        cols = []
+
+        # Group and sort the rows
+        is_numeric = None
+        for i in xrange(self.numrows):
+            r = irows[i]
+            total = r[layer]
+            if is_numeric is None:
+                is_numeric = numeric(total)
+            if not is_numeric:
+                total = len(r["records"])
+            header = Storage(value = r.value,
+                             text = r.text
+                                    if "text" in r else row_repr(r.value))
+            rows.append((i, total, header))
+        rows = top(rows, n, least=least)
+        last = rows.pop(-1) if rows[-1][0] == OTHER else None
+        sortdim(self.rows, rows)
+        if last:
+            last = (last[0], last[1], Storage(value=None, text=others))
+            rows.append(last)
+        row_indices = [i[0] for i in rows]
+
+        # Group and sort the cols
+        is_numeric = None
+        for i in xrange(self.numcols):
+            c = icols[i]
+            total = c[layer]
+            if is_numeric is None:
+                is_numeric = numeric(total)
+            if not is_numeric:
+                total = len(c["records"])
+            header = Storage(value = c.value,
+                             text = c.text
+                                    if "text" in c else col_repr(c.value))
+            cols.append((i, total, header))
+        cols = top(cols, n, least=least)
+        last = cols.pop(-1) if cols[-1][0] == OTHER else None
+        sortdim(self.cols, cols)
+        if last:
+            last = (last[0], last[1], Storage(value=None, text=others))
+            cols.append(last)
+        col_indices = [i[0] for i in cols]
+
+        # Group and sort the cells
+        icell = self.cell
+        cells = {}
+        for i in xrange(self.numrows):
+            irow = icell[i]
+            ridx = i if i in row_indices else OTHER
+            if ridx not in cells:
+                orow = cells[ridx] = {}
+            else:
+                orow = cells[ridx]
+            for j in xrange(self.numcols):
+                cell = irow[j]
+                cidx = j if j in col_indices else OTHER
+                value = cell[layer] if is_numeric else len(cell["records"])
+                if cidx not in orow:
+                    orow[cidx] = [value] if cidx == OTHER or ridx == OTHER else value
+                else:
+                    orow[cidx].append(value)
+
+        # Aggregate the grouped values
+        orows = []
+        ocols = []
+        ocells = []
+        ctotals = True
+        rappend = orows.append
+        cappend = ocols.append
+        for ri, rt, rh in rows:
+            orow = []
+            if represent:
+                rappend((ri, s3_unicode(rh.value), rh.text, rt))
+            else:
+                rappend((ri, s3_unicode(rh.value), rt))
+            for ci, ct, ch in cols:
+                value = cells[ri][ci]
+                if type(value) is list:
+                    value = self._aggregate(value, method)
+                orow.append(value)
+                if ctotals:
+                    if represent:
+                        cappend((ci, s3_unicode(ch.value), ch.text, ct))
+                    else:
+                        cappend((ci, s3_unicode(ch.value), ct))
+            ctotals = False
+            ocells.append(orow)
+
+        return {"rows": orows, "cols": ocols, "cells": ocells}
+
+    # -------------------------------------------------------------------------
+    # Internal methods
+    # -------------------------------------------------------------------------
+    def _pivot(self, items, hpkey, hrows, hcols):
+        """
+            @todo: docstring?
+        """
+
+        rvalues = Storage()
+        cvalues = Storage()
+        cells = Storage()
+
+        # All unique rows values
+        rindex = 0
+        cindex = 0
+        for item in items:
+
+            rvalue = item[hrows] if hrows else None
+            cvalue = item[hcols] if hcols else None
+
+            if rvalue not in rvalues:
+                r = rvalues[rvalue] = rindex
+                rindex += 1
+            else:
+                r = rvalues[rvalue]
+            if cvalue not in cvalues:
+                c = cvalues[cvalue] = cindex
+                cindex += 1
+            else:
+                c = cvalues[cvalue]
+
+            if (r, c) not in cells:
+                cells[(r, c)] = [item[hpkey]]
+            else:
+                cells[(r, c)].append(item[hpkey])
+
+        matrix = []
+        for r in xrange(len(rvalues)):
+            row = []
+            for c in xrange(len(cvalues)):
+                row.append(cells[(r, c)])
+            matrix.append(row)
+
+        rnames = [None] * len(rvalues)
+        for k, v in rvalues.items():
+            rnames[v] = k
+
+        cnames = [None] * len(cvalues)
+        for k, v in cvalues.items():
+            cnames[v] = k
+
+        return matrix, rnames, cnames
+
+    # -------------------------------------------------------------------------
+    def _get_fields(self, fields=None):
+        """
+            Determine the fields needed to generate the report
+
+            @param fields: fields to include in the report (all fields)
+        """
+
+        resource = self.resource
+        table = resource.table
+
+        # Lambda to prefix all field selectors
+        alias = resource.alias
+        def prefix(s):
+            if isinstance(s, (tuple, list)):
+                return prefix(s[-1])
+            if "." not in s.split("$", 1)[0]:
+                return "%s.%s" % (alias, s)
+            elif s[:2] == "~.":
+                return "%s.%s" % (alias, s[2:])
+            else:
+                return s
+
+        self.pkey = pkey = prefix(table._id.name)
+        self.rows = rows = self.rows and prefix(self.rows) or None
+        self.cols = cols = self.cols and prefix(self.cols) or None
+
+        if not fields:
+            fields = []
+
+        # dfields (data-fields): fields to generate the layers
+        dfields = [prefix(s) for s in fields]
+        if rows and rows not in dfields:
+            dfields.append(rows)
+        if cols and cols not in dfields:
+            dfields.append(cols)
+        if pkey not in dfields:
+            dfields.append(pkey)
+        for i in xrange(len(self.layers)):
+            f, m = self.layers[i]
+            s = prefix(f)
+            self.layers[i] = (s, m)
+            if s not in dfields:
+                dfields.append(f)
+        self.dfields = dfields
+
+        # rfields (resource-fields): dfields resolved into a ResourceFields map
+        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
+        rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
+        self.rfields = rfields
+
+        # tfields (transposition-fields): fields to group the records by
+        key = lambda s: str(hash(s)).replace("-", "_")
+        tfields = {pkey:key(pkey)}
+        if rows:
+            tfields[rows] = key(rows)
+        if cols:
+            tfields[cols] = key(cols)
+        self.tfields = tfields
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _totals(values, layers, append=None):
+        """
+            Get the totals of a row/column/report
+
+            @param values: the values dictionary
+            @param layers: the layers
+            @param append: callback to collect the totals for JSON data
+                           (currently only collects the first layer)
+        """
+
+        totals = []
+        for layer in layers:
+            f, m = layer
+            value = values[layer]
+
+            if m == "list":
+                value = value and len(value) or 0
+            if not len(totals) and append is not None:
+                append(value)
+            totals.append(IS_NUMBER.represent(value))
+        totals = " / ".join(totals)
+        return totals
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _represent(rfields, field, value, default="-"):
+        """
+            Represent a field value
+
+            @param rfields: the list fields map
+            @param field: the field
+            @param value: the value
+            @param default: the default representation
+        """
+
+        if field in rfields:
+            lfield = rfields[field]
+            if lfield.field:
+                f = lfield.field
+                ftype = str(f.type)
+                if ftype not in ("string", "text") and \
+                   isinstance(value, basestring):
+                    # pyvttbl converts col/row headers into unicode,
+                    # but represent may need the original data type,
+                    # hence try to convert it back here:
+                    convert = S3TypeConverter.convert
+                    try:
+                        if ftype == "boolean":
+                            value = convert(bool, value)
+                        elif ftype == "integer":
+                            value = convert(int, value)
+                        elif ftype == "float":
+                            value = convert(float, value)
+                        elif ftype == "date":
+                            value = convert(datetime.date, value)
+                        elif ftype == "time":
+                            value = convert(datetime.time, value)
+                        elif ftype == "datetime":
+                            value = convert(datetime.datetime, value)
+                    except TypeError, ValueError:
+                        pass
+
+                value = current.manager.represent(lfield.field, value,
+                                                  strip_markup=True)
+                return current.xml.xml_decode(value)
+        if value is None:
+            return default
+        else:
+            return s3_unicode(value)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _get_label(rfields, field, tablename, key):
+        """
+            Get the label for a field
+
+            @param rfields: the list fields map
+            @param key: the configuration key
+        """
+
+        DEFAULT = ""
+
+        if field in rfields:
+            rfield = rfields[field]
+        else:
+            return DEFAULT
+
+        # @todo: cleanup this:
+        get_config = lambda key, default, tablename=tablename: \
+                     current.s3db.get_config(tablename, key, default)
+        list_fields = get_config("list_fields", None)
+        fields = get_config(key, list_fields)
+
+        if fields:
+            for f in fields:
+                if isinstance(f, (tuple, list)) and f[1] == rfield.selector:
+                    return f[0]
+
+        if rfield:
+            if rfield.ftype == "id":
+                return current.T("Records")
+            return rfield.label
+        else:
+            return DEFAULT
+
+    # -------------------------------------------------------------------------
+    def _represent_method(self, dim):
+        """
+            Get a representation method for a dimension
+
+            @param dim: the dimension (self.rows or self.cols)
+        """
+
+        manager = current.manager
+
+        if dim:
+            rfield = self.rfields[dim]
+        else:
+            return lambda val: None
+        if rfield.virtual:
+            stripper = S3MarkupStripper()
+            def repr_method(val):
+                text = s3_unicode(val)
+                if "<" in text:
+                    stipper.feed(text)
+                    return stripper.stripped() # = totally naked ;)
+                else:
+                    return text
+        else:
+            def repr_method(val):
+                return manager.represent(rfield.field, val,
+                                         strip_markup=True)
+        return repr_method
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _mname(cls, code):
+        """
+            Get a label for a method
+
+            @param code: the method code
+            @return: the label (lazyT), or None for unsupported methods
+        """
+
+        methods = cls.METHODS
+
+        if code is None:
+            code = "list"
+        if code in methods:
+            return current.T(methods[code])
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _extract(self, row, field):
+        """
+            Extract a field value from a DAL row
+
+            @param row: the row
+            @param field: the fieldname (list_fields syntax)
+        """
+
+        rfields = self.rfields
+        if field not in rfields:
+            raise KeyError("Invalid field name: %s" % field)
+        rfield = rfields[field]
+        try:
+            return rfield.extract(row)
+        except AttributeError:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _expand(self, row): #, field=None):
+        """
+            Expand a data frame row into a list of rows for list:type values
+
+            @param row: the row
+            @param field: the field to expand (None for all fields)
+        """
+
+        rfields = self.rfields
+        tfields = self.tfields
+
+        item = [(k, row[rfields[f].colname]) for f, k in tfields.items()]
+
+        pairs = []
+        append = pairs.append
+        for k, v in item:
+            if type(v) is list:
+                append([(k, value) for value in v])
+            else:
+                append([(k, v)])
+        return [dict(i) for i in product(*pairs)]
+
+    # -------------------------------------------------------------------------
+    def _add_layer(self, matrix, fact, method):
+        """
+            Compute a new layer from the base layer (pt+items)
+
+            @param pt: the pivot table with record IDs
+            @param fact: the fact field for the layer
+            @param method: the aggregation method of the layer
+        """
+
+        if method not in self.METHODS:
+            raise SyntaxError("Unsupported aggregation method: %s" % method)
+
+        items = self.records
+        rfields = self.rfields
+        rows = self.row
+        cols = self.col
+        records = self.records
+        extract = self._extract
+        aggregate = self._aggregate
+        resource = self.resource
+
+        RECORDS = "records"
+        VALUES = "values"
+
+        table = resource.table
+        pkey = table._id.name
+
+        if method is None:
+            method = "list"
+        layer = (fact, method)
+
+        numcols = len(self.col)
+        numrows = len(self.row)
+
+        # Initialize cells
+        if self.cell is None:
+            self.cell = [[Storage()
+                          for i in xrange(numcols)]
+                         for j in xrange(numrows)]
+        cells = self.cell
+
+        all_values = []
+        for r in xrange(numrows):
+
+            # Initialize row header
+            row = rows[r]
+            row[RECORDS] = []
+            row[VALUES] = []
+
+            row_records = row[RECORDS]
+            row_values = row[VALUES]
+
+            for c in xrange(numcols):
+
+                # Initialize column header
+                col = cols[c]
+                if RECORDS not in col:
+                    col[RECORDS] = []
+                col_records = col[RECORDS]
+                if VALUES not in col:
+                    col[VALUES] = []
+                col_values = col[VALUES]
+
+                # Get the records
+                cell = cells[r][c]
+                if RECORDS in cell and cell[RECORDS] is not None:
+                    ids = cell[RECORDS]
+                else:
+                    data = matrix[r][c]
+                    if data:
+                        remove = data.remove
+                        while None in data:
+                            remove(None)
+                        ids = data
+                    else:
+                        ids = []
+                    cell[RECORDS] = ids
+                row_records.extend(ids)
+                col_records.extend(ids)
+
+                # Get the values
+                if fact is None:
+                    fact = pkey
+                    values = ids
+                    row_values = row_records
+                    col_values = row_records
+                    all_values = records.keys()
+                else:
+                    values = []
+                    append = values.append
+                    for i in ids:
+                        value = extract(records[i], fact)
+                        if value is None:
+                            continue
+                        append(value)
+                    values = list(s3_flatlist(values))
+                    if method in ("list", "count"):
+                        values =  list(set(values))
+                    row_values.extend(values)
+                    col_values.extend(values)
+                    all_values.extend(values)
+
+                # Aggregate values
+                value = aggregate(values, method)
+                cell[layer] = value
+
+            # Compute row total
+            row[layer] = aggregate(row_values, method)
+            del row[VALUES]
+
+        # Compute column total
+        for c in xrange(numcols):
+            col = cols[c]
+            col[layer] = aggregate(col[VALUES], method)
+            del col[VALUES]
+
+        # Compute overall total
+        self.totals[layer] = aggregate(all_values, method)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _aggregate(values, method):
+        """
+            Compute an aggregation of atomic values
+
+            @param values: the values
+            @param method: the aggregation method
+        """
+
+        if values is None:
+            return None
+
+        if method is None or method == "list":
+            if values:
+                return values
+            else:
+                return None
+
+        elif method == "count":
+            return len([v for v in values if v is not None])
+
+        elif method == "min":
+            try:
+                return min(values)
+            except (TypeError, ValueError):
+                return None
+
+        elif method == "max":
+            try:
+                return max(values)
+            except (TypeError, ValueError):
+                return None
+
+        elif method == "sum":
+            try:
+                return sum(values)
+            except (TypeError, ValueError):
+                return None
+
+        elif method in ("avg"):
+            try:
+                if len(values):
+                    return sum(values) / float(len(values))
+                else:
+                    return 0.0
+            except (TypeError, ValueError):
+                return None
+
+        #elif method == "std":
+            #import numpy
+            #if not values:
+                #return 0.0
+            #try:
+                #return numpy.std(values)
+            #except (TypeError, ValueError):
+                #return None
+
+        else:
+            return None
 
 # END =========================================================================

@@ -29,6 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import collections
 import datetime
 import os
 import re
@@ -1034,6 +1035,17 @@ def s3_unicode(s, encoding="utf-8"):
         else:
             s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
+
+# =============================================================================
+def s3_flatlist(nested):
+    """ Iterator to flatten mixed iterables of arbitrary depth """
+    for item in nested:
+        if isinstance(item, collections.Iterable) and \
+           not isinstance(item, basestring):
+            for sub in s3_flatlist(item):
+                yield sub
+        else:
+            yield item
 
 # =============================================================================
 def search_vars_represent(search_vars):

@@ -33,8 +33,7 @@
                        S3ResourceQuery,
                        S3ResourceFilter
     @group Helper Classes: S3RecordMerger,
-                           S3TypeConverter,
-                           S3Pivottable
+                           S3TypeConverter
 """
 
 import collections
@@ -75,7 +74,7 @@ from gluon.dal import Row, Rows, Table, Field, Expression
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3data import S3DataTable, S3DataList
+from s3data import S3DataTable, S3DataList, S3PivotTable
 from s3fields import S3Represent, S3RepresentLazy
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter
 from s3validators import IS_ONE_OF
@@ -91,17 +90,6 @@ else:
 ogetattr = object.__getattribute__
 
 TEXTTYPES = ("string", "text")
-
-# =============================================================================
-def flatlist(nested):
-    """ Iterator to flatten mixed iterables of arbitrary depth """
-    for item in nested:
-        if isinstance(item, collections.Iterable) and \
-           not isinstance(item, basestring):
-            for sub in flatlist(item):
-                yield sub
-        else:
-            yield item
 
 # =============================================================================
 class S3Resource(object):
@@ -560,74 +548,79 @@ class S3Resource(object):
             @return: the rows (with count/getids option a tuple (rows, count, ids))
         """
 
+        # Init
+        
         db = current.db
         table = self.table
+        tablename = table._tablename
+        pkey = str(table._id)
 
         # Get the query and filters
+        
         query = self.get_query()
         vfltr = self.get_filter()
         rfilter = self.rfilter
-
-        # Handle distinct-attribute (must respect rfilter.distinct)
-        distinct = self.rfilter.distinct | distinct
+        distinct = rfilter.distinct | distinct
 
         # Fields to select
+        
         if fields is None:
             fields = [f.name for f in self.readable_fields()]
         else:
             fields = list(fields)
-        # Add fields needed for filters
+
+        # Add virtual fields from filters (to get the tables joined)
         for f in rfilter.get_fields():
             if f not in fields:
                 fields.append(f)
+                
         # Resolve all field selectors
+        
         lfields, joins, ljoins, d = self.resolve_selectors(fields)
 
+        # Distinct
+        
         distinct = distinct | d
         attributes = {"distinct": distinct}
 
-        # Left joins
-        left_joins = left
-        if left_joins is None:
-            left_joins = []
-        elif not isinstance(left, list):
-            left_joins = [left_joins]
-        joined_tables = [str(join.first) for join in left_joins]
+        # Collect the left joins
+        
+        left_joins = {}
 
-        # Add the left joins from the field query
-        ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
-        for join in ljoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
+        # Left joins from caller
+        if left:
+            if not isinstance(left, (tuple, list)):
+                left = [left]
+            for join in left:
+                tname = str(join.first)
+                if tname not in left_joins:
+                    left_joins[tname] = join
 
-        # Add the left joins from the filter
-        fjoins = rfilter.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
+        # Left joins from filter
+        left = rfilter.get_left_joins()
+        for join in left:
+            tname = str(join.first)
+            if tname not in left_joins:
+                left_joins[tname] = join
+        try:
+            filter_joins = self.sortleft(left_joins.values())
+        except:
+            filter_joins = left_joins.values()
 
-        # Sort left joins and add to attributes
-        if left_joins:
-            try:
-                left_joins = self.sortleft(left_joins)
-            except:
-                pass
-            attributes["left"] = left_joins
+        # Left joins from fields
+        left = [j for tn in ljoins for j in ljoins[tn]]
+        for join in left:
+            tname = str(join.first)
+            if tname not in left_joins:
+                left_joins[tname] = join
 
-        # Joins
+        # Collect the inner joins
         for join in joins.values():
             if str(join) not in str(query):
                 query &= join
 
-        # Orderby
-        if orderby is not None:
-            attributes["orderby"] = orderby
-
         # Limitby
+        
         if vfltr is None:
             limitby = self.limitby(start=start, limit=limit)
             if limitby is not None:
@@ -637,131 +630,130 @@ class S3Resource(object):
             # => apply start/limit in vfltr instead
             limitby = None
 
-        # Column names and headers
-        colnames = [f.colname for f in lfields]
-        headers = dict(map(lambda f: (f.colname, f.label), lfields))
-
-        # Fields in the query
+        # Determine the fields for the SELECT
+        
+        qfields = {}
+        if groupby:
+            if isinstance(groupby, (list, tuple)):
+                gfields = [str(f) for f in groupby]
+            else:
+                gfields = str(groupby)
+        else:
+            gfields = []
         load = current.s3db.table
-        qfields = []
-        qtables = []
-        gfields = [str(g) for g in groupby] \
-                  if isinstance(groupby, (list, tuple)) else str(groupby)
+        primary_keys = {tablename: self._id}
         for f in lfields:
             field = f.field
             tname = f.tname
-            if field is None:
-                continue
+            fname = str(field)
             qtable = load(tname)
-            if qtable is None:
-                continue
-            if tname not in qtables:
-                # Make sure the primary key of the table this field
-                # belongs to is included in the SELECT
-                qtables.append(tname)
-
-                # @todo: is this really needed?
-                # if tname is an alias, get primary key from id instead of _id
-                if hasattr(qtable, "_ot") and qtable._ot != tname:
-                    pkey = qtable.id
-                else:    
-                    pkey = qtable._id
-                    
-                if not groupby:
-                    qfields.append(pkey)
-                if str(field) == str(pkey):
-                    continue
-            if not groupby or str(field) in gfields:
-                qfields.append(field)
-
-        if distinct or getids or left_joins:
-            if orderby:
-                # For GROUPBY id (which we need here for left joins), we need
-                # all ORDERBY-fields to appear in an aggregation function, or
-                # otherwise the ORDERBY can be ambiguous.
-                qfield_names = [str(f) for f in qfields]
-                if isinstance(groupby, (list, tuple)):
-                    groups = ",".join([str(f) for f in groupby])
-                elif not groupby:
-                    groups = ""
-                else:
-                    groups = groupby
-
-                if isinstance(orderby, str):
-                    orderby_fields = orderby.split(",")
-                elif not isinstance(orderby, (list, tuple)):
-                    orderby_fields = [orderby]
-                else:
-                    orderby_fields = orderby
-
-                orderby = []
-                for orderby_field in orderby_fields:
-
-                    if type(orderby_field) is Expression:
-                        f = orderby_field.first
-                        op = orderby_field.op
-                        if op == db._adapter.AGGREGATE:
-                            # Already an aggregation
-                            orderby.append(orderby_field)
-                            continue
-                        elif type(f) is Field and op == db._adapter.INVERT:
-                            direction = "desc"
-                        else:
-                            # Other expression - not supported
-                            continue
-                    elif type(orderby_field) is Field:
-                        direction = "asc"
-                        f = orderby_field
-                    elif isinstance(orderby_field, str):
-                        fn, direction = (orderby_field.strip().split() + ["asc"])[:2]
-                        tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
-                        try:
-                            f = db[tn][fn]
-                        except (AttributeError, KeyError):
-                            continue
-                    else:
-                        continue
-
-                    fname = str(f)
-                    kname = str(self._id)
-                    direction = direction.strip().lower()[:3]
-                    if kname in qfield_names and fname == kname or \
-                       kname in groups:
-                        expression = f if direction == "asc" else ~f
-                    else:
-                        expression = f.min() if direction == "asc" else ~(f.max())
-                    orderby.append(expression)
-
-                    # If the ORDERBY-field is not in SELECT, then add it.
-                    # According to SQL documentation, this is /not/ required - you
-                    # can have fields in the ORDERBY which are not in the SELECT,
-                    # however postgresql does seem to need it
-                    if str(f) not in qfield_names:
-                        qfields.append(f)
-                        qfield_names.append(str(f))
+            if field is not None:
+                if tname != tablename or fname == pkey:
+                    primary_keys[tname] = None
+                if not groupby or fname in gfields:
+                    qfields[fname] = field
             else:
-                # In DISTINCT without ORDERBY, the DAL adapter for postgresql
-                # would automatically add all primary keys as ORDERBY, which
-                # would though make DISTINCT pointless here - adding a default
-                # ORDERBY id will prevent this.
-                if str(self._id) not in [str(f) for f in qfields]:
-                    qfields.insert(0, self._id)
-                attributes["orderby"] = self._id
+                if tname not in primary_keys:
+                    primary_keys[tname] = qtable._id
+        if not groupby:
+            for pk in primary_keys.values():
+                if pk is not None:
+                    qfields[str(pk)] = pk
 
+        # Handle ORDERBY from caller
+        
+        if orderby is not None:
+            attributes["orderby"] = orderby
+
+        # In DISTINCT without ORDERBY, the DAL adapter for postgresql
+        # would automatically add all primary keys as ORDERBY, which
+        # would make DISTINCT pointless - adding a default ORDERBY id
+        # will prevent this:
+        if distinct and not orderby:
+            attributes["orderby"] = self._id
+
+        # For GROUPBY id (which we need here for left joins), we need
+        # all ORDERBY-fields to appear in an aggregation function, or
+        # otherwise the ORDERBY can be ambiguous.
+        if orderby:
+            if isinstance(orderby, str):
+                orderby_fields = orderby.split(",")
+            elif not isinstance(orderby, (list, tuple)):
+                orderby_fields = [orderby]
+            else:
+                orderby_fields = orderby
+            orderby = []
+            for orderby_field in orderby_fields:
+                if type(orderby_field) is Expression:
+                    f = orderby_field.first
+                    op = orderby_field.op
+                    if op == db._adapter.AGGREGATE:
+                        # Already an aggregation
+                        orderby.append(orderby_field)
+                        continue
+                    elif type(f) is Field and op == db._adapter.INVERT:
+                        direction = "desc"
+                    else:
+                        # Other expression - not supported
+                        continue
+                elif type(orderby_field) is Field:
+                    direction = "asc"
+                    f = orderby_field
+                elif isinstance(orderby_field, str):
+                    fn, direction = (orderby_field.strip().split() + ["asc"])[:2]
+                    tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
+                    try:
+                        f = db[tn][fn]
+                    except (AttributeError, KeyError):
+                        continue
+                else:
+                    continue
+                fname = str(f)
+                direction = direction.strip().lower()[:3]
+                if pkey in qfields and fname == pkey or pkey in gfields:
+                    expression = f if direction == "asc" else ~f
+                else:
+                    expression = f.min() if direction == "asc" else ~(f.max())
+                orderby.append(expression)
+                # If the ORDERBY-field is not in SELECT, then add it.
+                # According to SQL documentation, this is /not/ required - you
+                # can have fields in the ORDERBY which are not in the SELECT,
+                # however postgresql does seem to need it:
+                if distinct and fname not in qfields:
+                    qfields[fname] = f
+                # Make sure the table for this ORDERBY-field is joined
+                # even when only filtering:
+                tname = fname.split(".", 1)[0]
+                if tname != tablename and tname in left_joins:
+                    filter_joins.append(left_joins[tname])
+
+        # Handler GROUPBY from caller
+        
         if groupby:
             attributes["distinct"] = False
             attributes["groupby"] = groupby
             attributes["orderby"] = orderby
 
-        # Temporarily deactivate virtual fields
+        # Sort the left joins and add to attributes
+        
+        if left_joins:
+            try:
+                left_joins = self.sortleft(left_joins.values())
+            except:
+                left_joins = left_joins.values()
+            attributes["left"] = left_joins
+
+        # Temporarily deactivate (mandatory) virtual fields
+        
         osetattr = object.__setattr__
         if not virtual:
             vf = table.virtualfields
             osetattr(table, "virtualfields", [])
 
-        # Count the rows
+        # Count the rows and get the IDs
+        
         numrows = ids = None
-        if limitby is not None:
+        if vfltr is None:
             # No virtual filter
 
             if getids or left_joins:
@@ -771,15 +763,17 @@ class S3Resource(object):
                 # - the IDs of all records matching the query
                 # - the IDs of all records in the target page
 
-                # We don't need virtual fields here
+                # We don't need virtual fields here, so deactivate
+                # even if virtual is True
                 if virtual:
                     vf = table.virtualfields
                     osetattr(table, "virtualfields", [])
 
-                rows = db(query).select(self._id,
-                                        left=attributes.get("left", None),
+                _id = self._id
+                rows = db(query).select(_id,
+                                        left=filter_joins,
                                         orderby=orderby,
-                                        groupby=self._id,
+                                        groupby=_id,
                                         cacheable=True)
 
                 # Restore the virtual fields
@@ -787,44 +781,40 @@ class S3Resource(object):
                     osetattr(table, "virtualfields", vf)
 
                 numrows = len(rows)
-                row_ids = [row[table._id] for row in rows]
+                row_ids = [row[_id] for row in rows]
 
                 # Create a simplified query for the page
-                # (this will improve performance of the second select):
+                # (to improve performance of the second query):
                 if left_joins:
-                    page = row_ids[limitby[0]:limitby[1]]
+                    if limitby:
+                        page = row_ids[limitby[0]:limitby[1]]
+                        del attributes["limitby"]
+                    else:
+                        page = row_ids
                     query = table._id.belongs(page)
-                    del attributes["limitby"]
 
-                # If the caller asked for the IDs, then de-duplicate the list:
-                if getids:
-                    ids = list(set(row_ids))
+                # De-duplicate the ID list (this seems superfluous since
+                # we group by ID, therefore commented):
+                #if getids:
+                    #ids = list(set(row_ids))
 
             elif count:
                 c = self._id.count()
                 row = db(query).select(c,
                                        distinct=distinct,
-                                       left=attributes.get("left", None)).first()
+                                       left=filter_joins).first()
                 numrows = row[c]
                 ids = []
         else:
-            # No limitby present => count/collect ids from the rows
+            # Virtual filter => count/collect ids from the rows
             numrows = ids = None
 
         # Retrieve the rows
-        attributes["cacheable"] = cacheable
-
-        hasids = False
-
+        
+        hasids = pkey in qfields
         if numrows != 0:
-            pkey = str(table._id)
-            for qf in qfields:
-                if str(qf) == pkey:
-                    hasids = True
-                    break
-
-            rows = db(query).select(*qfields, **attributes)
-
+            attributes["cacheable"] = cacheable
+            rows = db(query).select(*(qfields.values()), **attributes)
             if vfltr is None:
                 if (getids or left_joins) and ids is None and hasids:
                     ids = list(set([row[table._id] for row in rows]))
@@ -833,13 +823,15 @@ class S3Resource(object):
                 if count and numrows is None:
                     numrows = len(rows)
         else:
-            rows = [] # None?
+            rows = []
            
         # Restore virtual fields
+        
         if not virtual:
             osetattr(table, "virtualfields", vf)
 
         # Apply virtual fields filter
+        
         if rows and vfltr is not None:
 
             if count:
@@ -858,6 +850,8 @@ class S3Resource(object):
                 ids = list(set([row[table._id] for row in rows]))
                 numrows = len(ids)
 
+        # Result
+        
         if not getids:
             ids = []
         if count or getids:
@@ -1512,12 +1506,12 @@ class S3Resource(object):
             @param layers: list of tuples (field selector, method) for
                            the aggregation layers
 
-            @return: an S3Pivottable instance
+            @return: an S3PivotTable instance
 
-            Supported methods: see S3Pivottable
+            Supported methods: see S3PivotTable
         """
 
-        return S3Pivottable(self, rows, cols, layers)
+        return S3PivotTable(self, rows, cols, layers)
 
     # -------------------------------------------------------------------------
     def json(self,
@@ -6368,726 +6362,6 @@ class S3ResourceFilter(object):
                 sub = q.serialize_url(resource=resource)
                 url_vars.update(sub)
         return url_vars
-
-# =============================================================================
-class S3Pivottable(object):
-    """ Class representing a pivot table of a resource """
-
-    #: Supported aggregation methods
-    METHODS = ["list", "count", "min", "max", "sum", "avg"] #, "std"]
-
-    def __init__(self, resource, rows, cols, layers):
-        """
-            Constructor
-
-            @param resource: the S3Resource
-            @param rows: field selector for the rows dimension
-            @param cols: field selector for the columns dimension
-            @param layers: list of tuples of (field selector, method)
-                           for the aggregation layers
-        """
-
-        # Initialize ----------------------------------------------------------
-        #
-        if not rows and not cols:
-            raise SyntaxError("No rows or columns specified for pivot table")
-
-        self.resource = resource
-
-        self.lfields = None
-        self.dfields = None
-        self.rfields = None
-
-        self.rows = rows
-        self.cols = cols
-        self.layers = layers
-
-        # API variables -------------------------------------------------------
-        #
-        self.records = None
-        """ All records in the pivot table as a Storage like:
-                {
-                 <record_id>: <Row>
-                }
-        """
-
-        self.empty = False
-        """ Empty-flag (True if no records could be found) """
-        self.numrows = None
-        """ The number of rows in the pivot table """
-        self.numcols = None
-        """ The number of columns in the pivot table """
-
-        self.cell = None
-        """ Array of pivot table cells in [rows[columns]]-order, each
-            cell is a Storage like:
-                {
-                 records: <list_of_record_ids>,
-                 (<fact>, <method>): <aggregated_value>, ...per layer
-                }
-        """
-        self.row = None
-        """ List of row headers, each header is a Storage like:
-                {
-                 value: <dimension value>,
-                 records: <list_of_record_ids>,
-                 (<fact>, <method>): <total value>, ...per layer
-                }
-        """
-        self.col = None
-        """ List of column headers, each header is a Storage like:
-                {
-                 value: <dimension value>,
-                 records: <list_of_record_ids>,
-                 (<fact>, <method>): <total value>, ...per layer
-                }
-        """
-        self.totals = Storage()
-        """ The grand total values for each layer, as a Storage like:
-                {
-                 (<fact>, <method): <total value>, ...per layer
-                }
-        """
-
-        # Get the fields ------------------------------------------------------
-        #
-        s3db = current.s3db
-        tablename = resource.tablename
-        get_config = s3db.get_config
-
-        # The "report_fields" table setting defines which additional
-        # fields shall be included in the report base layer. This is
-        # useful to provide easy access to the record data behind a
-        # pivot table cell.
-        fields = get_config(tablename, "report_fields", [])
-
-        self._get_fields(fields=fields)
-
-        if DEBUG:
-            _start = datetime.datetime.now()
-            _debug("S3Pivottable %s starting" % tablename)
-
-        # Retrieve the records ------------------------------------------------
-        #
-        records = resource.select(self.dfields,
-                                  start=None, limit=None, cacheable=True)
-
-        # Generate the report -------------------------------------------------
-        #
-        if records:
-            try:
-                pkey = resource.table._id
-                # Extract unique rows (otherwise the renderer will loose
-                # data due to naive de-duplication):
-                e = resource.extract(records, self.dfields)
-                self.records = Storage([(i[str(pkey)], i) for i in e])
-            except KeyError:
-                raise KeyError("Could not retrieve primary key values of %s" %
-                               resource.tablename)
-
-            # Generate the data frame -----------------------------------------
-            #
-            df = []
-            insert = df.append
-
-            item_list = []
-            seen = item_list.append
-
-            expand = self._expand
-
-            for row in e:
-                item = expand(row)
-                for i in item:
-                    tag = str(i)
-                    if tag not in item_list:
-                        seen(tag)
-                        insert(i)
-
-            # Group the records -----------------------------------------------
-            #
-            tfields = self.tfields
-            hpkey = tfields[self.pkey]
-            hrows = self.rows and tfields[self.rows] or None
-            hcols = self.cols and tfields[self.cols] or None
-
-            matrix, rnames, cnames = self.pivot(df, hpkey, hrows, hcols)
-
-            # Initialize columns and rows -------------------------------------
-            #
-            if cols:
-                self.col = [Storage({"value": v}) for v in cnames]
-                self.numcols = len(self.col)
-            else:
-                self.col = [Storage({"value": None})]
-                self.numcols = 1
-
-            if rows:
-                self.row = [Storage({"value": v}) for v in rnames]
-                self.numrows = len(self.row)
-            else:
-                self.row = [Storage({"value": None})]
-                self.numrows = 1
-
-            # Add the layers --------------------------------------------------
-            #
-            add_layer = self._add_layer
-            layers = list(self.layers)
-            for f, m in self.layers:
-                add_layer(matrix, f, m)
-
-        else:
-            # No items to report on -------------------------------------------
-            #
-            self.empty = True
-
-        if DEBUG:
-            duration = datetime.datetime.now() - _start
-            duration = '{:.2f}'.format(duration.total_seconds())
-            _debug("S3Pivottable completed in %s seconds" % duration)
-
-    # -------------------------------------------------------------------------
-    def pivot(self, items, hpkey, hrows, hcols):
-
-        rvalues = Storage()
-        cvalues = Storage()
-        cells = Storage()
-
-        # All unique rows values
-        rindex = 0
-        cindex = 0
-        for item in items:
-
-            rvalue = item[hrows] if hrows else None
-            cvalue = item[hcols] if hcols else None
-
-            if rvalue not in rvalues:
-                r = rvalues[rvalue] = rindex
-                rindex += 1
-            else:
-                r = rvalues[rvalue]
-            if cvalue not in cvalues:
-                c = cvalues[cvalue] = cindex
-                cindex += 1
-            else:
-                c = cvalues[cvalue]
-
-            if (r, c) not in cells:
-                cells[(r, c)] = [item[hpkey]]
-            else:
-                cells[(r, c)].append(item[hpkey])
-
-        matrix = []
-        for r in xrange(len(rvalues)):
-            row = []
-            for c in xrange(len(cvalues)):
-                row.append(cells[(r, c)])
-            matrix.append(row)
-
-        rnames = [None] * len(rvalues)
-        for k, v in rvalues.items():
-            rnames[v] = k
-
-        cnames = [None] * len(cvalues)
-        for k, v in cvalues.items():
-            cnames[v] = k
-
-        return matrix, rnames, cnames
-
-    # -------------------------------------------------------------------------
-    # API methods
-    # -------------------------------------------------------------------------
-    def __len__(self):
-        """ Total number of records in the report """
-
-        items = self.records
-        if items is None:
-            return 0
-        else:
-            return len(self.records)
-
-    # -------------------------------------------------------------------------
-    def compact(self, n=50, layer=None, least=False, represent=False):
-        """
-            Get the top/least n numeric results for a layer, used to
-            generate the input data for charts.
-
-            @param n: maximum dimension size, extracts the n-1 top/least
-                      rows/cols and aggregates the rest under "__other__"
-            @param layer: the layer
-            @param least: use the least n instead of the top n results
-            @param represent: represent the row/col dimension values as
-                              strings using the respective field
-                              representation
-        """
-
-        default = {"rows": [], "cols": [], "cells": []}
-
-        if self.empty or layer and layer not in self.layers:
-            return default
-        elif not layer:
-            layer = self.layers[0]
-
-        method = layer[-1]
-        if method == "min":
-            least = not least
-        numeric = lambda x: isinstance(x, (int, long, float))
-
-        rfields = self.rfields
-        OTHER = "__other__"
-
-        def top(tl, length=10, least=False):
-            """ Find the top/least n rows/cols """
-            try:
-                if len(tl) > length:
-                    m = length - 1
-                    l = list(tl)
-                    l.sort(lambda x, y: int(y[1]-x[1]))
-                    if least:
-                        l.reverse()
-                    ts = (OTHER, self._aggregate([t[1] for t in l[m:]], method))
-                    l = l[:m] + [ts]
-                    return l
-            except (TypeError, ValueError):
-                pass
-            return tl
-
-        def sortdim(dim, items):
-            """ Sort a dimension """
-
-            rfield = rfields[dim]
-            if not rfield:
-                return
-            ftype = rfield.ftype
-            sortby = "value"
-            if ftype == "integer":
-                requires = rfield.requires
-                if isinstance(requires, (tuple, list)):
-                    requires = requires[0]
-                if isinstance(requires, IS_EMPTY_OR):
-                    requires = requires.other
-                if isinstance(requires, IS_IN_SET):
-                    sortby = "text"
-            elif ftype[:9] == "reference":
-                sortby = "text"
-            items.sort(key=lambda item: item[2][sortby])
-
-        if represent:
-            row_repr = self._represent(self.rows)
-            col_repr = self._represent(self.cols)
-        else:
-            row_repr = col_repr = lambda v: s3_unicode(v)
-
-        others = s3_unicode(current.T("Others"))
-        
-        irows = self.row
-        icols = self.col
-        rows = []
-        cols = []
-
-        # Group and sort the rows
-        is_numeric = None
-        for i in xrange(self.numrows):
-            r = irows[i]
-            total = r[layer]
-            if is_numeric is None:
-                is_numeric = numeric(total)
-            if not is_numeric:
-                total = len(r["records"])
-            header = Storage(value = r.value,
-                             text = r.text
-                                    if "text" in r else row_repr(r.value))
-            rows.append((i, total, header))
-        rows = top(rows, n, least=least)
-        last = rows.pop(-1) if rows[-1][0] == OTHER else None
-        sortdim(self.rows, rows)
-        if last:
-            last = (last[0], last[1], Storage(value=None, text=others))
-            rows.append(last)
-        row_indices = [i[0] for i in rows]
-
-        # Group and sort the cols
-        is_numeric = None
-        for i in xrange(self.numcols):
-            c = icols[i]
-            total = c[layer]
-            if is_numeric is None:
-                is_numeric = numeric(total)
-            if not is_numeric:
-                total = len(c["records"])
-            header = Storage(value = c.value,
-                             text = c.text
-                                    if "text" in c else col_repr(c.value))
-            cols.append((i, total, header))
-        cols = top(cols, n, least=least)
-        last = cols.pop(-1) if cols[-1][0] == OTHER else None
-        sortdim(self.cols, cols)
-        if last:
-            last = (last[0], last[1], Storage(value=None, text=others))
-            cols.append(last)
-        col_indices = [i[0] for i in cols]
-
-        # Group and sort the cells
-        icell = self.cell
-        cells = {}
-        for i in xrange(self.numrows):
-            irow = icell[i]
-            ridx = i if i in row_indices else OTHER
-            if ridx not in cells:
-                orow = cells[ridx] = {}
-            else:
-                orow = cells[ridx]
-            for j in xrange(self.numcols):
-                cell = irow[j]
-                cidx = j if j in col_indices else OTHER
-                value = cell[layer] if is_numeric else len(cell["records"])
-                if cidx not in orow:
-                    orow[cidx] = [value] if cidx == OTHER or ridx == OTHER else value
-                else:
-                    orow[cidx].append(value)
-
-        # Aggregate the grouped values
-        orows = []
-        ocols = []
-        ocells = []
-        ctotals = True
-        rappend = orows.append
-        cappend = ocols.append
-        for ri, rt, rh in rows:
-            orow = []
-            if represent:
-                rappend((ri, s3_unicode(rh.value), rh.text, rt))
-            else:
-                rappend((ri, s3_unicode(rh.value), rt))
-            for ci, ct, ch in cols:
-                value = cells[ri][ci]
-                if type(value) is list:
-                    value = self._aggregate(value, method)
-                orow.append(value)
-                if ctotals:
-                    if represent:
-                        cappend((ci, s3_unicode(ch.value), ch.text, ct))
-                    else:
-                        cappend((ci, s3_unicode(ch.value), ct))
-            ctotals = False
-            ocells.append(orow)
-
-        return {"rows": orows, "cols": ocols, "cells": ocells}
-
-    # -------------------------------------------------------------------------
-    # Internal methods
-    # -------------------------------------------------------------------------
-    def _get_fields(self, fields=None):
-        """
-            Determine the fields needed to generate the report
-
-            @param fields: fields to include in the report (all fields)
-        """
-
-        resource = self.resource
-        table = resource.table
-
-        # Lambda to prefix all field selectors
-        alias = resource.alias
-        def prefix(s):
-            if isinstance(s, (tuple, list)):
-                return prefix(s[-1])
-            if "." not in s.split("$", 1)[0]:
-                return "%s.%s" % (alias, s)
-            elif s[:2] == "~.":
-                return "%s.%s" % (alias, s[2:])
-            else:
-                return s
-
-        self.pkey = pkey = prefix(table._id.name)
-        self.rows = rows = self.rows and prefix(self.rows) or None
-        self.cols = cols = self.cols and prefix(self.cols) or None
-
-        if not fields:
-            fields = []
-
-        # dfields (data-fields): fields to generate the layers
-        dfields = [prefix(s) for s in fields]
-        if rows and rows not in dfields:
-            dfields.append(rows)
-        if cols and cols not in dfields:
-            dfields.append(cols)
-        if pkey not in dfields:
-            dfields.append(pkey)
-        for i in xrange(len(self.layers)):
-            f, m = self.layers[i]
-            s = prefix(f)
-            self.layers[i] = (s, m)
-            if s not in dfields:
-                dfields.append(f)
-        self.dfields = dfields
-
-        # rfields (resource-fields): dfields resolved into a ResourceFields map
-        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
-        rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
-        self.rfields = rfields
-
-        # tfields (transposition-fields): fields to group the records by
-        key = lambda s: str(hash(s)).replace("-", "_")
-        tfields = {pkey:key(pkey)}
-        if rows:
-            tfields[rows] = key(rows)
-        if cols:
-            tfields[cols] = key(cols)
-        self.tfields = tfields
-
-        return
-
-    # -------------------------------------------------------------------------
-    def _represent(self, dim):
-        """
-            Get a representation method for a dimension
-
-            @param dim: the dimension (self.rows or self.cols)
-        """
-
-        manager = current.manager
-
-        if dim:
-            rfield = self.rfields[dim]
-        else:
-            return lambda val: None
-        if rfield.virtual:
-            stripper = S3MarkupStripper()
-            def repr_method(val):
-                text = s3_unicode(val)
-                if "<" in text:
-                    stipper.feed(text)
-                    return stripper.stripped() # = totally naked ;)
-                else:
-                    return text
-        else:
-            def repr_method(val):
-                return manager.represent(rfield.field, val,
-                                         strip_markup=True)
-        return repr_method
-
-    # -------------------------------------------------------------------------
-    def _extract(self, row, field):
-        """
-            Extract a field value from a DAL row
-
-            @param row: the row
-            @param field: the fieldname (list_fields syntax)
-        """
-
-        rfields = self.rfields
-        if field not in rfields:
-            raise KeyError("Invalid field name: %s" % field)
-        rfield = rfields[field]
-        try:
-            return rfield.extract(row)
-        except AttributeError:
-            return None
-
-    # -------------------------------------------------------------------------
-    def _expand(self, row): #, field=None):
-        """
-            Expand a data frame row into a list of rows for list:type values
-
-            @param row: the row
-            @param field: the field to expand (None for all fields)
-        """
-
-        rfields = self.rfields
-        tfields = self.tfields
-
-        item = [(k, row[rfields[f].colname]) for f, k in tfields.items()]
-
-        pairs = []
-        append = pairs.append
-        for k, v in item:
-            if type(v) is list:
-                append([(k, value) for value in v])
-            else:
-                append([(k, v)])
-        return [dict(i) for i in product(*pairs)]
-
-    # -------------------------------------------------------------------------
-    def _add_layer(self, matrix, fact, method):
-        """
-            Compute a new layer from the base layer (pt+items)
-
-            @param pt: the pivot table with record IDs
-            @param fact: the fact field for the layer
-            @param method: the aggregation method of the layer
-        """
-
-        if method not in self.METHODS:
-            raise SyntaxError("Unsupported aggregation method: %s" % method)
-
-        items = self.records
-        rfields = self.rfields
-        rows = self.row
-        cols = self.col
-        records = self.records
-        extract = self._extract
-        aggregate = self._aggregate
-        resource = self.resource
-
-        RECORDS = "records"
-        VALUES = "values"
-
-        table = resource.table
-        pkey = table._id.name
-
-        if method is None:
-            method = "list"
-        layer = (fact, method)
-
-        numcols = len(self.col)
-        numrows = len(self.row)
-
-        # Initialize cells
-        if self.cell is None:
-            self.cell = [[Storage()
-                          for i in xrange(numcols)]
-                         for j in xrange(numrows)]
-        cells = self.cell
-
-        all_values = []
-        for r in xrange(numrows):
-
-            # Initialize row header
-            row = rows[r]
-            row[RECORDS] = []
-            row[VALUES] = []
-
-            row_records = row[RECORDS]
-            row_values = row[VALUES]
-
-            for c in xrange(numcols):
-
-                # Initialize column header
-                col = cols[c]
-                if RECORDS not in col:
-                    col[RECORDS] = []
-                col_records = col[RECORDS]
-                if VALUES not in col:
-                    col[VALUES] = []
-                col_values = col[VALUES]
-
-                # Get the records
-                cell = cells[r][c]
-                if RECORDS in cell and cell[RECORDS] is not None:
-                    ids = cell[RECORDS]
-                else:
-                    data = matrix[r][c]
-                    if data:
-                        remove = data.remove
-                        while None in data:
-                            remove(None)
-                        ids = data
-                    else:
-                        ids = []
-                    cell[RECORDS] = ids
-                row_records.extend(ids)
-                col_records.extend(ids)
-
-                # Get the values
-                if fact is None:
-                    fact = pkey
-                    values = ids
-                    row_values = row_records
-                    col_values = row_records
-                    all_values = records.keys()
-                else:
-                    values = []
-                    append = values.append
-                    for i in ids:
-                        value = extract(records[i], fact)
-                        if value is None:
-                            continue
-                        append(value)
-                    values = list(flatlist(values))
-                    if method in ("list", "count"):
-                        values =  list(set(values))
-                    row_values.extend(values)
-                    col_values.extend(values)
-                    all_values.extend(values)
-
-                # Aggregate values
-                value = aggregate(values, method)
-                cell[layer] = value
-
-            # Compute row total
-            row[layer] = aggregate(row_values, method)
-            del row[VALUES]
-
-        # Compute column total
-        for c in xrange(numcols):
-            col = cols[c]
-            col[layer] = aggregate(col[VALUES], method)
-            del col[VALUES]
-
-        # Compute overall total
-        self.totals[layer] = aggregate(all_values, method)
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _aggregate(values, method):
-        """
-            Compute an aggregation of atomic values
-
-            @param values: the values
-            @param method: the aggregation method
-        """
-
-        if values is None:
-            return None
-
-        if method is None or method == "list":
-            if values:
-                return values
-            else:
-                return None
-
-        elif method == "count":
-            return len([v for v in values if v is not None])
-
-        elif method == "min":
-            try:
-                return min(values)
-            except (TypeError, ValueError):
-                return None
-
-        elif method == "max":
-            try:
-                return max(values)
-            except (TypeError, ValueError):
-                return None
-
-        elif method == "sum":
-            try:
-                return sum(values)
-            except (TypeError, ValueError):
-                return None
-
-        elif method in ("avg"):
-            try:
-                if len(values):
-                    return sum(values) / float(len(values))
-                else:
-                    return 0.0
-            except (TypeError, ValueError):
-                return None
-
-        #elif method == "std":
-            #import numpy
-            #if not values:
-                #return 0.0
-            #try:
-                #return numpy.std(values)
-            #except (TypeError, ValueError):
-                #return None
-
-        else:
-            return None
 
 # =============================================================================
 class S3RecordMerger(object):
