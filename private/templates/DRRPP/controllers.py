@@ -34,21 +34,30 @@ class index():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+        #Show full width instead of login box if user is logged in 
+        if current.auth.is_logged_in():
+            grid = "grid_12"
+        else:
+            grid = "grid_8"
+
         latest_projects = DIV(_id="front-latest-body",
-                              _class="grid_8 alpha")
+                              _class="%s alpha" % grid)
         lappend = latest_projects.append
                               
         db = current.db
         s3db = current.s3db
         table = s3db.project_project
+        table_drrpp = s3db.project_drrpp
         query = (table.deleted != True) & \
                 (table.approved_by != None)
         rows = db(query).select(table.id,
                                 table.name,
-                                table.description,
+                                table_drrpp.activities,
+                                table.organisation_id,
                                 table.start_date,
+                                left=table_drrpp.on(table.id == table_drrpp.project_id),
                                 limitby=(0, 3))
-        project_ids = [r.id for r in rows]
+        project_ids = [r.project_project.id for r in rows]
         ltable = s3db.project_location
         gtable = s3db.gis_location
         query = (ltable.deleted != True) & \
@@ -59,24 +68,28 @@ class index():
                                      gtable.L0)
         odd = True
         for row in rows:
-            countries = [l.gis_location.L0 for l in locations if l.project_location.project_id == row.id]
+            countries = [l.gis_location.L0 for l in locations if l.project_location.project_id == row.project_project.id]
             location = ", ".join(countries)
             if odd:
-                _class = "front-latest-item odd grid_8 alpha"
+                _class = "front-latest-item odd %s alpha" % grid
             else:
-                _class = "front-latest-item even grid_8 alpha"
-            card = DIV(DIV(A(row.name,
-                             _href=URL(c="project", f="project", args=[row.id])),
-                           _class="front-latest-title grid_8",
+                _class = "front-latest-item even %s alpha" % grid
+            card = DIV(DIV(A(row.project_project.name,
+                             _href=URL(c="project", f="project", args=[row.project_project.id])),
+                           _class="front-latest-title %s"  % grid,
                            ),
-                       DIV(row.description,
-                           _class="front-latest-desc grid_8",
+                       
+                       DIV("Lead Organization: %s" % s3db.org_organisation_represent(row.project_project.organisation_id),
+                                _class="front-latest-info-desc",
                            ),
-                       DIV(SPAN("Start Date: %s" % row.start_date,
+                       DIV(SPAN("Start Date: %s" % row.project_project.start_date,
                                 _class="front-latest-info-date"),
-                           SPAN("Location: %s" % location,
+                           SPAN("Countries: %s" % location,
                                 _class="front-latest-info-location"),
-                           _class="front-latest-info grid_8",
+                           _class="front-latest-info %s" % grid,
+                           ),
+                       DIV(row.project_drrpp.activities or "",
+                           _class="front-latest-desc %s"  % grid,
                            ),
                        _class=_class,
                        )

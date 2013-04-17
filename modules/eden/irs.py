@@ -789,7 +789,7 @@ class S3IRSModel(S3Model):
             output = msg.compose(**opts)
 
             # Maintain RHeader for consistency
-            if "rheader" in attr:
+            if attr.get("rheader"):
                 rheader = attr["rheader"](r)
                 if rheader:
                     output["rheader"] = rheader
@@ -908,7 +908,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             output = dict(item = item)
 
             # Maintain RHeader for consistency
-            if "rheader" in attr:
+            if attr.get("rheader"):
                 rheader = attr["rheader"](r)
                 if rheader:
                     output["rheader"] = rheader

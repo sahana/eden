@@ -2208,6 +2208,7 @@ class S3SavedSearch(S3Model):
         tablename = "pr_saved_search"
         table = self.define_table(tablename,
                                   Field("name",
+                                        label = T("Search Criteria"),
                                         requires=IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Name"),
@@ -2236,8 +2237,7 @@ class S3SavedSearch(S3Model):
                                         readable=False,
                                         writable=False),
                                   Field("url",
-                                        #label=T("URL"),
-                                        readable=False,
+                                        label=T("Display Search"),
                                         writable=False,
                                         #comment=DIV(_class="tooltip",
                                         #            _title="%s|%s" % (T("URL"),
@@ -2319,7 +2319,27 @@ class S3SavedSearch(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields()
                                   )
-
+        
+        def url_represent(url):
+            return TAG[""](
+                    A(T("List"),
+                        _href = url,
+                        _class = "action-btn"
+                        ),
+                    A(T("Matrix"),
+                        _href = url.replace("search","report"),
+                        _class = "action-btn"
+                        ),
+                    A(T("Chart"),
+                        _href = url.replace("search","report?chart=breakdown%3Arows"),
+                        _class = "action-btn"
+                        ),
+                    A(T("Map"),
+                        _href = url.replace("project/search","location/map"),
+                        _class = "action-btn"
+                        )
+                    )
+        table.url.represent = url_represent
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
             title_create=T("Add search"),
@@ -2342,11 +2362,7 @@ class S3SavedSearch(S3Model):
                        onvalidation=self.pr_saved_search_onvalidation,
                        listadd=False,
                        list_fields=["name",
-                                    "notification_format",
-                                    "notification_method",
-                                    "notification_frequency",
-                                    "notification_batch",
-                                    "public",
+                                    "url",
                                     ]
                        )
 
@@ -2402,8 +2418,8 @@ class S3SavedSearch(S3Model):
 
         for field_filter, values in filters.items():
             field_selector, filter = field_filter.split("__")
-            if field_selector.endswith(".id"):
-                field_selector = field_selector[:-3]
+            #if field_selector.endswith(".id"):
+            #    field_selector = field_selector[:-3]
 
             # Parse the values back out
             values = S3URLQuery.parse_value(values)
@@ -2432,12 +2448,11 @@ class S3SavedSearch(S3Model):
                     if not rfield.field:
                         values[index] = s3_unicode(value)
                     else:
-                        # Some represents need ints
-                        if s3_has_foreign_key(rfield.field):
-                            try:
-                                value = int(value)
-                            except ValueError:
-                                pass
+                        # Represents need ints
+                        try:
+                            value = int(value)
+                        except:
+                            pass
                         rep_value = represent(rfield.field,
                                               value,
                                               strip_markup=True)
