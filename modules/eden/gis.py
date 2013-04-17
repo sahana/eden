@@ -1150,11 +1150,10 @@ class S3GISConfigModel(S3Model):
         # GIS Projections
         tablename = "gis_projection"
         table = define_table(tablename,
-                             Field("name", length=64,
-                                   notnull=True, unique=True,
+                             Field("name", length=64, notnull=True, unique=True,
                                    label = T("Name")),
-                             Field("epsg", "integer",
-                                   notnull=True, label="EPSG",
+                             Field("epsg", "integer", notnull=True,
+                                   label="EPSG",
                                    requires = IS_NOT_EMPTY()),
                              Field("maxExtent", length=64, notnull=True,
                                    label = T("maxExtent"),
@@ -1834,14 +1833,13 @@ class S3GISConfigModel(S3Model):
     @staticmethod
     def gis_projection_deduplicate(item):
         """
-          This callback will be called when importing Projection records it will look
-          to see if the record being imported is a duplicate.
+            This callback will be called when importing Projection records it
+            will look to see if the record being imported is a duplicate.
 
-          @param item: An S3ImportJob object which includes all the details
-                      of the record being imported
+            @param item: An S3ImportItem object which includes all the details
+                         of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
-
+            If the record is a duplicate then it will set the job method to update
         """
 
         if item.tablename == "gis_projection" and \
@@ -1861,13 +1859,13 @@ class S3GISConfigModel(S3Model):
     @staticmethod
     def gis_symbology_deduplicate(item):
         """
-          This callback will be called when importing Symbology records it will look
-          to see if the record being imported is a duplicate.
+            This callback will be called when importing Symbology records it
+            will look to see if the record being imported is a duplicate.
 
-          @param item: An S3ImportJob object which includes all the details
-                      of the record being imported
+            @param item: An S3ImportItem object which includes all the details
+                         of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+            If the record is a duplicate then it will set the job method to update
 
         """
 

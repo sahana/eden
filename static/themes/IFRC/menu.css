@@ -94,7 +94,9 @@
 .breadcrumbs ul li a.highlight:after {
     content: "";
 }
-
+.breadcrumbs ul li a.highlight {
+    white-space: nowrap;
+}
 /* Dashboard */
 #dashboard {
     float: left;

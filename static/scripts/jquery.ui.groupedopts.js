@@ -4,8 +4,8 @@
  * @copyright: 2013 (c) Sahana Software Foundation
  * @license: MIT
  *
- * @requires: jQuery 1.9.1+
- * @requires: jQuery UI 1.10 widget factory
+ * requires: jQuery 1.9.1+
+ * requires: jQuery UI 1.10 widget factory
  *
  */
 

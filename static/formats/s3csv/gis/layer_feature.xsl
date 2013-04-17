@@ -104,12 +104,14 @@
 
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
     
-        <resource name="gis_config">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Config"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Config"/></data>
-        </resource>
+        <xsl:if test="$Config!=''">
+            <resource name="gis_config">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Config"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Config"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

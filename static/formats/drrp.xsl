@@ -129,7 +129,6 @@
 
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
             <data field="code"><xsl:value-of select="data[@field='short_title']"/></data>
-            <data field="description"><xsl:value-of select="data[@field='description']"/></data>
             <data field="start_date"><xsl:value-of select="data[@field='start_date']/@value"/></data>
             <data field="end_date"><xsl:value-of select="data[@field='end_date']/@value"/></data>
             <data field="budget"><xsl:value-of select="data[@field='total_funding']/@value"/></data>
@@ -157,6 +156,7 @@
                 </xsl:if>
                 <data field="duration"><xsl:value-of select="data[@field='duration']"/></data>
                 <data field="outputs"><xsl:value-of select="data[@field='outputs']"/></data>
+                <data field="activities"><xsl:value-of select="data[@field='description']"/></data>
                 <data field="rfa">
                     [<xsl:value-of select="translate(substring($RFA, 2, string-length($RFA) - 2), '|', ',')"/>]
                 </data>
