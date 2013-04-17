@@ -26,7 +26,6 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    @group Base Class: S3DataView
     @group Data Views: S3DataTable,
                        S3DataList,
                        S3PivotTable
@@ -63,14 +62,7 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-class S3DataView(object):
-    """ Base class for data views """
-
-    def __init__(self):
-        pass
-
-# =============================================================================
-class S3DataTable(S3DataView):
+class S3DataTable(object):
     """ Class representing a data table """
 
     # The dataTable id if no explicit value has been provided
@@ -871,7 +863,7 @@ class S3DataTable(S3DataView):
             return structure
 
 # =============================================================================
-class S3DataList(S3DataView):
+class S3DataList(object):
     """ Class representing a data list """
 
     # -------------------------------------------------------------------------
@@ -1034,7 +1026,7 @@ class S3DataList(S3DataView):
         return item
 
 # =============================================================================
-class S3PivotTable(S3DataView):
+class S3PivotTable(object):
     """ Class representing a pivot table of a resource """
 
     #: Supported aggregation methods

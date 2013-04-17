@@ -608,10 +608,12 @@ class S3Resource(object):
             filter_joins = left_joins.values()
 
         # Left joins from fields
+        join_tables = []
         left = [j for tn in ljoins for j in ljoins[tn]]
         for join in left:
             tname = str(join.first)
             if tname not in left_joins:
+                join_tables.append(tname)
                 left_joins[tname] = join
 
         # Collect the inner joins
@@ -724,7 +726,7 @@ class S3Resource(object):
                 # Make sure the table for this ORDERBY-field is joined
                 # even when only filtering:
                 tname = fname.split(".", 1)[0]
-                if tname != tablename and tname in left_joins:
+                if tname != tablename and tname in join_tables:
                     filter_joins.append(left_joins[tname])
 
         # Handler GROUPBY from caller
@@ -785,18 +787,16 @@ class S3Resource(object):
 
                 # Create a simplified query for the page
                 # (to improve performance of the second query):
-                if left_joins:
-                    if limitby:
-                        page = row_ids[limitby[0]:limitby[1]]
-                        del attributes["limitby"]
-                    else:
-                        page = row_ids
-                    query = table._id.belongs(page)
+                if limitby:
+                    page = row_ids[limitby[0]:limitby[1]]
+                    del attributes["limitby"]
+                else:
+                    page = row_ids
+                query = table._id.belongs(page)
 
-                # De-duplicate the ID list (this seems superfluous since
-                # we group by ID, therefore commented):
-                #if getids:
-                    #ids = list(set(row_ids))
+                # De-duplicate the ID list:
+                if getids:
+                    ids = row_ids #list(set(row_ids))
 
             elif count:
                 c = self._id.count()
