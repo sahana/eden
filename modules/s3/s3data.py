@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Multi-Record Representations
+""" S3 Data Views
 
     @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
@@ -25,10 +25,11 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-    
-    @group Data Representations: S3DataTable,
-                                 S3DataList,
-                                 S3PivotTable
+
+    @group Base Class: S3DataView
+    @group Data Views: S3DataTable,
+                       S3DataList,
+                       S3PivotTable
 """
 
 import datetime
@@ -62,7 +63,14 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-class S3DataTable(object):
+class S3DataView(object):
+    """ Base class for data views """
+
+    def __init__(self):
+        pass
+
+# =============================================================================
+class S3DataTable(S3DataView):
     """ Class representing a data table """
 
     # The dataTable id if no explicit value has been provided
@@ -859,7 +867,7 @@ class S3DataTable(object):
             return structure
 
 # =============================================================================
-class S3DataList(object):
+class S3DataList(S3DataView):
     """ Class representing a data list """
 
     # -------------------------------------------------------------------------
@@ -1022,7 +1030,7 @@ class S3DataList(object):
         return item
 
 # =============================================================================
-class S3PivotTable(object):
+class S3PivotTable(S3DataView):
     """ Class representing a pivot table of a resource """
 
     #: Supported aggregation methods
@@ -1038,13 +1046,15 @@ class S3PivotTable(object):
 
     def __init__(self, resource, rows, cols, layers):
         """
-            Constructor
+            Constructor - extracts all unique records, generates a
+            pivot table from them with the given dimensions and
+            computes the aggregated values for each cell.
 
             @param resource: the S3Resource
             @param rows: field selector for the rows dimension
             @param cols: field selector for the columns dimension
             @param layers: list of tuples of (field selector, method)
-                           for the aggregation layers
+                           for the value aggregation(s)
         """
 
         # Initialize ----------------------------------------------------------
@@ -1247,7 +1257,7 @@ class S3PivotTable(object):
         numrows = self.numrows
         rfields = self.rfields
 
-        get_label = self._get_label
+        get_label = self._get_field_label
         get_total = self._totals
         represent = lambda f, v, d="": \
                     self._represent(rfields, f, v, default=d)
@@ -1278,7 +1288,7 @@ class S3PivotTable(object):
                     layer_labels[(item[0], item[1])] = item[2]
 
         labels = []
-        get_mname = self._mname
+        get_mname = self._get_method_label
 
         for layer in layers:
             if layer in layer_labels:
@@ -1719,7 +1729,17 @@ class S3PivotTable(object):
     # -------------------------------------------------------------------------
     def _pivot(self, items, hpkey, hrows, hcols):
         """
-            @todo: docstring?
+            2-dimensional pivoting of a list of unique items
+
+            @param items: list of unique items as dicts
+            @param hpkey: field name of the primary key
+            @param hrows: field name of the row dimension
+            @param hcols: field name of the column dimension
+
+            @return: tuple of (cell matrix, row headers, column headers),
+                     where cell matrix is a 2-dimensional array [rows[columns]]
+                     and row headers and column headers each are lists (in the
+                     same order as the cell matrix)
         """
 
         rvalues = Storage()
@@ -1768,271 +1788,18 @@ class S3PivotTable(object):
         return matrix, rnames, cnames
 
     # -------------------------------------------------------------------------
-    def _get_fields(self, fields=None):
-        """
-            Determine the fields needed to generate the report
-
-            @param fields: fields to include in the report (all fields)
-        """
-
-        resource = self.resource
-        table = resource.table
-
-        # Lambda to prefix all field selectors
-        alias = resource.alias
-        def prefix(s):
-            if isinstance(s, (tuple, list)):
-                return prefix(s[-1])
-            if "." not in s.split("$", 1)[0]:
-                return "%s.%s" % (alias, s)
-            elif s[:2] == "~.":
-                return "%s.%s" % (alias, s[2:])
-            else:
-                return s
-
-        self.pkey = pkey = prefix(table._id.name)
-        self.rows = rows = self.rows and prefix(self.rows) or None
-        self.cols = cols = self.cols and prefix(self.cols) or None
-
-        if not fields:
-            fields = []
-
-        # dfields (data-fields): fields to generate the layers
-        dfields = [prefix(s) for s in fields]
-        if rows and rows not in dfields:
-            dfields.append(rows)
-        if cols and cols not in dfields:
-            dfields.append(cols)
-        if pkey not in dfields:
-            dfields.append(pkey)
-        for i in xrange(len(self.layers)):
-            f, m = self.layers[i]
-            s = prefix(f)
-            self.layers[i] = (s, m)
-            if s not in dfields:
-                dfields.append(f)
-        self.dfields = dfields
-
-        # rfields (resource-fields): dfields resolved into a ResourceFields map
-        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
-        rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
-        self.rfields = rfields
-
-        # tfields (transposition-fields): fields to group the records by
-        key = lambda s: str(hash(s)).replace("-", "_")
-        tfields = {pkey:key(pkey)}
-        if rows:
-            tfields[rows] = key(rows)
-        if cols:
-            tfields[cols] = key(cols)
-        self.tfields = tfields
-
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _totals(values, layers, append=None):
-        """
-            Get the totals of a row/column/report
-
-            @param values: the values dictionary
-            @param layers: the layers
-            @param append: callback to collect the totals for JSON data
-                           (currently only collects the first layer)
-        """
-
-        totals = []
-        for layer in layers:
-            f, m = layer
-            value = values[layer]
-
-            if m == "list":
-                value = value and len(value) or 0
-            if not len(totals) and append is not None:
-                append(value)
-            totals.append(IS_NUMBER.represent(value))
-        totals = " / ".join(totals)
-        return totals
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _represent(rfields, field, value, default="-"):
-        """
-            Represent a field value
-
-            @param rfields: the list fields map
-            @param field: the field
-            @param value: the value
-            @param default: the default representation
-        """
-
-        if field in rfields:
-            lfield = rfields[field]
-            if lfield.field:
-                f = lfield.field
-                ftype = str(f.type)
-                if ftype not in ("string", "text") and \
-                   isinstance(value, basestring):
-                    # pyvttbl converts col/row headers into unicode,
-                    # but represent may need the original data type,
-                    # hence try to convert it back here:
-                    convert = S3TypeConverter.convert
-                    try:
-                        if ftype == "boolean":
-                            value = convert(bool, value)
-                        elif ftype == "integer":
-                            value = convert(int, value)
-                        elif ftype == "float":
-                            value = convert(float, value)
-                        elif ftype == "date":
-                            value = convert(datetime.date, value)
-                        elif ftype == "time":
-                            value = convert(datetime.time, value)
-                        elif ftype == "datetime":
-                            value = convert(datetime.datetime, value)
-                    except TypeError, ValueError:
-                        pass
-
-                value = current.manager.represent(lfield.field, value,
-                                                  strip_markup=True)
-                return current.xml.xml_decode(value)
-        if value is None:
-            return default
-        else:
-            return s3_unicode(value)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _get_label(rfields, field, tablename, key):
-        """
-            Get the label for a field
-
-            @param rfields: the list fields map
-            @param key: the configuration key
-        """
-
-        DEFAULT = ""
-
-        if field in rfields:
-            rfield = rfields[field]
-        else:
-            return DEFAULT
-
-        # @todo: cleanup this:
-        get_config = lambda key, default, tablename=tablename: \
-                     current.s3db.get_config(tablename, key, default)
-        list_fields = get_config("list_fields", None)
-        fields = get_config(key, list_fields)
-
-        if fields:
-            for f in fields:
-                if isinstance(f, (tuple, list)) and f[1] == rfield.selector:
-                    return f[0]
-
-        if rfield:
-            if rfield.ftype == "id":
-                return current.T("Records")
-            return rfield.label
-        else:
-            return DEFAULT
-
-    # -------------------------------------------------------------------------
-    def _represent_method(self, dim):
-        """
-            Get a representation method for a dimension
-
-            @param dim: the dimension (self.rows or self.cols)
-        """
-
-        manager = current.manager
-
-        if dim:
-            rfield = self.rfields[dim]
-        else:
-            return lambda val: None
-        if rfield.virtual:
-            stripper = S3MarkupStripper()
-            def repr_method(val):
-                text = s3_unicode(val)
-                if "<" in text:
-                    stipper.feed(text)
-                    return stripper.stripped() # = totally naked ;)
-                else:
-                    return text
-        else:
-            def repr_method(val):
-                return manager.represent(rfield.field, val,
-                                         strip_markup=True)
-        return repr_method
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def _mname(cls, code):
-        """
-            Get a label for a method
-
-            @param code: the method code
-            @return: the label (lazyT), or None for unsupported methods
-        """
-
-        methods = cls.METHODS
-
-        if code is None:
-            code = "list"
-        if code in methods:
-            return current.T(methods[code])
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def _extract(self, row, field):
-        """
-            Extract a field value from a DAL row
-
-            @param row: the row
-            @param field: the fieldname (list_fields syntax)
-        """
-
-        rfields = self.rfields
-        if field not in rfields:
-            raise KeyError("Invalid field name: %s" % field)
-        rfield = rfields[field]
-        try:
-            return rfield.extract(row)
-        except AttributeError:
-            return None
-
-    # -------------------------------------------------------------------------
-    def _expand(self, row): #, field=None):
-        """
-            Expand a data frame row into a list of rows for list:type values
-
-            @param row: the row
-            @param field: the field to expand (None for all fields)
-        """
-
-        rfields = self.rfields
-        tfields = self.tfields
-
-        item = [(k, row[rfields[f].colname]) for f, k in tfields.items()]
-
-        pairs = []
-        append = pairs.append
-        for k, v in item:
-            if type(v) is list:
-                append([(k, value) for value in v])
-            else:
-                append([(k, v)])
-        return [dict(i) for i in product(*pairs)]
-
-    # -------------------------------------------------------------------------
     def _add_layer(self, matrix, fact, method):
         """
-            Compute a new layer from the base layer (pt+items)
+            Compute an aggregation layer, updates:
 
-            @param pt: the pivot table with record IDs
-            @param fact: the fact field for the layer
-            @param method: the aggregation method of the layer
+                - self.cell: the aggregated values per cell
+                - self.row: the totals per row
+                - self.col: the totals per column
+                - self.totals: the overall totals per layer
+
+            @param matrix: the cell matrix
+            @param fact: the fact field
+            @param method: the aggregation method
         """
 
         if method not in self.METHODS:
@@ -2150,9 +1917,9 @@ class S3PivotTable(object):
     @staticmethod
     def _aggregate(values, method):
         """
-            Compute an aggregation of atomic values
+            Compute an aggregation of a list of atomic values
 
-            @param values: the values
+            @param values: the values as list
             @param method: the aggregation method
         """
 
@@ -2204,6 +1971,242 @@ class S3PivotTable(object):
             #except (TypeError, ValueError):
                 #return None
 
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _get_fields(self, fields=None):
+        """
+            Determine the fields needed to generate the report
+
+            @param fields: fields to include in the report (all fields)
+        """
+
+        resource = self.resource
+        table = resource.table
+
+        # Lambda to prefix all field selectors
+        alias = resource.alias
+        def prefix(s):
+            if isinstance(s, (tuple, list)):
+                return prefix(s[-1])
+            if "." not in s.split("$", 1)[0]:
+                return "%s.%s" % (alias, s)
+            elif s[:2] == "~.":
+                return "%s.%s" % (alias, s[2:])
+            else:
+                return s
+
+        self.pkey = pkey = prefix(table._id.name)
+        self.rows = rows = self.rows and prefix(self.rows) or None
+        self.cols = cols = self.cols and prefix(self.cols) or None
+
+        if not fields:
+            fields = []
+
+        # dfields (data-fields): fields to generate the layers
+        dfields = [prefix(s) for s in fields]
+        if rows and rows not in dfields:
+            dfields.append(rows)
+        if cols and cols not in dfields:
+            dfields.append(cols)
+        if pkey not in dfields:
+            dfields.append(pkey)
+        for i in xrange(len(self.layers)):
+            f, m = self.layers[i]
+            s = prefix(f)
+            self.layers[i] = (s, m)
+            if s not in dfields:
+                dfields.append(f)
+        self.dfields = dfields
+
+        # rfields (resource-fields): dfields resolved into a ResourceFields map
+        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
+        rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
+        self.rfields = rfields
+
+        # tfields (transposition-fields): fields to group the records by
+        key = lambda s: str(hash(s)).replace("-", "_")
+        tfields = {pkey:key(pkey)}
+        if rows:
+            tfields[rows] = key(rows)
+        if cols:
+            tfields[cols] = key(cols)
+        self.tfields = tfields
+
+        return
+
+    # -------------------------------------------------------------------------
+    def _represent_method(self, dim):
+        """
+            Get a representation method for a dimension
+
+            @param dim: the dimension (self.rows or self.cols)
+        """
+
+        manager = current.manager
+
+        if dim:
+            rfield = self.rfields[dim]
+        else:
+            return lambda val: None
+        if rfield.virtual:
+            stripper = S3MarkupStripper()
+            def repr_method(val):
+                text = s3_unicode(val)
+                if "<" in text:
+                    stipper.feed(text)
+                    return stripper.stripped() # = totally naked ;)
+                else:
+                    return text
+        else:
+            def repr_method(val):
+                return manager.represent(rfield.field, val,
+                                         strip_markup=True)
+        return repr_method
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _represent(rfields, field, value, default="-"):
+        """
+            Represent a field value
+
+            @param rfields: the list fields map
+            @param field: the field
+            @param value: the value
+            @param default: the default representation
+
+            @todo: deprecate, use _represent_method instead
+        """
+
+        if field in rfields:
+            lfield = rfields[field]
+            if lfield.field:
+                value = current.manager.represent(lfield.field, value,
+                                                  strip_markup=True)
+                return current.xml.xml_decode(value)
+        if value is None:
+            return default
+        else:
+            return s3_unicode(value)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _totals(values, layers, append=None):
+        """
+            Get the totals of a row/column/report
+
+            @param values: the values dictionary
+            @param layers: the layers
+            @param append: callback to collect the totals for JSON data
+                           (currently only collects the first layer)
+        """
+
+        totals = []
+        for layer in layers:
+            f, m = layer
+            value = values[layer]
+
+            if m == "list":
+                value = value and len(value) or 0
+            if not len(totals) and append is not None:
+                append(value)
+            totals.append(IS_NUMBER.represent(value))
+        totals = " / ".join(totals)
+        return totals
+
+    # -------------------------------------------------------------------------
+    def _extract(self, row, field):
+        """
+            Extract a field value from a DAL row
+
+            @param row: the row
+            @param field: the fieldname (list_fields syntax)
+        """
+
+        rfields = self.rfields
+        if field not in rfields:
+            raise KeyError("Invalid field name: %s" % field)
+        rfield = rfields[field]
+        try:
+            return rfield.extract(row)
+        except AttributeError:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _expand(self, row): #, field=None):
+        """
+            Expand a data frame row into a list of rows for list:type values
+
+            @param row: the row
+            @param field: the field to expand (None for all fields)
+        """
+
+        rfields = self.rfields
+        tfields = self.tfields
+
+        item = [(k, row[rfields[f].colname]) for f, k in tfields.items()]
+
+        pairs = []
+        append = pairs.append
+        for k, v in item:
+            if type(v) is list:
+                append([(k, value) for value in v])
+            else:
+                append([(k, v)])
+        return [dict(i) for i in product(*pairs)]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _get_field_label(rfields, field, tablename, key):
+        """
+            Get the label for a field
+
+            @param rfields: the list fields map
+            @param key: the configuration key
+        """
+
+        DEFAULT = ""
+
+        if field in rfields:
+            rfield = rfields[field]
+        else:
+            return DEFAULT
+
+        # @todo: cleanup this:
+        get_config = lambda key, default, tablename=tablename: \
+                     current.s3db.get_config(tablename, key, default)
+        list_fields = get_config("list_fields", None)
+        fields = get_config(key, list_fields)
+
+        if fields:
+            for f in fields:
+                if isinstance(f, (tuple, list)) and f[1] == rfield.selector:
+                    return f[0]
+
+        if rfield:
+            if rfield.ftype == "id":
+                return current.T("Records")
+            return rfield.label
+        else:
+            return DEFAULT
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _get_method_label(cls, code):
+        """
+            Get a label for a method
+
+            @param code: the method code
+            @return: the label (lazyT), or None for unsupported methods
+        """
+
+        methods = cls.METHODS
+
+        if code is None:
+            code = "list"
+        if code in methods:
+            return current.T(methods[code])
         else:
             return None
 

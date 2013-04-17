@@ -49,8 +49,7 @@ from gluon.validators import IS_EMPTY_OR
 from s3crud import S3CRUD
 from s3data import S3PivotTable
 from s3search import S3Search
-from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode, S3TypeConverter
-from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER, IS_IN_SET
+from s3validators import IS_IN_SET
 
 # =============================================================================
 class S3Report(S3CRUD):
@@ -707,7 +706,7 @@ class S3Report(S3CRUD):
 
         # Construct missing labels
         _methods = []
-        mname = S3PivotTable._mname
+        mname = S3PivotTable._get_method_label
         for opt in opts:
             if len(opt) == 3:
                 # field+method -> construct label
