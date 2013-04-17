@@ -3001,7 +3001,7 @@ def org_organisation_controller():
             gis = current.gis
             r.table.country.default = gis.get_default_country("code")
 
-            if not r.component and r.method not in ["read", "update", "delete"]:
+            if not r.component and r.method not in ["read", "update", "delete", "deduplicate"]:
                 # Filter Locations
                 lfilter = current.session.s3.location_filter
                 if lfilter:

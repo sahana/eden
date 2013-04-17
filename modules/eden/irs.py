@@ -909,9 +909,11 @@ S3.timeline.now="''', now.isoformat(), '''"
 
             # Maintain RHeader for consistency
             if "rheader" in attr:
-                rheader = attr["rheader"](r)
+                rheader = attr["rheader"]
                 if rheader:
-                    output["rheader"] = rheader
+                    rheader = rheader(r)
+                    if rheader:
+                        output["rheader"] = rheader
 
             output["title"] = T("Incident Timeline")
             response.view = "timeline.html"

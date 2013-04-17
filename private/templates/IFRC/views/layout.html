@@ -60,11 +60,6 @@
    </div>
    <a href='#main-content' class='skipnavigation'>Skip to Content</a>
    {{=current.menu.main}}
-   <!--<div id='searchbox'><form><div><input type='text' name='search' title='Search' class='text-search'></div>
-   <div><select name='category' class='catsearch'>
-   <option value='' selected>Option1</option>
-   <option value=''>Option2</option>
-   </select></div><a href='' class='submit-search'>Submit</a></form></div>-->
   </div>
   <div id='wrapper'>
    {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
@@ -92,24 +87,8 @@
    {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
   </div>
  </div>
-{{s3.jquery_ready.append(
-"""$('#nav').children('li').mouseenter(function() {
-  $('#nav').find('.sub-menu:visible').hide();
-  $(this).children('.sub-menu').show().one('mouseleave', function() {
-    $(document).unbind('mousedown.rms');
-    $(this).hide();
-  }).each(function() {
-      self = $(this);
-      $(document).unbind('mousedown.rms').bind('mousedown.rms', function(event) {
-        var target = event.target;
-        if (!$.contains(self, target)) {
-          $(document).unbind('mousedown.rms');
-          self.hide();
-        }
-      });
-  });
-});""")}}
 {{pass}}
 {{include "scripts.html"}}
+<script src="/{{=appname}}/static/themes/IFRC/nav.js" type="text/javascript"></script>
 </body>
 </html>
