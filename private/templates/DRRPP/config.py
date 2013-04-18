@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, TAG, DIV, H3, SQLFORM
+from gluon import current, TAG, DIV, H3, A, SQLFORM
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3 import s3forms, s3search
@@ -754,13 +754,47 @@ def customize_pr_person(**attr):
         Customize pr_person controller
     """
 
+    s3db = current.s3db
     # Load normal model
-    table = current.s3db.pr_person
+    table = s3db.pr_person
 
     # Custom CRUD Strings
     current.response.s3.crud_strings.pr_person.title_display = T("My Page")
 
     attr["rheader"] = H3(T("Saved Searches"))
+    
+    # Customize saved search
+    table = current.s3db.pr_saved_search
+    
+    table.url.label = T("Display Search")
+
+    def url_represent(url):
+        return TAG[""](
+                A(T("List"),
+                    _href = url,
+                    _class = "action-btn"
+                    ),
+                A(T("Matrix"),
+                    _href = url.replace("search","report"),
+                    _class = "action-btn"
+                    ),
+                A(T("Chart"),
+                    _href = url.replace("search","report?chart=breakdown%3Arows"),
+                    _class = "action-btn"
+                    ),
+                A(T("Map"),
+                    _href = url.replace("project/search","location/map"),
+                    _class = "action-btn"
+                    )
+                )
+    table.url.represent = url_represent
+    
+    s3db.configure("pr_saved_search",
+                   list_fields=["name",
+                                "url",
+                                ]
+                   )
+
     return attr
 
 settings.ui.customize_pr_person = customize_pr_person
