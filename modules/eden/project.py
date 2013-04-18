@@ -2064,7 +2064,9 @@ class S3ProjectHazardModel(S3Model):
         #
         tablename = "project_hazard"
         table = define_table(tablename,
-                             Field("name", length=128, notnull=True, unique=True),
+                             Field("name", length=128, notnull=True, unique=True,
+                                   label=T("Name"),
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -2097,6 +2099,10 @@ class S3ProjectHazardModel(S3Model):
                                     represent = represent,
                                     ondelete = "CASCADE",
                                     )
+
+        # Field settings for project_project.hazard field in friendly_string_from_field_query function
+        table.id.represent = represent
+        table.id.label = T("Hazard")
 
         # ---------------------------------------------------------------------
         # Projects <> Hazards Link Table
@@ -2869,7 +2875,9 @@ class S3ProjectThemeModel(S3Model):
         #
         tablename = "project_theme"
         table = define_table(tablename,
-                             Field("name", length=128, notnull=True, unique=True),
+                             Field("name", length=128, notnull=True, unique=True,
+                                   label = T("Name"),
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -2901,6 +2909,10 @@ class S3ProjectThemeModel(S3Model):
                                                           sort=True)),
                                    represent = represent,
                                    ondelete = "CASCADE")
+
+        # Field settings for project_project.theme field in friendly_string_from_field_query function
+        table.id.represent = represent
+        table.id.label = T("Theme")
 
         # Components
         add_component("project_theme_project", project_theme="theme_id")
@@ -3189,12 +3201,11 @@ class S3ProjectDRRPPModel(S3Model):
                         ),
                      Field("parent_project",
                            represent = lambda v: v or NONE,
-                           label = T("Parent Project"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Parent Project"),
-                                                           T("The parent project or programme which this project is implemented under"))), 
-                           
-                     ),
+                           label =  T("Name of a programme or another project which this project is implemented as part of"),
+                           #comment = DIV(_class="tooltip",
+                           #              _title="%s|%s" % (T("Parent Project"),
+                           #                                T("The parent project or programme which this project is implemented under"))),
+                           ), 
                      Field("duration", "integer",
                            represent = lambda v: v or NONE,
                            label = T("Duration (months)")),

@@ -1006,7 +1006,7 @@ div.form-container form fieldset  .s3-groupedopts-widget label {
     border-top: 0px;
 }
 .filter-form table.s3-checkboxes-widget td,
-.filter-form table.s3-groupopts-widget td
+.filter-form table.s3-groupopts-widget td,
 .search_form table.s3-checkboxes-widget td,
 .search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,

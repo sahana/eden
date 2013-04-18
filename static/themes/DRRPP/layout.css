@@ -19,7 +19,7 @@
 	padding: 0 5px;
 }
 
-/* Content/Body */
+/* Content Body */
 .body-content-wrapper {
 	margin-top: 20px;
 	min-height: 550px;
@@ -86,8 +86,3 @@
 .block {
 	text-align: center;
 }
-
-/* Form */
-div.w2p_r {
-    width: 940px;
-)

@@ -497,6 +497,9 @@ div.w2p_fc {
     float: left;
     margin: 8px 5px 0 0;
 }
+div.w2p_r {
+    width: 940px;
+}
 
 /* Styling for Inline Components */
 table.embeddedComponent {
@@ -538,13 +541,3 @@ div.form-container form .embeddedComponent input[name*="document_i_comments"] {
 textarea.comments {
     height: 200px;
 }
-
-/*Hide Cook Island Fields by Default
-#project_project_sub_drrpp_L1__row_label,
-#project_project_sub_drrpp_L1__row_widget,
-#project_project_sub_drrpp_L1__row_comment,
-#project_project_drrpp_pifacc__subheading,
-#project_project_drrpp_jnap__subheading {
-    display: none;
-}
-*/

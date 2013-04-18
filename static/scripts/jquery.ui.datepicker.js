@@ -1676,7 +1676,6 @@ $.extend(Datepicker.prototype, {
 		selectOtherMonths = this._get(inst, "selectOtherMonths");
 		defaultDate = this._getDefaultDate(inst);
 		html = "";
-		dow;
 		for (row = 0; row < numMonths[0]; row++) {
 			group = "";
 			this.maxRows = 4;

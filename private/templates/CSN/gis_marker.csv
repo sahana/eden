@@ -18,6 +18,7 @@ Name,Height,Width,Image
 "twitter",25,25,"gis_marker.image.Twitter.small.png"
 "youtube",25,25,"gis_marker.image.YouTube.small.png"
 "CNB",25,25,"gis_marker.image.CNB.small.png"
+"LASD",29,25,"gis_marker.image.LASD.small.png"
 "Target",25,25,"gis_marker.image.Target.small.png"
 "Walmart",25,25,"gis_marker.image.Walmart.small.png"
 "WellsFargo",28,28,"gis_marker.image.WellsFargo.small.png"

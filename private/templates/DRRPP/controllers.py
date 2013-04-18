@@ -80,7 +80,7 @@ class index():
                            ),
                        
                        DIV("Lead Organization: %s" % s3db.org_organisation_represent(row.project_project.organisation_id),
-                                _class="front-latest-info-desc",
+                                _class="front-latest-desc",
                            ),
                        DIV(SPAN("Start Date: %s" % row.project_project.start_date,
                                 _class="front-latest-info-date"),

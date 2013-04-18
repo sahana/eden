@@ -1,6 +1,6 @@
 "Name","Description","Type","Enabled","Default"
 "Google Maps","Streets","maps","True","True",
-"Google Hybrid","Streets over Satellite imagery","hybrid","False",
+"Google Hybrid","Streets over Satellite imagery","hybrid","True",
 "Google Satellite","Satellite imagery","satellite","False",
 "Google Terrain","Streets over topography","terrain","False",
 "Google MapMaker","Community additions to streets. This is much more detailed than normal Google in some locations. It is incompatioble with Streetview.","mapmaker","False",

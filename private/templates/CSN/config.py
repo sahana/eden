@@ -419,6 +419,8 @@ def org_office_marker_fn(record):
         name = organisation.name
         if name == "City National Bank":
             name = "CNB"
+        if name == "Los Angeles County Sheriff’s Department":
+            name = "LASD"
         elif name == "Dorchester Collection":
             name = "hotel"
         else:

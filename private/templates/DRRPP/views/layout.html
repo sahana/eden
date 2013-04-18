@@ -14,8 +14,11 @@
 {{else:}}
  body{direction:ltr;}
 {{pass}}
+{{if request.vars.background:}}
+ html>body {background:{{=request.vars.background}};}
+{{pass}}
 </style>
- <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/font.css" rel="stylesheet" type="text/css" />
+ <link href="/{{=appname}}/static/themes/DRRPP/font.css" rel="stylesheet" type="text/css" />
 {{if s3.debug:}}
  {{=s3base.s3_include_debug_css()}}
 {{else:}}
@@ -47,6 +50,7 @@
  {{include}}
 {{else:}}
 <body>
+{{if request.vars.header != "hide":}}
 <div id='header' class='container_12'>
  <div id='header-banner' class='grid_12 alpha omega'>
   <div id='header-top-menu' class='grid_3 prefix_9 omega'>
@@ -91,6 +95,7 @@
   </ul>
  </div>
 </div>
+{{pass}}
 <div id='content-wrapper' class='container_12'>
 {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
 {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
@@ -99,10 +104,12 @@
 {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
 {{include}}
 </div>
+{{if request.vars.footer != "hide":}}
 <div id='footer' class='container_12'>
  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
 </div>
+{{pass}}
 {{s3.jquery_ready.append(
 """
 $('#nav').children('li').mouseover(function(){

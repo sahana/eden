@@ -2208,6 +2208,7 @@ class S3SavedSearch(S3Model):
         tablename = "pr_saved_search"
         table = self.define_table(tablename,
                                   Field("name",
+                                        label = T("Search Criteria"),
                                         requires=IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Name"),
@@ -2236,8 +2237,8 @@ class S3SavedSearch(S3Model):
                                         readable=False,
                                         writable=False),
                                   Field("url",
-                                        #label=T("URL"),
-                                        readable=False,
+                                        label=T("URL"),
+                                        #readable=False,
                                         writable=False,
                                         #comment=DIV(_class="tooltip",
                                         #            _title="%s|%s" % (T("URL"),
@@ -2347,6 +2348,7 @@ class S3SavedSearch(S3Model):
                                     "notification_frequency",
                                     "notification_batch",
                                     "public",
+                                    "url",
                                     ]
                        )
 
