@@ -233,6 +233,30 @@ class S3Chart(object):
         ax.set_title(title)
 
     # -------------------------------------------------------------------------
+    
+    def dashPie(self, title, data, label):
+        """
+            Draw a custom Pie Chart
+                - used by the dashboard module
+        """
+
+        fig = self.fig
+        if not fig:
+            return "Matplotlib not installed"
+
+        # Draw a pie chart
+        ax = fig.add_subplot(111)
+        ax.pie(data, labels=label,colors=('#c0f3b8', '#b8d3f2', '#fcbfc3', '#fefcc1') )
+        
+        ax.set_title(title)
+
+    # -------------------------------------------------------------------------
+    
+    
+    
+    
+    
+    
     def survey_bar(self, title, data, labels, legendLabels):
         """
             Draw a Bar Chart
