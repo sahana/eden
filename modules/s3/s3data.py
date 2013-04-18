@@ -32,6 +32,7 @@
 """
 
 import datetime
+import sys
 import time
 
 from itertools import product
@@ -1135,40 +1136,71 @@ class S3PivotTable(object):
 
         # Retrieve the records ------------------------------------------------
         #
-        records = resource.select(self.dfields,
-                                  start=None, limit=None, cacheable=True)
+        key = str(resource.table._id)
+        rfields = self.rfields
+        dfields = {}
+        for selector, rfield in rfields.items():
+            if rfield.colname == key:
+                continue
+            tname = rfield.tname
+            if tname in dfields:
+                dfields[tname].append(selector)
+            else:
+                dfields[tname] = [selector]
+        sets = dfields.items()
+        primary = sets[0]
+        secondary = sets[1:]
 
+        rows = resource.select([self.pkey] + primary[1],
+                               start=None, limit=None, cacheable=True)
+        data = Storage([(i[key], i)
+                        for i in resource.extract(rows, [self.pkey] + primary[1])])
+
+        #if DEBUG:
+            #duration = datetime.datetime.now() - _start
+            #duration = '{:.2f}'.format(duration.total_seconds())
+            #_debug("Primary query complete after %s seconds" % duration)
+            
         # Generate the report -------------------------------------------------
         #
-        if records:
-            try:
-                pkey = resource.table._id
-                # Extract unique rows (otherwise the renderer will loose
-                # data due to naive de-duplication):
-                e = resource.extract(records, self.dfields)
-                self.records = Storage([(i[str(pkey)], i) for i in e])
-            except KeyError:
-                raise KeyError("Could not retrieve primary key values of %s" %
-                               resource.tablename)
+        if data:
+            dresource = s3db.resource(resource.tablename, id=data.keys())
+            for tn, dfields in secondary:
+                rows = dresource.select([self.pkey] + dfields,
+                                        start=None, limit=None, cacheable=True)
+                e = dresource.extract(rows, [self.pkey] + dfields)
+                for row in e:
+                    k = row[key]
+                    d = data[k]
+                    d.update(row)
+            records = data
 
+            #if DEBUG:
+                #duration = datetime.datetime.now() - _start
+                #duration = '{:.2f}'.format(duration.total_seconds())
+                #_debug("Secondary queries complete after %s seconds" % duration)
+                
             # Generate the data frame -----------------------------------------
             #
             df = []
             insert = df.append
-
-            item_list = []
-            seen = item_list.append
-
             expand = self._expand
+            for _id in records:
+                row = records[_id]
+                rows_cn = rfields[self.rows].colname
+                cols_cn = rfields[self.cols].colname
+                item = {key: _id,
+                        rows_cn: row[rows_cn],
+                        cols_cn: row[cols_cn]}
+                df.extend(expand(item))
+                
+            self.records = records
 
-            for row in e:
-                item = expand(row)
-                for i in item:
-                    tag = str(i)
-                    if tag not in item_list:
-                        seen(tag)
-                        insert(i)
-
+            #if DEBUG:
+                #duration = datetime.datetime.now() - _start
+                #duration = '{:.2f}'.format(duration.total_seconds())
+                #_debug("Dataframe complete after %s seconds" % duration)
+                
             # Group the records -----------------------------------------------
             #
             tfields = self.tfields
@@ -1178,6 +1210,11 @@ class S3PivotTable(object):
 
             matrix, rnames, cnames = self._pivot(df, hpkey, hrows, hcols)
 
+            #if DEBUG:
+                #duration = datetime.datetime.now() - _start
+                #duration = '{:.2f}'.format(duration.total_seconds())
+                #_debug("Pivoting complete after %s seconds" % duration)
+                
             # Initialize columns and rows -------------------------------------
             #
             if cols:
@@ -1200,6 +1237,11 @@ class S3PivotTable(object):
             layers = list(self.layers)
             for f, m in self.layers:
                 add_layer(matrix, f, m)
+
+            #if DEBUG:
+                #duration = datetime.datetime.now() - _start
+                #duration = '{:.2f}'.format(duration.total_seconds())
+                #_debug("Layers complete after %s seconds" % duration)
 
         else:
             # No items to report on -------------------------------------------
