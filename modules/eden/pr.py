@@ -2208,6 +2208,7 @@ class S3SavedSearch(S3Model):
         tablename = "pr_saved_search"
         table = self.define_table(tablename,
                                   Field("name",
+                                        label = T("Search Criteria"),
                                         requires=IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Name"),
@@ -2236,8 +2237,6 @@ class S3SavedSearch(S3Model):
                                         readable=False,
                                         writable=False),
                                   Field("url",
-                                        #label=T("URL"),
-                                        readable=False,
                                         writable=False,
                                         #comment=DIV(_class="tooltip",
                                         #            _title="%s|%s" % (T("URL"),
@@ -2347,6 +2346,7 @@ class S3SavedSearch(S3Model):
                                     "notification_frequency",
                                     "notification_batch",
                                     "public",
+                                    "url",
                                     ]
                        )
 
@@ -2402,8 +2402,8 @@ class S3SavedSearch(S3Model):
 
         for field_filter, values in filters.items():
             field_selector, filter = field_filter.split("__")
-            if field_selector.endswith(".id"):
-                field_selector = field_selector[:-3]
+            #if field_selector.endswith(".id"):
+            #    field_selector = field_selector[:-3]
 
             # Parse the values back out
             values = S3URLQuery.parse_value(values)
@@ -2432,12 +2432,11 @@ class S3SavedSearch(S3Model):
                     if not rfield.field:
                         values[index] = s3_unicode(value)
                     else:
-                        # Some represents need ints
-                        if s3_has_foreign_key(rfield.field):
-                            try:
-                                value = int(value)
-                            except ValueError:
-                                pass
+                        # Represents need ints
+                        try:
+                            value = int(value)
+                        except:
+                            pass
                         rep_value = represent(rfield.field,
                                               value,
                                               strip_markup=True)
