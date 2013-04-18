@@ -190,6 +190,12 @@ if os.path.exists(path):
 #        restricted = False,
 #        module_type = 10,
 #    )
+settings.modules["simpleinventory"] = Storage(
+        name_nice = T("Key Items"),
+        restricted = False,
+        module_type = 2,
+    )
+
 
 # After 1st_run, set this for Production to save 1x DAL hit/request
 #settings.base.prepopulate = 0

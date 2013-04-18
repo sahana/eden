@@ -357,6 +357,22 @@ class S3OptionsMenu(object):
             self.menu = None
 
     # -------------------------------------------------------------------------
+    
+    def training(self):
+        return M(c="training")(
+                    M("Courses", f="course")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Report", m="report"),
+                      )
+                )   
+        
+        
+        
+        
+        
+        
+        
     def admin(self):
         """ ADMIN menu """
 
@@ -605,6 +621,12 @@ class S3OptionsMenu(object):
                     ),
                 )
 
+
+
+
+
+
+
     # -------------------------------------------------------------------------
     def delphi(self):
         """ DELPHI / Delphi Decision Maker """
@@ -645,8 +667,13 @@ class S3OptionsMenu(object):
                         #M("Search", m="search")
                     )
                 )
-
-    # -------------------------------------------------------------------------
+    
+    
+    
+ 
+    
+    
+     # -------------------------------------------------------------------------
     def dvi(self):
         """ DVI / Disaster Victim Identification """
 
@@ -1243,6 +1270,10 @@ class S3OptionsMenu(object):
                     #)
                 )
 
+
+   
+
+
     # -------------------------------------------------------------------------
     def security(self):
         """ Security Management System """
@@ -1813,6 +1844,28 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
+ 
+
+    def simpleinventory(self):
+        """ simple inventory menu"""
+        
+        return M(c="simpleinventory")(
+                    M("Items", f="items")(
+                         M("New", m="create"),
+                         M("List All"),
+                        
+                     ),
+                    M("status",f = "index") 
+                     
+                )
+    
+    
+    
+    
+    
+    
+    
+    # -------------------------------------------------------------------------
     @classmethod
     def settings_messaging(cls):
         """ Messaging settings menu items:
@@ -1886,5 +1939,9 @@ class S3OptionsMenu(object):
                                    vars=item.vars))
         return breadcrumbs
 #-----------------------------------------------------------------------
+
+
+    
+
 
 # END =========================================================================
