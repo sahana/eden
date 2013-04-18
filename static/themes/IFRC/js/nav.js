@@ -1,4 +1,11 @@
 $(document).ready(function() {
+    $('#nav').children('li').mouseover(function() {
+        $(this).children('.sub-menu').show();
+    });
+    $('#nav').children('li').mouseout(function() {
+        $(this).children('.sub-menu').hide();
+    });
+    /* This doesn't allow selection of options
     $('#nav').children('li').mouseenter(function() {
         $('#nav').find('.sub-menu:visible').hide();
         $(this).children('.sub-menu').show().one('mouseleave', function() {
@@ -15,4 +22,5 @@ $(document).ready(function() {
             });
         });
     });
+    */
 });

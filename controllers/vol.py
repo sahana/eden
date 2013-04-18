@@ -671,7 +671,7 @@ def group_membership():
                 (htable.person_id == table.person_id)
 
     output = s3_rest_controller("pr", "group_membership",
-                                csv_template="group_membership",
+                                csv_template=("hrm", "group_membership"),
                                 csv_stylesheet=("hrm", "group_membership.xsl"),
                                 )
     return output 
@@ -709,7 +709,10 @@ def job_role():
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_job_role)
 
-    output = s3_rest_controller("hrm", resourcename)
+    output = s3_rest_controller("hrm", resourcename,
+                                csv_template=("hrm", "job_role"),
+                                csv_stylesheet=("hrm", "job_role.xsl"),
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -726,7 +729,10 @@ def job_title():
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_job_title)
 
-    output = s3_rest_controller("hrm", resourcename)
+    output = s3_rest_controller("hrm", resourcename,
+                                csv_template=("hrm", "job_title"),
+                                csv_stylesheet=("hrm", "job_title.xsl"),
+                                )
     return output
 
 # =============================================================================
@@ -740,7 +746,10 @@ def skill():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
+    output = s3_rest_controller("hrm", resourcename,
+                                csv_template=("hrm", "skill"),
+                                csv_stylesheet=("hrm", "skill.xsl"),
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -764,7 +773,10 @@ def competency_rating():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
+    output = s3_rest_controller("hrm", resourcename,
+                                csv_template=("hrm", "competency_rating"),
+                                csv_stylesheet=("hrm", "competency_rating.xsl"),
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -792,7 +804,10 @@ def course():
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
     output = s3_rest_controller("hrm", resourcename,
-                                rheader=s3db.hrm_rheader)
+                                rheader=s3db.hrm_rheader,
+                                csv_template=("hrm", "course"),
+                                csv_stylesheet=("hrm", "course.xsl"),
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -823,7 +838,10 @@ def certificate():
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
     output = s3_rest_controller("hrm", resourcename,
-                                rheader=s3db.hrm_rheader)
+                                rheader=s3db.hrm_rheader,
+                                csv_template=("hrm", "certificate"),
+                                csv_stylesheet=("hrm", "certificate.xsl"),
+                                )
     return output
 
 # -----------------------------------------------------------------------------
