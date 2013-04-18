@@ -1235,7 +1235,7 @@ def irs_rheader(r, tabs=[]):
                 (T("Photos"), "image"),
                 (T("Documents"), "document"),
                 (T("Affected Persons"), "person"),
-               ]
+                ]
         if settings.get_irs_vehicle():
             tabs.append((T("Vehicles"), "vehicle"))
         tabs.append((hrm_label, "human_resource"))

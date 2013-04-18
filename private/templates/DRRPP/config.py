@@ -63,7 +63,6 @@ settings.L10n.decimal_separator = "."
 settings.L10n.thousands_separator = ","
 # Unsortable 'pretty' date format
 #settings.L10n.date_format = T("%d-%b-%Y")
-#settings.L10n.datetime_format = T("%d-%b-%Y %H:%M:%S")
 
 # =============================================================================
 # Finance Deployment Settings

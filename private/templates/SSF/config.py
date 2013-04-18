@@ -92,8 +92,6 @@ settings.L10n.utc_offset = "UTC +0000"
 settings.L10n.utc_offset = "UTC +0000"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #settings.L10n.date_format = T("%m-%d-%Y")
-#settings.L10n.time_format = T("%H:%M:%S")
-#settings.L10n.datetime_format = T("%m-%d-%Y %H:%M:%S")
 # Religions used in Person Registry
 # @ToDo: find a better code
 # http://eden.sahanafoundation.org/ticket/594

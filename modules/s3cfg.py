@@ -614,22 +614,16 @@ class S3Config(Storage):
                 "other":T("other")
             })
     def get_L10n_date_format(self):
-        T = current.T
-        return self.L10n.get("date_format", T("%Y-%m-%d"))
+        return self.L10n.get("date_format", current.T("%Y-%m-%d"))
     def get_L10n_time_format(self):
-        T = current.T
-        return self.L10n.get("time_format", T("%H:%M"))
+        return self.L10n.get("time_format", current.T("%H:%M"))
     def get_L10n_datetime_separator(self):
         return self.L10n.get("datetime_separator", " ")
     def get_L10n_datetime_format(self):
-        T = current.T
-        return self.L10n.get("datetime_format",
-                             "%s%s%s" % (
-                                self.get_L10n_date_format(),
-                                self.get_L10n_datetime_separator(),
-                                self.get_L10n_time_format()
-                             ))
-                             #T("%Y-%m-%d %H:%M"))
+        return "%s%s%s" % (self.get_L10n_date_format(),
+                           self.get_L10n_datetime_separator(),
+                           self.get_L10n_time_format()
+                           )
     def get_L10n_utc_offset(self):
         return self.L10n.get("utc_offset", "UTC +0000")
     def get_L10n_firstDOW(self):

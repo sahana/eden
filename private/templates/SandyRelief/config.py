@@ -29,8 +29,6 @@ settings.L10n.display_toolbar = False
 settings.L10n.utc_offset = "UTC -0500"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 settings.L10n.date_format = T("%m-%d-%Y")
-settings.L10n.time_format = T("%H:%M:%S")
-settings.L10n.datetime_format = T("%m-%d-%Y %H:%M")
 # Start week on Sunday
 settings.L10n.firstDOW = 0
 # Number formats (defaults to ISO 31-0)
