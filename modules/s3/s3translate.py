@@ -692,19 +692,28 @@ class TranslateReadFiles:
             fsappend = final_strings.append
             settings = current.deployment_settings
             for (loc, s) in strings:
-                if s[0] != '"' and s[0] != "'" and "settings." in s:
 
-                    # Convert the call to a standard form
-                    s = s.replace("current.deployment_settings", "settings")
-                    s = s.replace("()", "")
-                    l = s.split(".")
-                    obj = settings
+                if s[0] != '"' and s[0] != "'":
 
-                    # Get the actual value
-                    for atr in l[1:]:
-                        obj = getattr(obj, atr)()
-                    s = obj
-                fsappend((loc, s))
+                    # This is a variable
+                    if "settings." in s:
+                        # Convert the call to a standard form
+                        s = s.replace("current.deployment_settings", "settings")
+                        s = s.replace("()", "")
+                        l = s.split(".")
+                        obj = settings
+
+                        # Get the actual value
+                        for atr in l[1:]:
+                            obj = getattr(obj, atr)()
+                        s = obj
+                        fsappend((loc, s))
+                    else:
+                        #@ToDo : Get the value of non-settings variables
+                        pass
+
+                else:
+                    fsappend((loc, s))
 
             return final_strings
 
