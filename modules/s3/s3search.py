@@ -358,7 +358,11 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         elif ftype == "datetime":
             attr.update(_type="text")
             attr.update(_class="anytime")
-            requires = IS_EMPTY_OR(IS_DATETIME(format=settings.get_L10n_datetime_format()))
+            date_format = settings.get_L10n_date_format()
+            time_format = settings.get_L10n_time_format()
+            separator = settings.get_L10n_datetime_separator()
+            datetime_format = "%s%s%s" % (date_format, separator, time_format)
+            requires = IS_EMPTY_OR(IS_DATETIME(format=datetime_format))
             calendar_widget = S3DateTimeWidget()
             calendar_widget.inject_script("id-" + self.attr["_name"] + "_min", None)
             calendar_widget.inject_script("id-" + self.attr["_name"] + "_max", None)
