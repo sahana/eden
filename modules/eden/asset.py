@@ -169,7 +169,8 @@ S3OptionsFilter({
  'targetName':'site_id',
  'lookupResource':'site',
  'lookupPrefix':'org',
- 'lookupField':'site_id'
+ 'lookupField':'site_id',
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
 })'''),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
