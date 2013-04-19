@@ -611,6 +611,16 @@ S3OptionsFilter({
                                                _id="commit-btn")
                             s3.jquery_ready.append('''
 S3ConfirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
+                        else:
+                            s3.actions.append(
+                                          dict(url = URL(c="req", f="send_commit",
+                                                         args = ["[id]"]),
+                                               _class = "action-btn send-btn",
+                                               label = str(T("Prepare Shipment"))
+                                              )
+                                       )
+                            s3.jquery_ready.append(
+'''S3ConfirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
                 if r.component.alias == "job":
                     s3.actions = [
                         dict(label=str(T("Open")),
@@ -1164,6 +1174,25 @@ S3OptionsFilter({
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive and r.method != "import":
+            if not r.component:
+                table = r.table
+                record = r.record
+                s3_action_buttons(r)
+                s3.actions.append(
+                        dict(url = URL(f = "send_commit",
+                                       args=["[id]"]),
+                             _class = "action-btn send-btn",
+                             label = str(T("Prepare Shipment"))
+                            )
+                       )
+                s3.jquery_ready.append(
+'''S3ConfirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
+
+        return output
+    s3.postp = postp    
+    
     output = s3_rest_controller(rheader=commit_rheader)
     return output
 
