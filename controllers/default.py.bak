@@ -135,7 +135,7 @@ def index():
                  ["sit", T("Incidents"), "irs", "ireport"],
                  ["sit", T("Assessments"), "survey", "series"],
                  ["sit", T("Assets"), "asset", "asset"],
-                 ["sit", T("Inventory Items"), "inv", "inv_item"],
+                 ["sit", T("Training"), "training", "course"],
                  #["sit", T("Training"), "training", "index"],
                  #["dec", T("Gap Map"), "project", "gap_map"],
                  #["dec", T("Gap Report"), "project", "gap_report"],

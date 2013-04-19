@@ -7,7 +7,7 @@
 </p>
     <h3 class='right'>{{=T("Features Include:")}}</h3>
     <div class="clear"></div>
-
+    <div></div>
 <ul>
  <li><a href='{{=URL(f="user")}}'><b>{{=T("Manage Users & Roles")}}</b></a>
  <li><a href='{{=URL(f="setting")}}'><b>{{=T("Configure Run-time Settings")}}</b></a>
