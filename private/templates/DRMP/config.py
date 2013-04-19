@@ -11,7 +11,7 @@ from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_LOCATION
-from s3.s3widgets import S3LocationAutocompleteWidget
+from s3.s3widgets import S3LocationAutocompleteWidget, S3LocationSelectorWidget2
 
 T = current.T
 settings = current.deployment_settings
@@ -73,6 +73,11 @@ settings.L10n.utc_offset = "UTC +0900"
 settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
+
+# Restrict the Location Selector to just certain countries
+# NB This can also be over-ridden for specific contexts later
+# e.g. Activities filtered to those of parent Project
+settings.gis.countries = ["TL"]
 
 # -----------------------------------------------------------------------------
 # Finance settings
@@ -165,6 +170,8 @@ def customize_cms_post(**attr):
             field.represent = location_represent
             field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
             field.widget = S3LocationAutocompleteWidget(level="L3")
+            #field.requires = IS_NULL_OR(IS_LOCATION())
+            #field.widget = S3LocationSelectorWidget2()
             table.created_by.represent = s3_auth_user_represent_name
             field = table.body
             field.label = T("Text")

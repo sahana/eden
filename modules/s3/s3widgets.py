@@ -46,6 +46,7 @@ __all__ = ["S3HiddenWidget",
            "S3SiteAutocompleteWidget",
            "S3SiteAddressAutocompleteWidget",
            "S3LocationSelectorWidget",
+           "S3LocationSelectorWidget2",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
            "S3MultiSelectWidget",
@@ -2560,6 +2561,106 @@ i18n.gis_country_required="%s"''' % (country_snippet,
                        divider,
                        TR(map_popup, TD(), _class="box_middle"),
                        requires=requires
+                       )
+
+# =============================================================================
+class S3LocationSelectorWidget2(FormWidget):
+    """
+        Renders a gis_location Foreign Key to allow inline display/editing of linked fields
+
+        Differences to the original LocationSelectorWidget:
+        * Allows selection of either an Lx or creation of a new Point within the lowest Lx level
+        * Uses dropdowns not autocompletes
+        * Selection of lower Lx levels only happens when higher-level have been done
+
+        Limitations:
+        * Currently assumes use within just 1 country
+        * Doesn't allow creation of new Lx Locations
+        * Doesn't allow selection of existing Locations
+        * Doesn't support manual entry of LatLons
+        * Doesn't support creation of Polygons
+
+        May evolve into a replacement in-time if missing features get migrated here.
+
+        Implementation Notes:
+        * Performance: Create JSON for the hierarchy, along with bboxes for the map zoom
+                       - load progressively rather than all as 1 big download
+        h = {id : {'n' : name,
+                   'l' : level,
+                   'f' : parent
+                   }}
+    """
+
+    def __init__(self,
+                 levels=["L1", "L2", "L3"],
+                 ):
+
+        self.levels = levels
+
+    def __call__(self, field, value, **attributes):
+
+        levels = self.levels
+
+        T = current.T
+        s3db = current.s3db
+        settings = current.deployment_settings
+        s3 = current.response.s3
+        formstyle = s3.crud.formstyle
+    
+        countries = settings.get_gis_countries()
+        if len(countries) != 1:
+            # @ToDo: Lookup Labels dynamically when L0 changes
+            raise
+
+        # Main Input
+        defaults = dict(_type = "text",
+                        value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, defaults, **attributes)
+        # Hide the real field
+        attr["_class"] = "hide"
+
+        # Lx Dropdowns
+        htable = s3db.gis_hierarchy
+        ttable = s3db.gis_location_tag
+        fields = [htable[level] for level in levels]
+        query = (ttable.tag == "ISO2") & \
+                (ttable.value == countries[0]) & \
+                (ttable.location_id == htable.location_id)
+        labels = current.db(query).select(*fields).first()
+
+        Lx_rows = DIV()
+        hidden = False
+        for level in levels:
+            label = labels[level]
+            widget = SELECT()
+            comment = T("Select this %(location)s") % dict(location = label)
+            if formstyle == "bootstrap":
+                widget.add_class("input-xlarge")
+                comment = BUTTON(comment, _class="btn btn-primary hide")
+                _controls = DIV(widget, comment, _class="controls")
+                if hidden:
+                    _class = "control-group hide"
+                else:
+                    _class = "control-group"
+                row = DIV(label, _controls, _class=_class, _id="%s_row" % level)
+            elif callable(formstyle):
+                row = formstyle(label, widget, comment, hidden=hidden)
+            else:
+                raise
+            Lx_rows.append(row)
+            hidden = True
+        # @ToDo
+        #if value:
+
+        hierarchy = {}
+        script = '''h=%s\n''' % json.dumps(hierarchy)
+        s3.js_global.append(script)
+
+        # The overall layout of the components
+        return TAG[""](DIV(INPUT(**attr)), # Real input, hidden
+                       Lx_rows,
+                       #_map,
+                       requires=field.requires
                        )
 
 # =============================================================================

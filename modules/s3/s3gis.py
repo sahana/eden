@@ -913,7 +913,7 @@ class GIS(object):
                       "cr_shelter",
                       "asset_asset",
                       #"hms_hospital",
-                     ]
+                      ]
 
             for tablename in tables:
                 if tablename in db:
