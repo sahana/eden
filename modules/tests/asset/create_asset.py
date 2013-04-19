@@ -55,7 +55,7 @@ class CreateAsset(SeleniumUnitTest):
                       "International Federation of Red Cross and Red Crescent Societies (IFRC)", 
                       "option"),
                      ( "site_id",
-                       "AP Zone (Office)",
+                       "AP Zone",
                        "option",
                         4),
                      ( "sn",
