@@ -1057,12 +1057,15 @@ class StringsToExcel:
             """
 
             uniq = {}
+            appname = request.application
 
             for (loc, data) in Strings:
                 uniq[data] = ""
 
             for (loc, data) in Strings:
 
+                # Remove the prefix from the filename
+                loc = loc.split(appname, 1)[1]
                 if uniq[data] != "":
                     uniq[data] = uniq[data] + ";" + loc
                 else:
@@ -1187,8 +1190,6 @@ class StringsToExcel:
                 while i < lim and OldStrings[i][0] < s:
                     i += 1
 
-                # Remove the prefix from the filename
-                l = l.split(appname, 1)[1]
                 if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
                     Strings.append((l, s, OldStrings[i][1]))
