@@ -1,0 +1,9 @@
+{{extend "layout.html"}}
+<h2>Welcome to the Training module</h2>
+<ul>
+ <li>
+  <a href='{{=URL(f="course")}}'>
+   List Training Courses
+  </a>
+ </li>
+</ul>
