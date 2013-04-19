@@ -1,5 +1,5 @@
 /*!
- * jQuery UI Progressbar 1.10.1
+ * jQuery UI Progressbar 1.10.2
  * http://jqueryui.com
  *
  * Copyright 2013 jQuery Foundation and other contributors
@@ -18,7 +18,7 @@
 	height: 100%;
 }
 .ui-progressbar .ui-progressbar-overlay {
-	background: url("../../img/jquery-ui/animated-overlay.gif");
+	background: url("images/animated-overlay.gif");
 	height: 100%;
 	filter: alpha(opacity=25);
 	opacity: 0.25;

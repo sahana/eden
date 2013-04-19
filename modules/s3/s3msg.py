@@ -1872,7 +1872,7 @@ class S3Compose(S3CRUD):
             if len(recipients) == 1:
                 recipient = recipients[0]
                 represent = s3db.pr_pentity_represent(recipient,
-                                                    show_label=False)
+                                                      show_label=False)
                 # Restrict message options to those available for the entity
                 # @ToDo: Support Groups, etc by looking up Entity Type
                 ctable = s3db.pr_contact
