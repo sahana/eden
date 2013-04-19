@@ -2404,8 +2404,8 @@ class S3SavedSearch(S3Model):
 
         for field_filter, values in filters.items():
             field_selector, filter = field_filter.split("__")
-            if field_selector.endswith(".id"):
-                field_selector = field_selector[:-3]
+            #if field_selector.endswith(".id"):
+            #    field_selector = field_selector[:-3]
 
             # Parse the values back out
             values = S3URLQuery.parse_value(values)
@@ -2435,7 +2435,9 @@ class S3SavedSearch(S3Model):
                         values[index] = s3_unicode(value)
                     else:
                         # Some represents need ints
-                        if s3_has_foreign_key(rfield.field):
+                        if s3_has_foreign_key(rfield.field) or \
+                           rfield.field.type == "id" or \
+                           "integer" in rfield.field.type:
                             try:
                                 value = int(value)
                             except ValueError:

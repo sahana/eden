@@ -622,7 +622,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                 opt_append(v)
 
         # Translate empty-option
-        EMPTY = T("None")
+        if field.represent:
+            EMPTY = field.represent(None)
+        else:
+            EMPTY = T("None")
 
         # Append empty-option if field can be empty
         #if field:
@@ -1469,7 +1472,6 @@ i18n.edit_saved_search="%s"
             display_length = s3.dataTable_iDisplayLength
         else:
             display_length = attr.get("dt_displayLength", 25)
-
         # Server-side pagination?
         if not s3.no_sspag:
             dt_pagination = "true"
