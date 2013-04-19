@@ -463,6 +463,12 @@ class S3HRModel(S3Model):
                         cols = 3,
                         options = self.hrm_course_opts,
                       ),
+                      S3SearchOptionsWidget(
+                        name="human_resource_search_teams",
+                        label=T("Teams"),
+                        field="person_id$group_membership.group_id",
+                        cols=3,
+                        ),
                       # S3SearchSkillsWidget(
                         # name="human_resource_search_skills",
                         # label=T("Skills"),
