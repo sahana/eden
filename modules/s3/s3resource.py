@@ -602,18 +602,14 @@ class S3Resource(object):
             tname = str(join.first)
             if tname not in left_joins:
                 left_joins[tname] = join
-        try:
-            filter_joins = self.sortleft(left_joins.values())
-        except:
-            filter_joins = left_joins.values()
+                
+        filter_joins = Storage(left_joins)
 
         # Left joins from fields
-        join_tables = []
         left = [j for tn in ljoins for j in ljoins[tn]]
         for join in left:
             tname = str(join.first)
             if tname not in left_joins:
-                join_tables.append(tname)
                 left_joins[tname] = join
 
         # Collect the inner joins
@@ -726,8 +722,10 @@ class S3Resource(object):
                 # Make sure the table for this ORDERBY-field is joined
                 # even when only filtering:
                 tname = fname.split(".", 1)[0]
-                if tname != tablename and tname in join_tables:
-                    filter_joins.append(left_joins[tname])
+                if tname != tablename and \
+                   tname in left_joins and \
+                   tname not in filter_joins:
+                    filter_joins[tname] = left_joins[tname]
 
         # Handler GROUPBY from caller
         
@@ -745,6 +743,12 @@ class S3Resource(object):
                 left_joins = left_joins.values()
             attributes["left"] = left_joins
 
+        if filter_joins:
+            try:
+                filter_joins = self.sortleft(filter_joins.values())
+            except:
+                filter_joins = filter_joins.values()
+        
         # Temporarily deactivate (mandatory) virtual fields
         
         osetattr = object.__setattr__
