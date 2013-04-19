@@ -446,7 +446,8 @@ def customize_project_project(**attr):
                                       advanced = advanced)
 
     # Custom Report Fields
-    report_fields = [(T("Countries"), "location.location_id"),
+    report_fields = ["name",
+                     (T("Countries"), "location.location_id"),
                      (T("Hazards"), "hazard.name"),
                      (T("Themes"), "theme.name"),
                      (T("HFA Priorities"), "drr.hfa"),
