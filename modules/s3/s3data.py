@@ -1501,7 +1501,8 @@ class S3PivotTable(object):
                                     for fk in fvalue:
                                         if fk is not None and fk not in layer_ids:
                                             layer_ids.append(int(fk))
-                                            layer_values[fk] = s3_unicode(field.represent(fk))
+                                            if fk not in layer_values:
+                                                layer_values[fk] = s3_unicode(field.represent(fk))
                                 else:
                                     if type(fvalue) is not list:
                                         fvalue = [fvalue]
@@ -1516,6 +1517,8 @@ class S3PivotTable(object):
                                                 prev_id = cell_vals[val]
                                                 if prev_id not in layer_ids:
                                                     layer_ids.append(prev_id)
+                                                    
+                        layer_ids.sort(key=lambda i: layer_values[i])
 
                     cell_ids.append(layer_ids)
                     cell_lookup_table[layer_idx] = layer_values
