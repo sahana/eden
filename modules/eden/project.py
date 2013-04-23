@@ -3294,6 +3294,7 @@ class S3ProjectDRRPPModel(S3Model):
                      # @ToDo: Becase RMS uses the human_resource_id field, the focal person from RMS won't be visible in DRRPP
                      Field("focal_person",
                            represent = lambda v: v or NONE,
+                           requires = IS_NOT_EMPTY(),
                            label = T("Focal Person")),
                      self.org_organisation_id(label = T("Organization")),
                      Field("email",
