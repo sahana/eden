@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:8000/eden/static/themes/DRMP/menu.css */
+
 @charset "UTF-8";
 
 /* Main Navigation (S3MainMenu or modules menu) */
@@ -7,11 +10,14 @@ div.navbar-inner {
 	top: 0px;
 	width: 100%;
 	height: auto;
-	background: -webkit-linear-gradient(top, #585858, #454545);
-	background: -moz-linear-gradient(top, #585858, #454545);
-	background: -o-linear-gradient(top, #585858, #454545);
-	background: -ms-linear-gradient(top, #585858, #454545);
-	background: linear-gradient(to bottom, #585858, #454545);
+	background: rgba(55,136,179,1);
+	background: -moz-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+	background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(55,136,179,1)), color-stop(100%, rgba(35,84,130,1)));
+	background: -webkit-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+	background: -o-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+	background: -ms-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+	background: linear-gradient(to bottom, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3788b3', endColorstr='#235482', GradientType=0 );
 	z-index: 100;
 	-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 	-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -22,10 +28,7 @@ div.navbar-inner{
 	padding: 0;
 	border-radius: 0px;
 	border: none;
-	-moz-box-shadow: 0 1px 4px #818181;
-	-webkit-box-shadow: 0 1px 4px #818181;
-	box-shadow: 0 1px 4px #818181;    
-
+	border-bottom: 1px solid hsl(205, 57%, 21%);
 }
 
 .navbar .brand {
@@ -45,6 +48,11 @@ div.navbar-inner{
 	float: left;
 	text-transform: uppercase;
 	padding: 1.5em;
+	
+}
+
+ul.nav li.dropdown:hover > ul.dropdown-menu{
+    display: block;    
 }
 
 .navbar .nav  {
@@ -57,11 +65,11 @@ i.icon-cog {
 }
 
 .navbar .nav > li > a  {
-    border-left: 1px solid #313131
+    border-left: 1px solid #245886
 }
 
 .navbar .nav > li > a {
-    color: #c6c6c6;
+    color: #fff;
     text-shadow: none;
 	-webkit-transition: all 0.2s ease-in-out;
     -moz-transition: all 0.2s ease-in-out;
@@ -98,10 +106,10 @@ ul.dropdown-menu {
 	text-transform: none;
 	border: 1px solid #b2b2b2;
 	border-top: none;
-	margin-top: -0.5px;
+	margin-top: 1px;
 	border-top-left-radius: 0;
 	border-top-right-radius: 0;
-	background-color: #e4e5e4;
+	background-color: #f2f3f2;
 }
 
 .navbar .nav > li > .dropdown-menu:before {
