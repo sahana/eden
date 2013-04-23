@@ -492,6 +492,7 @@ def user():
         arg = None
 
     if arg == "login":
+        response.title = T("Login")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def login?
         auth.messages.submit_button = T("Login")
         form = auth()
@@ -500,6 +501,7 @@ def user():
         if s3.crud.submit_style:
             form[0][-1][1][0]["_class"] = s3.crud.submit_style
     elif arg == "register":
+        response.title = T("Register")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def register?
         if not self_registration:
             session.error = T("Registration not permitted")
@@ -510,8 +512,10 @@ def user():
         # Add client-side validation
         s3base.s3_register_validation()
     elif arg == "change_password":
+        response.title = T("Change Password")
         form = auth()
     elif arg == "profile":
+        response.title = T("Profile")
         form = auth.profile()
     else:
         # Retrieve Password / Logout

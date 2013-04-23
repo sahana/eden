@@ -3962,6 +3962,9 @@ def gis_location_lx_represent(id):
                                                  table.L5,
                                                  limitby=(0, 1)).first()
 
+    if not location:
+        return current.messages["NONE"]
+
     name = location.name
     location_list = [name]
     lappend = location_list.append
