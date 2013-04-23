@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, A, DIV, H3, TAG, SQLFORM
+from gluon import current, A, DIV, H3, TAG, SQLFORM, IS_NOT_EMPTY, IS_EMAIL
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3 import s3forms, s3search
@@ -214,6 +214,12 @@ def customize_project_project(**attr):
     table.file.widget = lambda field, value, download_url: \
         SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
     table.comments.widget = SQLFORM.widgets.string.widget
+    # If not logged in, contact person is requiredd
+    if not current.auth.is_logged_in():
+        table = s3db.project_drrpp
+        table.focal_person.required = True
+        table.email.required = True
+        table.email.requires=IS_EMAIL()
 
     # Custom dataTable
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
@@ -260,7 +266,21 @@ def customize_project_project(**attr):
                     s3db.project_drrpp.L1.readable = False
                     s3db.project_drrpp.pifacc.readable = False
                     s3db.project_drrpp.jnap.readable = False
-                       
+
+            if r.method == "review":
+                list_fields = ["id",
+                               "created_on",
+                               "modified_on",
+                               "name",
+                               "start_date",
+                               (T("Countries"), "location.location_id"),
+                               (T("Hazards"), "hazard.name"),
+                               (T("Lead Organization"), "organisation_id"),
+                               (T("Donors"), "donor.organisation_id"),
+                               ]
+                s3db.configure(tablename,
+                               list_fields = list_fields)
+
         elif r.representation == "xls":
             # All readable Fields should be exported
             list_fields = ["id",
@@ -446,7 +466,8 @@ def customize_project_project(**attr):
                                       advanced = advanced)
 
     # Custom Report Fields
-    report_fields = [(T("Countries"), "location.location_id"),
+    report_fields = ["name",
+                     (T("Countries"), "location.location_id"),
                      (T("Hazards"), "hazard.name"),
                      (T("Themes"), "theme.name"),
                      (T("HFA Priorities"), "drr.hfa"),

@@ -80,7 +80,7 @@ class index():
                            ),
                        
                        DIV("Lead Organization: %s" % s3db.org_organisation_represent(row.project_project.organisation_id),
-                                _class="front-latest-desc",
+                                _class="front-latest-desc %s" % grid,
                            ),
                        DIV(SPAN("Start Date: %s" % row.project_project.start_date,
                                 _class="front-latest-info-date"),
@@ -564,6 +564,9 @@ class admin():
                             ),
                           A(T("Manage Organisation Contacts"),
                             _href = URL(c="admin", f = "role", args = [6,"users"])
+                            ),
+                          A(T("Manage Organisations"),
+                            _href = URL(c="org", f = "organisation")
                             ),
                           A(T("Approve Projects"),
                             _href = URL(c="project", f = "project", args = "review")

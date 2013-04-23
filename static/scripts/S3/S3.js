@@ -124,6 +124,7 @@ S3.addModals = function() {
             // Bootstrap formstyle
             caller = $(this).parent().parent().prev().attr('id');
         }
+        caller = caller.replace(/__row_comment/, '');
         caller = caller.replace(/__row/, '');
         // Avoid Duplicate callers
         var url_out = attr;
