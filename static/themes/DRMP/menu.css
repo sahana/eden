@@ -1,54 +1,49 @@
-/* @override 
-	http://127.0.0.1:8000/eden/static/themes/DRMP/menu.css */
-
 @charset "UTF-8";
 
 /* Main Navigation (S3MainMenu or modules menu) */
 
 div.navbar-inner {
-	position: fixed;
-	top: 0px;
-	width: 100%;
-	height: auto;
-	background: rgba(55,136,179,1);
-	background: -moz-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
-	background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(55,136,179,1)), color-stop(100%, rgba(35,84,130,1)));
-	background: -webkit-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
-	background: -o-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
-	background: -ms-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
-	background: linear-gradient(to bottom, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3788b3', endColorstr='#235482', GradientType=0 );
-	z-index: 100;
-	-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-	-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    height: auto;
+    background: rgba(55,136,179,1);
+    background: -moz-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(55,136,179,1)), color-stop(100%, rgba(35,84,130,1)));
+    background: -webkit-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+    background: -o-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+    background: -ms-linear-gradient(top, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+    background: linear-gradient(to bottom, rgba(55,136,179,1) 0%, rgba(35,84,130,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3788b3', endColorstr='#235482', GradientType=0 );
+    z-index: 100;
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 div.navbar-inner{
-	padding: 0;
-	border-radius: 0px;
-	border: none;
-	border-bottom: 1px solid hsl(205, 57%, 21%);
+    padding: 0;
+    border-radius: 0px;
+    border: none;
+    border-bottom: 1px solid hsl(205, 57%, 21%);
 }
 
 .navbar .brand {
-   	margin-top:  0.5em;
-   	width: 200px;
-   	text-shadow: none;
-	color: #fff;
-	letter-spacing: 2px;
+    margin-top:  0.5em;
+    width: 200px;
+    text-shadow: none;
+    color: #fff;
+    letter-spacing: 2px;
 }
 
 #nav {
     text-align: right;
 }
 
-
 .navbar .nav > li > a  {
-	float: left;
-	text-transform: uppercase;
-	padding: 1.5em;
-	
+    float: left;
+    text-transform: uppercase;
+    padding: 1.5em;
 }
 
 ul.nav li.dropdown:hover > ul.dropdown-menu{
@@ -61,7 +56,7 @@ ul.nav li.dropdown:hover > ul.dropdown-menu{
 }
 
 i.icon-cog {
-	font-size: 20px;
+    font-size: 20px;
 }
 
 .navbar .nav > li > a  {
@@ -71,7 +66,7 @@ i.icon-cog {
 .navbar .nav > li > a {
     color: #fff;
     text-shadow: none;
-	-webkit-transition: all 0.2s ease-in-out;
+    -webkit-transition: all 0.2s ease-in-out;
     -moz-transition: all 0.2s ease-in-out;
     -ms-transition: all 0.2s ease-in-out;
     -o-transition: all 0.2s ease-in-out;
@@ -96,30 +91,29 @@ i.icon-cog {
 }
 
 /* Dropdown menu styling */
-
 ul.dropdown-menu {
-	padding: 12px;
-	height: auto;
-	line-height: 1.2;
-	font-size: 16px;
-	border: none;
-	text-transform: none;
-	border: 1px solid #b2b2b2;
-	border-top: none;
-	margin-top: 1px;
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
-	background-color: #f2f3f2;
+    padding: 12px;
+    height: auto;
+    line-height: 1.2;
+    font-size: 16px;
+    border: none;
+    text-transform: none;
+    border: 1px solid #b2b2b2;
+    border-top: none;
+    margin-top: 1px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    background-color: #f2f3f2;
 }
 
 .navbar .nav > li > .dropdown-menu:before {
-	display: none;
+    display: none;
 }
 
 .navbar .nav > li > .dropdown-menu:after {
-	display: none;
+    display: none;
 }
 
 ul.dropdown-menu li {
-	margin-top: 8px;
+    margin-top: 8px;
 }
