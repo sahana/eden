@@ -2436,8 +2436,7 @@ class S3SavedSearch(S3Model):
                     else:
                         # Some represents need ints
                         if s3_has_foreign_key(rfield.field) or \
-                           rfield.field.type == "id" or \
-                           "integer" in rfield.field.type:
+                           rfield.ftype in ("id", "integer"):
                             try:
                                 value = int(value)
                             except ValueError:

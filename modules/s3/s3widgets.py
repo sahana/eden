@@ -2583,6 +2583,8 @@ class S3LocationSelectorWidget2(FormWidget):
         May evolve into a replacement in-time if missing features get migrated here.
 
         Implementation Notes:
+        * Should support formstyles (Bootstrap most urgent)
+        * Should support multiple on a page
         * Performance: Create JSON for the hierarchy, along with bboxes for the map zoom
                        - load progressively rather than all as 1 big download
         h = {id : {'n' : name,
@@ -2602,15 +2604,19 @@ class S3LocationSelectorWidget2(FormWidget):
         levels = self.levels
 
         T = current.T
+        db = current.db
         s3db = current.s3db
         settings = current.deployment_settings
         s3 = current.response.s3
         formstyle = s3.crud.formstyle
-    
+        appname = current.request.application
+        throbber_img = "/%s/static/img/ajax-loader.gif" % appname
+
         countries = settings.get_gis_countries()
         if len(countries) != 1:
             # @ToDo: Lookup Labels dynamically when L0 changes
             raise
+        # @ToDo: Support default L1/L2/L3
 
         # Main Input
         defaults = dict(_type = "text",
@@ -2622,39 +2628,93 @@ class S3LocationSelectorWidget2(FormWidget):
         # Lx Dropdowns
         htable = s3db.gis_hierarchy
         ttable = s3db.gis_location_tag
-        fields = [htable[level] for level in levels]
+        fields = [htable[level] for level in levels] + [htable.location_id]
         query = (ttable.tag == "ISO2") & \
                 (ttable.value == countries[0]) & \
                 (ttable.location_id == htable.location_id)
-        labels = current.db(query).select(*fields).first()
+        labels = db(query).select(*fields).first()
+        country_id = labels.location_id
+        #del labels.location_id
 
         Lx_rows = DIV()
         hidden = False
+        fieldname = str(field).replace(".", "_")
         for level in levels:
             label = labels[level]
-            widget = SELECT()
+            id = "%s_%s" % (fieldname, level)
+            widget = SELECT(T("Select %(location)s") % dict(location = label), _id=id)
             comment = T("Select this %(location)s") % dict(location = label)
+            throbber = IMG(_src=throbber_img,
+                           _height=32, _width=32,
+                           _id="%s__throbber" % id,
+                           _class="throbber hide"
+                           )
             if formstyle == "bootstrap":
+                # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+                # - Elements moved via JS after page load
+                label = LABEL("%s:" % label, _class="control-label",
+                                             _for=id)
                 widget.add_class("input-xlarge")
-                comment = BUTTON(comment, _class="btn btn-primary hide")
-                _controls = DIV(widget, comment, _class="controls")
+                comment = BUTTON(comment,
+                                 _class="btn btn-primary hide",
+                                 _id="%s__button" % id
+                                 )
+                _controls = DIV(widget, throbber, comment, _class="controls")
                 if hidden:
                     _class = "control-group hide"
                 else:
                     _class = "control-group"
-                row = DIV(label, _controls, _class=_class, _id="%s_row" % level)
+                row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
             elif callable(formstyle):
+                # @ToDo
                 row = formstyle(label, widget, comment, hidden=hidden)
             else:
                 raise
             Lx_rows.append(row)
             hidden = True
+
         # @ToDo
         #if value:
 
-        hierarchy = {}
-        script = '''h=%s\n''' % json.dumps(hierarchy)
-        s3.js_global.append(script)
+        table = s3db.gis_location
+        query = (table.deleted == False) & \
+                (table.level == "L1") & \
+                (table.parent == country_id)
+        locations = db(query).select(table.id,
+                                     table.name,
+                                     table.level,
+                                     table.parent)
+        location_dict = {}
+        for location in locations:
+            location_dict[int(location.id)] = dict(n=location.name,
+                                                   l=int(location.level[1]),
+                                                   f=int(location.parent))
+
+        js_global = []
+        append = js_global.append
+
+        # i18n
+        i18n = "\n".join((
+            "i18n.gis_requires_login='%s'" % T("Requires Login"),
+            ))
+        append(i18n)
+
+        script = '''\nh=%s\n''' % json.dumps(location_dict)
+        append(script)
+
+        script = '''\ns3_gis_locationselector2('%s',%s)\n''' % (fieldname, country_id)
+        append(script)
+
+        s3.js_global.append("".join(js_global))
+
+        #if s3.debug:
+        script = "s3.locationselector.widget2.js"
+        #else:
+        #    script = "s3.locationselector.widget.min2.js"
+
+        script_path = "/%s/static/scripts/S3/%s" % (appname, script)
+        if script_path not in s3.scripts:
+            s3.scripts.append(script_path)
 
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr)), # Real input, hidden

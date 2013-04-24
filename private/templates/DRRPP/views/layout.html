@@ -14,10 +14,10 @@
 {{else:}}
  body{direction:ltr;}
 {{pass}}
-{{if request.vars.background:}}
- html>body {background:{{=request.vars.background}};}
+{{if request.get_vars.background:}}
+ html>body {background:{{=request.get_vars.background}};}
 {{pass}}
-{{if request.vars.header == "hide":}}
+{{if request.get_vars.header == "hide":}}
 div#header-banner {
     background: #568AAB;
     height: 20px;
@@ -114,7 +114,7 @@ div#header-top-menu {
 {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
 {{include}}
 </div>
-{{if request.vars.footer != "hide":}}
+{{if request.get_vars.footer != "hide":}}
 <div id='footer' class='container_12'>
  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}

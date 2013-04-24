@@ -214,12 +214,12 @@ def customize_project_project(**attr):
     table.file.widget = lambda field, value, download_url: \
         SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
     table.comments.widget = SQLFORM.widgets.string.widget
-    # If not logged in, contact person is requiredd
+    # If not logged in, contact person is required
     if not current.auth.is_logged_in():
         table = s3db.project_drrpp
         table.focal_person.required = True
         table.email.required = True
-        table.email.requires=IS_EMAIL()
+        table.email.requires = IS_EMAIL()
 
     # Custom dataTable
     s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'

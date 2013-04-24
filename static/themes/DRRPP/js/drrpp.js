@@ -7,7 +7,7 @@ $(document).ready(function(){
         var CountriesInline = $('#project_project_sub_defaultlocation__row_widget tr.read-row td').length / 3;
         var CookIslandsInline = $('#project_project_sub_defaultlocation__row_widget tr.read-row td:contains("Cook Islands")').length;
         var Show;
-        if ( (CountriesInline == 1 && CookIslandsInline == 1 && selCountry.children('option:selected').text() == "") || 
+        if ( (CountriesInline == 1 && CookIslandsInline == 1 && selCountry.children('option:selected').text() == '') || 
               (CountriesInline == 0 && selCountry.children('option:selected').text() == 'Cook Islands')
               ) {
             // Cook Islands only country selected

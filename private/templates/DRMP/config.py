@@ -168,10 +168,10 @@ def customize_cms_post(**attr):
             #field.readable = field.writable = False
             field = table.location_id
             field.represent = location_represent
-            field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
-            field.widget = S3LocationAutocompleteWidget(level="L3")
-            #field.requires = IS_NULL_OR(IS_LOCATION())
-            #field.widget = S3LocationSelectorWidget2()
+            #field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
+            #field.widget = S3LocationAutocompleteWidget(level="L3")
+            field.requires = IS_NULL_OR(IS_LOCATION())
+            field.widget = S3LocationSelectorWidget2()
             table.created_by.represent = s3_auth_user_represent_name
             field = table.body
             field.label = T("Text")

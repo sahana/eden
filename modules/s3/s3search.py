@@ -622,10 +622,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                 opt_append(v)
 
         # Translate empty-option
-        if field.represent:
-            EMPTY = field.represent(-1)
-        else:
-            EMPTY = T("Unspecified")
+        EMPTY = T("Unspecified")
 
         # Append empty-option if field can be empty
         #if field:

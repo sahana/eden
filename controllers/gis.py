@@ -404,6 +404,40 @@ def location():
     return output
 
 # -----------------------------------------------------------------------------
+def hdata():
+    """
+        Return JSON of location hierarchy suitable for use by S3LocationSelectorWidget2
+
+        n = {id : {'n' : name,
+                   'l' : level,
+                   'f' : parent
+                   }}
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        raise HTTP(400)
+
+    table = s3db.gis_location
+    query = (table.deleted == False) & \
+            (table.level == "L1") & \
+            (table.parent == id)
+    locations = db(query).select(table.id,
+                                 table.name,
+                                 table.level,
+                                 table.parent)
+    location_dict = {}
+    for location in locations:
+        location_dict[int(location.id)] = dict(n=location.name,
+                                               l=int(location.level[1]),
+                                               f=int(location.parent))
+
+    script = '''n=%s\n''' % json.dumps(location_dict)
+    response.headers["Content-Type"] = "application/json"
+    return script
+
+# -----------------------------------------------------------------------------
 def s3_gis_location_parents(r, **attr):
     """
         Custom S3Method
