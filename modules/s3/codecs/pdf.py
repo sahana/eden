@@ -663,7 +663,9 @@ class S3PDFTable(object):
                     if isinstance(value, (basestring, lazyT)):
                         dvalue = value
                     elif isinstance(value, IMG):
-                        dvalue = S3html2pdf.parse_img(value)[0]
+                        dvalue = S3html2pdf.parse_img(value, selector.field.uploadfolder)
+                        if dvalue:
+                            dvalue = dvalue[0]
                     elif isinstance(value, DIV):
                         if len(value.components) > 0:
                             value = value.components[0]
@@ -1204,6 +1206,10 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse_div(self, html):
         """
+            Parses a DIV element and converts it into a format for ReportLab
+
+            @param html: the DIV element  to convert
+            @returns: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1219,6 +1225,10 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse_a(self, html):
         """
+            Parses an A element and converts it into a format for ReportLab
+
+            @param html: the A element  to convert
+            @returns: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1233,33 +1243,36 @@ class S3html2pdf():
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_img(html):
+    def parse_img(html, uploadfolder=None):
         """
-        Parses an IMG element from Web2py and converts it into an Image
-        that ReportLab can use.
+            Parses an IMG element and converts it into an Image for ReportLab
 
-        @param html: the IMG element  to convert
-        @return: a list containing an Image that ReportLab can use
+            @param html: the IMG element  to convert
+            @param uploadfolder: an optional uploadfolder in which to find the file
+            @returns: a list containing an Image that ReportLab can use
 
 
-        @note: The `src` attribute of the image must either
-        point to a static resource, directly to a file, or to an upload.
+            @note: The `src` attribute of the image must either
+            point to a static resource, directly to a file, or to an upload.
         """
-        I = None
+
         from reportlab.platypus import Image
 
+        I = None
         if "_src" in html.attributes:
             src = html.attributes["_src"]
-            if src.startswith("/%s/static" % current.request.application):
+            if uploadfolder:
+                src = src.rsplit("/", 1)
+                src = os.path.join(uploadfolder, src[1])
+            elif src.startswith("/%s/static" % current.request.application):
                 src = src.split("/%s/" % current.request.application)[-1]
                 src = os.path.join(current.request.folder, src)
-            if os.path.exists(src):
-                I = Image(src)
             else:
                 src = src.rsplit("/", 1)
                 src = os.path.join(current.request.folder, "uploads/", src[1])
-                if os.path.exists(src):
-                    I = Image(src)
+            if os.path.exists(src):
+                I = Image(src)
+
         if not I:
             return None
 
@@ -1283,6 +1296,10 @@ class S3html2pdf():
 
     def parse_p(self, html):
         """
+            Parses a P element and converts it into a format for ReportLab
+
+            @param html: the P element  to convert
+            @returns: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1298,13 +1315,17 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse_table(self, html):
         """
+            Parses a TABLE element and converts it into a format for ReportLab
+
+            @param html: the TABLE element  to convert
+            @returns: a list containing text that ReportLab can use
         """
 
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
                  ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
-                 ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
-                ]
+                 ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                 ]
         content = []
         cappend = content.append
         rowCnt = 0
@@ -1332,6 +1353,10 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse_tr (self, html, style, rowCnt):
         """
+            Parses a TR element and converts it into a format for ReportLab
+
+            @param html: the TR element  to convert
+            @returns: a list containing text that ReportLab can use
         """
 
         row = []

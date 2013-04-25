@@ -138,8 +138,8 @@ def event_rheader(r):
         if r.name == "event":
             # Event Controller
             tabs = [(T("Event Details"), None)]
-            if settings.has_module("req"):
-                tabs.append((T("Requests"), "req"))
+            #if settings.has_module("req"):
+            #    tabs.append((T("Requests"), "req"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             event = r.record
