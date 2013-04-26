@@ -1080,31 +1080,70 @@ class S3OrganisationModel(S3Model):
             Remove any duplicate memberships and update affiliations
         """
 
+        s3db = current.s3db
+        
         id = form.vars.id
         db = current.db
-        table = db.org_organisation_branch
-        record = db(table.id == id).select(table.branch_id,
-                                           table.organisation_id,
-                                           table.deleted,
-                                           table.deleted_fk,
-                                           limitby=(0, 1)).first()
-        try:
-            branch_id = record.branch_id
-            organisation_id = record.organisation_id
-            if branch_id and organisation_id and not record.deleted:
-                query = (table.branch_id == branch_id) & \
-                        (table.organisation_id == organisation_id) & \
-                        (table.id != id) & \
-                        (table.deleted != True)
-                deleted_fk = {"branch_id": branch_id,
-                              "organisation_id": organisation_id}
-                db(query).update(deleted=True,
-                                 branch_id=None,
-                                 organisation_id=None,
-                                 deleted_fk=json.dumps(deleted_fk))
-            current.s3db.pr_update_affiliations(table, record)
-        except:
-            return
+
+        # Fields a branch organisation inherits from its parent organisation
+        inherit = ["organisation_type_id",
+                   "multi_sector_id",
+                   "region",
+                   "country"]
+
+        ltable = s3db.org_organisation_branch
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation.with_alias("org_branch_organisation")
+
+        ifields = [otable[fn] for fn in inherit]  + \
+                  [btable[fn] for fn in inherit]
+
+        left = [otable.on(ltable.organisation_id == otable.id),
+                btable.on(ltable.branch_id == btable.id)]
+        
+        record = db(ltable.id == id).select(
+                    ltable.branch_id,
+                    ltable.organisation_id,
+                    ltable.deleted,
+                    ltable.deleted_fk,
+                    *ifields,
+                    left=left,
+                    limitby=(0, 1)).first()
+
+        if record:
+            try:
+                organisation = record["org_organisation"]
+                branch = record["org_branch_organisation"]
+                link = record["org_organisation_branch"]
+
+                branch_id = link.branch_id
+                organisation_id = link.organisation_id
+                if branch_id and organisation_id and not link.deleted:
+
+                    # Inherit fields from parent organisation
+                    update = dict([(field, organisation[field])
+                                for field in inherit
+                                if not branch[field] and organisation[field]])
+                    if update:
+                        db(otable.id == branch_id).update(**update)
+
+                    # Eliminate duplicate affiliations
+                    query = (ltable.branch_id == branch_id) & \
+                            (ltable.organisation_id == organisation_id) & \
+                            (ltable.id != id) & \
+                            (ltable.deleted != True)
+
+                    deleted_fk = {"branch_id": branch_id,
+                                "organisation_id": organisation_id}
+                    db(query).update(deleted=True,
+                                    branch_id=None,
+                                    organisation_id=None,
+                                    deleted_fk=json.dumps(deleted_fk))
+
+                current.s3db.pr_update_affiliations(ltable, link)
+            except:
+                pass
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod
