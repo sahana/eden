@@ -257,7 +257,7 @@ def customize_project_project(**attr):
             if r.method == "read":
                 table_pl = s3db.project_location
                 table_l = s3db.gis_location
-                countries = [ r.name for r in 
+                countries = [ row.name for row in 
                               db( ( table_pl.project_id == r.record.id ) &
                                   ( table_pl.location_id == table_l.id ) 
                                ).select(table_l.name)
