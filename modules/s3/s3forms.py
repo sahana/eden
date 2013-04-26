@@ -795,23 +795,27 @@ class S3SQLCustomForm(S3SQLForm):
             if a:
                 if a in noupdate:
                     f.writable = False
-                if not labels is None and f.name not in labels:
+                if labels is not None and f.name not in labels:
                     labels[f.name] = "%s:" % f.label
 
         # Mark required subtable-fields (retaining override-labels)
-        for alias in subtables:
-            if alias in rcomponents:
-                component = rcomponents[alias]
-                mark_required = component.get_config("mark_required", [])
-                ctable = component.table
-                sfields = dict([(n, (f.name, f.label))
-                                for a, n, f in fields
-                                if a == alias and n in ctable])
-                slabels, h = s3_mark_required(
-                                [ctable[n] for n in sfields],
-                                mark_required=mark_required,
-                                map_names=sfields)
-                labels.update(slabels)
+        if not readonly:
+            for alias in subtables:
+                if alias in rcomponents:
+                    component = rcomponents[alias]
+                    mark_required = component.get_config("mark_required", [])
+                    ctable = component.table
+                    sfields = dict([(n, (f.name, f.label))
+                                    for a, n, f in fields
+                                    if a == alias and n in ctable])
+                    slabels, h = s3_mark_required(
+                                    [ctable[n] for n in sfields],
+                                    mark_required=mark_required,
+                                    map_names=sfields)
+                    if labels:
+                        labels.update(slabels)
+                    else:
+                        labels = slabels
 
         self.subtables = [s for s in self.subtables if s not in forbidden]
 
