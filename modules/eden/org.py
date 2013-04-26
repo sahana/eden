@@ -2337,7 +2337,7 @@ class S3OfficeModel(S3Model):
                   list_fields=["id",
                                "name",
                                "organisation_id", # Filtered in Component views
-                               "type",
+                               "office_type_id",
                                #(T("Address"), "location_id$addr_street"),
                                (messages.COUNTRY, "location_id$L0"),
                                "location_id$L1",
