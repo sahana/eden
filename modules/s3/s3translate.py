@@ -200,10 +200,8 @@ class TranslateGetFiles:
             self.modlist = modlist
 
             # Directories which are not required to be searched
-            self.rest_dirs = ["languages", "deployment-templates", "docs",
-                              "tests", "test", ".git",
-                              "TranslationFunctionality", "uploads"
-                              ]
+            self.rest_dirs = ["languages", "docs", "tests",
+                              "test", ".git", "uploads"]
 
         # ---------------------------------------------------------------------
         def get_module_list(self):
