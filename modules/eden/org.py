@@ -2181,20 +2181,20 @@ class S3OfficeModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         office_type_id = S3ReusableField("office_type_id", table,
-                                sortby="name",
-                                requires=IS_NULL_OR(
-                                            IS_ONE_OF(db, "org_office_type.id",
-                                                      represent,
-                                                      sort=True
-                                                      )),
-                                represent=represent,
-                                label=T("Office Type"),
-                                comment=S3AddResourceLink(c="org",
-                                            f="office_type",
-                                            label=T("Add Office Type"),
-                                            title=T("Office Type"),
-                                            tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Office Type'.")),
-                                ondelete="SET NULL")
+                            sortby="name",
+                            requires=IS_NULL_OR(
+                                        IS_ONE_OF(db, "org_office_type.id",
+                                                  represent,
+                                                  sort=True
+                                                  )),
+                            represent=represent,
+                            label=T("Office Type"),
+                            comment=S3AddResourceLink(c="org",
+                                f="office_type",
+                                label=T("Add Office Type"),
+                                title=T("Office Type"),
+                                tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Office Type'.")),
+                            ondelete="SET NULL")
 
         configure(tablename,
                   deduplicate=self.office_type_duplicate,
@@ -2217,7 +2217,7 @@ class S3OfficeModel(S3Model):
                                    length=64, # Mayon Compatibility
                                    label=T("Name")),
                              Field("code", length=10, # Mayon compatibility
-                                   label=T("Code")
+                                   label=T("Code"),
                                    # Deployments that don't wants office codes can hide them
                                    #readable=False,
                                    #writable=False,
@@ -2293,8 +2293,8 @@ class S3OfficeModel(S3Model):
                       ),
                       S3SearchOptionsWidget(
                         name="office_search_org",
-                        label=messages.ORGANISATION,
-                        comment=T("Search for office by organization."),
+                        label=T("Organization/Branch"),  
+                        comment=T("Search for office by organization or branch."),
                         field="organisation_id",
                         represent="%(name)s",
                         cols=3
@@ -2688,12 +2688,12 @@ class org_OrganisationRepresent(S3Represent):
             self.parent = False
             fields = ["name", "acronym"]
 
-        super(org_OrganisationRepresent, self) \
-             .__init__(lookup="org_organisation",
-                       fields=fields,
-                       show_link=show_link,
-                       translate=translate,
-                       multiple=multiple)
+        super(org_OrganisationRepresent,
+              self).__init__(lookup="org_organisation",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
 
         self.acronym = acronym
 
@@ -3182,7 +3182,6 @@ def org_organisation_controller():
                 if type_filter in type_crud_strings:
                     s3.crud_strings.org_organisation = type_crud_strings[type_filter]
 
-
         return True
     s3.prep = prep
 
@@ -3324,7 +3323,7 @@ def org_office_controller():
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
 
-                    # remove CRUD generated buttons in the tabs
+                    # Remove CRUD generated buttons in the tabs
                     s3db.configure("inv_inv_item",
                                    create=False,
                                    listadd=False,

@@ -15,24 +15,28 @@
   </div>
   <div>
  {{pass}}
-    {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
-        <div>
-        {{try:}}{{=deduplicate}}{{except:}}{{pass}}
-        {{include "last_update.html"}}
-        </div>
-    {{try:}}
-    {{include}}
-    {{except:}}{{pass}}
-    <div id='map'></div>
-    <div class='item-container read'>
-    {{try:}}{{=item}}{{except:}}{{pass}}
-    </div>
-    <div class='clear'></div>
-    <div class='form-controller grid_4 prefix_4 suffix_4 alpha omega'>
-     {{if "delete_btn" in buttons:}}
-     <div id='pdetail-delete-button' class='grid_2'><a class='delete-button medium' href='{{=buttons["delete_btn"].attributes["_href"]}}'></a></div>
-     {{pass}}
-    </div>
+ {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
+ <div>
+  {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+  {{include "last_update.html"}}
+ </div>
+ {{try:}}
+ {{include}}
+ {{except:}}{{pass}}
+ <div id='map'></div>
+ <div class='item-container read'>
+ {{try:}}{{=item}}{{except:}}{{pass}}
+ </div>
+ <div class='clear'></div>
+{{try:}}{{buttons}}
+ <div class='form-controller grid_4 prefix_4 suffix_4 alpha omega'>
+ {{if "delete_btn" in buttons:}}
+ <div id='pdetail-delete-button' class='grid_2'>
+  <a class='delete-button medium' href='{{=buttons["delete_btn"].attributes["_href"]}}'></a>
+ </div>
+ {{pass}}
+ </div>
+{{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 </div>

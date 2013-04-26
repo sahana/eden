@@ -264,6 +264,7 @@ def ns_only(f, required=True, branches=True):
     """
         Function to configure an organisation_id field to be restricted to just NS/Branch
     """
+
     # Label
     if branches:
         f.label = T("National Society / Branch")

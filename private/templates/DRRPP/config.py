@@ -257,10 +257,10 @@ def customize_project_project(**attr):
             if r.method == "read":
                 table_pl = s3db.project_location
                 table_l = s3db.gis_location
-                countries = [ row.name for row in 
-                              db( ( table_pl.project_id == r.record.id ) &
-                                  ( table_pl.location_id == table_l.id ) 
-                               ).select(table_l.name)
+                countries = [row.name for row in 
+                             db((table_pl.project_id == r.record.id) &
+                                (table_pl.location_id == table_l.id) 
+                                ).select(table_l.name)
                              ]
                 if not ("Cook Islands" in countries and len(countries) == 1):
                     s3db.project_drrpp.L1.readable = False
