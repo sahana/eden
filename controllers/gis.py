@@ -404,13 +404,14 @@ def location():
     return output
 
 # -----------------------------------------------------------------------------
-def hdata():
+def ldata():
     """
         Return JSON of location hierarchy suitable for use by S3LocationSelectorWidget2
 
         n = {id : {'n' : name,
                    'l' : level,
-                   'f' : parent
+                   'f' : parent,
+                   'b' : [bounds] // Just for lowest-level of hierarchy, for setting the map
                    }}
     """
 
@@ -421,17 +422,21 @@ def hdata():
 
     table = s3db.gis_location
     query = (table.deleted == False) & \
-            (table.level == "L1") & \
-            (table.parent == id)
+            ((table.parent == id) | \
+             (table.id == id))
     locations = db(query).select(table.id,
                                  table.name,
                                  table.level,
                                  table.parent)
+    id_level = int(locations.as_dict()[int(id)]["level"][1:])
+    output_level = id_level + 1
+    search_level = "L%s" % output_level
     location_dict = {}
     for location in locations:
-        location_dict[int(location.id)] = dict(n=location.name,
-                                               l=int(location.level[1]),
-                                               f=int(location.parent))
+        if location.level == search_level:
+            location_dict[int(location.id)] = dict(n=location.name,
+                                                   l=output_level,
+                                                   f=int(location.parent))
 
     script = '''n=%s\n''' % json.dumps(location_dict)
     response.headers["Content-Type"] = "application/json"

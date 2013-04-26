@@ -2699,7 +2699,7 @@ class S3LocationSelectorWidget2(FormWidget):
             ))
         append(i18n)
 
-        script = '''\nh=%s\n''' % json.dumps(location_dict)
+        script = '''\nl=%s\n''' % json.dumps(location_dict)
         append(script)
 
         script = '''\ns3_gis_locationselector2('%s',%s)\n''' % (fieldname, country_id)
