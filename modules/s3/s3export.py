@@ -56,18 +56,6 @@ class S3Exporter(object):
         )
 
     # -------------------------------------------------------------------------
-    def xls(self, *args, **kwargs):
-
-        codec = S3Codec.get_codec("xls").encode
-        return codec(*args, **kwargs)
-
-    # -------------------------------------------------------------------------
-    def pdf(self, *args, **kwargs):
-
-        codec = S3Codec.get_codec("pdf").encode
-        return codec(*args, **kwargs)
-
-    # -------------------------------------------------------------------------
     def csv(self, resource):
         """
             Export resource as CSV
@@ -131,5 +119,23 @@ class S3Exporter(object):
             response.headers["Content-Type"] = "application/json"
 
         return rows.json()
+
+    # -------------------------------------------------------------------------
+    def pdf(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("pdf").encode
+        return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def shp(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("shp").encode
+        return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def xls(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("xls").encode
+        return codec(*args, **kwargs)
 
 # End =========================================================================

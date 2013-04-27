@@ -2339,9 +2339,21 @@ class S3OfficeModel(S3Model):
                         cols=3
                       ),
                       S3SearchOptionsWidget(
-                        name="office_search_location",
+                        name="office_search_L0",
+                        field="location_id$L0",
+                        location_level="L0",
+                        cols=3
+                      ),
+                      S3SearchOptionsWidget(
+                        name="office_search_L1",
                         field="location_id$L1",
                         location_level="L1",
+                        cols=3
+                      ),
+                      S3SearchOptionsWidget(
+                        name="office_search_L2",
+                        field="location_id$L2",
+                        location_level="L2",
                         cols=3
                       ),
                       # Disabled until fixed (which will be in new S3FilterForm)

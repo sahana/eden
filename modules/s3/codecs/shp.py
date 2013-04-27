@@ -1,0 +1,228 @@
+# -*- coding: utf-8 -*-
+
+"""
+    S3 Shapefile codec
+
+    @copyright: 2013 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+__all__ = ["S3SHP"]
+
+import os
+
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
+
+from gluon import *
+from gluon.contenttype import contenttype
+from gluon.storage import Storage
+from gluon.streamer import DEFAULT_CHUNK_SIZE
+
+from ..s3codec import S3Codec
+from ..s3utils import s3_unicode, s3_strip_markup
+
+# =============================================================================
+class S3SHP(S3Codec):
+    """
+        Simple Shapefile format codec
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def extractResource(self, resource, list_fields):
+        """
+            Extract the items from the resource
+
+            @param resource: the resource
+            @param list_fields: fields to include in list views
+        """
+
+        title = self.crud_string(resource.tablename, "title_list")
+
+        rfields = resource.resolve_selectors(list_fields)[0]
+
+        types = []
+        lfields = []
+        heading = {}
+        for rfield in rfields:
+            if rfield.show:
+                lfields.append(rfield.colname)
+                heading[rfield.colname] = rfield.label
+                if rfield.ftype == "virtual":
+                    types.append("string")
+                else:
+                    types.append(rfield.ftype)
+
+        vars = Storage(current.request.vars)
+        vars["iColumns"] = len(rfields)
+        filter, orderby, left = resource.datatable_filter(list_fields, vars)
+        resource.add_filter(filter)
+
+        rows, count, ids = resource.select(list_fields,
+                                           left=left,
+                                           start=None,
+                                           limit=None,
+                                           count=True,
+                                           getids=True,
+                                           orderby=orderby)
+
+        items = resource.extract(rows, list_fields,
+                                 represent=True, show_links=False)
+
+        return (title, types, lfields, heading, items)
+
+    # -------------------------------------------------------------------------
+    def encode(self, data_source, **attr):
+        """
+            Export data as a Shapefile
+
+            @param data_source: the source of the data that is to be encoded
+                                as a shapefile. This may be:
+                                resource: the resource
+                                item:     a list of pre-fetched values
+                                          the headings are in the first row
+                                          the data types are in the second row
+            @param attr: dictionary of parameters:
+                 * title:          The export filename
+                 * list_fields:    Fields to include in list views
+        """
+
+        # Get the attributes
+        title = attr.get("title")
+        list_fields = attr.get("list_fields")
+        if not list_fields:
+            list_fields = data_source.list_fields()
+        if "location_id$wkt" not in list_fields:
+            list_fields.append("location_id$wkt")
+
+        # Extract the data from the data_source
+        if isinstance(data_source, (list, tuple)):
+            headers = data_source[0]
+            types = data_source[1]
+            items = data_source[2:]
+        else:
+            (title, types, lfields, headers, items) = self.extractResource(data_source,
+                                                                           list_fields)
+
+        # Create the data structure
+        output = []
+        oappend = output.append
+
+        # Header row
+        headers["gis_location.wkt"] = "WKT"
+        header = []
+        happend = header.append
+        for selector in lfields:
+            happend(s3_unicode(headers[selector]))
+        oappend('"%s"' % '","'.join(header))
+
+        for item in items:
+            row = []
+            rappend = row.append
+            for field in lfields:
+                represent = s3_strip_markup(s3_unicode(item[field]))
+                rappend(represent)
+            oappend('"%s"' % '","'.join(row))
+
+        # Write out as CSV
+        import tempfile
+        web2py_path = os.getcwd()
+        if os.path.exists(os.path.join(web2py_path, "temp")): # use web2py/temp
+            TEMP = os.path.join(web2py_path, "temp")
+        else:
+            TEMP = tempfile.gettempdir()
+        os_handle_temp, temp_filepath = tempfile.mkstemp(dir=TEMP, suffix=".csv")
+        with open(temp_filepath, "w") as f:
+            for line in output:
+                f.write("%s\n" % line.encode("utf-8"))
+
+        # Convert to Shapefile
+        # @ToDo: migrate to GDAL Python bindings
+        # Write out VRT file
+        temp_filename = temp_filepath.rsplit(os.path.sep, 1)[1]
+        vrt = \
+'''<OGRVRTDataSource>
+    <OGRVRTLayer name="%s">
+        <SrcDataSource>%s</SrcDataSource>
+        <GeometryType>wkbGeometryCollection</GeometryType>
+        <TargetSRS>EPSG:4326</TargetSRS>
+        <GeometryField encoding="WKT" field="WKT"/>
+    </OGRVRTLayer>
+</OGRVRTDataSource>''' % (temp_filename.rsplit(".", 1)[0], temp_filename)
+        os_handle_vrt, vrt_filename = tempfile.mkstemp(dir=TEMP, suffix=".vrt")
+        with open(vrt_filename, "w") as f:
+            f.write(vrt)
+        # @ToDo: Check that the data exists before writing out file
+        # Write Points
+        os.chdir(TEMP)
+        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_point.shp ' + vrt_filename + ' -skipfailures -nlt POINT -where "WKT LIKE \'%POINT%\'"'
+        #os.system('rm ' + title + '_point.*' )
+        os.system(cmd)
+        # Write Lines
+        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_line.shp ' + vrt_filename + ' -skipfailures -nlt MULTILINESTRING -where "WKT LIKE \'%LINESTRING%\'"'
+        #os.system('rm ' + title + '_line.*' )
+        os.system(cmd)
+        # Write Polygons
+        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_polygon.shp ' + vrt_filename + ' -skipfailures -nlt MULTIPOLYGON -where "WKT LIKE \'%POLYGON%\'"'
+        #os.system('rm ' + title + '_polygon.*' )
+        os.system(cmd)
+        os.close(os_handle_temp)
+        os.unlink(temp_filepath)
+        os.close(os_handle_vrt)
+        os.unlink(vrt_filename)
+        # Zip up
+        import zipfile
+        request = current.request
+        filename = "%s_%s.zip" % (current.request.env.server_name, str(title))
+        fzip = zipfile.ZipFile(filename, "w")
+        for item in ["point", "line", "polygon"]:
+            for exten in ["shp", "shx", "prj", "dbf"]:
+                tfilename = "%s_%s.%s" % (title, item, exten)
+                fzip.write(tfilename)
+                os.unlink(tfilename)
+        fzip.close()
+        # Restore path
+        os.chdir(web2py_path)
+        
+        # Response headers
+        disposition = "attachment; filename=\"%s\"" % filename
+        response = current.response
+        response.headers["Content-Type"] = contenttype(".zip")
+        response.headers["Content-disposition"] = disposition
+
+        stream = open(os.path.join(TEMP, filename))
+        return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
+                               request=request)
+
+# End =========================================================================

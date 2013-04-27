@@ -35,13 +35,6 @@ try:
 except:
     from StringIO import StringIO
 
-try:
-    from lxml import etree
-except ImportError:
-    import sys
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
-
 from gluon import *
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
@@ -166,6 +159,7 @@ class S3XLS(S3Codec):
             list_fields = data_source.list_fields()
         group = attr.get("dt_group")
         use_colour = attr.get("use_colour", False)
+
         # Extract the data from the data_source
         if isinstance(data_source, (list, tuple)):
             headers = data_source[0]

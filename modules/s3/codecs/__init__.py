@@ -30,5 +30,6 @@
 
 """
 
-from xls import *
 from pdf import *
+from shp import *
+from xls import *

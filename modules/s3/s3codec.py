@@ -69,13 +69,15 @@ class S3Codec(object):
     def get_codec(format):
 
         # Import the codec classes
+        from codecs import S3SHP
         from codecs import S3XLS
         from codecs import S3RL_PDF
 
         # Register the codec classes
         CODECS = Storage(
-            xls = S3XLS,
             pdf = S3RL_PDF,
+            shp = S3SHP,
+            xls = S3XLS,
         )
 
         if format in CODECS:

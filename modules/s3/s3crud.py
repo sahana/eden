@@ -1108,6 +1108,14 @@ class S3CRUD(S3Method):
             exporter = S3Exporter().csv
             return exporter(resource)
 
+        elif representation == "json":
+            exporter = S3Exporter().json
+            return exporter(resource,
+                            start=start,
+                            limit=limit,
+                            fields=fields,
+                            orderby=orderby)
+
         elif representation == "pdf":
             exporter = S3Exporter().pdf
             return exporter(resource,
@@ -1118,20 +1126,18 @@ class S3CRUD(S3Method):
                             report_formname = report_formname,
                             **attr)
 
+        elif representation == "shp":
+            exporter = S3Exporter().shp
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
         elif representation == "xls":
             exporter = S3Exporter().xls
             return exporter(resource,
                             list_fields=list_fields,
                             report_groupby=report_groupby,
                             **attr)
-
-        elif representation == "json":
-            exporter = S3Exporter().json
-            return exporter(resource,
-                            start=start,
-                            limit=limit,
-                            fields=fields,
-                            orderby=orderby)
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
@@ -1287,31 +1293,6 @@ class S3CRUD(S3Method):
             exporter = S3Exporter().csv
             return exporter(resource)
 
-        elif representation == "pdf":
-
-            report_hide_comments = get_config("report_hide_comments", None)
-            report_filename = get_config("report_filename", None)
-            report_formname = get_config("report_formname", None)
-
-            exporter = S3Exporter().pdf
-            return exporter(resource,
-                            request=r,
-                            list_fields=list_fields,
-                            report_hide_comments = report_hide_comments,
-                            report_filename = report_filename,
-                            report_formname = report_formname,
-                            **attr)
-
-        elif representation == "xls":
-
-            report_groupby = get_config("report_groupby", None)
-
-            exporter = S3Exporter().xls
-            return exporter(resource,
-                            list_fields=list_fields,
-                            report_groupby=report_groupby,
-                            **attr)
-
         elif representation == "json":
 
             get_vars = self.request.get_vars
@@ -1338,6 +1319,38 @@ class S3CRUD(S3Method):
                             limit=limit,
                             fields=fields,
                             orderby=orderby)
+
+        elif representation == "pdf":
+
+            report_hide_comments = get_config("report_hide_comments", None)
+            report_filename = get_config("report_filename", None)
+            report_formname = get_config("report_formname", None)
+
+            exporter = S3Exporter().pdf
+            return exporter(resource,
+                            request=r,
+                            list_fields=list_fields,
+                            report_hide_comments = report_hide_comments,
+                            report_filename = report_filename,
+                            report_formname = report_formname,
+                            **attr)
+
+        elif representation == "shp":
+
+            exporter = S3Exporter().shp
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
+        elif representation == "xls":
+
+            report_groupby = get_config("report_groupby", None)
+
+            exporter = S3Exporter().xls
+            return exporter(resource,
+                            list_fields=list_fields,
+                            report_groupby=report_groupby,
+                            **attr)
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
