@@ -6384,18 +6384,19 @@ class Marker(object):
 
     def __init__(self, id=None, layer_id=None):
 
+        db = current.db
         s3db = current.s3db
         mtable = s3db.gis_marker
         marker = None
         config = None
+        polygons = False
         if id:
             # Lookup the Marker details from it's ID
-            query = (mtable.id == id)
-            marker = current.db(query).select(mtable.image,
-                                              mtable.height,
-                                              mtable.width,
-                                              limitby=(0, 1),
-                                              cache=s3db.cache).first()
+            marker = db(mtable.id == id).select(mtable.image,
+                                                mtable.height,
+                                                mtable.width,
+                                                limitby=(0, 1),
+                                                cache=s3db.cache).first()
         elif layer_id:
             # Check if we have a Marker for this Layer
             config = current.gis.get_config()
@@ -6403,21 +6404,32 @@ class Marker(object):
             query = (ltable.layer_id == layer_id) & \
                     (ltable.symbology_id == config.symbology_id) & \
                     (ltable.marker_id == mtable.id)
-            marker = current.db(query).select(mtable.image,
-                                              mtable.height,
-                                              mtable.width,
-                                              limitby=(0, 1)).first()
-        if not marker:
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      limitby=(0, 1)).first()
+            if not marker:
+                # Check to see if we're a Polygon (& hence shouldn't use a default marker)
+                table = s3db.gis_layer_feature
+                query = (table.layer_id == layer_id)
+                layer = db(query).select(table.polygons,
+                                         limitby=(0, 1)).first()
+                if layer and layer.polygons:
+                    polygons = True
+
+        if marker:
+            self.image = marker.image
+            self.height = marker.height
+            self.width = marker.width
+        elif polygons:
+            self.image = None
+        else:
             # Default Marker
             if not config:
                 config = current.gis.get_config()
             self.image = config.marker_image
             self.height = config.marker_height
             self.width = config.marker_width
-        else:
-            self.image = marker.image
-            self.height = marker.height
-            self.width = marker.width
 
         # Always lookup URL client-side
         #self.url = URL(c="static", f="img",
