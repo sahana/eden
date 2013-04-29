@@ -870,11 +870,11 @@ class IS_ONE_OF(IS_ONE_OF_EMPTY):
         Extends IS_ONE_OF_EMPTY by restoring the 'options' method.
     """
 
-    def options(self):
+    def options(self, zero=True):
 
         self.build_set()
         items = zip(self.theset, self.labels)
-        if self.zero != None and not self.multiple:
+        if zero and self.zero is not None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
 
@@ -885,7 +885,7 @@ class IS_ONE_OF_EMPTY_SELECT(IS_ONE_OF_EMPTY):
         Extends IS_ONE_OF_EMPTY by displaying an empty SELECT (instead of INPUT)
     """
 
-    def options(self):
+    def options(self, zero=True):
         return [("", "")]
 
 # =============================================================================
@@ -2322,7 +2322,7 @@ class IS_IN_SET_LAZY(Validator):
             self.theset = []
 
     # -------------------------------------------------------------------------
-    def options(self):
+    def options(self, zero=True):
         if not self.theset:
             self._make_theset()
         if not self.labels:
@@ -2331,7 +2331,7 @@ class IS_IN_SET_LAZY(Validator):
             items = [(k, self.labels[i]) for (i, k) in enumerate(self.theset)]
         if self.sort:
             items.sort(options_sorter)
-        if self.zero != None and not self.multiple:
+        if zero and not self.zero is None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
 
