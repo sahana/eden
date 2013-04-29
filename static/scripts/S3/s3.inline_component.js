@@ -121,6 +121,7 @@ $(function() {
             element = '#sub_' +
                       formname + '_' + formname + '_i_' +
                       fieldname + '_edit_' + rowindex;
+            value = $(element).val();
             if ($(element).attr('type') == 'file') {
                 // Store the upload at the end of the form
                 form = $(element).closest('form');
@@ -131,12 +132,12 @@ $(function() {
                 upload.attr('name', upload_id);
                 upload.css({display: 'none'});
                 form.append(upload);
+                if (value.match(/fakepath/)) {
+                    // Remove any 'fakepath' from IE uploads
+                    value = value.replace(/C:\\fakepath\\/i, '');
+                }
             }
-            value = $(element).val();
             cssclass = $(element).attr('class');
-            //if ((cssclass == 'anytime') | (cssclass == 'double')) {
-                // pass
-            //} else {
             if (cssclass == 'generic-widget') {
                 // Reference values need to be ints for S3Represent to find a match in theset
                 intvalue = parseInt(value, 10);
