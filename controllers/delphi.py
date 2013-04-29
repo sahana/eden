@@ -28,7 +28,7 @@ def index():
     result = []
     for group in groups:
         actions = []
-        duser = eden.delphi.S3DelphiUser(group)
+        duser = s3db.delphi_DelphiUser(group)
         if duser.authorised:
             actions.append(("group/%d/update" % group.id, T("Edit")))
             actions.append(("new_problem/create/?group=%s&next=%s" % \
@@ -70,7 +70,7 @@ def group_rheader(r, tabs = []):
         group = r.record
 
         # Get this User's permissions for this Group
-        duser = eden.delphi.S3DelphiUser(group.id)
+        duser = s3db.delphi_DelphiUser(group.id)
         if duser.authorised:
             tabs.append((T("Membership"), "membership"))
 
@@ -149,7 +149,7 @@ def problem_rheader(r, tabs = []):
                 ]
 
         # Get this User's permissions for this Group
-        duser = eden.delphi.S3DelphiUser(problem.group_id)
+        duser = s3db.delphi_DelphiUser(problem.group_id)
         if duser.authorised:
             tabs.append((T("Edit"), None))
 
@@ -233,7 +233,7 @@ def problem():
     def prep(r):
         if r.interactive:
             if r.record:
-                duser = eden.delphi.S3DelphiUser(r.record.group_id)
+                duser = s3db.delphi_DelphiUser(r.record.group_id)
                 if duser.authorised:
                     s3db.configure(tablename,
                                    deletable=True,
@@ -294,7 +294,7 @@ def vote(r, **attr):
     problem = r.record
 
     # Get this User's permissions for this Group
-    duser = eden.delphi.S3DelphiUser(problem.group_id)
+    duser = s3db.delphi_DelphiUser(problem.group_id)
 
     # Add the RHeader to maintain consistency with the other pages
     rheader = problem_rheader(r)
@@ -367,7 +367,7 @@ def save_vote():
         raise HTTP(404)
 
     # Get this User's permissions for this Group
-    duser = eden.delphi.S3DelphiUser(problem.group_id)
+    duser = s3db.delphi_DelphiUser(problem.group_id)
 
     if not duser.can_vote:
         auth.permission.fail()

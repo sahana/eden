@@ -258,13 +258,13 @@ class TranslateGetFiles:
                 elif (baseFile == "test.py" or \
                       baseFile == "tests.py") == False:
 
-                    # If in /eden/views, categorize by parent directory name
+                    # If in /appname/views, categorize by parent directory name
                     if vflag == 1:
                         base = curmod
 
                     # Categorize file as "special" as it contains strings
                     # belonging to various modules
-                    elif curFile.endswith("/%s/modules/eden/menus.py" % appname) or \
+                    elif curFile.endswith("/%s/modules/s3menus.py" % appname) or \
                          curFile.endswith("/%s/modules/s3cfg.py" % appname) or \
                          baseFile == "000_config.py" or \
                          baseFile == "config.py":
@@ -669,7 +669,7 @@ class TranslateReadFiles:
                 # Handle cases for special files which contain
                 # strings belonging to different modules
                 appname = current.request.application
-                if fileName.endswith("/%s/modules/eden/menus.py" % appname) == True:
+                if fileName.endswith("/%s/modules/s3menus.py" % appname) == True:
                     parseMenu = P.parseMenu
                     for element in stList:
                         parseMenu(spmod, strings, element, 0)

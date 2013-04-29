@@ -2,14 +2,14 @@
 
 from gluon import current
 from s3 import *
-from eden.layouts import *
+from s3layouts import *
 try:
     # Nice to have to copy this file
     #from ..IFRC.layouts import *
     from .layouts import *
 except ImportError:
     pass
-import eden.menus as default
+import s3menus as default
 
 #red_cross_filter = {"organisation.organisation_type_id$name" : "Red Cross / Red Crescent"}
 

@@ -25,7 +25,7 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 # Define the Model
-# @ToDo: Move to modules/eden/assess.py
+# @ToDo: Move to modules/s3db/assess.py
 # - here it isn't visible to s3db.load_all_models() or Sync
 # -----------------------------------------------------------------------------
 assess_severity_opts = {

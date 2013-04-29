@@ -2,12 +2,12 @@
 
 from gluon import *
 from s3 import *
-from eden.layouts import *
+from s3layouts import *
 try:
     from .layouts import *
 except ImportError:
     pass
-import eden.menus as default
+import s3menus as default
 
 # Below is an example which you can base your own template's menus.py on
 # - there are also other examples in the other templates folders
