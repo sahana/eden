@@ -207,7 +207,7 @@ class S3SurveyTemplateModel(S3Model):
                                    label = T("Location Detail"),
                                    ),
                              # The priority question is the default question used in the map
-                             # to determine to priority need of each point.
+                             # to determine the priority of each point on the map.
                              # The data is stored as the question code.
                              Field("priority_qstn", "string", length=16,
                                    label = T("Default map question"),
@@ -2098,7 +2098,8 @@ $('#chart_btn').click(function(){
             pqstn_name = request.post_vars.pqstn_name
         if pqstn_name is None:
             pqstn = survey_getPriorityQuestionForSeries(series_id)
-            pqstn_name = pqstn["name"]
+            if "name" in pqstn:
+                pqstn_name = pqstn["name"]
         feature_queries = []
         bounds = {}
 
@@ -2114,8 +2115,11 @@ $('#chart_btn').click(function(){
         form = FORM(_id="mapQstnForm")
         table = TABLE()
 
-        priorityQstn = SELECT(numQstns, _name="pqstn_name",
-                              value=pqstn_name)
+        if pqstn:
+            priorityQstn = SELECT(numQstns, _name="pqstn_name",
+                                  value=pqstn_name)
+        else:
+            priorityQstn = None
 
         # Set up the legend
         priorityObj = S3AnalysisPriority(range=[-.66, .66],
