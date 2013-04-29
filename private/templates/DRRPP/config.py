@@ -243,6 +243,20 @@ def customize_project_project(**attr):
             if not result:
                 return False
 
+        if r.method == "review":
+            list_fields = ["id",
+                           "created_on",
+                           "modified_on",
+                           "name",
+                           "start_date",
+                           (T("Countries"), "location.location_id"),
+                           (T("Hazards"), "hazard.name"),
+                           (T("Lead Organization"), "organisation_id"),
+                           (T("Donors"), "donor.organisation_id"),
+                           ]
+            s3db.configure(tablename,
+                           list_fields = list_fields)
+
         if r.interactive:
             # Don't show Update/Delete button on Search table 
             if r.method == "search":
@@ -266,20 +280,6 @@ def customize_project_project(**attr):
                     s3db.project_drrpp.L1.readable = False
                     s3db.project_drrpp.pifacc.readable = False
                     s3db.project_drrpp.jnap.readable = False
-
-            if r.method == "review":
-                list_fields = ["id",
-                               "created_on",
-                               "modified_on",
-                               "name",
-                               "start_date",
-                               (T("Countries"), "location.location_id"),
-                               (T("Hazards"), "hazard.name"),
-                               (T("Lead Organization"), "organisation_id"),
-                               (T("Donors"), "donor.organisation_id"),
-                               ]
-                s3db.configure(tablename,
-                               list_fields = list_fields)
 
         elif r.representation == "xls":
             # All readable Fields should be exported
