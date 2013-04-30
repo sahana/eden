@@ -3973,6 +3973,16 @@ class S3Resource(object):
                             join = [j for j in left if j.first._tablename == tn]
                             if not join:
                                 left.append(ktable.on(q))
+                                # May also need an additional link
+                                tn = q.first._tablename 
+                                if tn != self.tablename:
+                                    join = [j for j in left if j.first._tablename == tn]
+                                    if not join:
+                                        for ljoin in ljoins:
+                                            j = ljoins[ljoin][0] 
+                                            if j.first._tablename == tn:
+                                                left.append(j)
+                                                break
                         if isinstance(field.sortby, (list, tuple)):
                             flist.extend([ktable[f] for f in field.sortby
                                                     if f in ktable.fields])
