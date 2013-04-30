@@ -2098,7 +2098,7 @@ $('#chart_btn').click(function(){
             pqstn_name = request.post_vars.pqstn_name
         if pqstn_name is None:
             pqstn = survey_getPriorityQuestionForSeries(series_id)
-             if "name" in pqstn:
+            if "name" in pqstn:
                 pqstn_name = pqstn["name"]
         feature_queries = []
         bounds = {}
