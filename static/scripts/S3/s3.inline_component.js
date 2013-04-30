@@ -113,35 +113,44 @@ $(function() {
         var fields = data['fields'];
         var fieldname;
         var element;
+        var input;
         var value;
-        var intvalue;
         var cssclass;
+        var intvalue;
         for (var i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             element = '#sub_' +
                       formname + '_' + formname + '_i_' +
                       fieldname + '_edit_' + rowindex;
-            if ($(element).attr('type') == 'file') {
+            input = $(element);
+            value = input.val();
+            if (input.attr('type') == 'file') {
                 // Store the upload at the end of the form
-                form = $(element).closest('form');
-                upload = $(element).clone();
-                upload_id = 'upload_' + formname + '_' + fieldname + '_' + rowindex;
+                var form = input.closest('form');
+                var cloned = input.clone();
+                var upload_id = 'upload_' + formname + '_' + fieldname + '_' + rowindex;
                 $('#' + upload_id).remove();
-                upload.attr('id', upload_id);
-                upload.attr('name', upload_id);
-                upload.css({display: 'none'});
-                form.append(upload);
-            }
-            value = $(element).val();
-            cssclass = $(element).attr('class');
-            //if ((cssclass == 'anytime') | (cssclass == 'double')) {
-                // pass
-            //} else {
-            if (cssclass == 'generic-widget') {
-                // Reference values need to be ints for S3Represent to find a match in theset
-                intvalue = parseInt(value, 10);
-                if (!isNaN(intvalue)) {
-                    value = intvalue;
+                if (value.match(/fakepath/)) {
+                    // IE, etc: Remove 'fakepath' from filename
+                    value = value.replace(/(c:\\)*fakepath\\/i, '');
+                }
+                // Clone the Input ready for any additional files
+                cloned.insertAfter(input);
+                // We move the original input as it doesn't contain the file otherwise on IE, etc
+                // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
+                input.css({display: 'none'});
+                input.attr('id', upload_id);
+                input.attr('name', upload_id);
+                input.appendTo(form);
+            } else {
+                cssclass = input.attr('class');
+                if (cssclass == 'generic-widget') {
+                    // Reference values need to be ints for S3Represent to find a match in theset
+                    // - ensure we don't do this to dates though!
+                    intvalue = parseInt(value, 10);
+                    if (!isNaN(intvalue)) {
+                        value = intvalue;
+                    }
                 }
             }
             row[fieldname] = value;
@@ -215,7 +224,6 @@ $(function() {
         } else {
             return response;
         }
-
     };
 
     // Form actions -----------------------------------------------------------
@@ -234,9 +242,10 @@ $(function() {
         var data = inline_deserialize(formname);
         var fields = data['fields'];
         var row = data['data'][rowindex];
-        var element;
         var fieldname;
         var value;
+        var element;
+        var input;
         for (i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             value = row[fieldname]['value'];
@@ -252,15 +261,16 @@ $(function() {
                     select.append('<option value="' + value + '">-</option>');
                 }
             }
-            if ($(element).attr('type') != 'file') {
-                $(element).val(value);
+            input = $(element);
+            if (input.attr('type') != 'file') {
+                input.val(value);
             } else {
                 // Update the existing upload item, if there is one
                 var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
                 if (upload.length) {
-                    var id = $(element).attr('id');
-                    var name = $(element).attr('name');
-                    $(element).replaceWith(upload);
+                    var id = input.attr('id');
+                    var name = input.attr('name');
+                    input.replaceWith(upload);
                     upload.attr('id', id);
                     upload.attr('name', name);
                     upload.css({display: ''});
@@ -269,7 +279,7 @@ $(function() {
             // Populate text in autocompletes
             var text = row[fieldname]['text'];
             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
-            $(element).val(text);
+            input.val(text);
         }
 
         // Insert the edit row after this read row
@@ -304,7 +314,6 @@ $(function() {
 
         // Enable the add-row
         enable_inline_add(formname);
-
     };
 
     // Add a new row
@@ -528,6 +537,7 @@ $(function() {
     // Submit all changed inline-rows, and then the main form
     var inline_submit_all = function() {
         var $form = $(this);
+        var success = false;
         $form.find('tr.inline-form.changed').each(function() {
             var formname = $(this).attr('id').split('-').pop();
             if ($(this).hasClass('add-row')) {
@@ -578,6 +588,11 @@ $(function() {
                 inline_mark_changed(this);
                 inline_catch_submit(true, this);
             });
+        });
+        // Chrome doesn't mark row as changed when just file input added
+        $('.add-row input[type="file"]').change(function() {
+            inline_mark_changed(this);
+            inline_catch_submit(true, this);
         });
 
         // Submit the inline-row instead of the main form if pressing Enter

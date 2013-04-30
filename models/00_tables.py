@@ -8,52 +8,53 @@
 # Import models
 #
 from s3.s3model import S3Model
-import eden as models
+import s3db as models
 current.models = models
-current.s3db = s3db = S3Model()
 
 # Explicit import statements to have them reload automatically in debug mode
-import eden.assess
-import eden.asset
-import eden.auth
-import eden.cap
-import eden.climate
-import eden.cms
-import eden.cr
-import eden.delphi
-import eden.doc
-import eden.dvi
-import eden.dvr
-import eden.event
-import eden.fire
-import eden.flood
-import eden.gis
-import eden.hms
-import eden.hrm
-import eden.inv
-import eden.irs
-import eden.member
-import eden.msg
-import eden.ocr
-import eden.org
-import eden.patient
-import eden.pr
-import eden.sit
-import eden.proc
-import eden.project
-import eden.req
-import eden.scenario
-import eden.security
-import eden.stats
-import eden.supply
-import eden.support
-import eden.survey
-import eden.sync
-import eden.translate
-import eden.transport
-import eden.vehicle
-import eden.vol
-import eden.vulnerability
+import s3db.assess
+import s3db.asset
+import s3db.auth
+import s3db.cap
+import s3db.climate
+import s3db.cms
+import s3db.cr
+import s3db.delphi
+import s3db.doc
+import s3db.dvi
+import s3db.dvr
+import s3db.event
+import s3db.fire
+import s3db.flood
+import s3db.gis
+import s3db.hms
+import s3db.hrm
+import s3db.inv
+import s3db.irs
+import s3db.member
+import s3db.msg
+import s3db.ocr
+import s3db.org
+import s3db.patient
+import s3db.pr
+import s3db.sit
+import s3db.proc
+import s3db.project
+import s3db.req
+import s3db.scenario
+import s3db.security
+import s3db.stats
+import s3db.supply
+import s3db.support
+import s3db.survey
+import s3db.sync
+import s3db.translate
+import s3db.transport
+import s3db.vehicle
+import s3db.vol
+import s3db.vulnerability
+
+current.s3db = s3db = S3Model()
 
 # =============================================================================
 # Make available for S3Models

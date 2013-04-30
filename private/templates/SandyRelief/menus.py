@@ -2,12 +2,12 @@
 
 from gluon import *
 from s3 import *
-from eden.layouts import *
+from s3layouts import *
 try:
     from .layouts import *
 except ImportError:
     pass
-import eden.menus as default
+import s3menus as default
 
 class S3MainMenu(default.S3MainMenu):
     """

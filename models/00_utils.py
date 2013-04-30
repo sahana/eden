@@ -40,8 +40,8 @@ if not auth.permission.has_permission("read"):
 # =============================================================================
 # Menus
 #
-from eden.layouts import *
-import eden.menus as default_menus
+from s3layouts import *
+import s3menus as default_menus
 
 S3MainMenu = default_menus.S3MainMenu
 S3OptionsMenu = default_menus.S3OptionsMenu

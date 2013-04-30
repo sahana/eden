@@ -26,7 +26,7 @@ $(function () {
 		image_size[0] = Math.floor(image_size[0]);
 		image_size[1] = Math.floor(image_size[1]);
 
-		s3_debug(image_size);
+		//s3_debug(image_size);
 		return image_size;
 	}
 
@@ -36,7 +36,7 @@ $(function () {
 		var $this = $(this);
 		var $preview = $('.imagecrop-preview');
 
-		if(!isValidImagePath($this.val())) {
+		if (!isValidImagePath($this.val())) {
 			alert(i18n.invalid_image);
 			$this.val('');
 		}
@@ -76,7 +76,7 @@ $(function () {
 		reader.onload = function(e) {
 			var image = new Image();
 			image.src = e.target.result;
-			s3_debug(e.target);
+			//s3_debug(e.target);
 			image.onload = function() {
 				var scale = calculateScale([$this.width(), $this.height()],
                                            [this.width, this.height]);
