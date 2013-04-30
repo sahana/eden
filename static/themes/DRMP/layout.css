@@ -1,0 +1,115 @@
+@charset "UTF-8";
+
+body {
+    padding-top: 50px;
+}
+
+/* Responsive style */
+@media screen and (min-width: 768px) and (max-width: 1000px) {
+  body {
+    padding-top: 30px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  body {
+    padding-top: 30px;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    padding-right: 0px;
+    padding-left: 0px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1000px) {
+  .container {
+    padding-bottom: 0;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .container {
+    padding: 0 14px;
+  }
+}
+
+/* Footer */
+footer {
+	border-top: 1px solid #c3c3c2;
+	background-color: #8a8d8e;
+	color: #fbfbfa;
+}
+
+#page-footer {
+  -webkit-box-shadow: inset 0px 0px 6px rgba(0, 0, 0, 0.06), inset 0px 1px 0px rgba(0, 0, 0, 0.12);
+  -moz-box-shadow: inset 0px 0px 6px rgba(0, 0, 0, 0.06), inset 0px 1px 0px rgba(0, 0, 0, 0.12);
+  box-shadow: inset 0px 0px 6px rgba(0, 0, 0, 0.06), inset 0px 1px 0px rgba(0, 0, 0, 0.12);
+  padding-top: 35px;
+  background: rgba(0, 0, 0, 0.03);
+  color: #999999;
+  text-shadow: 0px 1px 0px white;
+}
+
+#page-footer h3 {
+    margin-bottom: 14px;
+    color: #999999;
+    font-family: "Proxima Nova", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+#page-footer ul {
+    margin-bottom: 21px;
+    margin-left: 0px;
+}
+
+#page-footer ul > li {
+    display: block;
+    list-style-type: none;
+}
+
+@media screen and (max-width: 767px) {
+  #page-footer ul {
+    padding-bottom: 21px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.11);
+  }
+}
+
+#page-footer a {
+    color: #999999;
+    text-shadow: 0 1px 0 white;
+}
+
+#page-footer #footer-copyrights {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+@media screen and (max-width: 767px) {
+  #page-footer #footer-copyrights {
+    border-top: none;
+    padding-top: 0;
+    margin-top: -21px;
+  }
+}
+
+#page-footer #footer-copyrights p {
+    margin-bottom: 0;
+    padding-bottom: 14px;
+}
+
+.extra-small {
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.pt4 {
+    padding-top: 14px !important;
+}

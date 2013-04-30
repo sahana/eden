@@ -3,7 +3,6 @@ body {
     color: #666;
     overflow-x: hidden;
     background: url(img/bg_patch.jpg) #ebebeb;
-    padding-top: 50px;
 }
 
 body.popup {
@@ -80,7 +79,6 @@ a.btn.btn-primary.main-add {
 a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
 }
-
 
 /* Card Icons */
 i.icon.icon-activity,

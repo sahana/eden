@@ -18,49 +18,160 @@ class index():
 
     def __call__(self):
 
-        return homepage()
+        response = current.response
+        output = {}
+        output["title"] = response.title = current.deployment_settings.get_system_name()
+        view = path.join(current.request.folder, "private", "templates",
+                         THEME, "views", "index.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        # Image Carousel
+        response.s3.jquery_ready.append('''$('#myCarousel').carousel()''')
+
+        s3db = current.s3db
+        # Latest 4 Events
+        resource = s3db.resource("event_event")
+        list_fields = ["name",
+                       "zero_hour",
+                       "closed",
+                       ]
+        orderby = resource.get_config("list_orderby",
+                                      ~resource.table.created_on)
+        datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                   start=None,
+                                                   limit=4,
+                                                   listid="event_datalist",
+                                                   orderby=orderby,
+                                                   layout=render_events)
+        if numrows == 0:
+            # Empty table or just no match?
+            table = resource.table
+            if "deleted" in table:
+                available_records = current.db(table.deleted != True)
+            else:
+                available_records = current.db(table._id > 0)
+            if available_records.select(table._id,
+                                        limitby=(0, 1)).first():
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_no_match"),
+                          _class="empty")
+            else:
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_list_empty"),
+                          _class="empty")
+            data = msg
+        else:
+            # Render the list
+            dl = datalist.html()
+            data = dl
+        output["events"] = data
+
+        # Latest 4 Updates
+        resource = s3db.resource("cms_post")
+        list_fields = ["series_id",
+                       "location_id",
+                       "created_on",
+                       "body",
+                       "created_by",
+                       "created_by$organisation_id",
+                       "document.file",
+                       "event_post.event_id",
+                       ]
+        orderby = resource.get_config("list_orderby",
+                                      ~resource.table.created_on)
+        datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                   start=None,
+                                                   limit=4,
+                                                   listid="news_datalist",
+                                                   orderby=orderby,
+                                                   layout=render_posts)
+        if numrows == 0:
+            # Empty table or just no match?
+            table = resource.table
+            if "deleted" in table:
+                available_records = current.db(table.deleted != True)
+            else:
+                available_records = current.db(table._id > 0)
+            if available_records.select(table._id,
+                                        limitby=(0, 1)).first():
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_no_match"),
+                          _class="empty")
+            else:
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_list_empty"),
+                          _class="empty")
+            data = msg
+        else:
+            # Render the list
+            dl = datalist.html()
+            data = dl
+        output["news"] = data
+
+        return output
 
 # =============================================================================
 class datalist():
-    """ Alternate URL for homepage """
+    """ Alternate URL for Updates page """
 
     def __call__(self):
 
-        return homepage()
+        return _updates()
 
 # =============================================================================
 class datalist_dl_post():
-    """ AJAX URL for CMS Posts (for Homepage) """
+    """ AJAX URL for CMS Posts (for Updates page) """
 
     def __call__(self):
 
-        return homepage()
+        return _updates()
 
 # =============================================================================
 class datalist_dl_filter():
-    """ AJAX URL for CMS Posts Filter Form (for Homepage) """
+    """ AJAX URL for CMS Posts Filter Form (for Updates page) """
 
     def __call__(self):
 
-        return homepage()
+        return _updates()
+
+# =============================================================================
+class login():
+    """ Custom Login page """
+
+    def __call__(self):
+
+        return _login()
+
+# =============================================================================
+class updates():
+    """ Updates page """
+
+    def __call__(self):
+
+        return _updates()
 
 # =============================================================================
 class validate():
-    """ Alternate URL for homepage """
+    """ Alternate URL for Updates page """
 
     def __call__(self):
 
-        return homepage()
+        return _updates()
 
 # =============================================================================
-def homepage():
+def _updates():
     """
-        Custom Homepage
-        - DataList of CMS Posts
+        Custom Page
+        - Filterable DataList of CMS Posts & a DataList of Events
     """
 
     if not current.auth.is_logged_in():
-        return login()
+        return _login()
 
     T = current.T
     s3db = current.s3db
@@ -70,7 +181,7 @@ def homepage():
 
     current.deployment_settings.ui.customize_cms_post()
 
-    list_layout = render_homepage_posts
+    list_layout = render_posts
 
     filter_widgets = [S3TextFilter(["body"],
                                    label="",
@@ -148,7 +259,7 @@ def homepage():
         # Set Title & View after REST Controller, in order to override
         output["title"] = response.title = current.deployment_settings.get_system_name()
         view = path.join(request.folder, "private", "templates",
-                         "DRMP", "views", "index.html")
+                         THEME, "views", "updates.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -169,10 +280,9 @@ def homepage():
                                                    limit=5,
                                                    listid="event_datalist",
                                                    orderby=orderby,
-                                                   layout=render_homepage_events)
+                                                   layout=render_events)
         if numrows == 0:
             # Empty table or just no match?
-
             table = resource.table
             if "deleted" in table:
                 available_records = current.db(table.deleted != True)
@@ -188,18 +298,16 @@ def homepage():
                                              "msg_list_empty"),
                           _class="empty")
             data = msg
-
         else:
             # Render the list
             dl = datalist.html()
             data = dl
-
         output["disasters"] = data
 
     return output
 
 # -----------------------------------------------------------------------------
-def login():
+def _login():
     """
         Custom Login page
     """
@@ -208,7 +316,7 @@ def login():
     request = current.request
 
     view = path.join(request.folder, "private", "templates",
-                     "DRMP", "views", "login.html")
+                     THEME, "views", "login.html")
     try:
         # Pass view as file not str to work in compiled mode
         response.view = open(view, "rb")
@@ -223,9 +331,8 @@ def login():
     auth.settings.formstyle = "bootstrap"
     login = auth()
 
-    return dict(
-        form = login
-    )
+    return dict(form = login,
+                )
 
 # -----------------------------------------------------------------------------
 def filter_formstyle(row_id, label, widget, comment):
@@ -244,7 +351,7 @@ def filter_formstyle(row_id, label, widget, comment):
         return DIV(widget)
 
 # -----------------------------------------------------------------------------
-def render_homepage_posts(listid, resource, rfields, record, **attr):
+def render_posts(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for CMS Posts on the Homepage
 
@@ -284,8 +391,7 @@ def render_homepage_posts(listid, resource, rfields, record, **attr):
                                  _class="media-object",
                                  _style="width:50px;padding:5px;padding-top:0px;")
     db = current.db
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
+    ltable = current.s3db.pr_person_user
     ptable = db.pr_person
     query = (ltable.user_id == author_id) & \
             (ltable.pe_id == ptable.pe_id)
@@ -381,9 +487,9 @@ def render_homepage_posts(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_homepage_events(listid, resource, rfields, record, **attr):
+def render_events(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for Events on the Homepage
+        Custom dataList item renderer for 'Disasters' on the Updates page
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -467,8 +573,7 @@ class glossary():
 
         title = current.T("Glossary")
 
-        return dict(
-                title = title,
-            )
+        return dict(title = title,
+                    )
 
 # END =========================================================================

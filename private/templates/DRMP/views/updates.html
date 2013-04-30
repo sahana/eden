@@ -1,0 +1,56 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='span3 bs-docs-sidebar'>
+  <div class='search_box'>
+   <div class='input-append'><input type='text' id='input_temp' name=''>
+    <span class='add-on'><i class='icon-search'></i></span>
+   </div>
+  </div>
+  <div class='accordion side-filter' id='accordion2'>
+   <div class='accordion-group'>
+    <div class='accordion-heading'>
+     <div id='collapseOne' class='accordion-body collapse out'>
+      <div class='accordion-inner'>
+       {{=list_filter_form}}
+	  </div>
+     </div>	
+    </div>
+   </div>
+   <div class='accordion-group'>
+    <div class='accordion-heading'>
+     <button class='btn btn-primary search_btn' type='button'>{{=T("SEARCH")}}</button>
+     <a class='accordion-toggle' data-toggle='collapse' data-parent='#accordion2' href='#collapseOne'>
+	  <i class='icon-reorder'></i> {{=T("Advanced Search")}}
+     </a>
+    </div>	
+   </div>
+  </div>
+ </div>
+ <div class='span6'>
+  <a href='#myModal' class='btn btn-primary main-add' role='button' data-toggle='modal'><i class='icon icon-plus-sign big-add'></i></a>
+  <h4 class='latest-updates'>{{=T("Latest Activity")}}</h4>
+  <div class="card-holder-home">
+   {{=items}}
+  </div>
+ </div>
+ <div class='span3'>
+  <h4 class='latest-disasters'>{{=T("Disasters")}}</h4>
+  {{=disasters}}
+ </div>
+</div>
+<div id='myModal' class='modal hide fade' tabindex='-1' role='dialog' aria-labelledby='myModalLabel' aria-hidden='true'>
+ <div class='modal-header'>
+  <button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>
+  <h3 id='myModalLabel'>{{=T("Add New Information")}}</h3>
+ </div>
+ <form action="#" class="form-horizontal" enctype="multipart/form-data" method="post">
+ <div class='modal-body'>
+   {{try:}}{{=form[0]}}{{except:}}{{pass}}
+ </div>
+ <div class='modal-footer'>
+  <button class='btn' data-dismiss='modal' aria-hidden='true'>{{=T("Close")}}</button>
+  {{try:}}{{=form.custom.submit}}{{except:}}{{pass}}
+ </div>
+ {{try:}}{{=form.custom.end}}{{except:}}{{pass}}
+</div>
+{{include "dataLists.html"}}
