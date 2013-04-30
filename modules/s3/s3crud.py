@@ -1071,7 +1071,7 @@ class S3CRUD(S3Method):
             else:
                 output = '{"iTotalRecords": %s, ' \
                          '"iTotalDisplayRecords": 0,' \
-                         '"dataTable_id": %s, ' \
+                         '"dataTable_id": "%s", ' \
                          '"sEcho": %s, ' \
                          '"aaData": []}' % (totalrows, listid, sEcho)
 
@@ -1558,7 +1558,7 @@ class S3CRUD(S3Method):
             else:
                 output = '{"iTotalRecords": %s, ' \
                          '"iTotalDisplayRecords": 0,' \
-                         '"dataTable_id": %s, ' \
+                         '"dataTable_id": "%s", ' \
                          '"sEcho": %s, ' \
                          '"aaData": []}' % (totalrows, listid, sEcho)
 
@@ -1936,7 +1936,7 @@ class S3CRUD(S3Method):
             else:
                 output = '{"iTotalRecords": %s, ' \
                          '"iTotalDisplayRecords": 0,' \
-                         '"dataTable_id": %s, ' \
+                         '"dataTable_id": "%s", ' \
                          '"sEcho": %s, ' \
                          '"aaData": []}' % (totalrows, listid, sEcho)
 

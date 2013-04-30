@@ -305,7 +305,7 @@ def ns_only(f, required=True, branches=True):
     if s3_has_role("ADMIN") or \
        s3_has_role("ORG_ADMIN"):
         # Need to do import after setting Theme
-        from eden.layouts import S3AddResourceLink
+        from s3layouts import S3AddResourceLink
         f.comment = S3AddResourceLink(c="org",
                                       f="organisation",
                                       vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},

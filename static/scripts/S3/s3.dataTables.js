@@ -382,18 +382,18 @@ $(document).ready(function() {
                                   ];
         }
 
-        // The call back used to manage the paganation
-        var fnDataTablesPipeline;
         if (aoTableConfig[t]['pagination'] == 'true') {
+            // Server-side Pagination is True
             // Cache the pages to reduce server-side calls
             bServerSide = true;
             bProcessing = true;
             var iDisplayLength = aoTableConfig[t]['displayLength'];
             var aoData = [{name: 'iDisplayLength', value: iDisplayLength},
                           {name: 'iDisplayStart', value: 0},
-                          {name: 'sEcho', value: 1}];
+                          {name: 'sEcho', value: 1}
+                          ];
 
-            function fnSetKey( aoData, sKey, mValue ) {
+            function fnSetKey(aoData, sKey, mValue) {
                 for (var i=0, iLen=aoData.length; i < iLen; i++) {
                     if ( aoData[i].name == sKey ) {
                         aoData[i].value = mValue;
@@ -408,8 +408,7 @@ $(document).ready(function() {
                 }
                 return null;
             }
-            fnDataTablesPipeline = function(sSource, aoData, fnCallback) {
-
+            var fnDataTablesPipeline = function(sSource, aoData, fnCallback) {
                 var bNeedServer = false;
                 var table;
                 if (this.hasOwnProperty('nTable')) {
@@ -428,7 +427,6 @@ $(document).ready(function() {
                     // Can just return here, because fnDraw inside fnCallback
                     // has already triggered the regular pipeline refresh
                     return;
-
                 } else {
                     table = '#' + this[0].id;
                 }
@@ -449,11 +447,12 @@ $(document).ready(function() {
                 var iRequestStart = fnGetKey(aoData, 'iDisplayStart');
                 var iRequestEnd = iRequestStart + iRequestLength;
                 var oCache = cache[t];
-                totalRecords[t] = fnGetKey(aoData, 'iTotalRecords');
                 oCache.iDisplayStart = iRequestStart;
-                if (oCache.hasOwnProperty('lastJson') &&
-                    oCache.lastJson.hasOwnProperty('iTotalRecords')) {
+                if (oCache.hasOwnProperty('lastJson') && oCache.lastJson.hasOwnProperty('iTotalRecords')) {
                     totalRecords[t] = oCache.lastJson.iTotalRecords;
+                } else {
+                    // This key never seems to be present?
+                    totalRecords[t] = fnGetKey(aoData, 'iTotalRecords');
                 }
                 // Prevent the Ajax lookup of the last page if we already know
                 // that there are no more records than we have in the cache.
@@ -464,20 +463,20 @@ $(document).ready(function() {
                     }
                 }
                 // outside pipeline?
-                if ( oCache.iCacheUpper !== -1 && /* If Display All oCache.iCacheUpper == -1 */
-                     ( iRequestLength == -1 || oCache.iCacheLower < 0 || iRequestStart < oCache.iCacheLower || iRequestEnd > oCache.iCacheUpper )
+                if (oCache.iCacheUpper !== -1 && /* If Display All oCache.iCacheUpper == -1 */
+                    (iRequestLength == -1 || oCache.iCacheLower < 0 || iRequestStart < oCache.iCacheLower || iRequestEnd > oCache.iCacheUpper)
                     ) {
                     bNeedServer = true;
                 }
                 // sorting etc changed?
-                if ( oCache.lastRequest && !bNeedServer ) {
+                if (oCache.lastRequest && !bNeedServer) {
                     if (!oCache.lastRequest.length) {
                         // no previous request => need server in any case
                         bNeedServer = true;
                     } else {
                         for (var i=0, iLen=aoData.length; i < iLen; i++) {
-                            if ( aoData[i].name != 'iDisplayStart' && aoData[i].name != 'iDisplayLength' && aoData[i].name != 'sEcho' ) {
-                                if ( aoData[i].value != oCache.lastRequest[i].value ) {
+                            if (aoData[i].name != 'iDisplayStart' && aoData[i].name != 'iDisplayLength' && aoData[i].name != 'sEcho') {
+                                if (aoData[i].value != oCache.lastRequest[i].value) {
                                     bNeedServer = true;
                                     break;
 
@@ -489,33 +488,33 @@ $(document).ready(function() {
                 
                 // Store the request for checking next time around
                 oCache.lastRequest = aoData.slice();
-                if ( bNeedServer ) {
+                if (bNeedServer) {
                     if (iRequestStart < oCache.iCacheLower) {
                         iRequestStart = iRequestStart - (iRequestLength * (iPipe - 1));
-                        if ( iRequestStart < 0 ) {
+                        if (iRequestStart < 0) {
                             iRequestStart = 0;
                         }
                     }
                     oCache.iCacheLower = iRequestStart;
-                    oCache.iDisplayLength = fnGetKey( aoData, 'iDisplayLength' );
+                    oCache.iDisplayLength = fnGetKey(aoData, 'iDisplayLength');
                     if (iRequestLength == -1) {
                         oCache.iCacheUpper = -1; // flag for all records are in Cache
-                        fnSetKey( aoData, 'iDisplayStart', "None" ); // No Filter
-                        fnSetKey( aoData, 'iDisplayLength', "None" );  // No Filter
+                        fnSetKey(aoData, 'iDisplayStart', 'None'); // No Filter
+                        fnSetKey(aoData, 'iDisplayLength', 'None');  // No Filter
                     } else {
                         oCache.iCacheUpper = iRequestStart + (iRequestLength * iPipe);
-                        fnSetKey( aoData, 'iDisplayStart', iRequestStart );
-                        fnSetKey( aoData, 'iDisplayLength', iRequestLength * iPipe );
+                        fnSetKey(aoData, 'iDisplayStart', iRequestStart);
+                        fnSetKey(aoData, 'iDisplayLength', iRequestLength * iPipe);
                     }
                     var nonDefaultData = aoData.filter(isNonDefaultData);
-                    $.getJSON(sSource, nonDefaultData, function (json) {
+                    $.getJSON(sSource, nonDefaultData, function(json) {
                         // Callback processing
                         oCache.lastJson = jQuery.extend(true, {}, json);
-                        if ( oCache.iCacheLower != oCache.iDisplayStart ) {
-                            json.aaData.splice( 0, oCache.iDisplayStart - oCache.iCacheLower );
+                        if (oCache.iCacheLower != oCache.iDisplayStart) {
+                            json.aaData.splice(0, oCache.iDisplayStart - oCache.iCacheLower);
                         }
                         if (oCache.iDisplayLength !== -1) {
-                            json.aaData.splice( oCache.iDisplayLength, json.aaData.length );
+                            json.aaData.splice(oCache.iDisplayLength, json.aaData.length);
                         }
                         fnCallback(json);
                     } );
@@ -523,8 +522,8 @@ $(document).ready(function() {
                     json = jQuery.extend(true, {}, oCache.lastJson);
                     json.sEcho = sEcho; // Update the echo for each response
                     if (iRequestLength !== -1) {
-                        json.aaData.splice( 0, iRequestStart - oCache.iCacheLower );
-                        json.aaData.splice( iRequestLength, json.aaData.length );
+                        json.aaData.splice(0, iRequestStart - oCache.iCacheLower);
+                        json.aaData.splice(iRequestLength, json.aaData.length);
                     }
                     fnCallback(json);
                 }
@@ -532,28 +531,26 @@ $(document).ready(function() {
             fnAjaxCallback[t] = fnDataTablesPipeline;
             // end of pagination code
         } else {
+            // No Pagination
             bServerSide = false;
             bProcessing = false;
             aoTableConfig[t]['ajaxUrl'] = null;
-            fnDataTablesPipeline = function( url, data, callback ) {
+            var fnDataTablesPipeline = function(url, data, callback) {
                 var nonDefaultData = data.filter(isNonDefaultData);
-                $.ajax( {
-                    'url': url,
-                    'data': nonDefaultData,
-                    'success': callback,
-
-                    'dataType': 'json',
-                    'cache': false,
-                    'error': function (xhr, error, thrown) {
-                        if (error == 'parsererror') {
-                            alert('DataTables warning: JSON data from server could not be parsed. ' +
-                                  'This is caused by a JSON formatting error.');
+                $.ajax({'url': url,
+                        'data': nonDefaultData,
+                        'success': callback,
+                        'dataType': 'json',
+                        'cache': false,
+                        'error': function (xhr, error, thrown) {
+                            if (error == 'parsererror') {
+                                alert('DataTables warning: JSON data from server could not be parsed. ' +
+                                      'This is caused by a JSON formatting error.');
+                            }
                         }
-                    }
-                } );
+                });
             };
             fnAjaxCallback[t] = fnDataTablesPipeline;
-
         } // end of no pagination code
     } // end of loop for each dataTable
 
