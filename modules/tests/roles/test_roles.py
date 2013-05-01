@@ -91,9 +91,13 @@ def test_roles():
             if uuid:
                 #print "%s, %s, %s, %s" % (table,c,f, uuid)
                 #print uuid
-                record_id = db(db_table.uuid==uuid).select(db_table._id,
-                                                           limitby=(0, 1)
-                                                           ).first()[db_table._id]
+                rec = db(db_table.uuid==uuid).select(db_table._id,
+                                                     limitby=(0, 1)
+                                                    )
+                if rec:
+                    record_id = rec.first()[db_table._id]
+                else:
+                    record_id = None
             else:
                 record_id = None
 
