@@ -3353,15 +3353,15 @@ class S3ProjectDRRPPModel(S3Model):
 
         NONE = current.messages["NONE"]
 
-        opts = opt
         if isinstance(opt, int):
             opts = [opt]
-        elif not isinstance(opt, (list, tuple)):
+        if isinstance(opt, (list, tuple)):
+            if not opt or opt[0] is None:
+                return NONE
+            else:
+                return ", ".join(["%s %s" % (prefix, o) for o in opt])
+        else:
             return NONE
-        elif opt[0] is None:
-            return NONE
-        vals = ["%s %s" % (prefix, o) for o in opts]
-        return ", ".join(vals)
 
     # -------------------------------------------------------------------------
     @staticmethod
