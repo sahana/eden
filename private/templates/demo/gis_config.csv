@@ -1,0 +1,8 @@
+UUID	Name	OU	OU Type	Region Country	Default Country	Zoom	Lat	Lon	Projection	Symbology	MinLat	MaxLat	MinLon	MaxLon	WMS Browser
+SITE_DEFAULT	Default					3	4.9	125	900913	Sahana	-90	90	-180	180	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+	WGS84					3	4.9	125	4326	Sahana	-90	90	-180	180	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+	AURC	Australian Red Cross	organisation	AU	AU	6	-24.764639	136.180729	900913	RedCross	-45	-4	105	165	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+	TLRC	Timor-Leste Red Cross Society	organisation	TL	TL	8	-8.88	125.92	900913	RedCross	-9.5	-8.4	124.04	127.3	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+	USRC	American Red Cross	organisation	US	US	4	39.1348	-98.41	900913	RedCross	0	90	-180	-50	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+	Eden	Sahana Eden	organisation	US	US	8	-8.88	125.92	900913	Sahana	-9.5	-8.4	124.04	127.3	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+	NEOC	Timor-Leste Government	organisation	TL	TL	8	-8.88	125.92	900913	Government	-9.5	-8.4	124.04	127.3	http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities

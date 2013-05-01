@@ -1,0 +1,7 @@
+"First Name","Last Name","Email","Password","Role","Organisation"
+"Admin","User","admin@example.com","testing","ADMIN","Sahana Eden"
+"Normal","User","normaluser@example.com","testing","","Sahana Eden"
+"Australian","RC","AURC@example.com","testing","","Australian Red Cross"
+"Timor-Leste","RC","CVTL@example.com","testing","","Timor-Leste Red Cross Society"
+"American","RC","USRC@example.com","testing","","American Red Cross"
+"Timor-TLGovt","Leste","Govt@example.com","testing","","Timor-Leste Government"
