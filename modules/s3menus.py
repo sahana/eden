@@ -1001,7 +1001,7 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
-                        M("Search by skills", f="competency", args=["search"]),
+                        #M("Search by skills", f="competency", args=["search"]),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),

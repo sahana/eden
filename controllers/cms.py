@@ -123,11 +123,11 @@ def post():
             if _module:
                 table.name.default = "%s Home Page" % _module
                 table.location_id.readable = table.location_id.writable = False
-                _crud = s3.crud_strings[tablename]
+                _crud = s3.crud_strings[table._tablename]
                 _crud.title_create = T("New Page")
                 _crud.title_update = T("Edit Page")
                 url = URL(c=_module, f="index")
-                s3db.configure(tablename,
+                s3db.configure(table._tablename,
                                create_next = url,
                                update_next = url)
             else:
@@ -135,11 +135,11 @@ def post():
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False
-                    _crud = s3.crud_strings[tablename]
+                    _crud = s3.crud_strings[table._tablename]
                     _crud.title_create = T("New Page")
                     _crud.title_update = T("Edit Page")
                     url = URL(c="default", f="index", vars={"page": page})
-                    s3db.configure(tablename,
+                    s3db.configure(table._tablename,
                                    create_next = url,
                                    update_next = url)
 
