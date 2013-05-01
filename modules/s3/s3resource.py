@@ -42,8 +42,7 @@ import re
 import sys
 import time
 
-from itertools import product, chain
-from itertools import groupby
+from itertools import product, chain, groupby
 
 try:
     from cStringIO import StringIO # Faster, where available
