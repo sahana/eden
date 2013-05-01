@@ -4612,7 +4612,9 @@ def hrm_competency_controller():
         return output
 
     s3.postp = postp    
-    return current.rest_controller()
+    return current.rest_controller("hrm", "competency",
+                                   csv_stylesheet=("hrm", "competency.xsl"),
+                                   csv_template=("hrm", "competency"))
 
 # ---------------------------------------------------------------------        
 def hrm_skill_simple_search_widget(type):

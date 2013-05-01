@@ -2642,7 +2642,7 @@ class S3LocationSelectorWidget2(FormWidget):
         for level in levels:
             label = labels[level]
             id = "%s_%s" % (fieldname, level)
-            widget = SELECT(T("Select %(location)s") % dict(location = label), _id=id)
+            widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label), _value=""), _id=id)
             comment = T("Select this %(location)s") % dict(location = label)
             throbber = IMG(_src=throbber_img,
                            _height=32, _width=32,

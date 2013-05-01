@@ -86,8 +86,8 @@ def blog():
 def post():
     """ RESTful CRUD controller """
 
+    tablename = "cms_post"
     # Filter out those posts which are part of a series
-    #tablename = "cms_post"
     #table = s3db[tablename]
     #s3.filter = (table.series_id == None)
 
