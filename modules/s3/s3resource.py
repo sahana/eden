@@ -1057,7 +1057,7 @@ class S3Resource(object):
 
         if getids or count or left_joins:
             if not groupby and not vfltr and \
-               (limitby or vtables != tnames):
+               (limitby or vtables != ftables):
 
                 if getids or left_joins:
                     field = table._id
