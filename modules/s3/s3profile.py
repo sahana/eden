@@ -36,6 +36,16 @@ from s3crud import S3CRUD
 from s3data import S3DataList
 from s3resource import S3FieldSelector
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
+
+
 # =============================================================================
 class S3Profile(S3CRUD):
     """
@@ -80,10 +90,10 @@ class S3Profile(S3CRUD):
 
         # Initialise Output
         output = dict()
-
+        
+        
         # Get the page widgets
         widgets = current.s3db.get_config(tablename, "profile_widgets")
-
         # Index the widgets by their position in the config
         for index, widget in enumerate(widgets):
             widget["index"] = index
@@ -113,6 +123,10 @@ class S3Profile(S3CRUD):
                     colspan = widget.get("colspan", 1)
                     if w_type == "map":
                         row.append(self._map(r, widget, **attr))
+                        if colspan == 2:
+                            append(row)
+                    elif w_type == "piechart":
+                        row.append(self._piechart(r, widget, **attr))
                         if colspan == 2:
                             append(row)
                     elif w_type == "comments":
@@ -172,6 +186,90 @@ class S3Profile(S3CRUD):
 
         return output
 
+    # -------------------------------------------------------------------------
+    def _piechart(self,r,widget,**attr):
+        """
+            Generates a pie-chart widget
+            
+            @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label, tablename, icon, filter)
+            @param attr: controller attributes for the request
+    
+        """
+        
+        
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+        
+        
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+        
+        table1 = "hrm_human_resource"
+        table2 = "pr_person"
+        
+        gender_types = ["unspecified","female","male"]
+        gender_values = [0,0,0]
+        labels = ["label","data"]
+        pr_type = widget.get("select", None)  # 1 for staff members , 2 for volunteers
+        
+        hr_type = ["Volunteers","Staff"]
+        
+        resource = current.s3db.resource(table1, context=True)
+        
+        filter = (S3FieldSelector("organisation_id") == r.id) & (S3FieldSelector("type") == pr_type)
+        resource.add_filter(filter)     
+        
+        rows = resource.select(['person_id',])
+                                                   
+        resource2 = current.s3db.resource(table2, context=True)
+        
+        for r in rows :
+            filter2 = (S3FieldSelector("id") == r.person_id)
+            resource2.clear_query()
+            resource2.add_filter(filter2)
+            v = resource2.select(['gender'],)
+            gender_values[v[0].gender-1]+=1  
+    
+                                                   
+        # Preapring data for piechart 
+       
+        data = []
+        for i in range(3):
+            dict_ = dict(zip(labels, [gender_types[i],gender_values[i]]))
+            data.append(dict_)
+        
+        json_data = json.dumps(data)
+      
+        # Calling flot pie chart library
+        
+        s3.jquery_ready.append('''$.plot($("#piechart"),'''+str(json_data)+''', {
+         series: {
+            pie: {
+                show: true
+            }
+         },
+         legend: {
+            labelBoxBorderColor: "none"
+         }
+    });''')
+        
+        
+        s3.scripts.append("/%s/static/scripts/flot/jquery.flot.js" % current.request.application)
+        s3.scripts.append("/%s/static/scripts/flot/jquery.flot.pie.js" % current.request.application)
+        
+            
+        output = DIV(H4(label+" ("+hr_type[pr_type]+")",
+                        _class="profile-sub-header"),
+                       DIV(str(json_data),
+                         _class="card-holder",_id="piechart",_width="350px" , _height="350px"),
+                     _class="span6")
+
+        return output
+        
     # -------------------------------------------------------------------------
     def _datalist(self, r, widget, **attr):
         """

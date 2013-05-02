@@ -889,6 +889,13 @@ def customize_org_organisation(**attr):
                            icon = "icon-comments-alt",
                            colspan = 2,
                            )
+                           
+    piechart_widget = dict(label = "Sex distribution chart",
+                           type = "piechart" ,
+                           context = "organisation",
+                           select = 1, # 1 for staff , 2 for volunteers
+                           )
+
     s3db.configure("org_organisation",
                    list_fields = ["id",
                                   "name",
@@ -900,6 +907,8 @@ def customize_org_organisation(**attr):
                                     incidents_widget,
                                     assessments_widget,
                                     activities_widget,
+                                    reports_widget,
+                                    piechart_widget,
                                     reports_widget,
                                     #comments_widget,
                                     ],
