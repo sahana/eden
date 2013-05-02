@@ -30,6 +30,7 @@
 __all__ = ["S3OrganisationModel",
            "S3OrganisationVirtualFields",
            "S3OrganisationSummaryModel",
+           "S3OrganisationResourceModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
@@ -1212,6 +1213,83 @@ class S3OrganisationSummaryModel(S3Model):
                                         requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
                                         label=T("# of International Staff")),
                                   *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage(
+                )
+
+# =============================================================================
+class S3OrganisationResourceModel(S3Model):
+    """
+        Organisation Resource Model
+    """
+
+    names = ["org_resource",
+             "org_resource_type",]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        # ---------------------------------------------------------------------
+        # Resource Type data
+        #
+        tablename = "org_resource_type" # Or should it be org_organisation_resource_type?
+        table = self.define_table(tablename,
+                                  Field("name", label=T("Resource Type")),
+                                  *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename)
+        org_resource_type_id = \
+            S3ReusableField("sector_id", "reference org_sector",
+                            sortby="name",
+                            requires=IS_NULL_OR(
+                                        IS_ONE_OF(db, "org_resource_type.id",
+                                                  represent,
+                                                  sort=True,
+                                                  )),
+                            represent=represent,
+                            comment=S3AddResourceLink(c="org",
+                                            f="resource_type",
+                                            label=T("Add Resource Type"),
+                                            ),
+                            label=T("Resource Type"),
+                            ondelete="SET NULL")
+
+        # ---------------------------------------------------------------------
+        # Resource data
+        #
+        tablename = "org_resource"
+        table = self.define_table(tablename,
+                                  self.org_organisation_id(ondelete="CASCADE"),
+                                  self.gis_location_id(),
+                                  org_resource_type_id(),
+                                  Field("quantity", "integer", 
+                                        requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                        label=T("Quantity")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create=T("Add Resource"),
+            title_display=T("Resource Details"),
+            title_list=T("Resource Inventory"),
+            title_update=T("Edit Resource"),
+            title_map=T("Map of Resources"),
+            title_search=T("Search Resource Inventory"),
+            title_upload=T("Import Resources"),
+            subtitle_create=T("Add New Resource"),
+            label_list_button=T("Resource Inventory"),
+            label_create_button=T("Add New Resource"),
+            label_delete_button=T("Delete Resource"),
+            msg_record_created=T("Resource added"),
+            msg_record_modified=T("Resource updated"),
+            msg_record_deleted=T("Resource deleted"),
+            msg_list_empty=T("No Resources in Inventory"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

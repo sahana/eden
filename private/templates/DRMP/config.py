@@ -8,9 +8,10 @@ from gluon.validators import IS_NULL_OR
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_LOCATION
+from s3.s3validators import IS_LOCATION, IS_ONE_OF
 from s3.s3widgets import S3LocationAutocompleteWidget, S3LocationSelectorWidget2
 
 T = current.T
@@ -98,6 +99,45 @@ settings.ui.camp = True
 # Save Search Widget
 settings.save_search.widget = False
 
+
+# -----------------------------------------------------------------------------
+# Formstyle
+def formstyle_row(id, label, widget, comment, hidden=False):
+    if hidden:
+        hide = "hide"
+    else:
+        hide = ""
+    row = DIV(DIV(label,
+                  _id=id + "_label",
+                  _class="w2p_fl %s" % hide),
+              DIV(widget,
+                  _id=id + "_widget",
+                  _class="w2p_fw %s" % hide),
+              DIV(comment,
+                  _id=id + "_comment",
+                  _class="w2p_fc %s" % hide),
+              _class = "w2p_r",
+              )
+    return row
+# -----------------------------------------------------------------------------
+def formstyle(self, xfields):
+    """
+        Use new Web2Py formstyle to generate form using DIVs & CSS NOT TABLES
+        CSS can then be used to create MUCH more flexible form designs:
+        - Labels above vs. labels to left
+        - Multiple Columns 
+        @ToDo: Requires further changes to code to use
+    """
+    form = DIV()
+
+    for id, a, b, c, in xfields:
+        form.append(formstyle_row(id, a, b, c))
+
+    return form
+
+#settings.ui.formstyle_row = formstyle_row
+
+#settings.ui.formstyle = formstyle
 # =============================================================================
 # Module Settings
 
@@ -116,6 +156,10 @@ settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.use_teams = False
 
+# -----------------------------------------------------------------------------
+# Project
+# Uncomment this to use multiple Organisations per project
+settings.project.multiple_organisations = True
 # -----------------------------------------------------------------------------
 def location_represent(id, row=None):
     """
@@ -931,6 +975,116 @@ def customize_org_organisation(**attr):
 
 settings.ui.customize_org_organisation = customize_org_organisation
 
+# -----------------------------------------------------------------------------
+def customize_project_project(**attr):
+    """
+        Customize project_project controller
+        - Data Model
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    db = current.db
+
+    tablename = "project_project"
+    table = s3db.project_project
+    
+    # Remove rheader
+    attr["rheader"] = None
+    
+    # Configure fields 
+    table.human_resource_id.label = T("Focal Person")
+
+    # Project Locations must be districts
+    ltable = s3db.project_location
+    ltable.location_id.requires = IS_ONE_OF(db, "gis_location.id",
+                                            S3Represent(lookup="gis_location"),
+                                            sort = True,
+                                            filterby = "level",
+                                            filter_opts = ["L1"]
+                                            )
+    ltable.location_id.widget = None
+
+    crud_form = S3SQLCustomForm(
+        "name",
+        "organisation_id",
+        S3SQLInlineComponent(
+            "location",
+            label = T("Locations"),
+            fields = ["location_id"],
+            orderby = "location_id$name",
+            render_list = True
+        ),
+        "human_resource_id",
+        "start_date",
+        "end_date",
+        # Partner Orgs
+        S3SQLInlineComponent(
+            "organisation",
+            name = "partner",
+            label = T("Partner Organisations"),
+            fields = ["organisation_id",
+                      ],
+            filterby = dict(field = "role",
+                            options = "5"
+                            )
+        ),
+        # Donors
+        S3SQLInlineComponent(
+            "organisation",
+            name = "donor",
+            label = T("Donor(s)"),
+            fields = ["organisation_id", "amount", "currency"],
+            filterby = dict(field = "role",
+                            options = "3"
+                            )
+        ),
+        "budget",
+        "comments",
+    )
+
+    list_fields = ["name",
+                   "organisation_id",
+                   "human_resource_id",
+                   "start_date",
+                   "end_date",
+                   "budget",
+                   ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   list_fields = list_fields)
+
+    return attr
+
+settings.ui.customize_project_project = customize_project_project
+
+# -----------------------------------------------------------------------------
+def customize_org_resource(**attr):
+    """
+        Customize project_project controller
+        - Data Model
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    db = current.db
+
+    tablename = "org_resource"
+    table = s3db.org_resource
+    
+    # Configure fields 
+    table.location_id.requires = IS_ONE_OF(db, "gis_location.id",
+                                            S3Represent(lookup="gis_location"),
+                                            sort = True,
+                                            filterby = "level",
+                                            filter_opts = ["L1"]
+                                            )
+    table.location_id.widget = None
+    
+    return attr
+
+settings.ui.customize_org_resource = customize_org_resource
 # =============================================================================
 # Template Modules
 # Comment/uncomment modules here to disable/enable them

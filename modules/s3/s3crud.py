@@ -1560,7 +1560,9 @@ class S3CRUD(S3Method):
                          '"iTotalDisplayRecords": 0,' \
                          '"dataTable_id": "%s", ' \
                          '"sEcho": %s, ' \
-                         '"aaData": []}' % (totalrows, listid, sEcho)
+                         '"aaData": [],' \
+                         '"dataTable_filter": null, ' \
+                         '"dataTable_groupTotals": [],}' % (totalrows, listid, sEcho)
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)

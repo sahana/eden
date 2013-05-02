@@ -1434,10 +1434,10 @@ class S3Config(Storage):
         T = current.T
         return self.project.get("organisation_roles", {
                 1: T("Lead Implementer"), # T("Host National Society")
-                2: T("Partner"), # T("Partner National Society")
+                #2: T("Partner National Society")
                 3: T("Donor"),
-                4: T("Customer"), # T("Beneficiary")?
-                5: T("Supplier"), # T("Beneficiary")?
+                4: T("Customer"), 
+                5: T("Partner") 
             })
 
     def get_project_organisation_lead_role(self):
