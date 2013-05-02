@@ -4563,8 +4563,8 @@ class S3Resource(object):
 
                 flist = []
                 for i in xrange(numcols):
-                    rfield = rfields[i]
                     try:
+                        rfield = rfields[i]
                         field = rfield.field
                     except (KeyError, IndexError):
                         continue
@@ -4684,7 +4684,7 @@ class S3Resource(object):
 
             # Process the orderby-fields
             for i in xrange(len(columns)):
-                rfield = rfields[i]
+                rfield = columns[i]
                 field = rfield.field
                 if field is None:
                     continue
