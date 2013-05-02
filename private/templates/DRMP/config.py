@@ -882,6 +882,16 @@ def customize_org_organisation(**attr):
                            icon = "icon-comments-alt",
                            colspan = 2,
                            )
+                           
+    datatable_widget = dict(label = "datatable",
+                           type = "datatable",
+                           tablename = "hrm_human_resource",
+                           fields = ["person_id","type","organisation_id"],
+                           icon = "icon-info-sign",
+                           # filter
+                           # orderby
+                           # pagesize
+                           )
     s3db.configure("org_organisation",
                    list_fields = ["id",
                                   "name",
@@ -893,6 +903,8 @@ def customize_org_organisation(**attr):
                                     incidents_widget,
                                     assessments_widget,
                                     activities_widget,
+                                    reports_widget,
+                                    datatable_widget,
                                     reports_widget,
                                     #comments_widget,
                                     ],
@@ -986,6 +998,7 @@ settings.modules = OrderedDict([
             module_type = None
         )),
     # All modules below here should be possible to disable safely
+    
     ("hrm", Storage(
             name_nice = T("Staff"),
             #description = "Human Resources Management",

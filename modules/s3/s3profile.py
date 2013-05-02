@@ -119,6 +119,10 @@ class S3Profile(S3CRUD):
                         row.append(self._comments(r, widget, **attr))
                         if colspan == 2:
                             append(row)
+                    elif w_type == "datatable":
+                        row.append(self._datatable(r, widget,**attr))
+                        if colspan == 2:
+                            append(row)
                     elif w_type == "datalist":
                         row.append(self._datalist(r, widget, **attr))
                         if colspan == 2:
@@ -171,7 +175,63 @@ class S3Profile(S3CRUD):
                      _class="span12")
 
         return output
+    # -------------------------------------------------------------------------
+    def _datatable(self, r, widget, **attr):
+        """
+            Generate a datatable
 
+            @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label,type,tablename,fields,icon,filter,start,limit)
+            @param attr: controller attributes for the request
+        """
+
+        context = widget.get("context", None)
+        if context:
+            context = "(%s)" % context
+            current.s3db.context = S3FieldSelector(context) == r.id
+
+        if(widget.get("tablename",None)):
+            tablename = widget.get("tablename", None)
+        else :
+            tablename = "org_organisation"
+            
+        resource = current.s3db.resource(tablename, context=True)
+    
+        config = resource.get_config
+        if widget.get("fields", None) is not None:
+            fields = widget.get("fields",None)
+        else :
+            fields = widget.get("fields", 
+                                     config("list_fields", None))
+            
+        if(widget.get("filter", None)):
+            filter = (widget.get("filter", None))
+            resource.add_filter(filter)
+            
+        if widget.get("pagesize", None) :
+            pagesize = int(widget.get("limit", None))
+        else :
+            pagesize = 10
+            
+        datatable, numrows, ids = resource.datatable(fields=fields,start=0, limit=pagesize,orderby = widget.get("orderby",None))
+        data = datatable.html(numrows,numrows,dt_pagination=False)
+        
+        icon = widget.get("icon", "")
+        if icon:
+            icon = TAG[""](I(_class=icon), " ")
+            
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+            
+        output = DIV(H4(icon,
+                        label,
+                        _class="profile-sub-header"),
+                     DIV(data,
+                         _class="card-holder"),
+                     _class="span6")
+
+        return output
     # -------------------------------------------------------------------------
     def _datalist(self, r, widget, **attr):
         """
