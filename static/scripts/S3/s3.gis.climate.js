@@ -42,8 +42,8 @@ function each(array, fn) {
     }
 }
 
-function base64_encode (s) {
-    var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split("");
+function base64_encode(s) {
+    var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
     var r = ''; 
     var p = ''; 
     var c = s.length % 3;

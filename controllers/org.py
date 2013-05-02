@@ -507,6 +507,18 @@ def donor():
     return output
 
 # -----------------------------------------------------------------------------
+def resource():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def resource_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def req_match():
     """ Match Requests for Sites """
 
@@ -532,10 +544,4 @@ def facility_geojson():
 
     s3db.org_facility_geojson()
 
-# -----------------------------------------------------------------------------
-def resource():
-    return s3_rest_controller()
-# -----------------------------------------------------------------------------
-def resource_type():
-    return s3_rest_controller()
 # END =========================================================================

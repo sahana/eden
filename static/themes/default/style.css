@@ -146,6 +146,7 @@ p {
     padding: 5px;
     margin: 0;
 }
+
 /*** Overrides to widgets.css ***/
 /* Form Layout Styles */
 
@@ -156,19 +157,19 @@ textarea:focus {
     background-color: #ffffcc;
 }
 
-div.form-container form input:focus,
-div.form-container form select:focus,
-div.form-container form input.errorfield:focus,
-div.form-container form textarea:focus {
+.form-container form input:focus,
+.form-container form select:focus,
+.form-container form input.errorfield:focus,
+.form-container form textarea:focus {
     background-color: #ffc;
     /* border-color: #ffc; */
 }
-div.form-container form td.w2p_fl label,
-div.item-container form td.w2p_fl label {
+.form-container form td.w2p_fl label,
+.item-container form td.w2p_fl label {
     width: auto;
 }
 /* Big Buttons (e.g. RMS) */
-div.question-container {
+.question-container {
     text-align: center;
     width: 8em;
     background-color: #F3F6FF;

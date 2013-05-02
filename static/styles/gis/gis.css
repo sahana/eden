@@ -9,82 +9,82 @@
 }
 
 /* Toolbar */
-#mappnlcntr .zoomfull {
+.mappnlcntr .zoomfull {
     background-image: url(../../img/gis/mapfish/icon_zoomfull.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .zoomin {
+.mappnlcntr .zoomin {
     background-image: url(../../img/gis/mapfish/icon_zoomin.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .zoomout {
+.mappnlcntr .zoomout {
     background-image: url(../../img/gis/mapfish/icon_zoomout.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .pan-off {
+.mappnlcntr .pan-off {
     background-image: url(../../img/gis/mapfish/icon_pan.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .measure-off {
+.mappnlcntr .measure-off {
   background-image: url(../../img/gis/measuring-stick-off.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .measure-area {
+.mappnlcntr .measure-area {
   background-image: url(../../img/gis/measure-area-off.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .modifyfeature {
+.mappnlcntr .modifyfeature {
     background-image: url(../../img/gis/mapfish/move_vertex_off.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .drawpoint-off {
+.mappnlcntr .drawpoint-off {
   background-image: url(../../img/gis/add_point_off.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .drawline-off {
+.mappnlcntr .drawline-off {
   background-image: url(../../img/gis/mapfish/draw_line_off.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .drawpolygon-off {
+.mappnlcntr .drawpolygon-off {
   background-image: url(../../img/gis/mapfish/draw_polygon_off.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .info {
+.mappnlcntr .info {
   background-image: url(../../img/gis/mapfish/info.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .searchclick {
+.mappnlcntr .searchclick {
     background-image: url(../../img/ext/information.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .searchbox {
+.mappnlcntr .searchbox {
     background-image: url(../../img/ext/information-box.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .back {
+.mappnlcntr .back {
     background-image: url(../../img/gis/mapfish/resultset_previous.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .next {
+.mappnlcntr .next {
     background-image: url(../../img/gis/mapfish/resultset_next.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .save {
+.mappnlcntr .save {
     background-image: url(../../img/ext/save.gif) !important;
     height: 20px !important;
     width: 20px !important;
@@ -124,52 +124,52 @@
 .gxp-icon-layerproperties {
     background-image: url(../../img/silk/wrench.png) !important;
 }
-#mappnlcntr .movefeature {
+.mappnlcntr .movefeature {
     background-image: url(../../img/gis/arrow_refresh.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .removefeature {
+.mappnlcntr .removefeature {
     background-image: url(../../img/gis/remove_point_off.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .resizefeature {
+.mappnlcntr .resizefeature {
     background-image: url(../../img/gis/resize.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .rotatefeature {
+.mappnlcntr .rotatefeature {
     background-image: url(../../img/gis/arrow_rotate_clockwise.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
 
 /*
-#mappnlcntr .mf-print-action {
+.mappnlcntr .mf-print-action {
     background-image: url(../../img/gis/mapfish/printer.png) !important;
 }
-#mappnlcntr .pan-on{
+.mappnlcntr .pan-on{
     background-image: url(../../img/gis/openlayers/theme_default/pan_on.png) !important;
     height: 20px !important;
     width: 20px !important;
 }
-#mappnlcntr .drawpoint-on {
+.mappnlcntr .drawpoint-on {
   background-image: url(../../img/gis/openlayers/theme_default/add_point_on.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .drawline-on {
+.mappnlcntr .drawline-on {
   background-image: url(../../img/gis/openlayers/theme_default/draw_line_on.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .drawpolygon-on{
+.mappnlcntr .drawpolygon-on{
   background-image: url(../../img/gis/openlayers/theme_default/draw_polygon_on.png) !important;
   height: 20px !important;
   width: 20px !important;
 }
-#mappnlcntr .measure-on {
+.mappnlcntr .measure-on {
   background-image: url(../../img/gis/measuring-stick-on.png) !important;
   height: 20px !important;
   width: 20px !important;
@@ -177,10 +177,10 @@
 */
  
 /* Popups */
-div.olFramedCloudPopupContent label {
+.olFramedCloudPopupContent label {
     padding-right: 5px;
 }
-div#gis-map-window .olFramedCloudPopupContent td {
+.gis-map-window .olFramedCloudPopupContent td {
     padding: 2px;
 }
 #georsspopup h2,

@@ -27,9 +27,13 @@ form {
 }
 
 /* Over-ride Bootstrap */
-#gis-map-window img,
-#map_wrapper img {
+.gis-map-window img,
+.map_wrapper img {
     max-width: none;
+}
+
+.form-horizontal .map_wrapper {
+    margin-left: 100px;
 }
 
 /* Imitate Bootstrap in jQueryUI Modal */
@@ -42,13 +46,13 @@ form {
 
 /* Over-ride widgets */
 /*
-div#dl-container {
+#dl-container {
     clear: none;
 }*/
 div.dl {
     border-bottom: 0;
 }
-div.dl-item {
+.dl-item {
     border-top: 0;
     clear: none;
 }
@@ -56,15 +60,15 @@ div.dl-item {
     display: none;
 }
 
-textarea#cms_post_body.text.input-xlarge {
+#cms_post_body.text.input-xlarge {
     height: 100px;
 }
 
 /* Push down below Nav */
-div#alert-space {
+#alert-space {
     padding-top: 50px;
 }
-div.alert.alert-success {
+.alert.alert-success {
     border: 1px solid #b2b2b2;
 }
 
@@ -240,10 +244,10 @@ input#sub_filedocument_filedocument_i_file_edit_none.upload {
     padding-top: 22px;
 }
 
-div#cms_post_body__row.control-group, 
-div#cms_post_series_id__row.control-group,
-div#cms_post_location_id__row.control-group,
-div#cms_post_sub_filedocument__row.control-group {
+#cms_post_body__row.control-group, 
+#cms_post_series_id__row.control-group,
+#cms_post_location_id__row.control-group,
+#cms_post_sub_filedocument__row.control-group {
     margin-bottom: 5px;
 }
 
@@ -358,25 +362,25 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     border: none;
 }
 
-input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
-input#post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
+#post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
+#post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
     width: 100px;
     margin-left: 10px;
     margin-right: 10px;
     font-size: 12px;
 }
 
-input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime{
+#post-cms_post_created_on-date-filter-le.date-filter-input.anytime{
     margin-right: 10px;
     margin-left: 17px;
 }
 
-label#post-auth_user_organisation_id-options-filter__label,
-label#post-cms_post_series_id-options-filter__label,
-label#post-cms_post_created_on-date-filter__label,
-label#post-cms_post_location_id-location-filter__label, 
-label#post-cms_post_location_id-location-filter__label, 
-label#post-cms_post_created_on-date-filter__label {
+#post-auth_user_organisation_id-options-filter__label,
+#post-cms_post_series_id-options-filter__label,
+#post-cms_post_created_on-date-filter__label,
+#post-cms_post_location_id-location-filter__label, 
+#post-cms_post_location_id-location-filter__label, 
+#post-cms_post_created_on-date-filter__label {
     padding: 7px 7px 7px 0;
     font-weight: bold;
 }
@@ -386,8 +390,8 @@ input.btn.btn-primary.filter-submit.filter-ajax {
     margin-bottom: -15px;
 }
 
-input#post-cms_post_created_on-date-filter-le_clear,
-input#post-cms_post_created_on-date-filter-ge_clear {
+#post-cms_post_created_on-date-filter-le_clear,
+#post-cms_post_created_on-date-filter-ge_clear {
     font-size: 11px;
     font-weight: normal;
     font-style: normal;

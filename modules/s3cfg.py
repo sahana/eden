@@ -1436,8 +1436,8 @@ class S3Config(Storage):
                 1: T("Lead Implementer"), # T("Host National Society")
                 2: T("Partner"), # T("Partner National Society")
                 3: T("Donor"),
-                4: T("Customer"), 
-                5: T("Supplier") 
+                4: T("Customer"), # T("Beneficiary")?
+                5: T("Supplier")  # T("Beneficiary")?
             })
 
     def get_project_organisation_lead_role(self):

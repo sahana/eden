@@ -2642,7 +2642,9 @@ class S3LocationSelectorWidget2(FormWidget):
         for level in levels:
             label = labels[level]
             id = "%s_%s" % (fieldname, level)
-            widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label), _value=""), _id=id)
+            widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
+                                   _value=""),
+                            _id=id)
             comment = T("Select this %(location)s") % dict(location = label)
             throbber = IMG(_src=throbber_img,
                            _height=32, _width=32,
@@ -2651,10 +2653,11 @@ class S3LocationSelectorWidget2(FormWidget):
                            )
             if formstyle == "bootstrap":
                 # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-                # - Elements moved via JS after page load
+                # -> Elements moved via JS after page load
                 label = LABEL("%s:" % label, _class="control-label",
                                              _for=id)
                 widget.add_class("input-xlarge")
+                # Currently unused, so remove if this remains so
                 comment = BUTTON(comment,
                                  _class="btn btn-primary hide",
                                  _id="%s__button" % id
@@ -2716,10 +2719,31 @@ class S3LocationSelectorWidget2(FormWidget):
         if script_path not in s3.scripts:
             s3.scripts.append(script_path)
 
+        map_icon = I(_class="icon-map-marker")
+        if formstyle == "bootstrap":
+            map_icon = DIV("", "", map_icon, _class="controls")
+            # @ToDo: Show if already at highest level of hierarchy (or a specific location within)
+            #if value:
+            hidden = "hide"
+            map_icon = DIV("", map_icon, _class="control-group %s" % hidden,
+                           _id="%s_map_icon" % fieldname)
+        elif callable(formstyle):
+            map_icon = formstyle("", "", map_icon, hidden=hidden)
+        else:
+            raise
+
+        _map = current.gis.show_map(collapsed=True,
+                                    height=400,
+                                    width=500,
+                                    # Postpone rendering Map until DIV unhidden
+                                    callback=""
+                                    )
+
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr)), # Real input, hidden
                        Lx_rows,
-                       #_map,
+                       map_icon,
+                       _map,
                        requires=field.requires
                        )
 

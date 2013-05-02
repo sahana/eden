@@ -2035,7 +2035,7 @@ function addXYZLayer(layer) {
 
 // Support Vector Layers
 function showThrobber(id) {
-    $('#layer_throbber').show().removeClass('hide');
+    $('.layer_throbber').show().removeClass('hide');
     S3.gis.layers_loading.pop(id); // we never want 2 pushed
     S3.gis.layers_loading.push(id);
 }
@@ -2043,7 +2043,7 @@ function showThrobber(id) {
 function hideThrobber(id) {
     S3.gis.layers_loading.pop(id);
     if (S3.gis.layers_loading.length === 0) {
-        $('#layer_throbber').hide().addClass('hide');
+        $('.layer_throbber').hide().addClass('hide');
     }
 }
 

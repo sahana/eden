@@ -141,7 +141,8 @@
     overflow: auto;
 }
 
-#subnav li, #subnav ul li {
+#subnav li,
+#subnav ul li {
     list-style: none;
     clear: both;
 }

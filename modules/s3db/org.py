@@ -29,8 +29,8 @@
 
 __all__ = ["S3OrganisationModel",
            "S3OrganisationVirtualFields",
-           "S3OrganisationSummaryModel",
            "S3OrganisationResourceModel",
+           "S3OrganisationSummaryModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
@@ -1189,38 +1189,6 @@ class S3OrganisationVirtualFields:
             return current.messages["NONE"]
 
 # =============================================================================
-class S3OrganisationSummaryModel(S3Model):
-    """
-        Organisation Summary fields visible when settings.org.summary = True
-    """
-
-    names = ["org_organisation_summary"]
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Summary data
-        #
-        tablename = "org_organisation_summary"
-        table = self.define_table(tablename,
-                                  self.org_organisation_id(ondelete="CASCADE"),
-                                  Field("national_staff", "integer", # national is a reserved word in Postgres
-                                        requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
-                                        label=T("# of National Staff")),
-                                  Field("international_staff", "integer",
-                                        requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
-                                        label=T("# of International Staff")),
-                                  *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                )
-
-# =============================================================================
 class S3OrganisationResourceModel(S3Model):
     """
         Organisation Resource Model
@@ -1235,6 +1203,7 @@ class S3OrganisationResourceModel(S3Model):
         db = current.db
         auth = current.auth
         settings = current.deployment_settings
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Resource Type data
@@ -1242,9 +1211,28 @@ class S3OrganisationResourceModel(S3Model):
         tablename = "org_resource_type" # Or should it be org_organisation_resource_type?
         table = self.define_table(tablename,
                                   Field("name", label=T("Resource Type")),
+                                  s3_comments(),
                                   *s3_meta_fields())
 
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            title_create=T("Add Resource Type"),
+            title_display=T("Resource Type Details"),
+            title_list=T("Resource Types"),
+            title_update=T("Edit Resource Type"),
+            title_search=T("Search Resource  Types"),
+            title_upload=T("Import Resource Types"),
+            subtitle_create=T("Add New Resource Type"),
+            label_list_button=T("Resource Types"),
+            label_create_button=T("Add New Resourc Typee"),
+            label_delete_button=T("Delete Resource Type"),
+            msg_record_created=T("Resource Type added"),
+            msg_record_modified=T("Resource Type updated"),
+            msg_record_deleted=T("Resource Type deleted"),
+            msg_list_empty=T("No Resource Types defined"))
+
         represent = S3Represent(lookup=tablename)
+
         org_resource_type_id = \
             S3ReusableField("resource_type_id", "reference org_resource_type",
                             sortby="name",
@@ -1267,27 +1255,31 @@ class S3OrganisationResourceModel(S3Model):
         tablename = "org_resource"
         table = self.define_table(tablename,
                                   self.org_organisation_id(ondelete="CASCADE"),
-                                  self.super_link("site_id", "org_site",
-                                                  label=settings.get_org_site_label(),
-                                                  instance_types = auth.org_site_types,
-                                                  orderby = "org_site.name",
-                                                  realms = auth.permission.permitted_realms(tablename, method="create"),
-                                                  not_filterby = "obsolete",
-                                                  not_filter_opts = [True],
-                                                  readable = True,
-                                                  writable = True,
-                                                  represent = self.org_site_represent,
-                                                  ),
+                                  # Add this when deprecating S3OfficeSummaryModel
+                                  # self.super_link("site_id", "org_site",
+                                                  # label=settings.get_org_site_label(),
+                                                  # instance_types = auth.org_site_types,
+                                                  # orderby = "org_site.name",
+                                                  # realms = auth.permission.permitted_realms(tablename,  
+                                                                                            # method="create"),
+                                                  # not_filterby = "obsolete",
+                                                  # not_filter_opts = [True],
+                                                  # readable = True,
+                                                  # writable = True,
+                                                  # represent = self.org_site_represent,
+                                                  # ),
                                   self.gis_location_id(),
                                   org_resource_type_id(),
                                   Field("quantity", "integer", 
-                                        requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                        requires=IS_NULL_OR(
+                                                    IS_INT_IN_RANGE(0, 9999)
+                                                    ),
                                         label=T("Quantity")),
                                   s3_comments(),
                                   *s3_meta_fields())
 
         # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create=T("Add Resource"),
             title_display=T("Resource Details"),
             title_list=T("Resource Inventory"),
@@ -1303,6 +1295,40 @@ class S3OrganisationResourceModel(S3Model):
             msg_record_modified=T("Resource updated"),
             msg_record_deleted=T("Resource deleted"),
             msg_list_empty=T("No Resources in Inventory"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage(
+                )
+
+# =============================================================================
+class S3OrganisationSummaryModel(S3Model):
+    """
+        Organisation Summary fields visible when settings.org.summary = True
+
+        @ToDo: Deprecate in favour of S3OrganisationResourceModel
+    """
+
+    names = ["org_organisation_summary"]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Summary data
+        #
+        tablename = "org_organisation_summary"
+        table = self.define_table(tablename,
+                                  self.org_organisation_id(ondelete="CASCADE"),
+                                  Field("national_staff", "integer", # national is a reserved word in Postgres
+                                        requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                        label=T("# of National Staff")),
+                                  Field("international_staff", "integer",
+                                        requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                        label=T("# of International Staff")),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2619,6 +2645,8 @@ class S3OfficeModel(S3Model):
 class S3OfficeSummaryModel(S3Model):
     """
         Office Summary fields visible when settings.org.summary = True
+
+        @ToDo: Deprecate in favour of S3OrganisationResourceModel
     """
 
     names = ["org_office_summary"]

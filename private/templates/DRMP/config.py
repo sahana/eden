@@ -1033,27 +1033,23 @@ def customize_org_resource(**attr):
         - Data Model
     """
 
-    s3 = current.response.s3
-    s3db = current.s3db
-    db = current.db
-
     tablename = "org_resource"
-    table = s3db.org_resource
+    table = current.s3db.org_resource
     
     # Configure fields
-    table.site_id.readable = False
-    table.site_id.writable = False
-    table.location_id.requires = IS_ONE_OF(db, "gis_location.id",
-                                            S3Represent(lookup="gis_location"),
-                                            sort = True,
-                                            filterby = "level",
-                                            filter_opts = ["L1"]
-                                            )
+    #table.site_id.readable = table.site_id.readable = False
+    table.location_id.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                           S3Represent(lookup="gis_location"),
+                                           sort = True,
+                                           filterby = "level",
+                                           filter_opts = ["L1"]
+                                           )
     table.location_id.widget = None
     
     return attr
 
 settings.ui.customize_org_resource = customize_org_resource
+
 # =============================================================================
 # Template Modules
 # Comment/uncomment modules here to disable/enable them
