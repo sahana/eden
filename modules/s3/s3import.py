@@ -3479,7 +3479,7 @@ class S3BulkImporter(object):
 
         function = details[1].strip('" ')
         csv = None
-        if len(details) == 3:
+        if len(details) >= 3:
             fileName = details[2].strip('" ')
             (csvPath, csvFile) = os.path.split(fileName)
             if csvPath != "":
@@ -3489,8 +3489,8 @@ class S3BulkImporter(object):
                                     csvPath)
             csv = os.path.join(path, csvFile)
         extraArgs = None
-        if len(details) == 4:
-            extraArgs = details[3].strip('" ')
+        if len(details) >= 4:
+            extraArgs = details[3:]
         self.tasks.append([2, function, csv, extraArgs])
         self.specialTasks.append([function, csv, extraArgs])
 
@@ -3629,11 +3629,11 @@ class S3BulkImporter(object):
                 if extraArgs is None:
                     error = s3[fun]()
                 else:
-                    error = s3[fun](extraArgs)
+                    error = s3[fun](*extraArgs)
             elif extraArgs is None:
                 error = s3[fun](csv)
             else:
-                error = s3[fun](csv, extraArgs)
+                error = s3[fun](csv, *extraArgs)
             if error:
                 self.errorList.append(error)
             end = datetime.now()
@@ -3733,6 +3733,69 @@ class S3BulkImporter(object):
                 create_role(rulelist[0],
                             rulelist[1],
                             *acls[rulelist[0]])
+    # -------------------------------------------------------------------------
+    def import_image(self,
+                     filename,
+                     tablename,
+                     idname,
+                     imagename):
+        """
+            Import images, such as a logo or person image
+            
+            filename     a CSV list of records and filenames
+            tablename    the name of the table
+            idname       the field used to identify the record
+            imagename    the field to where the image will be added
+            
+            Example:
+            bi.import_image ("org_logos.csv", "org_organisation", "name", "logo")
+            and the file org_logos.csv may look as follows
+            id                            file
+            Sahana Software Foundation    sahanalogo.jpg
+            American Red Cross            icrc.gif
+        """
+         # Check if the source file is accessible
+        try:
+            openFile = open(filename, "r")
+        except IOError:
+            return "Unable to open file %s" % filename
+        reader = self.csv.DictReader(openFile)
+        table = current.s3db[tablename]
+        for row in reader:
+            if row != None:
+                id = row["id"]
+                image = row["file"]
+                # Open the file
+                try:
+                    # Extract the path to the CSV file, image should bi in
+                    # this directory, or relative to it
+                    (path, file) = os.path.split(filename)
+                    imagepath= os.path.join(path, image)
+                    openFile = open(imagepath, "r")
+                except IOError:
+                    s3_debug("Unable to open image file %s" % image)
+                    continue
+                image_source = StringIO(openFile.read())
+                # get the id of the resource
+                try:
+                    record = current.db((table.deleted != True) & \
+                                        (table[idname] == id)).select(limitby=(0, 1)).first()
+                except:
+                    s3_debug("Unable get %s of the resource %s to attach the image file to" % (id, tablename))
+                    continue
+                # create and accept the form
+                image_form = SQLFORM(table, record, fields=["id", imagename])
+                form_vars = Storage()
+                form_vars._formname = "%s/%s" % (tablename, record.id)
+                form_vars.id = record.id
+                source = Storage()
+                source.filename = imagepath
+                source.file = image_source
+                form_vars[imagename] = source
+                if not image_form.accepts(form_vars):
+                    for (key,error) in image_form.errors.items():
+                        s3_debug("error importing logo %s: %s %s" % (image, key, error))
+
 
     # -------------------------------------------------------------------------
     def perform_tasks(self, path):
