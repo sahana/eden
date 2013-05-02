@@ -121,6 +121,9 @@
             <xsl:if test="col[@field='Objectives']!=''">
                 <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
             </xsl:if>
+            <xsl:if test="col[@field='Budget']!=''">
+                <data field="budget"><xsl:value-of select="col[@field='Budget']"/></data>
+            </xsl:if>
 
             <!-- Status -->
             <xsl:if test="$Status">
@@ -210,7 +213,7 @@
 
             <!-- Project Budgets -->
             <xsl:variable name="Currency" select="col[@field='Currency']"/>
-            <xsl:for-each select="col[starts-with(@field, 'Budget')]">
+            <xsl:for-each select="col[starts-with(@field, 'Budget:')]">
                 <xsl:variable name="Amount" select="text()"/>
                 <xsl:if test="$Amount!=''">
                     <resource name="project_annual_budget">
