@@ -1438,8 +1438,8 @@ class S3Resource(object):
             @param records: the records dict to merge the data into
             @param field_data: the cumulative field data
             @param effort: estimated effort for list:type representations
-            @param represent: field data are rendered as dicts rather than
-                              as lists - this aids value representation
+            @param represent: collect unique values per field and estimate
+                              representation efforts for list:types
         """
 
         def get(key):
@@ -1457,7 +1457,7 @@ class S3Resource(object):
             record = records.get(k, {})
             for idx, col in enumerate(columns):
                 fvalues, frecords, joined, list_type = field_data[col]
-                values =  {}
+                values = record.get(col, {})
                 for row in group:
                     value = getval[idx](row)
                     if list_type and value is not None:
@@ -1473,8 +1473,7 @@ class S3Resource(object):
                             values[value] = None
                         if represent and value not in fvalues:
                             fvalues[value] = None
-
-                record[col] = values if represent else values.keys()
+                record[col] = values
                 if k not in frecords:
                     frecords[k] = record[col]
             records[k] = record
@@ -2026,81 +2025,24 @@ class S3Resource(object):
             fields.insert(0, table._id.name)
             selectors.insert(0, table._id.name)
 
-        # Resolve the selectors
-        rfields = self.resolve_selectors(fields, extra_fields=False)[0]
-
-        # Retrieve the rows
-        rows, numrows, ids = self.select(fields=selectors,
-                                         start=start,
-                                         limit=limit,
-                                         orderby=orderby,
-                                         left=left,
-                                         distinct=distinct,
-                                         count=True,
-                                         getids=getids,
-                                         cacheable=True)
+        # Extract the data
+        data = self.fast_select(selectors,
+                                start=start,
+                                limit=limit,
+                                orderby=orderby,
+                                left=left,
+                                distinct=distinct,
+                                count=True,
+                                getids=getids,
+                                represent=True)
 
         # Generate the data table
-        if rows:
-            data = self.extract(rows, selectors, represent=True)
-            return S3DataTable(rfields, data), numrows, ids
+        if data["data"]:
+            rfields = data["rfields"]
+            dt = S3DataTable(rfields, data["data"])
         else:
-            return None, 0, []
-
-    #def datatable(self,
-                  #fields=None,
-                  #start=0,
-                  #limit=None,
-                  #left=None,
-                  #orderby=None,
-                  #distinct=False,
-                  #getids=False):
-        #"""
-            #Generate a data table of this resource
-
-            #@param fields: list of fields to include (field selector strings)
-            #@param start: index of the first record to include
-            #@param limit: maximum number of records to include
-            #@param left: additional left joins for DB query
-            #@param orderby: orderby for DB query
-            #@param distinct: distinct-flag for DB query
-            #@param getids: return the record IDs of all records matching the
-                           #query (used in search to create a filter)
-
-            #@return: tuple (S3DataTable, numrows, ids), where numrows represents
-                     #the total number of rows in the table that match the query;
-                     #ids is empty unless getids=True
-        #"""
-
-        ## Choose fields
-        #if fields is None:
-            #fields = [f.name for f in self.readable_fields()]
-        #selectors = list(fields)
-
-        ## Automatically include the record ID
-        #table = self.table
-        #if table._id.name not in selectors:
-            #fields.insert(0, table._id.name)
-            #selectors.insert(0, table._id.name)
-
-        ## Extract the data
-        #data = self.fast_select(selectors,
-                                #start=start,
-                                #limit=limit,
-                                #orderby=orderby,
-                                #left=left,
-                                #distinct=distinct,
-                                #count=True,
-                                #getids=getids,
-                                #represent=True)
-
-        ## Generate the data table
-        #if data["data"]:
-            #rfields = data["rfields"]
-            #dt = S3DataTable(rfields, data["data"])
-        #else:
-            #dt = None
-        #return dt, data["numrows"], data["ids"]
+            dt = None
+        return dt, data["numrows"], data["ids"]
 
     # -------------------------------------------------------------------------
     def datalist(self,
@@ -4586,7 +4528,7 @@ class S3Resource(object):
 
         db = current.db
 
-        left = []
+        left_joins = {}
 
         sSearch = "sSearch"
         iColumns = "iColumns"
@@ -4622,7 +4564,8 @@ class S3Resource(object):
                 flist = []
                 for i in xrange(numcols):
                     try:
-                        field = rfields[i].field
+                        rfield = rfields[i]
+                        field = rfield.field
                     except (KeyError, IndexError):
                         continue
                     if field is None:
@@ -4641,21 +4584,17 @@ class S3Resource(object):
                             tn = alias
                         else:
                             ktable = db[tn]
-                        if tn != skip:
-                            q = (field == ktable._id)
-                            join = [j for j in left if j.first._tablename == tn]
-                            if not join:
-                                left.append(ktable.on(q))
-                                # May also need an additional link
-                                tn = q.first._tablename 
-                                if tn != self.tablename:
-                                    join = [j for j in left if j.first._tablename == tn]
-                                    if not join:
-                                        for ljoin in ljoins:
-                                            j = ljoins[ljoin][0] 
-                                            if j.first._tablename == tn:
-                                                left.append(j)
-                                                break
+
+                        # Add left joins for key table
+                        if tn != skip and tn not in left_joins:
+                            left_joins[tn] = ktable.on(field == ktable._id)
+                            if rfield.left:
+                                for joins in rfield.left.values():
+                                    for join in joins:
+                                        tname = join.first._tablename
+                                        if tname not in left_joins:
+                                            left_joins[tname] = join
+
                         if isinstance(field.sortby, (list, tuple)):
                             flist.extend([ktable[f] for f in field.sortby
                                                     if f in ktable.fields])
@@ -4741,11 +4680,12 @@ class S3Resource(object):
                 except:
                     columns.append(None)
                 else:
-                    columns.append(rfield.field)
+                    columns.append(rfield)
 
             # Process the orderby-fields
             for i in xrange(len(columns)):
-                field = columns[i]
+                rfield = columns[i]
+                field = rfield.field
                 if field is None:
                     continue
                 ftype = str(field.type)
@@ -4765,12 +4705,15 @@ class S3Resource(object):
                     else:
                         ktable = db[tn]
 
-                    # Add left join (except for linked table)
-                    if tn != skip:
-                        q = (field == ktable._id)
-                        join = [j for j in left if j.first._tablename == tn]
-                        if not join:
-                            left.append(ktable.on(q))
+                    # Add left joins for key table
+                    if tn != skip and tn not in left_joins:
+                        left_joins[tn] = ktable.on(field == ktable._id)
+                        if rfield.left:
+                            for joins in rfield.left.values():
+                                for join in joins:
+                                    tname = join.first._tablename
+                                    if tname not in left_joins:
+                                        left_joins[tname] = join
 
                     # Construct orderby from sortby
                     if not isinstance(field.sortby, (list, tuple)):
@@ -4789,7 +4732,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        return (searchq, orderby, left)
+        return (searchq, orderby, left_joins.values())
 
     # -------------------------------------------------------------------------
     @classmethod
