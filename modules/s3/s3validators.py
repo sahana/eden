@@ -927,40 +927,36 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
 class IS_LOCATION(Validator):
     """
         Allow all locations, or locations by level.
-
-        Optimized for use within the S3LocationSelectorWidget's L0 Dropdown.
     """
 
     def __init__(self,
                  level = None,
                  error_message = None
-                ):
-        T = current.T
+                 ):
         self.level = level # can be a List or a single element
-        self.error_message = error_message or T("Invalid Location!")
+        self.error_message = error_message
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
-        db = current.db
-        table = db.gis_location
-        level = self.level
 
-        if level and level == "L0":
+        level = self.level
+        if level == "L0":
             # Use cached countries. This returns name if id is for a country.
-            have_location = gis.get_country(value)
+            ok = current.gis.get_country(value)
         else:
+            db = current.db
+            table = db.gis_location
             query = (table.id == value) & (table.deleted == False)
             if level:
                 if isinstance(level, list):
                     query = query & (table.level.belongs(level))
                 else:
                     query = query & (table.level == level)
-            have_location = db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if have_location:
+            ok = db(query).select(table.id, limitby=(0, 1))
+        if ok:
             return (value, None)
         else:
-            return (value, self.error_message)
+            return (value, self.error_message or current.T("Invalid Location!"))
 
 # =============================================================================
 class IS_LOCATION_SELECTOR(Validator):
@@ -974,7 +970,7 @@ class IS_LOCATION_SELECTOR(Validator):
 
     def __init__(self,
                  error_message = None,
-                ):
+                 ):
         self.error_message = error_message
         self.errors = Storage()
         self.id = None
@@ -1506,23 +1502,72 @@ class IS_LOCATION_SELECTOR(Validator):
         if form.errors:
             self.errors = form.errors
             return None
-        location = Storage(
-                        name=name,
-                        lat=vars.lat,
-                        lon=vars.lon,
-                        inherited=vars.inherited,
-                        street=street,
-                        postcode=postcode,
-                        parent=parent,
-                        wkt = vars.wkt,
-                        gis_feature_type = vars.gis_feature_type,
-                        lon_min = vars.lon_min,
-                        lon_max = vars.lon_max,
-                        lat_min = vars.lat_min,
-                        lat_max = vars.lat_max
-                      )
+        location = Storage(name=name,
+                           lat=vars.lat,
+                           lon=vars.lon,
+                           inherited=vars.inherited,
+                           street=street,
+                           postcode=postcode,
+                           parent=parent,
+                           wkt = vars.wkt,
+                           gis_feature_type = vars.gis_feature_type,
+                           lon_min = vars.lon_min,
+                           lon_max = vars.lon_max,
+                           lat_min = vars.lat_min,
+                           lat_max = vars.lat_max
+                           )
 
         return location
+
+# =============================================================================
+class IS_LOCATION_SELECTOR2(Validator):
+    """
+        Designed for use within the S3LocationSelectorWidget2.
+        For Create forms, this will create a new location if there is a Lat/Lon submitted
+        For Update forms, this will check that we have a valid location_id FK and update any changes
+
+        @ToDo: Audit
+    """
+
+    def __init__(self,
+                 error_message = None,
+                ):
+        self.error_message = error_message
+        self.errors = Storage()
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+
+        # Rough check for valid Lat/Lon (detailed later)
+        vars = current.request.post_vars
+        lat = vars.get("lat", None)
+        lon = vars.get("lon", None)
+        if lat:
+            try:
+                lat = float(lat)
+            except ValueError:
+                self.errors["lat"] = current.T("Latitude is Invalid!")
+        if lon:
+            try:
+                lon = float(lon)
+            except ValueError:
+                self.errors["lon"] = current.T("Longitude is Invalid!")
+        if self.errors:
+            return (value, None)
+
+        db = current.db
+        table = db.gis_location
+
+        if lat and lon:
+            # @ToDo: Specific Location
+            pass
+            # Create or Update
+            #current.gis.update_location_tree(vars)
+            #return (value, None)
+        else:
+            # Lx
+            return (value, None)
+            #return (value, self.error_message or current.T("Invalid Location!"))
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):

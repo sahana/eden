@@ -249,6 +249,7 @@ def dojs(dogis = False, warnings = True):
                      "embed_component",
                      "gis.fullscreen",
                      "locationselector.widget",
+                     "locationselector.widget2",
                      "popup",
                      "timeline",
                      ]:

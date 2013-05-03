@@ -79,6 +79,9 @@ S3.gis.show_map = function() {
 
     // Toolbar Tooltips
     Ext.QuickTips.init();
+    
+    // Return the map object (ready to be able to have this not be a global)
+    return map;
 };
 
 // Configure the Viewport
@@ -247,6 +250,16 @@ function addWestPanel() {
 function addMapPanelContainer() {
     if (S3.gis.toolbar) {
         addToolbar();
+    } else {
+        // Enable Controls which we may want independent of the Toolbar
+        if (S3.gis.draw_feature) {
+            if (S3.gis.draw_feature == 'active') {
+                var active = true;
+            } else {
+                var active = false;
+            }
+            addPointControl(null, active);
+        }
     }
     S3.gis.mapPanelContainer = new Ext.Panel({
         layout: 'card',
@@ -518,11 +531,11 @@ function addToolbar() {
     var polygon_pressed;
     var pan_pressed;
     var point_pressed;
-    if (S3.gis.draw_polygon == "active") {
+    if (S3.gis.draw_polygon == 'active') {
         polygon_pressed = true;
         pan_pressed = false;
         point_pressed = false;
-    } else if (S3.gis.draw_feature == "active") {
+    } else if (S3.gis.draw_feature == 'active') {
         point_pressed = true;
         pan_pressed = false;
         polygon_pressed = false;

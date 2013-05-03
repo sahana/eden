@@ -1098,11 +1098,6 @@ table.report .report-cell-zoom.opened {
     padding-left: 2px;
 }
 
-/* LocationSelectorWidget2 */
-.controls .icon-map-marker {
-    margin-left: 260px;
-}
-
 /* Translation Functionality */
 .translation_module_table {
     width: 55%;

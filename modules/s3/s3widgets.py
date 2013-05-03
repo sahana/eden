@@ -2579,12 +2579,13 @@ class S3LocationSelectorWidget2(FormWidget):
         * Doesn't allow selection of existing Locations
         * Doesn't support manual entry of LatLons
         * Doesn't support creation of Polygons
+        * Doesn't support Geocoding
 
         May evolve into a replacement in-time if missing features get migrated here.
 
         Implementation Notes:
         * Should support formstyles (Bootstrap most urgent)
-        * Should support multiple on a page
+        * Should support multiple on a page (not urgent)
         * Performance: Create JSON for the hierarchy, along with bboxes for the map zoom
                        - load progressively rather than all as 1 big download
         h = {id : {'n' : name,
@@ -2612,18 +2613,71 @@ class S3LocationSelectorWidget2(FormWidget):
         appname = current.request.application
         throbber_img = "/%s/static/img/ajax-loader.gif" % appname
 
+        gtable = s3db.gis_location
+
         countries = settings.get_gis_countries()
         if len(countries) != 1:
             # @ToDo: Lookup Labels dynamically when L0 changes
             raise
-        # @ToDo: Support default L1/L2/L3
 
-        # Main Input
+        # @ToDo: Support default locations from gis_config
+        values = dict(L0 = countries[0],
+                      L1 = None,
+                      L2 = None,
+                      L3 = None,
+                      L4 = None,
+                      L5 = None,
+                      )
+        lat = None
+        lon = None
+        if value:
+            record = db(gtable.id == value).select(gtable.path,
+                                                   gtable.level,
+                                                   gtable.lat,
+                                                   gtable.lon,
+                                                   # @ToDo: Polygon support
+                                                   #gtable.wkt,
+                                                   limitby=(0, 1)).first()
+            if not record:
+                raise
+            level = record.level
+            path = record.path.split("/")
+            if not level:
+                # Only use a specific Lat/Lon when not an Lx
+                lat = record.lat
+                lon = record.lon
+                if len(path) < len(levels):
+                    # We don't have a full path
+                    # @ToDo: Retrieve all records in the path to match them up to their Lx
+                    raise
+            else:
+                if len(path) != (level + 1):
+                    # We don't have a full path
+                    # @ToDo: Retrieve all records in the path to match them up to their Lx
+                    raise
+
+            for l in levels:
+                try:
+                    values[l] = path[int(l[1:])]
+                except:
+                    pass
+
+        fieldname = str(field).replace(".", "_")
+
+        # Main Input, will be hidden
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
-        # Hide the real field
-        attr["_class"] = "hide"
+
+        # Lat/Lon INPUT fields, will be hidden
+        lat_input = INPUT(_name="lat",
+                          _id="%s_lat" % fieldname,
+                          _value=lat,
+                          )
+        lon_input = INPUT(_name="lon",
+                          _id="%s_lon" % fieldname,
+                          _value=lon,
+                          )
 
         # Lx Dropdowns
         htable = s3db.gis_hierarchy
@@ -2637,8 +2691,8 @@ class S3LocationSelectorWidget2(FormWidget):
         #del labels.location_id
 
         Lx_rows = DIV()
+        # 1st level is always visible
         hidden = False
-        fieldname = str(field).replace(".", "_")
         for level in levels:
             label = labels[level]
             id = "%s_%s" % (fieldname, level)
@@ -2674,19 +2728,18 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 raise
             Lx_rows.append(row)
+            # Subsequent levels are hidden by-default
+            # (client-side JS will open when-needed)
             hidden = True
 
-        # @ToDo
-        #if value:
-
-        table = s3db.gis_location
-        query = (table.deleted == False) & \
-                (table.level == "L1") & \
-                (table.parent == country_id)
-        locations = db(query).select(table.id,
-                                     table.name,
-                                     table.level,
-                                     table.parent)
+        # @ToDo: Don't assume we start at L1
+        query = (gtable.deleted == False) & \
+                (gtable.level == "L1") & \
+                (gtable.parent == country_id)
+        locations = db(query).select(gtable.id,
+                                     gtable.name,
+                                     gtable.level,
+                                     gtable.parent)
         location_dict = {}
         for location in locations:
             location_dict[int(location.id)] = dict(n=location.name,
@@ -2702,40 +2755,43 @@ class S3LocationSelectorWidget2(FormWidget):
             ))
         append(i18n)
 
-        script = '''\nl=%s\n''' % json.dumps(location_dict)
+        script = '''l=%s''' % json.dumps(location_dict)
         append(script)
 
-        script = '''\ns3_gis_locationselector2('%s',%s)\n''' % (fieldname, country_id)
+        script = '''s3_gis_locationselector2('%s',%s''' % (fieldname, country_id)
+        L1 = values["L1"]
+        if L1:
+            script = '''%s,%i''' % (script, values[L1])
+            L2 = values["L2"]
+            if L2:
+                script = '''%s,%i''' % (script, values[L2])
+                L3 = values["L3"]
+                if L3:
+                    script = '''%s,%i''' % (script, values[L3])
+                L4 = values["L4"]
+                if L4:
+                    script = '''%s,%i''' % (script, values[L4])
+                    L5 = values["L5"]
+                    if L5:
+                        script = '''%s,%i''' % (script, values[L5])
+        script = '''%s)''' % script
         append(script)
 
-        s3.js_global.append("".join(js_global))
+        s3.js_global.append("\n".join(js_global))
 
-        #if s3.debug:
-        script = "s3.locationselector.widget2.js"
-        #else:
-        #    script = "s3.locationselector.widget.min2.js"
+        if s3.debug:
+            script = "s3.locationselector.widget2.js"
+        else:
+            script = "s3.locationselector.widget.min2.js"
 
         script_path = "/%s/static/scripts/S3/%s" % (appname, script)
-        if script_path not in s3.scripts:
-            s3.scripts.append(script_path)
-
-        map_icon = I(_class="icon-map-marker")
-        if formstyle == "bootstrap":
-            map_icon = DIV("", "", map_icon, _class="controls")
-            # @ToDo: Show if already at highest level of hierarchy (or a specific location within)
-            #if value:
-            hidden = "hide"
-            map_icon = DIV("", map_icon, _class="control-group %s" % hidden,
-                           _id="%s_map_icon" % fieldname)
-        elif callable(formstyle):
-            map_icon = formstyle("", "", map_icon, hidden=hidden)
-        else:
-            raise
+        scripts = s3.scripts
+        if script_path not in scripts:
+            scripts.append(script_path)
 
         _map = current.gis.show_map(collapsed = True,
                                     height = 320,
                                     width = 480,
-                                    #toolbar = True,
                                     add_feature = True,
                                     add_feature_active = True,
                                     # Postpone rendering Map until DIV unhidden
@@ -2743,9 +2799,11 @@ class S3LocationSelectorWidget2(FormWidget):
                                     )
 
         # The overall layout of the components
-        return TAG[""](DIV(INPUT(**attr)), # Real input, hidden
+        return TAG[""](DIV(INPUT(**attr), # Real input, hidden
+                           lat_input,
+                           lon_input,
+                           _class="hide"),
                        Lx_rows,
-                       map_icon,
                        _map,
                        requires=field.requires
                        )

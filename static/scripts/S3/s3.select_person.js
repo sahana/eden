@@ -3,6 +3,7 @@
  * Currently hardcoded for the hrm_human_resource/create context
  */
 
+// Global, so can only have 1 per page
 var addPerson_real_input;
  
 function addPersonWidget() {

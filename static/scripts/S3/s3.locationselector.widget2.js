@@ -19,7 +19,6 @@ var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5) {
     // Move the rows underneath the real one
     var map_div = $('#' + fieldname + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper')
                                                            .hide();
-    var map_icon = $('#' + fieldname + '_map_icon');
     var L0_row = $('#' + fieldname + '_L0__row');
     var L1_row = $('#' + fieldname + '_L1__row');
     var L2_row = $('#' + fieldname + '_L2__row');
@@ -28,7 +27,6 @@ var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5) {
     var L5_row = $('#' + fieldname + '_L5__row');
     $('#' + fieldname + '__row').hide()
                                 .after(map_div)
-                                .after(map_icon)
                                 .after(L5_row)
                                 .after(L4_row)
                                 .after(L3_row)
@@ -80,7 +78,6 @@ var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5) {
 function lx_select(fieldname, level, id) {
     // Hierarchical dropdown has been selected
     // Hide Map
-    $('#' + fieldname + '_map_icon').hide();
     $('#' + fieldname + '_map_wrapper').hide();
     if (!id) {
         id = $('#' + fieldname + '_L' + level).val();
@@ -132,7 +129,7 @@ function lx_select(fieldname, level, id) {
             var select = $('#' + fieldname + '_L' + level);
             // Remove old entries
             $('#' + fieldname + '_L' + level + ' option').remove('[value != ""]');
-            for (var i=0; i < values.length; i++) {
+            for (var i=0, len=values.length; i < len; i++) {
                 location = values[i];
                 _id = location['i'];
                 if (id == _id) {
@@ -144,42 +141,51 @@ function lx_select(fieldname, level, id) {
                 select.append(option);
             }
         } else {
-            // We're at the top of the hierarchy so show the map icon
-            $('#' + fieldname + '_map_icon').show()
-                                            .click(function() {
-                var element = $('#' + fieldname + '_map_wrapper');
-                if (element.is(':visible')) {
-                    element.hide();
-                } else {
-                    // Open the map so we can select a specific point
-                    element.show();
-                    if (!S3.gis.mapPanel) {
-                        // Instantiate the Map as we couldn't do it when DIV is hidden
-                        S3.gis.show_map();
-                    }
-                    // Zoom to extent of the Lx, if we have it
-                    var bounds = l[id].b;
-                    if (!bounds) {
-                        // Try the parent
-                        var parent = l[id].f;
-                        bounds = l[parent].b;
-                        if (!bounds) {
-                            // Try the grandparent
-                            var grandparent = l[parent].f;
-                            bounds = l[grandparent].b;
-                            if (!bounds) {
-                                // Try the greatgrandparent
-                                var greatgrandparent = l[grandparent].f;
-                                bounds = l[greatgrandparent].b;
-                            }
-                        }
-                    }
-                    if (bounds) {
-                        bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, S3.gis.projection_current);
-                        map.zoomToExtent(bounds);
+            // We're at the top of the hierarchy so show the map so we can select a specific point
+            $('#' + fieldname + '_map_wrapper').show();
+            if (!S3.gis.mapPanel) {
+                // Instantiate the Map as we couldn't do it when DIV is hidden
+                var map = S3.gis.show_map();
+                // @ToDo: Display any existing stored point
+                // Watch for new points being selected, so that we can store the Lat/Lon
+                var control;
+                var controls = map.controls;
+                for (var i=0, len=controls.length; i < len; i++) {
+                    if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
+                        control = controls[i];
                     }
                 }
-            })
+                if (control) {
+                    var updateForm = function(event) {
+                        var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
+                        centerPoint.transform(S3.gis.projection_current, S3.gis.proj4326);
+                        $('#' + fieldname + '_lat').val(centerPoint.lat);
+                        $('#' + fieldname + '_lon').val(centerPoint.lon);
+                    }
+                    control.events.register('featureadded', null, updateForm);
+                }
+            }
+            // Zoom to extent of the Lx, if we have it
+            var bounds = l[id].b;
+            if (!bounds) {
+                // Try the parent
+                var parent = l[id].f;
+                bounds = l[parent].b;
+                if (!bounds) {
+                    // Try the grandparent
+                    var grandparent = l[parent].f;
+                    bounds = l[grandparent].b;
+                    if (!bounds) {
+                        // Try the greatgrandparent
+                        var greatgrandparent = l[grandparent].f;
+                        bounds = l[greatgrandparent].b;
+                    }
+                }
+            }
+            if (bounds) {
+                bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, S3.gis.projection_current);
+                map.zoomToExtent(bounds);
+            }
         }
     } else {
         if (level === 0) {
