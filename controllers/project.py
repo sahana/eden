@@ -77,7 +77,7 @@ def project():
         # Location Filter
         s3db.gis_location_filter(r)
         
-        if r.component and r.component.name == "project_taks":
+        if r.component and r.component.name == "project_task":
             list_fields = s3db.get_config("project_task",
                                           "list_fields")
             list_fields.insert(3, (T("Activity"), "activity.name"))
