@@ -2810,7 +2810,7 @@ class S3LocationSelectorWidget2(FormWidget):
         if s3.debug:
             script = "s3.locationselector.widget2.js"
         else:
-            script = "s3.locationselector.widget.min2.js"
+            script = "s3.locationselector.widget2.min.js"
 
         script = "/%s/static/scripts/S3/%s" % (appname, script)
         scripts = s3.scripts
