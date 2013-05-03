@@ -51,6 +51,7 @@ from gluon.storage import Storage
 
 from s3rest import S3Method
 from s3import import S3ImportItem
+from s3resource import S3URLQuery
 
 DEBUG = False
 if DEBUG:
@@ -547,6 +548,39 @@ class S3Sync(S3Method):
                 # No rule - accept always
                 _debug("Accept because no rule found")
                 item.conflict = False
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_filters(task_id):
+        """
+            Get all filters for a synchronization task
+
+            @param task_id: the task ID
+            @return: a dict of dicts like {tablename: {url_var: value}}
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ftable = s3db.sync_resource_filter
+        query = (ftable.task_id == task_id) & \
+                (ftable.deleted != True)
+        rows = db(query).select(ftable.tablename,
+                                ftable.filter_string)
+
+        filters = {}
+        for row in rows:
+            tablename = row.tablename
+            if tablename in filters:
+                filters[tablename] = "%s&%s" % (filters[tablename],
+                                                row.filter_string)
+            else:
+                filters[tablename] = row.filter_string
+                
+        parse_url = S3URLQuery.parse_url
+        for tablename in filters:
+            filters[tablename] = parse_url(filters[tablename])
+        return filters
 
 # =============================================================================
 class S3SyncLog(S3Method):
