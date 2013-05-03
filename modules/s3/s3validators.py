@@ -690,7 +690,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     labels = [d.get(r[self.kfield], d[None]) for r in records]
                 else:
                     # Standard representation function
-                    labels = map(label, [], records)
+                    labels = map(label, records)
             except TypeError:
                 if isinstance(label, str):
                     labels = map(lambda r: label % dict(r), records)
