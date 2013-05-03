@@ -2732,11 +2732,14 @@ class S3LocationSelectorWidget2(FormWidget):
         else:
             raise
 
-        _map = current.gis.show_map(collapsed=True,
-                                    height=400,
-                                    width=500,
+        _map = current.gis.show_map(collapsed = True,
+                                    height = 320,
+                                    width = 480,
+                                    #toolbar = True,
+                                    add_feature = True,
+                                    add_feature_active = True,
                                     # Postpone rendering Map until DIV unhidden
-                                    callback=""
+                                    callback = ""
                                     )
 
         # The overall layout of the components

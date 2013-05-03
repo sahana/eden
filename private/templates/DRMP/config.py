@@ -234,7 +234,7 @@ def customize_cms_post(**attr):
                 )
 
             # Return to List view after create/update/delete
-            url_next = URL(c="default", f="index", args=None)
+            url_next = URL(c="default", f="index", args="updates")
 
             list_fields = ["series_id",
                            "location_id",
@@ -256,7 +256,7 @@ def customize_cms_post(**attr):
 
             crud_settings = current.response.s3.crud
             crud_settings.formstyle = "bootstrap"
-            crud_settings.submit_button = T("Save changes")
+            #crud_settings.submit_button = T("Save changes")
             # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
             #crud_settings.submit_style = "btn btn-primary"
 
@@ -576,7 +576,7 @@ def customize_event_event(**attr):
 
     crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
+    #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
 
@@ -742,7 +742,7 @@ def customize_gis_location(**attr):
 
     crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
+    #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
 
@@ -934,7 +934,7 @@ def customize_org_organisation(**attr):
 
     crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
+    #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
 

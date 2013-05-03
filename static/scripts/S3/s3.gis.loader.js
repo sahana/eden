@@ -439,10 +439,10 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         jsFiles.push('gis/OpenLayers.js');
         jsFiles.push('gis/GeoExt.js');
         if (i18n.gis_search) {
-            gxt_files.push('gis/GeoExt/ux/GeoNamesSearchCombo.min.js');
+            jsFiles.push('gis/GeoExt/ux/GeoNamesSearchCombo.min.js');
         }
         if (i18n.gis_uploadlayer) {
-            gxt_files.push('gis/gxp_upload.js');
+            jsFiles.push('gis/gxp_upload.js');
         }
         if (S3.gis.mouse_position == 'mgrs') {
             jsFiles.push('gis/MGRS.min.js');
