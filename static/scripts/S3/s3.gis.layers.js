@@ -144,10 +144,11 @@ function addLayers() {
     }
     // Simple Features
     if (S3.gis.features) {
+        var current_projection = map.getProjectionObject();
         for (i = 0; i < S3.gis.features.length; i++) {
             var feature = S3.gis.format_geojson.parseFeature(S3.gis.features[i]);
             feature.geometry.transform(S3.gis.proj4326,
-                                       S3.gis.projection_current);
+                                       current_projection);
             S3.gis.draftLayer.addFeatures([feature]);
         }
     }

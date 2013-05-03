@@ -1,5 +1,5 @@
-{{# Form has been submitted successfully: Refresh the Main form & Close the pop up}}
-{{s3.jquery_ready.append("""s3_popup_refresh_main_form()""")}}
+{{# Form has been submitted successfully: Don't load unnecessary JS, Refresh the Main form & Close the pop up}}
+{{s3.scripts=[]}}{{s3.js_global=[]}}{{s3.jquery_ready=["s3_popup_refresh_main_form()"]}}
 <div id='popup' class='cf'><center>
  <p style='padding:20px 20px;'>
  <h2>{{=T("Submission successful - please wait")}}...</h2>

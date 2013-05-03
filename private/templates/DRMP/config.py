@@ -11,7 +11,7 @@ from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_LOCATION, IS_ONE_OF
+from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationAutocompleteWidget, S3LocationSelectorWidget2
 
 T = current.T
@@ -178,11 +178,12 @@ def customize_cms_post(**attr):
             field.default = False
             #field.readable = field.writable = False
             field = table.location_id
+            field.label = ""
             field.represent = location_represent
-            #field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
-            #field.widget = S3LocationAutocompleteWidget(level="L3")
-            field.requires = IS_NULL_OR(IS_LOCATION())
-            field.widget = S3LocationSelectorWidget2()
+            field.requires = IS_NULL_OR(
+                                IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"])
+                             )
+            field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"])
             table.created_by.represent = s3_auth_user_represent_name
             field = table.body
             field.label = T("Text")

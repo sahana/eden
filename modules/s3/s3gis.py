@@ -3888,6 +3888,7 @@ class GIS(object):
                         db(table.id == feature.id).update(**_vars)
             return
 
+        # Single Feature
         id = "id" in feature and str(feature["id"])
         if not id:
             # Nothing we can do

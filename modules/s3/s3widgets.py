@@ -2630,8 +2630,10 @@ class S3LocationSelectorWidget2(FormWidget):
                       )
         lat = None
         lon = None
+        parent = ""
         if value:
             record = db(gtable.id == value).select(gtable.path,
+                                                   gtable.parent,
                                                    gtable.level,
                                                    gtable.lat,
                                                    gtable.lon,
@@ -2640,6 +2642,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                                    limitby=(0, 1)).first()
             if not record:
                 raise
+            parent = record.parent
             level = record.level
             path = record.path.split("/")
             if not level:
@@ -2651,7 +2654,7 @@ class S3LocationSelectorWidget2(FormWidget):
                     # @ToDo: Retrieve all records in the path to match them up to their Lx
                     raise
             else:
-                if len(path) != (level + 1):
+                if len(path) != (int(level[1:]) + 1):
                     # We don't have a full path
                     # @ToDo: Retrieve all records in the path to match them up to their Lx
                     raise
@@ -2664,7 +2667,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         fieldname = str(field).replace(".", "_")
 
-        # Main Input, will be hidden
+        # Main INPUT, will be hidden
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
@@ -2678,7 +2681,12 @@ class S3LocationSelectorWidget2(FormWidget):
                           _id="%s_lon" % fieldname,
                           _value=lon,
                           )
-
+        # Parent INPUT field, will be hidden
+        parent_input = INPUT(_name="parent",
+                             _id="%s_parent" % fieldname,
+                             _value=parent,
+                             )
+        
         # Lx Dropdowns
         htable = s3db.gis_hierarchy
         ttable = s3db.gis_location_tag
@@ -2728,7 +2736,7 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 raise
             Lx_rows.append(row)
-            # Subsequent levels are hidden by-default
+            # Subsequent levels are hidden by default
             # (client-side JS will open when-needed)
             hidden = True
 
@@ -2746,8 +2754,8 @@ class S3LocationSelectorWidget2(FormWidget):
                                                    l=int(location.level[1]),
                                                    f=int(location.parent))
 
-        js_global = []
-        append = js_global.append
+        scripts = []
+        append = scripts.append
 
         # i18n
         i18n = "\n".join((
@@ -2758,50 +2766,74 @@ class S3LocationSelectorWidget2(FormWidget):
         script = '''l=%s''' % json.dumps(location_dict)
         append(script)
 
+        s3.js_global.append("\n".join(scripts))
+
+        # If we need to show the map since the lowest-level is predefined
+        # then we need to launch the client-side JS as a callback to the MapJS loader
+        max_level = levels[len(levels) - 1]
+        use_callback = False
         script = '''s3_gis_locationselector2('%s',%s''' % (fieldname, country_id)
         L1 = values["L1"]
         if L1:
-            script = '''%s,%i''' % (script, values[L1])
-            L2 = values["L2"]
-            if L2:
-                script = '''%s,%i''' % (script, values[L2])
-                L3 = values["L3"]
-                if L3:
-                    script = '''%s,%i''' % (script, values[L3])
-                L4 = values["L4"]
-                if L4:
-                    script = '''%s,%i''' % (script, values[L4])
-                    L5 = values["L5"]
-                    if L5:
-                        script = '''%s,%i''' % (script, values[L5])
+            script = '''%s,%s''' % (script, L1)
+            if max_level == "L1":
+                use_callback = True
+            else:
+                L2 = values["L2"]
+                if L2:
+                    script = '''%s,%s''' % (script, L2)
+                    if max_level == "L2":
+                        use_callback = True
+                    else:
+                        L3 = values["L3"]
+                        if L3:
+                            script = '''%s,%s''' % (script, L3)
+                            if max_level == "L3":
+                                use_callback = True
+                            else:
+                                L4 = values["L4"]
+                                if L4:
+                                    script = '''%s,%s''' % (script, L4)
+                                    if max_level == "L4":
+                                        use_callback = True
+                                    else:
+                                        L5 = values["L5"]
+                                        if L5:
+                                            script = '''%s,%s''' % (script, L5)
+                                            use_callback = True
         script = '''%s)''' % script
-        append(script)
-
-        s3.js_global.append("\n".join(js_global))
+        if use_callback:
+            callback = script
+        else:
+            s3.jquery_ready.append(script)
 
         if s3.debug:
             script = "s3.locationselector.widget2.js"
         else:
             script = "s3.locationselector.widget.min2.js"
 
-        script_path = "/%s/static/scripts/S3/%s" % (appname, script)
+        script = "/%s/static/scripts/S3/%s" % (appname, script)
         scripts = s3.scripts
-        if script_path not in scripts:
-            scripts.append(script_path)
+        if script not in scripts:
+            scripts.append(script)
 
+        # @ToDo: handle multiple LocationSelectors in 1 page
+        # (=> multiple callbacks, as well as the globals issue)
         _map = current.gis.show_map(collapsed = True,
                                     height = 320,
                                     width = 480,
                                     add_feature = True,
                                     add_feature_active = True,
-                                    # Postpone rendering Map until DIV unhidden
-                                    callback = ""
+                                    # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
+                                    # but use our one if we need to display a map by default
+                                    callback = callback if use_callback else "",
                                     )
 
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
                            lat_input,
                            lon_input,
+                           parent_input,
                            _class="hide"),
                        Lx_rows,
                        _map,

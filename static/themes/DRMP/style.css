@@ -199,8 +199,8 @@ i.icon.icon-paper-clip.fright {
     font-size: 17px;
 }
 
-
 /* Modals */
+/* Deprecated
 div.modal-header {
     text-align: center;
     padding: 6px 6px 6px 25px;
@@ -214,6 +214,23 @@ div.modal-header {
     background-image: linear-gradient(top,#f9f9fa,#e0e2e8);
     margin-bottom: -1px;
     font-size: 20px;
+}
+#myModal form.form-horizontal div.modal-body {
+    padding-top: 22px;
+}
+#myModal div.modal-header button.close {
+    padding-right: 6px;
+}
+*/
+
+.ui-dialog-titlebar {
+    text-align: center;
+    background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8)) !important;
+    background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: -moz-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: linear-gradient(top,#f9f9fa,#e0e2e8) !important;
 }
 
 table.embeddedComponent {
@@ -237,10 +254,6 @@ table.embeddedComponent {
     padding-left: 4px;
 }
 
-#myModal form.form-horizontal div.modal-body {
-    padding-top: 22px;
-}
-
 #cms_post_body__row.control-group, 
 #cms_post_series_id__row.control-group,
 #cms_post_location_id__row.control-group,
@@ -251,10 +264,6 @@ table.embeddedComponent {
 #sub-filedocument table.embeddedComponent thead tr.label-row,
 #sub-defaultevent_post table.embeddedComponent thead tr.label-row {
     display: none;	
-}
-
-#myModal div.modal-header button.close {
-    padding-right: 6px;
 }
 
 /*  Filter Styling  */
@@ -268,16 +277,16 @@ div#accordion2.accordion.side-filter {
     border-bottom-right-radius: 4px;
 }
 
-div.accordion-inner,
-div.accordion-heading,
-div.accordion-group,
+.accordion-inner,
+.accordion-heading,
+.accordion-group,
 #accordion2 div.accordion-group
 #collapseOne div.accordion-inner {
     border-top: none;
     border-bottom: none;
 }
 
-a.accordion-toggle {
+.accordion-toggle {
     font-size: 12px;
     font-variant: normal;
     text-transform: none;
@@ -285,12 +294,12 @@ a.accordion-toggle {
     border-none: none;
 }
 
-a.accordion-toggle:hover {
+.accordion-toggle:hover {
     text-decoration: none;
     color: #3498DB;
 }
 
-div.search_box {
+.search_box {
     background-color: #fff;
     border: 1px solid #b2b2b2;
     border-bottom: none;
@@ -307,7 +316,7 @@ button.btn.btn-primary.search_btn {
     margin-left: 8px;
 }
 
-input#input_temp {
+#input_temp {
     width: 84%;
 }
 
@@ -449,7 +458,13 @@ a i.icon-paper-clip.pull-right:hover {
     text-decoration: none;
 }
 
-span.date-title {
+.card-title {
+    font-size: 14px;
+    text-shadow: 0px 1px 0px white;
+    letter-spacing: -1px;
+}
+
+.date-title {
     font: 400 10px "Helvetica Neue",Arial,sans-serif;
     list-style: none outside none;
     padding-left: 10px;
@@ -460,7 +475,7 @@ span.date-title {
     padding-bottom: 9px;
 }
 
-span.location-title {
+.location-title {
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     text-shadow: 0px 1px 0px white;
     padding-left: 10px;
@@ -470,13 +485,7 @@ span.location-title {
     padding-bottom: 7px;
 }
 
-span.card-title {
-    font-size: 14px;
-    text-shadow: 0px 1px 0px white;
-    letter-spacing: -1px;
-}
-
-span.location-title a {
+.location-title a {
     font: 400 12px "Helvetica Neue", Arial,sans-serif;
     color: #777;
     padding: 0;
@@ -485,18 +494,18 @@ span.location-title a {
     word-spacing: -1px;
 }
 
-span.location-title a:hover {
+.location-title a:hover {
     color: #333;
     text-decoration: none;
 }
 
-p.card_comments {
+.card_comments {
     font: 13px/17px "Georgia",Times;
     color: #5c5c5c;
     padding-top: 2px;
 }
 
-div.edit-bar.pull-right {
+.edit-bar.pull-right {
     color: #8a8989;
     font-size: 14px;
 }
@@ -596,7 +605,7 @@ a i.icon.icon-plus-sign.small-add:hover{
     color: #2da7fc;
 }
 
-div.card-holder {
+.card-holder {
     display: inline-block;
     min-height: 383px;
     width: 99.7%;
@@ -608,12 +617,12 @@ div.thumbnail.map {
     height: 383px;
 }
 
-div.more_profile {
+.more_profile {
     text-align: center;
     padding: 5px;
 }
 
-p.empty_card-holder {
+.empty_card-holder {
     text-align: center;
     font: 15px Georgia, "Times New Roman", Times, serif;
     position: relative;
@@ -631,31 +640,27 @@ div.span5.card-details {
     margin-left: 0px;
 }
 
-div.card-holder div.edit-bar.fright {
+.card-holder .edit-bar.fright {
     color: #8A8989;
     font-size: 14px;
 }
-div.card-holder div.edit-bar.fright {
-    color: #8A8989;
+.card-holder .card-title {
     font-size: 14px;
 }
-div.card-holder span.date-title {
+.card-holder .date-title {
     font: 11px "Helvetica Neue",Arial,sans-serif;
     list-style: none outside none;
     text-decoration: none;
     text-transform: none;
     color: #999;	
 }
-div.card-holder span.card-title {
-    font-size: 14px;
-}
-div.card-holder span.location-title {
+.card-holder .location-title {
     font: bold 13px "Helvetica Neue", Arial,sans-serif;
     color: #333333;
     padding: 0;
 }
 
-div.card-holder p.card_comments {
+.card-holder .card_comments {
     font: 14px/19px "Georgia",Times;
     color: #5c5c5c;
     padding-top: 6px;

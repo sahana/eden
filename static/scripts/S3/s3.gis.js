@@ -23,6 +23,7 @@ OpenLayers.Util.onImageLoadErrorColor = 'transparent';
 OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 // See http://crschmidt.net/~crschmidt/spherical_mercator.html#reprojecting-points
 S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
+// This global only used in this file (to do transforms before the map is instantiated)
 S3.gis.projection_current = new OpenLayers.Projection('EPSG:' + S3.gis.projection);
 S3.gis.options = {
     // We will add these ourselves later for better control

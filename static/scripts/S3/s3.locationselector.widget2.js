@@ -16,9 +16,8 @@
 var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5) {
     // Function to be called by S3LocationSelectorWidget2
 
-    // Move the rows underneath the real one
-    var map_div = $('#' + fieldname + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper')
-                                                           .hide();
+    // Move the visible rows underneath the real (hidden) one
+    var map_div = $('#' + fieldname + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
     var L0_row = $('#' + fieldname + '_L0__row');
     var L1_row = $('#' + fieldname + '_L1__row');
     var L2_row = $('#' + fieldname + '_L2__row');
@@ -77,12 +76,31 @@ var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5) {
 
 function lx_select(fieldname, level, id) {
     // Hierarchical dropdown has been selected
+    // Clear the Lat/Lon fields after storing the current value
+    // - need to clear for IS_LOCATION_SELECTOR2
+    var latfield = $('#' + fieldname + '_lat');
+    var lonfield = $('#' + fieldname + '_lon');
+    var lat = latfield.val();
+    var lon = lonfield.val();
+    if (lat) {
+        latfield.data('lat', lat);
+    }
+    if (lon) {
+        lonfield.data('lon', lon);
+    }
+    latfield.val('');
+    lonfield.val('');
     // Hide Map
     $('#' + fieldname + '_map_wrapper').hide();
-    if (!id) {
+    if (id) {
+        // Set this dropdown to this value
+        // - this is being set from outside the dropdown, e.g. an update form or using a visible default location
+        $('#' + fieldname + '_L' + level).val(id);
+    } else {
+        // Read the selected value from the dropdown
         id = $('#' + fieldname + '_L' + level).val();
     }
-    if (level === 0) {
+    //if (level === 0) {
         // @ToDo: This data structure doesn't exist yet (not required for TLDRMP)
         // Set Labels
         //var h = hdata[id];
@@ -91,7 +109,7 @@ function lx_select(fieldname, level, id) {
         //$('#' + fieldname + '_L3__row label').html(h.l3 + ':');
         //$('#' + fieldname + '_L4__row label').html(h.l4 + ':');
         //$('#' + fieldname + '_L5__row label').html(h.l5 + ':');
-    }
+    //}
     if (id) {
         // Set the real input to this value
         $('#' + fieldname).val(id);
@@ -147,6 +165,18 @@ function lx_select(fieldname, level, id) {
                 // Instantiate the Map as we couldn't do it when DIV is hidden
                 var map = S3.gis.show_map();
                 // @ToDo: Display any existing stored point
+                var lat = latfield.data('lat');
+                if (lat) {
+                    latfield.val(lat);
+                }
+                var lon = lonfield.data('lon');
+                if (lon) {
+                    lonfield.val(lon);
+                }
+                var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                geometry.transform(S3.gis.proj4326, map.getProjectionObject());
+                var feature = new OpenLayers.Feature.Vector(geometry);
+                S3.gis.draftLayer.addFeatures([feature]);
                 // Watch for new points being selected, so that we can store the Lat/Lon
                 var control;
                 var controls = map.controls;
@@ -158,9 +188,13 @@ function lx_select(fieldname, level, id) {
                 if (control) {
                     var updateForm = function(event) {
                         var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
-                        centerPoint.transform(S3.gis.projection_current, S3.gis.proj4326);
-                        $('#' + fieldname + '_lat').val(centerPoint.lat);
-                        $('#' + fieldname + '_lon').val(centerPoint.lon);
+                        centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
+                        latfield.val(centerPoint.lat);
+                        lonfield.val(centerPoint.lon);
+                        // Store the parent
+                        $('#' + fieldname + '_parent').val(id);
+                        // Dummify the real input (need this to enter IS_LOCATION_SELECTOR2)
+                        $('#' + fieldname).val('dummy');
                     }
                     control.events.register('featureadded', null, updateForm);
                 }

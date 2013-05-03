@@ -568,7 +568,7 @@ function addPointControl(toolbar, active) {
                 // Update form fields in S3LocationSelectorWidget
                 // (S3LocationSelectorWidget2 does this in s3.locationselector.widget2.js, which is a better design)
                 var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-                centerPoint.transform(S3.gis.projection_current, S3.gis.proj4326);
+                centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
                 lon_field.val(centerPoint.lon);
                 $('#gis_location_lat').val(centerPoint.lat);
                 $('#gis_location_wkt').val('');
@@ -628,7 +628,7 @@ function addPolygonControl(toolbar, polygon_pressed, not_regular) {
                     S3.gis.lastDraftFeature.destroy();
                 }
                 // update Form Field
-                var WKT = feature.geometry.transform(S3.gis.projection_current, S3.gis.proj4326).toString();
+                var WKT = feature.geometry.transform(map.getProjectionObject(), S3.gis.proj4326).toString();
                 $('#gis_search_polygon_input').val(WKT).trigger('change');
                 $('#gis_location_wkt').val(WKT);
                 $('#gis_location_lat').val('');
@@ -753,10 +753,10 @@ function getState() {
     // @ToDo: Filters
     // @ToDo: WMS Browser
     var layers = [];
-    var layer_config;
+    var id, layer_config;
     var base_id = map.baseLayer.s3_layer_id;
     Ext.iterate(map.layers, function(key, val, obj) {
-        var id = key.s3_layer_id;
+        id = key.s3_layer_id;
         layer_config = {
             id: id
         };
@@ -819,8 +819,8 @@ function addPdfControl(toolbar) {
             this.w.show();
         },
         getPdf: function (bounds) {
-            var ll = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.left, bounds.bottom)).transform(S3.gis.projection_current, S3.gis.proj4326);
-            var ur = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.right, bounds.top)).transform(S3.gis.projection_current, S3.gis.proj4326);
+            var ll = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.left, bounds.bottom)).transform(map.getProjectionObject(), S3.gis.proj4326);
+            var ur = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.right, bounds.top)).transform(map.getProjectionObject(), S3.gis.proj4326);
             var boundsgeog = new OpenLayers.Bounds(ll.lon, ll.lat, ur.lon, ur.lat);
             bbox = boundsgeog.toBBOX();
             OpenLayers.Request.GET({

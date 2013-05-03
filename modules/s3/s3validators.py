@@ -47,6 +47,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_NOT_ONE_OF",
            "IS_LOCATION",
            "IS_LOCATION_SELECTOR",
+           "IS_LOCATION_SELECTOR2",
            "IS_SITE_SELECTOR",
            "IS_ACL",
            "IS_ADD_PERSON_WIDGET",
@@ -1530,44 +1531,84 @@ class IS_LOCATION_SELECTOR2(Validator):
     """
 
     def __init__(self,
+                 levels=["L1", "L2", "L3"],
                  error_message = None,
-                ):
+                 ):
+        self.levels = levels
         self.error_message = error_message
-        self.errors = Storage()
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
-        # Rough check for valid Lat/Lon (detailed later)
         vars = current.request.post_vars
         lat = vars.get("lat", None)
         lon = vars.get("lon", None)
+        parent = vars.get("parent", None)
+        # Rough check for valid Lat/Lon
+        # @ToDo: Detailed bounds-check later
+        errors = Storage()
         if lat:
             try:
                 lat = float(lat)
             except ValueError:
-                self.errors["lat"] = current.T("Latitude is Invalid!")
+                errors["lat"] = current.T("Latitude is Invalid!")
         if lon:
             try:
                 lon = float(lon)
             except ValueError:
-                self.errors["lon"] = current.T("Longitude is Invalid!")
-        if self.errors:
-            return (value, None)
-
-        db = current.db
-        table = db.gis_location
+                errors["lon"] = current.T("Longitude is Invalid!")
+        if errors:
+            return (value, errors)
 
         if lat and lon:
-            # @ToDo: Specific Location
-            pass
-            # Create or Update
-            #current.gis.update_location_tree(vars)
-            #return (value, None)
+            # Specific Location
+            db = current.db
+            table = db.gis_location
+            if value == "dummy":
+                # Create form
+                if not current.auth.s3_has_permission("create", table):
+                    return (None, current.auth.messages.access_denied)
+                vars = dict(lat=lat,
+                            lon=lon,
+                            parent=parent,
+                            )
+                id = table.insert(**vars)
+                vars["id"] = id
+                current.gis.update_location_tree(vars)
+                return (id, None)
+            else:
+                # This must be an Update form
+                if not current.auth.s3_has_permission("update", table, record_id=value):
+                    return (value, current.auth.messages.access_denied)
+                # Check that this is a valid location_id
+                query = (table.id == value) & \
+                        (table.deleted == False) & \
+                        (table.level == None) # NB Specific Locations only
+                location = db(query).select(table.lat,
+                                            table.lon,
+                                            table.parent,
+                                            limitby=(0, 1)).first()
+                if location:
+                    # @ToDo: Allow amending the Parent
+                    if lat != location.lat or \
+                       lon != location.lon or \
+                       parent != location.parent:
+                        # Update the record
+                        vars = dict(lat=lat,
+                                    lon=lon,
+                                    parent=parent,
+                                    )
+                        db(table.id == value).update(**vars)
+                        # Update location tree in case parent has changed
+                        vars["id"] = value
+                        current.gis.update_location_tree(vars)
+                    return (value, None)
+                else:
+                    return (value, self.error_message or current.T("Invalid Location!"))
         else:
             # Lx
-            return (value, None)
-            #return (value, self.error_message or current.T("Invalid Location!"))
+            # - do a simple Location check
+            return IS_LOCATION(level=self.levels)(value)
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):

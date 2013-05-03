@@ -27,7 +27,9 @@
   </div>
  </div>
  <div class='span6'>
-  <a href='#myModal' class='btn btn-primary main-add' role='button' data-toggle='modal'><i class='icon icon-plus-sign big-add'></i></a>
+  <a id='cms_post_create' href='/{{=appname}}/cms/post/create.popup?refresh=datalist' class='btn btn-primary main-add s3_modal' role='button' title='{{=T("Add New Information")}}'>
+   <i class='icon icon-plus-sign big-add'></i>
+  </a>
   <h4 class='latest-updates'>{{=T("Latest Information")}}</h4>
   <div class="card-holder-home">
    {{=items}}
@@ -37,20 +39,5 @@
   <h4 class='latest-disasters'>{{=T("Disasters")}}</h4>
   {{=disasters}}
  </div>
-</div>
-<div id='myModal' class='modal hide fade' tabindex='-1' role='dialog' aria-labelledby='myModalLabel' aria-hidden='true'>
- <div class='modal-header'>
-  <button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>
-  <h3 id='myModalLabel'>{{=T("Add New Information")}}</h3>
- </div>
- <form action="#" class="form-horizontal" enctype="multipart/form-data" method="post">
- <div class='modal-body'>
-   {{try:}}{{=form[0]}}{{except:}}{{pass}}
- </div>
- <div class='modal-footer'>
-  <button class='btn' data-dismiss='modal' aria-hidden='true'>{{=T("Close")}}</button>
-  {{try:}}{{=form.custom.submit}}{{except:}}{{pass}}
- </div>
- {{try:}}{{=form.custom.end}}{{except:}}{{pass}}
 </div>
 {{include "dataLists.html"}}
