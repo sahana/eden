@@ -2602,6 +2602,7 @@ class S3Resource(object):
                    as_tree=False,
                    as_json=False,
                    maxbounds=False,
+                   filters=None,
                    pretty_print=False,
                    **args):
         """
@@ -2621,6 +2622,8 @@ class S3Resource(object):
             @param stylesheet: path to the XSLT stylesheet (if required)
             @param as_tree: return the ElementTree (do not convert into string)
             @param as_json: represent the XML tree as JSON
+            @param filters: additional URL filters (Sync), as dict
+                            {tablename: {url_var: string}}
             @param pretty_print: insert newlines/indentation in the output
             @param args: dict of arguments to pass to the XSLT stylesheet
         """
@@ -2644,6 +2647,7 @@ class S3Resource(object):
                                 mcomponents=mcomponents,
                                 rcomponents=rcomponents,
                                 references=references,
+                                filters=filters,
                                 maxbounds=maxbounds)
         if DEBUG:
             end = datetime.datetime.now()
@@ -2703,6 +2707,7 @@ class S3Resource(object):
                     dereference=True,
                     mcomponents=None,
                     rcomponents=None,
+                    filters=None,
                     maxbounds=False):
         """
             Export the resource as element tree
@@ -2722,7 +2727,6 @@ class S3Resource(object):
                                 for all
             @param maxbounds: include lat/lon boundaries in the top
                               level element (off by default)
-
         """
 
         define_resource = current.s3db.resource
@@ -2746,6 +2750,12 @@ class S3Resource(object):
             mci_filter = (table.mci >= 0)
             self.add_filter(mci_filter)
 
+        # Sync filters
+        tablename = self.tablename
+        if filters and tablename in filters:
+            queries = S3URLQuery.parse(self, filters[tablename])
+            [self.add_filter(q) for a in queries for q in queries[a]]
+
         # Total number of results
         results = self.count()
 
@@ -2758,7 +2768,6 @@ class S3Resource(object):
             orderby = "%s ASC" % table["modified_on"]
         else:
             orderby = None
-
 
         # Facility Map search needs VFs for reqs (marker_fn & filter)
         # @ToDo: Lazy VirtualFields
@@ -2827,6 +2836,7 @@ class S3Resource(object):
                                       lazy=lazy,
                                       components=mcomponents,
                                       skip=skip,
+                                      filters=filters,
                                       msince=msince,
                                       marker=marker,
                                       locations=locations)
@@ -2869,10 +2879,16 @@ class S3Resource(object):
             REF = xml.ATTRIBUTE.ref
             for tablename in load_map:
                 load_list = load_map[tablename]
+                # Sync filters
+                if filters:
+                    filter_vars = filters.get(tablename, None)
+                else:
+                    filter_vars = None
                 prefix, name = tablename.split("_", 1)
                 rresource = define_resource(tablename,
                                             id=load_list,
-                                            components=[])
+                                            components=[],
+                                            vars=filter_vars)
                 table = rresource.table
                 if manager.s3.base_url:
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
@@ -2894,6 +2910,7 @@ class S3Resource(object):
                                               components=rcomponents,
                                               lazy=lazy,
                                               skip=skip,
+                                              filters=filters,
                                               master=False,
                                               marker=marker,
                                               locations=locations)
@@ -2940,6 +2957,7 @@ class S3Resource(object):
                           lazy=None,
                           components=None,
                           skip=[],
+                          filters=None,
                           msince=None,
                           master=True,
                           marker=None,
@@ -2957,6 +2975,7 @@ class S3Resource(object):
             @param components: list of components to include from referenced
                                resources (tablenames)
             @param skip: fields to skip
+            @param filters: sync filters (see export_xml)
             @param msince: the minimum update datetime for exported records
             @param master: True of this is the master resource
             @param marker: the marker for GIS encoding
@@ -3022,6 +3041,12 @@ class S3Resource(object):
                 if xml.filter_mci and xml.MCI in ctable.fields:
                     mci_filter = (ctable[xml.MCI] >= 0)
                     c.add_filter(mci_filter)
+
+                # Sync filters
+                ctablename = c.tablename
+                if filters and ctablename in filters:
+                    queries = S3URLQuery.parse(self, filters[ctablename])
+                    [c.add_filter(q) for a in queries for q in queries[a]]
 
                 # Split fields
                 _skip = skip+[c.fkey]
