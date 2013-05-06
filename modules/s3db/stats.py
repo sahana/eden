@@ -1074,7 +1074,8 @@ class S3StatsGroupModel(S3Model):
         configure("stats_group",
                   deduplicate=self.stats_group_duplicate,
                   requires_approval = True,
-                  )
+                  extra_fields = ["approved_by", "group_type_id"]
+        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1275,8 +1276,6 @@ class StatsGroupVirtualFields:
     """ Virtual fields to show the group that the report belongs to
         used by vulnerability/report
     """
-
-    extra_fields = ["group"]
 
     def group(self):
         try:

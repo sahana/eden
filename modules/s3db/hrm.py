@@ -588,6 +588,7 @@ class S3HRModel(S3Model):
                        #update_next = hrm_url,
                        realm_components = ["presence"],
                        update_realm = True,
+                       #extra_fields = ["person_id"]
                        )
 
         # ---------------------------------------------------------------------
@@ -2120,10 +2121,10 @@ class S3HRSkillModel(S3Model):
                                      fact="training.person_id",
                                      aggregate="count"),
                     ),
-                  list_fields = ["course_id",
-                                 "date",
-                                 "hours",
-                                 ]
+                    list_fields = ["course_id",
+                                   "date",
+                                   "hours",
+                                  ]
                   )
 
         # =====================================================================
@@ -3904,9 +3905,6 @@ def hrm_service_record(r, **attr):
 class HRMVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["person_id"]
-
-    # -------------------------------------------------------------------------
     def email(self):
         """ Email addresses """
         try:
@@ -3962,9 +3960,6 @@ class HRMActiveVirtualField:
         - unused: replaced by vol_details.active
     """
 
-    extra_fields = ["person_id"]
-
-    # -------------------------------------------------------------------------
     #def programme(self):
     #    """ Which Programme a Volunteer is associated with """
     #    try:
@@ -4019,9 +4014,6 @@ class HRMActiveVirtualField:
 class HRMTrainingVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["date"]
-
-    # -------------------------------------------------------------------------
     def month(self):
         """ Year/Month of the start date of the training event """
         try:
@@ -4529,6 +4521,7 @@ def hrm_training_controller():
                            insertable=False,
                            list_fields=list_fields)
             if r.method == "report":
+                s3db.configure("hrm_training", extra_fields=["date"])
                 s3db.hrm_training.virtualfields.append(HRMTrainingVirtualFields())
         return True
     current.response.s3.prep = prep

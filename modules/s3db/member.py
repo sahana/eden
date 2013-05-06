@@ -341,7 +341,8 @@ class S3MembersModel(S3Model):
                                ],
                   update_realm=True,
                   create_next=URL(f="person", vars={"membership.id": "[id]"}),
-                  )
+                  extra_fields = ["start_date", "membership_paid"],
+                 )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -542,11 +543,6 @@ def member_rheader(r, tabs=[]):
 class MemberVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["start_date",
-                    "membership_paid",
-                    ]
-
-    # -------------------------------------------------------------------------
     def paid(self):
         """
             Whether the member has paid within 12 months of start_date

@@ -1283,9 +1283,6 @@ class HMSHospitalVirtualFields:
         - currently unused
     """
 
-    extra_fields = []
-
-    # -------------------------------------------------------------------------
     def facility_status(self):
         """ Facility Status for the Hospital """
         id = self.hms_hospital.id

@@ -636,7 +636,6 @@ class S3PDFTable(object):
         self.pdf = document
         # @todo: Change the code to use raw_data directly rather than this
         #        conversion to an ordered list of values
-        # @ToDo: We don't want to include in the output the selectors added as extra_fields
         self.rfields = rfields
         rdata = []
         rappend = rdata.append

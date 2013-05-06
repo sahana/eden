@@ -1107,6 +1107,7 @@ class S3Resource(object):
             master_query &= join
 
         # Determine fields in master query
+        mfields = {}
         qfields = {}
 
         if groupby:
@@ -1143,6 +1144,8 @@ class S3Resource(object):
                     tname = fname.split(".", 1)[0]
                 if tname != tablename:
                     qtables.append(tname)
+                    
+            mfields.update(qfields)
 
         else:
             
@@ -1150,13 +1153,13 @@ class S3Resource(object):
                 qtables = ftables
             qtables.extend(vtables)
 
-            mfields = {}
-            qfields = {}
             for flist in [dfields, vfields]:
                 for rfield in flist:
-                    colname = rfield.colname
-                    if rfield.tname == tablename or rfield.tname in qtables:
-                        mfields[colname] = True
+                    tname = rfield.tname
+                    if tname == tablename or tname in qtables:
+                        colname = rfield.colname
+                        if rfield.show:
+                            mfields[colname] = True
                         if rfield.field:
                             qfields[colname] = rfield.field
 
@@ -4160,12 +4163,11 @@ class S3Resource(object):
         # Collect extra fields from virtual tables
         if extra_fields:
             append = slist.append
-            for vtable in table.virtualfields:
-                if hasattr(vtable, "extra_fields"):
-                    for selector in vtable.extra_fields:
-                        s = prefix(selector)
-                        if s not in display_fields:
-                            append(s)
+            extra = self.get_config("extra_fields", [])
+            for selector in extra:
+                s = prefix(selector)
+                if s not in display_fields:
+                    append(s)
 
         joins = Storage()
         left = Storage()
