@@ -41,6 +41,24 @@ def repository():
     s3db.set_method("sync", "repository",
                     method="register", action=current.sync)
 
+    crud_form = s3base.S3SQLCustomForm("resource_name",
+                                       "last_pull",
+                                       "last_push",
+                                       "mode",
+                                       "strategy",
+                                       "update_method",
+                                       "update_policy",
+                                       "conflict_policy",
+                                       s3base.S3SQLInlineComponent(
+                                             "resource_filter",
+                                             label = T("Filters"),
+                                             fields = ["tablename",
+                                                       "filter_string",
+                                                      ]
+                                       ),
+                                      )
+    s3db.configure("sync_task", crud_form=crud_form)
+
     def prep(r):
         if r.interactive:
             if r.component and r.id:
