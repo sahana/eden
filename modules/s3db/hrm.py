@@ -2008,8 +2008,9 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Trainings registered"))
 
         # @ToDo: Deprecate VFs
-        table.virtualfields.append(HRMTrainingParticipantVirtualFields())
-
+        table.job_title = Field.Lazy(hrm_training_job_title)
+        table.organisation = Field.Lazy(hrm_training_organisation)
+        
         training_search = S3Search(
             advanced=(
                       S3SearchSimpleWidget(
@@ -4047,77 +4048,71 @@ class HRMTrainingVirtualFields:
             return current.messages["NONE"]
 
 # =============================================================================
-class HRMTrainingParticipantVirtualFields:
+def hrm_training_job_title(row):
     """
-        Virtual fields for list_fields
-
-        @ToDo: Deprecate
+        Which Job Titles(s) the person is active with
     """
 
-    extra_fields = ["person_id"]
+    try:
+        person_id = row.hrm_training.person_id
+    except AttributeError:
+        # not available
+        person_id = None
+        
+    if person_id:
+        s3db = current.s3db
+        table = s3db.hrm_human_resource
+        jtable = s3db.hrm_job_title
+        query = (table.person_id == person_id) & \
+                (table.status != 2) & \
+                (table.job_title_id == jtable.id)
+        jobs = current.db(query).select(jtable.name,
+                                        distinct=True,
+                                        orderby=jtable.name)
+        if jobs:
+            output = ""
+            for job in jobs:
+                repr = job.name
+                if output:
+                    output = "%s, %s" % (output, repr)
+                else:
+                    output = repr
+            return output
 
-    # -------------------------------------------------------------------------
-    def job_title(self):
-        """
-            Which Job Titles(s) the person is active with
-        """
-        try:
-            person_id = self.hrm_training.person_id
-        except AttributeError:
-            # not available
-            person_id = None
-        if person_id:
-            s3db = current.s3db
-            table = s3db.hrm_human_resource
-            jtable = s3db.hrm_job_title
-            query = (table.person_id == person_id) & \
-                    (table.status != 2) & \
-                    (table.job_title_id == jtable.id)
-            jobs = current.db(query).select(jtable.name,
-                                            distinct=True,
-                                            orderby=jtable.name)
-            if jobs:
-                output = ""
-                for job in jobs:
-                    repr = job.name
-                    if output:
-                        output = "%s, %s" % (output, repr)
-                    else:
-                        output = repr
-                return output
+    return current.messages["NONE"]
+    
+# =============================================================================
+def hrm_training_organisation(row):
+    """
+        Which Organisation(s)/Branch(es) the person is actively affiliated with
+    """
 
-        return current.messages["NONE"]
+    try:
+        person_id = row.hrm_training.person_id
+    except AttributeError:
+        # not available
+        person_id = None
+        
+    if person_id:
+        s3db = current.s3db
+        table = s3db.hrm_human_resource
+        query = (table.person_id == person_id) & \
+                (table.status != 2)
+        orgs = current.db(query).select(table.organisation_id,
+                                        distinct=True)
+        if orgs:
+            output = ""
+            represent = s3db.org_OrganisationRepresent()
+            for org in orgs:
+                repr = represent(org.organisation_id)
+                if output:
+                    output = "%s, %s" % (output, repr)
+                else:
+                    output = repr
+            return output
 
-    # -------------------------------------------------------------------------
-    def organisation(self):
-        """
-            Which Organisation(s)/Branch(es) the person is actively affiliated with
-        """
-        try:
-            person_id = self.hrm_training.person_id
-        except AttributeError:
-            # not available
-            person_id = None
-        if person_id:
-            s3db = current.s3db
-            table = s3db.hrm_human_resource
-            query = (table.person_id == person_id) & \
-                    (table.status != 2)
-            orgs = current.db(query).select(table.organisation_id,
-                                            distinct=True)
-            if orgs:
-                output = ""
-                represent = s3db.org_OrganisationRepresent()
-                for org in orgs:
-                    repr = represent(org.organisation_id)
-                    if output:
-                        output = "%s, %s" % (output, repr)
-                    else:
-                        output = repr
-                return output
-
-        return current.messages["NONE"]
-
+    return current.messages["NONE"]
+    
 # =============================================================================
 def hrm_rheader(r, tabs=[],
                 profile = False):

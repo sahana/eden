@@ -1150,13 +1150,15 @@ class S3Resource(object):
                 qtables = ftables
             qtables.extend(vtables)
 
-            # @todo: optimize this:
+            mfields = {}
             qfields = {}
             for flist in [dfields, vfields]:
                 for rfield in flist:
-                    if rfield.field and \
-                    (rfield.tname == tablename or rfield.tname in qtables):
-                        qfields[rfield.colname] = rfield.field
+                    colname = rfield.colname
+                    if rfield.tname == tablename or rfield.tname in qtables:
+                        mfields[colname] = True
+                        if rfield.field:
+                            qfields[colname] = rfield.field
 
         if not groupby:
             if distinct and orderby:
@@ -1230,7 +1232,7 @@ class S3Resource(object):
             return output
 
         # Extract master rows
-        records = self.__extract(rows, pkey, qfields.keys(),
+        records = self.__extract(rows, pkey, mfields.keys(),
                                  join=hasattr(rows[0], tablename),
                                  field_data=field_data,
                                  effort=effort,
@@ -1252,7 +1254,7 @@ class S3Resource(object):
         stables = {}
         for dfield in dfields:
             colname = dfield.colname
-            if colname in qfields:
+            if colname in qfields or dfield.tname == tablename:
                 continue
             tname = dfield.tname
             if tname not in stables:
@@ -1265,22 +1267,37 @@ class S3Resource(object):
         # Retrieve + extract into records
         for tname in stables:
 
-            sjoins = left_joins.as_list(tablenames=[tname],
+            # Get the extra fields for subtable
+            sresource = s3db.resource(tname)
+            efields, ejoins, l, d = sresource.resolve_selectors([])
+
+            # Get all left joins for subtable
+            tnames = left_joins.extend(l)
+            sjoins = left_joins.as_list(tablenames=[tname] + tnames,
                                         aqueries=aqueries)
             if not sjoins:
                 continue
 
-            sfields = [f for f in stables[tname].values() if f]
+            # Get all fields for subtable query
+            stable = stables[tname]
+            extract = stable.keys()
+            for efield in efields:
+                stable[efield.colname] = efield.field
+            sfields = [f for f in stable.values() if f]
+            if not sfields:
+                sfields.append(s3db.table(tname)._id)
             sfields.insert(0, table._id)
 
+            # Retrieve the subtable rows
             rows = db(squery).select(left=sjoins,
                                      distinct=True,
                                      cacheable=True,
                                      *sfields)
-                                     
+
+            # Extract and merge the data
             records = self.__extract(rows,
                                      pkey,
-                                     stables[tname].keys(),
+                                     extract,
                                      records=records,
                                      join=True,
                                      field_data=field_data,
@@ -1459,8 +1476,16 @@ class S3Resource(object):
             for idx, col in enumerate(columns):
                 fvalues, frecords, joined, list_type = field_data[col]
                 values = record.get(col, {})
+                lazy = False
                 for row in group:
-                    value = getval[idx](row)
+                    try:
+                        value = getval[idx](row)
+                    except AttributeError:
+                        _debug("Warning S3Resource.__extract: column %s not in row" % col)
+                        value = None
+                    if lazy or callable(value): # lazy virtual field
+                        value = value()
+                        lazy = True
                     if list_type and value is not None:
                         if represent and value:
                             effort[col] += 30 + len(value)
