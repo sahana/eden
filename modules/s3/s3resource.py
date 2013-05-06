@@ -954,13 +954,14 @@ class S3Resource(object):
             osetattr(table, "virtualfields", [])
 
         # Initialize field data and effort estimates
-        field_data = {}
-        effort = {}
+        field_data = {pkey: ({}, {}, False, False)}
+        effort = {pkey: 0}
         for dfield in dfields:
             colname = dfield.colname
             effort[colname] = 0
-            joined = dfield.tname != self.tablename
-            field_data[colname] = ({}, {}, joined, dfield.ftype[:5] == "list:")
+            field_data[colname] = ({}, {},
+                                   dfield.tname != self.tablename,
+                                   dfield.ftype[:5] == "list:")
 
         # Resolve ORDERBY :
 
