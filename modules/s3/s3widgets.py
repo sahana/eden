@@ -92,6 +92,7 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP
 #from gluon.validators import *
+from gluon.html import BUTTON
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 

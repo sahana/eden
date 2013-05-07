@@ -2114,35 +2114,30 @@ class S3Resource(object):
             fields.insert(0, table._id.name)
             selectors.insert(0, table._id.name)
 
-        # Resolve the selectors
-        rfields = self.resolve_selectors(fields, extra_fields=False)[0]
+        # Extract the data
+        data = self.fast_select(selectors,
+                                start=start,
+                                limit=limit,
+                                orderby=orderby,
+                                left=left,
+                                distinct=distinct,
+                                count=True,
+                                getids=getids,
+                                raw_data=True,
+                                represent=True)
 
-        # Retrieve the rows
-        rows, numrows, ids = self.select(fields=selectors,
-                                         start=start,
-                                         limit=limit,
-                                         orderby=orderby,
-                                         left=left,
-                                         distinct=distinct,
-                                         count=True,
-                                         getids=getids,
-                                         cacheable=True)
-
-        # Generate the data table
-        if rows:
-            data = self.extract(rows, selectors,
-                                represent=True, raw_data=True)
-        else:
-            data = []
-            
-        return S3DataList(self,
-                          fields,
-                          data,
-                          listid=listid,
-                          start=start,
-                          total=numrows,
-                          limit=limit,
-                          layout=layout), numrows, ids
+        # Generate the data list
+        numrows = data["numrows"]
+        dl = S3DataList(self,
+                        fields,
+                        data["data"],
+                        listid=listid,
+                        start=start,
+                        limit=limit,
+                        total=numrows,
+                        layout=layout)
+                        
+        return dl, numrows, data["ids"]
 
     # -------------------------------------------------------------------------
     def pivottable(self, rows, cols, layers):
