@@ -298,14 +298,29 @@ class S3Sync(S3Method):
 
         _debug("S3Sync.__send")
 
+        resource = r.resource
+        
         # Identify the requesting repository
         repository = Storage(id=None)
         if "repository" in r.vars:
+
+            db = current.db
+            s3db = current.s3db
+
             ruid = r.vars["repository"]
-            rtable = current.s3db.sync_repository
-            row = current.db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            rtable = s3db.sync_repository
+            ttable = s3db.sync_task
+
+            left = ttable.on((rtable.id == ttable.repository_id) & \
+                             (ttable.resource_name == resource.tablename))
+
+            row = db(rtable.uuid == ruid).select(rtable.id,
+                                                 ttable.id,
+                                                 left=left,
+                                                 limitby=(0, 1)).first()
             if row:
-                repository = row
+                repository_id = row[rtable.id]
+                task_id = row[ttable.id]
 
         # Additional export parameters
         _vars = r.get_vars
@@ -331,10 +346,15 @@ class S3Sync(S3Method):
             except ValueError:
                 msince = None
 
+        if task_id:
+            filters = self.get_filters(task_id)
+        else:
+            filters = None
+
         # Export the resource
-        resource = r.resource
         output = resource.export_xml(start=start,
                                      limit=limit,
+                                     filters=filters,
                                      msince=msince)
         count = resource.results
 
@@ -343,7 +363,7 @@ class S3Sync(S3Method):
         headers["Content-Type"] = "text/xml"
 
         # Log the operation
-        self.log.write(repository_id=repository.id,
+        self.log.write(repository_id=repository_id,
                        resource_name=r.resource.tablename,
                        transmission=self.log.IN,
                        mode=self.log.PULL,
@@ -1104,7 +1124,9 @@ class S3SyncRepository(object):
         # Export the resource as S3XML
         resource = current.s3db.resource(resource_name,
                                          include_deleted=True)
-        data = resource.export_xml(msince=last_push)
+        filters = current.sync.get_filters(task.id)
+        data = resource.export_xml(filters=filters,
+                                   msince=last_push)
         count = resource.results or 0
         mtime = resource.muntil
 
