@@ -370,7 +370,7 @@ class S3Profile(S3CRUD):
                      })
 
         height = widget.get("height", 383)
-        width = widget.get("width", 568)
+        width = widget.get("width", 568) # span6 * 99.7%
         map = current.gis.show_map(height=height,
                                    width=width,
                                    collapsed=True,

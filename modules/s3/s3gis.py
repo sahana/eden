@@ -3852,7 +3852,10 @@ class GIS(object):
             # Do the whole database
             # Do in chunks to save memory and also do in correct order
             db = current.db
-            table = db.gis_location
+            try:
+                table = db.gis_location
+            except:
+                table = current.s3db.gis_location
             fields = [table.id, table.name, table.gis_feature_type,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,

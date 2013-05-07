@@ -552,6 +552,8 @@ def customize_event_event(**attr):
     s3db.configure("event_event",
                    create_next = URL(c="event", f="event",
                                      args=["[id]", "profile"]),
+                   # We want the Create form to be in a modal, not inline, for consistency
+                   listadd = False,
                    list_layout = render_events,
                    profile_widgets=[alerts_widget,
                                     map_widget,
@@ -584,6 +586,28 @@ def customize_event_event(**attr):
     #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive and \
+           current.auth.s3_has_permission("create", r.table):
+            # Insert a Button to Create New in Modal
+            output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
+                                      _href=URL(c="event", f="event",
+                                                args=["create.popup"],
+                                                vars={"refresh":"datalist"}),
+                                      _class="btn btn-primary s3_modal",
+                                      _role="button",
+                                      _title=T("Add New Disaster"),
+                                      )
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
 
     return attr
 
@@ -695,6 +719,8 @@ def customize_gis_location(**attr):
                       type = "map",
                       context = "location",
                       icon = "icon-map-marker",
+                      height = 383,
+                      width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
                             type = "datalist",
@@ -867,6 +893,8 @@ def customize_org_organisation(**attr):
                       type = "map",
                       context = "organisation",
                       icon = "icon-map-marker",
+                      height = 383,
+                      width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
                             type = "datalist",

@@ -1568,12 +1568,24 @@ class IS_LOCATION_SELECTOR2(Validator):
                 # Create form
                 if not current.auth.s3_has_permission("create", table):
                     return (None, current.auth.messages.access_denied)
-                vars = dict(lat=lat,
-                            lon=lon,
-                            parent=parent,
-                            )
+                vars = Storage(lat=lat,
+                               lon=lon,
+                               parent=parent,
+                               )
                 id = table.insert(**vars)
-                vars["id"] = id
+                vars.id = id
+                # onvalidation
+                form = Storage()
+                form.errors = errors
+                form.vars = vars
+                current.s3db.gis_location_onvalidation(form)
+                if form.errors:
+                    errors = form.errors
+                    error = ""
+                    for e in errors:
+                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                    return (None, error)
+                # onaccept
                 current.gis.update_location_tree(vars)
                 return (id, None)
             else:
@@ -1593,14 +1605,26 @@ class IS_LOCATION_SELECTOR2(Validator):
                     if lat != location.lat or \
                        lon != location.lon or \
                        parent != location.parent:
+                        vars = Storage(lat=lat,
+                                       lon=lon,
+                                       parent=parent,
+                                       )
+                        # onvalidation
+                        form = Storage()
+                        form.errors = errors
+                        form.vars = vars
+                        current.s3db.gis_location_onvalidation(form)
+                        if form.errors:
+                            errors = form.errors
+                            error = ""
+                            for e in errors:
+                                error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                            return (None, error)
                         # Update the record
-                        vars = dict(lat=lat,
-                                    lon=lon,
-                                    parent=parent,
-                                    )
                         db(table.id == value).update(**vars)
                         # Update location tree in case parent has changed
-                        vars["id"] = value
+                        vars.id = value
+                        # onaccept
                         current.gis.update_location_tree(vars)
                     return (value, None)
                 else:
