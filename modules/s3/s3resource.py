@@ -2720,6 +2720,8 @@ class S3Resource(object):
             @param rcomponents: components of referenced resources to
                                 include (list of tablenames), empty list
                                 for all
+            @param filters: additional URL filters (Sync), as dict
+                            {tablename: {url_var: string}}
             @param maxbounds: include lat/lon boundaries in the top
                               level element (off by default)
         """
@@ -2970,7 +2972,8 @@ class S3Resource(object):
             @param components: list of components to include from referenced
                                resources (tablenames)
             @param skip: fields to skip
-            @param filters: sync filters (see export_xml)
+            @param filters: additional URL filters (Sync), as dict
+                            {tablename: {url_var: string}}
             @param msince: the minimum update datetime for exported records
             @param master: True of this is the master resource
             @param marker: the marker for GIS encoding
@@ -3031,17 +3034,20 @@ class S3Resource(object):
                 else:
                     c = component
 
-                # Add MCI filter to component
-                ctable = c.table
-                if xml.filter_mci and xml.MCI in ctable.fields:
-                    mci_filter = (ctable[xml.MCI] >= 0)
-                    c.add_filter(mci_filter)
+                # Before loading the component: add filters
+                if c._rows is None:
+                    
+                    # MCI filter
+                    ctable = c.table
+                    if xml.filter_mci and xml.MCI in ctable.fields:
+                        mci_filter = S3FieldSelector(xml.MCI) >= 0
+                        c.add_filter(mci_filter)
 
-                # Sync filters
-                ctablename = c.tablename
-                if filters and ctablename in filters:
-                    queries = S3URLQuery.parse(self, filters[ctablename])
-                    [c.add_filter(q) for a in queries for q in queries[a]]
+                    # Sync filters
+                    ctablename = c.tablename
+                    if filters and ctablename in filters:
+                        queries = S3URLQuery.parse(self, filters[ctablename])
+                        [c.add_filter(q) for a in queries for q in queries[a]]
 
                 # Split fields
                 _skip = skip+[c.fkey]

@@ -28,7 +28,7 @@
 """
 
 import sys
-import urllib2
+import urllib, urllib2
 import datetime
 import time
 
@@ -175,9 +175,9 @@ class S3Sync(S3Method):
                       message=message)
             return False
 
-        rtable = current.s3db.sync_task
-        query = (rtable.repository_id == repository.id) & \
-                (rtable.deleted != True)
+        ttable = current.s3db.sync_task
+        query = (ttable.repository_id == repository.id) & \
+                (ttable.deleted != True)
         tasks = current.db(query).select()
 
         connector = S3SyncRepository.factory(repository)
@@ -195,7 +195,7 @@ class S3Sync(S3Method):
 
         success = True
         for task in tasks:
-
+            
             # Pull
             mtime = None
             if task.mode in (1, 3):
@@ -301,7 +301,7 @@ class S3Sync(S3Method):
         resource = r.resource
         
         # Identify the requesting repository
-        repository = Storage(id=None)
+        repository_id = None
         if "repository" in r.vars:
 
             db = current.db
@@ -346,9 +346,23 @@ class S3Sync(S3Method):
             except ValueError:
                 msince = None
 
-        if task_id:
-            filters = self.get_filters(task_id)
-        else:
+        # Sync filters from peer
+        filters = {}
+        for k, v in _vars.items():
+            if k[0] == "[" and "]" in k:
+                tablename, urlvar = k[1:].split("]", 1)
+                if urlvar:
+                    if not tablename or tablename == "~":
+                        tablename = resource.tablename
+                    f = filters.get(tablename, {})
+                    u = f.get(urlvar, None)
+                    if u:
+                        u = "%s&%s" % (u, v)
+                    else:
+                        u = v
+                    f[urlvar] = u
+                    filters[tablename] = f
+        if not filters:
             filters = None
 
         # Export the resource
@@ -813,7 +827,6 @@ class S3SyncRepository(object):
         _debug("...send to URL %s" % url)
 
         # Generate the request
-        import urllib2
         req = urllib2.Request(url=url)
         handlers = []
 
@@ -923,6 +936,18 @@ class S3SyncRepository(object):
         if last_pull and task.update_policy not in ("THIS", "OTHER"):
             url += "&msince=%s" % xml.encode_iso_datetime(last_pull)
         url += "&include_deleted=True"
+
+        # Send sync filters to peer
+        filters = current.sync.get_filters(task.id)
+        filter_string = None
+        resource_name = task.resource_name
+        for tablename in filters:
+            prefix = "~" if not tablename or tablename == resource_name \
+                            else tablename
+            for k, v in filters[tablename].items():
+                urlfilter = "[%s]%s=%s" % (prefix, k, v)
+                url += "&%s" % urlfilter
+                
         _debug("...pull from URL %s" % url)
 
         # Figure out the protocol from the URL
@@ -933,7 +958,6 @@ class S3SyncRepository(object):
             protocol, path = "http", None
 
         # Create the request
-        import urllib2
         req = urllib2.Request(url=url)
         handlers = []
 
@@ -1121,10 +1145,14 @@ class S3SyncRepository(object):
             last_push = None
         _debug("...push to URL %s" % url)
 
-        # Export the resource as S3XML
+        # Define the resource
         resource = current.s3db.resource(resource_name,
                                          include_deleted=True)
+
+        # Apply sync filters for this task
         filters = current.sync.get_filters(task.id)
+        
+        # Export the resource as S3XML
         data = resource.export_xml(filters=filters,
                                    msince=last_push)
         count = resource.results or 0
@@ -1462,9 +1490,7 @@ class S3SyncCiviCRM(S3SyncRepository):
         if hasattr(self, "site_key") and self.site_key:
             args["key"] = self.site_key
 
-
         # Create the request
-        import urllib, urllib2
         url = self.url + "?" + urllib.urlencode(args)
         req = urllib2.Request(url=url)
         handlers = []
