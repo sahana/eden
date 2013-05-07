@@ -98,13 +98,15 @@ def sync():
         tablename = request.get_vars["resource"]
         if "_" in tablename:
 
-            # URL variables from peer
+            # URL variables from peer:
+            # repository ID, msince and sync filters
+            get_vars = Storage(include_deleted=True)
+            
             _vars = request.get_vars
-            get_vars=Storage(include_deleted=True)
-            if "repository" in _vars:
-                get_vars.update(repository=_vars["repository"])
-            if "msince" in _vars:
-                get_vars.update(msince=_vars["msince"])
+            for k, v in _vars.items():
+                if k in ("repository", "msince") or \
+                   k[0] == "[" and "]" in k:
+                    get_vars[k] = v
 
             # Request
             prefix, name = tablename.split("_", 1)
