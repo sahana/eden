@@ -182,6 +182,7 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
+        T = current.T
         context = widget.get("context", None)
         if context:
             context = "(%s)" % context
@@ -223,9 +224,15 @@ class S3Profile(S3CRUD):
             vars.refresh = listid
             if context:
                 vars[context] = r.id
+            title_create = widget.get("title_create", None)
+            if title_create:
+                title_create = T(title_create)
+            else:
+                title_create = S3CRUD.crud_string(tablename, "title_create")
             create = A(I(_class="icon icon-plus-sign small-add"),
                        _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
                        _class="s3_modal",
+                       _title=title_create,
                        )
         else:
             create = "" 
@@ -278,7 +285,7 @@ class S3Profile(S3CRUD):
         if numrows == 0:
             msg = P(I(_class="icon-folder-open-alt"),
                     BR(),
-                    S3CRUD.crud_string(resource.tablename,
+                    S3CRUD.crud_string(tablename,
                                        "msg_no_match"),
                     _class="empty_card-holder")
             data.insert(1, msg)
@@ -290,7 +297,7 @@ class S3Profile(S3CRUD):
 
         label = widget.get("label", "")
         if label:
-            label = current.T(label)
+            label = T(label)
         icon = widget.get("icon", "")
         if icon:
             icon = TAG[""](I(_class=icon), " ")

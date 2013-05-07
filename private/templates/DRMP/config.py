@@ -498,6 +498,7 @@ def customize_event_event(**attr):
     table = s3db.event_event
 
     alerts_widget = dict(label = "Alerts",
+                         title_create = "Add New Alert",
                          type = "datalist",
                          tablename = "cms_post",
                          context = "event",
@@ -513,6 +514,7 @@ def customize_event_event(**attr):
                       width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
+                            title_create = "Add New Incident",
                             type = "datalist",
                             tablename = "cms_post",
                             context = "event",
@@ -521,6 +523,7 @@ def customize_event_event(**attr):
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
+                              title_create = "Add New Assessment",
                               type = "datalist",
                               tablename = "cms_post",
                               context = "event",
@@ -529,6 +532,7 @@ def customize_event_event(**attr):
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
                              type = "datalist",
                              tablename = "cms_post",
                              context = "event",
@@ -537,6 +541,7 @@ def customize_event_event(**attr):
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
+                          title_create = "Add New Report",
                           type = "datalist",
                           tablename = "cms_post",
                           context = "event",
@@ -708,6 +713,7 @@ def customize_gis_location(**attr):
     table = s3db.gis_location
 
     alerts_widget = dict(label = "Alerts",
+                         title_create = "Add New Alert",
                          type = "datalist",
                          tablename = "cms_post",
                          context = "location",
@@ -723,6 +729,7 @@ def customize_gis_location(**attr):
                       width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
+                            title_create = "Add New Incident",
                             type = "datalist",
                             tablename = "cms_post",
                             context = "location",
@@ -731,6 +738,7 @@ def customize_gis_location(**attr):
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
+                              title_create = "Add New Assessment",
                               type = "datalist",
                               tablename = "cms_post",
                               context = "location",
@@ -739,6 +747,7 @@ def customize_gis_location(**attr):
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
                              type = "datalist",
                              tablename = "cms_post",
                              context = "location",
@@ -747,6 +756,7 @@ def customize_gis_location(**attr):
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
+                          title_create = "Add New Report",
                           type = "datalist",
                           tablename = "cms_post",
                           context = "location",
@@ -882,6 +892,7 @@ def customize_org_organisation(**attr):
     table = s3db.org_organisation
 
     alerts_widget = dict(label = "Alerts",
+                         title_create = "Add New Alert",
                          type = "datalist",
                          tablename = "cms_post",
                          context = "organisation",
@@ -897,6 +908,7 @@ def customize_org_organisation(**attr):
                       width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
+                            title_create = "Add New Incident",
                             type = "datalist",
                             tablename = "cms_post",
                             context = "organisation",
@@ -905,6 +917,7 @@ def customize_org_organisation(**attr):
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
+                              title_create = "Add New Assessment",
                               type = "datalist",
                               tablename = "cms_post",
                               context = "organisation",
@@ -913,6 +926,7 @@ def customize_org_organisation(**attr):
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
                              type = "datalist",
                              tablename = "cms_post",
                              context = "organisation",
@@ -921,6 +935,7 @@ def customize_org_organisation(**attr):
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
+                          title_create = "Add New Report",
                           type = "datalist",
                           tablename = "cms_post",
                           context = "organisation",

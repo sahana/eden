@@ -1572,8 +1572,6 @@ class IS_LOCATION_SELECTOR2(Validator):
                                lon=lon,
                                parent=parent,
                                )
-                id = table.insert(**vars)
-                vars.id = id
                 # onvalidation
                 form = Storage()
                 form.errors = errors
@@ -1585,6 +1583,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                     for e in errors:
                         error = "%s\n%s" % (error, errors[e]) if error else errors[e]
                     return (None, error)
+                id = table.insert(**vars)
+                vars.id = id
                 # onaccept
                 current.gis.update_location_tree(vars)
                 return (id, None)
