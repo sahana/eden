@@ -509,6 +509,8 @@ def customize_event_event(**attr):
                       type = "map",
                       context = "event",
                       icon = "icon-map-marker",
+                      height = 383,
+                      width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
                             type = "datalist",
@@ -548,6 +550,8 @@ def customize_event_event(**attr):
                            colspan = 2,
                            )
     s3db.configure("event_event",
+                   create_next = URL(c="event", f="event",
+                                     args=["[id]", "profile"]),
                    list_layout = render_events,
                    profile_widgets=[alerts_widget,
                                     map_widget,
