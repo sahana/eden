@@ -28,7 +28,7 @@
 """
 
 import sys
-import urllib2
+import urllib, urllib2
 import datetime
 import time
 
@@ -51,6 +51,7 @@ from gluon.storage import Storage
 
 from s3rest import S3Method
 from s3import import S3ImportItem
+from s3resource import S3URLQuery
 
 DEBUG = False
 if DEBUG:
@@ -174,9 +175,9 @@ class S3Sync(S3Method):
                       message=message)
             return False
 
-        rtable = current.s3db.sync_task
-        query = (rtable.repository_id == repository.id) & \
-                (rtable.deleted != True)
+        ttable = current.s3db.sync_task
+        query = (ttable.repository_id == repository.id) & \
+                (ttable.deleted != True)
         tasks = current.db(query).select()
 
         connector = S3SyncRepository.factory(repository)
@@ -194,7 +195,7 @@ class S3Sync(S3Method):
 
         success = True
         for task in tasks:
-
+            
             # Pull
             mtime = None
             if task.mode in (1, 3):
@@ -297,14 +298,29 @@ class S3Sync(S3Method):
 
         _debug("S3Sync.__send")
 
+        resource = r.resource
+        
         # Identify the requesting repository
-        repository = Storage(id=None)
+        repository_id = None
         if "repository" in r.vars:
+
+            db = current.db
+            s3db = current.s3db
+
             ruid = r.vars["repository"]
-            rtable = current.s3db.sync_repository
-            row = current.db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            rtable = s3db.sync_repository
+            ttable = s3db.sync_task
+
+            left = ttable.on((rtable.id == ttable.repository_id) & \
+                             (ttable.resource_name == resource.tablename))
+
+            row = db(rtable.uuid == ruid).select(rtable.id,
+                                                 ttable.id,
+                                                 left=left,
+                                                 limitby=(0, 1)).first()
             if row:
-                repository = row
+                repository_id = row[rtable.id]
+                task_id = row[ttable.id]
 
         # Additional export parameters
         _vars = r.get_vars
@@ -330,10 +346,29 @@ class S3Sync(S3Method):
             except ValueError:
                 msince = None
 
+        # Sync filters from peer
+        filters = {}
+        for k, v in _vars.items():
+            if k[0] == "[" and "]" in k:
+                tablename, urlvar = k[1:].split("]", 1)
+                if urlvar:
+                    if not tablename or tablename == "~":
+                        tablename = resource.tablename
+                    f = filters.get(tablename, {})
+                    u = f.get(urlvar, None)
+                    if u:
+                        u = "%s&%s" % (u, v)
+                    else:
+                        u = v
+                    f[urlvar] = u
+                    filters[tablename] = f
+        if not filters:
+            filters = None
+
         # Export the resource
-        resource = r.resource
         output = resource.export_xml(start=start,
                                      limit=limit,
+                                     filters=filters,
                                      msince=msince)
         count = resource.results
 
@@ -342,7 +377,7 @@ class S3Sync(S3Method):
         headers["Content-Type"] = "text/xml"
 
         # Log the operation
-        self.log.write(repository_id=repository.id,
+        self.log.write(repository_id=repository_id,
                        resource_name=r.resource.tablename,
                        transmission=self.log.IN,
                        mode=self.log.PULL,
@@ -547,6 +582,39 @@ class S3Sync(S3Method):
                 # No rule - accept always
                 _debug("Accept because no rule found")
                 item.conflict = False
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_filters(task_id):
+        """
+            Get all filters for a synchronization task
+
+            @param task_id: the task ID
+            @return: a dict of dicts like {tablename: {url_var: value}}
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ftable = s3db.sync_resource_filter
+        query = (ftable.task_id == task_id) & \
+                (ftable.deleted != True)
+        rows = db(query).select(ftable.tablename,
+                                ftable.filter_string)
+
+        filters = {}
+        for row in rows:
+            tablename = row.tablename
+            if tablename in filters:
+                filters[tablename] = "%s&%s" % (filters[tablename],
+                                                row.filter_string)
+            else:
+                filters[tablename] = row.filter_string
+                
+        parse_url = S3URLQuery.parse_url
+        for tablename in filters:
+            filters[tablename] = parse_url(filters[tablename])
+        return filters
 
 # =============================================================================
 class S3SyncLog(S3Method):
@@ -759,7 +827,6 @@ class S3SyncRepository(object):
         _debug("...send to URL %s" % url)
 
         # Generate the request
-        import urllib2
         req = urllib2.Request(url=url)
         handlers = []
 
@@ -869,6 +936,18 @@ class S3SyncRepository(object):
         if last_pull and task.update_policy not in ("THIS", "OTHER"):
             url += "&msince=%s" % xml.encode_iso_datetime(last_pull)
         url += "&include_deleted=True"
+
+        # Send sync filters to peer
+        filters = current.sync.get_filters(task.id)
+        filter_string = None
+        resource_name = task.resource_name
+        for tablename in filters:
+            prefix = "~" if not tablename or tablename == resource_name \
+                            else tablename
+            for k, v in filters[tablename].items():
+                urlfilter = "[%s]%s=%s" % (prefix, k, v)
+                url += "&%s" % urlfilter
+                
         _debug("...pull from URL %s" % url)
 
         # Figure out the protocol from the URL
@@ -879,7 +958,6 @@ class S3SyncRepository(object):
             protocol, path = "http", None
 
         # Create the request
-        import urllib2
         req = urllib2.Request(url=url)
         handlers = []
 
@@ -1067,10 +1145,16 @@ class S3SyncRepository(object):
             last_push = None
         _debug("...push to URL %s" % url)
 
-        # Export the resource as S3XML
+        # Define the resource
         resource = current.s3db.resource(resource_name,
                                          include_deleted=True)
-        data = resource.export_xml(msince=last_push)
+
+        # Apply sync filters for this task
+        filters = current.sync.get_filters(task.id)
+        
+        # Export the resource as S3XML
+        data = resource.export_xml(filters=filters,
+                                   msince=last_push)
         count = resource.results or 0
         mtime = resource.muntil
 
@@ -1406,9 +1490,7 @@ class S3SyncCiviCRM(S3SyncRepository):
         if hasattr(self, "site_key") and self.site_key:
             args["key"] = self.site_key
 
-
         # Create the request
-        import urllib, urllib2
         url = self.url + "?" + urllib.urlencode(args)
         req = urllib2.Request(url=url)
         handlers = []

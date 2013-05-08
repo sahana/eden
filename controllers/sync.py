@@ -41,6 +41,24 @@ def repository():
     s3db.set_method("sync", "repository",
                     method="register", action=current.sync)
 
+    crud_form = s3base.S3SQLCustomForm("resource_name",
+                                       "last_pull",
+                                       "last_push",
+                                       "mode",
+                                       "strategy",
+                                       "update_method",
+                                       "update_policy",
+                                       "conflict_policy",
+                                       s3base.S3SQLInlineComponent(
+                                             "resource_filter",
+                                             label = T("Filters"),
+                                             fields = ["tablename",
+                                                       "filter_string",
+                                                      ]
+                                       ),
+                                      )
+    s3db.configure("sync_task", crud_form=crud_form)
+
     def prep(r):
         if r.interactive:
             if r.component and r.id:
@@ -80,13 +98,15 @@ def sync():
         tablename = request.get_vars["resource"]
         if "_" in tablename:
 
-            # URL variables from peer
+            # URL variables from peer:
+            # repository ID, msince and sync filters
+            get_vars = Storage(include_deleted=True)
+            
             _vars = request.get_vars
-            get_vars=Storage(include_deleted=True)
-            if "repository" in _vars:
-                get_vars.update(repository=_vars["repository"])
-            if "msince" in _vars:
-                get_vars.update(msince=_vars["msince"])
+            for k, v in _vars.items():
+                if k in ("repository", "msince") or \
+                   k[0] == "[" and "]" in k:
+                    get_vars[k] = v
 
             # Request
             prefix, name = tablename.split("_", 1)

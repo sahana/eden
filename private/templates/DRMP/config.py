@@ -8,9 +8,10 @@ from gluon.validators import IS_NULL_OR
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_LOCATION
+from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationAutocompleteWidget, S3LocationSelectorWidget2
 
 T = current.T
@@ -98,6 +99,12 @@ settings.ui.camp = True
 # Save Search Widget
 settings.save_search.widget = False
 
+
+# -----------------------------------------------------------------------------
+# Formstyle
+
+settings.ui.formstyle_row = "bootstrap"
+settings.ui.formstyle = "bootstrap"
 # =============================================================================
 # Module Settings
 
@@ -116,6 +123,10 @@ settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.use_teams = False
 
+# -----------------------------------------------------------------------------
+# Project
+# Uncomment this to use multiple Organisations per project
+settings.project.multiple_organisations = True
 # -----------------------------------------------------------------------------
 def location_represent(id, row=None):
     """
@@ -167,11 +178,12 @@ def customize_cms_post(**attr):
             field.default = False
             #field.readable = field.writable = False
             field = table.location_id
+            field.label = ""
             field.represent = location_represent
-            #field.requires = IS_NULL_OR(IS_LOCATION(level="L3"))
-            #field.widget = S3LocationAutocompleteWidget(level="L3")
-            field.requires = IS_NULL_OR(IS_LOCATION())
-            field.widget = S3LocationSelectorWidget2()
+            field.requires = IS_NULL_OR(
+                                IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"])
+                             )
+            field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"])
             table.created_by.represent = s3_auth_user_represent_name
             field = table.body
             field.label = T("Text")
@@ -223,7 +235,7 @@ def customize_cms_post(**attr):
                 )
 
             # Return to List view after create/update/delete
-            url_next = URL(c="default", f="index", args=None)
+            url_next = URL(c="default", f="index", args="updates")
 
             list_fields = ["series_id",
                            "location_id",
@@ -245,7 +257,7 @@ def customize_cms_post(**attr):
 
             crud_settings = current.response.s3.crud
             crud_settings.formstyle = "bootstrap"
-            crud_settings.submit_button = T("Save changes")
+            #crud_settings.submit_button = T("Save changes")
             # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
             #crud_settings.submit_style = "btn btn-primary"
 
@@ -486,6 +498,7 @@ def customize_event_event(**attr):
     table = s3db.event_event
 
     alerts_widget = dict(label = "Alerts",
+                         title_create = "Add New Alert",
                          type = "datalist",
                          tablename = "cms_post",
                          context = "event",
@@ -497,8 +510,11 @@ def customize_event_event(**attr):
                       type = "map",
                       context = "event",
                       icon = "icon-map-marker",
+                      height = 383,
+                      width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
+                            title_create = "Add New Incident",
                             type = "datalist",
                             tablename = "cms_post",
                             context = "event",
@@ -507,6 +523,7 @@ def customize_event_event(**attr):
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
+                              title_create = "Add New Assessment",
                               type = "datalist",
                               tablename = "cms_post",
                               context = "event",
@@ -515,6 +532,7 @@ def customize_event_event(**attr):
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
                              type = "datalist",
                              tablename = "cms_post",
                              context = "event",
@@ -523,6 +541,7 @@ def customize_event_event(**attr):
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
+                          title_create = "Add New Report",
                           type = "datalist",
                           tablename = "cms_post",
                           context = "event",
@@ -536,6 +555,10 @@ def customize_event_event(**attr):
                            colspan = 2,
                            )
     s3db.configure("event_event",
+                   create_next = URL(c="event", f="event",
+                                     args=["[id]", "profile"]),
+                   # We want the Create form to be in a modal, not inline, for consistency
+                   listadd = False,
                    list_layout = render_events,
                    profile_widgets=[alerts_widget,
                                     map_widget,
@@ -565,9 +588,31 @@ def customize_event_event(**attr):
 
     crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
+    #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive and \
+           current.auth.s3_has_permission("create", r.table):
+            # Insert a Button to Create New in Modal
+            output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
+                                      _href=URL(c="event", f="event",
+                                                args=["create.popup"],
+                                                vars={"refresh":"datalist"}),
+                                      _class="btn btn-primary s3_modal",
+                                      _role="button",
+                                      _title=T("Add New Disaster"),
+                                      )
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
 
     return attr
 
@@ -668,6 +713,7 @@ def customize_gis_location(**attr):
     table = s3db.gis_location
 
     alerts_widget = dict(label = "Alerts",
+                         title_create = "Add New Alert",
                          type = "datalist",
                          tablename = "cms_post",
                          context = "location",
@@ -679,8 +725,11 @@ def customize_gis_location(**attr):
                       type = "map",
                       context = "location",
                       icon = "icon-map-marker",
+                      height = 383,
+                      width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
+                            title_create = "Add New Incident",
                             type = "datalist",
                             tablename = "cms_post",
                             context = "location",
@@ -689,6 +738,7 @@ def customize_gis_location(**attr):
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
+                              title_create = "Add New Assessment",
                               type = "datalist",
                               tablename = "cms_post",
                               context = "location",
@@ -697,6 +747,7 @@ def customize_gis_location(**attr):
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
                              type = "datalist",
                              tablename = "cms_post",
                              context = "location",
@@ -705,6 +756,7 @@ def customize_gis_location(**attr):
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
+                          title_create = "Add New Report",
                           type = "datalist",
                           tablename = "cms_post",
                           context = "location",
@@ -731,7 +783,7 @@ def customize_gis_location(**attr):
 
     crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
+    #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
 
@@ -840,6 +892,7 @@ def customize_org_organisation(**attr):
     table = s3db.org_organisation
 
     alerts_widget = dict(label = "Alerts",
+                         title_create = "Add New Alert",
                          type = "datalist",
                          tablename = "cms_post",
                          context = "organisation",
@@ -851,8 +904,11 @@ def customize_org_organisation(**attr):
                       type = "map",
                       context = "organisation",
                       icon = "icon-map-marker",
+                      height = 383,
+                      width = 568,
                       )
     incidents_widget = dict(label = "Incidents",
+                            title_create = "Add New Incident",
                             type = "datalist",
                             tablename = "cms_post",
                             context = "organisation",
@@ -861,6 +917,7 @@ def customize_org_organisation(**attr):
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
+                              title_create = "Add New Assessment",
                               type = "datalist",
                               tablename = "cms_post",
                               context = "organisation",
@@ -869,6 +926,7 @@ def customize_org_organisation(**attr):
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
                              type = "datalist",
                              tablename = "cms_post",
                              context = "organisation",
@@ -877,6 +935,7 @@ def customize_org_organisation(**attr):
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
+                          title_create = "Add New Report",
                           type = "datalist",
                           tablename = "cms_post",
                           context = "organisation",
@@ -923,13 +982,121 @@ def customize_org_organisation(**attr):
 
     crud_settings = s3.crud
     crud_settings.formstyle = "bootstrap"
-    crud_settings.submit_button = T("Save changes")
+    #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
 
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
+def customize_project_project(**attr):
+    """
+        Customize project_project controller
+        - Data Model
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    db = current.db
+
+    tablename = "project_project"
+    table = s3db.project_project
+    
+    # Remove rheader
+    attr["rheader"] = None
+    
+    # Configure fields 
+    table.human_resource_id.label = T("Focal Person")
+
+    # Project Locations must be districts
+    ltable = s3db.project_location
+    ltable.location_id.requires = IS_ONE_OF(db, "gis_location.id",
+                                            S3Represent(lookup="gis_location"),
+                                            sort = True,
+                                            filterby = "level",
+                                            filter_opts = ["L1"]
+                                            )
+    ltable.location_id.widget = None
+
+    crud_form = S3SQLCustomForm(
+        "name",
+        "organisation_id",
+        S3SQLInlineComponent(
+            "location",
+            label = T("Locations"),
+            fields = ["location_id"],
+            orderby = "location_id$name",
+            render_list = True
+        ),
+        "human_resource_id",
+        "start_date",
+        "end_date",
+        # Partner Orgs
+        S3SQLInlineComponent(
+            "organisation",
+            name = "partner",
+            label = T("Partner Organisations"),
+            fields = ["organisation_id",
+                      ],
+            filterby = dict(field = "role",
+                            options = "5"
+                            )
+        ),
+        # Donors
+        S3SQLInlineComponent(
+            "organisation",
+            name = "donor",
+            label = T("Donor(s)"),
+            fields = ["organisation_id", "amount", "currency"],
+            filterby = dict(field = "role",
+                            options = "3"
+                            )
+        ),
+        "budget",
+        "comments",
+    )
+
+    list_fields = ["name",
+                   "organisation_id",
+                   "human_resource_id",
+                   "start_date",
+                   "end_date",
+                   "budget",
+                   ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   list_fields = list_fields)
+
+    return attr
+
+settings.ui.customize_project_project = customize_project_project
+
+# -----------------------------------------------------------------------------
+def customize_org_resource(**attr):
+    """
+        Customize project_project controller
+        - Data Model
+    """
+
+    tablename = "org_resource"
+    table = current.s3db.org_resource
+    
+    # Configure fields
+    #table.site_id.readable = table.site_id.readable = False
+    table.location_id.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                           S3Represent(lookup="gis_location"),
+                                           sort = True,
+                                           filterby = "level",
+                                           filter_opts = ["L1"]
+                                           )
+    table.location_id.widget = None
+    
+    return attr
+
+settings.ui.customize_org_resource = customize_org_resource
 
 # =============================================================================
 # Template Modules

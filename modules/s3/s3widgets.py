@@ -92,6 +92,7 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP
 #from gluon.validators import *
+from gluon.html import BUTTON
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
@@ -2579,12 +2580,13 @@ class S3LocationSelectorWidget2(FormWidget):
         * Doesn't allow selection of existing Locations
         * Doesn't support manual entry of LatLons
         * Doesn't support creation of Polygons
+        * Doesn't support Geocoding
 
         May evolve into a replacement in-time if missing features get migrated here.
 
         Implementation Notes:
         * Should support formstyles (Bootstrap most urgent)
-        * Should support multiple on a page
+        * Should support multiple on a page (not urgent)
         * Performance: Create JSON for the hierarchy, along with bboxes for the map zoom
                        - load progressively rather than all as 1 big download
         h = {id : {'n' : name,
@@ -2609,22 +2611,88 @@ class S3LocationSelectorWidget2(FormWidget):
         settings = current.deployment_settings
         s3 = current.response.s3
         formstyle = s3.crud.formstyle
-        appname = current.request.application
+        request = current.request
+        appname = request.application
         throbber_img = "/%s/static/img/ajax-loader.gif" % appname
+
+        gtable = s3db.gis_location
 
         countries = settings.get_gis_countries()
         if len(countries) != 1:
             # @ToDo: Lookup Labels dynamically when L0 changes
             raise
-        # @ToDo: Support default L1/L2/L3
 
-        # Main Input
+        # @ToDo: Support default locations from gis_config
+        values = dict(L0 = countries[0],
+                      L1 = None,
+                      L2 = None,
+                      L3 = None,
+                      L4 = None,
+                      L5 = None,
+                      )
+        lat = None
+        lon = None
+        parent = ""
+        if value == "dummy":
+            # Validation Error on creating a new Point
+            # Revert to Parent
+            value = request.post_vars.parent
+        if value:
+            record = db(gtable.id == value).select(gtable.path,
+                                                   gtable.parent,
+                                                   gtable.level,
+                                                   gtable.lat,
+                                                   gtable.lon,
+                                                   # @ToDo: Polygon support
+                                                   #gtable.wkt,
+                                                   limitby=(0, 1)).first()
+            if not record:
+                raise
+            parent = record.parent
+            level = record.level
+            path = record.path.split("/")
+            if not level:
+                # Only use a specific Lat/Lon when not an Lx
+                lat = record.lat
+                lon = record.lon
+                if len(path) < len(levels):
+                    # We don't have a full path
+                    # @ToDo: Retrieve all records in the path to match them up to their Lx
+                    raise
+            else:
+                if len(path) != (int(level[1:]) + 1):
+                    # We don't have a full path
+                    # @ToDo: Retrieve all records in the path to match them up to their Lx
+                    raise
+
+            for l in levels:
+                try:
+                    values[l] = path[int(l[1:])]
+                except:
+                    pass
+
+        fieldname = str(field).replace(".", "_")
+
+        # Main INPUT, will be hidden
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
-        # Hide the real field
-        attr["_class"] = "hide"
 
+        # Lat/Lon INPUT fields, will be hidden
+        lat_input = INPUT(_name="lat",
+                          _id="%s_lat" % fieldname,
+                          _value=lat,
+                          )
+        lon_input = INPUT(_name="lon",
+                          _id="%s_lon" % fieldname,
+                          _value=lon,
+                          )
+        # Parent INPUT field, will be hidden
+        parent_input = INPUT(_name="parent",
+                             _id="%s_parent" % fieldname,
+                             _value=parent,
+                             )
+        
         # Lx Dropdowns
         htable = s3db.gis_hierarchy
         ttable = s3db.gis_location_tag
@@ -2637,12 +2705,14 @@ class S3LocationSelectorWidget2(FormWidget):
         #del labels.location_id
 
         Lx_rows = DIV()
+        # 1st level is always visible
         hidden = False
-        fieldname = str(field).replace(".", "_")
         for level in levels:
             label = labels[level]
             id = "%s_%s" % (fieldname, level)
-            widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label), _value=""), _id=id)
+            widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
+                                   _value=""),
+                            _id=id)
             comment = T("Select this %(location)s") % dict(location = label)
             throbber = IMG(_src=throbber_img,
                            _height=32, _width=32,
@@ -2651,10 +2721,12 @@ class S3LocationSelectorWidget2(FormWidget):
                            )
             if formstyle == "bootstrap":
                 # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-                # - Elements moved via JS after page load
+                # -> Elements moved via JS after page load
                 label = LABEL("%s:" % label, _class="control-label",
                                              _for=id)
                 widget.add_class("input-xlarge")
+                # Currently unused, so remove if this remains so
+                from gluon.html import BUTTON
                 comment = BUTTON(comment,
                                  _class="btn btn-primary hide",
                                  _id="%s__button" % id
@@ -2671,27 +2743,26 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 raise
             Lx_rows.append(row)
+            # Subsequent levels are hidden by default
+            # (client-side JS will open when-needed)
             hidden = True
 
-        # @ToDo
-        #if value:
-
-        table = s3db.gis_location
-        query = (table.deleted == False) & \
-                (table.level == "L1") & \
-                (table.parent == country_id)
-        locations = db(query).select(table.id,
-                                     table.name,
-                                     table.level,
-                                     table.parent)
+        # @ToDo: Don't assume we start at L1
+        query = (gtable.deleted == False) & \
+                (gtable.level == "L1") & \
+                (gtable.parent == country_id)
+        locations = db(query).select(gtable.id,
+                                     gtable.name,
+                                     gtable.level,
+                                     gtable.parent)
         location_dict = {}
         for location in locations:
             location_dict[int(location.id)] = dict(n=location.name,
                                                    l=int(location.level[1]),
                                                    f=int(location.parent))
 
-        js_global = []
-        append = js_global.append
+        scripts = []
+        append = scripts.append
 
         # i18n
         i18n = "\n".join((
@@ -2699,27 +2770,80 @@ class S3LocationSelectorWidget2(FormWidget):
             ))
         append(i18n)
 
-        script = '''\nl=%s\n''' % json.dumps(location_dict)
+        script = '''l=%s''' % json.dumps(location_dict)
         append(script)
 
-        script = '''\ns3_gis_locationselector2('%s',%s)\n''' % (fieldname, country_id)
-        append(script)
+        s3.js_global.append("\n".join(scripts))
 
-        s3.js_global.append("".join(js_global))
+        # If we need to show the map since the lowest-level is predefined
+        # then we need to launch the client-side JS as a callback to the MapJS loader
+        max_level = levels[len(levels) - 1]
+        use_callback = False
+        script = '''s3_gis_locationselector2('%s',%s''' % (fieldname, country_id)
+        L1 = values["L1"]
+        if L1:
+            script = '''%s,%s''' % (script, L1)
+            if max_level == "L1":
+                use_callback = True
+            else:
+                L2 = values["L2"]
+                if L2:
+                    script = '''%s,%s''' % (script, L2)
+                    if max_level == "L2":
+                        use_callback = True
+                    else:
+                        L3 = values["L3"]
+                        if L3:
+                            script = '''%s,%s''' % (script, L3)
+                            if max_level == "L3":
+                                use_callback = True
+                            else:
+                                L4 = values["L4"]
+                                if L4:
+                                    script = '''%s,%s''' % (script, L4)
+                                    if max_level == "L4":
+                                        use_callback = True
+                                    else:
+                                        L5 = values["L5"]
+                                        if L5:
+                                            script = '''%s,%s''' % (script, L5)
+                                            use_callback = True
+        script = '''%s)''' % script
+        if use_callback:
+            callback = script
+        else:
+            s3.jquery_ready.append(script)
 
-        #if s3.debug:
-        script = "s3.locationselector.widget2.js"
-        #else:
-        #    script = "s3.locationselector.widget.min2.js"
+        if s3.debug:
+            script = "s3.locationselector.widget2.js"
+        else:
+            script = "s3.locationselector.widget2.min.js"
 
-        script_path = "/%s/static/scripts/S3/%s" % (appname, script)
-        if script_path not in s3.scripts:
-            s3.scripts.append(script_path)
+        script = "/%s/static/scripts/S3/%s" % (appname, script)
+        scripts = s3.scripts
+        if script not in scripts:
+            scripts.append(script)
+
+        # @ToDo: handle multiple LocationSelectors in 1 page
+        # (=> multiple callbacks, as well as the globals issue)
+        _map = current.gis.show_map(collapsed = True,
+                                    height = 320,
+                                    width = 480,
+                                    add_feature = True,
+                                    add_feature_active = True,
+                                    # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
+                                    # but use our one if we need to display a map by default
+                                    callback = callback if use_callback else "",
+                                    )
 
         # The overall layout of the components
-        return TAG[""](DIV(INPUT(**attr)), # Real input, hidden
+        return TAG[""](DIV(INPUT(**attr), # Real input, hidden
+                           lat_input,
+                           lon_input,
+                           parent_input,
+                           _class="hide"),
                        Lx_rows,
-                       #_map,
+                       _map,
                        requires=field.requires
                        )
 

@@ -144,10 +144,11 @@ function addLayers() {
     }
     // Simple Features
     if (S3.gis.features) {
+        var current_projection = map.getProjectionObject();
         for (i = 0; i < S3.gis.features.length; i++) {
             var feature = S3.gis.format_geojson.parseFeature(S3.gis.features[i]);
             feature.geometry.transform(S3.gis.proj4326,
-                                       S3.gis.projection_current);
+                                       current_projection);
             S3.gis.draftLayer.addFeatures([feature]);
         }
     }
@@ -2035,7 +2036,7 @@ function addXYZLayer(layer) {
 
 // Support Vector Layers
 function showThrobber(id) {
-    $('#layer_throbber').show().removeClass('hide');
+    $('.layer_throbber').show().removeClass('hide');
     S3.gis.layers_loading.pop(id); // we never want 2 pushed
     S3.gis.layers_loading.push(id);
 }
@@ -2043,7 +2044,7 @@ function showThrobber(id) {
 function hideThrobber(id) {
     S3.gis.layers_loading.pop(id);
     if (S3.gis.layers_loading.length === 0) {
-        $('#layer_throbber').hide().addClass('hide');
+        $('.layer_throbber').hide().addClass('hide');
     }
 }
 

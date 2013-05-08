@@ -303,7 +303,9 @@ class S3DelphiModel(S3Model):
                                "modified_on",
                                (T("Voted on"), "votes"),
                                (T("Comments"), "comments"),
-                               ])
+                               ],
+                  extra_fields = ["problem_id"],
+                 )
 
         solution_represent = S3Represent(lookup=tablename)
         solution_id = S3ReusableField("solution_id", table,
@@ -474,13 +476,6 @@ class S3DelphiModel(S3Model):
 # =============================================================================
 class solution_virtualfields(dict, object):
     """ Virtual Fields for Solutions """
-
-    # Fields to be loaded by sqltable as qfields
-    # without them being list_fields
-    # (These cannot contain VirtualFields)
-    extra_fields = [
-                "problem_id"
-            ]
 
     def comments(self):
         ctable = current.s3db.delphi_comment

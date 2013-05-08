@@ -3852,7 +3852,10 @@ class GIS(object):
             # Do the whole database
             # Do in chunks to save memory and also do in correct order
             db = current.db
-            table = db.gis_location
+            try:
+                table = db.gis_location
+            except:
+                table = current.s3db.gis_location
             fields = [table.id, table.name, table.gis_feature_type,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,
@@ -3888,6 +3891,7 @@ class GIS(object):
                         db(table.id == feature.id).update(**_vars)
             return
 
+        # Single Feature
         id = "id" in feature and str(feature["id"])
         if not id:
             # Nothing we can do
@@ -5115,12 +5119,11 @@ class GIS(object):
                     s3_debug("Error reading WKT", location.wkt)
                     continue
                 bounds = shape.bounds
-                table[location.id] = dict(
-                                        lon_min = bounds[0],
-                                        lat_min = bounds[1],
-                                        lon_max = bounds[2],
-                                        lat_max = bounds[3],
-                                        )
+                table[location.id] = dict(lon_min = bounds[0],
+                                          lat_min = bounds[1],
+                                          lon_max = bounds[2],
+                                          lat_max = bounds[3],
+                                          )
 
         # Anything left, we assume is a Point, so set the bounds to be the same
         db(no_bounds).update(lon_min=table.lon,
@@ -5242,8 +5245,6 @@ class GIS(object):
                  legend = False,
                  toolbar = False,
                  search = False,
-                 googleEarth = False,
-                 googleStreetview = False,
                  mouse_position = None,
                  overview = None,
                  permalink = None,
@@ -5257,7 +5258,8 @@ class GIS(object):
                  maximizable = True,
                  collapsed = False,
                  location_selector = False,
-                 plugins = None,
+                 callback = "S3.gis.show_map()",
+                 plugins = [],
                 ):
         """
             Returns the HTML to display a map
@@ -5314,8 +5316,6 @@ class GIS(object):
             @param legend: Show the Legend panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param search: Show the Geonames search box
-            @param googleEarth: Include a Google Earth Panel
-            @param googleStreetview: Include the ability to click to open up StreetView in a popup at that location
             @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal', 'mgrs', False (defaults to checking deployment_settings, which defaults to 'normal')
             @param overview: Show the Overview Map (defaults to checking deployment_settings, which defaults to True)
             @param permalink: Show the Permalink control (defaults to checking deployment_settings, which defaults to True)
@@ -5336,9 +5336,12 @@ class GIS(object):
             @param closable: In Window mode, whether the window is closable or not
             @param collapsed: Start the Tools panel (West region) collapsed
             @param location_selector: This Map is being instantiated within the LocationSelectorWidget
+            @param callback: Code to run once the Map JavaScript has loaded
             @param plugins: an iterable of objects which support the following methods:
-                            .addToMapWindow(items)
-                            .setup(map)
+                                .extend_gis_map(add_javascript, html_append)
+                            Client-side portion suppoprts the following methods:
+                                .addToMapWindow(items)
+                                .setup(map)
 
         """
 
@@ -5350,6 +5353,7 @@ class GIS(object):
         if s3.gis.location_selector_loaded:
             # Already loaded, bail
             return ""
+        debug = s3.debug
         session = current.session
         T = current.T
         db = current.db
@@ -5387,7 +5391,7 @@ class GIS(object):
             and (-90 < bbox["min_lat"] < 90)
             and (-180 < bbox["max_lon"] < 180)
             and (-180 < bbox["min_lon"] < 180)
-        ):
+            ):
             # We have sane Bounds provided, so we should use them
             pass
         else:
@@ -5454,13 +5458,16 @@ S3.gis.marker_default_width=%i
         ######
         # HTML
         ######
-        html = DIV(_id="map_wrapper")
+        html = DIV(_class="map_wrapper")
         html_append = html.append
 
         # Map (Embedded not Window)
+        # Needs to be an ID which means we can't have multiple per page :/
+        # - Alternatives are also fragile. See s3.gis.js
         html_append(DIV(_id="map_panel"))
 
         # Status Reports
+        # @ToDo: Make these non-unique IDs so we can have multiple in a  page
         html_append(TABLE(TR(
             #TD(
             #    # Somewhere to report details of OSM File Features via on_feature_hover()
@@ -5480,55 +5487,17 @@ S3.gis.marker_default_width=%i
         #########
 
         # JS Loader
-        html_append(SCRIPT(_type="text/javascript",
-                           _src=URL(c="static", f="scripts/yepnope.1.5.4-min.js")))
-
         scripts = []
         scripts_append = scripts.append
-        ready = ""
-        def add_javascript(script, ready=""):
-            if type(script) == SCRIPT:
-                if ready:
-                    ready = """%s
-%s""" % (ready, script)
-                else:
-                    ready = script
-            elif script.startswith("http"):
-                scripts_append(script)
-            else:
-                script = URL(c="static", f=script)
-                scripts_append(script)
+        add_script = s3.scripts.append
+        js_global_append = s3.js_global.append
 
-        debug = s3.debug
-        if debug:
-            if projection not in (900913, 4326):
-                add_javascript("scripts/gis/proj4js/lib/proj4js-combined.js")
-                add_javascript("scripts/gis/proj4js/lib/defs/EPSG%s.js" % projection)
-
-            add_javascript("scripts/gis/openlayers/lib/OpenLayers.js")
-            add_javascript("scripts/gis/cdauth.js")
-            add_javascript("scripts/gis/osm_styles.js")
-            add_javascript("scripts/gis/GeoExt/lib/GeoExt.js")
-            add_javascript("scripts/gis/GeoExt/ux/GeoNamesSearchCombo.js")
-            add_javascript("scripts/gis/gxp/RowExpander.js")
-            add_javascript("scripts/gis/gxp/widgets/NewSourceWindow.js")
-            add_javascript("scripts/gis/gxp/plugins/LayerSource.js")
-            add_javascript("scripts/gis/gxp/plugins/WMSSource.js")
-            add_javascript("scripts/gis/gxp/plugins/Tool.js")
-            add_javascript("scripts/gis/gxp/plugins/AddLayers.js")
-            add_javascript("scripts/gis/gxp/plugins/RemoveLayer.js")
-            if mouse_position == "mgrs":
-                add_javascript("scripts/gis/usng2.js")
-                add_javascript("scripts/gis/MP.js")
-            pass
-        else:
-            if projection not in (900913, 4326):
-                add_javascript("scripts/gis/proj4js/lib/proj4js-compressed.js")
-                add_javascript("scripts/gis/proj4js/lib/defs/EPSG%s.js" % projection)
-            add_javascript("scripts/gis/OpenLayers.js")
-            add_javascript("scripts/gis/GeoExt.js")
-            if mouse_position == "mgrs":
-                add_javascript("scripts/gis/MGRS.min.js")
+        def add_javascript(script):
+            """
+                Function used to add JavaScripts to load async with the rest of the Map JavaScript
+                - after OpenLayers/GeoExt, but before the callback runs
+            """
+            scripts_append(script)
 
         #######
         # Tools
@@ -5589,8 +5558,6 @@ S3.gis.marker_default_width=%i
         # Upload Layer
         if settings.get_gis_geoserver_password():
             upload_layer = '''i18n.gis_uploadlayer='Upload Shapefile'\n'''
-            add_javascript("scripts/gis/gxp/FileUploadField.js")
-            add_javascript("scripts/gis/gxp/widgets/LayerUploadPanel.js")
         else:
             upload_layer = ""
 
@@ -5620,7 +5587,7 @@ S3.gis.marker_default_width=%i
         if not mouse_position:
             mouse_position = ""
         elif mouse_position == "mgrs":
-            mouse_position = '''S3.gis.mouse_position='mgrs'\n'''
+            mouse_position = '''S3.gis.mouse_position="mgrs"\n'''
         else:
             mouse_position = '''S3.gis.mouse_position=true\n'''
 
@@ -5662,194 +5629,6 @@ S3.gis.marker_default_width=%i
             osm_auth = '''S3.gis.osm_oauth='%s'\n''' % T("Zoom in closer to Edit OpenStreetMap layer")
         else:
             osm_auth = ""
-
-        # Print
-        # NB This isn't too-flexible a method. We're now focussing on print.css
-        # If we do come back to it, then it should be moved to static
-        if print_tool:
-            url = print_tool["url"]
-            if "title" in print_tool:
-                mapTitle = unicode(print_tool["mapTitle"])
-            else:
-                mapTitle = unicode(T("Map from Sahana Eden"))
-            if "subtitle" in print_tool:
-                subTitle = unicode(print_tool["subTitle"])
-            else:
-                subTitle = unicode(T("Printed from Sahana Eden"))
-            if auth.is_logged_in():
-                creator = unicode(auth.user.email)
-            else:
-                creator = ""
-            script = u"".join(("""
-        if (typeof(printCapabilities) != 'undefined') {
-            // info.json from script headers OK
-            printProvider = new GeoExt.data.PrintProvider({
-                //method: 'POST',
-                //url: '""", url, """',
-                method: 'GET', // 'POST' recommended for production use
-                capabilities: printCapabilities, // from the info.json returned from the script headers
-                customParams: {
-                    mapTitle: '""", mapTitle, """',
-                    subTitle: '""", subTitle, """',
-                    creator: '""", creator, """'
-                }
-            });
-            // Our print page. Stores scale, center and rotation and gives us a page
-            // extent feature that we can add to a layer.
-            printPage = new GeoExt.data.PrintPage({
-                printProvider: printProvider
-            });
-
-            //var printExtent = new GeoExt.plugins.PrintExtent({
-            //    printProvider: printProvider
-            //});
-            // A layer to display the print page extent
-            //var pageLayer = new OpenLayers.Layer.Vector('""", unicode(T("Print Extent")), """');
-            //pageLayer.addFeatures(printPage.feature);
-            //pageLayer.setVisibility(false);
-            //map.addLayer(pageLayer);
-            //var pageControl = new OpenLayers.Control.TransformFeature();
-            //map.addControl(pageControl);
-            //map.setOptions({
-            //    eventListeners: {
-                    // recenter/resize page extent after pan/zoom
-            //        'moveend': function() {
-            //            printPage.fit(mapPanel, true);
-            //        }
-            //    }
-            //});
-            // The form with fields controlling the print output
-            S3.gis.printFormPanel = new Ext.form.FormPanel({
-                title: '""", unicode(T("Print Map")), """',
-                rootVisible: false,
-                split: true,
-                autoScroll: true,
-                collapsible: true,
-                collapsed: true,
-                collapseMode: 'mini',
-                lines: false,
-                bodyStyle: 'padding:5px',
-                labelAlign: 'top',
-                defaults: {anchor: '100%%'},
-                listeners: {
-                    'expand': function() {
-                        //if (null == mapPanel.map.getLayersByName('""", unicode(T("Print Extent")), """')[0]) {
-                        //    mapPanel.map.addLayer(pageLayer);
-                        //}
-                        if (null == mapPanel.plugins[0]) {
-                            //map.addLayer(pageLayer);
-                            //pageControl.activate();
-                            //mapPanel.plugins = [ new GeoExt.plugins.PrintExtent({
-                            //    printProvider: printProvider,
-                            //    map: map,
-                            //    layer: pageLayer,
-                            //    control: pageControl
-                            //}) ];
-                            //mapPanel.plugins[0].addPage();
-                        }
-                    },
-                    'collapse':  function() {
-                        //mapPanel.map.removeLayer(pageLayer);
-                        //if (null != mapPanel.plugins[0]) {
-                        //    map.removeLayer(pageLayer);
-                        //    mapPanel.plugins[0].removePage(mapPanel.plugins[0].pages[0]);
-                        //    mapPanel.plugins = [];
-                        //}
-                    }
-                },
-                items: [{
-                    xtype: 'textarea',
-                    name: 'comment',
-                    value: '',
-                    fieldLabel: '""", unicode(T("Comment")), """',
-                    plugins: new GeoExt.plugins.PrintPageField({
-                        printPage: printPage
-                    })
-                }, {
-                    xtype: 'combo',
-                    store: printProvider.layouts,
-                    displayField: 'name',
-                    fieldLabel: '""", T("Layout").decode("utf-8"), """',
-                    typeAhead: true,
-                    mode: 'local',
-                    triggerAction: 'all',
-                    plugins: new GeoExt.plugins.PrintProviderField({
-                        printProvider: printProvider
-                    })
-                }, {
-                    xtype: 'combo',
-                    store: printProvider.dpis,
-                    displayField: 'name',
-                    fieldLabel: '""", unicode(T("Resolution")), """',
-                    tpl: '<tpl for="."><div class="x-combo-list-item">{name} dpi</div></tpl>',
-                    typeAhead: true,
-                    mode: 'local',
-                    triggerAction: 'all',
-                    plugins: new GeoExt.plugins.PrintProviderField({
-                        printProvider: printProvider
-                    }),
-                    // the plugin will work even if we modify a combo value
-                    setValue: function(v) {
-                        v = parseInt(v) + ' dpi';
-                        Ext.form.ComboBox.prototype.setValue.apply(this, arguments);
-                    }
-                //}, {
-                //    xtype: 'combo',
-                //    store: printProvider.scales,
-                //    displayField: 'name',
-                //    fieldLabel: '""", unicode(T("Scale")), """',
-                //    typeAhead: true,
-                //    mode: 'local',
-                //    triggerAction: 'all',
-                //    plugins: new GeoExt.plugins.PrintPageField({
-                //        printPage: printPage
-                //    })
-                //}, {
-                //    xtype: 'textfield',
-                //    name: 'rotation',
-                //    fieldLabel: '""", unicode(T("Rotation")), """',
-                //    plugins: new GeoExt.plugins.PrintPageField({
-                //        printPage: printPage
-                //    })
-                }],
-                buttons: [{
-                    text: '""", unicode(T("Create PDF")), """',
-                    handler: function() {
-                        // the PrintExtent plugin is the mapPanel's 1st plugin
-                        //mapPanel.plugins[0].print();
-                        // convenient way to fit the print page to the visible map area
-                        printPage.fit(mapPanel, true);
-                        // print the page, including the legend, where available
-                        if (null == legendPanel) {
-                            printProvider.print(mapPanel, printPage);
-                        } else {
-                            printProvider.print(mapPanel, printPage, {legend: legendPanel});
-                        }
-                    }
-                }]
-            });
-        } else {
-            // Display error diagnostic
-            S3.gis.printFormPanel = new Ext.Panel ({
-                title: '""", unicode(T("Print Map")), """',
-                rootVisible: false,
-                split: true,
-                autoScroll: true,
-                collapsible: true,
-                collapsed: true,
-                collapseMode: 'mini',
-                lines: false,
-                bodyStyle: 'padding:5px',
-                labelAlign: 'top',
-                defaults: {anchor: '100%'},
-                html: '""", unicode(T("Printing disabled since server not accessible")), """: <BR />""", unicode(url), """'
-            });
-        }
-        """))
-            ready = """%s
-%s""" % (ready, script)
-            script = "%sinfo.json?var=printCapabilities" % url
-            scripts_append(script)
 
         ##########
         # Settings
@@ -6240,13 +6019,9 @@ S3.gis.layers_feature_resources[%i]={
                     layers_config = "".join((layers_config,
                                              layer_type_js))
                     for script in layer.scripts:
-                        if "google.com" in script:
-                            # Uses document.write, so can't load async
-                            script = SCRIPT(_type="text/javascript",
-                                            _src=script)
-                            html_append(script)
-                        else:
-                            add_javascript(script, ready=ready)
+                        add_javascript(script)
+                    for cb in layer.callbacks:
+                        callback = '''%s\n%s''' % (callback, cb)
             except Exception, exception:
                 error = "%s not shown: %s" % (LayerType.__name__, exception)
                 if debug:
@@ -6285,7 +6060,6 @@ i18n.gis_feature_info="%s"
             '''S3.gis.map_width=%s\n''' % map_width,
             '''S3.gis.zoom=%s\n''' % (zoom or 1),
             center,
-            '''S3.gis.projection='%i'\n''' % projection,
             '''S3.gis.units='%s'\n''' % units,
             '''S3.gis.maxResolution=%f\n'''% maxResolution,
             '''S3.gis.maxExtent=[%s]\n''' % maxExtent,
@@ -6341,38 +6115,34 @@ i18n.gis_feature_info="%s"
             # For S3LocationSelectorWidget
             '''i18n.gis_current_location='%s'\n''' % T("Current Location"),
         ))
-        html_append(SCRIPT(config_script))
-
-        # Static Script
-        if debug:
-            add_javascript("scripts/S3/s3.gis.layers.js")
-            add_javascript("scripts/S3/s3.gis.controls.js")
-            add_javascript("scripts/S3/s3.gis.js")
-        else:
-            add_javascript("scripts/S3/s3.gis.min.js")
+        js_global_append(config_script)
 
         # Set up map plugins
-        # This, and any code it generates is done last
+        # - currently just used by Climate
+        # @ToDo: Get these working with new loader
+        # This, and any code it generates, is done last
         # However, map plugin should not assume this.
-        if plugins is not None:
-            for plugin in plugins:
-                plugin.extend_gis_map(
-                    add_javascript,
-                    html_append # for adding in dynamic configuration, etc.
-                )
+        for plugin in plugins:
+            plugin.extend_gis_map(
+                add_javascript,
+                html_append # for adding in dynamic configuration, etc.
+            )
 
-        script = "','".join(scripts)
-        if ready:
-            ready = '''%s
-S3.gis.show_map()''' % ready
-        else:
-            ready = "S3.gis.show_map()"
-        # Tell YepNope to load all our scripts asynchronously & then run the callback
-        script = '''yepnope({
- load:['%s'],
- complete:function(){%s}})''' % (script, ready)
-        html_append(SCRIPT(script))
+        if callback:
+            js_global_append('''S3.gis.callback=function(){%s}''' % callback)
+            add_script(URL(c="static", f="scripts/yepnope.1.5.4-min.js"))
 
+        add_script(URL(c="static", f="scripts/S3/s3.gis.loader.js"))
+
+        loader = '''s3_gis_loadjs(%(debug)s,%(projection)s,%(callback)s,%(scripts)s)''' \
+            % dict(debug = "true" if debug else "false",
+                   projection = projection,
+                   callback = "S3.gis.callback" if callback else "null",
+                   scripts = scripts
+                   )
+        s3.jquery_ready.append(loader)
+
+        # Flag to not have us load 2x Maps if there are multiple LocationSelectors in 1 page
         s3.gis.location_selector_loaded = 1
         return html
 
@@ -6488,7 +6258,10 @@ class Layer(object):
 
         sublayers = []
         append = sublayers.append
+        # List of Scripts to load async with the Map JavaScript
         self.scripts = []
+        # List of JS Snippets to run in the callback function after the Map JS has loaded
+        self.callbacks = []
 
         gis = current.response.s3.gis
         s3db = current.s3db
@@ -6758,6 +6531,15 @@ class CoordinateLayer(Layer):
     tablename = "gis_layer_coordinate"
 
     # -------------------------------------------------------------------------
+    def as_dict(self):
+        sublayers = self.sublayers
+        if sublayers:
+            if current.response.s3.debug:
+                self.scripts.append("gis/cdauth.js")
+            else:
+                self.scripts.append("gis/cdauth.min.js")
+
+    # -------------------------------------------------------------------------
     def as_javascript(self):
         """
             Output the Layer as Javascript
@@ -7021,8 +6803,10 @@ class GoogleLayer(Layer):
             T = current.T
             epsg = (Projection().epsg == 900913)
             apikey = current.deployment_settings.get_gis_api_google()
-            debug = current.response.s3.debug
-            add_script = self.scripts.append
+            s3 = current.response.s3
+            debug = s3.debug
+            # Google scripts use document.write so cannot be loaded async via yepnope.js
+            add_script = s3.scripts.append
 
             output = {}
 
@@ -7030,11 +6814,14 @@ class GoogleLayer(Layer):
                 # Attributes which are defaulted client-side if not set
                 if sublayer.type == "earth":
                     output["Earth"] = str(T("Switch to 3D"))
-                    add_script("http://www.google.com/jsapi?key=%s" % apikey)
-                    add_script(SCRIPT('''try{google && google.load('earth','1')}catch(e){}''', _type="text/javascript"))
+                    #{"modules":[{"name":"earth","version":"1"}]}
+                    add_script("http://www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D")
+                    # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
+                    #s3.jquery_ready.append('''try{google.load('earth','1')catch(e){}''')
                     if debug:
-                        # Non-debug has this included within GeoExt.js
-                        add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")
+                        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.js")
+                    else:
+                        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.min.js")
                 elif epsg:
                     # Earth is the only layer which can run in non-Spherical Mercator
                     # @ToDo: Warning?
@@ -7075,8 +6862,9 @@ class GoogleLayer(Layer):
                     output["StreetviewButton"] = str(T("Click where you want to open Streetview"))
                     output["StreetviewTitle"] = str(T("Street View"))
                     if debug:
-                        # Non-debug has this included within GeoExt.js
-                        add_script("scripts/gis/gxp/widgets/GoogleStreetViewPanel.js")
+                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
+                    else:
+                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
 
             return output
         else:
@@ -7317,8 +7105,9 @@ class OpenWeatherMapLayer(Layer):
         sublayers = self.sublayers
         if sublayers:
             if current.response.s3.debug:
-                # Non-debug has this included within OpenLayers.js
-                self.scripts.append("scripts/gis/OWM.OpenLayers.js")
+                self.scripts.append("gis/OWM.OpenLayers.js")
+            else:
+                self.scripts.append("gis/OWM.OpenLayers.min.js")
             output = {}
             for sublayer in sublayers:
                 if sublayer.type == "station":
@@ -7464,8 +7253,9 @@ class WMSLayer(Layer):
         super(WMSLayer, self).__init__()
         if self.sublayers:
             if current.response.s3.debug:
-                # Non-debug has this included within GeoExt.js
-                self.scripts.append("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
+                self.scripts.append("gis/gxp/plugins/WMSGetFeatureInfo.js")
+            else:
+                self.scripts.append("gis/gxp/plugins/WMSGetFeatureInfo.min.js")
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):

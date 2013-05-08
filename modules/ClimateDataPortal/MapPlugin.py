@@ -46,8 +46,9 @@ class MapPlugin(object):
         place_table,
         client_config = {}
     ):
-        """client_config (optional) passes configuration dict 
-        through to the client-side map plugin.
+        """
+            param: client_config (optional) passes configuration dict 
+                                            through to the client-side map plugin.
         """
         try:
             import rpy2
@@ -78,7 +79,7 @@ class MapPlugin(object):
         map_plugin.client_config = client_config
 
     def extend_gis_map(map_plugin, add_javascript, add_configuration):
-        add_javascript("scripts/S3/s3.gis.climate.js")
+        add_javascript("S3/s3.gis.climate.js")
         env = map_plugin.env
         SCRIPT = env.SCRIPT
         T = env.T

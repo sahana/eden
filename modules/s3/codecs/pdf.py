@@ -299,50 +299,39 @@ class S3RL_PDF(S3Codec):
 
         from s3.s3data import S3DataTable
 
-        list_fields = self.list_fields
-        if list_fields:
-            try:
-                # Remove the ID field as we're not using this for the Action Buttons
-                list_fields.remove("id")
-            except:
-                pass
+        fields = self.list_fields
+        if fields:
+            list_fields = [f for f in fields if f != "id"]
         else:
-            list_fields = []
-            fields = resource.readable_fields()
-            for field in fields:
-                if field.type == "id":
-                    continue
-                if self.pdf_hide_comments and field.name == "comments":
-                    continue
-                list_fields.append(field.name)
-
-        rfields = resource.resolve_selectors(list_fields,
-                                             extra_fields=False)[0]
+            list_fields = [f.name for f in resource.readable_fields()
+                                  if f.type != "id" and
+                                     f.name != "comments" or
+                                     not self.pdf_hide_comments]
 
         vars = Storage(current.request.vars)
-        vars["iColumns"] = len(rfields)
+        vars["iColumns"] = len(list_fields)
         filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
 
-        current.manager.ROWSPERPAGE = None # needed to get all the data
-        rows = resource.select(list_fields,
-                               left=left,
-                               start=None,
-                               limit=None,
-                               orderby=orderby)
-        data = resource.extract(rows,
-                                list_fields,
-                                represent=True,
-                                show_links=False)
+        result = resource.fast_select(list_fields,
+                                      left=left,
+                                      start=None,
+                                      limit=None,
+                                      count=True,
+                                      getids=True,
+                                      orderby=orderby,
+                                      represent=True,
+                                      show_links=False)
 
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
-                               rfields,
-                               data,
+                               result["rfields"],
+                               result["data"],
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,
                                ).build()
+
         return pdf_table
 
 # =============================================================================
@@ -647,7 +636,6 @@ class S3PDFTable(object):
         self.pdf = document
         # @todo: Change the code to use raw_data directly rather than this
         #        conversion to an ordered list of values
-        # @ToDo: We don't want to include in the output the selectors added as extra_fields
         self.rfields = rfields
         rdata = []
         rappend = rdata.append

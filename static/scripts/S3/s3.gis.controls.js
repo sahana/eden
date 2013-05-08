@@ -543,7 +543,7 @@ function addNavigationControl(toolbar) {
 }
 
 // Point Control to add new Markers to the Map
-function addPointControl(toolbar, point_pressed) {
+function addPointControl(toolbar, active) {
     OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
         // Ensure that we propagate Double Clicks (so we can still Zoom)
         dblclick: function(evt) {
@@ -553,44 +553,59 @@ function addPointControl(toolbar, point_pressed) {
         CLASS_NAME: 'OpenLayers.Handler.PointS3'
     });
 
-    // Toolbar Button
-    S3.gis.pointButton = new GeoExt.Action({
-        control: new OpenLayers.Control.DrawFeature(S3.gis.draftLayer, OpenLayers.Handler.PointS3, {
-            // custom Callback
-            'featureAdded': function(feature) {
-                // Remove previous point
-                if (S3.gis.lastDraftFeature) {
-                    S3.gis.lastDraftFeature.destroy();
-                } else if (S3.gis.draftLayer.features.length > 1) {
-                    // Clear the one from the Current Location in S3LocationSelector
-                    S3.gis.draftLayer.features[0].destroy();
-                }
-                // update Form Fields
+    var control = new OpenLayers.Control.DrawFeature(S3.gis.draftLayer, OpenLayers.Handler.PointS3, {
+        // custom Callback
+        'featureAdded': function(feature) {
+            // Remove previous point
+            if (S3.gis.lastDraftFeature) {
+                S3.gis.lastDraftFeature.destroy();
+            } else if (S3.gis.draftLayer.features.length > 1) {
+                // Clear the one from the Current Location in S3LocationSelector
+                S3.gis.draftLayer.features[0].destroy();
+            }
+            var lon_field = $('#gis_location_lon');
+            if (lon_field.length) {
+                // Update form fields in S3LocationSelectorWidget
+                // (S3LocationSelectorWidget2 does this in s3.locationselector.widget2.js, which is a better design)
                 var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-                centerPoint.transform(S3.gis.projection_current, S3.gis.proj4326);
-                $('#gis_location_lon').val(centerPoint.lon);
+                centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
+                lon_field.val(centerPoint.lon);
                 $('#gis_location_lat').val(centerPoint.lat);
                 $('#gis_location_wkt').val('');
-                // Prepare in case user selects a new point
-                S3.gis.lastDraftFeature = feature;
             }
-        }),
-        handler: function(){
-            if (S3.gis.pointButton.items[0].pressed) {
-                $('.olMapViewport').addClass('crosshair');
-            } else {
-                $('.olMapViewport').removeClass('crosshair');
-            }
-        },
-        map: map,
-        iconCls: 'drawpoint-off',
-        tooltip: i18n.gis_draw_feature,
-        allowDepress: true,
-        enableToggle: true,
-        toggleGroup: 'controls',
-        pressed: point_pressed
-    });
-    toolbar.add(S3.gis.pointButton);
+            // Prepare in case user selects a new point
+            S3.gis.lastDraftFeature = feature;
+        }
+    })
+
+    if (toolbar) {
+        // Toolbar Button
+        S3.gis.pointButton = new GeoExt.Action({
+            control: control,
+            handler: function() {
+                if (S3.gis.pointButton.items[0].pressed) {
+                    $('.olMapViewport').addClass('crosshair');
+                } else {
+                    $('.olMapViewport').removeClass('crosshair');
+                }
+            },
+            map: map,
+            iconCls: 'drawpoint-off',
+            tooltip: i18n.gis_draw_feature,
+            allowDepress: true,
+            enableToggle: true,
+            toggleGroup: 'controls',
+            pressed: active
+        });
+        toolbar.add(S3.gis.pointButton);
+    } else {
+        // Simply add straight to the map
+        map.addControl(control);
+        if (active) {
+            control.activate();
+            $('.olMapViewport').addClass('crosshair');
+        }
+    }
 }
 
 // Polygon Control to select Areas on the Map
@@ -613,7 +628,7 @@ function addPolygonControl(toolbar, polygon_pressed, not_regular) {
                     S3.gis.lastDraftFeature.destroy();
                 }
                 // update Form Field
-                var WKT = feature.geometry.transform(S3.gis.projection_current, S3.gis.proj4326).toString();
+                var WKT = feature.geometry.transform(map.getProjectionObject(), S3.gis.proj4326).toString();
                 $('#gis_search_polygon_input').val(WKT).trigger('change');
                 $('#gis_location_wkt').val(WKT);
                 $('#gis_location_lat').val('');
@@ -738,10 +753,10 @@ function getState() {
     // @ToDo: Filters
     // @ToDo: WMS Browser
     var layers = [];
-    var layer_config;
+    var id, layer_config;
     var base_id = map.baseLayer.s3_layer_id;
     Ext.iterate(map.layers, function(key, val, obj) {
-        var id = key.s3_layer_id;
+        id = key.s3_layer_id;
         layer_config = {
             id: id
         };
@@ -804,8 +819,8 @@ function addPdfControl(toolbar) {
             this.w.show();
         },
         getPdf: function (bounds) {
-            var ll = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.left, bounds.bottom)).transform(S3.gis.projection_current, S3.gis.proj4326);
-            var ur = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.right, bounds.top)).transform(S3.gis.projection_current, S3.gis.proj4326);
+            var ll = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.left, bounds.bottom)).transform(map.getProjectionObject(), S3.gis.proj4326);
+            var ur = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.right, bounds.top)).transform(map.getProjectionObject(), S3.gis.proj4326);
             var boundsgeog = new OpenLayers.Bounds(ll.lon, ll.lat, ur.lon, ur.lat);
             bbox = boundsgeog.toBBOX();
             OpenLayers.Request.GET({

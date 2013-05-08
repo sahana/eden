@@ -665,7 +665,7 @@ S3OptionsFilter({
                            "site_id",
                            "item_id",
                            #(T("Item Code"), "item_code"),
-                           "item_id$item_code",
+                           "item_id$code",
                            #(T("Category"), "item_category"),
                            "item_id$item_category_id",
                            "quantity",
@@ -682,7 +682,7 @@ S3OptionsFilter({
                            "site_id",
                            "item_id",
                            #(T("Item Code"), "item_code"),
-                           "item_id$item_code",
+                           "item_id$code",
                            #(T("Category"), "item_category"),
                            "item_id$item_category_id",
                            "quantity",
@@ -725,7 +725,8 @@ S3OptionsFilter({
                        search_method = inv_item_search,
                        report_options = report_options,
                        deduplicate = self.inv_item_duplicate,
-                       )
+                       extra_fields = ["quantity", "pack_value"],
+                      )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1861,7 +1862,8 @@ S3OptionsFilter({
                   search_method = track_search,
                   onaccept = self.inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
-                  )
+                  extra_fields = ["quantity", "pack_value"],
+                 )
  
         #---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2127,13 +2129,13 @@ S3OptionsFilter({
                         list_fields.insert(6, "pack_value")
                         list_fields.insert(6, "currency")
                     if record.req_ref and r.interactive:
+                        s3db.configure("inv_track_item",
+                                       extra_fields = ["req_item_id"])
                         tracktable.virtualfields.append(InvQuantityNeededVirtualField())
                         list_fields.insert(4, (T("Quantity Needed"),
                                                "quantity_needed"))
 
-                s3db.configure("inv_track_item",
-                               list_fields=list_fields,
-                               )
+                s3db.configure("inv_track_item", list_fields=list_fields)                              
 
                 # Can only create or delete track items for a send record if the status is preparing
                 method = r.method
@@ -4350,11 +4352,6 @@ def duplicator(job, query):
 class InvItemVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["quantity",
-                    "pack_value",
-                    ]
-
-    # -------------------------------------------------------------------------
     def total_value(self):
         try:
             v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
@@ -4385,11 +4382,6 @@ class InvItemVirtualFields:
 class InvTrackItemVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["quantity",
-                    "pack_value",
-                    ]
-
-    # -------------------------------------------------------------------------
     def total_value(self):
         try:
             v = self.inv_track_item.quantity * self.inv_track_item.pack_value
@@ -4418,10 +4410,6 @@ class InvQuantityNeededVirtualField():
         There isn't a scalability issue here as it's only used for interactive UI of a single send record at a time, which doesn't generally have more than 10 rows
     """
 
-    extra_fields = ["req_item_id",
-                    ]
-
-    # -------------------------------------------------------------------------
     def quantity_needed(self):
         try:
             req_item_id = self.inv_track_item.req_item_id

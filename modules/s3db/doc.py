@@ -253,8 +253,11 @@ class S3DocumentLibrary(S3Model):
         """ File representation """
 
         if file:
-            return A(table.file.retrieve(file)[0],
-                     _href=URL(c="default", f="download", args=[file]))
+            try:
+                return A(table.file.retrieve(file)[0],
+                         _href=URL(c="default", f="download", args=[file]))
+            except IOError:
+                return current.T("File not found")
         else:
             return current.messages["NONE"]
 

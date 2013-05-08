@@ -13,24 +13,25 @@
  *  hdata = Labels Hierarchy (@ToDo)
  */
 
-function s3_gis_locationselector2(fieldname, L0, L1, L2, L3, L4, L5) {
+var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5) {
     // Function to be called by S3LocationSelectorWidget2
 
-    // Move the visible rows underneath the real one
-    var L0_row = $('#' + fieldname + '_L0__row').clone();
-    var L1_row = $('#' + fieldname + '_L1__row').clone();
-    var L2_row = $('#' + fieldname + '_L2__row').clone();
-    var L3_row = $('#' + fieldname + '_L3__row').clone();
-    var L4_row = $('#' + fieldname + '_L4__row').clone();
-    var L5_row = $('#' + fieldname + '_L5__row').clone();
+    // Move the visible rows underneath the real (hidden) one
+    var map_div = $('#' + fieldname + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
+    var L0_row = $('#' + fieldname + '_L0__row');
+    var L1_row = $('#' + fieldname + '_L1__row');
+    var L2_row = $('#' + fieldname + '_L2__row');
+    var L3_row = $('#' + fieldname + '_L3__row');
+    var L4_row = $('#' + fieldname + '_L4__row');
+    var L5_row = $('#' + fieldname + '_L5__row');
     $('#' + fieldname + '__row').hide()
+                                .after(map_div)
                                 .after(L5_row)
                                 .after(L4_row)
                                 .after(L3_row)
                                 .after(L2_row)
                                 .after(L1_row)
                                 .after(L0_row);
-    $('#' + fieldname + '__row div.controls div:eq(1)').remove();
 
     // Initial population of dropdown(s)
     if (L0) {
@@ -75,10 +76,31 @@ function s3_gis_locationselector2(fieldname, L0, L1, L2, L3, L4, L5) {
 
 function lx_select(fieldname, level, id) {
     // Hierarchical dropdown has been selected
-    if (!id) {
+    // Clear the Lat/Lon fields after storing the current value
+    // - need to clear for IS_LOCATION_SELECTOR2
+    var latfield = $('#' + fieldname + '_lat');
+    var lonfield = $('#' + fieldname + '_lon');
+    var lat = latfield.val();
+    var lon = lonfield.val();
+    if (lat) {
+        latfield.data('lat', lat);
+    }
+    if (lon) {
+        lonfield.data('lon', lon);
+    }
+    latfield.val('');
+    lonfield.val('');
+    // Hide Map
+    $('#' + fieldname + '_map_wrapper').hide();
+    if (id) {
+        // Set this dropdown to this value
+        // - this is being set from outside the dropdown, e.g. an update form or using a visible default location
+        $('#' + fieldname + '_L' + level).val(id);
+    } else {
+        // Read the selected value from the dropdown
         id = $('#' + fieldname + '_L' + level).val();
     }
-    if (level === 0) {
+    //if (level === 0) {
         // @ToDo: This data structure doesn't exist yet (not required for TLDRMP)
         // Set Labels
         //var h = hdata[id];
@@ -87,45 +109,117 @@ function lx_select(fieldname, level, id) {
         //$('#' + fieldname + '_L3__row label').html(h.l3 + ':');
         //$('#' + fieldname + '_L4__row label').html(h.l4 + ':');
         //$('#' + fieldname + '_L5__row label').html(h.l5 + ':');
-    }
+    //}
     if (id) {
         // Set the real input to this value
         $('#' + fieldname).val(id);
+        // Hide all lower levels
+        for (var lev=level + 1; lev < 6; lev++) {
+            $('#' + fieldname + '_L' + lev + '__row').hide();
+        }
         // Show next dropdown
         level += 1;
-        $('#' + fieldname + '_L' + level + '__row').show();
-        // Do we need to read hierarchy?
-        var read = true; 
-        for (var i in l) {
-            if (l[i].f == id) {
-                read = false;
-                continue;
+        var selector = $('#' + fieldname + '_L' + level + '__row');
+        if (selector.length) {
+            selector.show();
+            // Do we need to read hierarchy?
+            var read = true; 
+            for (var i in l) {
+                if (l[i].f == id) {
+                    read = false;
+                    continue;
+                }
             }
-        }
-        if (read) {
-            // AJAX Read extra hierarchy options
-            readHierarchy(fieldname, level, id);
-        }
-        var values = [];
-        for (var i in l) {
-            v = l[i];
-            if ((v['l'] == level) && (v['f'] == id)) {
-                v['i'] = i;
-                values.push(v);
+            if (read) {
+                // AJAX Read extra hierarchy options
+                readHierarchy(fieldname, level, id);
             }
-        }
-        values.sort(nameSort);
-        var _id, location, option, selected;
-        for (var i=0; i < values.length; i++) {
-            location = values[i];
-            _id = location['i'];
-            if (id == _id) {
-                selected = ' selected="selected"';
-            } else {
-                selected = '';
+            var values = [];
+            for (var i in l) {
+                v = l[i];
+                if ((v['l'] == level) && (v['f'] == id)) {
+                    v['i'] = i;
+                    values.push(v);
+                }
             }
-            option = '<option value="' + _id + '"' + selected + '>' + location['n'] + '</option>';
-            $('#' + fieldname + '_L' + level).append(option);
+            values.sort(nameSort);
+            var _id, location, option, selected;
+            var select = $('#' + fieldname + '_L' + level);
+            // Remove old entries
+            $('#' + fieldname + '_L' + level + ' option').remove('[value != ""]');
+            for (var i=0, len=values.length; i < len; i++) {
+                location = values[i];
+                _id = location['i'];
+                if (id == _id) {
+                    selected = ' selected="selected"';
+                } else {
+                    selected = '';
+                }
+                option = '<option value="' + _id + '"' + selected + '>' + location['n'] + '</option>';
+                select.append(option);
+            }
+        } else {
+            // We're at the top of the hierarchy so show the map so we can select a specific point
+            $('#' + fieldname + '_map_wrapper').show();
+            if (!S3.gis.mapPanel) {
+                // Instantiate the Map as we couldn't do it when DIV is hidden
+                var map = S3.gis.show_map();
+                // @ToDo: Display any existing stored point
+                var lat = latfield.data('lat');
+                if (lat) {
+                    latfield.val(lat);
+                }
+                var lon = lonfield.data('lon');
+                if (lon) {
+                    lonfield.val(lon);
+                }
+                var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                geometry.transform(S3.gis.proj4326, map.getProjectionObject());
+                var feature = new OpenLayers.Feature.Vector(geometry);
+                S3.gis.draftLayer.addFeatures([feature]);
+                // Watch for new points being selected, so that we can store the Lat/Lon
+                var control;
+                var controls = map.controls;
+                for (var i=0, len=controls.length; i < len; i++) {
+                    if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
+                        control = controls[i];
+                    }
+                }
+                if (control) {
+                    var updateForm = function(event) {
+                        var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
+                        centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
+                        latfield.val(centerPoint.lat);
+                        lonfield.val(centerPoint.lon);
+                        // Store the parent
+                        $('#' + fieldname + '_parent').val(id);
+                        // Dummify the real input (need this to enter IS_LOCATION_SELECTOR2)
+                        $('#' + fieldname).val('dummy');
+                    }
+                    control.events.register('featureadded', null, updateForm);
+                }
+            }
+            // Zoom to extent of the Lx, if we have it
+            var bounds = l[id].b;
+            if (!bounds) {
+                // Try the parent
+                var parent = l[id].f;
+                bounds = l[parent].b;
+                if (!bounds) {
+                    // Try the grandparent
+                    var grandparent = l[parent].f;
+                    bounds = l[grandparent].b;
+                    if (!bounds) {
+                        // Try the greatgrandparent
+                        var greatgrandparent = l[grandparent].f;
+                        bounds = l[greatgrandparent].b;
+                    }
+                }
+            }
+            if (bounds) {
+                bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, S3.gis.projection_current);
+                map.zoomToExtent(bounds);
+            }
         }
     } else {
         if (level === 0) {
@@ -158,10 +252,16 @@ function nameSort(a, b) {
 function readHierarchy(fieldname, level, id) {
     // Show Throbber
     $('#' + fieldname + '_L' + level + '__throbber').show();
+    var url = S3.Ap.concat('/gis/ldata/' + id);
+    if (!$('#' + fieldname + '_L' + (level + 1) + '__row').length) {
+        // This is the lowest-level of the hierarchy, so
+        // Download the bounds to zoom the map to
+        url += '/b';
+    }
     // Download Location Data
     $.ajax({
         'async': false,
-        'url': S3.Ap.concat('/gis/ldata/' + id),
+        'url': url,
         'success': function(data) {
             // Copy the elements across
             for (var prop in n) {

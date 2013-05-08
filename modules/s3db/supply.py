@@ -1392,15 +1392,7 @@ class SupplyItemPackVirtualFields(dict, object):
 # =============================================================================
 # Virtual Fields for category, country, organisation & status
 class item_entity_virtualfields:
-    # Fields to be loaded by sqltable as qfields
-    # without them being list_fields
-    # (These cannot contain VirtualFields)
-    # In this case we just load it once to save a query in each method
-    extra_fields = [
-                "instance_type"
-            ]
-
-    # -------------------------------------------------------------------------
+    
     def category(self):
         table = current.s3db.supply_item
         try:
@@ -1759,7 +1751,9 @@ def supply_item_entity_controller():
                                   (T("Organization"), "organisation"),
                                   #(T("Office"), "site"),
                                   (T("Contacts"), "contacts"),
-                                ])
+                                 ],
+                   extra_fields = ["instance_type"],
+                  )
 
     def postp(r, output):
         if r.interactive and not r.record:

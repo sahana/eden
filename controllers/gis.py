@@ -407,36 +407,65 @@ def location():
 def ldata():
     """
         Return JSON of location hierarchy suitable for use by S3LocationSelectorWidget2
+        '/eden/gis/ldata/' + id
+        Append '/b' to request bounds
 
         n = {id : {'n' : name,
                    'l' : level,
                    'f' : parent,
-                   'b' : [bounds] // Just for lowest-level of hierarchy, for setting the map
+                   'b' : [min_lon, min_lat, max_lon, max_lat] // Just for lowest-level of hierarchy, for setting the map
                    }}
     """
 
-    try:
-        id = request.args[0]
-    except:
+    args = request.args
+    args_len = len(args)
+
+    if args_len == 0:
         raise HTTP(400)
+    elif args_len == 1:
+        bounds = False
+    else:
+        bounds = True
+
+    id = args[0]
 
     table = s3db.gis_location
     query = (table.deleted == False) & \
             ((table.parent == id) | \
              (table.id == id))
-    locations = db(query).select(table.id,
-                                 table.name,
-                                 table.level,
-                                 table.parent)
+    fields = [table.id,
+              table.name,
+              table.level,
+              table.parent,
+              ]
+    if bounds:
+        fields += [table.lon_min,
+                   table.lat_min,
+                   table.lon_max,
+                   table.lat_max,
+                   ]
+    locations = db(query).select(*fields)
     id_level = int(locations.as_dict()[int(id)]["level"][1:])
     output_level = id_level + 1
     search_level = "L%s" % output_level
     location_dict = {}
     for location in locations:
         if location.level == search_level:
-            location_dict[int(location.id)] = dict(n=location.name,
-                                                   l=output_level,
-                                                   f=int(location.parent))
+            if bounds and location.lon_min is not None:
+                location_dict[int(location.id)] = dict(n=location.name,
+                                                       l=output_level,
+                                                       f=int(location.parent),
+                                                       b=[location.lon_min,
+                                                          location.lat_min,
+                                                          location.lon_max,
+                                                          location.lat_max
+                                                          ],
+                                                       )
+            else:
+                location_dict[int(location.id)] = dict(n=location.name,
+                                                       l=output_level,
+                                                       f=int(location.parent),
+                                                       )
 
     script = '''n=%s\n''' % json.dumps(location_dict)
     response.headers["Content-Type"] = "application/json"

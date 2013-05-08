@@ -415,7 +415,7 @@
 
         // use "parser-inserted scripts" for guaranteed execution order
         // http://hsivonen.iki.fi/script-execution/
-        var scriptTags = new Array(jsFiles.length);
+        //var scriptTags = new Array(jsFiles.length);
         if (undefined != 'S3.Ap') {
             // Sahana loader, required when running in pr_contacts()
             var host = S3.Ap.concat('/static/scripts/gis/openlayers/lib/');

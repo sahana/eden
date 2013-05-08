@@ -1,39 +1,36 @@
 @charset "UTF-8";
 
 /* Over-ride Ext */
-div#map_wrapper ol, ul {
+.map_wrapper ol, ul {
     list-style: disc inside none;
 }
-div#gis-map-window ol, ul {
-    list-style: disc inside none;
-}
-
-div#map_wrapper td {
-    padding: 0;
-}
-div#gis-map-window td {
-    padding: 0;
-}
-div#map_wrapper span a {
+.map_wrapper span a {
     /* For Catalogue Tabs */
     color: #fff;
 }
-div#map_wrapper  td:first-child {
-    background: none repeat scroll 0 0 transparent;
+.map_wrapper td {
+    padding: 0;
 }
-div#gis-map-window  td:first-child {
+.map_wrapper  td:first-child {
     background: none repeat scroll 0 0 transparent;
 }
 
+.gis-map-window ol, ul {
+    list-style: disc inside none;
+}
+.gis-map-window table td {
+    border: 0;
+}
+.gis-map-window td {
+    padding: 0;
+}
+.gis-map-window  td:first-child {
+    background: none repeat scroll 0 0 transparent;
+}
+
+/* ID => 1 map/page but alternatives ugly - see s3.gis.js */
 #map_panel table td {
     border: 0;
-}
-#gis-map-window table td {
-    border: 0;
-}
-#legend table td {
-    border: 0;
-    text-align: center;
 }
 
 table.x-toolbar-ct {

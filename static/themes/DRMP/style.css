@@ -30,9 +30,13 @@ form {
 }
 
 /* Over-ride Bootstrap */
-#gis-map-window img,
-#map_wrapper img {
+.gis-map-window img,
+.map_wrapper img {
     max-width: none;
+}
+
+.form-horizontal .map_wrapper {
+    margin-left: 20px;
 }
 
 /* Imitate Bootstrap in jQueryUI Modal */
@@ -45,13 +49,13 @@ form {
 
 /* Over-ride widgets */
 /*
-div#dl-container {
+#dl-container {
     clear: none;
 }*/
 div.dl {
     border-bottom: 0;
 }
-div.dl-item {
+.dl-item {
     border-top: 0;
     clear: none;
 }
@@ -59,16 +63,16 @@ div.dl-item {
     display: none;
 }
 
-textarea#cms_post_body.text.input-xlarge {
+#cms_post_body.text.input-xlarge {
     height: 100px;
 }
 
 /* Push down below Nav */
-div#alert-space {
+#alert-space {
     padding-top: 50px;
     
 }
-div.alert.alert-success {
+.alert.alert-success {
     border: 1px solid #b2b2b2;
 }
 
@@ -229,8 +233,8 @@ i.icon.icon-paper-clip.fright {
   }
 
 
-
 /* Modals */
+/* Deprecated
 div.modal-header {
     text-align: center;
     padding: 6px 6px 6px 25px;
@@ -245,9 +249,32 @@ div.modal-header {
     margin-bottom: -1px;
     font-size: 20px;
 }
+#myModal form.form-horizontal div.modal-body {
+    padding-top: 22px;
+}
+#myModal div.modal-header button.close {
+    padding-right: 6px;
+}
+*/
+
+.ui-dialog-titlebar {
+    text-align: center;
+    background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8)) !important;
+    background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: -moz-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    background-image: linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+}
 
 table.embeddedComponent {
     border: 0;
+    display: inline-block;
+    margin-bottom: 10px;
+    margin-top: 1px;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
 }
 #add-row-defaultevent_post td, 
 #add-row-filedocument td {
@@ -255,39 +282,22 @@ table.embeddedComponent {
     padding-left: 0;
 }
 
-table.embeddedComponent {
-    display: inline-block;
-    margin-bottom: 10px;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
-    margin-top: 1px;
-}
-
 #sub_defaultevent_post_defaultevent_post_i_event_id_edit_none,
-input#sub_filedocument_filedocument_i_file_edit_none.upload {
+#sub_filedocument_filedocument_i_file_edit_none.upload {
     padding-top: 6px;
     padding-left: 4px;
 }
 
-#myModal form.form-horizontal div.modal-body {
-    padding-top: 22px;
-}
-
-div#cms_post_body__row.control-group, 
-div#cms_post_series_id__row.control-group,
-div#cms_post_location_id__row.control-group,
-div#cms_post_sub_filedocument__row.control-group {
+#cms_post_body__row.control-group, 
+#cms_post_series_id__row.control-group,
+#cms_post_location_id__row.control-group,
+#cms_post_sub_filedocument__row.control-group {
     margin-bottom: 5px;
 }
 
 #sub-filedocument table.embeddedComponent thead tr.label-row,
 #sub-defaultevent_post table.embeddedComponent thead tr.label-row {
     display: none;	
-}
-
-#myModal div.modal-header button.close {
-    padding-right: 6px;
 }
 
 /*  Filter Styling  */
@@ -303,16 +313,16 @@ div#accordion2.accordion.side-filter {
     border-bottom-right-radius: 4px;
 }
 
-div.accordion-inner,
-div.accordion-heading,
-div.accordion-group,
+.accordion-inner,
+.accordion-heading,
+.accordion-group,
 #accordion2 div.accordion-group
 #collapseOne div.accordion-inner {
     border-top: none;
     border-bottom: none;
 }
 
-a.accordion-toggle {
+.accordion-toggle {
     font-size: 12px;
     font-variant: normal;
     text-transform: none;
@@ -320,12 +330,12 @@ a.accordion-toggle {
     border-none: none;
 }
 
-a.accordion-toggle:hover {
+.accordion-toggle:hover {
     text-decoration: none;
     color: #3498DB;
 }
 
-div.search_box {
+.search_box {
     background-color: #fff;
     border: 1px solid #b2b2b2;
     border-bottom: none;
@@ -342,7 +352,7 @@ button.btn.btn-primary.search_btn {
     margin-left: 8px;
 }
 
-input#input_temp {
+#input_temp {
     width: 84%;
 }
 
@@ -513,25 +523,25 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     border: none;
 }
 
-input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
-input#post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
+#post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
+#post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
     width: 100px;
     margin-left: 10px;
     margin-right: 10px;
     font-size: 12px;
 }
 
-input#post-cms_post_created_on-date-filter-le.date-filter-input.anytime{
+#post-cms_post_created_on-date-filter-le.date-filter-input.anytime{
     margin-right: 10px;
     margin-left: 17px;
 }
 
-label#post-auth_user_organisation_id-options-filter__label,
-label#post-cms_post_series_id-options-filter__label,
-label#post-cms_post_created_on-date-filter__label,
-label#post-cms_post_location_id-location-filter__label, 
-label#post-cms_post_location_id-location-filter__label, 
-label#post-cms_post_created_on-date-filter__label {
+#post-auth_user_organisation_id-options-filter__label,
+#post-cms_post_series_id-options-filter__label,
+#post-cms_post_created_on-date-filter__label,
+#post-cms_post_location_id-location-filter__label, 
+#post-cms_post_location_id-location-filter__label, 
+#post-cms_post_created_on-date-filter__label {
     padding: 7px 7px 7px 0;
     font-weight: bold;
 }
@@ -541,8 +551,8 @@ input.btn.btn-primary.filter-submit.filter-ajax {
     margin-bottom: -15px;
 }
 
-input#post-cms_post_created_on-date-filter-le_clear,
-input#post-cms_post_created_on-date-filter-ge_clear {
+#post-cms_post_created_on-date-filter-le_clear,
+#post-cms_post_created_on-date-filter-ge_clear {
     font-size: 11px;
     font-weight: normal;
     font-style: normal;
@@ -603,7 +613,13 @@ a i.icon-paper-clip.pull-right:hover {
     text-decoration: none;
 }
 
-span.date-title {
+.card-title {
+    font-size: 14px;
+    text-shadow: 0px 1px 0px white;
+    letter-spacing: -1px;
+}
+
+.date-title {
     font: 400 10px "Helvetica Neue",Arial,sans-serif;
     list-style: none outside none;
     padding-left: 10px;
@@ -614,7 +630,7 @@ span.date-title {
     padding-bottom: 9px;
 }
 
-span.location-title {
+.location-title {
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     text-shadow: 0px 1px 0px white;
     padding-left: 10px;
@@ -624,13 +640,7 @@ span.location-title {
     padding-bottom: 7px;
 }
 
-span.card-title {
-    font-size: 14px;
-    text-shadow: 0px 1px 0px white;
-    letter-spacing: -1px;
-}
-
-span.location-title a {
+.location-title a {
     font: 400 12px "Helvetica Neue", Arial,sans-serif;
     color: #777;
     padding: 0;
@@ -639,18 +649,18 @@ span.location-title a {
     word-spacing: -1px;
 }
 
-span.location-title a:hover {
+.location-title a:hover {
     color: #333;
     text-decoration: none;
 }
 
-p.card_comments {
+.card_comments {
     font: 13px/17px "Georgia",Times;
     color: #5c5c5c;
     padding-top: 2px;
 }
 
-div.edit-bar.pull-right {
+.edit-bar.pull-right {
     color: #8a8989;
     font-size: 14px;
 }
@@ -750,7 +760,7 @@ a i.icon.icon-plus-sign.small-add:hover{
     color: #2da7fc;
 }
 
-div.card-holder {
+.card-holder {
     display: inline-block;
     min-height: 383px;
     width: 99.7%;
@@ -762,12 +772,12 @@ div.thumbnail.map {
     height: 383px;
 }
 
-div.more_profile {
+.more_profile {
     text-align: center;
     padding: 5px;
 }
 
-p.empty_card-holder {
+.empty_card-holder {
     text-align: center;
     font: 15px Georgia, "Times New Roman", Times, serif;
     position: relative;
@@ -785,31 +795,27 @@ div.span5.card-details {
     margin-left: 0px;
 }
 
-div.card-holder div.edit-bar.fright {
+.card-holder .edit-bar.fright {
     color: #8A8989;
     font-size: 14px;
 }
-div.card-holder div.edit-bar.fright {
-    color: #8A8989;
+.card-holder .card-title {
     font-size: 14px;
 }
-div.card-holder span.date-title {
+.card-holder .date-title {
     font: 11px "Helvetica Neue",Arial,sans-serif;
     list-style: none outside none;
     text-decoration: none;
     text-transform: none;
     color: #999;	
 }
-div.card-holder span.card-title {
-    font-size: 14px;
-}
-div.card-holder span.location-title {
+.card-holder .location-title {
     font: bold 13px "Helvetica Neue", Arial,sans-serif;
     color: #333333;
     padding: 0;
 }
 
-div.card-holder p.card_comments {
+.card-holder .card_comments {
     font: 14px/19px "Georgia",Times;
     color: #5c5c5c;
     padding-top: 6px;

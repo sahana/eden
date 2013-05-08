@@ -1147,7 +1147,7 @@ class S3CRUD(S3Method):
     # -------------------------------------------------------------------------
     def select_filter(self, r, **attr):
         """
-            Filtered datatable/datalist (intended as replacement for select())
+            Filtered datatable/datalist (a replacement for select())
         
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler

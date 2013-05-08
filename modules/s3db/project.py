@@ -1783,7 +1783,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                                      aggregate="sum",
                                      totals=True
                                      )
-                  )
+                  ),
+                  extra_fields = ["project_id", "date", "end_date",]                  
                  )
 
         # Reusable Field
@@ -3353,15 +3354,15 @@ class S3ProjectDRRPPModel(S3Model):
 
         NONE = current.messages["NONE"]
 
-        opts = opt
         if isinstance(opt, int):
             opts = [opt]
-        elif not isinstance(opt, (list, tuple)):
+        if isinstance(opt, (list, tuple)):
+            if not opt or opt[0] is None:
+                return NONE
+            else:
+                return ", ".join(["%s %s" % (prefix, o) for o in opt])
+        else:
             return NONE
-        elif opt[0] is None:
-            return NONE
-        vals = ["%s %s" % (prefix, o) for o in opts]
-        return ", ".join(vals)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3754,6 +3755,7 @@ class S3ProjectTaskModel(S3Model):
                   search_method=task_search,
                   report_options = task_report,
                   list_fields=list_fields,
+                  extra_fields = ["id"],
                   crud_form = crud_form,
                   extra="description")
 
@@ -4782,12 +4784,6 @@ def task_notify(form):
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["project_id",
-                    "date",
-                    "end_date",
-                    ]
-
-    # -------------------------------------------------------------------------
     def year(self):
 
         try:
@@ -4825,9 +4821,6 @@ class S3ProjectBeneficiaryVirtualFields:
 class S3ProjectThemeVirtualFields:
     """ Virtual fields for the project table """
 
-    extra_fields = []
-
-    # -------------------------------------------------------------------------
     def themes(self):
         """
             Themes associated with this Project
@@ -4869,9 +4862,6 @@ class S3ProjectThemeVirtualFields:
 class S3ProjectTaskVirtualFields:
     """ Virtual fields for the project_task table """
 
-    extra_fields = ["id"]
-
-    # -------------------------------------------------------------------------
     def task_id(self):
 
         try:

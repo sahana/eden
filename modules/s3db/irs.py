@@ -1046,6 +1046,7 @@ class S3IRSResponseModel(S3Model):
         ireport_id = self.irs_ireport_id
 
         define_table = self.define_table
+        configure = self.configure
 
         settings = current.deployment_settings
         hrm = settings.get_hrm_show_staff()
@@ -1098,13 +1099,13 @@ class S3IRSResponseModel(S3Model):
                                          ),
                              *s3_meta_fields())
 
-        self.configure(tablename,
-                       list_fields=["id",
-                                    "human_resource_id",
-                                    "incident_commander",
-                                    "response",
-                                    "reply",
-                                    ])
+        configure(tablename,
+                  list_fields=["id",
+                               "human_resource_id",
+                               "incident_commander",
+                               "response",
+                               "reply",
+                              ])
 
         if not settings.has_module("vehicle"):
             return Storage()
@@ -1147,6 +1148,9 @@ class S3IRSResponseModel(S3Model):
                              *s3_meta_fields())
 
         table.virtualfields.append(irs_ireport_vehicle_virtual_fields())
+        configure(tablename,
+                  extra_fields = ["datetime"]
+                 )
 
         # ---------------------------------------------------------------------
         # Which Staff are assigned to which Vehicle?
@@ -1307,10 +1311,6 @@ def irs_rheader(r, tabs=[]):
 
 # =============================================================================
 class irs_ireport_vehicle_virtual_fields:
-    """
-    """
-
-    extra_fields = ["datetime"]
 
     def minutes(self):
         try:

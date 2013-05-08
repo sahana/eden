@@ -501,8 +501,9 @@ class S3RequestModel(S3Model):
                                              fact="id",
                                              aggregate="count")
                             ),
-                       list_fields = list_fields
-                       )
+                       list_fields = list_fields,
+                       extra_fields = ["req_ref", "type"]
+                      )
 
         # Custom Methods
         set_method("req", "req",
@@ -3161,11 +3162,6 @@ class ReqVirtualFields:
         Virtual fields for Requests to show Item Details & Driver
     """
 
-    extra_fields = ["req_ref",
-                    "type",
-                    ]
-
-    # -------------------------------------------------------------------------
     def details(self):
         """
             Show the requested items/skills
@@ -3242,9 +3238,6 @@ class req_site_virtualfields:
         Virtual fields for the org_site table which reflect their Requests status
     """
 
-    extra_fields = []
-
-    # -------------------------------------------------------------------------
     def __init__(self, tablename):
         self.tablename = tablename
 

@@ -214,6 +214,8 @@ def _updates():
                    filter_submit = (T("Filter Results"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
                    list_layout = list_layout,
+                   # Create form comes via AJAX in a Modal
+                   insertable = False,
                    )
 
     s3.dl_pagelength = 6  # 5 forces an AJAX call
@@ -226,6 +228,8 @@ def _updates():
         # FilterForm options update request
         request.args = ["filter"]
         ajax = "filter"
+    elif "validate.json" in request.args:
+        ajax = True
     else:
         # Default
         request.args = ["datalist_f"]
@@ -251,11 +255,6 @@ def _updates():
         if not "delete" in request.get_vars:
             response.view = "plain.html"
     elif not ajax:
-        form = output["form"]
-        # Remove duplicate Submit button
-        form[0][-1] = ""
-        if form.errors:
-            s3.jquery_ready.append('''$("#myModal").modal("show")''')
         # Set Title & View after REST Controller, in order to override
         output["title"] = response.title = current.deployment_settings.get_system_name()
         view = path.join(request.folder, "private", "templates",
@@ -425,7 +424,7 @@ def render_posts(listid, resource, rfields, record, **attr):
     if permit("delete", table, record_id=record_id):
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
                        _class="dl-item-delete",
-                      )
+                       )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,

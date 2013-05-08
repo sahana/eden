@@ -47,6 +47,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_NOT_ONE_OF",
            "IS_LOCATION",
            "IS_LOCATION_SELECTOR",
+           "IS_LOCATION_SELECTOR2",
            "IS_SITE_SELECTOR",
            "IS_ACL",
            "IS_ADD_PERSON_WIDGET",
@@ -690,7 +691,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     labels = [d.get(r[self.kfield], d[None]) for r in records]
                 else:
                     # Standard representation function
-                    labels = map(label, [], records)
+                    labels = map(label, records)
             except TypeError:
                 if isinstance(label, str):
                     labels = map(lambda r: label % dict(r), records)
@@ -927,40 +928,36 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
 class IS_LOCATION(Validator):
     """
         Allow all locations, or locations by level.
-
-        Optimized for use within the S3LocationSelectorWidget's L0 Dropdown.
     """
 
     def __init__(self,
                  level = None,
                  error_message = None
-                ):
-        T = current.T
+                 ):
         self.level = level # can be a List or a single element
-        self.error_message = error_message or T("Invalid Location!")
+        self.error_message = error_message
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
-        db = current.db
-        table = db.gis_location
-        level = self.level
 
-        if level and level == "L0":
+        level = self.level
+        if level == "L0":
             # Use cached countries. This returns name if id is for a country.
-            have_location = gis.get_country(value)
+            ok = current.gis.get_country(value)
         else:
+            db = current.db
+            table = db.gis_location
             query = (table.id == value) & (table.deleted == False)
             if level:
                 if isinstance(level, list):
                     query = query & (table.level.belongs(level))
                 else:
                     query = query & (table.level == level)
-            have_location = db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if have_location:
+            ok = db(query).select(table.id, limitby=(0, 1))
+        if ok:
             return (value, None)
         else:
-            return (value, self.error_message)
+            return (value, self.error_message or current.T("Invalid Location!"))
 
 # =============================================================================
 class IS_LOCATION_SELECTOR(Validator):
@@ -974,7 +971,7 @@ class IS_LOCATION_SELECTOR(Validator):
 
     def __init__(self,
                  error_message = None,
-                ):
+                 ):
         self.error_message = error_message
         self.errors = Storage()
         self.id = None
@@ -1506,23 +1503,136 @@ class IS_LOCATION_SELECTOR(Validator):
         if form.errors:
             self.errors = form.errors
             return None
-        location = Storage(
-                        name=name,
-                        lat=vars.lat,
-                        lon=vars.lon,
-                        inherited=vars.inherited,
-                        street=street,
-                        postcode=postcode,
-                        parent=parent,
-                        wkt = vars.wkt,
-                        gis_feature_type = vars.gis_feature_type,
-                        lon_min = vars.lon_min,
-                        lon_max = vars.lon_max,
-                        lat_min = vars.lat_min,
-                        lat_max = vars.lat_max
-                      )
+        location = Storage(name=name,
+                           lat=vars.lat,
+                           lon=vars.lon,
+                           inherited=vars.inherited,
+                           street=street,
+                           postcode=postcode,
+                           parent=parent,
+                           wkt = vars.wkt,
+                           gis_feature_type = vars.gis_feature_type,
+                           lon_min = vars.lon_min,
+                           lon_max = vars.lon_max,
+                           lat_min = vars.lat_min,
+                           lat_max = vars.lat_max
+                           )
 
         return location
+
+# =============================================================================
+class IS_LOCATION_SELECTOR2(Validator):
+    """
+        Designed for use within the S3LocationSelectorWidget2.
+        For Create forms, this will create a new location if there is a Lat/Lon submitted
+        For Update forms, this will check that we have a valid location_id FK and update any changes
+
+        @ToDo: Audit
+    """
+
+    def __init__(self,
+                 levels=["L1", "L2", "L3"],
+                 error_message = None,
+                 ):
+        self.levels = levels
+        self.error_message = error_message
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+
+        vars = current.request.post_vars
+        lat = vars.get("lat", None)
+        lon = vars.get("lon", None)
+        parent = vars.get("parent", None)
+        # Rough check for valid Lat/Lon
+        # @ToDo: Detailed bounds-check later
+        errors = Storage()
+        if lat:
+            try:
+                lat = float(lat)
+            except ValueError:
+                errors["lat"] = current.T("Latitude is Invalid!")
+        if lon:
+            try:
+                lon = float(lon)
+            except ValueError:
+                errors["lon"] = current.T("Longitude is Invalid!")
+        if errors:
+            return (value, errors)
+
+        if lat and lon:
+            # Specific Location
+            db = current.db
+            table = db.gis_location
+            if value == "dummy":
+                # Create form
+                if not current.auth.s3_has_permission("create", table):
+                    return (None, current.auth.messages.access_denied)
+                vars = Storage(lat=lat,
+                               lon=lon,
+                               parent=parent,
+                               )
+                # onvalidation
+                form = Storage()
+                form.errors = errors
+                form.vars = vars
+                current.s3db.gis_location_onvalidation(form)
+                if form.errors:
+                    errors = form.errors
+                    error = ""
+                    for e in errors:
+                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                    return (None, error)
+                id = table.insert(**vars)
+                vars.id = id
+                # onaccept
+                current.gis.update_location_tree(vars)
+                return (id, None)
+            else:
+                # This must be an Update form
+                if not current.auth.s3_has_permission("update", table, record_id=value):
+                    return (value, current.auth.messages.access_denied)
+                # Check that this is a valid location_id
+                query = (table.id == value) & \
+                        (table.deleted == False) & \
+                        (table.level == None) # NB Specific Locations only
+                location = db(query).select(table.lat,
+                                            table.lon,
+                                            table.parent,
+                                            limitby=(0, 1)).first()
+                if location:
+                    # @ToDo: Allow amending the Parent
+                    if lat != location.lat or \
+                       lon != location.lon or \
+                       parent != location.parent:
+                        vars = Storage(lat=lat,
+                                       lon=lon,
+                                       parent=parent,
+                                       )
+                        # onvalidation
+                        form = Storage()
+                        form.errors = errors
+                        form.vars = vars
+                        current.s3db.gis_location_onvalidation(form)
+                        if form.errors:
+                            errors = form.errors
+                            error = ""
+                            for e in errors:
+                                error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                            return (None, error)
+                        # Update the record
+                        db(table.id == value).update(**vars)
+                        # Update location tree in case parent has changed
+                        vars.id = value
+                        # onaccept
+                        current.gis.update_location_tree(vars)
+                    return (value, None)
+                else:
+                    return (value, self.error_message or current.T("Invalid Location!"))
+        else:
+            # Lx
+            # - do a simple Location check
+            return IS_LOCATION(level=self.levels)(value)
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):

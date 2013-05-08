@@ -47,6 +47,7 @@ class SyncDataModel(S3Model):
              "sync_status",
              "sync_repository",
              "sync_task",
+             "sync_resource_filter",
              "sync_job",
              "sync_log"
              ]
@@ -300,10 +301,6 @@ class SyncDataModel(S3Model):
                              repository_id(),
                              Field("resource_name",
                                    notnull=True),
-                             Field("resource_filter",
-                                   readable=False,
-                                   writable=False,
-                                   label=T("Filter")),
                              Field("last_pull", "datetime",
                                    readable=True,
                                    writable=False,
@@ -399,6 +396,39 @@ class SyncDataModel(S3Model):
         configure(tablename,
                   create_onvalidation=self.sync_task_onvalidation)
 
+        # Reusable Field
+        task_represent = self.sync_task_represent
+        task_id = S3ReusableField("task_id", table,
+                                  requires = IS_ONE_OF(db,
+                                                       "sync_task.id",
+                                                       task_represent),
+                                  represent = task_represent,
+                                  label = T("Task"))
+
+        # Components
+        add_component("sync_resource_filter", sync_task="task_id")
+                      
+        # -------------------------------------------------------------------------
+        # Filters
+        # -------------------------------------------------------------------------
+        tablename = "sync_resource_filter"
+        table = define_table(tablename,
+                             task_id(),
+                             Field("tablename",
+                                   label = T("Table"),
+                                   requires = IS_NOT_EMPTY()),
+                             Field("filter_string",
+                                   label = T("Filter"),
+                                   requires = IS_NOT_EMPTY()),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  list_fields = ["id",
+                                 "task_id$repository_id",
+                                 "task_id$resource_name",
+                                 "tablename",
+                                 "filter_string"])
+                             
         # -------------------------------------------------------------------------
         # Job
         # -------------------------------------------------------------------------
@@ -489,10 +519,37 @@ class SyncDataModel(S3Model):
         rtable = current.s3db.sync_repository
         repository = db(rtable.id == rid).select(rtable.name,
                                                  limitby=(0, 1)).first()
+
         try:
             return repository.name
         except:
             return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def sync_task_represent(task_id):
+        """ Task representation """
+
+        s3db = current.s3db
+
+        ttable = s3db.sync_task
+        rtable = s3db.sync_repository
+
+        query = (ttable.id == task_id) & \
+                (rtable.id == ttable.repository_id)
+
+        db = current.db
+        task = db(query).select(ttable.resource_name,
+                                rtable.name,
+                                limitby=(0, 1)).first()
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        if task:
+            repository = task[rtable.name] or UNKNOWN_OPT
+            resource = task[ttable.resource_name] or UNKNOWN_OPT
+            return "%s: %s" % (repository, resource)
+        else:
+            return UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

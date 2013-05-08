@@ -52,7 +52,8 @@ class S3SituationModel(S3Model):
         configure = self.configure
         super_entity = self.super_entity
 
-        # Situation Super-Entity ----------------------------------------------
+        # ---------------------------------------------------------------------
+        # Situation Super-Entity
         #
         situation_types = Storage(
             irs_incident = T("Incident"),
@@ -68,7 +69,8 @@ class S3SituationModel(S3Model):
         configure(tablename,
                   editable=False, deletable=False, listadd=False)
 
-        # Trackable Types -----------------------------------------------------
+        # ---------------------------------------------------------------------
+        # Trackable Types
         #
         # Use:
         #   - add a field with super_link("track_id", "sit_trackable")
@@ -90,7 +92,8 @@ class S3SituationModel(S3Model):
         configure(tablename,
                   editable=False, deletable=False, listadd=False)
 
-        # Presence Records for trackables -------------------------------------
+        # ---------------------------------------------------------------------
+        # Presence Records for trackables
         #
         # Use:
         #   - will be automatically available to all trackable types

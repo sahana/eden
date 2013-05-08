@@ -1544,6 +1544,150 @@ class ResourceExportTests(unittest.TestCase):
         finally:
             current.db.rollback()
 
+    # -------------------------------------------------------------------------
+    def testExportXMLWithSyncFilters(self):
+        """ Test XML Export with Sync Filters """
+
+        manager = current.manager
+        auth = current.auth
+        s3db = current.s3db
+        
+        auth.override = True
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_office_type" uuid="SFT1">
+        <data field="name">SFT1</data>
+    </resource>
+    <resource name="org_office_type" uuid="SFT2">
+        <data field="name">SFT2</data>
+    </resource>
+    <resource name="org_organisation" uuid="SFO1">
+        <data field="name">Sync1FilterOrganisation</data>
+        <resource name="org_office" uuid="S1FO1">
+            <data field="name">Sync1FilterOffice1</data>
+            <reference field="office_type_id" resource="org_office_type" uuid="SFT1"/>
+        </resource>
+    </resource>
+    <resource name="org_organisation" uuid="SFO2">
+        <data field="name">Sync2FilterOrganisation</data>
+        <resource name="org_office" uuid="S1FO2">
+            <data field="name">Sync1FilterOffice2</data>
+            <reference field="office_type_id" resource="org_office_type" uuid="SFT2"/>
+        </resource>
+    </resource>
+    <resource name="org_organisation" uuid="SFO3">
+        <data field="name">Sync3FilterOrganisation</data>
+        <resource name="org_office" uuid="S1FO3">
+            <data field="name">Sync1FilterOffice3</data>
+        </resource>
+        <resource name="org_office" uuid="S2FO1">
+            <data field="name">Sync2FilterOffice1</data>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        try:
+            from lxml import etree
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            resource = current.s3db.resource("org_organisation")
+            resource.import_xml(xmltree)
+
+            # Filter master by master field
+            resource = s3db.resource(resource,
+                                     uid=["SFO1", "SFO2", "SFO3"])
+
+            filters = {"org_organisation": {"organisation.name__like": "Sync1%"}}
+
+            xmlexport = resource.export_xml(filters=filters,
+                                            mcomponents=["org_office"],
+                                            dereference=False)
+                                            
+            xmltree = etree.ElementTree(etree.fromstring(xmlexport))
+            orgs = xmltree.xpath("resource[@name='org_organisation']")
+            self.assertEqual(len(orgs), 1)
+            self.assertEqual(orgs[0].get("uuid"), "SFO1")
+
+            offices = xmltree.xpath("//resource[@name='org_office']")
+            self.assertEqual(len(offices), 1)
+            self.assertEqual(offices[0].get("uuid"), "S1FO1")
+
+            # Filter master by component field
+            resource = s3db.resource(resource,
+                                     uid=["SFO1", "SFO2", "SFO3"])
+
+            filters = {"org_organisation": {"office.name__like": "Sync2%"}}
+
+            xmlexport = resource.export_xml(filters=filters,
+                                            mcomponents=["org_office"],
+                                            dereference=False)
+
+            xmltree = etree.ElementTree(etree.fromstring(xmlexport))
+            orgs = xmltree.xpath("resource[@name='org_organisation']")
+            self.assertEqual(len(orgs), 1)
+            self.assertEqual(orgs[0].get("uuid"), "SFO3")
+
+            offices = xmltree.xpath("//resource[@name='org_office']")
+            self.assertEqual(len(offices), 1)
+            self.assertEqual(offices[0].get("uuid"), "S2FO1")
+
+            # Filter component by component field
+            resource = s3db.resource(resource,
+                                     uid=["SFO1", "SFO2", "SFO3"])
+
+            filters = {"org_office": {"office.name__like": "Sync1%"}}
+
+            xmlexport = resource.export_xml(filters=filters,
+                                            mcomponents=["org_office"],
+                                            dereference=False)
+            xmltree = etree.ElementTree(etree.fromstring(xmlexport))
+
+            orgs = xmltree.xpath("resource[@name='org_organisation']")
+            self.assertEqual(len(orgs), 3)
+            uids = [org.get("uuid") for org in orgs]
+            self.assertTrue("SFO1" in uids)
+            self.assertTrue("SFO2" in uids)
+            self.assertTrue("SFO3" in uids)
+            
+            offices = xmltree.xpath("//resource[@name='org_office']")
+            self.assertEqual(len(offices), 3)
+            uids = [office.get("uuid") for office in offices]
+            self.assertTrue("S1FO1" in uids)
+            self.assertTrue("S1FO2" in uids)
+            self.assertTrue("S1FO3" in uids)
+            self.assertFalse("S2FO1" in uids)
+
+            # Filter referenced table
+            resource = s3db.resource(resource,
+                                     uid=["SFO1", "SFO2"])
+
+            xmlexport = resource.export_xml(filters=None,
+                                            mcomponents=["org_office"])
+            xmltree = etree.ElementTree(etree.fromstring(xmlexport))
+
+            types = xmltree.xpath("resource[@name='org_office_type']")
+            self.assertEqual(len(types), 2)
+            uids = [t.get("uuid") for t in types]
+            self.assertTrue("SFT1" in uids)
+            self.assertTrue("SFT2" in uids)
+
+            resource = s3db.resource(resource,
+                                     uid=["SFO1", "SFO2"])
+
+            filters = {"org_office_type": {"office_type.name__like": "SFT1%"}}
+
+            xmlexport = resource.export_xml(filters=filters,
+                                            mcomponents=["org_office"])
+            xmltree = etree.ElementTree(etree.fromstring(xmlexport))
+
+            types = xmltree.xpath("resource[@name='org_office_type']")
+            self.assertEqual(len(types), 1)
+            self.assertEqual(types[0].get("uuid"), "SFT1")
+
+        finally:
+            current.db.rollback()
+            auth.override = False
+
 # =============================================================================
 class ResourceImportTests(unittest.TestCase):
     """ Test XML imports into resources """
