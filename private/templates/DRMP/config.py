@@ -56,6 +56,8 @@ settings.base.system_name_short = T("DRMP")
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "DRMP"
+settings.ui.formstyle_row = "bootstrap"
+settings.ui.formstyle = "bootstrap"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
@@ -102,12 +104,6 @@ settings.ui.camp = True
 # Save Search Widget
 settings.save_search.widget = False
 
-
-# -----------------------------------------------------------------------------
-# Formstyle
-
-settings.ui.formstyle_row = "bootstrap"
-settings.ui.formstyle = "bootstrap"
 # =============================================================================
 # Module Settings
 

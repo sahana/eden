@@ -244,23 +244,22 @@ def user():
                     (table.registration_key == "")
             rows = db(query).select(table.id)
             restrict = [str(row.id) for row in rows]
-            s3.actions = [
-                            dict(label=str(UPDATE), _class="action-btn",
-                                 url=URL(c="admin", f="user",
-                                         args=["[id]", "update"])),
-                            dict(label=str(T("Link")),
-                                 _class="action-btn",
-                                 _title = str(T("Link (or refresh link) between User, Person & HR Record")),
-                                 url=URL(c="admin", f="user",
-                                         args=["[id]", "link"]),
-                                 restrict = restrict),
-                            dict(label=str(T("Roles")), _class="action-btn",
-                                 url=URL(c="admin", f="user",
-                                         args=["[id]", "roles"])),
-                            dict(label=str(T("Disable")), _class="action-btn",
-                                 url=URL(c="admin", f="user",
-                                         args=["[id]", "disable"]),
-                                 restrict = restrict)
+            s3.actions = [dict(label=str(UPDATE), _class="action-btn",
+                               url=URL(c="admin", f="user",
+                                       args=["[id]", "update"])),
+                          dict(label=str(T("Link")),
+                               _class="action-btn",
+                               _title = str(T("Link (or refresh link) between User, Person & HR Record")),
+                               url=URL(c="admin", f="user",
+                                       args=["[id]", "link"]),
+                               restrict = restrict),
+                          dict(label=str(T("Roles")), _class="action-btn",
+                               url=URL(c="admin", f="user",
+                                       args=["[id]", "roles"])),
+                          dict(label=str(T("Disable")), _class="action-btn",
+                               url=URL(c="admin", f="user",
+                                       args=["[id]", "disable"]),
+                               restrict = restrict)
                           ]
             # Only show the approve button if the user is currently pending
             query = (table.registration_key != "disabled") & \
@@ -288,6 +287,61 @@ def user():
                       dict(col=6, key="disabled", display=str(T("Disabled")))
                       ]
             s3.dataTableDisplay = values
+
+            # @ToDo: Merge these with the code in s3aaa.py and use S3SQLCustomForm to implement
+            form = output.get("form", None)
+            if not form:
+                return output
+            form.attributes["_id"] = "regform"
+            if s3_formstyle == "bootstrap":
+                div = DIV(LABEL("%s:" % T("Verify password"),
+                                _id="auth_user_password_two__label",
+                                _for="password_two",
+                                _class="control-label",
+                                ),
+                          DIV(INPUT(_name="password_two",
+                                    _id="password_two",
+                                    _type="password",
+                                    _disabled="disabled",
+                                    _class="password input-xlarge",
+                                    ),
+                              _class="controls",
+                              ),
+                          # Somewhere to store Error Messages
+                          SPAN(_class="help-block"),
+                          _id="auth_user_password_two__row",
+                          _class="control-group hide",
+                          )
+                form[0].insert(4, div)
+                # @ToDo:
+                #if settings.get_auth_registration_requests_mobile_phone():
+            else:
+                # Assume callable
+                id = "auth_user_password_two__row"
+                label = "%s:" % T("Verify password")
+                widget = INPUT(_name="password_two",
+                               _id="password_two",
+                               _type="password",
+                               _disabled="disabled",
+                               )
+                comment = ""
+                row = s3_formstyle(id, label, widget, comment, hidden=True)
+                if s3.theme == "DRRPP":
+                    form[0].insert(4, row)
+                else:
+                    form[0].insert(8, row)
+                if settings.get_auth_registration_requests_mobile_phone():
+                    id = "auth_user_mobile__row"
+                    label = "%s:" % settings.get_ui_label_mobile_phone()
+                    widget = INPUT(_name="mobile",
+                                   _id="mobile",
+                                   _class="string",
+                                   )
+                    comment = ""
+                    row = s3_formstyle(id, label, widget, comment)
+                    # @ToDo:
+                    #if s3.theme == "DRRPP":
+                    form[0].insert(-8, row)
 
             # Add client-side validation
             s3base.s3_register_validation()

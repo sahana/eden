@@ -7,13 +7,7 @@
 
          CSV fields:
          Name....................event_event.name
-         Description.............event_event.comments
-         Description.............event_event.comments
-         Description.............event_event.comments
-         Description.............event_event.comments
-         Description.............event_event.comments
-         Description.............event_event.comments
-         Description.............event_event.comments
+         Type....................event_event.event_type_id
          Description.............event_event.comments
          Country.................optional.....event_event_location.Country
          L1......................optional.....event_event_location.L1
@@ -64,6 +58,8 @@
                                                     col[@field='L4'], '/',
                                                     col[@field='L5'])"/>
 
+    <xsl:key name="type" match="row" use="col[@field='Type']"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
@@ -110,6 +106,12 @@
                                                                           col[@field='L4'], '/',
                                                                           col[@field='L5']))[1])]">
                 <xsl:call-template name="L5"/>
+            </xsl:for-each>
+
+            <!-- Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
+                                                                       col[@field='Type'])[1])]">
+                <xsl:call-template name="Type"/>
             </xsl:for-each>
 
             <!-- Events -->
@@ -212,6 +214,19 @@
             </xsl:for-each>
 
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Type">
+        <xsl:variable name="type" select="col[@field='Type']/text()"/>
+
+        <resource name="event_event_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$type"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$type"/></data>
+       </resource>
 
     </xsl:template>
 

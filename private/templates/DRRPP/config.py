@@ -141,14 +141,15 @@ def formstyle_row(id, label, widget, comment, hidden=False):
         hide = ""
     row = DIV(DIV(label,
                   _id=id + "_label",
-                  _class="w2p_fl %s" % hide),
+                  _class="w2p_fl"),
               DIV(widget,
                   _id=id + "_widget",
-                  _class="w2p_fw %s" % hide),
+                  _class="w2p_fw"),
               DIV(comment,
                   _id=id + "_comment",
-                  _class="w2p_fc %s" % hide),
-              _class = "w2p_r",
+                  _class="w2p_fc"),
+              _id=id,
+              _class = "w2p_r %s" % hide,
               )
     return row
 

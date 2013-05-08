@@ -800,9 +800,7 @@ def s3_populate_browser_compatibility(request):
 def s3_register_validation():
     """
         JavaScript client-side validation for Register form
-        - needed to check for passwords being same
-        @ToDo: Move this to JS. Internationalisation (T()) can be provided in
-               views/l10n.js
+        - needed to check for passwords being same, etc
     """
 
     T = current.T
@@ -812,118 +810,67 @@ def s3_register_validation():
     appname = current.request.application
     auth = current.auth
 
+    # Static Scripts
+    scripts_append = s3.scripts.append
     if s3.debug:
-        s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
-        s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
+        scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
+        scripts_append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
+        scripts_append("/%s/static/scripts/S3/s3.register_validation.js" % appname)
     else:
-        s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
-        s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
+        scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
+        scripts_append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
+        scripts_append("/%s/static/scripts/S3/s3.register_validation.min.js" % appname)
 
+    # Configuration
+    js_global = []
+    js_append = js_global.append
     if request.cookies.has_key("registered"):
-        password_position = '''last'''
+        # .password:first
+        js_append('''S3.password_position=1''')
     else:
-        password_position = '''first'''
+        # .password:last
+        js_append('''S3.password_position=2''')
 
     if settings.get_auth_registration_mobile_phone_mandatory():
-        mobile = '''
-  mobile:{
-   required:true
-  },'''
-    else:
-        mobile = ""
+        js_append('''S3.auth_registration_mobile_phone_mandatory=1''')
 
     if settings.get_auth_registration_organisation_required():
-        org1 = '''
-  organisation_id:{
-   required: true
-  },'''
-        org2 = "".join((''',
-  organisation_id:"''', str(T("Enter your organization")), '''"'''))
-    else:
-        org1 = ""
-        org2 = ""
+        js_append('''S3.get_auth_registration_organisation_required=1''')
+        js_append('''i18n.enter_your_organisation="%s"''' % T("Enter your organization"))
 
-    domains = ""
-    if settings.get_auth_registration_organisation_hidden() and \
-       request.controller != "admin":
-        table = current.auth.settings.table_user
-        table.organisation_id
+    if request.controller != "admin":
+        if settings.get_auth_registration_organisation_hidden():
+            js_append('''S3.get_auth_registration_hide_organisation=1''')
 
+        # Check for Whitelists
         table = current.s3db.auth_organisation
         query = (table.organisation_id != None) & \
                 (table.domain != None)
         whitelists = current.db(query).select(table.organisation_id,
                                               table.domain)
         if whitelists:
-            domains = '''$('#auth_user_organisation_id__row').hide()
-S3.whitelists={
-'''
-            count = 0
+            domains = []
+            domains_append = domains.append
             for whitelist in whitelists:
-                count += 1
-                domains += "'%s':%s" % (whitelist.domain,
-                                         whitelist.organisation_id)
-                if count < len(whitelists):
-                    domains += ",\n"
-                else:
-                    domains += "\n"
-            domains += '''}
-$('#regform #auth_user_email').blur(function(){
- var email=$('#regform #auth_user_email').val()
- var domain=email.split('@')[1]
- if(undefined!=S3.whitelists[domain]){
-  $('#auth_user_organisation_id').val(S3.whitelists[domain])
- }else{
-  $('#auth_user_organisation_id__row').show()
- }
-})'''
+                domains_append("'%s':%s" % (whitelist.domain,
+                                            whitelist.organisation_id))
+            domains = ''','''.join(domains)
+            domains = '''S3.whitelists={%s}''' % domains
+            js_append(domains)
 
-    # validate signup form on keyup and submit
-    # @ToDo: //remote:'emailsurl'
-    script = "".join(( domains, '''
-$('#regform').validate({
- errorClass:'req',
- rules:{
-  first_name:{
-   required:true
-  },''', mobile, '''
-  email:{
-   required:true,
-   email:true
-  },''', org1, '''
-  password:{
-   required:true
-  },
-  password_two:{
-   required:true,
-   equalTo:".password:''', password_position, '''"
-  }
- },
- messages:{
-  first_name:"''', str(T("Enter your first name")), '''",
-  password:{
-   required:"''', str(T("Provide a password")), '''"
-  },
-  password_two:{
-   required:"''', str(T("Repeat your password")), '''",
-   equalTo:"''', str(T("Enter the same password as above")), '''"
-  },
-  email:{
-   required:"''', str(T("Please enter a valid email address")), '''",
-   email:"''', str(T("Please enter a valid email address")), '''"
-  }''', org2, '''
- },
- errorPlacement:function(error,element){
-  error.appendTo(element.parent().next())
- },
- submitHandler:function(form){
-  form.submit()
- }
-})
-var MinPasswordChar=''', str(settings.get_auth_password_min_length()), ''';
- $('.password:''', password_position, '''').pstrength({minchar:MinPasswordChar,minchar_label:null});
-''' ))
-    s3.jquery_ready.append(script)
+    js_append('''i18n.enter_first_name="%s"''' % T("Enter your first name"))
+    js_append('''i18n.provide_password="%s"''' % T("Provide a password"))
+    js_append('''i18n.repeat_your_password="%s"''' % T("Repeat your password"))
+    js_append('''i18n.enter_same_password="%s"''' % T("Enter the same password as above"))
+    js_append('''i18n.please_enter_valid_email="%s"''' % T("Please enter a valid email address"))
+
+    js_append('''S3.password_min_length=%i''' % settings.get_auth_password_min_length())
+
+    script = '''\n'''.join(js_global)
+    s3.js_global.append(script)
+
+    # Call script after Global config done
+    s3.jquery_ready.append('''s3_register_validation()''')
 
 # =============================================================================
 def s3_filename(filename):

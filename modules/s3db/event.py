@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3EventModel",
+           "S3IncidentModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
            "S3EventAssetModel",
@@ -53,30 +54,23 @@ class S3EventModel(S3Model):
 
         http://eden.sahanafoundation.org/wiki/BluePrintScenario
 
-        Incident is the primary unit at which things are managed:
-            Scenarios are designed
-            Resources are assigned
-            Situation Reports are made
-
-        Events are a higher-level 
+        Events are a high-level term, such as a 'Disaster'
 
         Link tables are in separate classes to increase performance & allow
         the system to be more modular
     """
 
-    names = ["event_event",
+    names = ["event_event_type",
+             "event_event",
              "event_event_id",
              "event_event_location",
              "event_event_tag",
-             "event_incident",
-             "event_incident_id",
              ]
 
     def model(self):
 
         T = current.T
         db = current.db
-        settings = current.deployment_settings
 
         add_component = self.add_component
         configure = self.configure
@@ -85,9 +79,59 @@ class S3EventModel(S3Model):
         NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
-        # Events
+        # Event Types / Disaster Types
         #
-        #   Events are a way of grouping related Incidents
+        tablename = "event_event_type"
+        table = self.define_table(tablename,
+                                  Field("name", notnull=True,
+                                        length=64,
+                                        label=T("Name")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Event Type"),
+            title_display = T("Event Type Details"),
+            title_list = T("Event Types"),
+            title_update = T("Edit Event Type"),
+            title_search = T("Search Event Types"),
+            title_upload = T("Import Event Types"),
+            subtitle_create = T("Add New Event Type"),
+            label_list_button = T("List Event Types"),
+            label_create_button = T("Add Event Type"),
+            label_delete_button = T("Remove Event Type from this event"),
+            msg_record_created = T("Event Type added"),
+            msg_record_modified = T("Event Type updated"),
+            msg_record_deleted = T("Event Type removed"),
+            #msg_list_empty = T("No Event Types currently registered in this event")
+            msg_list_empty = T("No Event Types currently registered")
+            )
+
+        represent = S3Represent(lookup=tablename)
+        event_type_id = S3ReusableField("event_type_id", table,
+                                        sortby="name",
+                                        requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "event_event_type.id",
+                                                              represent,
+                                                              orderby="event_event_type.name",
+                                                              sort=True)),
+                                        represent = represent,
+                                        label = T("Event Type"),
+                                        ondelete = "RESTRICT",
+                                        # Uncomment these to use an Autocomplete & not a Dropdown
+                                        #widget = S3AutocompleteWidget()
+                                        #comment = DIV(_class="tooltip",
+                                        #              _title="%s|%s" % (T("Event Type"),
+                                        #                                T("Enter some characters to bring up a list of possible matches")))
+                                        )
+        configure(tablename,
+                  deduplicate=self.event_type_duplicate
+                  )
+
+        # ---------------------------------------------------------------------
+        # Events / Disasters
+        #
+        #   Events can be a way of grouping related Incidents or used standalone
         #
         # ---------------------------------------------------------------------
         tablename = "event_event"
@@ -95,6 +139,7 @@ class S3EventModel(S3Model):
                              Field("name", notnull=True, # Name could be a code
                                    length=64,    # Mayon compatiblity
                                    label=T("Name")),
+                             event_type_id(),
                              Field("exercise", "boolean",
                                    represent = lambda opt: "√" if opt else NONE,
                                    #comment = DIV(_class="tooltip",
@@ -228,6 +273,140 @@ class S3EventModel(S3Model):
                   deduplicate=self.event_event_tag_deduplicate)
 
         # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage(
+                event_event_id = event_id,
+            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
+
+        return Storage(
+                event_event_id = S3ReusableField("event_id", "integer",
+                                                 readable=False,
+                                                 writable=False),
+            )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_update_onaccept(form):
+        """
+            When an Event is updated, check for closure
+        """
+
+        vars = form.vars
+        if vars.closed:
+            event = vars.id
+            # Ensure this event isn't active in the session
+            s3 = current.session.s3
+            if s3.event == event:
+                s3.event = None
+            # @ToDo: Hide the Event from the Map menu
+            #gis = current.gis
+            #config = gis.get_config()
+            #if config == config.config_id:
+            #    # Reset to the Default Map
+            #    gis.set_config(0)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_duplicate(item):
+        """
+            Deduplication of Events
+        """
+
+        if item.tablename != "event_event":
+            return
+
+        data = item.data
+        name = data.get("name", None)
+
+        table = item.table
+        query = (table.name == name)
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.data.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_type_duplicate(item):
+        """
+            Deduplication of Event Types
+        """
+
+        if item.tablename != "event_event_type":
+            return
+
+        data = item.data
+        name = data.get("name", None)
+
+        table = item.table
+        query = (table.name == name)
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.data.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_event_tag_deduplicate(item):
+        """
+           Deduplication of Event Tags
+        """
+
+        if item.tablename != "event_event_tag":
+            return
+
+        data = item.data
+        tag = data.get("tag", None)
+        event = data.get("event_id", None)
+
+        if not tag or not event:
+            return
+
+        table = item.table
+        query = (table.tag.lower() == tag.lower()) & \
+                (table.event_id == event)
+
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3IncidentModel(S3Model):
+    """
+        Incidents
+         - the primary unit at which things are managed:
+            Scenarios are designed
+            Resources are assigned
+            Situation Reports are made
+    """
+
+    names = ["event_incident",
+             "event_incident_id",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        settings = current.deployment_settings
+        
+        add_component = self.add_component
+
+        # ---------------------------------------------------------------------
         # Incidents
         #
         #  Incidents are the unit at which responses are managed.
@@ -235,35 +414,35 @@ class S3EventModel(S3Model):
         #  They can be instantiated from Scenario Templates.
         #
         tablename = "event_incident"
-        table = define_table(tablename,
-                             event_id(),
-                             self.event_incident_type_id(),
-                             self.scenario_scenario_id(),
-                             Field("name", notnull=True, # Name could be a code
-                                   length=64,
-                                   label=T("Name")),
-                             Field("exercise", "boolean",
-                                   represent = lambda opt: "√" if opt else NONE,
-                                   #comment = DIV(_class="tooltip",
-                                   #              _title="%s|%s" % (T("Exercise"),
-                                                                   # Should!
-                                   #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
-                                   label=T("Exercise?")),
-                             s3_datetime(name="zero_hour",
-                                         label = T("Zero Hour"),
-                                         default = "now",
-                                         comment = DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("Zero Hour"),
-                                                                         T("The time at which the Incident started."))),
-                                         ),
-                             Field("closed", "boolean",
-                                   default = False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Closed")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        table = self.define_table(tablename,
+                                  self.event_event_id(),
+                                  self.event_incident_type_id(),
+                                  self.scenario_scenario_id(),
+                                  Field("name", notnull=True, # Name could be a code
+                                        length=64,
+                                        label=T("Name")),
+                                  Field("exercise", "boolean",
+                                        represent = lambda opt: "√" if opt else NONE,
+                                        #comment = DIV(_class="tooltip",
+                                        #              _title="%s|%s" % (T("Exercise"),
+                                                                        # Should!
+                                        #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
+                                        label=T("Exercise?")),
+                                  s3_datetime(name="zero_hour",
+                                              label = T("Zero Hour"),
+                                              default = "now",
+                                              comment = DIV(_class="tooltip",
+                                                            _title="%s|%s" % (T("Zero Hour"),
+                                                                              T("The time at which the Incident started."))),
+                                              ),
+                                  Field("closed", "boolean",
+                                        default = False,
+                                        represent = s3_yes_no_represent,
+                                        label=T("Closed")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
-        crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Incident"),
             title_display = T("Incident Details"),
             title_list = T("Incidents"),
@@ -307,17 +486,17 @@ class S3EventModel(S3Model):
         else:
             create_next_url = URL(args=["[id]", "site"])
 
-        configure(tablename,
-                  create_next = create_next_url,
-                  create_onaccept=self.incident_create_onaccept,
-                  deduplicate=self.incident_duplicate,
-                  list_fields = ["id",
-                                 "name",
-                                 "incident_type_id",
-                                 "exercise",
-                                 "closed",
-                                 "comments",
-                                 ])
+        self.configure(tablename,
+                       create_next = create_next_url,
+                       create_onaccept=self.incident_create_onaccept,
+                       deduplicate=self.incident_duplicate,
+                       list_fields = ["id",
+                                      "name",
+                                      "incident_type_id",
+                                      "exercise",
+                                      "closed",
+                                      "comments",
+                                      ])
 
         # Components
         # Tasks
@@ -369,7 +548,6 @@ class S3EventModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return Storage(
-                event_event_id = event_id,
                 event_incident_id = incident_id,
             )
 
@@ -381,13 +559,11 @@ class S3EventModel(S3Model):
         """
 
         return Storage(
-            event_event_id = S3ReusableField("event_id", "integer",
-                                             readable=False,
-                                             writable=False),
-            event_incident_id = S3ReusableField("incident_id", "integer",
-                                                readable=False,
-                                                writable=False),
-        )
+                event_incident_id = S3ReusableField("incident_id", "integer",
+                                                    readable=False,
+                                                    writable=False),
+
+            )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -483,76 +659,6 @@ class S3EventModel(S3Model):
             current.gis.set_config(config)
             # Viewport can be saved from the Map's toolbar
             # @ToDo: Add to GIS Menu? Separate Menu?
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def event_update_onaccept(form):
-        """
-            When an Event is updated, check for closure
-        """
-
-        vars = form.vars
-        if vars.closed:
-            event = vars.id
-            # Ensure this event isn't active in the session
-            s3 = current.session.s3
-            if s3.event == event:
-                s3.event = None
-            # @ToDo: Hide the Event from the Map menu
-            #gis = current.gis
-            #config = gis.get_config()
-            #if config == config.config_id:
-            #    # Reset to the Default Map
-            #    gis.set_config(0)
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def event_duplicate(item):
-        """
-            Deduplication of Events
-        """
-
-        if item.tablename != "event_event":
-            return
-
-        data = item.data
-        name = data.get("name", None)
-
-        table = item.table
-        query = (table.name == name)
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_event_tag_deduplicate(item):
-        """
-           Deduplication of Event Tags
-        """
-
-        if item.tablename != "event_event_tag":
-            return
-
-        data = item.data
-        tag = data.get("tag", None)
-        event = data.get("event_id", None)
-
-        if not tag or not event:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.event_id == event)
-
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -691,6 +797,11 @@ class S3IncidentTypeModel(S3Model):
 class S3IncidentTypeTagModel(S3Model):
     """
         Incident Type Tags
+         - Key-Value extensions
+         - can be used to provide conversions to external systems, such as:
+           * CAP
+           * NIMS
+         - can be a Triple Store for Semantic Web support
     """
 
     names = ["event_incident_type_tag"]
@@ -700,15 +811,7 @@ class S3IncidentTypeTagModel(S3Model):
         T = current.T
 
         # ---------------------------------------------------------------------
-        # Local Names
-        #
-        # ---------------------------------------------------------------------
         # Incident Type Tags
-        # - Key-Value extensions
-        # - can be used to provide conversions to external systems, such as:
-        #   * CAP
-        #   * NIMS
-        # - can be a Triple Store for Semantic Web support
         #
         tablename = "event_incident_type_tag"
         table = self.define_table(tablename,

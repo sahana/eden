@@ -220,11 +220,6 @@ $(document).ready(function() {
     $('input.float_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g,'').reverse();});
     // Auto-capitalize first names
     $('input[name="first_name"]').focusout(function() {this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);});
-    // Hide password verification field in admin/user until changed
-    $('input[name="password"]').keyup(function() {
-        $('.verify-password').removeClass('hide');
-        $('#password_two').prop('disabled', false);
-    });
 
     // Resizable textareas
     $('textarea.resizable:not(.textarea-processed)').each(function() {

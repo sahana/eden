@@ -267,6 +267,7 @@ def dojs(dogis = False, warnings = True):
                      "locationselector.widget",
                      "locationselector.widget2",
                      "popup",
+                     "register_validation",
                      "timeline",
                      ]:
         print "Compressing s3.%s.js" % filename
