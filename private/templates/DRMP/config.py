@@ -80,6 +80,9 @@ settings.L10n.thousands_separator = ","
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ["TL"]
 
+# Until Validation Errors fixed in LocationSelector2
+settings.gis.check_within_parent_boundaries = False
+
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
@@ -504,6 +507,7 @@ def customize_event_event(**attr):
                          context = "event",
                          filter = S3FieldSelector("series_id$name") == "Alert",
                          icon = "icon-alert",
+                         marker = "alert",
                          list_layout = render_profile_posts,
                          )
     map_widget = dict(label = "Location",
@@ -520,6 +524,7 @@ def customize_event_event(**attr):
                             context = "event",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
+                            marker = "alert",
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
@@ -529,6 +534,7 @@ def customize_event_event(**attr):
                               context = "event",
                               filter = S3FieldSelector("series_id$name") == "Assessment",
                               icon = "icon-info-sign",
+                              marker = "assessment",
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
@@ -538,6 +544,7 @@ def customize_event_event(**attr):
                              context = "event",
                              filter = S3FieldSelector("series_id$name") == "Activity",
                              icon = "icon-activity",
+                             marker = "activity",
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
@@ -547,6 +554,7 @@ def customize_event_event(**attr):
                           context = "event",
                           filter = S3FieldSelector("series_id$name") == "Report",
                           icon = "icon-report",
+                          marker = "report",
                           list_layout = render_profile_posts,
                           )
     comments_widget = dict(label = "Comments",
@@ -719,6 +727,7 @@ def customize_gis_location(**attr):
                          context = "location",
                          filter = S3FieldSelector("series_id$name") == "Alert",
                          icon = "icon-alert",
+                         marker = "alert",
                          list_layout = render_profile_posts,
                          )
     map_widget = dict(label = "Location",
@@ -735,6 +744,7 @@ def customize_gis_location(**attr):
                             context = "location",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
+                            marker = "alert",
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
@@ -744,6 +754,7 @@ def customize_gis_location(**attr):
                               context = "location",
                               filter = S3FieldSelector("series_id$name") == "Assessment",
                               icon = "icon-info-sign",
+                              marker = "assessment",
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
@@ -753,6 +764,7 @@ def customize_gis_location(**attr):
                              context = "location",
                              filter = S3FieldSelector("series_id$name") == "Activity",
                              icon = "icon-activity",
+                             marker = "activity",
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
@@ -762,6 +774,7 @@ def customize_gis_location(**attr):
                           context = "location",
                           filter = S3FieldSelector("series_id$name") == "Report",
                           icon = "icon-report",
+                          marker = "report",
                           list_layout = render_profile_posts,
                           )
     comments_widget = dict(label = "Comments",
@@ -898,6 +911,7 @@ def customize_org_organisation(**attr):
                          context = "organisation",
                          filter = S3FieldSelector("series_id$name") == "Alert",
                          icon = "icon-alert",
+                         marker = "alert",
                          list_layout = render_profile_posts,
                          )
     map_widget = dict(label = "Location",
@@ -914,6 +928,7 @@ def customize_org_organisation(**attr):
                             context = "organisation",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
+                            marker = "alert",
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
@@ -923,6 +938,7 @@ def customize_org_organisation(**attr):
                               context = "organisation",
                               filter = S3FieldSelector("series_id$name") == "Assessment",
                               icon = "icon-info-sign",
+                              marker = "assessment",
                               list_layout = render_profile_posts,
                               )
     activities_widget = dict(label = "Activities",
@@ -932,6 +948,7 @@ def customize_org_organisation(**attr):
                              context = "organisation",
                              filter = S3FieldSelector("series_id$name") == "Activity",
                              icon = "icon-activity",
+                             marker = "activity",
                              list_layout = render_profile_posts,
                              )
     reports_widget = dict(label = "Reports",
@@ -941,6 +958,7 @@ def customize_org_organisation(**attr):
                           context = "organisation",
                           filter = S3FieldSelector("series_id$name") == "Report",
                           icon = "icon-report",
+                          marker = "report",
                           list_layout = render_profile_posts,
                           )
     comments_widget = dict(label = "Comments",

@@ -1,3 +1,2 @@
 "UUID",Name,Region,Default,Zoom,Lat,Lon,Projection,Symbology,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
-"SITE_DEFAULT",Default,,,8,-8.88,125.92,900913,"US",-9.5,-8.4,124.04,127.3,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
-,WGS84,,,8,-8.88,125.92,4326,"US",-9.5,-8.4,124.04,127.3,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+"SITE_DEFAULT",Default,,,8,-8.88,125.92,900913,"DRMP",-9.5,-8.4,124.04,127.3,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"

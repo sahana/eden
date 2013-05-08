@@ -324,6 +324,7 @@ class S3Profile(S3CRUD):
         """
 
         T = current.T
+        db = current.db
         s3db = current.s3db
 
         label = widget.get("label", "")
@@ -340,6 +341,8 @@ class S3Profile(S3CRUD):
         feature_resources = []
         fappend = feature_resources.append
         widgets = s3db.get_config(r.tablename, "profile_widgets")
+        s3dbresource = s3db.resource
+        mtable = s3db.gis_marker
         for widget in widgets:
             if widget["type"] != "datalist":
                 continue
@@ -347,7 +350,7 @@ class S3Profile(S3CRUD):
             if not show_on_map:
                 continue
             tablename = widget["tablename"]
-            resource = s3db.resource(tablename)
+            resource = s3dbresource(tablename)
             filter = widget.get("filter", None)
             map_url = widget.get("map_url", None)
             if not map_url:
@@ -364,13 +367,20 @@ class S3Profile(S3CRUD):
                 elif context:
                     map_url = "%s?%s" % (map_url, context)
 
+            marker = widget.get("marker", None)
+            if marker:
+                marker = db(mtable.name == marker).select(mtable.image,
+                                                          mtable.height,
+                                                          mtable.width,
+                                                          limitby=(0, 1)).first()
+
             listid = "profile-list-%s-%s" % (tablename, widget["index"])
             fappend({"name"      : T(widget["label"]),
                      "id"        : listid,
                      "tablename" : tablename,
                      "url"       : map_url,
                      "active"    : True,          # Is the feed displayed upon load or needs ticking to load afterwards?
-                     #"marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
+                     "marker"    : marker,        # Optional: A per-Layer marker dict for the icon used to display the feature
                      #"opacity"   : 1,            # Optional
                      "cluster_distance" : 150,
                      #"cluster_threshold"         # Optional
