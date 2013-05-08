@@ -1182,17 +1182,23 @@ class S3PivotTable(object):
                 
             # Generate the data frame -----------------------------------------
             #
-            df = []
-            insert = df.append
+            gfields = self.gfields
+            pkey_colname = gfields[self.pkey]
+            rows_colname = gfields[self.rows]
+            cols_colname = gfields[self.cols]
+            
+            dataframe = []
+            insert = dataframe.append
             expand = self._expand
+
             for _id in records:
                 row = records[_id]
-                rows_cn = rfields[self.rows].colname
-                cols_cn = rfields[self.cols].colname
-                item = {key: _id,
-                        rows_cn: row[rows_cn],
-                        cols_cn: row[cols_cn]}
-                df.extend(expand(item))
+                item = {key: _id}
+                if rows_colname:
+                    item[rows_colname] = row[rows_colname]
+                if cols_colname:
+                    item[cols_colname] = row[cols_colname]
+                dataframe.extend(expand(item))
                 
             self.records = records
 
@@ -1203,12 +1209,10 @@ class S3PivotTable(object):
                 
             # Group the records -----------------------------------------------
             #
-            tfields = self.tfields
-            hpkey = tfields[self.pkey]
-            hrows = self.rows and tfields[self.rows] or None
-            hcols = self.cols and tfields[self.cols] or None
-
-            matrix, rnames, cnames = self._pivot(df, hpkey, hrows, hcols)
+            matrix, rnames, cnames = self._pivot(dataframe,
+                                                 pkey_colname,
+                                                 rows_colname,
+                                                 cols_colname)
 
             #if DEBUG:
                 #duration = datetime.datetime.now() - _start
@@ -1768,14 +1772,14 @@ class S3PivotTable(object):
     # -------------------------------------------------------------------------
     # Internal methods
     # -------------------------------------------------------------------------
-    def _pivot(self, items, hpkey, hrows, hcols):
+    def _pivot(self, items, pkey_colname, rows_colname, cols_colname):
         """
             2-dimensional pivoting of a list of unique items
 
             @param items: list of unique items as dicts
-            @param hpkey: field name of the primary key
-            @param hrows: field name of the row dimension
-            @param hcols: field name of the column dimension
+            @param pkey_colname: column name of the primary key
+            @param rows_colname: column name of the row dimension
+            @param cols_colname: column name of the column dimension
 
             @return: tuple of (cell matrix, row headers, column headers),
                      where cell matrix is a 2-dimensional array [rows[columns]]
@@ -1792,8 +1796,8 @@ class S3PivotTable(object):
         cindex = 0
         for item in items:
 
-            rvalue = item[hrows] if hrows else None
-            cvalue = item[hcols] if hcols else None
+            rvalue = item[rows_colname] if rows_colname else None
+            cvalue = item[cols_colname] if cols_colname else None
 
             if rvalue not in rvalues:
                 r = rvalues[rvalue] = rindex
@@ -1807,9 +1811,9 @@ class S3PivotTable(object):
                 c = cvalues[cvalue]
 
             if (r, c) not in cells:
-                cells[(r, c)] = [item[hpkey]]
+                cells[(r, c)] = [item[pkey_colname]]
             else:
-                cells[(r, c)].append(item[hpkey])
+                cells[(r, c)].append(item[pkey_colname])
 
         matrix = []
         for r in xrange(len(rvalues)):
@@ -2066,15 +2070,10 @@ class S3PivotTable(object):
         rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
         self.rfields = rfields
 
-        # tfields (transposition-fields): fields to group the records by
-        key = lambda s: str(hash(s)).replace("-", "_")
-        tfields = {pkey:key(pkey)}
-        if rows:
-            tfields[rows] = key(rows)
-        if cols:
-            tfields[cols] = key(cols)
-        self.tfields = tfields
-
+        # gfields (grouping-fields): fields to group the records by
+        self.gfields = {pkey: rfields[pkey].colname,
+                        rows: rfields[rows].colname if rows else None,
+                        cols: rfields[cols].colname if cols else None}
         return
 
     # -------------------------------------------------------------------------
@@ -2183,18 +2182,16 @@ class S3PivotTable(object):
             @param field: the field to expand (None for all fields)
         """
 
-        rfields = self.rfields
-        tfields = self.tfields
-
-        item = [(k, row[rfields[f].colname]) for f, k in tfields.items()]
+        item = [(colname, row[colname])
+                for selector, colname in self.gfields.items() if colname]
 
         pairs = []
         append = pairs.append
-        for k, v in item:
-            if type(v) is list:
-                append([(k, value) for value in v])
+        for colname, value in item:
+            if type(value) is list:
+                append([(colname, v) for v in value])
             else:
-                append([(k, v)])
+                append([(colname, value)])
         return [dict(i) for i in product(*pairs)]
 
     # -------------------------------------------------------------------------
