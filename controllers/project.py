@@ -73,9 +73,25 @@ def project():
 
     # Pre-process
     def prep(r):
+        
+        s3db.add_component("project_task_activity",
+                    project_task = Storage(
+                    joinby="task_id",
+                    multiple = False))
+
+        s3db.add_component("project_task_project",
+                    project_task = Storage(
+                    joinby = "task_id",
+                    multiple = False))
+
+        s3db.add_component("project_task_milestone",
+                    project_task = Storage(
+                    joinby = "task_id",
+                    multiple = False))
+
         # Location Filter
         s3db.gis_location_filter(r)
-        
+
         if r.component and r.component.name == "project_task":
             list_fields = s3db.get_config("project_task",
                                           "list_fields")
@@ -259,6 +275,11 @@ def project():
                 filter_by_type = (db.hrm_human_resource.type == group)
                 r.resource.add_component_filter("human_resource", filter_by_type)
 
+        if not r.method in ("search", "report"):
+            # Insert fields to control the Activity & Milestone
+            crud_form = s3db.project_task_form_inject(r, project=False)
+            s3db.configure("project_task", crud_form = crud_form)
+
         return True
     s3.prep = prep
 
@@ -279,10 +300,7 @@ def project():
                     # Set the minimum end_date to the same as the start_date
                     s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
-            elif r.component_name == "task" and "form" in output and \
-                 not r.method in ("search", "report"):
-                # Insert fields to control the Activity & Milestone
-                output = s3db.project_task_form_inject(r, output, project=False)
+ 
         return output
     s3.postp = postp
 
