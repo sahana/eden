@@ -82,6 +82,7 @@ div.dl {
 /* Push down below Nav */
 #alert-space {
     padding-top: 50px;
+    
 }
 .alert.alert-success {
     border: 1px solid #b2b2b2;
@@ -100,16 +101,153 @@ a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
 }
 
-/* Modals */
-/* Imitate Bootstrap in jQueryUI Modal */
-#popup #submit_record__row {
-    text-align: right;
+/* Card Icons */
+i.icon.icon-activity,
+i.icon.icon-alert,
+i.icon.icon-incident, 
+i.icon.icon-report,
+i.icon.icon-assessment,
+i.icon.icon-disaster,
+i.icon.icon-training_material,
+i.icon.icon-plans  {
+    font-size: 14px;
+    display: inline-block;
+    color: #413b3b;
+    padding-left: 1px;
+    width: 106px;
+}
+
+/* Activity */
+/*.icon-truck:*/
+.icon-activity:before  {
+    content: "\f0d1";
+}
+/* Alert */
+/*.icon-bullhorn*/
+.icon-alert:before {
+    content: "\f0a1";
+}
+/* Report */
+/*.icon-file-alt*/
+.icon-report:before {
+    content: "\f0f6";
+}
+/* Training Material */
+/*icon-book*/
+i.icon.icon-training_material:before {
+    content: "\f02d";
+}
+
+/* Assessment */
+/*icon-info-sign*/
+i.icon.icon-assessment:before{
+    content: "\f05a";
+}
+/* Disaster */
+/* Incident */
+/*icon-warning-sign*/
+i.icon.icon-incident:before,
+i.icon.icon-disaster:before {
+    content: "\f071";
+}
+
+/* Home Cards */
+div.edit-bar.fright {
+    color: #8a8989;
+    font-size: 14px;
+    position: relative;
+    top: 4px;
+    float: right;
+}
+
+div.attachment.fright {
+    font-size: 21px;
+    padding: 10px;
+}
+
+div.media {
+    margin-top: 12px;
+    font: 13px/17px "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #333;
+    word-spacing: -1px;
+}
+
+div.card-person {
+    margin-top: 5px;
+}
+
+div.card-person a {
+    font-size: 11px;
+    color: #7b7b78;
+    text-transform: none;
+}
+
+a.card-organisation{
+    font-size: 10px;
+    text-transform: uppercase;
+}
+a.card-organisation:hover,
+div.card-person a:hover {
+    color: #26a0c3;
+    text-decoration: none;
+}
+
+div.card-header {
+    border-bottom: 1px solid #bdbdbb;
+    padding: 5px;
+    margin: -3px -5px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    background: rgba(255,255,255,1);
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
+}
+
+
+/*disaster cards*/
+
+
+
+div.thumbnail.disaster {
+    border: 3px solid #f8c464;    
 }
 .ui-dialog-titlebar-close:after {
     content: "x";
 }
 
-.ui-dialog-titlebar {
+#event_datalist a h5 {
+	font-size: 13px;
+	margin-top: 1px;
+	width: 70%;
+	
+	margin-bottom: -1px;
+	color: #666;
+	line-height: 16px;
+	word-spacing: -1px;
+	letter-spacing: 0;
+	padding-top: 3px;
+	padding-left: 5px;
+	padding-bottom: 5px;
+}
+
+#event_datalist a h5:hover{
+	color: #26a0c3;
+}
+
+#event_datalist a span.date-title {
+	  border-left: 0px;
+	  margin-left: -1px;
+  }
+
+
+
+/* Modals */
+div.modal-header {
     text-align: center;
     background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8)) !important;
     background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
@@ -313,6 +451,7 @@ label#post-cms_post_created_on-date-filter__label{
 	font-size: 12px;
 	margin-top: 2px;
 }
+
 #post-cms_post_created_on-date-filter-le {
 	margin-left: 17px;
 	
