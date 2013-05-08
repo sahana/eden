@@ -167,6 +167,10 @@ class SyncDataModel(S3Model):
                                    label=T("Accept Push")),
                              *s3_meta_fields())
 
+        # Virtual fields
+        table.last_pull_time = Field.Lazy(self.sync_repository_last_pull_time)
+        table.last_push_time = Field.Lazy(self.sync_repository_last_push_time)
+        
         # Field configuration
         table.uuid.label = "UUID"
         table.uuid.readable = True
@@ -235,7 +239,6 @@ class SyncDataModel(S3Model):
                                                                   "task"]),
                   update_next=URL(c="sync", f="repository", args=["[id]"]))
 
-        table.virtualfields.append(SyncRepositoryVirtualFields())
         set_method("sync", "repository", method="now", action=sync_now)
 
         # Reusable Fields
@@ -527,6 +530,44 @@ class SyncDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def sync_repository_last_pull_time(row):
+        """ Last pull synchronization date/time for this repository """
+
+        try:
+            repository_id = row["sync_repository.id"]
+        except AttributeError:
+            return "-"
+
+        table = current.s3db.sync_task
+        query = (table.repository_id == repository_id)
+        task = current.db(query).select(orderby=~table.last_pull,
+                                        limitby=(0,1)).first()
+        if task and task.last_pull:
+            return S3DateTime.datetime_represent(task.last_pull, utc=True)
+        else:
+            return current.T("never")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def sync_repository_last_push_time(row):
+        """ Last push synchronization date/time for this repository """
+
+        try:
+            repository_id = row["sync_repository.id"]
+        except AttributeError:
+            return "-"
+
+        table = current.s3db.sync_task
+        query = (table.repository_id == repository_id)
+        task = current.db(query).select(orderby=~table.last_push,
+                                        limitby=(0,1)).first()
+        if task and task.last_push:
+            return S3DateTime.datetime_represent(task.last_push, utc=True)
+        else:
+            return current.T("never")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def sync_task_represent(task_id):
         """ Task representation """
 
@@ -637,44 +678,6 @@ class SyncDataModel(S3Model):
             if row:
                 form.errors.resource_name = \
                 T("This resource is already configured for this repository")
-
-# =============================================================================
-class SyncRepositoryVirtualFields:
-    """ Repository virtual fields """
-
-    def last_pull_time(self):
-        """ Last pull synchronization date/time for this repository """
-
-        try:
-            repository_id = self.sync_repository.id
-        except AttributeError:
-            return "-"
-
-        table = current.s3db.sync_task
-        query = (table.repository_id == repository_id)
-        task = current.db(query).select(orderby=~table.last_pull,
-                                        limitby=(0,1)).first()
-        if task:
-            return S3DateTime.datetime_represent(task.last_pull, utc=True)
-        else:
-            return current.T("never")
-
-    def last_push_time(self):
-        """ Last push synchronization date/time for this repository """
-
-        try:
-            repository_id = self.sync_repository.id
-        except AttributeError:
-            return "-"
-
-        table = current.s3db.sync_task
-        query = (table.repository_id == repository_id)
-        task = current.db(query).select(orderby=~table.last_push,
-                                        limitby=(0,1)).first()
-        if task:
-            return S3DateTime.datetime_represent(task.last_push, utc=True)
-        else:
-            return current.T("never")
 
 # =============================================================================
 def sync_rheader(r, tabs=[]):
