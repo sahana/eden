@@ -298,43 +298,61 @@ def render_events(listid, resource, rfields, record, **attr):
 
     item_class = "thumbnail"
 
-    #raw = record._row
+    raw = record._row
     name = record["event_event.name"]
     date = record["event_event.zero_hour"]
+    closed = raw["event_event.closed"]
+    event_type = record["event_event_type.name"]
 
-    permit = current.auth.s3_has_permission
-    table = current.db.event_event
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="event", f="event",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.event_event.title_update,
-                     )
+    if closed:
+        edit_bar = DIV()
     else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                      )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
+        item_class = "%s disaster" % item_class
+
+        permit = current.auth.s3_has_permission
+        table = resource.table
+        if permit("update", table, record_id=record_id):
+            edit_btn = A(I(" ", _class="icon icon-edit"),
+                         _href=URL(c="event", f="event",
+                                   args=[record_id, "update.popup"],
+                                   vars={"refresh": listid,
+                                         "record": record_id}),
+                         _class="s3_modal",
+                         _title=current.response.s3.crud_strings.event_event.title_update,
+                         )
+        else:
+            edit_btn = ""
+        if permit("delete", table, record_id=record_id):
+            delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                           _class="dl-item-delete",
+                          )
+        else:
+            delete_btn = ""
+        edit_bar = DIV(edit_btn,
+                       delete_btn,
+                       _class="edit-bar fright",
+                       )
 
     # Render the item
-    item = DIV(DIV(A(name,
-                     _href=URL(c="event", f="event",
-                               args=[record_id, "profile"]),
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="themes",
+                                  args=["DRMP", "img", "%s.png" % event_type]),
+                         ),
+                     _class="pull-left",
+                     _href="#",
                      ),
-                   " ",
-                   SPAN(date,
-                        _class="date-title",
-                        ),
+  		           edit_bar,
+                   DIV(A(H5(name,
+                            _class="media-heading"),
+                         SPAN(date,
+                              _class="date-title",
+                              ),
+                         _href=URL(c="event", f="event",
+                                   args=[record_id, "profile"]),
+                         ),
+                       _class="media-body",
+                       ),
                    _class="media",
                    ),
                _class=item_class,

@@ -201,6 +201,13 @@
                 </xsl:when>
             </xsl:choose>
 
+            <!-- Link to Event Type -->
+            <reference field="event_type_id" resource="event_event_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Type']"/>
+                </xsl:attribute>
+            </reference>
+
             <!-- Link to Location(s) -->
             <xsl:if test="col[@field=$Country]!=''">
                 <resource name="event_event_location">

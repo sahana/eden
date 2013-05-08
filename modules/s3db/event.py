@@ -205,6 +205,7 @@ class S3EventModel(S3Model):
                   deduplicate=self.event_duplicate,
                   list_fields = ["id",
                                  "name",
+                                 "event_type_id$name",
                                  (T("Location"), "location.name"),
                                  "zero_hour",
                                  "exercise",
