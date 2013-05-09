@@ -625,7 +625,9 @@ class S3PersonModel(S3Model):
                                                                     T("The first or only name of the person (mandatory)."))),
                                    label = T("First Name")),
                              Field("middle_name", length=64, # Mayon Compatibility
-                                   label = T("Middle Name")),
+                                   represent = lambda v: v or messages.NONE,
+                                   label = T("Middle Name"),
+                                   ),
                              Field("last_name", length=64, # Mayon Compatibility
                                    label = T("Last Name"),
                                    requires = last_name_validate),
@@ -718,7 +720,8 @@ class S3PersonModel(S3Model):
                                     "person_details.occupation",
                                     "person_details.company",
                                     "person_details.affiliations",
-                                    "comments")
+                                    "comments",
+                                    )
 
         # Resource configuration
         self.configure(tablename,
@@ -730,7 +733,7 @@ class S3PersonModel(S3Model):
                                        #"picture",
                                        "gender",
                                        "age_group",
-                                       (messages.ORGANISATION, "hrm_human_resource:organisation_id$name"),
+                                       (messages.ORGANISATION, "human_resource.organisation_id"),
                                        ],
                         crud_form = crud_form,
                         onvalidation=self.pr_person_onvalidation,
@@ -773,6 +776,23 @@ class S3PersonModel(S3Model):
         add_component("msg_subscription", pr_person="person_id")
 
         add_component("member_membership", pr_person="person_id")
+
+        # Email
+        add_component("pr_contact",
+                      pr_person=dict(
+                        name="phone",
+                        joinby="pe_id",
+                        filterby="contact_method",
+                        filterfor=["EMAIL"],
+                      ))
+        # Mobile Phone
+        add_component("pr_contact",
+                      pr_person=dict(
+                        name="phone",
+                        joinby="pe_id",
+                        filterby="contact_method",
+                        filterfor=["SMS"],
+                      ))
 
         # HR Record
         add_component("hrm_human_resource", pr_person="person_id")

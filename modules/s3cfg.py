@@ -997,6 +997,7 @@ class S3Config(Storage):
     def get_hrm_staff_label(self):
         """
             Label for 'Staff'
+            e.g. 'Contacts'
         """
         return current.T(self.hrm.get("staff_label", "Staff"))
 

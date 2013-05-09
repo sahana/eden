@@ -2398,9 +2398,13 @@ class S3CRUD(S3Method):
         if "delete" in buttons:
             authorised = self._permitted(method="delete")
             if authorised and href_delete and deletable:
+                if current.response.s3.crud.formstyle == "bootstrap":
+                    _class="btn btn-primary delete-btn"
+                else:
+                    _class="delete-btn"
                 delete_btn = self.crud_button(DELETE, _href=href_delete,
                                               _id="delete-btn",
-                                              _class="delete-btn")
+                                              _class=_class)
                 output["delete_btn"] = delete_btn
 
         return output

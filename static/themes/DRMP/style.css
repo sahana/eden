@@ -60,6 +60,22 @@ div.dl {
     height: 100px;
 }
 
+#delete-btn {
+    margin-bottom: 0;
+}
+
+/* Match .btn.btn-primary */
+.delete-btn {
+    background-color: #006DCC;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-radius: 4px 4px 4px 4px;
+    color: #FFFFFF;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
+    padding: 4px 12px;
+}
+
 /* Push down below Nav */
 #alert-space {
     padding-top: 50px;

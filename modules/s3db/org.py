@@ -1208,13 +1208,14 @@ class S3OrganisationResourceModel(S3Model):
         # ---------------------------------------------------------------------
         # Resource Type data
         #
-        tablename = "org_resource_type" # Or should it be org_organisation_resource_type?
+        tablename = "org_resource_type"
         table = self.define_table(tablename,
                                   Field("name", label=T("Resource Type")),
                                   s3_comments(),
                                   *s3_meta_fields())
 
         # CRUD strings
+        ADD_RESOURCE_TYPE = T("Add New Resource Type")
         crud_strings[tablename] = Storage(
             title_create=T("Add Resource Type"),
             title_display=T("Resource Type Details"),
@@ -1222,9 +1223,9 @@ class S3OrganisationResourceModel(S3Model):
             title_update=T("Edit Resource Type"),
             title_search=T("Search Resource  Types"),
             title_upload=T("Import Resource Types"),
-            subtitle_create=T("Add New Resource Type"),
+            subtitle_create=ADD_RESOURCE_TYPE,
             label_list_button=T("Resource Types"),
-            label_create_button=T("Add New Resourc Typee"),
+            label_create_button=ADD_RESOURCE_TYPE,
             label_delete_button=T("Delete Resource Type"),
             msg_record_created=T("Resource Type added"),
             msg_record_modified=T("Resource Type updated"),
@@ -1244,7 +1245,7 @@ class S3OrganisationResourceModel(S3Model):
                             represent=represent,
                             comment=S3AddResourceLink(c="org",
                                             f="resource_type",
-                                            label=T("Add Resource Type"),
+                                            label=ADD_RESOURCE_TYPE,
                                             ),
                             label=T("Resource Type"),
                             ondelete="SET NULL")

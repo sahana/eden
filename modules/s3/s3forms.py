@@ -1619,7 +1619,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     "component": component_name,
                     "fields": headers,
                     "defaults": self._filterby_defaults(),
-                    "data": items}
+                    "data": items
+                    }
         else:
             raise AttributeError("Undefined component")
 
@@ -1668,8 +1669,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param attributes: keyword attributes for this widget
         """
 
-        self.upload = Storage()
-
         if value is None:
             value = field.default
         if isinstance(value, basestring):
@@ -1679,6 +1678,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
             value = json.dumps(value)
         if data is None:
             raise SyntaxError("No resource structure information")
+
+        self.upload = Storage()
+
+        if self.options.multiple is False:
+            multiple = False
+        else:
+            multiple = True
 
         # Get the table
         resource = self.resource
@@ -1731,6 +1737,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                          editable=editable,
                                          deletable=deletable,
                                          readonly=True,
+                                         multiple=multiple,
                                          index=i,
                                          _id="read-row-%s" % rowname,
                                          _class="read-row inline-form")
@@ -1747,6 +1754,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                      editable=True,
                                      deletable=True,
                                      readonly=False,
+                                     multiple=multiple,
                                      index=0,
                                      _id="edit-row-%s" % formname,
                                      _class="edit-row inline-form hide")
@@ -1755,13 +1763,18 @@ class S3SQLInlineComponent(S3SQLSubForm):
         # Add-row
         permitted = permit("create", tablename)
         if permitted:
+            _class = "add-row inline-form"
+            if not multiple and has_rows:
+                _class = "%s hide" % _class
             has_rows = True
             add_row = self._render_item(table, None, fields,
                                         editable=True,
                                         deletable=True,
                                         readonly=False,
+                                        multiple=multiple,
                                         _id="add-row-%s" % formname,
-                                        _class="add-row inline-form")
+                                        _class=_class
+                                        )
             action_rows.append(add_row)
 
         # Empty edit row
@@ -1769,6 +1782,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                       editable=True,
                                       deletable=True,
                                       readonly=False,
+                                      multiple=multiple,
                                       index="default",
                                       _id="empty-edit-row-%s" % formname,
                                       _class="empty-row inline-form hide")
@@ -1779,6 +1793,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                       editable=True,
                                       deletable=True,
                                       readonly=True,
+                                      multiple=multiple,
                                       index="none",
                                       _id="empty-read-row-%s" % formname,
                                       _class="empty-row inline-form hide")
@@ -1790,7 +1805,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                        _value = value,
                        requires=lambda v: (v, None))
         attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = attr["_class"] + " hide"
+        attr["_class"] = "%s hide" % attr["_class"]
         attr["_id"] = real_input
 
         if has_rows:
@@ -2144,6 +2159,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                      readonly=True,
                      editable=False,
                      deletable=False,
+                     multiple=True,
                      index="none",
                      **attributes):
         """
@@ -2155,6 +2171,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param readonly: render a read-row (otherwise edit-row)
             @param editable: whether the record can be edited
             @param deletable: whether the record can be deleted
+            @param multiple: whether multiple records can be added
             @param index: the row index
             @param attributes: HTML attributes for the row
         """
@@ -2256,7 +2273,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 cnc = action(T("Cancel editing"),
                              "cancel.png", "cnc", index)
                 columns.append(cnc)
-            else:
+            elif multiple:
                 columns.append(TD())
                 add = action(T("Add this entry"),
                              "add.png", "add", index, throbber=True)

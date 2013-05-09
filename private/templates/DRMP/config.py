@@ -111,6 +111,7 @@ settings.ui.update_label = "Edit"
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
+settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
 # Uncomment to show the Organisation name in HR represents
@@ -123,6 +124,10 @@ settings.hrm.use_credentials = False
 settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.use_teams = False
+
+# -----------------------------------------------------------------------------
+# Org
+settings.org.site_label = "Office"
 
 # -----------------------------------------------------------------------------
 # Project
@@ -223,6 +228,7 @@ def customize_cms_post(**attr):
                     S3SQLInlineComponent(
                         "event_post",
                         label = T("Disaster(s)"),
+                        multiple = False,
                         fields = ["event_id"],
                         orderby = "event_id$name",
                     ),
@@ -1060,7 +1066,6 @@ settings.ui.customize_org_organisation = customize_org_organisation
 def customize_project_project(**attr):
     """
         Customize project_project controller
-        - Data Model
     """
 
     s3 = current.response.s3
@@ -1174,13 +1179,11 @@ settings.ui.customize_project_project = customize_project_project
 # -----------------------------------------------------------------------------
 def customize_org_resource(**attr):
     """
-        Customize project_project controller
-        - Data Model
+        Customize org_resource controller
     """
 
     s3 = current.response.s3
 
-    tablename = "org_resource"
     table = current.s3db.org_resource
     
     # Configure fields
@@ -1227,6 +1230,134 @@ def customize_org_resource(**attr):
     return attr
 
 settings.ui.customize_org_resource = customize_org_resource
+
+# -----------------------------------------------------------------------------
+def customize_pr_person(**attr):
+    """
+        Customize pr_person controller
+    """
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    tablename = "pr_person"
+    table = s3db.pr_person
+    
+    # CRUD Strings
+    ADD_CONTACT = T("Add New Contact")
+    s3.crud_strings[tablename] = Storage(
+        title_create = T("Add Contact"),
+        title_display = T("Contact Details"),
+        title_list = T("Contacts"),
+        title_update = T("Edit Contact Details"),
+        title_search = T("Search Contacts"),
+        subtitle_create = ADD_CONTACT,
+        label_list_button = T("List Contacts"),
+        label_create_button = ADD_CONTACT,
+        label_delete_button = T("Delete Contact"),
+        msg_record_created = T("Contact added"),
+        msg_record_modified = T("Contact details updated"),
+        msg_record_deleted = T("Contact deleted"),
+        msg_list_empty = T("No Contacts currently registered"))
+
+    MOBILE = settings.get_ui_label_mobile_phone()
+    EMAIL = T("Email")
+
+    s3db.hrm_human_resource.organisation_id.widget = None
+    s3db.pr_contact.value.label = ""
+
+    crud_form = S3SQLCustomForm(
+            "first_name",
+            "middle_name",
+            "last_name",
+            S3SQLInlineComponent(
+                "human_resource",
+                name = "human_resource",
+                label = "",
+                multiple = False,
+                fields = ["organisation_id",
+                          "job_title_id",
+                          "site_id",
+                          ],
+                filterby = dict(field = "contact_method",
+                                options = "SMS"
+                                )
+            ),
+            S3SQLInlineComponent(
+                "contact",
+                name = "phone",
+                label = MOBILE,
+                multiple = False,
+                fields = ["value",
+                          ],
+                filterby = dict(field = "contact_method",
+                                options = "SMS"
+                                )
+            ),
+            S3SQLInlineComponent(
+                "contact",
+                name = "email",
+                label = EMAIL,
+                multiple = False,
+                fields = ["value",
+                          ],
+                filterby = dict(field = "contact_method",
+                                options = "EMAIL"
+                                )
+            ),
+        )
+
+    list_fields = ["first_name",
+                   "middle_name",
+                   "last_name",
+                   (current.messages.ORGANISATION, "human_resource.organisation_id"),
+                   (T("Job Title"), "human_resource.job_title_id"),
+                   (T("Office"), "human_resource.site_id"),
+                   (EMAIL, "email.value"),
+                   (MOBILE, "phone.value"),
+                   ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   list_fields = list_fields,
+                   listadd = True,
+                   )
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive:
+            output["rheader"] = None
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="pr", f="person",
+                                    args=["[id]", "read"]))
+                       ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("update", table):
+                actions.append(dict(label=str(T("Edit")),
+                                    _class="action-btn",
+                                    url=URL(c="pr", f="person",
+                                            args=["[id]", "update"])))
+            if has_permission("delete", table):
+                actions.append(dict(label=str(T("Delete")),
+                                    _class="action-btn",
+                                    url=URL(c="pr", f="person",
+                                            args=["[id]", "delete"])))
+            s3.actions = actions
+            if "form" in output:
+                output["form"].add_class("pr_person")
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_pr_person = customize_pr_person
 
 # =============================================================================
 # Template Modules
