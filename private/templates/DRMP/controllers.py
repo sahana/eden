@@ -192,32 +192,40 @@ def _updates():
     filter_widgets = [S3TextFilter(["body"],
                                    label="",
                                    _class="filter-search",
-                                   _placeholder=T("Search").upper()),
+                                   #_placeholder=T("Search").upper(),
+                                   ),
                       S3OptionsFilter("series_id",
                                       label=T("Filter by Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
-                                      cols=3),
+                                      cols=3,
+                                      hidden=True,
+                                      ),
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
                                        levels=["L1", "L2", "L3"],
                                        #represent="%(name)s",
                                        widget="multiselect",
-                                       cols=3),
+                                       cols=3,
+                                       hidden=True,
+                                       ),
                       S3OptionsFilter("created_by$organisation_id",
                                       label=T("Filter by Organization"),
                                       represent="%(name)s",
                                       widget="multiselect",
-                                      #widget="multiselect-bootstrap",
-                                      cols=3),
+                                      cols=3,
+                                      hidden=True,
+                                      ),
                       S3DateFilter("created_on",
                                    label=T("Filter by Date"),
-                                   hide_time=True),
+                                   hide_time=True,
+                                   hidden=True,
+                                   ),
                       ]
 
     s3db.configure("cms_post",
                    filter_formstyle = filter_formstyle,
-                   filter_submit = (T("Filter Results"), "btn btn-primary"),
+                   filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
                    list_layout = list_layout,
                    # Create form comes via AJAX in a Modal
@@ -272,6 +280,15 @@ def _updates():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+        scripts = []
+        sappend = scripts.append
+        # Style the Search TextFilter widget
+        sappend('''$('#post-cms_post_body-text-filter__row').addClass('input-append').append('<span class="add-on"><i class="icon-search"></i></span>')''')
+        # Button to toggle Advanced Form
+        sappend('''$('#list-filter').append('<a class="accordion-toggle"><i class="icon-reorder"></i> %s</a>')''' % T("Advanced Search"))
+        sappend('''$('.accordion-toggle').click(function(){$('.advanced').toggle()})''')
+        s3.jquery_ready.append('''\n'''.join(scripts))
+        
         # Latest 5 Disasters
         resource = s3db.resource("event_event")
         list_fields = ["name",
@@ -341,7 +358,7 @@ def _login():
                 )
 
 # -----------------------------------------------------------------------------
-def filter_formstyle(row_id, label, widget, comment):
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
     """
         Custom Formstyle for FilterForm
 
@@ -349,12 +366,18 @@ def filter_formstyle(row_id, label, widget, comment):
         @param label: the label
         @param widget: the form widget
         @param comment: the comment
+        @param hidden: whether the row should initially be hidden or not
     """
 
-    if label:
-        return DIV(label, widget)
+    if hidden:
+        _class = "advanced hide"
     else:
-        return DIV(widget)
+        _class= ""
+
+    if label:
+        return DIV(label, widget, _id=row_id, _class=_class)
+    else:
+        return DIV(widget, _id=row_id, _class=_class)
 
 # -----------------------------------------------------------------------------
 def render_posts(listid, resource, rfields, record, **attr):

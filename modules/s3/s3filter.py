@@ -1206,6 +1206,7 @@ class S3FilterForm(object):
             widget = f(resource, get_vars, alias=alias)
             label = f.opts["label"]
             comment = f.opts["comment"]
+            hidden = f.opts["hidden"]
             widget_id = f.attr["_id"]
             if widget_id:
                 row_id = "%s__row" % widget_id
@@ -1219,7 +1220,7 @@ class S3FilterForm(object):
                 label = ""
             if not comment:
                 comment = ""
-            rappend(formstyle(row_id, label, widget, comment))
+            rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
 
         submit = self.opts.get("submit", False)
         if submit:
@@ -1283,7 +1284,7 @@ class S3FilterForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _formstyle(row_id, label, widget, comment):
+    def _formstyle(row_id, label, widget, comment, hidden=False):
         """
             Default formstyle for search forms
 
@@ -1291,9 +1292,16 @@ class S3FilterForm(object):
             @param label: the label
             @param widget: the form widget
             @param comment: the comment
+            @param hidden: whether the row should initially be hidden or not
         """
 
-        row = TR(TD(label, _class="w2p_fl"), TD(widget), _id=row_id)
+        if hidden:
+            _class = "advanced hide"
+        else:
+            _class = ""
+
+        row = TR(TD(label, _class="w2p_fl"), TD(widget),
+                 _id=row_id, _class=_class)
 
         if comment:
             row.append(TD(DIV(_class="tooltip",
