@@ -808,13 +808,13 @@ class S3Config(Storage):
 
     def get_ui_label_read(self):
         """
-            Label for buttons in list views which lead to a Read-opnly 'Display' view
+            Label for buttons in list views which lead to a Read-only 'Display' page
         """
         return self.ui.get("read_label", "Open")
 
     def get_ui_label_update(self):
         """
-            Label for buttons in list views which lead to a Read-opnly 'Display' view
+            Label for buttons in list views which lead to an Editable 'Update' page
         """
         return self.ui.get("update_label", "Open")
 
@@ -828,7 +828,10 @@ class S3Config(Storage):
         return self.ui.get("search_submit_button", "search-button")
 
     def get_ui_social_buttons(self):
-        """ Display social media Buttons in the footer? """
+        """
+            Display social media Buttons in the footer?
+            - requires support in the Theme
+        """
         return self.ui.get("social_buttons", False)
 
     # =========================================================================

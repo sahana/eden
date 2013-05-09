@@ -3,6 +3,7 @@ Name,Height,Width,Image
 "activity",34,20,"gis_marker.image.DRMP_Activity.png"
 "alert",34,20,"gis_marker.image.DRMP_Alert.png"
 "assessment",34,20,"gis_marker.image.DRMP_Assessment.png"
+"incident",34,20,"gis_marker.image.DRMP_Incident.png"
 "office",34,20,"gis_marker.image.DRMP_Office.png"
 "project",34,20,"gis_marker.image.DRMP_Project.png"
 "report",34,20,"gis_marker.image.DRMP_Report.png"

@@ -103,7 +103,6 @@ class S3EventModel(S3Model):
             msg_record_created = T("Event Type added"),
             msg_record_modified = T("Event Type updated"),
             msg_record_deleted = T("Event Type removed"),
-            #msg_list_empty = T("No Event Types currently registered in this event")
             msg_list_empty = T("No Event Types currently registered")
             )
 
@@ -348,6 +347,9 @@ class S3EventModel(S3Model):
 
         data = item.data
         name = data.get("name", None)
+
+        if not name:
+            return
 
         table = item.table
         query = (table.name == name)
@@ -784,6 +786,9 @@ class S3IncidentTypeModel(S3Model):
 
         data = item.data
         name = data.get("name", None)
+
+        if not name:
+            return
 
         table = item.table
         query = (table.name == name)

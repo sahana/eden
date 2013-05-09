@@ -20,6 +20,7 @@ settings = current.deployment_settings
 """
     Template settings for DRM Portal
 """
+
 # =============================================================================
 # System Settings
 # -----------------------------------------------------------------------------
@@ -33,10 +34,6 @@ settings.auth.registration_requests_site = False
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
 
 settings.auth.record_approval = False
-
-settings.auth.registration_roles = {"site_id": ["reader",
-                                                ],
-                                    }
 
 # -----------------------------------------------------------------------------
 # Security Policy
@@ -126,6 +123,7 @@ settings.hrm.use_teams = False
 # Project
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
+
 # -----------------------------------------------------------------------------
 def location_represent(id, row=None):
     """
@@ -538,7 +536,7 @@ def customize_event_event(**attr):
                             context = "event",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
-                            marker = "alert",
+                            marker = "incident",
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
@@ -758,7 +756,7 @@ def customize_gis_location(**attr):
                             context = "location",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
-                            marker = "alert",
+                            marker = "incident",
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",
@@ -942,7 +940,7 @@ def customize_org_organisation(**attr):
                             context = "organisation",
                             filter = S3FieldSelector("series_id$name") == "Incident",
                             icon = "icon-warning-sign",
-                            marker = "alert",
+                            marker = "incident",
                             list_layout = render_profile_posts,
                             )
     assessments_widget = dict(label = "Assessments",

@@ -1,0 +1,2 @@
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Polygons","Style","Folder","Visible","Enabled","Cluster Distance"
+"Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","office.obsolete=False","obsolete","False",,,,"False",,1

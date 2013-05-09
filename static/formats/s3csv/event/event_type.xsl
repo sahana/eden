@@ -7,9 +7,9 @@
 
          CSV column...........Format..........Content
 
-         Name.................string..........Incident Type Name
+         Name.................string..........Event Type Name
          Comments.............string..........Comments
-         KV:XX................................Key,Value (Key = XX in column name, value = cell in row)
+         KV:XX................................Key,Value (Key = XX in column name, value = cell in row) <- Not yet supported by Model
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
