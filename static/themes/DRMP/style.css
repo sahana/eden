@@ -835,9 +835,9 @@ div.span5.card-details {
 	border: 1px solid #b2b2b2;
 	border-radius: 0 0 5px 5px;
 	position: relative;
-	top: 11px;
 	padding-top: 7px;
 	padding-left: 9px;
+	top: 0;
 }
 
 
@@ -851,7 +851,6 @@ div.span5.card-details {
 	text-align: center;
 	border-bottom: solid 1px #c9ccd0;
 	border-radius: 5px 5px 0 0;
-	margin-bottom: 4px;
 	text-transform: uppercase;
 	font-size: 18px;
 	background: rgba(255,255,255,1);
@@ -869,14 +868,210 @@ div.span5.card-details {
 	-webkit-box-shadow: 0 1px 1px #aaaaa7;
 	box-shadow: 0 1px 1px #aaaaa7;
 	padding: 7px 6px;
+	margin-bottom: -6px;
 }
 
 #submit_record__row input.btn.btn-primary {
 	padding: 5px 20px;
-	text-transform: uppercase;
 }
+
+
+/*Table Styling for Projects and Resources*/
 
 
 table#datatable.dataTable.display {
-	background-color: #f9f9f9;
+	background-color: #fff;
+	
 }
+
+#datatable_wrapper {
+	background: rgba(255,255,255,1);
+	background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+	background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	-moz-box-shadow: 0 -1px 3px #d7d7d6;
+	-webkit-box-shadow: 0 -1px 3px #d7d7d6;
+	box-shadow: 0 -1px 3px #d7d7d6;
+	border: 1px solid #9e9b9b;
+	-moz-box-shadow: 0 1px 1px #aaaaa7;
+	-webkit-box-shadow: 0 1px 1px #aaaaa7;
+	box-shadow: 0 1px 1px #aaaaa7;
+	border: 1px solid #b2b2b2;
+	border-radius: 5px;
+}
+
+#datatable_filter label {
+	position: relative;
+	padding-right: 25px;
+	margin-bottom: -37px;
+	margin-top: 13px;
+	font-weight: bold;
+}
+
+#datatable_length label select {
+	width: 75px;
+}
+
+#datatable_length label {
+	font-size: 12px;
+	margin-bottom: -1px;
+	margin-top: 2px;
+}
+
+#datatable_info.dataTables_info {
+	font-size: 12px;
+	padding-right: 15px;
+	color: #D35400;
+	line-height: 16px;
+}
+
+
+#datatable thead tr {
+	border: none;
+}
+
+#datatable tbody tr.odd {
+	background-color: #eeeeed;
+	padding-top: 5px;
+}
+
+#datatable tbody tr.odd td.sorting_1 {
+	background-color: rgba(51, 151, 219, 0.35);
+	color: #222220;
+	
+}
+
+#datatable tbody tr.even td.sorting_1 {
+	background-color: rgba(51, 151, 219, 0.17);
+	color: #222220;
+}
+
+#table-container tr.even td,
+#table-container tr.odd td {
+    border: 1px solid #d9d8d8;
+    border-left: none;
+	padding: 10px 10px;
+	font-size: 13px;
+}
+
+#table-container th {
+    border: 1px solid #d9d8d8;
+    border-left: none;
+	font-size: 13px;
+}
+
+
+h2 {
+	font-size: 30px;
+	text-shadow: 1px 0 2px #ffffff;
+}
+
+
+/*Project & Resource Read Screen*/
+
+form.form-horizontal {  /*temporary we need to pass another class to the form so I can style it without problems*/
+	background-color: #fff;
+	border: 1px solid #b2b2b2;
+	border-radius: 5px;
+	position: relative;
+	top: 11px;
+	padding-top: 7px;
+	padding-left: 9px;
+}
+
+#last_update {
+	color: #D35400;
+}
+
+#markDuplicate {
+	padding-bottom: 0;
+}
+
+#project_project_name__row.control-group {
+	margin-bottom: 15px;
+	text-align: left;
+	width: 100%;
+	font-size: 24px;
+	margin-top: 15px;
+}
+
+#project_project_name__row div.controls {
+	text-align: center;
+	border-bottom: solid 1px #c9ccd0;
+	border-radius: 5px 5px 0 0;
+	text-transform: uppercase;
+	font-size: 18px;
+	background: rgba(255,255,255,1);
+	background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+	background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	-moz-box-shadow: 0 1px 1px #aaaaa7;
+	-webkit-box-shadow: 0 1px 1px #aaaaa7;
+	box-shadow: 0 1px 1px #aaaaa7;
+	border: 1px solid #9e9b9b;
+	padding: 7px 6px;
+	margin: -23px -1px 4px -10px;
+}
+
+#project_project_organisation_id__row, 
+#project_project_sub_defaultlocation__row,
+#project_project_human_resource_id__row, 
+#project_project_start_date__row, 
+#project_project_end_date__row, 
+#project_project_sub_partnerorganisation__row, 
+#project_project_sub_donororganisation__row, 
+#project_project_budget__row {
+	margin-bottom: 5px;
+}
+
+#project_project_organisation_id__label,
+#project_project_sub_defaultlocation__label,
+#project_project_human_resource_id__label,
+#project_project_start_date__label,
+#project_project_end_date__label,
+#project_project_sub_partnerorganisation__label,
+#project_project_sub_donororganisation__label,
+#project_project_budget__label,
+#project_project_comments__label {
+	padding-top: 0;
+	font-weight: bold;
+}
+
+#project_project_name__label {
+	display: none;
+}
+
+#organisation_add,
+#staff_add {
+	font-size: 11px;
+}
+
+#org_resource_organisation_id__row,
+#org_resource_location_id__row,
+#org_resource_resource_type_id__row,
+#org_resource_quantity__row {
+	margin-bottom: 5px;
+}
+
+#org_resource_organisation_id__label,
+#org_resource_location_id__label,
+#org_resource_resource_type_id__label,
+#org_resource_quantity__label,
+#org_resource_comments__label {
+padding-top: 0;
+font-weight: bold;
+}
+
+b.red {
+	display: none;
+}
+
+
+
+
