@@ -2739,7 +2739,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
             elif callable(formstyle):
                 # @ToDo
-                row = formstyle(label, widget, comment, hidden=hidden)
+                row = formstyle(id, label, widget, comment, hidden=hidden)
             else:
                 raise
             Lx_rows.append(row)

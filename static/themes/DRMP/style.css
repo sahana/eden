@@ -36,6 +36,10 @@ form {
     margin-left: 20px;
 }
 
+.tooltip {
+    opacity: 1;
+}
+
 /* Over-ride widgets */
 /*
 #dl-container {

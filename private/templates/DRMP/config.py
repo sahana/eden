@@ -101,6 +101,11 @@ settings.ui.camp = True
 # Save Search Widget
 settings.save_search.widget = False
 
+# Uncomment to restrict the export formats available
+settings.ui.export_formats = ["xls"]
+
+settings.ui.update_label = "Edit"
+
 # =============================================================================
 # Module Settings
 
@@ -252,11 +257,13 @@ def customize_cms_post(**attr):
                            list_fields = list_fields,
                            )
 
-            crud_settings = current.response.s3.crud
-            crud_settings.formstyle = "bootstrap"
+            #crud_settings = current.response.s3.crud
+            #crud_settings.formstyle = "bootstrap"
             #crud_settings.submit_button = T("Save changes")
             # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
             #crud_settings.submit_style = "btn btn-primary"
+
+            s3.cancel = True
 
         # Call standard prep
         # (Done afterwards to ensure type field gets hidden)
@@ -635,8 +642,8 @@ def customize_event_event(**attr):
         msg_record_deleted = T("Disaster deleted"),
         msg_list_empty = T("No Disasters currently registered"))
 
-    crud_settings = s3.crud
-    crud_settings.formstyle = "bootstrap"
+    #crud_settings = s3.crud
+    #crud_settings.formstyle = "bootstrap"
     #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
@@ -835,8 +842,8 @@ def customize_gis_location(**attr):
                                     ],
                    )
 
-    crud_settings = s3.crud
-    crud_settings.formstyle = "bootstrap"
+    #crud_settings = s3.crud
+    #crud_settings.formstyle = "bootstrap"
     #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
@@ -1039,8 +1046,8 @@ def customize_org_organisation(**attr):
         msg_record_deleted = T("Stakeholder deleted"),
         msg_list_empty = T("No Stakeholders currently registered"))
 
-    crud_settings = s3.crud
-    crud_settings.formstyle = "bootstrap"
+    #crud_settings = s3.crud
+    #crud_settings.formstyle = "bootstrap"
     #crud_settings.submit_button = T("Save changes")
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
@@ -1129,6 +1136,37 @@ def customize_project_project(**attr):
                    crud_form = crud_form,
                    list_fields = list_fields)
 
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="project", f="project",
+                                    args=["[id]", "read"]))
+                       ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("update", table):
+                actions.append(dict(label=str(T("Edit")),
+                                    _class="action-btn",
+                                    url=URL(c="project", f="project",
+                                            args=["[id]", "update"])))
+            if has_permission("delete", table):
+                actions.append(dict(label=str(T("Delete")),
+                                    _class="action-btn",
+                                    url=URL(c="project", f="project",
+                                            args=["[id]", "delete"])))
+            s3.actions = actions
+            if "form" in output:
+                output["form"].add_class("project_project")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
     return attr
 
 settings.ui.customize_project_project = customize_project_project
@@ -1139,6 +1177,8 @@ def customize_org_resource(**attr):
         Customize project_project controller
         - Data Model
     """
+
+    s3 = current.response.s3
 
     tablename = "org_resource"
     table = current.s3db.org_resource
@@ -1153,6 +1193,37 @@ def customize_org_resource(**attr):
                                            )
     table.location_id.widget = None
     
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="org", f="resource",
+                                    args=["[id]", "read"]))
+                       ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("update", table):
+                actions.append(dict(label=str(T("Edit")),
+                                    _class="action-btn",
+                                    url=URL(c="org", f="resource",
+                                            args=["[id]", "update"])))
+            if has_permission("delete", table):
+                actions.append(dict(label=str(T("Delete")),
+                                    _class="action-btn",
+                                    url=URL(c="org", f="resource",
+                                            args=["[id]", "delete"])))
+            s3.actions = actions
+            if "form" in output:
+                output["form"].add_class("org_resource")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
     return attr
 
 settings.ui.customize_org_resource = customize_org_resource

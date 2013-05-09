@@ -2243,7 +2243,7 @@ class S3CRUD(S3Method):
                     name=None,
                     _href=None,
                     _id=None,
-                    _class="action-btn"):
+                    _class=None):
         """
             Generate a CRUD action button
 
@@ -2255,6 +2255,11 @@ class S3CRUD(S3Method):
             @param _class: the HTML-class of the link
         """
 
+        if _class is None:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class="btn btn-primary"
+            else:
+                _class="action-btn"
         if name:
             labelstr = S3CRUD.crud_string(tablename, name)
         else:
