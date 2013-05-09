@@ -306,12 +306,21 @@ class S3EventModel(S3Model):
             s3 = current.session.s3
             if s3.event == event:
                 s3.event = None
+
             # @ToDo: Hide the Event from the Map menu
             #gis = current.gis
             #config = gis.get_config()
             #if config == config.config_id:
             #    # Reset to the Default Map
             #    gis.set_config(0)
+
+            # Expire all related Posts
+            db = current.db
+            ltable = current.s3db.event_event_post
+            table = db.cms_post
+            rows = db(ltable.event_id == event).select(ltable.post_id)
+            for row in rows:
+                db(table.id == row.post_id).update(expired=True)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -896,6 +905,7 @@ class S3EventCMSModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Posts
+        #   Link table for cms_post <> event_event
         # @ToDo: Search Widget
 
         tablename = "event_event_post"

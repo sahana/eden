@@ -696,7 +696,7 @@ class S3LocationFilter(S3FilterWidget):
         base_id = attr["_id"]
         for level in levels:
             if noopt:
-                opts["%s-%s" % (base_id, level)] = noopt
+                opts["%s-%s" % (base_id, level)] = str(noopt)
             else:
                 options = levels[level]["options"]
                 options.sort()
@@ -708,7 +708,6 @@ class S3LocationFilter(S3FilterWidget):
 
         T = current.T
 
-        EMPTY = T("None")
         NOOPT = T("No options available")
 
         attr = self.attr
@@ -977,7 +976,7 @@ class S3OptionsFilter(S3FilterWidget):
         ftype, options, noopt = self._options(resource)
 
         if noopt:
-            options = {attr["_id"]: noopt}
+            options = {attr["_id"]: str(noopt)}
         else:
             widget_type = opts["widget"]
             if widget_type in ("multiselect-bootstrap", "multiselect"):
