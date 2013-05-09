@@ -419,6 +419,8 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
                _href=person_url,
                _class="pull-left",
                )
+
+    # Edit Bar
     permit = current.auth.s3_has_permission
     table = db.cms_post
     if permit("update", table, record_id=record_id):
@@ -450,15 +452,42 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
                    delete_btn,
                    _class="edit-bar fright",
                    )
-    document = raw["doc_document.file"]
-    if document:
-        doc_url = URL(c="default", f="download",
-                      args=[document]
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
                       )
-        doc_link = A(I(_class="icon icon-paper-clip fright"),
-                     _href=doc_url)
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except IOError:
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
     else:
-        doc_link = ""
+        docs = ""
 
     # Render the item
     class SMALL(DIV):
@@ -483,7 +512,7 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
                         edit_bar,
                         P(body,
                           _class="card_comments"),
-                        doc_link,
+                        docs,
                        _class="span5 card-details"),
                    _class="row",
                    ),

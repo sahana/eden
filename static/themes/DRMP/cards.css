@@ -1,0 +1,105 @@
+@charset "UTF-8";
+
+/* Cards - common styling for Updates & Profile pages */
+
+.thumbnail {
+    background-color: #fff;
+    border-radius: 0;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border: 1px solid #9e9b9b;
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    -moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
+}
+	
+.thumbnail:hover {
+    background-color: #f5f5f5;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    cursor: auto;
+}
+
+.date-title {
+    font: 400 10px "Helvetica Neue",Arial,sans-serif;
+    list-style: none outside none;
+    padding-left: 10px;
+    color: #999;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    margin-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 9px;
+}
+
+.location-title {
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    text-shadow: 0px 1px 0px white;
+    padding-left: 10px;
+    margin-left: 10px;
+    width: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.location-title a {
+    font: 400 12px "Helvetica Neue", Arial,sans-serif;
+    color: #777;
+    padding: 0;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
+    letter-spacing: 0;
+    word-spacing: -1px;
+}
+
+.location-title a:hover {
+    color: #333;
+    text-decoration: none;
+}
+
+img.media-object {
+    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+}
+
+/* Edit Toolbar */
+.edit-bar.fright {
+    color: #8a8989;
+    font-size: 14px;
+    position: relative;
+    top: 4px;
+    float: right;
+}
+
+.icon.icon-edit {
+    padding-right: 3px;
+}
+
+.icon.icon-edit,
+.icon.icon-remove-sign {
+    color: #999;
+    padding-left: 2px;
+}
+
+.icon.icon-edit:hover,
+.icon.icon-remove-sign:hover {
+    color: #0095fe;
+    text-decoration: none;
+}
+
+.icon.icon-remove-sign:hover {
+    color: #E74C3C;
+}
+
+/* Used by Updates & Selection but not Profile */
+.media {
+    margin-top: 12px;
+    font: 13px/17px "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #333;
+    word-spacing: -1px;
+}

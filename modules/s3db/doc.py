@@ -152,7 +152,8 @@ class S3DocumentLibrary(S3Model):
         configure(tablename,
                   super_entity = "stats_source",
                   deduplicate=self.document_duplicate,
-                  onvalidation=self.document_onvalidation)
+                  onvalidation=self.document_onvalidation,
+                  )
 
         # ---------------------------------------------------------------------
         # Images
@@ -254,10 +255,13 @@ class S3DocumentLibrary(S3Model):
 
         if file:
             try:
-                return A(table.file.retrieve(file)[0],
-                         _href=URL(c="default", f="download", args=[file]))
+                # Read the filename from the file
+                filename = table.file.retrieve(file)[0]
             except IOError:
                 return current.T("File not found")
+            else:
+                return A(filename,
+                         _href=URL(c="default", f="download", args=[file]))
         else:
             return current.messages["NONE"]
 
@@ -316,27 +320,37 @@ class S3DocumentLibrary(S3Model):
             # This is a prepop, so file not in form
             return
 
-        db = current.db
-
         if document:
             tablename = "doc_document"
-            msg = current.T("Either file upload or document URL required.")
         else:
             tablename = "doc_image"
-            msg = current.T("Either file upload or image URL required.")
 
+        db = current.db
         table = db[tablename]
 
         url = vars.url
-        if not hasattr(doc, "file"):
+        if hasattr(doc, "file"):
+            name = vars.name
+            if not name:
+                # Use the filename
+                vars.name = doc.filename
+        else:
             id = current.request.post_vars.id
             if id:
                 record = db(table.id == id).select(table.file,
                                                    limitby=(0, 1)).first()
                 if record:
                     doc = record.file
+                    name = vars.name
+                    if not name:
+                        # Use the filename
+                        vars.name = table.file.retrieve(doc)[0]
 
         if not hasattr(doc, "file") and not doc and not url:
+            if document:
+                msg = current.T("Either file upload or document URL required.")
+            else:
+                msg = current.T("Either file upload or image URL required.")
             form.errors.file = msg
             form.errors.url = msg
 

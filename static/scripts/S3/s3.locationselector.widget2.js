@@ -204,15 +204,24 @@ function lx_select(fieldname, level, id) {
             if (!bounds) {
                 // Try the parent
                 var parent = l[id].f;
-                bounds = l[parent].b;
-                if (!bounds) {
-                    // Try the grandparent
-                    var grandparent = l[parent].f;
-                    bounds = l[grandparent].b;
+                parent = l[parent];
+                if (parent) {
+                    bounds = parent.b;
                     if (!bounds) {
-                        // Try the greatgrandparent
-                        var greatgrandparent = l[grandparent].f;
-                        bounds = l[greatgrandparent].b;
+                        // Try the grandparent
+                        var grandparent = parent.f;
+                        grandparent = l[grandparent];
+                        if (grandparent) {
+                            bounds = grandparent.b;
+                            if (!bounds) {
+                                // Try the greatgrandparent
+                                var greatgrandparent = grandparent.f;
+                                greatgrandparent = l[greatgrandparent];
+                                if (greatgrandparent) {
+                                    bounds = greatgrandparent.b;
+                                }
+                            }
+                        }
                     }
                 }
             }
