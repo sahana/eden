@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:8000/eden/static/themes/DRMP/style.css */
+
 body {
     font: 14px/21px 'Open Sans', sans-serif;
     color: #666;
@@ -67,6 +70,7 @@ div.dl {
 /* Push down below Nav */
 #alert-space {
     padding-top: 50px;
+    
 }
 .alert.alert-success {
     border: 1px solid #b2b2b2;
@@ -191,13 +195,43 @@ div.card-header {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
 }
 
+
+/*disaster cards*/
+
+
+
 div.thumbnail.disaster {
-    border: 3px solid #f8c464;
+    border: 3px solid #f8c464;    
 }
 
 i.icon.icon-paper-clip.fright {
     font-size: 17px;
 }
+
+#event_datalist a h5 {
+	font-size: 13px;
+	margin-top: 1px;
+	width: 70%;
+	
+	margin-bottom: -1px;
+	color: #666;
+	line-height: 16px;
+	word-spacing: -1px;
+	letter-spacing: 0;
+	padding-top: 3px;
+	padding-left: 5px;
+	padding-bottom: 5px;
+}
+
+#event_datalist a h5:hover{
+	color: #26a0c3;
+}
+
+#event_datalist a span.date-title {
+	  border-left: 0px;
+	  margin-left: -1px;
+  }
+
 
 /* Modals */
 /* Deprecated
@@ -267,6 +301,8 @@ table.embeddedComponent {
 }
 
 /*  Filter Styling  */
+
+
 div#accordion2.accordion.side-filter {
     background-color: #fff;
     position: relative;
@@ -329,14 +365,6 @@ input.filter-search {
 }
 
 /*button.btn.btn-primary.btn-filter,*/
-input.btn.btn-primary.filter-submit {
-    width: 90%;
-    padding-right: 5px;
-    padding-left: 5px;
-  /*position: relative;
-    top: 220px;*/
-    margin-left: 12px;
-}
 
 button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     background-color: hsl(0, 0%, 79%) !important;
@@ -357,12 +385,139 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
 
 button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all:hover {
     color: #333333;
-    background-color: #e6e6e6;
+    background: #e6e6e6;
 }
 
 button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     margin-bottom: 10px;
 }
+
+/*===Filter Responsive Input Size===*/
+
+/* default screen */
+input.filter-search{
+	width: 95%;
+}
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    width:100%!important;
+}
+label#post-auth_user_organisation_id-options-filter__label,
+label#post-cms_post_series_id-options-filter__label,
+label#post-cms_post_created_on-date-filter__label,
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_created_on-date-filter__label{
+	font-size: 13px;
+}
+#post-cms_post_created_on-date-filter-ge,
+#post-cms_post_created_on-date-filter-le {
+	width: 70px;
+	margin-right: 6px;
+	font-size: 13px;
+	margin-left: 17px;
+}
+#post-cms_post_created_on-date-filter-le {
+	margin-left: 24px;
+}
+input.btn.btn-primary.filter-submit.filter-ajax {
+	width: 100%;
+	margin-left: -1px;
+}
+
+
+/* Large desktop */
+@media (min-width: 1200px) { 
+#post-cms_post_created_on-date-filter-ge,
+#post-cms_post_created_on-date-filter-le {
+	width: 112px;
+}
+}
+ 
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) { 
+input.filter-search{
+	width: 90%;
+}
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    width:100%!important;
+}
+label#post-auth_user_organisation_id-options-filter__label,
+label#post-cms_post_series_id-options-filter__label,
+label#post-cms_post_created_on-date-filter__label,
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_created_on-date-filter__label{
+	font-size: 12px;
+	word-spacing: -2px;
+}
+#post-cms_post_created_on-date-filter-ge,
+#post-cms_post_created_on-date-filter-le {
+	margin-right: 3px;
+	font-size: 12px;
+	margin-top: 2px;
+}
+
+#post-cms_post_created_on-date-filter-le {
+	margin-left: 17px;
+	
+}
+input.btn.btn-primary.filter-submit.filter-ajax {
+	width: 100%;
+	margin-left: -1px;
+}
+} 
+
+
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) { 
+input.filter-search{
+	width: 96%;
+}
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    width:100%!important;
+}
+label#post-auth_user_organisation_id-options-filter__label,
+label#post-cms_post_series_id-options-filter__label,
+label#post-cms_post_created_on-date-filter__label,
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_created_on-date-filter__label{
+	font-size: 12px;
+	word-spacing: -2px;
+}
+#post-cms_post_created_on-date-filter-ge,
+#post-cms_post_created_on-date-filter-le {
+	width: 20%;
+	margin-right: 6px;
+	font-size: 12px;
+	margin-left: 6px;
+}
+#post-cms_post_created_on-date-filter-ge{
+	margin-left: 6px;
+}
+
+input#post-cms_post_created_on-date-filter-ge_clear {
+	margin-right: 10px;
+}
+
+input.btn.btn-primary.filter-submit.filter-ajax {
+	width: 100%;
+	margin-left: -1px;
+}
+}
+ 
+/* Landscape phones and down */
+@media (max-width: 480px) { 
+input.filter-search{
+	width: 96%;
+}
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    margin-bottom: 10px;
+    
+}
+}
+
+
 
 #datalist-filter-form table tbody tr td {
     border: none;
@@ -664,4 +819,64 @@ div.span5.card-details {
     font: 14px/19px "Georgia",Times;
     color: #5c5c5c;
     padding-top: 6px;
+}
+
+/*------Projects page--------*/
+
+
+#list-add div.form-container form.form-horizontal fieldset {
+	border: none;
+}
+
+/*add new form*/
+
+#list-add div.form-container form.form-horizontal {
+	background-color: #fff;
+	border: 1px solid #b2b2b2;
+	border-radius: 0 0 5px 5px;
+	position: relative;
+	top: 11px;
+	padding-top: 7px;
+	padding-left: 9px;
+}
+
+
+#submit_record__row {
+	margin-bottom: -24px;
+	margin-left: -18px;
+	margin-right: -15px;
+}
+
+#list-add h3 {
+	text-align: center;
+	border-bottom: solid 1px #c9ccd0;
+	border-radius: 5px 5px 0 0;
+	margin-bottom: 4px;
+	text-transform: uppercase;
+	font-size: 18px;
+	background: rgba(255,255,255,1);
+	background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+	background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	-moz-box-shadow: 0 -1px 3px #d7d7d6;
+	-webkit-box-shadow: 0 -1px 3px #d7d7d6;
+	box-shadow: 0 -1px 3px #d7d7d6;
+	border: 1px solid #9e9b9b;
+	-moz-box-shadow: 0 1px 1px #aaaaa7;
+	-webkit-box-shadow: 0 1px 1px #aaaaa7;
+	box-shadow: 0 1px 1px #aaaaa7;
+	padding: 7px 6px;
+}
+
+#submit_record__row input.btn.btn-primary {
+	padding: 5px 20px;
+	text-transform: uppercase;
+}
+
+
+table#datatable.dataTable.display {
+	background-color: #f9f9f9;
 }
