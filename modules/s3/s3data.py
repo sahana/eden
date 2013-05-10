@@ -1136,49 +1136,13 @@ class S3PivotTable(object):
 
         # Retrieve the records ------------------------------------------------
         #
-        key = str(resource.table._id)
-        rfields = self.rfields
-        dfields = {}
-        for selector, rfield in rfields.items():
-            if rfield.colname == key:
-                continue
-            tname = rfield.tname
-            if tname in dfields:
-                dfields[tname].append(selector)
-            else:
-                dfields[tname] = [selector]
-        sets = dfields.items()
-        primary = sets[0]
-        secondary = sets[1:]
-
-        rows = resource.select([self.pkey] + primary[1],
-                               start=None, limit=None, cacheable=True)
-        data = Storage([(i[key], i)
-                        for i in resource.extract(rows, [self.pkey] + primary[1])])
-
-        #if DEBUG:
-            #duration = datetime.datetime.now() - _start
-            #duration = '{:.2f}'.format(duration.total_seconds())
-            #_debug("Primary query complete after %s seconds" % duration)
-            
-        # Generate the report -------------------------------------------------
-        #
+        result = resource.fast_select(self.rfields.keys(),
+                                      start=None, limit=None)
+        data = result["data"]
         if data:
-            dresource = s3db.resource(resource.tablename, id=data.keys())
-            for tn, dfields in secondary:
-                rows = dresource.select([self.pkey] + dfields,
-                                        start=None, limit=None, cacheable=True)
-                e = dresource.extract(rows, [self.pkey] + dfields)
-                for row in e:
-                    k = row[key]
-                    d = data[k]
-                    d.update(row)
-            records = data
 
-            #if DEBUG:
-                #duration = datetime.datetime.now() - _start
-                #duration = '{:.2f}'.format(duration.total_seconds())
-                #_debug("Secondary queries complete after %s seconds" % duration)
+            key = str(resource.table._id)
+            records = Storage([(i[key], i) for i in data])
                 
             # Generate the data frame -----------------------------------------
             #

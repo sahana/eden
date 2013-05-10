@@ -1422,7 +1422,7 @@ class S3Resource(object):
                     else:
                         result = results[record_id]
 
-                    data = records[record_id].keys()
+                    data = frecords[record_id].keys()
                     if len(data) == 1 and not list_type:
                         data = data[0]
                     result[colname] = data
@@ -1444,7 +1444,7 @@ class S3Resource(object):
                   pkey,
                   columns,
                   join=True,
-                  records={},
+                  records=None,
                   field_data=None,
                   effort=None,
                   represent=False):
@@ -1463,6 +1463,9 @@ class S3Resource(object):
                               representation efforts for list:types
         """
 
+        if records is None:
+            records = {}
+        
         def get(key):
             t, f = key.split(".", 1)
             if join:
