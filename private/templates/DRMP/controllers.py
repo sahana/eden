@@ -8,6 +8,7 @@ from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
 from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_avatar_represent
 
 THEME = "DRMP"
@@ -35,10 +36,15 @@ class index():
 
         s3db = current.s3db
         # Latest 4 Events
-        resource = s3db.resource("event_event")
-        list_fields = ["name",
-                       "zero_hour",
-                       "closed",
+        resource = s3db.resource("cms_post")
+        resource.add_filter(S3FieldSelector("series_id$name") == "Event")
+        list_fields = ["location_id",
+                       "created_on",
+                       "body",
+                       "created_by",
+                       "created_by$organisation_id",
+                       "document.file",
+                       "event_post.event_id",
                        ]
         orderby = resource.get_config("list_orderby",
                                       ~resource.table.created_on)
@@ -47,7 +53,7 @@ class index():
                                                    limit=4,
                                                    listid="event_datalist",
                                                    orderby=orderby,
-                                                   layout=render_events)
+                                                   layout=render_cms_events)
         if numrows == 0:
             # Empty table or just no match?
             table = resource.table
@@ -186,32 +192,40 @@ def _updates():
     filter_widgets = [S3TextFilter(["body"],
                                    label="",
                                    _class="filter-search",
-                                   _placeholder=T("Search").upper()),
+                                   #_placeholder=T("Search").upper(),
+                                   ),
                       S3OptionsFilter("series_id",
                                       label=T("Filter by Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
-                                      cols=3),
+                                      cols=3,
+                                      hidden=True,
+                                      ),
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
                                        levels=["L1", "L2", "L3"],
                                        #represent="%(name)s",
                                        widget="multiselect",
-                                       cols=3),
+                                       cols=3,
+                                       hidden=True,
+                                       ),
                       S3OptionsFilter("created_by$organisation_id",
                                       label=T("Filter by Organization"),
                                       represent="%(name)s",
                                       widget="multiselect",
-                                      #widget="multiselect-bootstrap",
-                                      cols=3),
+                                      cols=3,
+                                      hidden=True,
+                                      ),
                       S3DateFilter("created_on",
                                    label=T("Filter by Date"),
-                                   hide_time=True),
+                                   hide_time=True,
+                                   hidden=True,
+                                   ),
                       ]
 
     s3db.configure("cms_post",
                    filter_formstyle = filter_formstyle,
-                   filter_submit = (T("Filter Results"), "btn btn-primary"),
+                   filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
                    list_layout = list_layout,
                    # Create form comes via AJAX in a Modal
@@ -266,6 +280,15 @@ def _updates():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+        scripts = []
+        sappend = scripts.append
+        # Style the Search TextFilter widget
+        sappend('''$('#post-cms_post_body-text-filter__row').addClass('input-append').append('<span class="add-on"><i class="icon-search"></i></span>')''')
+        # Button to toggle Advanced Form
+        sappend('''$('#list-filter').append('<a class="accordion-toggle"><i class="icon-reorder"></i> %s</a>')''' % T("Advanced Search"))
+        sappend('''$('.accordion-toggle').click(function(){$('.advanced').toggle()})''')
+        s3.jquery_ready.append('''\n'''.join(scripts))
+        
         # Latest 5 Disasters
         resource = s3db.resource("event_event")
         list_fields = ["name",
@@ -335,7 +358,7 @@ def _login():
                 )
 
 # -----------------------------------------------------------------------------
-def filter_formstyle(row_id, label, widget, comment):
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
     """
         Custom Formstyle for FilterForm
 
@@ -343,17 +366,23 @@ def filter_formstyle(row_id, label, widget, comment):
         @param label: the label
         @param widget: the form widget
         @param comment: the comment
+        @param hidden: whether the row should initially be hidden or not
     """
 
-    if label:
-        return DIV(label, widget)
+    if hidden:
+        _class = "advanced hide"
     else:
-        return DIV(widget)
+        _class= ""
+
+    if label:
+        return DIV(label, widget, _id=row_id, _class=_class)
+    else:
+        return DIV(widget, _id=row_id, _class=_class)
 
 # -----------------------------------------------------------------------------
 def render_posts(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for CMS Posts on the Homepage
+        Custom dataList item renderer for CMS Posts on the Home & Updates pages
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -409,6 +438,8 @@ def render_posts(listid, resource, rfields, record, **attr):
                _href=person_url,
                _class="pull-left",
                )
+
+    # Edit Bar
     permit = current.auth.s3_has_permission
     table = db.cms_post
     if permit("update", table, record_id=record_id):
@@ -432,16 +463,42 @@ def render_posts(listid, resource, rfields, record, **attr):
                    delete_btn,
                    _class="edit-bar fright",
                    )
-    # @ToDo: Dropdown of available documents
-    document = raw["doc_document.file"]
-    if document:
-        doc_url = URL(c="default", f="download",
-                      args=[document]
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
                       )
-        doc_link = A(I(_class="icon icon-paper-clip fright"),
-                     _href=doc_url)
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except IOError:
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
     else:
-        doc_link = ""
+        docs = ""
 
     if series == "Alert":
         item_class = "%s disaster" % item_class
@@ -471,7 +528,7 @@ def render_posts(listid, resource, rfields, record, **attr):
                                  _href=org_url,
                                  _class="card-organisation",
                                  ),
-                               doc_link,
+                               docs,
                                _class="card-person",
                                ),
                            _class="media",
@@ -563,6 +620,167 @@ def render_events(listid, resource, rfields, record, **attr):
                          _href=URL(c="event", f="event",
                                    args=[record_id, "profile"]),
                          ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# -----------------------------------------------------------------------------
+def render_cms_events(listid, resource, rfields, record, **attr):
+    """
+        Custom dataList item renderer for 'Events' on the Home page
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "cms_post.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    series = "Event"
+    date = record["cms_post.created_on"]
+    body = record["cms_post.body"]
+    location = record["cms_post.location_id"]
+    location_id = raw["cms_post.location_id"]
+    location_url = URL(c="gis", f="location", args=[location_id])
+    author = record["cms_post.created_by"]
+    author_id = raw["cms_post.created_by"]
+    organisation = record["auth_user.organisation_id"]
+    organisation_id = raw["auth_user.organisation_id"]
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    avatar = s3_avatar_represent(author_id,
+                                 _class="media-object",
+                                 _style="width:50px;padding:5px;padding-top:0px;")
+    db = current.db
+    ltable = current.s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="hrm", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+    avatar = A(avatar,
+               _href=person_url,
+               _class="pull-left",
+               )
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = db.cms_post
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="cms", f="post",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.cms_post.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except IOError:
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
+    # Render the item
+    item = DIV(DIV(I(SPAN(" %s" % current.T(series),
+                          _class="card-title",
+                          ),
+                     _class="icon icon-%s" % series.lower().replace(" ", "_"),
+                     ),
+                   SPAN(A(location,
+                          _href=location_url,
+                          ),
+                        _class="location-title",
+                        ),
+                   SPAN(date,
+                        _class="date-title",
+                        ),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(avatar,
+                   DIV(DIV(body,
+                           DIV(author,
+                               " - ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               docs,
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
                        _class="media-body",
                        ),
                    _class="media",

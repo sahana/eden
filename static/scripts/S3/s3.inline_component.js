@@ -524,10 +524,13 @@ $(function() {
         inline_serialize(formname, data);
 
         // Remove the read-row for this item
-        $('#read-row-'+rowname).remove();
+        $('#read-row-' + rowname).remove();
 
         // Remove all uploads for this item
         $('input[name^="' + 'upload_' + formname + '_"][name$="_' + rowindex + '"]').remove();
+
+        // Display the add-row (in case hidden because we're multiple=False)
+        $('#add-row-' + formname).show();
 
         return true;
     };

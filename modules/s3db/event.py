@@ -103,7 +103,6 @@ class S3EventModel(S3Model):
             msg_record_created = T("Event Type added"),
             msg_record_modified = T("Event Type updated"),
             msg_record_deleted = T("Event Type removed"),
-            #msg_list_empty = T("No Event Types currently registered in this event")
             msg_list_empty = T("No Event Types currently registered")
             )
 
@@ -307,12 +306,21 @@ class S3EventModel(S3Model):
             s3 = current.session.s3
             if s3.event == event:
                 s3.event = None
+
             # @ToDo: Hide the Event from the Map menu
             #gis = current.gis
             #config = gis.get_config()
             #if config == config.config_id:
             #    # Reset to the Default Map
             #    gis.set_config(0)
+
+            # Expire all related Posts
+            db = current.db
+            ltable = current.s3db.event_event_post
+            table = db.cms_post
+            rows = db(ltable.event_id == event).select(ltable.post_id)
+            for row in rows:
+                db(table.id == row.post_id).update(expired=True)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -348,6 +356,9 @@ class S3EventModel(S3Model):
 
         data = item.data
         name = data.get("name", None)
+
+        if not name:
+            return
 
         table = item.table
         query = (table.name == name)
@@ -785,6 +796,9 @@ class S3IncidentTypeModel(S3Model):
         data = item.data
         name = data.get("name", None)
 
+        if not name:
+            return
+
         table = item.table
         query = (table.name == name)
         _duplicate = current.db(query).select(table.id,
@@ -891,6 +905,7 @@ class S3EventCMSModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Posts
+        #   Link table for cms_post <> event_event
         # @ToDo: Search Widget
 
         tablename = "event_event_post"

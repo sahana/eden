@@ -149,6 +149,14 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="Expired">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Expired']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
+
         <xsl:variable name="Author" select="col[@field='Author']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
         <xsl:variable name="Series" select="col[@field='Series']/text()"/>
@@ -185,6 +193,35 @@
             <xsl:if test="$Comments!=''">
                 <data field="comments"><xsl:value-of select="$Comments"/></data>
             </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$Expired=''">
+                    <!-- Use System Default -->
+                </xsl:when>
+                <xsl:when test="$Expired='Y'">
+                    <data field="expired" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Expired='YES'">
+                    <data field="expired" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Expired='T'">
+                    <data field="expired" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Expired='TRUE'">
+                    <data field="expired" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Expired='N'">
+                    <data field="expired" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Expired='NO'">
+                    <data field="expired" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Expired='F'">
+                    <data field="expired" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Expired='FALSE'">
+                    <data field="expired" value="false">False</data>
+                </xsl:when>
+            </xsl:choose>
 
             <!-- Link to Module -->
             <xsl:if test="$Module!=''">

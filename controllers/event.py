@@ -59,6 +59,14 @@ def event():
     return output
 
 # -----------------------------------------------------------------------------
+def event_type():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def incident_type():
     """
         RESTful CRUD controller

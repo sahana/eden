@@ -2243,7 +2243,7 @@ class S3CRUD(S3Method):
                     name=None,
                     _href=None,
                     _id=None,
-                    _class="action-btn"):
+                    _class=None):
         """
             Generate a CRUD action button
 
@@ -2255,6 +2255,11 @@ class S3CRUD(S3Method):
             @param _class: the HTML-class of the link
         """
 
+        if _class is None:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class="btn btn-primary"
+            else:
+                _class="action-btn"
         if name:
             labelstr = S3CRUD.crud_string(tablename, name)
         else:
@@ -2393,9 +2398,13 @@ class S3CRUD(S3Method):
         if "delete" in buttons:
             authorised = self._permitted(method="delete")
             if authorised and href_delete and deletable:
+                if current.response.s3.crud.formstyle == "bootstrap":
+                    _class="btn btn-primary delete-btn"
+                else:
+                    _class="delete-btn"
                 delete_btn = self.crud_button(DELETE, _href=href_delete,
                                               _id="delete-btn",
-                                              _class="delete-btn")
+                                              _class=_class)
                 output["delete_btn"] = delete_btn
 
         return output

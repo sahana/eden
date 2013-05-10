@@ -1,0 +1,128 @@
+@charset "UTF-8";
+
+/* Profile Page */
+
+h2.profile_header {
+    font-size: 25px;
+    color: #666;
+    text-align: left;
+    text-transform: uppercase;
+    font-weight: normal;
+    font-style: normal;
+    background-color: #f7f8f7;
+    height: 40px;
+    padding: 20px;
+    border: 1px solid #9e9b9b;
+    border-radius: 4px;
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+}
+
+h4.Profile_Header {
+    font-size: 25px;
+    color: #666;
+    text-align: center;
+    font-weight: normal;
+    font-style: normal;
+}
+
+h4.profile-sub-header {
+    font-size: 17px;
+    color: #666;
+    text-align: left;
+    font-weight: normal;
+    font-style: normal;	
+    padding: 6px 6px 6px 9px;
+    border-radius: 5px 5px 0 0;
+    background: rgba(255,255,255,1);
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    border: 1px solid #9e9b9b;
+    margin-bottom: -1px;
+}
+
+.row.profile {
+    margin-top: 5px;
+}
+
+.icon.icon-plus-sign.small-add {
+    font-size: 17px;
+    color: #0096fe;
+    float: right;
+    position: relative;
+    top: 17px;
+    right: 9px;
+}
+
+.icon.icon-plus-sign.small-add:hover{
+    text-decoration: none;
+    color: #2da7fc;
+}
+
+.empty_card-holder {
+    text-align: center;
+    font: 15px Georgia, "Times New Roman", Times, serif;
+    position: relative;
+    top: 144px;
+    opacity: 0.67;
+}
+
+.icon-folder-open-alt {
+    font-size: 25px;
+}
+
+.card-holder {
+    display: inline-block;
+    min-height: 383px;
+    width: 99.7%;
+    border: 1px solid #b2b2b2;
+    background-color: #f0f0ef;
+}
+
+.card-holder .edit-bar.fright {
+    color: #8A8989;
+    font-size: 14px;
+}
+.card-holder .card-title {
+    font-size: 14px;
+}
+.card-holder .date-title {
+    font: 11px "Helvetica Neue", Arial, sans-serif;
+    list-style: none outside none;
+    text-decoration: none;
+    text-transform: none;
+    color: #999;	
+}
+.card-holder .location-title {
+    font: bold 13px "Helvetica Neue", Arial, sans-serif;
+    color: #333333;
+    padding: 0;
+}
+
+.card-holder .card_comments {
+    font: 14px/19px "Georgia", Times;
+    color: #5c5c5c;
+    padding-top: 6px;
+}
+
+.span5.card-details {
+    margin-left: 0;
+}
+
+.citation {
+    float: left;
+    clear: left;
+    width: 58px;
+    font-size: 80%;
+    line-height: 11px;
+    text-align: center;
+}

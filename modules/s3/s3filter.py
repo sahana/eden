@@ -696,7 +696,7 @@ class S3LocationFilter(S3FilterWidget):
         base_id = attr["_id"]
         for level in levels:
             if noopt:
-                opts["%s-%s" % (base_id, level)] = noopt
+                opts["%s-%s" % (base_id, level)] = str(noopt)
             else:
                 options = levels[level]["options"]
                 options.sort()
@@ -708,7 +708,6 @@ class S3LocationFilter(S3FilterWidget):
 
         T = current.T
 
-        EMPTY = T("None")
         NOOPT = T("No options available")
 
         attr = self.attr
@@ -977,7 +976,7 @@ class S3OptionsFilter(S3FilterWidget):
         ftype, options, noopt = self._options(resource)
 
         if noopt:
-            options = {attr["_id"]: noopt}
+            options = {attr["_id"]: str(noopt)}
         else:
             widget_type = opts["widget"]
             if widget_type in ("multiselect-bootstrap", "multiselect"):
@@ -1207,6 +1206,7 @@ class S3FilterForm(object):
             widget = f(resource, get_vars, alias=alias)
             label = f.opts["label"]
             comment = f.opts["comment"]
+            hidden = f.opts["hidden"]
             widget_id = f.attr["_id"]
             if widget_id:
                 row_id = "%s__row" % widget_id
@@ -1220,7 +1220,7 @@ class S3FilterForm(object):
                 label = ""
             if not comment:
                 comment = ""
-            rappend(formstyle(row_id, label, widget, comment))
+            rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
 
         submit = self.opts.get("submit", False)
         if submit:
@@ -1284,7 +1284,7 @@ class S3FilterForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _formstyle(row_id, label, widget, comment):
+    def _formstyle(row_id, label, widget, comment, hidden=False):
         """
             Default formstyle for search forms
 
@@ -1292,9 +1292,16 @@ class S3FilterForm(object):
             @param label: the label
             @param widget: the form widget
             @param comment: the comment
+            @param hidden: whether the row should initially be hidden or not
         """
 
-        row = TR(TD(label, _class="w2p_fl"), TD(widget), _id=row_id)
+        if hidden:
+            _class = "advanced hide"
+        else:
+            _class = ""
+
+        row = TR(TD(label, _class="w2p_fl"), TD(widget),
+                 _id=row_id, _class=_class)
 
         if comment:
             row.append(TD(DIV(_class="tooltip",
