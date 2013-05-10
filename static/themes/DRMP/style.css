@@ -425,7 +425,7 @@ table#datatable.dataTable.display {
 #table-container tr.odd td {
     border: 1px solid #d9d8d8;
     border-left: none;
-	padding: 10px 10px;
+	padding: 10px 10px 10px 7px;
 	font-size: 13px;
 }
 
@@ -531,11 +531,6 @@ form.form-horizontal.project_project fieldset div#project_project_name__row div.
 }
 
 
-#organisation_add,
-#staff_add {
-	font-size: 11px;
-}
-
 #org_resource_organisation_id__row,
 #org_resource_location_id__row,
 #org_resource_resource_type_id__row,
@@ -557,5 +552,137 @@ b.red {
 }
 
 
+/*Add new project form styling*/
+
+#sub-partnerorganisation table.embeddedComponent thead,
+#sub-defaultlocation table.embeddedComponent thead tr.label-row td {
+	display: none;
+}
+
+#resource_type_add,
+#sub_donororganisation_donororganisation_i_organisation_id_edit_none_organisation_add, 
+#sub_partnerorganisation_partnerorganisation_i_organisation_id_edit_none_organisation_add, 
+#sub_defaultlocation_defaultlocation_i_location_id_edit_none_location_add,
+#organisation_add,
+#staff_add  {
+	padding-left: 0;
+	font-size: 11px;
+}
+
+#add-row-defaultlocation td {
+	border-bottom: none;
+	padding-left: 0;
+}
+#add-row-donororganisation td,
+#add-row-partnerorganisation td,
+#sub-donororganisation table.embeddedComponent thead td {
+	border: none;
+	padding: 0 5px 0 0;
+}
+
+#sub_donororganisation_donororganisation_i_currency_edit_none,
+#sub_donororganisation_donororganisation_i_amount_edit_none {
+	position: relative;
+	top: -5px;
+}
+
+#sub_donororganisation_donororganisation_i_organisation_id_edit_none {
+	position: relative;
+	top: 5px;
+	margin-bottom: 5px;
+}
+
+#sub-donororganisation table.embeddedComponent thead td label {
+	font-size: 12px;
+	color: #7b7b77;
+}
+
+#delete-btn, 
+#edit-btn.btn.btn-primary,
+#show-add-btn {
+	padding: 1px 6px;
+	font-size: 10.5px;
+	-webkit-border-radius: 3px;
+	   -moz-border-radius: 3px;
+	        border-radius: 3px;
+
+}
+a.action-btn {
+	  display: inline-block;
+	  *display: inline;
+	  padding: 1px 6px;
+	  margin-bottom: 0;
+	  *margin-left: .3em;
+	  margin-right: -2px;
+	  font-size: 10.5px;
+	  line-height: 20px;
+	  *line-height: 20px;
+	  color: #333333;
+	  text-align: center;
+	  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+	  vertical-align: middle;
+	  cursor: pointer;
+	  background-color: #f5f5f5;
+	  *background-color: #e6e6e6;
+	  background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+	  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+	  background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+	  background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+	  background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+	  background-repeat: repeat-x;
+	  border: 1px solid #bbbbbb;
+	  *border: 0;
+	  border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+	  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+	  border-bottom-color: #a2a2a2;
+	  -webkit-border-radius: 4px;
+	     -moz-border-radius: 4px;
+	          border-radius: 4px;
+	  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
+	  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+	  *zoom: 1;
+	  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+	     -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+	          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+ 
+a.action-btn:hover {
+	color: #333333;
+	text-decoration: none;
+	background-color: #e6e6e6;
+	*background-color: #d9d9d9;
+	/* Buttons in IE7 don't get borders, so darken on hover */
+	
+	background-position: 0 -15px;
+	-webkit-transition: background-position 0.1s linear;
+	 -moz-transition: background-position 0.1s linear;
+	   -o-transition: background-position 0.1s linear;
+	      transition: background-position 0.1s linear;
+}
+
+
+#delete-btn {
+	color: #ffffff;
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+	background-color: #da4f49;
+	*background-color: #bd362f;
+	background-image: -moz-linear-gradient(top, #ee5f5b, #bd362f);
+	background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#bd362f));
+	background-image: -webkit-linear-gradient(top, #ee5f5b, #bd362f);
+	background-image: -o-linear-gradient(top, #ee5f5b, #bd362f);
+	background-image: linear-gradient(to bottom, #ee5f5b, #bd362f);
+	background-repeat: repeat-x;
+	border-color: #bd362f #bd362f #802420;
+	border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffee5f5b', endColorstr='#ffbd362f', GradientType=0);
+	filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+}
+
+#delete-btn:hover{
+  color: #ffffff;
+  background-color: #bd362f;
+  *background-color: #a9302a;
+
+{
 
 
