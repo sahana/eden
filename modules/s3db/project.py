@@ -32,6 +32,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectActivityTypeModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectBeneficiaryModel",
+           "S3ProjectCampaignModel",
            "S3ProjectFrameworkModel",
            "S3ProjectHazardModel",
            "S3ProjectLocationModel",
@@ -1637,10 +1638,11 @@ class S3ProjectBeneficiaryModel(S3Model):
                                                                     title=ADD_BNF_TYPE,
                                                                     tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
                                         ),
-                             # populated automatically
+                             # Populated automatically from project_location
                              self.gis_location_id(readable = False,
                                                   writable = False),
-                             # @ToDo: What is this used for?
+                             # Used for Aggregation as per Vulnerability needs
+                             # @ToDo: Can we remove from here?
                              self.stats_group_id(readable = False,
                                                  writable = False),
                              Field("value", "double",
@@ -1896,6 +1898,290 @@ class S3ProjectBeneficiaryModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+# =============================================================================
+class S3ProjectCampaignModel(S3Model):
+    """
+        Project Campaign Model
+        - used for TERA integration:
+          http://www.ifrc.org/en/what-we-do/beneficiary-communications/tera/
+        - depends on Stats module
+    """
+
+    names = ["project_campaign",
+             "project_campaign_message",
+             "project_campaign_keyword",
+             #"project_campaign_response",
+             "project_campaign_response_summary",
+             ]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("stats"):
+            # Campaigns Model needs Stats module enabling
+            return dict()
+
+        T = current.T
+        db = current.db
+
+        add_component = self.add_component
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        location_id = self.gis_location_id
+
+        # ---------------------------------------------------------------------
+        # Project Campaign
+        #
+        tablename = "project_campaign"
+        table = define_table(tablename,
+                             #self.project_project_id(),
+                             Field("name", length=128, #unique=True,
+                                   #requires = IS_NOT_IN_DB(db,
+                                   #                        "project_campaign.name")
+                                   ),
+                             s3_comments("description",
+                                         label = T("Description")),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_CAMPAIGN = T("Add Campaign")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_CAMPAIGN,
+            title_display = T("Campaign"),
+            title_list = T("Campaigns"),
+            title_update = T("Edit Campaign"),
+            title_search = T("Search Campaigns"),
+            subtitle_create = T("Add New Campaign"),
+            label_list_button = T("List Campaigns"),
+            label_create_button = ADD_CAMPAIGN,
+            msg_record_created = T("Campaign Added"),
+            msg_record_modified = T("Campaign Updated"),
+            msg_record_deleted = T("Campaign Deleted"),
+            msg_list_empty = T("No Campaigns Found")
+        )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        campaign_id = S3ReusableField("campaign_id", table,
+                                      sortby="name",
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "project_campaign.id",
+                                                              represent,
+                                                              sort=True)),
+                                      represent = represent,
+                                      label = T("Campaign"),
+                                      comment = S3AddResourceLink(c="project",
+                                                                  f="campaign",
+                                                                  title=ADD_CAMPAIGN,
+                                                                  tooltip=\
+                                        T("If you don't see the campaign in the list, you can add a new one by clicking link 'Add Campaign'.")),
+                                      ondelete = "CASCADE")
+
+        add_component("project_campaign_message",
+                      project_campaign="campaign_id")
+
+        # ---------------------------------------------------------------------
+        # Project Campaign Message
+        # - a Message to broadcast to a geographic location (Polygon)
+        #
+        tablename = "project_campaign_message"
+        table = define_table(tablename,
+                             campaign_id(),
+                             Field("name", length=128, #unique=True,
+                                   #requires = IS_NOT_IN_DB(db,
+                                   #                        "project_campaign.name")
+                                   ),
+                             s3_comments("message",
+                                         label = T("Message")),
+                             location_id(
+                                widget = S3LocationSelectorWidget(
+                                    catalog_layers=True,
+                                    polygon=True
+                                    )
+                                ),
+                             # @ToDo: Allow selection of which channel message should be sent out on
+                             #self.msg_channel_id(),
+                             # @ToDo: Record the Message sent out
+                             #self.msg_message_id(),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_CAMPAIGN = T("Add Campaign")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_CAMPAIGN,
+            title_display = T("Campaign"),
+            title_list = T("Campaigns"),
+            title_update = T("Edit Campaign"),
+            title_search = T("Search Campaigns"),
+            subtitle_create = T("Add New Campaign"),
+            label_list_button = T("List Campaigns"),
+            label_create_button = ADD_CAMPAIGN,
+            msg_record_created = T("Campaign Added"),
+            msg_record_modified = T("Campaign Updated"),
+            msg_record_deleted = T("Campaign Deleted"),
+            msg_list_empty = T("No Campaigns Found")
+        )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        message_id = S3ReusableField("campaign_message_id", table,
+                                     sortby="name",
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "project_campaign_message.id",
+                                                              represent,
+                                                              sort=True)),
+                                     represent = represent,
+                                     label = T("Campaign Message"),
+                                     ondelete = "CASCADE")
+
+        #add_component("project_campaign_response",
+        #              project_campaign_message="campaign_message_id")
+
+        add_component("project_campaign_response_summary",
+                      project_campaign_message="campaign_message_id")
+
+        # ---------------------------------------------------------------------
+        # Project Campaign Keyword
+        # - keywords in responses which are used in Stats reporting
+        #
+        tablename = "project_campaign_keyword"
+        table = define_table(tablename,
+                             super_link("parameter_id", "stats_parameter"),
+                             Field("name", length=128, unique=True,
+                                   requires = IS_NOT_IN_DB(db,
+                                                           "project_campaign_keyword.name")),
+                             s3_comments("description",
+                                         label = T("Description")),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_CAMPAIGN_KW = T("Add Keyword")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_CAMPAIGN_KW,
+            title_display = T("Keyword"),
+            title_list = T("Keywords"),
+            title_update = T("Edit Keyword"),
+            title_search = T("Search Keywords"),
+            subtitle_create = T("Add New Keyword"),
+            label_list_button = T("List Keywords"),
+            label_create_button = ADD_CAMPAIGN_KW,
+            msg_record_created = T("Keyword Added"),
+            msg_record_modified = T("Keyword Updated"),
+            msg_record_deleted = T("Keyword Deleted"),
+            msg_list_empty = T("No Keywords Found")
+        )
+
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = "stats_parameter",
+                  )
+
+        # ---------------------------------------------------------------------
+        # Project Campaign Response
+        # - individual response (unused for TERA)
+        # - this can be populated by parsing raw responses
+        # - these are aggregated into project_campaign_response_summary
+        #
+        #tablename = "project_campaign_response"
+        #table = define_table(tablename,
+        #                     message_id(),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+        #                     super_link("parameter_id", "stats_parameter",
+        #                                label = T("Keyword"),
+        #                                instance_types = ["project_campaign_keyword"],
+        #                                represent = S3Represent(lookup="stats_parameter"),
+        #                                readable = True,
+        #                                writable = True,
+        #                                empty = False,
+        #                                ),
+                             # Getting this without TERA may be hard!
+                             #location_id(writable = False),
+                             # @ToDo: Link to the raw Message received
+                             #self.msg_message_id(),
+        #                     s3_datetime(),
+        #                     s3_comments(),
+        #                     *s3_meta_fields())
+
+        # CRUD Strings
+        #ADD_CAMPAIGN_RESP = T("Add Response")
+        #crud_strings[tablename] = Storage(
+        #    title_create = ADD_CAMPAIGN_RESP,
+        #    title_display = T("Response Details"),
+        #    title_list = T("Responses"),
+        #    title_update = T("Edit Response"),
+        #    title_search = T("Search Responses"),
+        #    title_report = T("Response Report"),
+        #    subtitle_create = T("Add New Response"),
+        #    label_list_button = T("List Responses"),
+        #    label_create_button = ADD_CAMPAIGN_RESP,
+        #    msg_record_created = T("Response Added"),
+        #    msg_record_modified = T("Response Updated"),
+        #    msg_record_deleted = T("Response Deleted"),
+        #    msg_list_empty = T("No Responses Found")
+        #)
+
+        # ---------------------------------------------------------------------
+        # Project Campaign Response Summary
+        # - aggregated responses (by Keyword/Location)
+        # - TERA data comes in here
+        #
+        tablename = "project_campaign_response_summary"
+        table = define_table(tablename,
+                             message_id(),
+                             # Instance
+                             super_link("data_id", "stats_data"),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Keyword"),
+                                        instance_types = ["project_campaign_keyword"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        ),
+                             # Populated automatically (by TERA)
+                             # & will be a msg_basestation?
+                             location_id(writable = False),
+                             Field("value", "double",
+                                   label = T("Number of Responses"),
+                                   requires = IS_INT_IN_RANGE(0, 99999999),
+                                   represent = lambda v: \
+                                    IS_INT_AMOUNT.represent(v)),
+                             # @ToDo: Populate automatically from time Message is sent?
+                             s3_date("date",
+                                     label = T("Start Date"),
+                                     #empty = False,
+                                     ),
+                             s3_date("end_date",
+                                     label = T("End Date"),
+                                     #empty = False,
+                                     ),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_CAMPAIGN_RESP_SUMM = T("Add Response Summary")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_CAMPAIGN_RESP_SUMM,
+            title_display = T("Response Summary Details"),
+            title_list = T("Response Summaries"),
+            title_update = T("Edit Response Summary"),
+            title_search = T("Search Response Summaries"),
+            title_report = T("Response Summary Report"),
+            subtitle_create = T("Add New Response Summary"),
+            label_list_button = T("List Response Summaries"),
+            label_create_button = ADD_CAMPAIGN_RESP_SUMM,
+            msg_record_created = T("Response Summary Added"),
+            msg_record_modified = T("Response Summary Updated"),
+            msg_record_deleted = T("Response Summary Deleted"),
+            msg_list_empty = T("No Response Summaries Found")
+        )
 
 # =============================================================================
 class S3ProjectFrameworkModel(S3Model):

@@ -1,0 +1,6 @@
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
+"Base Stations","","msg","basestation","IFRC","mobile_phone","Radio Beacon","Base Station","name","",,,,,"False",
+"Help",,"project","campaign_response_summary","IFRC","sos",,"Campaign Responses","parameter_id/value",campaign_response_summary.parameter_id$name__like=HELP,,,,"Campaign Responses","False",
+"SOS",,"project","campaign_response_summary","IFRC","sos",,"Campaign Responses","parameter_id/value",campaign_response_summary.parameter_id$name=SOS,,,,"Campaign Responses","False",
+"Thanks",,"project","campaign_response_summary","IFRC","thanks",,"Campaign Responses","parameter_id/value",campaign_response_summary.parameter_id$name=THANKS,,,,"Campaign Responses","False",
+"Water",,"project","campaign_response_summary","IFRC","water",,"Campaign Responses","parameter_id/value",campaign_response_summary.parameter_id$name__like=WATER,,,,"Campaign Responses","False",

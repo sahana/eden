@@ -900,4 +900,36 @@ $('#submit_record__row input').click(function(){
 
     return XML(output)
 
+# =============================================================================
+# Campaigns
+# =============================================================================
+def campaign():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_keyword():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_message():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_response():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_response_summary():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================

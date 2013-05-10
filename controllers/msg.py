@@ -183,7 +183,7 @@ def twitter_search_results():
                 result = msg.receive_subscribed_tweets()
                 if not result:
                     session.error = T("Need to configure Twitter Authentication")
-                    redirect(URL(f="twitter_settings", args=[1, "update"]))
+                    redirect(URL(f="twitter_channel", args=[1, "update"]))
         return True
     s3.prep = prep
 
@@ -194,8 +194,8 @@ def twitter_search_results():
 
 # =============================================================================
 @auth.s3_requires_membership(1)
-def setting():
-    """ SMS settings for the messaging framework """
+def sms_outbound_gateway():
+    """ SMS Outbound Gateway selection for the messaging framework """
 
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
@@ -205,8 +205,8 @@ def setting():
                           T("Selects what type of gateway to use for outbound SMS"))))
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMS Settings"),
-        msg_record_modified = T("SMS settings updated")
+        title_update = T("Edit SMS Outbound Gateway"),
+        msg_record_modified = T("SMS Outbound Gateway updated")
     )
 
     def prep(r):
@@ -216,36 +216,45 @@ def setting():
                                                          None)
             if outgoing_sms_handler == "WEB_API":
                 s3db.configure(tablename,
-                                update_next = URL(f="api_settings",
-                                                  args=[1, "update"]))
+                               update_next = URL(f="sms_webapi_channel",
+                                                 args=[1, "update"]))
             elif outgoing_sms_handler == "SMTP":
                 s3db.configure(tablename,
-                                update_next = URL(f="smtp_to_sms_settings",
-                                                  args=[1, "update"]))
+                               update_next = URL(f="sms_smtp_channel",
+                                                 args=[1, "update"]))
             elif outgoing_sms_handler == "MODEM":
                 s3db.configure(tablename,
-                                update_next = URL(f="modem_settings",
-                                                  args=[1, "update"]))
+                               update_next = URL(f="sms_modem_channel",
+                                                 args=[1, "update"]))
             elif outgoing_sms_handler == "TROPO":
                 s3db.configure(tablename,
-                                update_next = URL(f="tropo_settings",
-                                                  args=[1, "update"]))
+                               update_next = URL(f="tropo_channel",
+                                                 args=[1, "update"]))
             else:
                 s3db.configure(tablename,
-                                update_next = URL(args=[1, "update"]))
+                               update_next = URL(args=[1, "update"]))
         return True
     s3.prep = prep
 
     s3db.configure(tablename,
                     deletable=False,
                     listadd=False)
+
     #response.menu_options = admin_menu_options
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def inbound_email_settings():
+def channel():
     """
-        RESTful CRUD controller for email settings
+        RESTful CRUD controller for Channels
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def email_inbound_channel():
+    """
+        RESTful CRUD controller for Inbound Email channels
             - appears in the administration menu
     """
 
@@ -253,7 +262,7 @@ def inbound_email_settings():
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
 
-    tablename = "msg_inbound_email_settings"
+    tablename = "msg_email_inbound_channel"
     table = s3db[tablename]
 
     table.server.label = T("Server")
@@ -272,17 +281,17 @@ def inbound_email_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-    title_display = T("Email Setting Details"),
-    title_list = T("Email Settings"),
-    title_create = T("Add Email Settings"),
-    title_update = T("Edit Email Settings"),
-    title_search = T("Search Email Settings"),
-    label_list_button = T("View Email Settings"),
-    label_create_button = T("Add Email Settings"),
-    msg_record_created = T("Setting added"),
-    msg_record_deleted = T("Email Setting deleted"),
-    msg_list_empty = T("No Settings currently defined"),
-    msg_record_modified = T("Email settings updated")
+        title_display = T("Email Setting Details"),
+        title_list = T("Email Settings"),
+        title_create = T("Add Email Settings"),
+        title_update = T("Edit Email Settings"),
+        title_search = T("Search Email Settings"),
+        label_list_button = T("View Email Settings"),
+        label_create_button = T("Add Email Settings"),
+        msg_record_created = T("Setting added"),
+        msg_record_deleted = T("Email Setting deleted"),
+        msg_list_empty = T("No Settings currently defined"),
+        msg_record_modified = T("Email settings updated")
         )
 
     #response.menu_options = admin_menu_options
@@ -372,9 +381,9 @@ def inbound_email_settings():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def mcommons_inbound_settings():
+def mcommons_channel():
     """
-        RESTful CRUD controller for Mobile Commons SMS settings
+        RESTful CRUD controller for Mobile Commons SMS Channels
             - appears in the administration menu
     """
 
@@ -382,7 +391,7 @@ def mcommons_inbound_settings():
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
 
-    tablename = "msg_mcommons_inbound_settings"
+    tablename = "msg_mcommons_channel"
     table = s3db[tablename]
 
     table.name.label = T("Account Name")
@@ -502,9 +511,9 @@ def mcommons_inbound_settings():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def twilio_inbound_settings():
+def twilio_inbound_channel():
     """
-        RESTful CRUD controller for twilio sms settings
+        RESTful CRUD controller for Twilio SMS channels
             - appears in the administration menu
     """
 
@@ -512,7 +521,7 @@ def twilio_inbound_settings():
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
 
-    tablename = "msg_twilio_inbound_settings"
+    tablename = "msg_twilio_inbound_channel"
     table = s3db[tablename]
 
     table.account_name.label = T("Account Name")
@@ -688,8 +697,8 @@ def workflow():
             mymodule = sys.modules[module_name]
             S3Parsing = mymodule.S3Parsing()
 
-            mtable = s3db.msg_inbound_email_settings
-            ttable = s3db.msg_twilio_inbound_settings
+            mtable = s3db.msg_email_inbound_channel
+            ttable = s3db.msg_twilio_inbound_channel
             source_opts = []
             append = source_opts.append
             records = db(mtable.id > 0).select(mtable.username)
@@ -858,19 +867,19 @@ def schedule_email():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="inbound_email_settings"))
+        redirect(URL(f="email_inbound_channel"))
 
-    table = s3db.msg_inbound_email_settings
+    table = s3db.msg_email_inbound_channel
     record = db(table.id == id).select(table.username,
                                        limitby=(0, 1)).first()
-    s3task.schedule_task("msg_process_inbound_email",
+    s3task.schedule_task("msg_email_poll",
                          vars={"username": record.username},
                          period=300,  # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
                          )
 
-    redirect(URL(f="inbound_email_settings"))
+    redirect(URL(f="email_inbound_channel"))
 
 # -----------------------------------------------------------------------------
 def schedule_mcommons_sms():
@@ -882,19 +891,19 @@ def schedule_mcommons_sms():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="mcommons_inbound_settings"))
+        redirect(URL(f="mcommons_channel"))
 
-    table = s3db.msg_mcommons_inbound_settings
+    table = s3db.msg_mcommons_channel
     record = db(table.id == id).select(table.campaign_id,
                                        limitby=(0, 1)).first()
-    s3task.schedule_task("msg_twilio_inbound_sms",
+    s3task.schedule_task("msg_mcommons_poll",
                          vars={"campaign_id": record.campaign_id},
                          period=300,  # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
                          )
 
-    redirect(URL(f="mcommons_inbound_settings"))
+    redirect(URL(f="mcommons_channel"))
 
 # -----------------------------------------------------------------------------
 def schedule_twilio_sms():
@@ -906,19 +915,19 @@ def schedule_twilio_sms():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="twilio_inbound_settings"))
+        redirect(URL(f="twilio_inbound_channel"))
 
-    ttable = s3db.msg_twilio_inbound_settings
+    ttable = s3db.msg_twilio_inbound_channel
     record = db(table.id == id).select(table.account_name,
                                        limitby=(0, 1)).first()
-    s3task.schedule_task("msg_twilio_inbound_sms",
+    s3task.schedule_task("msg_twilio_poll",
                          vars={"account": record.account_name},
                          period=300,  # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
                          )
 
-    redirect(URL(f="twilio_inbound_settings"))
+    redirect(URL(f="twilio_inbound_channel"))
 
 # -----------------------------------------------------------------------------
 def disable_parser():
@@ -964,10 +973,10 @@ def disable_email():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="inbound_email_settings"))
+        redirect(URL(f="email_inbound_channel"))
 
     stable = s3db.scheduler_task
-    table = s3db.msg_inbound_email_settings
+    table = s3db.msg_email_inbound_channel
 
     settings = db(table.id == id).select(table.username,
                                          limitby=(0, 1)).first()
@@ -982,7 +991,7 @@ def disable_email():
             if (s == settings.username) :
                 db(stable.id == record.id).update(enabled = False)
 
-    redirect(URL(f="inbound_email_settings"))
+    redirect(URL(f="email_inbound_channel"))
 
 # -----------------------------------------------------------------------------
 def disable_mcommons_sms():
@@ -994,10 +1003,10 @@ def disable_mcommons_sms():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="mcommons_inbound_settings"))
+        redirect(URL(f="mcommons_channel"))
 
     stable = s3db.scheduler_task
-    table = s3db.msg_mcommons_inbound_settings
+    table = s3db.msg_mcommons_channel
 
     settings = db(table.id == id).select(table.campaign_id,
                                          limitby=(0, 1)).first()
@@ -1012,7 +1021,7 @@ def disable_mcommons_sms():
             if (s == settings.campaign_id) :
                 db(stable.id == record.id).update(enabled = False)
 
-    redirect(URL(f="mcommons_inbound_settings"))
+    redirect(URL(f="mcommons_channel"))
 
 # -----------------------------------------------------------------------------
 def disable_twilio_sms():
@@ -1024,10 +1033,10 @@ def disable_twilio_sms():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="twilio_inbound_settings"))
+        redirect(URL(f="twilio_inbound_channel"))
 
     stable = s3db.scheduler_task
-    table = s3db.msg_twilio_inbound_settings
+    table = s3db.msg_twilio_inbound_channel
 
     settings = db(table.id == id).select(table.account_name,
                                          limitby=(0, 1)).first()
@@ -1042,7 +1051,7 @@ def disable_twilio_sms():
             if (s == settings.account_name) :
                 db(stable.id == record.id).update(enabled = False)
 
-    redirect(URL(f="twilio_inbound_settings"))
+    redirect(URL(f="twilio_inbound_channel"))
 
 # -----------------------------------------------------------------------------
 def enable_email():
@@ -1054,10 +1063,10 @@ def enable_email():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="inbound_email_settings"))
+        redirect(URL(f="email_inbound_channel"))
 
     stable = s3db.scheduler_task
-    table = s3db.msg_inbound_email_settings
+    table = s3db.msg_email_inbound_channel
 
     settings = db(table.id == id).select(table.username,
                                          limitby=(0, 1)).first()
@@ -1072,7 +1081,7 @@ def enable_email():
             if (s == settings.username) :
                 db(stable.id == record.id).update(enabled = True)
 
-    redirect(URL(f="inbound_email_settings"))
+    redirect(URL(f="email_inbound_channel"))
 
 # -----------------------------------------------------------------------------
 def enable_mcommons_sms():
@@ -1084,10 +1093,10 @@ def enable_mcommons_sms():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="mcommons_inbound_settings"))
+        redirect(URL(f="mcommons_channel"))
 
     stable = s3db.scheduler_task
-    table = s3db.msg_mcommons_inbound_settings
+    table = s3db.msg_mcommons_channel
 
     settings = db(table.id == id).select(table.campaign_id,
                                          limitby=(0, 1)).first()
@@ -1102,7 +1111,7 @@ def enable_mcommons_sms():
             if (s == settings.campaign_id) :
                 db(stable.id == record.id).update(enabled = True)
 
-    redirect(URL(f="mcommons_inbound_settings"))
+    redirect(URL(f="mcommons_channel"))
 
 # -----------------------------------------------------------------------------
 def enable_twilio_sms():
@@ -1114,10 +1123,10 @@ def enable_twilio_sms():
         id = request.args[0]
     except:
         session.error = T("Source not specified!")
-        redirect(URL(f="twilio_inbound_settings"))
+        redirect(URL(f="twilio_inbound_channel"))
 
     stable = s3db.scheduler_task
-    table = s3db.msg_twilio_inbound_settings
+    table = s3db.msg_twilio_inbound_channel
 
     settings = db(table.id == id).select(table.account_name,
                                          limitby=(0, 1)).first()
@@ -1132,7 +1141,7 @@ def enable_twilio_sms():
             if (s == settings.account_name) :
                 db(stable.id == record.id).update(enabled = True)
 
-    redirect(URL(f="twilio_inbound_settings"))
+    redirect(URL(f="twilio_inbound_channel"))
 
 # -----------------------------------------------------------------------------
 def enable_parser():
@@ -1247,9 +1256,9 @@ def twilio_inbox():
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
-def modem_settings():
+def sms_modem_channel():
     """
-        RESTful CRUD controller for modem settings
+        RESTful CRUD controller for modem channels
         - appears in the administration menu
         Multiple Modems can be configured to receive Inbound Messages
     """
@@ -1303,11 +1312,12 @@ def modem_settings():
 
 #------------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
-def smtp_to_sms_settings():
+def sms_smtp_channel():
     """
-        RESTful CRUD controller for SMTP to SMS settings
+        RESTful CRUD controller for SMTP to SMS Outbound channels
         - appears in the administration menu
-        Only 1 of these ever in existence
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
     """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1341,11 +1351,12 @@ def smtp_to_sms_settings():
 
 #------------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
-def api_settings():
+def sms_webapi_channel():
     """
-        RESTful CRUD controller for Web API settings
+        RESTful CRUD controller for Web API channels
         - appears in the administration menu
-        Only 1 of these ever in existence
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
     """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1394,14 +1405,15 @@ def api_settings():
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
-def tropo_settings():
+def tropo_channel():
     """
-        RESTful CRUD controller for Tropo settings
+        RESTful CRUD controller for Tropo channels
         - appears in the administration menu
-        Only 1 of these ever in existence
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
     """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "msg_tropo_channel"
     table = s3db[tablename]
 
     table.token_messaging.label = T("Tropo Messaging Token")
@@ -1425,11 +1437,12 @@ def tropo_settings():
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
-def twitter_settings():
+def twitter_channel():
     """
-        RESTful CRUD controller for Twitter settings
+        RESTful CRUD controller for Twitter channels
         - appears in the administration menu
-        Only 1 of these ever in existence
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
     """
 
     try:
@@ -1499,6 +1512,12 @@ def twitter_settings():
                    deletable=False)
 
     return s3_rest_controller(deduplicate="", list_btn="")
+
+# -----------------------------------------------------------------------------
+def basestation():
+    """ RESTful CRUD controller for Base Stations """
+
+    return s3_rest_controller()
 
 # =============================================================================
 # The following functions hook into the pr functions:
@@ -1694,6 +1713,7 @@ def person_search(value, type=None):
 
 # -----------------------------------------------------------------------------
 def subscription():
+    """ RESTful CRUD controller """
 
     return s3_rest_controller()
 
@@ -1703,7 +1723,6 @@ def subscription():
 @auth.s3_requires_membership(1)
 def tag():
     """ RESTful CRUD controller """
-
 
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
@@ -1739,6 +1758,8 @@ def process_twitter_outbox():
     return
 
 # -----------------------------------------------------------------------------
+# Collect Inbound Messages
+# -----------------------------------------------------------------------------
 def poll_mcommons_inbox():
     """ Collect Inbound Mobile Commons Messages """
 
@@ -1746,9 +1767,9 @@ def poll_mcommons_inbox():
         campaign_id = request.args[0]
     except:
         session.error = T("Need to specify campaign_id")
-        redirect(URL(f="mcommons_inbound_settings"))
+        redirect(URL(f="mcommons_channel"))
 
-    msg.mcommons_inbound_sms(campaign_id = campaign_id)
+    msg.mcommons_poll(campaign_id = campaign_id)
 
     redirect(URL(f="inbox"))
 
@@ -1762,7 +1783,7 @@ def poll_twilio_inbox():
         session.error = T("Need to specify account name")
         redirect(f="")
 
-    msg.twilio_inbound_sms(account_name = account_name)
+    msg.twilio_poll(account_name = account_name)
 
     redirect(URL(f="twilio_inbox"))
 

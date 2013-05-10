@@ -49,7 +49,6 @@ class S3StatsModel(S3Model):
     names = ["stats_parameter",
              "stats_data",
              "stats_aggregate",
-             "stats_param_id",
              "stats_rebuild_aggregates",
              "stats_update_time_aggregate",
              "stats_update_aggregate_location",
@@ -71,6 +70,7 @@ class S3StatsModel(S3Model):
         #
         sp_types = Storage(stats_demographic = T("Demographic"),
                            project_beneficiary_type = T("Project Beneficiary Type"),
+                           project_campaign_keyword = T("Project Campaign Keyword"),
                            vulnerability_indicator = T("Vulnerability Indicator"),
                            vulnerability_aggregated_indicator = T("Vulnerability Aggregated Indicator"),
                            #survey_question_type = T("Survey Question Type"),
@@ -105,6 +105,7 @@ class S3StatsModel(S3Model):
         #
         sd_types = Storage(stats_demographic_data = T("Demographic Data"),
                            project_beneficiary = T("Project Beneficiary"),
+                           project_campaign_response_summary = T("Project Campaign Response Summary"),
                            vulnerability_data = T("Vulnerability Data"),
                            #survey_answer = T("Survey Answer"),
                            #climate_data = T("Climate Data"),
@@ -210,7 +211,6 @@ class S3StatsModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return Storage(
-                stats_param_id = param_id,
                 stats_rebuild_aggregates = self.stats_rebuild_aggregates,
                 stats_update_time_aggregate = self.stats_update_time_aggregate,
                 stats_update_aggregate_location = self.stats_update_aggregate_location,
@@ -221,14 +221,10 @@ class S3StatsModel(S3Model):
     def defaults(self):
         """ Safe defaults if the module is disabled """
 
-        param_id = S3ReusableField("parameter_id", "integer",
-                                   readable=False, writable=False
-                                   )
         def rebuild_aggregates():
             return
 
         return Storage(
-                stats_param_id = param_id,
                 stats_rebuild_aggregates = rebuild_aggregates
             )
 
@@ -827,7 +823,7 @@ class S3StatsDemographicModel(S3Model):
             msg_record_deleted = T("Demographic deleted"),
             msg_list_empty = T("No demographics currently defined"))
 
-        configure("stats_demographic",
+        configure(tablename,
                   super_entity = "stats_parameter",
                   deduplicate = self.stats_demographic_duplicate,
                   requires_approval = True,
