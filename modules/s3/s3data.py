@@ -1265,8 +1265,12 @@ class S3PivotTable(object):
 
         get_label = self._get_field_label
         get_total = self._totals
-        represent = lambda f, v, d="": \
-                    self._represent(rfields, f, v, default=d)
+
+        # Representation methods
+        represent_method = self._represent_method
+        cols_repr = represent_method(cols)
+        rows_repr = represent_method(rows)
+        layers_repr = dict([(f, represent_method(f)) for f, m in layers])
 
         layer_label = None
         col_titles = []
@@ -1355,7 +1359,7 @@ class S3PivotTable(object):
         for i in xrange(numrows):
             row = rvals[i]
             # Add representation value of the row header
-            row["text"] = represent(rows, row.value)
+            row["text"] = rows_repr(row.value)
             rows_list.append((row, cells[i]))
         sortdim(rows, rows_list)
 
@@ -1364,7 +1368,7 @@ class S3PivotTable(object):
         cols_list = []
         for j in xrange(numcols):
             column = cvals[j]
-            column["text"] = represent(cols, column.value)
+            column["text"] = cols_repr(column.value)
             cols_list.append((column, j))
         sortdim(cols, cols_list)
 
@@ -1426,10 +1430,11 @@ class S3PivotTable(object):
                 add_value = vals.append
                 for layer_idx, layer in enumerate(layers):
                     f, m = layer
+                    represent = layers_repr[f]
                     value = cell[layer]
                     if m == "list":
                         if isinstance(value, list):
-                            l = [represent(f, v, d="-") for v in value]
+                            l = [represent(v) for v in value]
                         elif value is None:
                             l = ["-"]
                         else:
@@ -1480,7 +1485,7 @@ class S3PivotTable(object):
                                                 next_id = len(cell_vals)
                                                 cell_vals[val] = next_id
                                                 layer_ids.append(next_id)
-                                                layer_values[next_id] = s3_unicode(represent(f, val))
+                                                layer_values[next_id] = s3_unicode(represent(val))
                                             else:
                                                 prev_id = cell_vals[val]
                                                 if prev_id not in layer_ids:
@@ -2041,58 +2046,42 @@ class S3PivotTable(object):
         return
 
     # -------------------------------------------------------------------------
-    def _represent_method(self, dim):
+    def _represent_method(self, field):
         """
-            Get a representation method for a dimension
+            Get the representation method for a field in the report
 
-            @param dim: the dimension (self.rows or self.cols)
+            @param field: the field selector
         """
 
-        manager = current.manager
+        rfields = self.rfields
+        default = lambda value: None
 
-        if dim:
-            rfield = self.rfields[dim]
+        if field and field in rfields:
+
+            rfield = rfields[field]
+
+            if rfield.field:
+                def repr_method(value):
+                    return current.manager.represent(rfield.field, value,
+                                                     strip_markup=True)
+
+            elif rfield.virtual:
+                stripper = S3MarkupStripper()
+                def repr_method(val):
+                    if val is None:
+                        return "-"
+                    text = s3_unicode(val)
+                    if "<" in text:
+                        stipper.feed(text)
+                        return stripper.stripped() # = totally naked ;)
+                    else:
+                        return text
+            else:
+                repr_method = default
         else:
-            return lambda val: None
-        if rfield.virtual:
-            stripper = S3MarkupStripper()
-            def repr_method(val):
-                text = s3_unicode(val)
-                if "<" in text:
-                    stipper.feed(text)
-                    return stripper.stripped() # = totally naked ;)
-                else:
-                    return text
-        else:
-            def repr_method(val):
-                return manager.represent(rfield.field, val,
-                                         strip_markup=True)
+            repr_method = default
+
         return repr_method
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _represent(rfields, field, value, default="-"):
-        """
-            Represent a field value
-
-            @param rfields: the list fields map
-            @param field: the field
-            @param value: the value
-            @param default: the default representation
-
-            @todo: deprecate, use _represent_method instead
-        """
-
-        if field in rfields:
-            lfield = rfields[field]
-            if lfield.field:
-                value = current.manager.represent(lfield.field, value,
-                                                  strip_markup=True)
-                return current.xml.xml_decode(value)
-        if value is None:
-            return default
-        else:
-            return s3_unicode(value)
 
     # -------------------------------------------------------------------------
     @staticmethod
