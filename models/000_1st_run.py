@@ -14,6 +14,13 @@
 # This will be compared to the version in the 0000_update_check.py 'canary' file.
 CURRENT_UPDATE_CHECK_ID = 3
 update_check_needed = False
+if os.path.exists(os.getcwd() + "/applications/websetup"):       #if the websetup tool do exist , then
+    #-------------------------------------Check To See If First Run or Not ---------------------------------
+    if  not os.path.exists(os.getcwd() + "/applications/"+request.application+"/models/000_config.py"):
+        redirect(URL(a="websetup",c="default",f="index",vars=dict(firstTime="True")))
+
+
+
 try:
     if CANARY_UPDATE_CHECK_ID != CURRENT_UPDATE_CHECK_ID:
         update_check_needed = True
