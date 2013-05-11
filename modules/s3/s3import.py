@@ -3573,6 +3573,8 @@ class S3BulkImporter(object):
                     extra_data = extradata
                 except:
                     self.errorList.append("WARNING:5th parameter invalid, parameter %s ignored" % task[5])
+            auth = current.auth
+            auth.rollback = True
             try:
                 # @todo: add extra_data and file attachments
                 result = resource.import_xml(csv,
@@ -3582,6 +3584,7 @@ class S3BulkImporter(object):
             except SyntaxError, e:
                 self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %
                                      (e, filename, task[4]))
+                auth.rollback = False
                 return
 
             if not resource.error:
@@ -3595,6 +3598,8 @@ class S3BulkImporter(object):
                 if errors:
                     self.errorList.extend(errors)
                 db.rollback()
+                
+            auth.rollback = False
 
             # Restore the view
             response.view = view

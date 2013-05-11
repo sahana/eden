@@ -3436,7 +3436,8 @@ class S3Resource(object):
         manager = current.manager
         db = current.db
         xml = current.xml
-        permit = current.auth.s3_has_permission
+        auth = current.auth
+        permit = auth.s3_has_permission
         audit = manager.audit
         tablename = self.tablename
         table = self.table
@@ -3577,7 +3578,9 @@ class S3Resource(object):
                 return False
 
         # Commit the import job
+        auth.rollback = not commit_job
         import_job.commit(ignore_errors=ignore_errors)
+        auth.rollback = False
         self.error = import_job.error
         self.import_count += import_job.count
         self.import_created += import_job.created
