@@ -935,7 +935,7 @@ class S3Resource(object):
 
         # Virtual fields and extra fields required by filter
         virtual_fields = rfilter.get_fields()
-        vfields, vjoins, l, d = resolve(virtual_fields)
+        vfields, vjoins, l, d = resolve(virtual_fields, show=False)
         joins.update(vjoins)
         vtables = left_joins.extend(l)
         distinct |= d
@@ -4160,7 +4160,8 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def resolve_selectors(self, selectors,
                           skip_components=False,
-                          extra_fields=True):
+                          extra_fields=True,
+                          show=True):
         """
             Resolve a list of field selectors against this resource
 
@@ -4169,6 +4170,7 @@ class S3Resource(object):
                                     are currently not supported by list_fields)
             @param extra_fields: automatically add extra_fields of all virtual
                                  fields in this table
+            @param show: default for S3ResourceField.show
 
             @return: tuple of (fields, joins, left, distinct)
         """
@@ -4266,7 +4268,7 @@ class S3Resource(object):
             elif rfield.join:
                 joins.update(rfield.join)
 
-            rfield.show = rfield.selector in display_fields
+            rfield.show = show and rfield.selector in display_fields
             append(rfield)
 
         return (rfields, joins, left, distinct)
