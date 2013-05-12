@@ -769,16 +769,20 @@ def time():
                        list_fields=list_fields)
 
     elif "week" in vars:
-        # Filter to just last week
+        # Filter to the specified number of weeks
+        weeks = int(vars.get("week", 1))
         now = request.utcnow
         week = datetime.timedelta(days=7)
-        s3.filter = (table.date > (now - week))
+        delta = week * weeks
+        s3.filter = (table.date > (now - delta))
 
     elif "month" in vars:
-        # Filter to just last 4 weeks
+        # Filter to the specified number of months
+        months = int(vars.get("month", 1))
         now = request.utcnow
         month = datetime.timedelta(weeks=4)
-        s3.filter = (table.date > (now - month))
+        delta = month * months
+        s3.filter = (table.date > (now - delta))
 
     return s3_rest_controller()
 

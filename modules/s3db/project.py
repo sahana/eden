@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#[*- coding: utf-8 -*-
 
 """ Sahana Eden Project Model
 
@@ -155,8 +155,8 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Statuses currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename,
-                               ) #none = T("Unknown"))
+        represent = S3Represent(lookup=tablename)
+                                #none = T("Unknown"))
         status_id = S3ReusableField("status_id", table,
                                     label = T("Status"),
                                     sortby = "name",
@@ -746,25 +746,22 @@ class S3ProjectModel(S3Model):
             # @ToDo: Pass through attributes that we don't need for the 1st level of mapping
             #        so that they can be used without a screen refresh
             url = URL(f="location", extension="geojson")
-            layer = {
-                    "name"      : T("Projects"),
-                    "id"        : "projects",
-                    "tablename" : "project_location",
-                    "url"       : url,
-                    "active"    : True,
-                    #"marker"   : None,
-                }
+            layer = {"name"      : T("Projects"),
+                     "id"        : "projects",
+                     "tablename" : "project_location",
+                     "url"       : url,
+                     "active"    : True,
+                     #"marker"   : None,
+                     }
 
-            map = current.gis.show_map(
-                        collapsed = True,
-                        feature_resources = [layer],
-                    )
+            map = current.gis.show_map(collapsed = True,
+                                       feature_resources = [layer],
+                                       )
 
-            output = dict(
-                title = T("Projects Map"),
-                form = form,
-                map = map,
-            )
+            output = dict(title = T("Projects Map"),
+                          form = form,
+                          map = map,
+                          )
 
             # Add Static JS
             response.s3.scripts.append(URL(c="static",
@@ -782,6 +779,8 @@ class S3ProjectModel(S3Model):
         """
             Export Projects as GeoJSON Polygons to view on the map
             - currently assumes that theme_percentages=True
+
+            @ToDo: complete
         """
 
         db = current.db
@@ -4911,7 +4910,7 @@ class S3ProjectTaskHRMModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(
-        )
+            )
 
 # =============================================================================
 class S3ProjectTaskIReportModel(S3Model):
@@ -5206,7 +5205,7 @@ def project_time_day(row):
         @param row: the Row
     """
 
-    default = "-"
+    default = current.messages["NONE"]
 
     try:
         thisdate = row["project_time.date"]
@@ -5235,7 +5234,7 @@ def project_time_week(row):
         @param row: the Row
     """
 
-    default = "-"
+    default = current.messages["NONE"]
 
     try:
         thisdate = row["project_time.date"]
@@ -5261,6 +5260,7 @@ def project_ckeditor():
     s3.scripts.append(adapter)
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
+    # @ToDo: Move to Static
     js = "".join((
 '''i18n.reply="''', str(current.T("Reply")), '''"
 var img_path=S3.Ap.concat('/static/img/jCollapsible/')
@@ -5425,58 +5425,51 @@ def project_rheader(r):
         activity = db(query).select(atable.name,
                                     limitby=(0, 1)).first()
         if activity:
-            activity = TR(
-                            TH("%s: " % T("Activity")),
-                            activity.name
-                        )
+            activity = TR(TH("%s: " % T("Activity")),
+                          activity.name
+                          )
         else:
             activity = ""
 
         if record.description:
-            description = TR(
-                            TH("%s: " % table.description.label),
-                            record.description
-                        )
+            description = TR(TH("%s: " % table.description.label),
+                             record.description
+                             )
         else:
             description = ""
 
         if record.site_id:
-            facility = TR(
-                            TH("%s: " % table.site_id.label),
-                            table.site_id.represent(record.site_id),
-                        )
+            facility = TR(TH("%s: " % table.site_id.label),
+                          table.site_id.represent(record.site_id),
+                          )
         else:
             facility = ""
 
         if record.location_id:
-            location = TR(
-                            TH("%s: " % table.location_id.label),
-                            table.location_id.represent(record.location_id),
-                        )
+            location = TR(TH("%s: " % table.location_id.label),
+                          table.location_id.represent(record.location_id),
+                          )
         else:
             location = ""
 
         if record.created_by:
-            creator = TR(
-                            TH("%s: " % T("Created by")),
-                            s3_auth_user_represent(record.created_by),
-                        )
+            creator = TR(TH("%s: " % T("Created by")),
+                         s3_auth_user_represent(record.created_by),
+                         )
         else:
             creator = ""
 
         if record.time_estimated:
-            time_estimated = TR(
-                            TH("%s: " % table.time_estimated.label),
-                            record.time_estimated
-                        )
+            time_estimated = TR(TH("%s: " % table.time_estimated.label),
+                                record.time_estimated
+                                )
         else:
             time_estimated = ""
 
         if record.time_actual:
-            time_actual = TR(
-                            TH("%s: " % table.time_actual.label),
-                            record.time_actual
-                        )
+            time_actual = TR(TH("%s: " % table.time_actual.label),
+                             record.time_actual
+                             )
         else:
             time_actual = ""
 
@@ -5555,13 +5548,12 @@ def project_task_form_inject(r, output, project=True):
                                 f="activity",
                                 tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
     if project:
-        options = {
-            "triggerName": "project_id",
-            "targetName": "activity_id",
-            "lookupPrefix": "project",
-            "lookupResource": "activity",
-            "optional": True,
-        }
+        options = {"triggerName": "project_id",
+                   "targetName": "activity_id",
+                   "lookupPrefix": "project",
+                   "lookupResource": "activity",
+                   "optional": True,
+                   }
         s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
     row = s3_formstyle(row_id, label, widget, comment)
@@ -5602,13 +5594,12 @@ def project_task_form_inject(r, output, project=True):
                                     c="project",
                                     f="milestone",
                                     tooltip=T("If you don't see the milestone in the list, you can add a new one by clicking link 'Add Milestone'."))
-        options = {
-            "triggerName": "project_id",
-            "targetName": "milestone_id",
-            "lookupPrefix": "project",
-            "lookupResource": "milestone",
-            "optional": True,
-        }
+        options = {"triggerName": "project_id",
+                   "targetName": "milestone_id",
+                   "lookupPrefix": "project",
+                   "lookupResource": "milestone",
+                   "optional": True,
+                   }
         s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
         row_id = field_id + SQLFORM.ID_ROW_SUFFIX
         row = s3_formstyle(row_id, label, widget, comment)
