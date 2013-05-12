@@ -4288,18 +4288,17 @@ class S3ProjectTaskModel(S3Model):
 
         if settings.get_project_sectors():
             report_fields.insert(3, (T("Sector"),
-                                     "task_id$task_project.project_id$sector"))
+                                     "task_id$task_project.project_id$sector_project.sector_id"))
             def get_sector_opts():
                 stable = self.org_sector
-                rows = db(stable.deleted == False).select(stable.name)
+                rows = db(stable.deleted == False).select(stable.id, stable.name)
                 sector_opts = {}
                 for row in rows:
-                    name = row.name
-                    sector_opts[name] = name
+                    sector_opts[row.id] = row.name
                 return sector_opts
             task_time_search.insert(2, S3SearchOptionsWidget(name="sectors",
                                                              label = T("Sector"),
-                                                             field = "task_id$task_project.project_id$sector",
+                                                             field = "task_id$task_project.project_id$sector_project.sector_id",
                                                              options = get_sector_opts,
                                                              cols = 3),
                                     )

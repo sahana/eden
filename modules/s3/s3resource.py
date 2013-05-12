@@ -1261,28 +1261,32 @@ class S3Resource(object):
                 continue
             tname = dfield.tname
             if tname not in stables:
-                sfields = stables[tname] = {}
+                sfields = stables[tname] = {"_left": {}}
             else:
                 sfields = stables[tname]
             if colname not in sfields:
                 sfields[colname] = dfield.field
+                if dfield.left:
+                    sfields["_left"].update(dfield.left)
 
         # Retrieve + extract into records
         for tname in stables:
+
+            stable = stables[tname]
 
             # Get the extra fields for subtable
             sresource = s3db.resource(tname)
             efields, ejoins, l, d = sresource.resolve_selectors([])
 
             # Get all left joins for subtable
-            tnames = left_joins.extend(l)
-            sjoins = left_joins.as_list(tablenames=[tname] + tnames,
+            tnames = left_joins.extend(l) + stable["_left"].keys()
+            sjoins = left_joins.as_list(tablenames=tnames,
                                         aqueries=aqueries)
             if not sjoins:
                 continue
+            del stable["_left"]
 
             # Get all fields for subtable query
-            stable = stables[tname]
             extract = stable.keys()
             for efield in efields:
                 stable[efield.colname] = efield.field
@@ -1296,7 +1300,6 @@ class S3Resource(object):
                                      distinct=True,
                                      cacheable=True,
                                      *sfields)
-
             # Extract and merge the data
             records = self.__extract(rows,
                                      pkey,
