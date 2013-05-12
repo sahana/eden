@@ -746,8 +746,9 @@ def time():
     """ RESTful CRUD controller """
 
     table = s3db.project_time
-    if "mine" in request.get_vars:
-        # Show the Logged Time for this User
+    vars = request.get_vars
+    if "mine" in vars:
+        # Filter to just this User
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         person_id = auth.s3_logged_in_person()
         if person_id:
@@ -767,10 +768,17 @@ def time():
                        listadd=False,
                        list_fields=list_fields)
 
-    elif "week" in request.get_vars:
+    elif "week" in vars:
+        # Filter to just last week
         now = request.utcnow
         week = datetime.timedelta(days=7)
         s3.filter = (table.date > (now - week))
+
+    elif "month" in vars:
+        # Filter to just last 4 weeks
+        now = request.utcnow
+        month = datetime.timedelta(weeks=4)
+        s3.filter = (table.date > (now - month))
 
     return s3_rest_controller()
 

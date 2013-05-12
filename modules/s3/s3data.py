@@ -1031,15 +1031,14 @@ class S3PivotTable(object):
     """ Class representing a pivot table of a resource """
 
     #: Supported aggregation methods
-    METHODS = {
-        "list": "List",
-        "count": "Count",
-        "min": "Minimum",
-        "max": "Maximum",
-        "sum": "Total",
-        "avg": "Average",
-        #"std": "Standard Deviation"
-    }
+    METHODS = {"list": "List",
+               "count": "Count",
+               "min": "Minimum",
+               "max": "Maximum",
+               "sum": "Total",
+               "avg": "Average",
+               #"std": "Standard Deviation"
+               }
 
     def __init__(self, resource, rows, cols, layers):
         """
@@ -1118,15 +1117,13 @@ class S3PivotTable(object):
 
         # Get the fields ------------------------------------------------------
         #
-        s3db = current.s3db
         tablename = resource.tablename
-        get_config = s3db.get_config
 
         # The "report_fields" table setting defines which additional
         # fields shall be included in the report base layer. This is
         # useful to provide easy access to the record data behind a
         # pivot table cell.
-        fields = get_config(tablename, "report_fields", [])
+        fields = current.s3db.get_config(tablename, "report_fields", [])
 
         self._get_fields(fields=fields)
 

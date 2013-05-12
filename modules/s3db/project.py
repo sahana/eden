@@ -229,8 +229,7 @@ class S3ProjectModel(S3Model):
                                    label = T("Budget"),
                                    represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             s3_currency(
-                                         readable = False if multi_budgets else True,
+                             s3_currency(readable = False if multi_budgets else True,
                                          writable = False if multi_budgets else True,
                                          ),
                              Field("objectives", "text",
@@ -3709,6 +3708,7 @@ class S3ProjectTaskModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        set_method = self.set_method
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -3926,14 +3926,14 @@ class S3ProjectTaskModel(S3Model):
                         name = "task_search_project",
                         label = T("Project"),
                         field = "task_project.project_id",
-                        options = self.task_project_opts,
+                        options = self.project_task_project_opts,
                         cols = 3
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_activity",
                         label = T("Activity"),
                         field = "task_activity.activity_id",
-                        options = self.task_activity_opts,
+                        options = self.project_task_activity_opts,
                         cols = 3
                     ),
                     S3SearchOptionsWidget(
@@ -3987,7 +3987,7 @@ class S3ProjectTaskModel(S3Model):
                                             name = "task_search_milestone",
                                             label = T("Milestone"),
                                             field = "task_milestone.milestone_id",
-                                            options = self.task_milestone_opts,
+                                            options = self.project_task_milestone_opts,
                                             cols = 3
                                             ))
 
@@ -4033,11 +4033,11 @@ class S3ProjectTaskModel(S3Model):
                   super_entity="doc_entity",
                   copyable=True,
                   orderby="project_task.priority",
-                  realm_entity=self.task_realm_entity,
-                  onvalidation=self.task_onvalidation,
+                  realm_entity=self.project_task_realm_entity,
+                  onvalidation=self.project_task_onvalidation,
                   #create_next=URL(f="task", args=["[id]"]),
-                  create_onaccept=self.task_create_onaccept,
-                  update_onaccept=self.task_update_onaccept,
+                  create_onaccept=self.project_task_create_onaccept,
+                  update_onaccept=self.project_task_update_onaccept,
                   search_method=task_search,
                   report_options = task_report,
                   list_fields=list_fields,
@@ -4060,9 +4060,9 @@ class S3ProjectTaskModel(S3Model):
                                   ondelete = "CASCADE")
 
         # Custom Methods
-        self.set_method("project", "task",
-                        method="dispatch",
-                        action=self.task_dispatch)
+        set_method("project", "task",
+                   method="dispatch",
+                   action=self.project_task_dispatch)
 
         # Components
         # Projects (for imports)
@@ -4265,7 +4265,8 @@ class S3ProjectTaskModel(S3Model):
         table.week = Field.Lazy(project_time_week)
 
         report_fields = list_fields + \
-                        [(T("Day"), "day"), (T("Week"), "week")]
+                        [(T("Day"), "day"),
+                         (T("Week"), "week")]
 
         task_time_search = [S3SearchOptionsWidget(name="person_id",
                                                   label = T("Person"),
@@ -4274,12 +4275,12 @@ class S3ProjectTaskModel(S3Model):
                             S3SearchOptionsWidget(name="project",
                                                   label = T("Project"),
                                                   field = "task_id$task_project.project_id",
-                                                  options = self.task_project_opts,
+                                                  options = self.project_task_project_opts,
                                                   cols = 3),
                             S3SearchOptionsWidget(name="activity",
                                                   label = T("Activity"),
                                                   field = "task_id$task_activity.activity_id",
-                                                  options = self.task_activity_opts,
+                                                  options = self.project_task_activity_opts,
                                                   cols = 3),
                             S3SearchMinMaxWidget(name="date",
                                                  label=T("Date"),
@@ -4304,8 +4305,13 @@ class S3ProjectTaskModel(S3Model):
                                                              cols = 3),
                                     )
 
+        # Custom Methods
+        set_method("project", "time",
+                   method="effort",
+                   action=self.project_time_effort_report)
+
         configure(tablename,
-                  onaccept=self.time_onaccept,
+                  onaccept=self.project_time_onaccept,
                   search_method=S3Search(advanced=task_time_search),
                   report_fields=["date"],
                   report_options=Storage(
@@ -4347,7 +4353,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_project_opts():
+    def project_task_project_opts():
         """
             Provide the options for the Project search filter
             - all Projects with Tasks
@@ -4365,7 +4371,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_activity_opts():
+    def project_task_activity_opts():
         """
             Provide the options for the Activity search filter
             - all Activities with Tasks
@@ -4386,7 +4392,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_milestone_opts():
+    def project_task_milestone_opts():
         """
             Provide the options for the Milestone search filter
             - all Activities with Tasks
@@ -4499,7 +4505,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_realm_entity(table, record):
+    def project_task_realm_entity(table, record):
         """ Set the task realm entity to the project's realm entity """
 
         task_id = record.id
@@ -4517,7 +4523,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_onvalidation(form):
+    def project_task_onvalidation(form):
         """ Task form validation """
 
         vars = form.vars
@@ -4532,7 +4538,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_create_onaccept(form):
+    def project_task_create_onaccept(form):
         """
             When a Task is created:
                 * Process the additional fields: Project/Activity/Milestone
@@ -4596,7 +4602,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_update_onaccept(form):
+    def project_task_update_onaccept(form):
         """
             * Process the additional fields: Project/Activity/Milestone
             * Log changes as comments
@@ -4728,7 +4734,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_dispatch(r, **attr):
+    def project_task_dispatch(r, **attr):
         """
             Send a Task Dispatch notice from a Task
             - if a location is supplied, this will be formatted as an OpenGeoSMS
@@ -4778,7 +4784,7 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def time_onaccept(form):
+    def project_time_onaccept(form):
         """ When Time is logged, update the Task & Activity """
 
         db = current.db
@@ -4835,6 +4841,37 @@ class S3ProjectTaskModel(S3Model):
             db(query).update(time_actual=hours)
 
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_time_effort_report(r, **attr):
+        """
+            Provide a Report on Effort by week
+
+            @ToDo: https://sahana.mybalsamiq.com/projects/sandbox/Effort
+        """
+
+        if r.representation == "html":
+
+            T = current.T
+            request = current.request
+            resource = r.resource
+            output = {}
+
+            from s3.s3data import S3PivotTable
+            rows = "person_id"
+            cols = "week"
+            layers = [("hours", "sum")]
+            pivot = S3PivotTable(resource, rows, cols, layers)
+            _table = pivot.html()
+
+            output["items"] = _table
+            output["title"] = T("Effort Report")
+            current.response.view = "list.html"
+            return output
+
+        else:
+            raise HTTP(501, BADMETHOD)
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):
