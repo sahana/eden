@@ -1207,7 +1207,7 @@ class S3Resource(object):
 
             if count:
                 rows = rfilter(rows)
-                numrows = len(rows)
+                totalrows = len(rows)
                 
                 if limit and start is None:
                     start = 0
@@ -1221,7 +1221,7 @@ class S3Resource(object):
 
             if (getids or left_joins) and has_id:
                 ids = list(set([row[pkey] for row in rows]))
-                numrows = len(ids)
+                totalrows = len(ids)
 
         # With GROUPBY, return the grouped rows here:
         if groupby:
