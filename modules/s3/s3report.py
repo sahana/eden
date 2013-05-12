@@ -56,7 +56,6 @@ class S3Report(S3CRUD):
     """ RESTful method for pivot table reports """
 
     T = current.T
-    METHODS = S3PivotTable.METHODS
     SHOW = T("Show")
     HIDE = T("Hide")
 

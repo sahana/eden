@@ -1646,12 +1646,6 @@ class S3OptionsMenu(object):
                 menu(
                      M("Daily Work", f="time")(
                         M("My Logged Hours", vars={"mine":1}),
-                        M("Last Week's Work", m="report",
-                          vars=Storage(rows="person_id",
-                                       cols="day",
-                                       fact="hours",
-                                       aggregate="sum",
-                                       week=1)),
                         M("My Open Tasks", f="task", vars={"mine":1}),
                      ),
                      M("Admin", restrict=[ADMIN])(
@@ -1660,6 +1654,18 @@ class S3OptionsMenu(object):
                      ),
                      M("Reports", f="report")(
                         M("Activity Report", f="activity", m="report"),
+                        M("Last Week's Work", f="time", m="report",
+                          vars=Storage(rows="person_id",
+                                       cols="day",
+                                       fact="hours",
+                                       aggregate="sum",
+                                       week=1)),
+                        M("Last Month's Work", f="time", m="report",
+                          vars=Storage(rows="person_id",
+                                       cols="week",
+                                       fact="hours",
+                                       aggregate="sum",
+                                       month=1)),
                         M("Project Time Report", f="time", m="report"),
                      ),
                     )
