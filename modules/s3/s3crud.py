@@ -1529,7 +1529,7 @@ class S3CRUD(S3Method):
             if r.method == "search" and not orderby:
                 orderby = default_orderby
             if orderby is None:
-                orderby = _config("orderby", None)
+                orderby = get_config("orderby", None)
 
             # Get a data table
             if totalrows != 0:
@@ -1556,11 +1556,11 @@ class S3CRUD(S3Method):
                                  sEcho,
                                  **dtargs)
             else:
-                output = '{"iTotalRecords": %s, ' \
-                         '"iTotalDisplayRecords": 0,' \
-                         '"dataTable_id": "%s", ' \
-                         '"sEcho": %s, ' \
-                         '"aaData": []}' % (totalrows, listid, sEcho)
+                output = '{"iTotalRecords":%s,' \
+                         '"iTotalDisplayRecords":0,' \
+                         '"dataTable_id":"%s",' \
+                         '"sEcho":%s,' \
+                         '"aaData":[]}' % (totalrows, listid, sEcho)
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
