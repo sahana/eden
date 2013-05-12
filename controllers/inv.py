@@ -275,7 +275,7 @@ def warehouse():
     if "viewing" in request.get_vars:
         viewing = request.get_vars.viewing
         tn, id = viewing.split(".", 1)
-        if tn == "inv_warehousec":
+        if tn == "inv_warehouse":
             request.args.insert(0, id)
 
     # CRUD pre-process
