@@ -3406,28 +3406,27 @@ class S3ProjectDRRModel(S3Model):
         T = current.T
 
         project_hfa_opts = self.project_hfa_opts()
+        hfa_opts = dict([(opt, "HFA %s" % opt) for opt in project_hfa_opts])
 
         tablename = "project_drr"
         self.define_table(tablename,
                           self.project_project_id(empty=False),
                           Field("hfa", "list:integer",
                                 label = T("HFA Priorities"),
-                                requires = IS_NULL_OR(
-                                            IS_IN_SET(project_hfa_opts.keys(),
-                                                      labels = ["HFA %s" % hfa \
-                                                                for hfa in project_hfa_opts.keys()],
-                                                      multiple = True)),
-                                represent = self.hfa_opts_represent,
-                                widget = lambda f, v, **attr: \
-                                    s3_grouped_checkboxes_widget(f, v,
-                                                                 help_field=project_hfa_opts,
-                                                                 **attr)
+                                requires = IS_NULL_OR(IS_IN_SET(
+                                            hfa_opts,
+                                            multiple = True)),
+                                widget = S3GroupedOptionsWidget(
+                                            cols=1,
+                                            help_field=project_hfa_opts
+                                         ),
+                                represent = S3Represent(options=hfa_opts,
+                                                        multiple=True),
                                 ),
                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict(
-            )
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod

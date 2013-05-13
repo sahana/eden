@@ -3099,7 +3099,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         T = current.T
 
-        selector = field.name.replace(".", "_")
+        selector = str(field).replace(".", "_")
 
         # Options:
         # * Show Selected List
@@ -4715,6 +4715,8 @@ class S3GroupedOptionsWidget(FormWidget):
         else:
             _id = "%s-options" % fieldname
         attr["_id"] = _id
+        if "_name" not in attr:
+            attr["_name"] = fieldname
 
         options = self._options(field, value)
         if "empty" in options:
