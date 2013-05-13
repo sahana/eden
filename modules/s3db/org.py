@@ -1195,7 +1195,8 @@ class S3OrganisationResourceModel(S3Model):
     """
 
     names = ["org_resource",
-             "org_resource_type",]
+             "org_resource_type",
+             ]
 
     def model(self):
 
@@ -1210,7 +1211,8 @@ class S3OrganisationResourceModel(S3Model):
         #
         tablename = "org_resource_type"
         table = self.define_table(tablename,
-                                  Field("name", label=T("Resource Type")),
+                                  Field("name",
+                                        label=T("Resource Type")),
                                   s3_comments(),
                                   *s3_meta_fields())
 
@@ -1273,7 +1275,7 @@ class S3OrganisationResourceModel(S3Model):
                                   org_resource_type_id(),
                                   Field("quantity", "integer", 
                                         requires=IS_NULL_OR(
-                                                    IS_INT_IN_RANGE(0, 9999)
+                                                    IS_INT_IN_RANGE(0, 999999)
                                                     ),
                                         label=T("Quantity")),
                                   s3_comments(),

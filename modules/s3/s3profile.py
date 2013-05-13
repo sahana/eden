@@ -355,7 +355,7 @@ class S3Profile(S3CRUD):
             map_url = widget.get("map_url", None)
             if not map_url:
                 # Build one
-                c, f = tablename.split("_")
+                c, f = tablename.split("_", 1)
                 map_url = URL(c=c, f=f, extension="geojson")
                 if filter:
                     map_url = "%s?" % map_url

@@ -415,12 +415,10 @@ def render_posts(listid, resource, rfields, record, **attr):
     organisation = record["auth_user.organisation_id"]
     organisation_id = raw["auth_user.organisation_id"]
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    avatar = s3_avatar_represent(author_id,
-                                 _class="media-object",
-                                 _style="width:50px;padding:5px;padding-top:0px;")
+
     db = current.db
-    ltable = current.s3db.pr_person_user
+    s3db = current.s3db
+    ltable = s3db.pr_person_user
     ptable = db.pr_person
     query = (ltable.user_id == author_id) & \
             (ltable.pe_id == ptable.pe_id)
@@ -434,8 +432,32 @@ def render_posts(listid, resource, rfields, record, **attr):
     author = A(author,
                _href=person_url,
                )
+
+    # Use Personal Avatar
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    #avatar = s3_avatar_represent(author_id,
+    #                             _class="media-object")
+    #avatar = A(avatar,
+    #           _href=person_url,
+    #           _class="pull-left",
+    #           )
+
+    # Use Organisation Logo
+    otable = db.org_organisation
+    row = db(otable.id == organisation_id).select(otable.logo,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    if row and row.logo:
+        logo = URL(c="default", f="download", args=[row.logo])
+    else:
+        logo = ""
+    avatar = IMG(_src=logo,
+                 _height=50,
+                 _width=50,
+                 _style="padding-right:5px;",
+                 _class="media-object")
     avatar = A(avatar,
-               _href=person_url,
+               _href=org_url,
                _class="pull-left",
                )
 
@@ -520,15 +542,14 @@ def render_posts(listid, resource, rfields, record, **attr):
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(avatar,
-                   DIV(DIV(body,
+               DIV(DIV(avatar,
+                       DIV(body,
                            DIV(author,
                                " - ",
                                A(organisation,
                                  _href=org_url,
                                  _class="card-organisation",
                                  ),
-                               docs,
                                _class="card-person",
                                ),
                            _class="media",
@@ -537,6 +558,7 @@ def render_posts(listid, resource, rfields, record, **attr):
                        ),
                    _class="media",
                    ),
+               docs,
                _class=item_class,
                _id=item_id,
                )

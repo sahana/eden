@@ -1,4 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation,Photo
+Admin,User,admin@example.com,testing,ADMIN,National Disaster Operation Center,
 Jose,Soares,jose.soares@oxfam.org.tl,eden,,Oxfam,http://tldrmp.aidiq.com/eden/static/prepop/scream.jpg
 Adriana,Macedo,adriana.macedo@redcross.tl,eden,,Timor-Leste Red Cross Society,http://tldrmp.aidiq.com/eden/static/prepop/Alexandra.jpg
 Liliana,Otilia,liliana.otilia@mss.gov.tl,eden,,National Disaster Operation Center,http://tldrmp.aidiq.com/eden/static/prepop/Boho.jpg

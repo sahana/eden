@@ -408,10 +408,8 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     author_id = raw["cms_post.created_by"]
     organisation = record["auth_user.organisation_id"]
     organisation_id = raw["auth_user.organisation_id"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id])
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    avatar = s3_avatar_represent(author_id,
-                                 _class="media-object")
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+
     db = current.db
     s3db = current.s3db
     ltable = s3db.pr_person_user
@@ -428,8 +426,32 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     author = A(author,
                _href=person_url,
                )
+
+    # Use Personal Avatar
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    #avatar = s3_avatar_represent(author_id,
+    #                             _class="media-object")
+    #avatar = A(avatar,
+    #           _href=person_url,
+    #           _class="pull-left",
+    #           )
+
+    # Use Organisation Logo
+    otable = db.org_organisation
+    row = db(otable.id == organisation_id).select(otable.logo,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    if row and row.logo:
+        logo = URL(c="default", f="download", args=[row.logo])
+    else:
+        logo = ""
+    avatar = IMG(_src=logo,
+                 _height=50,
+                 _width=50,
+                 #_style="padding-right:5px;",
+                 _class="media-object")
     avatar = A(avatar,
-               _href=person_url,
+               _href=org_url,
                _class="pull-left",
                )
 
@@ -1080,15 +1102,23 @@ def customize_project_project(**attr):
     
     # Configure fields 
     table.human_resource_id.label = T("Focal Person")
+    table.budget.label = "%s (USD)" % T("Budget")
+    # Better in column label & otherwise this construction loses thousands separators
+    #table.budget.represent = lambda value: "%d USD" % value
 
     # Project Locations must be districts
     ltable = s3db.project_location
+    ltable.location_id.label = ""
+    ltable.location_id.represent = S3Represent(lookup="gis_location")
     ltable.location_id.requires = IS_ONE_OF(db, "gis_location.id",
                                             S3Represent(lookup="gis_location"),
                                             sort = True,
                                             filterby = "level",
                                             filter_opts = ["L1"]
                                             )
+    # Don't add new Locations here
+    ltable.location_id.comment = None
+    # Simple dropdown
     ltable.location_id.widget = None
 
     crud_form = S3SQLCustomForm(
@@ -1096,7 +1126,7 @@ def customize_project_project(**attr):
         "organisation_id",
         S3SQLInlineComponent(
             "location",
-            label = T("Locations"),
+            label = T("Districts"),
             fields = ["location_id"],
             orderby = "location_id$name",
             render_list = True

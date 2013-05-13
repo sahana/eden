@@ -583,11 +583,10 @@ def person():
         form = auth.profile(next = next,
                             onaccept = onaccept)
 
-        return dict(
-                title = T("User Profile"),
-                rheader = rheader,
-                form = form,
-            )
+        return dict(title = T("User Profile"),
+                    rheader = rheader,
+                    form = form,
+                    )
 
     set_method("pr", "person",
                method="user",

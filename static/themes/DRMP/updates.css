@@ -85,6 +85,10 @@ h4.latest-updates {
     letter-spacing: -1px;
 }
 
+/* Attachments button */
+.dl-item > .btn-group > .dropdown-toggle {
+    margin-top: -25px;
+}
 
 /* Card Icons */
 .icon.icon-activity,
