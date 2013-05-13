@@ -94,15 +94,19 @@ class S3DataTable(object):
 
         self.data = data
         self.rfields = rfields
-        lfields = []
-        append = lfields.append
+
+        colnames = []
         heading = {}
-        for field in rfields:
-            selector = "%s.%s" % (field.tname, field.fname)
-            append(selector)
-            heading[selector] = (field.label)
-        self.lfields = lfields
+        
+        append = colnames.append
+        for rfield in rfields:
+            colname = rfield.colname
+            heading[colname] = rfield.label
+            append(colname)
+            
+        self.colnames = colnames
         self.heading = heading
+        
         max = len(data)
         if start < 0:
             start == 0
@@ -118,50 +122,39 @@ class S3DataTable(object):
         self.end = end
         self.filterString = filterString
 
-        def selectAction(orderby):
-            if isinstance(orderby, tuple):
-                for el in orderby:
-                    selectAction(el)
-            if isinstance(orderby, Field):
-                extractField(orderby)
-            elif isinstance(orderby, Expression):
-                extractExpression(orderby)
+        if orderby:
+            
+            if isinstance(orderby, str):
+                orderby_fields = orderby.split(",")
+            elif not isinstance(orderby, (list, tuple)):
+                orderby_fields = [orderby]
             else:
-                self.orderby.append([1, "asc"])
-
-        def extractField(field):
-            cnt = 0
-            append = self.orderby.append
-            s_field = str(field)
-            for rfield in rfields:
-                if s_field == rfield.colname:
-                    append([cnt, "asc"])
-                    break
-                cnt += 1
-
-        def extractExpression(exp):
-            cnt = 0
-            first = exp.first
-            if isinstance(first, Field):
-                s_first = str(first)
-                op = exp.op
-                INVERT = exp.db._adapter.INVERT
-                append = self.orderby.append
+                orderby_fields = orderby
+            orderby = []
+            for orderby_field in orderby_fields:
+                if type(orderby_field) is Expression:
+                    f = orderby_field.first
+                    if type(f) is Field and \
+                       orderby_field.op == db._adapter.INVERT:
+                        direction = "desc"
+                    else:
+                        continue
+                    fname = str(f)
+                elif type(orderby_field) is Field:
+                    direction = "asc"
+                    fname = str(orderby_field)
+                elif isinstance(orderby_field, str):
+                    fname, direction = (orderby_field.strip().split() + ["asc"])[:2]
+                else:
+                    continue
+                idx = 0
                 for rfield in rfields:
-                    if s_first == rfield.colname:
-                        if op == INVERT:
-                            append([cnt, "desc"])
-                        else:
-                            append([cnt, "asc"])
+                    if rfield.colname == fname:
+                        orderby.append([idx, direction])
                         break
-                    cnt += 1
-            else:
-                extractExpression(first)
-            if exp.second:
-                selectAction(exp.second)
-
-        self.orderby = []
-        selectAction(orderby)
+                    idx += 1
+                    
+        self.orderby = orderby
 
     # -------------------------------------------------------------------------
     def html(self,
@@ -186,7 +179,7 @@ class S3DataTable(object):
             @param attr: dictionary of attributes which can be passed in
         """
 
-        flist = self.lfields
+        flist = self.colnames
 
         if not id:
             id = "list_%s" % self.id_counter
@@ -271,7 +264,7 @@ class S3DataTable(object):
                                     after the group title.
         """
 
-        flist = self.lfields
+        flist = self.colnames
         action_col = attr.get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
@@ -761,7 +754,7 @@ class S3DataTable(object):
         start = self.start
         end = self.end
         if not flist:
-            flist = self.lfields
+            flist = self.colnames
 
         # Build the header row
         header = THEAD()
@@ -832,7 +825,7 @@ class S3DataTable(object):
 
         data = self.data
         if not flist:
-            flist = self.lfields
+            flist = self.colnames
         start = self.start
         end = self.end
         if action_col is None:

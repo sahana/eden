@@ -2073,7 +2073,7 @@ class S3Resource(object):
         # Generate the data table
         if data["data"]:
             rfields = data["rfields"]
-            dt = S3DataTable(rfields, data["data"])
+            dt = S3DataTable(rfields, data["data"], orderby=orderby)
         else:
             dt = None
         return dt, data["numrows"], data["ids"]
