@@ -923,7 +923,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     styleList["boxB1"] = boxB1
     styleList["boxB2"] = boxB2
 
-    sheet1 = book.add_sheet(T("Assessment"))
+    sheet1 = book.add_sheet(T("Survey"))
     sheetA = book.add_sheet(T("Metadata"))
     maxCol = 0
     for cell in matrix.matrix.values():
@@ -1111,7 +1111,7 @@ def question_metadata():
     return output
 
 # -----------------------------------------------------------------------------
-def newAssessment():
+def newSurvey():
     """
         RESTful CRUD controller
         @ToDo: Why is this a specialised function?
@@ -1167,7 +1167,7 @@ def newAssessment():
                             vars={"viewing":"%s.%s" % ("survey_series", series_id),
                                   "single_pass":True}
                             )
-            buttons = DIV(A(T("Upload Completed Assessment Form"),
+            buttons = DIV(A(T("Upload Completed Survey Form"),
                             _href=urlimport,
                             _id="Excel-import",
                             _class="action-btn"
@@ -1215,7 +1215,7 @@ def complete():
 
     def import_xls(uploadFile):
         """
-            Import Assessment Spreadsheet
+            Import Survey Spreadsheet
         """
 
         if series_id is None:
@@ -1230,11 +1230,11 @@ def complete():
             return None
         workbook = xlrd.open_workbook(file_contents=uploadFile)
         try:
-            sheetR = workbook.sheet_by_name("Assessment")
+            sheetR = workbook.sheet_by_name("Survey")
             sheetM = workbook.sheet_by_name("Metadata")
         except:
             session.error = T("You need to use the spreadsheet which you can download from this page")
-            redirect(URL(c="survey", f="newAssessment", args=[],
+            redirect(URL(c="survey", f="newSurvey", args=[],
                          vars={"viewing": "survey_series.%s" % series_id}))
         header = ""
         body = ""
