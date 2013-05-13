@@ -153,6 +153,9 @@ class S3DataTable(object):
                         orderby.append([idx, direction])
                         break
                     idx += 1
+
+        else:
+            orderby = []
                     
         self.orderby = orderby
 

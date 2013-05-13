@@ -1309,7 +1309,12 @@ class S3CRUD(S3Method):
                 start = None
 
             table = resource.table
-            fields = [table[f] for f in list_fields if f in table.fields]
+            if list_fields:
+                fields = [table[f] for f in list_fields if f in table.fields]
+                if table._id.name not in list_fields:
+                    fields.insert(0, table._id)
+            else:
+                fields = [f for f in table if f.type == "id" or f.readable]
 
             orderby = get_config("orderby", None)
 
