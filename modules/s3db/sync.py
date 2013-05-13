@@ -254,8 +254,8 @@ class SyncDataModel(S3Model):
                       sync_repository="repository_id")
         add_component("sync_log",
                       sync_repository="repository_id")
-        add_component("sync_conflict",
-                      sync_repository="repository_id")
+        #add_component("sync_conflict",
+        #              sync_repository="repository_id")
         add_component(S3Task.TASK_TABLENAME,
                       sync_repository=dict(name="job",
                                            joinby="repository_id",
@@ -618,8 +618,8 @@ class SyncDataModel(S3Model):
         db(jtable.repository_id == row.id).update(deleted=True)
 
         # Delete all pending conflicts of this repository
-        ctable = s3db.sync_conflict
-        db(ctable.repository_id == row.id).delete()
+        #ctable = s3db.sync_conflict
+        #db(ctable.repository_id == row.id).delete()
 
         # Delete all log entries for this repository
         ltable = s3db.sync_log
