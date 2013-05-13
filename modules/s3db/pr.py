@@ -542,6 +542,7 @@ class S3PersonModel(S3Model):
         settings = current.deployment_settings
 
         messages = current.messages
+        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         define_table = self.define_table
@@ -625,12 +626,14 @@ class S3PersonModel(S3Model):
                                                                     T("The first or only name of the person (mandatory)."))),
                                    label = T("First Name")),
                              Field("middle_name", length=64, # Mayon Compatibility
-                                   represent = lambda v: v or messages.NONE,
+                                   represent = lambda v: v or NONE,
                                    label = T("Middle Name"),
                                    ),
                              Field("last_name", length=64, # Mayon Compatibility
                                    label = T("Last Name"),
-                                   requires = last_name_validate),
+                                   represent = lambda v: v or NONE,
+                                   requires = last_name_validate,
+                                   ),
                              Field("initials", length=8,
                                    label = T("Initials")),
                              Field("preferred_name", length=64, # Mayon Compatibility
@@ -700,7 +703,7 @@ class S3PersonModel(S3Model):
                                        "last_name",
                                        "local_name",
                                        "identity.value"
-                                      ])
+                                       ])
 
         # Custom Form
         crud_form = S3SQLCustomForm("first_name",
@@ -712,7 +715,6 @@ class S3PersonModel(S3Model):
                                     "local_name",
                                     "gender",
                                     "person_details.marital_status",
-                                    "age_group",
                                     "person_details.nationality",
                                     "person_details.religion",
                                     "person_details.mother_name",
@@ -732,7 +734,7 @@ class S3PersonModel(S3Model):
                                        "last_name",
                                        #"picture",
                                        "gender",
-                                       "age_group",
+                                       #"age_group",
                                        (messages.ORGANISATION, "human_resource.organisation_id"),
                                        ],
                         crud_form = crud_form,
@@ -805,9 +807,8 @@ class S3PersonModel(S3Model):
 
         # Experience
         add_component("hrm_experience", pr_person="person_id")
-        add_component("hrm_programme_hours", pr_person=Storage(
-                                                name="hours",
-                                                joinby="person_id"))
+        add_component("hrm_programme_hours", pr_person=dict(name="hours",
+                                                            joinby="person_id"))
 
         # Assets
         add_component("asset_asset", pr_person="assigned_to_id")
