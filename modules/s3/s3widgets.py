@@ -3099,7 +3099,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         T = current.T
 
-        if type(field) is field:
+        if isinstance(field, Field):
             selector = str(field).replace(".", "_")
         else:
             selector = field.name.replace(".", "_")
