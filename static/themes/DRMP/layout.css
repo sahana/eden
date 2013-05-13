@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:8000/eden/static/themes/DRMP/layout.css */
+
 @charset "UTF-8";
 
 body {
@@ -43,6 +46,7 @@ footer {
 	border-top: 1px solid #c3c3c2;
 	background-color: #8a8d8e;
 	color: #fbfbfa;
+	margin-top: 80px;
 }
 
 #page-footer {
@@ -75,6 +79,12 @@ footer {
     display: block;
     list-style-type: none;
 }
+
+#page-footer div.container div.row div.span3 h3,
+#page-footer div.container div.row div.span3 ul {
+	text-align: left;
+}
+
 
 @media screen and (max-width: 767px) {
   #page-footer ul {
