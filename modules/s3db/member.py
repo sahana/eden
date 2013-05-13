@@ -180,7 +180,7 @@ class S3MembersModel(S3Model):
             msg_record_deleted = T("Member deleted"),
             msg_list_empty = T("No members currently registered"))
 
-        table.virtualfields.append(MemberVirtualFields())
+        table.paid = Field.Lazy(self.member_membership_paid)
 
         # Components
         # Email
@@ -349,6 +349,72 @@ class S3MembersModel(S3Model):
         #
         return Storage()
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def member_membership_paid(row):
+        """
+            Whether the member has paid within 12 months of start_date
+            anniversary
+
+            @ToDo: Formula should come from the deployment_template
+        """
+
+        try:
+            start_date = row["member_membership.start_date"]
+        except AttributeError:
+            # not available
+            start_date = None
+        try:
+            paid_date = row["member_membership.membership_paid"]
+        except AttributeError:
+            # not available
+            paid_date = None
+
+        if start_date:
+
+            T = current.T
+            PAID = T("paid")
+            OVERDUE = T("overdue")
+            LAPSED = T("expired")
+            lapsed = datetime.timedelta(days=183) # 6 months
+            year = datetime.timedelta(days=365)
+            now = current.request.utcnow.date()
+
+            if not paid_date:
+                # Never renewed since Membership started
+                # => due within 1 year
+                due = start_date + year
+                if now < due:
+                    return PAID
+                elif now > (due + lapsed):
+                    return LAPSED
+                else:
+                    return OVERDUE
+
+            now_month = now.month
+            start_month = start_date.month
+            if now_month > start_month:
+                due = datetime.date(now.year, start_month, start_date.day)
+            elif now_month == start_month:
+                now_day = now.day
+                start_day = start_date.day
+                if now_day >= start_day:
+                    due = datetime.date(now.year, start_month, start_day)
+                else:
+                    due = datetime.date((now.year - 1), start_month, start_day)
+            else:
+                # now_month < start_month
+                due = datetime.date((now.year - 1), start_month, start_date.day)
+
+            if paid_date >= due:
+                return PAID
+            elif (due - paid_date) > lapsed:
+                return LAPSED
+            else:
+                return OVERDUE
+
+        return current.messages["NONE"]
+        
     # -------------------------------------------------------------------------
     @staticmethod
     def member_search_simple_widget(type):
@@ -538,71 +604,5 @@ def member_rheader(r, tabs=[]):
             ), rheader_tabs)
 
     return rheader
-
-# =============================================================================
-class MemberVirtualFields:
-    """ Virtual fields as dimension classes for reports """
-
-    def paid(self):
-        """
-            Whether the member has paid within 12 months of start_date
-            anniversary
-
-            @ToDo: Formula should come from the deployment_template
-        """
-
-        try:
-            start_date = self.member_membership.start_date
-        except AttributeError:
-            # Not available
-            start_date = None
-        try:
-            paid_date = self.member_membership.membership_paid
-        except AttributeError:
-            # not available
-            paid_date = None
-        if start_date:
-            T = current.T
-            PAID = T("paid")
-            OVERDUE = T("overdue")
-            LAPSED = T("expired")
-            lapsed = datetime.timedelta(days=183) # 6 months
-            year = datetime.timedelta(days=365)
-            now = current.request.utcnow.date()
-
-            if not paid_date:
-                # Never renewed since Membership started
-                # => due within 1 year
-                due = start_date + year
-                if now < due:
-                    return PAID
-                elif now > (due + lapsed):
-                    return LAPSED
-                else:
-                    return OVERDUE
-
-            now_month = now.month
-            start_month = start_date.month
-            if now_month > start_month:
-                due = datetime.date(now.year, start_month, start_date.day)
-            elif now_month == start_month:
-                now_day = now.day
-                start_day = start_date.day
-                if now_day >= start_day:
-                    due = datetime.date(now.year, start_month, start_day)
-                else:
-                    due = datetime.date((now.year - 1), start_month, start_day)
-            else:
-                # now_month < start_month
-                due = datetime.date((now.year - 1), start_month, start_date.day)
-
-            if paid_date >= due:
-                return PAID
-            elif (due - paid_date) > lapsed:
-                return LAPSED
-            else:
-                return OVERDUE
-
-        return current.messages["NONE"]
-
+    
 # END =========================================================================

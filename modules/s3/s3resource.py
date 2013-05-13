@@ -1024,16 +1024,15 @@ class S3Resource(object):
                         # No join found for this field => skip
                         continue
                     
-                orderby.append(item)
                 orderby_fields.append(f)
-
                 if expression is None:
-                    fname = str(f)
+                    expression = f if direction == "asc" else ~f
+                    orderby.append(expression)
                     direction = direction.strip().lower()[:3]
-                    if fname == pkey:
-                        expression = f if direction == "asc" else ~f
-                    else:
+                    if fname != pkey:
                         expression = f.min() if direction == "asc" else ~(f.max())
+                else:
+                    orderby.append(expression)
                 orderby_aggregate.append(expression)
 
         # Initialize master query
