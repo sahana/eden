@@ -248,8 +248,6 @@ class HospitalDataModel(S3Model):
             msg_record_deleted = T("Hospital information deleted"),
             msg_list_empty = T("No Hospitals currently registered"))
 
-        #table.virtualfields.append(HMSHospitalVirtualFields())
-
         # Search method
         hms_hospital_search = S3Search(
             #name="hospital_search_simple",
@@ -1275,26 +1273,6 @@ class HospitalActivityReportModel(S3Model):
         timestmp = form.vars.date
         if hospital and hospital.modified_on < timestmp:
             hospital.update_record(modified_on=timestmp)
-
-# =============================================================================
-class HMSHospitalVirtualFields:
-    """
-        Virtual fields as dimension classes for reports
-        - currently unused
-    """
-
-    def facility_status(self):
-        """ Facility Status for the Hospital """
-        id = self.hms_hospital.id
-        table = current.s3db.hms_status
-        field = table.facility_status
-        r = current.db(table.hospital_id == id).select(field,
-                                                       limitby=(0, 1)
-                                                       ).first()
-        if r:
-            return s3_unicode(field.represent(r.facility_status))
-        else:
-            return current.messages["NONE"]
 
 # =============================================================================
 def hms_hospital_rheader(r, tabs=[]):

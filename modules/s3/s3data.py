@@ -1031,15 +1031,14 @@ class S3PivotTable(object):
     """ Class representing a pivot table of a resource """
 
     #: Supported aggregation methods
-    METHODS = {
-        "list": "List",
-        "count": "Count",
-        "min": "Minimum",
-        "max": "Maximum",
-        "sum": "Total",
-        "avg": "Average",
-        #"std": "Standard Deviation"
-    }
+    METHODS = {"list": "List",
+               "count": "Count",
+               "min": "Minimum",
+               "max": "Maximum",
+               "sum": "Total",
+               "avg": "Average",
+               #"std": "Standard Deviation"
+               }
 
     def __init__(self, resource, rows, cols, layers):
         """
@@ -1118,15 +1117,13 @@ class S3PivotTable(object):
 
         # Get the fields ------------------------------------------------------
         #
-        s3db = current.s3db
         tablename = resource.tablename
-        get_config = s3db.get_config
 
         # The "report_fields" table setting defines which additional
         # fields shall be included in the report base layer. This is
         # useful to provide easy access to the record data behind a
         # pivot table cell.
-        fields = get_config(tablename, "report_fields", [])
+        fields = current.s3db.get_config(tablename, "report_fields", [])
 
         self._get_fields(fields=fields)
 
@@ -1136,49 +1133,13 @@ class S3PivotTable(object):
 
         # Retrieve the records ------------------------------------------------
         #
-        key = str(resource.table._id)
-        rfields = self.rfields
-        dfields = {}
-        for selector, rfield in rfields.items():
-            if rfield.colname == key:
-                continue
-            tname = rfield.tname
-            if tname in dfields:
-                dfields[tname].append(selector)
-            else:
-                dfields[tname] = [selector]
-        sets = dfields.items()
-        primary = sets[0]
-        secondary = sets[1:]
-
-        rows = resource.select([self.pkey] + primary[1],
-                               start=None, limit=None, cacheable=True)
-        data = Storage([(i[key], i)
-                        for i in resource.extract(rows, [self.pkey] + primary[1])])
-
-        #if DEBUG:
-            #duration = datetime.datetime.now() - _start
-            #duration = '{:.2f}'.format(duration.total_seconds())
-            #_debug("Primary query complete after %s seconds" % duration)
-            
-        # Generate the report -------------------------------------------------
-        #
+        result = resource.fast_select(self.rfields.keys(),
+                                      start=None, limit=None)
+        data = result["data"]
         if data:
-            dresource = s3db.resource(resource.tablename, id=data.keys())
-            for tn, dfields in secondary:
-                rows = dresource.select([self.pkey] + dfields,
-                                        start=None, limit=None, cacheable=True)
-                e = dresource.extract(rows, [self.pkey] + dfields)
-                for row in e:
-                    k = row[key]
-                    d = data[k]
-                    d.update(row)
-            records = data
 
-            #if DEBUG:
-                #duration = datetime.datetime.now() - _start
-                #duration = '{:.2f}'.format(duration.total_seconds())
-                #_debug("Secondary queries complete after %s seconds" % duration)
+            key = str(resource.table._id)
+            records = Storage([(i[key], i) for i in data])
                 
             # Generate the data frame -----------------------------------------
             #
@@ -1301,8 +1262,12 @@ class S3PivotTable(object):
 
         get_label = self._get_field_label
         get_total = self._totals
-        represent = lambda f, v, d="": \
-                    self._represent(rfields, f, v, default=d)
+
+        # Representation methods
+        represent_method = self._represent_method
+        cols_repr = represent_method(cols)
+        rows_repr = represent_method(rows)
+        layers_repr = dict([(f, represent_method(f)) for f, m in layers])
 
         layer_label = None
         col_titles = []
@@ -1391,7 +1356,7 @@ class S3PivotTable(object):
         for i in xrange(numrows):
             row = rvals[i]
             # Add representation value of the row header
-            row["text"] = represent(rows, row.value)
+            row["text"] = rows_repr(row.value)
             rows_list.append((row, cells[i]))
         sortdim(rows, rows_list)
 
@@ -1400,7 +1365,7 @@ class S3PivotTable(object):
         cols_list = []
         for j in xrange(numcols):
             column = cvals[j]
-            column["text"] = represent(cols, column.value)
+            column["text"] = cols_repr(column.value)
             cols_list.append((column, j))
         sortdim(cols, cols_list)
 
@@ -1462,10 +1427,11 @@ class S3PivotTable(object):
                 add_value = vals.append
                 for layer_idx, layer in enumerate(layers):
                     f, m = layer
+                    represent = layers_repr[f]
                     value = cell[layer]
                     if m == "list":
                         if isinstance(value, list):
-                            l = [represent(f, v, d="-") for v in value]
+                            l = [represent(v) for v in value]
                         elif value is None:
                             l = ["-"]
                         else:
@@ -1516,7 +1482,7 @@ class S3PivotTable(object):
                                                 next_id = len(cell_vals)
                                                 cell_vals[val] = next_id
                                                 layer_ids.append(next_id)
-                                                layer_values[next_id] = s3_unicode(represent(f, val))
+                                                layer_values[next_id] = s3_unicode(represent(val))
                                             else:
                                                 prev_id = cell_vals[val]
                                                 if prev_id not in layer_ids:
@@ -2077,58 +2043,42 @@ class S3PivotTable(object):
         return
 
     # -------------------------------------------------------------------------
-    def _represent_method(self, dim):
+    def _represent_method(self, field):
         """
-            Get a representation method for a dimension
+            Get the representation method for a field in the report
 
-            @param dim: the dimension (self.rows or self.cols)
+            @param field: the field selector
         """
 
-        manager = current.manager
+        rfields = self.rfields
+        default = lambda value: None
 
-        if dim:
-            rfield = self.rfields[dim]
+        if field and field in rfields:
+
+            rfield = rfields[field]
+
+            if rfield.field:
+                def repr_method(value):
+                    return current.manager.represent(rfield.field, value,
+                                                     strip_markup=True)
+
+            elif rfield.virtual:
+                stripper = S3MarkupStripper()
+                def repr_method(val):
+                    if val is None:
+                        return "-"
+                    text = s3_unicode(val)
+                    if "<" in text:
+                        stipper.feed(text)
+                        return stripper.stripped() # = totally naked ;)
+                    else:
+                        return text
+            else:
+                repr_method = default
         else:
-            return lambda val: None
-        if rfield.virtual:
-            stripper = S3MarkupStripper()
-            def repr_method(val):
-                text = s3_unicode(val)
-                if "<" in text:
-                    stipper.feed(text)
-                    return stripper.stripped() # = totally naked ;)
-                else:
-                    return text
-        else:
-            def repr_method(val):
-                return manager.represent(rfield.field, val,
-                                         strip_markup=True)
+            repr_method = default
+
         return repr_method
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _represent(rfields, field, value, default="-"):
-        """
-            Represent a field value
-
-            @param rfields: the list fields map
-            @param field: the field
-            @param value: the value
-            @param default: the default representation
-
-            @todo: deprecate, use _represent_method instead
-        """
-
-        if field in rfields:
-            lfield = rfields[field]
-            if lfield.field:
-                value = current.manager.represent(lfield.field, value,
-                                                  strip_markup=True)
-                return current.xml.xml_decode(value)
-        if value is None:
-            return default
-        else:
-            return s3_unicode(value)
 
     # -------------------------------------------------------------------------
     @staticmethod

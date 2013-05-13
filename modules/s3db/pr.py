@@ -780,7 +780,7 @@ class S3PersonModel(S3Model):
         # Email
         add_component("pr_contact",
                       pr_person=dict(
-                        name="phone",
+                        name="email",
                         joinby="pe_id",
                         filterby="contact_method",
                         filterfor=["EMAIL"],

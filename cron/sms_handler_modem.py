@@ -29,48 +29,63 @@ import sys, os
 path = os.path.join(request.folder, "modules")
 if not path in sys.path:
     sys.path.append(path)
-import pygsm
 import threading
 import time
+
+import pygsm
 from pygsm.autogsmmodem import GsmModemNotFound
+
+from gluon import current
+
 import s3msg
 
-class ModemThread( threading.Thread ):
+class ModemThread(threading.Thread):
     def __init__(self, modem):
         self.modem = modem
-        threading.Thread.__init__ ( self )
-        self.msg = s3msg.S3Msg(globals(), deployment_settings, db, modem=modem)
+        threading.Thread.__init__(self)
 
     def run(self):
-        boxdata = self.modem.query("AT+CMGD=?")
+        modem = self.modem
+        query = modem.query
+        command = modem.command
+        next_message = modem.next_message
+
+        msg = current.msg
+        process_outbox = msg.process_outbox
+        receive_msg = msg.receive_msg
+
+        boxdata = query("AT+CMGD=?")
         boxsize = int(boxdata.split("(")[1].split(")")[0].split("-")[1])
         cleanup = False
+
         while True:
-            self.msg.process_outbox(contact_method="SMS")
+            process_outbox(contact_method="SMS")
             for i in range(5):
-                # parse 5 messages in one shot
-                message = self.modem.next_message()
+                # Parse 5 messages in one shot
+                message = next_message()
                 if message is not None:
                     cleanup = True
                     # for debug purposes
                     #print "Got message: " + message.text
                     # Temp: SMS AutoResponder on by default
-                    #self.modem.send_sms(message.sender, "This is to be replaced with the autorespond message")
-                    self.msg.receive_msg(message=message.text, fromaddress=message.sender, pr_message_method="SMS")
+                    #modem.send_sms(message.sender, "This is to be replaced with the autorespond message")
+                    receive_msg(message=message.text, fromaddress=message.sender, pr_message_method="SMS")
                 if cleanup:
                     for i in range(boxsize): # For cleaning up read messages.
                         try:
-                            temp = self.modem.command("AT+CMGR=" + str(i+1) + ",1")
+                            temp = command("AT+CMGR=" + str(i+1) + ",1")
                             if "REC READ" in temp[0]:
-                                self.modem.query("AT+CMGD=" + str(i+1))
+                                query("AT+CMGD=" + str(i+1))
                         except:
                             pass
                     cleanup = False
             time.sleep(5)
-		#self.modem.send_sms("9935648569", "Hey!")
+		#modem.send_sms("9935648569", "Hey!")
 
-s3db.table("msg_modem_settings")
-modem_configs = db(db.msg_modem_settings.enabled == True).select()
+table = s3db.msg_sms_modem_channel
+modem_configs = db(table.enabled == True).select(table.modem_port,
+                                                 table.modem_baud,
+                                                 )
 
 # PyGSM GsmModem class instances
 modems = []

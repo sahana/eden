@@ -1207,7 +1207,7 @@ class S3Resource(object):
 
             if count:
                 rows = rfilter(rows)
-                numrows = len(rows)
+                totalrows = len(rows)
                 
                 if limit and start is None:
                     start = 0
@@ -1221,7 +1221,7 @@ class S3Resource(object):
 
             if (getids or left_joins) and has_id:
                 ids = list(set([row[pkey] for row in rows]))
-                numrows = len(ids)
+                totalrows = len(ids)
 
         # With GROUPBY, return the grouped rows here:
         if groupby:
@@ -1422,7 +1422,7 @@ class S3Resource(object):
                     else:
                         result = results[record_id]
 
-                    data = records[record_id].keys()
+                    data = frecords[record_id].keys()
                     if len(data) == 1 and not list_type:
                         data = data[0]
                     result[colname] = data
@@ -1444,7 +1444,7 @@ class S3Resource(object):
                   pkey,
                   columns,
                   join=True,
-                  records={},
+                  records=None,
                   field_data=None,
                   effort=None,
                   represent=False):
@@ -1463,6 +1463,9 @@ class S3Resource(object):
                               representation efforts for list:types
         """
 
+        if records is None:
+            records = {}
+        
         def get(key):
             t, f = key.split(".", 1)
             if join:
@@ -3433,7 +3436,8 @@ class S3Resource(object):
         manager = current.manager
         db = current.db
         xml = current.xml
-        permit = current.auth.s3_has_permission
+        auth = current.auth
+        permit = auth.s3_has_permission
         audit = manager.audit
         tablename = self.tablename
         table = self.table
@@ -3574,7 +3578,9 @@ class S3Resource(object):
                 return False
 
         # Commit the import job
+        auth.rollback = not commit_job
         import_job.commit(ignore_errors=ignore_errors)
+        auth.rollback = False
         self.error = import_job.error
         self.import_count += import_job.count
         self.import_created += import_job.created

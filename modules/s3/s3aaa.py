@@ -209,6 +209,10 @@ Thank you
         # Set to True to override any authorization
         self.override = False
 
+        # Set to True to indicate that all current transactions
+        # are to be rolled back (e.g. trial phase of interactive imports)
+        self.rollback = False
+
         # Site types (for OrgAuth)
         T = current.T
         if deployment_settings.get_ui_label_camp():

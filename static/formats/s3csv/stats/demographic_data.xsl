@@ -114,6 +114,7 @@
     <!-- Demographic Data Record -->
     <xsl:template match="row">
         <xsl:variable name="status" select="col[@field='Status']"/>
+        <xsl:variable name="value" select="col[@field='Value']"/>
         <xsl:variable name="date" select="col[@field='Date']"/>
         <xsl:variable name="location"><xsl:call-template name="LocationTuid"/></xsl:variable>
         <xsl:variable name="source" select="col[@field='Source Name']"/>
@@ -129,12 +130,12 @@
             </xsl:choose>
         </xsl:variable>
 
-        <xsl:if test="col[@field='Value']!=''">
+        <xsl:if test="$value!=''">
             <resource name="stats_demographic_data">
                 <xsl:attribute name="approved">
                     <xsl:value-of select="$approved"/>
                 </xsl:attribute>
-                <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
+                <data field="value"><xsl:value-of select="$value"/></data>
                 <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
                 <!-- Bad to hardcode a created_by to an ID in an .xsl!
                 <data field="created_by">1</data> -->

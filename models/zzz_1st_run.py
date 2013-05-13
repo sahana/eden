@@ -187,21 +187,21 @@ if len(pop_list) > 0:
     if has_module("msg"):
         # To read inbound email, set username (email address), password, etc.
         # here. Insert multiple records for multiple email sources.
-        db.msg_inbound_email_settings.insert(server = "imap.gmail.com",
-                                             protocol = "imap",
-                                             use_ssl = True,
-                                             port = 993,
-                                             username = "example-username",
-                                             password = "password",
-                                             delete_from_server = False
-                                             )
+        db.msg_email_inbound_channel.insert(server = "imap.gmail.com",
+                                            protocol = "imap",
+                                            use_ssl = True,
+                                            port = 993,
+                                            username = "example-username",
+                                            password = "password",
+                                            delete_from_server = False
+                                            )
         # Need entries for the Settings/1/Update URLs to work
-        db.msg_setting.insert( outgoing_sms_handler = "WEB_API" )
-        db.msg_modem_settings.insert( modem_baud = 115200 )
-        db.msg_api_settings.insert( to_variable = "to" )
-        db.msg_smtp_to_sms_settings.insert( address="changeme" )
-        db.msg_tropo_settings.insert( token_messaging = "" )
-        db.msg_twitter_settings.insert( pin = "" )
+        db.msg_sms_outbound_gateway.insert( outgoing_sms_handler = "WEB_API" )
+        db.msg_sms_modem_channel.insert( modem_baud = 115200 )
+        db.msg_sms_webapi_channel.insert( to_variable = "to" )
+        db.msg_sms_smtp_channel.insert( address="changeme" )
+        db.msg_tropo_channel.insert( token_messaging = "" )
+        db.msg_twitter_channel.insert( pin = "" )
 
     # Budget Module
     if has_module("budget"):

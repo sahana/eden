@@ -28,6 +28,7 @@ Name,Height,Width,Image
 "hospital_yellow",40,40,"gis_marker.image.E_Med_Hospital_S1_Yellow.png"
 "incident",50,50,"gis_marker.image.Incident_Theme.png"
 "information",32,32,"gis_marker.image.Information.png"
+"mobile_phone",40,40,"gis_marker.image.Mobile_Phone.png"
 "mosque",33,44,"gis_marker.image.Public_Venue_Mosque_S1.png"
 "news",48,48,"gis_marker.image.News.png"
 "office",40,40,"gis_marker.image.Emergency_Operations_Center_S1.png"

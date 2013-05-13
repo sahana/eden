@@ -411,7 +411,8 @@ class S3LocationModel(S3Model):
             On Accept for GIS Locations (after DB I/O)
         """
 
-        if not current.auth.override:
+        if not current.auth.override and \
+           not current.auth.rollback:
             # Update the Path (async if-possible)
             # (skip during prepop)
             vars = form.vars

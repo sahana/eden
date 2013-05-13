@@ -108,10 +108,13 @@ class S3Msg(object):
         #  <xs:enumeration value="XRI"/>
         #  <xs:enumeration value="YAHOO"/>
 
+        # @ToDo: Remove the T from the init() & T upon usage instead
+
+        MOBILE = current.deployment_settings.get_ui_label_mobile_phone()
         # Full range of contact options
         self.CONTACT_OPTS = {
                 "EMAIL":       T("Email"),
-                "SMS":         current.deployment_settings.get_ui_label_mobile_phone(),
+                "SMS":         MOBILE,
                 "HOME_PHONE":  T("Home phone"),
                 "WORK_PHONE":  T("Work phone"),
                 "FAX":         T("Fax"),
@@ -127,7 +130,7 @@ class S3Msg(object):
         # NB Coded into hrm_map_popup & s3.msg.js
         self.MSG_CONTACT_OPTS = {
                 "EMAIL":   T("Email"),
-                "SMS":     current.deployment_settings.get_ui_label_mobile_phone(),
+                "SMS":     MOBILE,
                 "TWITTER": T("Twitter"),
                 #"XMPP":   "XMPP",
             }
@@ -620,7 +623,7 @@ class S3Msg(object):
         s3db = current.s3db
 
         if contact_method == "SMS":
-            table = s3db.msg_setting
+            table = s3db.msg_sms_outbound_gateway
             settings = db(table.id > 0).select(table.outgoing_sms_handler,
                                                limitby=(0, 1)).first()
             if not settings:
@@ -951,7 +954,7 @@ class S3Msg(object):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.msg_api_settings
+        table = s3db.msg_sms_webapi_channel
 
         # Get Configuration
         query = (table.enabled == True)
@@ -1000,7 +1003,7 @@ class S3Msg(object):
             http://www.obviously.com/tech_tips/SMS_Text_Email_Gateway.html
         """
 
-        table = current.s3db.msg_smtp_to_sms_settings
+        table = current.s3db.msg_sms_smtp_channel
         query = (table.enabled == True)
         settings = current.db(query).select(limitby=(0, 1)
                                             ).first()
@@ -1033,7 +1036,7 @@ class S3Msg(object):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.msg_tropo_settings
+        table = s3db.msg_tropo_channel
 
         base_url = "http://api.tropo.com/1.0/sessions"
         action = "create"
@@ -1150,7 +1153,8 @@ class S3Msg(object):
         else:
             self.tweepy = tweepy
 
-        table = current.s3db.msg_twitter_settings
+        table = current.s3db.msg_twitter_channel
+        # @ToDo: Don't assume that we only have a single record
         twitter_settings = current.db(table.id > 0).select(table.oauth_key,
                                                            table.oauth_secret,
                                                            table.twitter_account,
@@ -1354,13 +1358,13 @@ class S3Msg(object):
         db = current.db
         s3db = current.s3db
 
-        inbound_status_table = s3db.msg_inbound_email_status
+        inbound_status_table = s3db.msg_email_inbound_status
         inbox_table = s3db.msg_email_inbox
         log_table = s3db.msg_log
         source_task_id = username
 
         # Read-in configuration from Database
-        settings = db(s3db.msg_inbound_email_settings.username == username).select(limitby=(0, 1)).first()
+        settings = db(s3db.msg_email_inbound_channel.username == username).select(limitby=(0, 1)).first()
         if not settings:
             return "Username %s not scheduled." % username
         host = settings.server
@@ -1535,7 +1539,7 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def mcommons_inbound_sms(campaign_id):
+    def mcommons_poll(campaign_id):
         """
             Fetches the inbound SMS from Mobile Commons API
             http://www.mobilecommons.com/mobile-commons-api/rest/#ListIncomingMessages
@@ -1543,7 +1547,7 @@ class S3Msg(object):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.msg_mcommons_inbound_settings
+        table = s3db.msg_mcommons_channel
         query = (table.campaign_id == campaign_id)
         account = db(query).select(limitby=(0, 1)).first()
         if account:
@@ -1596,12 +1600,12 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def twilio_inbound_sms(account_name):
-        """ Fetches the inbound sms from twilio API."""
+    def twilio_poll(account_name):
+        """ Fetches the inbound SMS from Twilio API."""
 
         db = current.db
         s3db = current.s3db
-        ttable = s3db.msg_twilio_inbound_settings
+        ttable = s3db.msg_twilio_inbound_channel
         query = (ttable.account_name == account_name) & \
                 (ttable.deleted == False)
         account = db(query).select(limitby=(0, 1)).first()

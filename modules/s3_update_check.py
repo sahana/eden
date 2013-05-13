@@ -19,9 +19,6 @@ VERSION = 1
 def update_check():
     """
         Check whether the dependencies are sufficient to run Eden
-
-        @ToDo: Integrate into WebSetup:
-               http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/WebSetup
     """
 
     # Get Web2py environment into our globals.
@@ -163,6 +160,17 @@ def update_check():
                 import shutil
                 shutil.copy(src_path, dst_path)
             copied_from_template.append(template_files[t])
+
+            # @ToDo: WebSetup
+            #  http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/WebSetup
+            #if not os.path.exists("%s/applications/websetup" % os.getcwd()):
+            #    # @ToDo: Check Permissions
+            #    # Copy files into this folder (@ToDo: Pythonise)
+            #    cp -r private/websetup "%s/applications" % os.getcwd()
+            # Launch WebSetup
+            #redirect(URL(a="websetup", c="default", f="index",
+            #             vars=dict(appname=request.application,
+            #                       firstTime="True")))
         else:
             # Found the file in the destination
             # Check if it has been edited

@@ -162,7 +162,7 @@ if settings.has_module("msg"):
     tasks["msg_process_outbox"] = msg_process_outbox
 
     # -------------------------------------------------------------------------
-    def msg_process_inbound_email(username, user_id):
+    def msg_email_poll(username, user_id):
         """
             Poll an inbound email source.
 
@@ -174,37 +174,37 @@ if settings.has_module("msg"):
         db.commit()
         return result
 
-    tasks["msg_process_inbound_email"] = msg_process_inbound_email
+    tasks["msg_email_poll"] = msg_email_poll
 
     # -------------------------------------------------------------------------
-    def msg_mcommons_inbound_sms(campaign_id, user_id=None):
+    def msg_mcommons_poll(campaign_id, user_id=None):
         """
-            Poll an inbound SMS(Mobile Commons) source.
+            Poll a Mobile Commons source for Inbound SMS.
 
             @param campaign_id: account name for the SMS source to read from.
             This uniquely identifies one inbound SMS task.
         """
         # Run the Task & return the result
-        result = msg.mcommons_inbound_sms(campaign_id)
+        result = msg.mcommons_poll(campaign_id)
         db.commit()
         return result
 
-    tasks["msg_mcommons_inbound_sms"] = msg_mcommons_inbound_sms
+    tasks["msg_mcommons_poll"] = msg_mcommons_poll
 
     # -------------------------------------------------------------------------
-    def msg_twilio_inbound_sms(account, user_id=None):
+    def msg_twilio_poll(account, user_id=None):
         """
-            Poll an inbound SMS(Twilio) source.
+            Poll a Twilio source for Inbound SMS.
 
             @param account: account name for the SMS source to read from.
             This uniquely identifies one inbound SMS task.
         """
         # Run the Task & return the result
-        result = msg.twilio_inbound_sms(account)
+        result = msg.twilio_poll(account)
         db.commit()
         return result
 
-    tasks["msg_twilio_inbound_sms"] = msg_twilio_inbound_sms
+    tasks["msg_twilio_poll"] = msg_twilio_poll
 
     # -----------------------------------------------------------------------------
     def msg_parse_workflow(workflow, source, user_id):

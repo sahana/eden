@@ -746,8 +746,9 @@ def time():
     """ RESTful CRUD controller """
 
     table = s3db.project_time
-    if "mine" in request.get_vars:
-        # Show the Logged Time for this User
+    vars = request.get_vars
+    if "mine" in vars:
+        # Filter to just this User
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         person_id = auth.s3_logged_in_person()
         if person_id:
@@ -767,10 +768,21 @@ def time():
                        listadd=False,
                        list_fields=list_fields)
 
-    elif "week" in request.get_vars:
+    elif "week" in vars:
+        # Filter to the specified number of weeks
+        weeks = int(vars.get("week", 1))
         now = request.utcnow
         week = datetime.timedelta(days=7)
-        s3.filter = (table.date > (now - week))
+        delta = week * weeks
+        s3.filter = (table.date > (now - delta))
+
+    elif "month" in vars:
+        # Filter to the specified number of months
+        months = int(vars.get("month", 1))
+        now = request.utcnow
+        month = datetime.timedelta(weeks=4)
+        delta = month * months
+        s3.filter = (table.date > (now - delta))
 
     return s3_rest_controller()
 
@@ -899,5 +911,37 @@ $('#submit_record__row input').click(function(){
                  SCRIPT(script))
 
     return XML(output)
+
+# =============================================================================
+# Campaigns
+# =============================================================================
+def campaign():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_keyword():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_message():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_response():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def campaign_response_summary():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
 
 # END =========================================================================
