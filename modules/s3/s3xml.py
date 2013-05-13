@@ -1085,7 +1085,7 @@ class S3XML(S3Codec):
 
             elif fieldtype == "upload":
                 fileurl = "%s/%s" % (download_url, v)
-                filename = v
+                filename = dbfield.retrieve_file_properties(v)["filename"]
                 if filename:
                     data = SubElement(elem, DATA)
                     attr = data.attrib
