@@ -3099,7 +3099,10 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         T = current.T
 
-        selector = str(field).replace(".", "_")
+        if type(field) is field:
+            selector = str(field).replace(".", "_")
+        else:
+            selector = field.name.replace(".", "_")
 
         # Options:
         # * Show Selected List
