@@ -6917,7 +6917,8 @@ class S3RoleManager(S3Method):
                                         utable.id,
                                         utable.first_name,
                                         utable.last_name,
-                                        utable[username])
+                                        utable[username],
+                                        orderby=utable.first_name)
                 entities = [row[mtable.pe_id] for row in rows]
                 if use_realms:
                     entity_repr = self._entity_represent(entities)
