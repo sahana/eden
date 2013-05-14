@@ -531,7 +531,7 @@ class S3Merge(S3Method):
                     ),
                     # Append mode and selected - required to get back here!
                     hidden = {
-                        "mode": mode,
+                        "mode": "Inclusive",
                         "selected": ",".join(ids),
                     }
                 )
