@@ -3085,7 +3085,7 @@ class S3MapModel(S3Model):
                              # Auto-populated by reading Shapefile
                              Field("data", "text",
                                    # Left readable for now, to allow easier debugging
-                                   readable=False,
+                                   #readable=False,
                                    writable=False,
                                    represent = lambda v: v or NONE,
                                    label=T("Data")),
@@ -3587,12 +3587,12 @@ class S3MapModel(S3Model):
             # Unzip it
             import zipfile
             myfile = zipfile.ZipFile(fp)
-            # for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
-                # fileName = "%s.%s" % (layerName, ext)
-                # file = myfile.read(fileName)
-                # f = open(fileName, "w")
-                # f.write(file)
-                # f.close()
+            for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+                fileName = "%s.%s" % (layerName, ext)
+                file = myfile.read(fileName)
+                f = open(fileName, "wb")
+                f.write(file)
+                f.close()
             myfile.close()
             fp.close()
 
