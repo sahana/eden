@@ -1919,7 +1919,7 @@ class S3LayerEntityModel(S3Model):
         # =====================================================================
         #  Layer Entity
 
-        # @ToDo: shapefile, scan, xyz
+        # @ToDo: Scanned images
         layer_types = Storage(gis_layer_feature = T("Feature Layer"),
                               gis_layer_arcrest = T("ArcGIS REST Layer"),
                               gis_layer_bing = T("Bing Layer"),
@@ -1934,6 +1934,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_kml = T("KML Layer"),
                               gis_layer_mgrs = T("MGRS Layer"),
                               gis_layer_openweathermap = T("OpenWeatherMap Layer"),
+                              gis_layer_shapefile = T("Shapefile Layer"),
                               gis_layer_theme = T("Theme Layer"),
                               gis_layer_tms = T("TMS Layer"),
                               gis_layer_wfs = T("WFS Layer"),
@@ -2396,6 +2397,7 @@ class S3MapModel(S3Model):
              "gis_layer_mgrs",
              "gis_layer_openstreetmap",
              "gis_layer_openweathermap",
+             "gis_layer_shapefile",
              "gis_layer_tms",
              "gis_layer_wfs",
              "gis_layer_wms",
@@ -2420,6 +2422,7 @@ class S3MapModel(S3Model):
 
         layer_id = self.super_link("layer_id", "gis_layer_entity")
 
+        NONE  = current.messages["NONE"]
         DESCRIPTION = T("Description")
         TRANSPARENT = T("Transparent?")
         BASE_LAYER = T("Base Layer?")
@@ -2432,7 +2435,7 @@ class S3MapModel(S3Model):
         #
         # Store results of Feature Queries in a temporary table to allow
         # BBOX queries, Clustering, Refresh, Client-side Filtering, etc
-
+        #
         tablename = "gis_feature_query"
         table = define_table(tablename,
                              Field("name", length=128, notnull=True),
@@ -2479,12 +2482,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # ArcGIS REST
         #
-
         tablename = "gis_layer_arcrest"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -2529,9 +2532,8 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
-        # Bing
+        # Bing tiles
         #
-
         bing_layer_types = ["aerial", "road", "hybrid"]
 
         tablename = "gis_layer_bing"
@@ -2539,6 +2541,7 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("type", length=16,
                                    label=TYPE,
@@ -2564,14 +2567,14 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
-        # Coordinate
+        # Coordinate grid
         #
-
         tablename = "gis_layer_coordinate"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              gis_layer_folder()(),
                              s3_role_required(),       # Single Role
@@ -2595,14 +2598,14 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
-        # Empty
+        # Empty (no baselayer, so can display just overlays)
         #
-
         tablename = "gis_layer_empty"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              gis_layer_folder()(),
                              s3_role_required(),       # Single Role
@@ -2628,12 +2631,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # GeoJSON
         #
-
         tablename = "gis_layer_geojson"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -2682,12 +2685,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # GeoRSS
         #
-
         tablename = "gis_layer_georss"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -2741,9 +2744,8 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
-        # Google
+        # Google tiles
         #
-
         google_layer_types = ["satellite", "maps", "hybrid", "terrain",
                               "mapmaker", "mapmakerhybrid",
                               "earth", "streetview"]
@@ -2753,6 +2755,7 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("type", length=16,
                                    label=TYPE,
@@ -2778,14 +2781,14 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
-        # GPX
+        # GPX - GPS eXchange format
         #
-
         tablename = "gis_layer_gpx"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("track", "upload", autodelete=True,
                                    label = T("GPS Track File"),
@@ -2838,12 +2841,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # KML
         #
-
         tablename = "gis_layer_kml"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -2900,12 +2903,13 @@ class S3MapModel(S3Model):
         # JS
         # - raw JavaScript code for advanced users
         # @ToDo: Move to a Plugin (more flexible)
-
+        #
         tablename = "gis_layer_js"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("code", "text",
                                    label=T("Code"),
@@ -2934,12 +2938,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # MGRS
         #
-
         tablename = "gis_layer_mgrs"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -2967,17 +2971,18 @@ class S3MapModel(S3Model):
                                     # autodelete=False))
 
         # ---------------------------------------------------------------------
-        # OpenStreetMap
+        # OpenStreetMap tiles
         #
         # @ToDo: Provide a catalogue of standard layers which are fully-defined
         #        in static & can just have name over-ridden, as well as
         #        fully-custom layers.
-
+        #
         tablename = "gis_layer_openstreetmap"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url1",
                                    label=LOCATION,
@@ -3023,7 +3028,6 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # OpenWeatherMap
         #
-
         openweathermap_layer_types = ["station", "city"]
 
         tablename = "gis_layer_openweathermap"
@@ -3031,6 +3035,7 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("type", length=16,
                                    label=TYPE,
@@ -3057,14 +3062,61 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
+        # Shapefiles
+        #
+        tablename = "gis_layer_shapefile"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(),
+                             Field("description",
+                                   represent = lambda v: v or NONE,
+                                   label=DESCRIPTION),
+                             Field("shape", "upload", autodelete=True,
+                                   label = T("ESRI Shape File"),
+                                   requires = IS_UPLOAD_FILENAME(extension="zip"),
+                                   # upload folder needs to be visible to the download() function as well as the upload
+                                   uploadfolder = os.path.join(request.folder,
+                                                               "uploads",
+                                                               "shapefiles"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("ESRI Shape File"),
+                                                                   T("An ESRI Shapefile (zipped)"),
+                                                                   ))),
+                             # Auto-populated by reading Shapefile
+                             Field("data", "text",
+                                   # Left readable for now, to allow easier debugging
+                                   readable=False,
+                                   writable=False,
+                                   represent = lambda v: v or NONE,
+                                   label=T("Data")),
+                             gis_layer_folder()(),
+                             s3_role_required(), # Single Role
+                             *s3_meta_fields())  
+        configure(tablename,
+                  onaccept=self.gis_layer_shapefile_onaccept,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_shapefile=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # ---------------------------------------------------------------------
         # TMS
         #
-
         tablename = "gis_layer_tms"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -3111,12 +3163,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # WFS
         #
-
         tablename = "gis_layer_wfs"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -3209,7 +3261,6 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # WMS
         #
-
         wms_img_formats = ["image/jpeg", "image/jpeg;mode=24bit", "image/png",
                            "image/gif", "image/bmp", "image/tiff",
                            "image/svg+xml"]
@@ -3219,6 +3270,7 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -3294,6 +3346,7 @@ class S3MapModel(S3Model):
                                    label=T("Queryable?")),
                              Field("legend_url",
                                    label=T("Legend URL"),
+                                   represent = lambda v: v or NONE,
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Legend URL"),
                                                                  T("Address of an image to use for this Layer in the Legend. This allows use of a controlled static image rather than querying the server automatically for what it provides (which won't work through GeoWebCache anyway).")))),
@@ -3324,12 +3377,12 @@ class S3MapModel(S3Model):
         #
         # @ToDo: Support Overlays with Opacity
         #
-
         tablename = "gis_layer_xyz"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
                              Field("description",
+                                   represent = lambda v: v or NONE,
                                    label=DESCRIPTION),
                              Field("url",
                                    label=LOCATION,
@@ -3375,6 +3428,7 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # Store downloaded GeoRSS feeds in the DB
         # - to allow refresh timer, BBOX queries, unified approach to Markers & Popups
+        #
         tablename = "gis_cache"
         table = define_table(tablename,
                              Field("title"),
@@ -3391,6 +3445,7 @@ class S3MapModel(S3Model):
 
         # Store downloaded KML feeds on the filesystem
         # @ToDo: Migrate to DB instead (using above gis_cache)
+        #
         tablename = "gis_cache2"
         table = define_table(tablename,
                              Field("name", length=128, notnull=True, unique=True),
@@ -3489,6 +3544,156 @@ class S3MapModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+        return
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_shapefile_onaccept(form):
+        """
+            Convert the Uploaded Shapefile to GeoJSON for display on the map
+        """
+
+        try:
+            from osgeo import ogr
+        except ImportError:
+            current.response.error = current.T("Python GDAL required for Shapefile support!")
+        else:
+            # Copy the current working directory to revert back to later
+            cwd = os.getcwd()
+            # Create the working directory
+            TEMP = os.path.join(cwd, "temp")
+            if not os.path.exists(TEMP): # use web2py/temp
+                import tempfile
+                TEMP = tempfile.gettempdir()
+            tempPath = os.path.join(TEMP, "Shapefiles")
+            try:
+                os.mkdir(tempPath)
+            except OSError:
+                # Folder already exists - reuse
+                pass
+            # Set the current working directory
+            os.chdir(tempPath)
+
+            # Retrieve the file
+            db = current.db
+            id = form.vars.id
+            table = db.gis_layer_shapefile
+            row = db(table.id == id).select(table.shape,
+                                            limitby=(0, 1)).first()
+            shapefile = table.shape.retrieve(row.shape)
+            (fileName, fp) = shapefile
+            layerName = fileName.rsplit(".", 1)[0] # strip the .zip extension
+
+            # Unzip it
+            import zipfile
+            myfile = zipfile.ZipFile(fp)
+            # for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+                # fileName = "%s.%s" % (layerName, ext)
+                # file = myfile.read(fileName)
+                # f = open(fileName, "w")
+                # f.write(file)
+                # f.close()
+            myfile.close()
+            fp.close()
+
+            # Use OGR to read Shapefile
+            shapefile = "%s.shp" % layerName
+            ds = ogr.Open(shapefile)
+            if ds is None:
+                current.response.error = current.T("Couldn't open %s!" % shapefile)
+                return
+            lyr = ds.GetLayerByName(layerName)
+            lyr.ResetReading()
+            # Get the Data Model
+            geom_type = lyr.GetGeomType() # All features within a Shapefile share a common geometry
+            wkbPoint = ogr.wkbPoint
+            OFTInteger = ogr.OFTInteger
+            OFTReal = ogr.OFTReal
+            OFTDate = ogr.OFTDate
+            OFTDateTime = ogr.OFTDateTime
+            OFTTime = ogr.OFTTime
+            lyr_defn = lyr.GetLayerDefn()
+            nFields = lyr_defn.GetFieldCount()
+            GetFieldDefn = lyr_defn.GetFieldDefn
+            fields = []
+            append = fields.append
+            for i in range(nFields):
+                field_defn = GetFieldDefn(i)
+                fname = field_defn.GetName()
+                ftype = field_defn.GetType()
+                if ftype == OFTInteger:
+                    ftype = "int"
+                elif ftype == OFTReal:
+                    ftype = "float"
+                elif ftype == OFTDate:
+                    ftype = "date"
+                elif ftype == OFTDateTime:
+                    ftype = "datetime"
+                elif ftype == OFTTime:
+                    ftype = "time"
+                else:
+                    # Assume String (ogr.OFTString/OFTWideString)
+                    ftype = "string"
+                append((fname, ftype))
+
+            # Get the Data
+            features = []
+            append = features.append
+            for feature in lyr:
+                f = {}
+                # Get the Attributes
+                for i in range(nFields):
+                    fname = fields[i][0]
+                    value = feature.GetField(i)
+                    f[fname] = value
+
+                # Get the Geometry
+                geom = feature.GetGeometryRef()
+                if geom is None:
+                    lat = lon = wkt = None
+                if geom_type == wkbPoint:
+                    lat = geom.GetX()
+                    lon = geom.GetY()
+                    wkt = "POINT(%f %f)" % (lon, lat)
+                    # gis_feature_type = 1
+                else:
+                    wkt = geom.ExportToWkt()
+                    # if wkt.startswith("LINESTRING"):
+                        # gis_feature_type = 2
+                    # elif wkt.startswith("POLYGON"):
+                        # gis_feature_type = 3
+                    # elif wkt.startswith("MULTIPOINT"):
+                        # gis_feature_type = 4
+                    # elif wkt.startswith("MULTILINESTRING"):
+                        # gis_feature_type = 5
+                    # elif wkt.startswith("MULTIPOLYGON"):
+                        # gis_feature_type = 6
+                    # elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        # gis_feature_type = 7
+                    # @ToDo: Centroids
+                    #lat = 
+                    #lon = 
+                f[wkt] = wkt
+                append(f)
+
+            # Close the shapefile
+            ds = None
+
+            # Revert back to the working directory as before.
+            os.chdir(cwd)
+
+            data = {}
+            data["features"] = features
+            data["fields"] = fields
+
+            # Convert table structure to JSON
+            data = json.dumps(data)
+            # Update the record
+            db(table.id == id).update(data=data)
+
+        # Normal Layer onaccept
+        gis_layer_onaccept(form)
+
         return
 
 # =============================================================================
@@ -4228,6 +4433,7 @@ def gis_rheader(r, tabs=[]):
          resourcename == "layer_empty" or \
          resourcename == "layer_google" or \
          resourcename == "layer_openweathermap" or \
+         resourcename == "layer_shapefile" or \
          resourcename == "layer_tms" or \
          resourcename == "layer_wms" or \
          resourcename == "layer_wfs" or \

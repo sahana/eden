@@ -2920,8 +2920,8 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.gis_location
         ttable = s3db.gis_location_tag
+        table = db.gis_location
 
         layer = {
             "url" : "http://gadm.org/data/gadm_v1_lev0_shp.zip",
@@ -2932,12 +2932,11 @@ class GIS(object):
         }
 
         # Copy the current working directory to revert back to later
-        old_working_directory = os.getcwd()
+        cwd = os.getcwd()
 
         # Create the working directory
-        if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp/GADMv1 as a cache
-            TEMP = os.path.join(os.getcwd(), "temp")
-        else:
+        TEMP = os.path.join(cwd, "temp")
+        if not os.path.exists(TEMP): # use web2py/temp/GADMv1 as a cache
             import tempfile
             TEMP = tempfile.gettempdir()
         tempPath = os.path.join(TEMP, "GADMv1")
@@ -2983,12 +2982,12 @@ class GIS(object):
 
         # Use OGR to read Shapefile
         s3_debug("Opening %s.shp" % layerName)
-        ds = ogr.Open( "%s.shp" % layerName )
+        ds = ogr.Open("%s.shp" % layerName)
         if ds is None:
             s3_debug("Open failed.\n")
             return
 
-        lyr = ds.GetLayerByName( layerName )
+        lyr = ds.GetLayerByName(layerName)
 
         lyr.ResetReading()
 
@@ -3050,7 +3049,7 @@ class GIS(object):
         db.commit()
 
         # Revert back to the working directory as before.
-        os.chdir(old_working_directory)
+        os.chdir(cwd)
 
         return
 
@@ -3129,12 +3128,11 @@ class GIS(object):
                 yield dict(zip(headers, r))
 
         # Copy the current working directory to revert back to later
-        old_working_directory = os.getcwd()
+        cwd = os.getcwd()
 
         # Create the working directory
-        if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp/GADMv1 as a cache
-            TEMP = os.path.join(os.getcwd(), "temp")
-        else:
+        TEMP = os.path.join(cwd, "temp")
+        if not os.path.exists(TEMP): # use web2py/temp/GADMv1 as a cache
             import tempfile
             TEMP = tempfile.gettempdir()
         tempPath = os.path.join(TEMP, "GADMv1")
@@ -3168,7 +3166,7 @@ class GIS(object):
             except urllib2.URLError, exception:
                 s3_debug(exception)
                 # Revert back to the working directory as before.
-                os.chdir(old_working_directory)
+                os.chdir(cwd)
                 return
             fp = StringIO(file)
         else:
@@ -3223,7 +3221,7 @@ class GIS(object):
                  iDstField = outputFDefn.GetFieldIndex(oFieldDefn.GetNameRef())
             if iDstField >= 0:
                 panMap[iField] = iDstField
-            elif outputLayer.CreateField( oFieldDefn ) == 0:
+            elif outputLayer.CreateField(oFieldDefn) == 0:
                 # now that we've created a field, GetLayerDefn() won't return NULL
                 if outputFDefn is None:
                     outputFDefn = outputLayer.GetLayerDefn()
@@ -3259,9 +3257,10 @@ class GIS(object):
                 if poDstFeature.SetFromWithMap(poFeature, 1, panMap) != 0:
                     if nGroupTransactions > 0:
                         outputLayer.CommitTransaction()
-                    s3_debug("Unable to translate feature %d from layer %s" % (poFeature.GetFID() , inputFDefn.GetName() ))
+                    s3_debug("Unable to translate feature %d from layer %s" % \
+                                (poFeature.GetFID(), inputFDefn.GetName()))
                     # Revert back to the working directory as before.
-                    os.chdir(old_working_directory)
+                    os.chdir(cwd)
                     return
                 poDstGeometry = poDstFeature.GetGeometryRef()
                 if poDstGeometry is not None:
@@ -3270,11 +3269,12 @@ class GIS(object):
                         poPart = poDstGeometry.GetGeometryRef(iPart).Clone()
                         poDstFeature.SetGeometryDirectly(poPart)
                         poDstGeometry = poPart
-                if outputLayer.CreateFeature( poDstFeature ) != 0 and not bSkipFailures:
+                if outputLayer.CreateFeature(poDstFeature) != 0 and \
+                   not bSkipFailures:
                     if nGroupTransactions > 0:
                         outputLayer.RollbackTransaction()
                     # Revert back to the working directory as before.
-                    os.chdir(old_working_directory)
+                    os.chdir(cwd)
                     return
         if nGroupTransactions > 0:
             outputLayer.CommitTransaction()
@@ -3289,11 +3289,11 @@ class GIS(object):
 
         # Use OGR to read SHP for geometry
         s3_debug("Opening %s.shp" % layerName)
-        ds = ogr.Open( "%s.shp" % layerName )
+        ds = ogr.Open("%s.shp" % layerName)
         if ds is None:
             s3_debug("Open failed.\n")
             # Revert back to the working directory as before.
-            os.chdir(old_working_directory)
+            os.chdir(cwd)
             return
 
         lyr = ds.GetLayerByName(layerName)
@@ -3326,7 +3326,8 @@ class GIS(object):
                                       cache=cache).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
-                s3_debug("Skipping - cannot find parent with key: %s, value: %s" % (parentEdenCodeField, parentCode))
+                s3_debug("Skipping - cannot find parent with key: %s, value: %s" % \
+                            (parentEdenCodeField, parentCode))
                 count += 1
                 continue
 
@@ -3339,7 +3340,8 @@ class GIS(object):
                         continue
                 else:
                     # Check grandparent
-                    country = self.get_parent_country(parent.id, key_type="code")
+                    country = self.get_parent_country(parent.id,
+                                                      key_type="code")
                     if country not in countries:
                         count += 1
                         continue
@@ -3414,7 +3416,7 @@ class GIS(object):
         db.commit()
 
         # Revert back to the working directory as before.
-        os.chdir(old_working_directory)
+        os.chdir(cwd)
 
         return
 

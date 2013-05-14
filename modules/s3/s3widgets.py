@@ -2741,6 +2741,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 # @ToDo
                 row = formstyle(id, label, widget, comment, hidden=hidden)
             else:
+                # Unsupported
                 raise
             Lx_rows.append(row)
             # Subsequent levels are hidden by default
@@ -2826,6 +2827,9 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # @ToDo: handle multiple LocationSelectors in 1 page
         # (=> multiple callbacks, as well as the globals issue)
+        # Meanwhile change to make the map rendering lazy, i.e. to make it an HTML
+        # component of the widget and render it only when it's xml() method is called
+        s3.gis.location_selector_loaded = False # Hack to ensure that 2nd process of form on validation errors gives us a map
         _map = current.gis.show_map(collapsed = True,
                                     height = 320,
                                     width = 480,
