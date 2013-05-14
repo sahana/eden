@@ -478,7 +478,7 @@ settings.modules = OrderedDict([
         )),
     ("survey", Storage(
             name_nice = T("Surveys"),
-            #description = "Create, enter, and manage surveys.",
+            description = "Create, enter, and manage surveys.",
             restricted = True,
             module_type = 5,
         )),
