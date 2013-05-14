@@ -1084,13 +1084,14 @@ class S3XML(S3Codec):
                         attrib[f] = s3_unicode(text)
 
             elif fieldtype == "upload":
-                fileurl = "%s/%s" % (download_url, v)
-                filename = dbfield.retrieve_file_properties(v)["filename"]
-                data = SubElement(elem, DATA)
-                attr = data.attrib
-                attr[FIELD] = f
-                attr[URL] = fileurl
-                attr[ATTRIBUTE.filename] = filename
+                if v:
+                    fileurl = "%s/%s" % (download_url, v)
+                    filename = dbfield.retrieve_file_properties(v)["filename"]
+                    data = SubElement(elem, DATA)
+                    attr = data.attrib
+                    attr[FIELD] = f
+                    attr[URL] = fileurl
+                    attr[ATTRIBUTE.filename] = filename
 
             elif fieldtype == "password":
                 data = SubElement(elem, DATA)

@@ -2451,7 +2451,15 @@ class S3MapModel(S3Model):
                              Field("marker_width", "integer"),
                              # or Shape/Size/Colour
                              Field("shape",
-                                   requires=IS_NULL_OR(IS_IN_SET(["circle", "square", "star", "x", "cross", "triangle"]))),
+                                   requires=IS_NULL_OR(
+                                                IS_IN_SET(["circle",
+                                                           "square",
+                                                           "star",
+                                                           "x",
+                                                           "cross",
+                                                           "triangle",
+                                                           ]))
+                                                ),
                              Field("size", "integer"),
                              Field("colour", requires=IS_NULL_OR(IS_HTML_COLOUR()),
                                  widget=S3ColorPickerWidget(),),
