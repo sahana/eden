@@ -3612,6 +3612,9 @@ class S3MapModel(S3Model):
                 return
             lyr = ds.GetLayerByName(layerName)
             lyr.ResetReading()
+
+            spatialdb = current.deployment_settings.get_gis_spatialdb()
+
             # Get the Data Model
             geom_type = lyr.GetGeomType() # All features within a Shapefile share a common geometry
             wkbPoint = ogr.wkbPoint
@@ -3628,11 +3631,13 @@ class S3MapModel(S3Model):
             for i in range(nFields):
                 field_defn = GetFieldDefn(i)
                 fname = field_defn.GetName()
+                if fname.lower() == "id":
+                    fname = "id_orig"
                 ftype = field_defn.GetType()
                 if ftype == OFTInteger:
-                    ftype = "int"
+                    ftype = "integer"
                 elif ftype == OFTReal:
-                    ftype = "float"
+                    ftype = "double"
                 elif ftype == OFTDate:
                     ftype = "date"
                 elif ftype == OFTDateTime:
@@ -3678,10 +3683,13 @@ class S3MapModel(S3Model):
                         # gis_feature_type = 6
                     # elif wkt.startswith("GEOMETRYCOLLECTION"):
                         # gis_feature_type = 7
-                    # @ToDo: Centroids
+                    # @ToDo: Centroids?
                     #lat = 
                     #lon = 
-                f[wkt] = wkt
+                    # @ToDo: Bounds?
+                f["wkt"] = wkt
+                if spatialdb:
+                    f["the_geom"] = wkt
                 append(f)
 
             # Close the shapefile
@@ -3690,14 +3698,28 @@ class S3MapModel(S3Model):
             # Revert back to the working directory as before.
             os.chdir(cwd)
 
-            data = {}
-            data["features"] = features
-            data["fields"] = fields
-
             # Convert table structure to JSON
-            data = json.dumps(data)
+            data = json.dumps(fields)
             # Update the record
             db(table.id == id).update(data=data)
+
+            # Create Database table to store these features in
+            tablename = "gis_layer_shapefile_%s" % id
+            Fields = []
+            append = Fields.append
+            for field in fields:
+                append(Field(field[0], field[1]))
+            append(Field("wkt"))
+            if spatialdb:
+                # Add a spatial field
+                append(Field("the_geom", "geometry()"))
+            db._migrate_enabled = True
+            dtable = db.define_table(tablename, *Fields)
+            db._migrate_enabled = False
+            # Populate table with data
+            # @ToDo: PostGIS when-available
+            for feature in features:
+                dtable.insert(**feature)
 
         # Normal Layer onaccept
         gis_layer_onaccept(form)
