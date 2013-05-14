@@ -1011,7 +1011,7 @@ class S3XML(S3Codec):
             fields = [self.MTIME]
 
         # GIS marker
-        if table._tablename == "gis_location" and current.gis:
+        if tablename == "gis_location" and current.gis:
             marker = current.gis.get_marker() # Default Marker
             # Quicker to download Icons from Static
             # also doesn't require authentication so KML files can work in
@@ -1084,9 +1084,10 @@ class S3XML(S3Codec):
                         attrib[f] = s3_unicode(text)
 
             elif fieldtype == "upload":
-                fileurl = "%s/%s" % (download_url, v)
                 filename = v
                 if filename:
+                    fileurl = "%s/%s" % (download_url, v)
+                    filename = dbfield.retrieve_file_properties(v)["filename"]
                     data = SubElement(elem, DATA)
                     attr = data.attrib
                     attr[FIELD] = f

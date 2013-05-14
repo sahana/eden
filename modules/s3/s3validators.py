@@ -936,6 +936,9 @@ class IS_LOCATION(Validator):
                  ):
         self.level = level # can be a List or a single element
         self.error_message = error_message
+        # Make it like IS_ONE_OF to support AddResourceLink
+        self.ktable = "gis_location"
+        self.kfield = "id"
 
     # -------------------------------------------------------------------------
     def __call__(self, value):

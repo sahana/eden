@@ -3646,7 +3646,8 @@ class S3Resource(object):
                 req = field.requires
                 if isinstance(req, IS_EMPTY_OR):
                     req = req.other
-                if not isinstance(req, IS_ONE_OF):
+                from s3validators import IS_LOCATION
+                if not isinstance(req, (IS_ONE_OF, IS_LOCATION)):
                     raise RuntimeError, "not isinstance(req, IS_ONE_OF)"
                 kfield = db[req.ktable][req.kfield]
                 rows = db().select(kfield,
