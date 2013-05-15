@@ -264,6 +264,10 @@ $(function() {
             input = $(element);
             if (input.attr('type') != 'file') {
                 input.val(value);
+                // Populate text in autocompletes
+                element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
+                var text = row[fieldname]['text'];
+                $(element).val(text);
             } else {
                 // Update the existing upload item, if there is one
                 var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
@@ -276,10 +280,6 @@ $(function() {
                           .css({display: ''});
                 }
             }
-            // Populate text in autocompletes
-            var text = row[fieldname]['text'];
-            element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
-            input.val(text);
         }
 
         // Insert the edit row after this read row
