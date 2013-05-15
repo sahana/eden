@@ -542,16 +542,10 @@ textarea.comments {
     height: 200px;
 }
 
-div.edit #project_project_sub_drrpp_L1__row_label,
-div.edit #project_project_sub_drrpp_L1__row_widget,
-div.edit #project_project_sub_drrpp_L1__row_comment,
+div.edit #project_project_sub_drrpp_L1__row,
 div.edit #project_project_drrpp_pifacc__subheading,
-div.edit #project_project_sub_drrpp_pifacc__row_label,
-div.edit #project_project_sub_drrpp_pifacc__row_widget,
-div.edit #project_project_sub_drrpp_pifacc__row_comment,
+div.edit #project_project_sub_drrpp_pifacc__row,
 div.edit #project_project_drrpp_jnap__row_subheading,
-div.edit #project_project_sub_drrpp_jnap__row_label,
-div.edit #project_project_sub_drrpp_jnap__row_widget,
-div.edit #project_project_sub_drrpp_jnap__row_comment {
+div.edit #project_project_sub_drrpp_jnap__row {
     display: none;
 }

@@ -392,6 +392,7 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
         item_id = "%s-%s" % (listid, record_id)
     else:
         # template
+        record_id = record[str(resource._id)]  
         item_id = "%s-[id]" % listid
 
     item_class = "thumbnail"
@@ -739,6 +740,8 @@ def render_locations(listid, resource, rfields, record, **attr):
         represent = "%s (%s)" % (name, L1)
     elif level == "L3":
         represent = "%s (%s, %s)" % (name, L2, L1)
+    else:
+        represent = name
 
     permit = current.auth.s3_has_permission
     table = current.db.gis_location
@@ -980,16 +983,25 @@ def customize_org_organisation(**attr):
     # Load normal Model
     table = s3db.org_organisation
 
-    alerts_widget = dict(label = "Alerts",
-                         title_create = "Add New Alert",
-                         type = "datalist",
-                         tablename = "cms_post",
-                         context = "organisation",
-                         filter = S3FieldSelector("series_id$name") == "Alert",
-                         icon = "icon-alert",
-                         marker = "alert",
-                         list_layout = render_profile_posts,
-                         )
+    #alerts_widget = dict(label = "Alerts",
+    #                     title_create = "Add New Alert",
+    #                     type = "datalist",
+    #                     tablename = "cms_post",
+    #                     context = "organisation",
+    #                     filter = S3FieldSelector("series_id$name") == "Alert",
+    #                     icon = "icon-alert",
+    #                     marker = "alert",
+    #                     list_layout = render_profile_posts,
+    #                     )
+    contacts_widget = dict(label = "Contacts",
+                           title_create = "Add New Contact",
+                           type = "datalist",
+                           tablename = "hrm_human_resource",
+                           context = "organisation",
+                           icon = "icon-contact",
+                           marker = "contact",
+                           list_layout = render_profile_posts,
+                           )
     map_widget = dict(label = "Location",
                       type = "map",
                       context = "organisation",
@@ -997,36 +1009,25 @@ def customize_org_organisation(**attr):
                       height = 383,
                       width = 568,
                       )
-    incidents_widget = dict(label = "Incidents",
-                            title_create = "Add New Incident",
-                            type = "datalist",
-                            tablename = "cms_post",
-                            context = "organisation",
-                            filter = S3FieldSelector("series_id$name") == "Incident",
-                            icon = "icon-warning-sign",
-                            marker = "incident",
-                            list_layout = render_profile_posts,
-                            )
-    assessments_widget = dict(label = "Assessments",
-                              title_create = "Add New Assessment",
-                              type = "datalist",
-                              tablename = "cms_post",
-                              context = "organisation",
-                              filter = S3FieldSelector("series_id$name") == "Assessment",
-                              icon = "icon-info-sign",
-                              marker = "assessment",
-                              list_layout = render_profile_posts,
-                              )
-    activities_widget = dict(label = "Activities",
-                             title_create = "Add New Activity",
-                             type = "datalist",
-                             tablename = "cms_post",
-                             context = "organisation",
-                             filter = S3FieldSelector("series_id$name") == "Activity",
-                             icon = "icon-activity",
-                             marker = "activity",
-                             list_layout = render_profile_posts,
-                             )
+    #incidents_widget = dict(label = "Incidents",
+    #                        title_create = "Add New Incident",
+    #                        type = "datalist",
+    #                        tablename = "cms_post",
+    #                        context = "organisation",
+    #                        filter = S3FieldSelector("series_id$name") == "Incident",
+    #                        icon = "icon-warning-sign",
+    #                        marker = "incident",
+    #                        list_layout = render_profile_posts,
+    #                        )
+    resource_widget = dict(label = "Resource",
+                           title_create = "Add New Resource",
+                           type = "datalist",
+                           tablename = "org_resource",
+                           context = "organisation",
+                           icon = "icon-resource",
+                           marker = "resource",
+                           list_layout = render_profile_posts,
+                           )
     reports_widget = dict(label = "Reports",
                           title_create = "Add New Report",
                           type = "datalist",
@@ -1037,6 +1038,37 @@ def customize_org_organisation(**attr):
                           marker = "report",
                           list_layout = render_profile_posts,
                           )
+    #assessments_widget = dict(label = "Assessments",
+    #                          title_create = "Add New Assessment",
+    #                          type = "datalist",
+    #                          tablename = "cms_post",
+    #                          context = "organisation",
+    #                          filter = S3FieldSelector("series_id$name") == "Assessment",
+    #                          icon = "icon-info-sign",
+    #                          marker = "assessment",
+    #                          list_layout = render_profile_posts,
+    #                          )
+    projects_widget = dict(label = "Project",
+                           title_create = "Add New Project",
+                           type = "datalist",
+                           tablename = "project_project",
+                           context = "organisation",
+                           icon = "icon-project",
+                           #marker = "project",
+                           show_on_map = False,
+                           list_layout = render_profile_posts,
+                           )
+    activities_widget = dict(label = "Activities",
+                             title_create = "Add New Activity",
+                             type = "datalist",
+                             tablename = "cms_post",
+                             context = "organisation",
+                             filter = S3FieldSelector("series_id$name") == "Activity",
+                             icon = "icon-activity",
+                             marker = "activity",
+                             list_layout = render_profile_posts,
+                             )
+
     comments_widget = dict(label = "Comments",
                            type = "comments",
                            icon = "icon-comments-alt",
@@ -1048,12 +1080,16 @@ def customize_org_organisation(**attr):
                                   "logo",
                                   ],
                    list_layout = render_organisations,
-                   profile_widgets=[alerts_widget,
+                   profile_widgets=[#alerts_widget,
+                                    contacts_widget,
                                     map_widget,
-                                    incidents_widget,
-                                    assessments_widget,
-                                    activities_widget,
+                                    #incidents_widget,
+                                    resource_widget,
                                     reports_widget,
+                                    projects_widget,
+                                    #assessments_widget,
+                                    activities_widget,
+                                    
                                     #comments_widget,
                                     ],
                    )
@@ -1103,8 +1139,6 @@ def customize_project_project(**attr):
     # Configure fields 
     table.human_resource_id.label = T("Focal Person")
     table.budget.label = "%s (USD)" % T("Budget")
-    # Better in column label & otherwise this construction loses thousands separators
-    #table.budget.represent = lambda value: "%d USD" % value
 
     # Project Locations must be districts
     ltable = s3db.project_location
@@ -1119,7 +1153,9 @@ def customize_project_project(**attr):
     # Don't add new Locations here
     ltable.location_id.comment = None
     # Simple dropdown
+    ltable.location_id.represent = S3Represent(lookup="gis_location")
     ltable.location_id.widget = None
+    
 
     crud_form = S3SQLCustomForm(
         "name",
@@ -1142,7 +1178,7 @@ def customize_project_project(**attr):
             fields = ["organisation_id",
                       ],
             filterby = dict(field = "role",
-                            options = "5"
+                            options = "2"
                             )
         ),
         # Donors
