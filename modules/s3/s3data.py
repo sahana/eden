@@ -135,7 +135,7 @@ class S3DataTable(object):
                 if type(orderby_field) is Expression:
                     f = orderby_field.first
                     if type(f) is Field and \
-                       orderby_field.op == db._adapter.INVERT:
+                       orderby_field.op == current.db._adapter.INVERT:
                         direction = "desc"
                     else:
                         continue

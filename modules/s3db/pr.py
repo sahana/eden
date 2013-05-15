@@ -2391,9 +2391,9 @@ class S3SavedSearch(S3Model):
 
         # Set the friendly query string from the url
         if vars.url:
+            tablename = "%s_%s" % (vars.prefix, vars.resource_name)
             vars.query = S3SavedSearch.friendly_string_from_field_query(
-                vars.prefix,
-                vars.resource_name,
+                tablename,
                 vars.url
             )
 
@@ -2403,7 +2403,7 @@ class S3SavedSearch(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def friendly_string_from_field_query(prefix, resource_name, url):
+    def friendly_string_from_field_query(tablename, url):
         """
             Takes a field query URL
             Returns a string of nice labels and represent-ed values
@@ -2414,7 +2414,14 @@ class S3SavedSearch(S3Model):
         import urlparse
 
         represent = current.manager.represent
-        resource = S3Resource(resource_name, prefix=prefix)
+        resource = S3Resource(tablename)
+
+        if tablename == "project_hazard":
+            resource.table.id.label = current.T("Hazard")
+            resource.table.id.represent = S3Represent(lookup=tablename)
+        elif tablename == "project_theme":
+            resource.table.id.label = current.T("Theme")
+            resource.table.id.represent = S3Represent(lookup=tablename)
 
         parsed_url = urlparse.urlparse(url)
         filters = urlparse.parse_qs(parsed_url.query)

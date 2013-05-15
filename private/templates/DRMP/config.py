@@ -739,6 +739,9 @@ def render_locations(listid, resource, rfields, record, **attr):
         represent = "%s (%s)" % (name, L1)
     elif level == "L3":
         represent = "%s (%s, %s)" % (name, L2, L1)
+    else:
+        # L0 or specific
+        represent = name
 
     permit = current.auth.s3_has_permission
     table = current.db.gis_location
@@ -1142,7 +1145,7 @@ def customize_project_project(**attr):
             fields = ["organisation_id",
                       ],
             filterby = dict(field = "role",
-                            options = "5"
+                            options = "2"
                             )
         ),
         # Donors

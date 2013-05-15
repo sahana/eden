@@ -115,7 +115,7 @@ settings.project.organisation_roles = {
     2: T("Partner Organization"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    #5: T("Partner")
+    #5: T("Supplier")
 }
 
 # =============================================================================

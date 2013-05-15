@@ -204,7 +204,8 @@ class TranslateGetFiles:
                               "test", ".git", "uploads"]
 
         # ---------------------------------------------------------------------
-        def get_module_list(self):
+        @staticmethod
+        def get_module_list():
             """
                 Returns a list of modules using files in /controllers/
                 as point of reference
@@ -624,7 +625,8 @@ class TranslateReadFiles:
         """ Class to open and read files """
 
         # ---------------------------------------------------------------------
-        def findstr(self, fileName, spmod, modlist):
+        @staticmethod
+        def findstr(fileName, spmod, modlist):
             """
                 Using the methods in TranslateParseFiles to extract the strings
                 fileName -> the file to be used for extraction
@@ -716,7 +718,8 @@ class TranslateReadFiles:
             return final_strings
 
         # ---------------------------------------------------------------------
-        def read_html_js(self, filename):
+        @staticmethod
+        def read_html_js(filename):
             """
                Function to read and extract strings from html/js files
                using regular expressions
@@ -747,7 +750,8 @@ class TranslateReadFiles:
             return strings
 
         # ---------------------------------------------------------------------
-        def get_user_strings(self):
+        @staticmethod
+        def get_user_strings():
             """
                 Function to return the list of user-supplied strings
             """
@@ -768,7 +772,8 @@ class TranslateReadFiles:
             return strings
 
         # ---------------------------------------------------------------------
-        def merge_user_strings_file(self, newstrings):
+        @staticmethod
+        def merge_user_strings_file(newstrings):
             """
                 Function to merge the existing file of user-supplied strings
                 with newly uploaded strings
@@ -795,7 +800,8 @@ class TranslateReadFiles:
             f.close()
 
         # ---------------------------------------------------------------------
-        def read_w2pfile(self, fileName):
+        @staticmethod
+        def read_w2pfile(fileName):
             """
                 Function to read a web2py language file and
                 return a list of translation string pairs
@@ -827,7 +833,8 @@ class TranslateReadFiles:
             return strings
 
         # ---------------------------------------------------------------------
-        def read_csvfile(self, fileName):
+        @staticmethod
+        def read_csvfile(fileName):
             """ Function to read a csv file and return a list of rows """
 
             import csv
@@ -849,7 +856,8 @@ class TranslateReportStatus:
         """
 
         # ---------------------------------------------------------------------
-        def create_master_file(self):
+        @staticmethod
+        def create_master_file():
             """ Function to create a master file containing all the strings """
 
             try:
@@ -904,7 +912,8 @@ class TranslateReportStatus:
             current.db(utable.id > 0).update(sbit=True)
 
         # ---------------------------------------------------------------------
-        def update_percentages(self, lang_code):
+        @staticmethod
+        def update_percentages(lang_code):
             """
                Function to update the translation percentages for all modules
                for a given language
@@ -1028,7 +1037,8 @@ class StringsToExcel:
         """ Class to convert strings to .xls format """
 
         # ---------------------------------------------------------------------
-        def remove_quotes(self, Strings):
+        @staticmethod
+        def remove_quotes(Strings):
             """
                 Function to remove single or double quotes around the strings
             """
@@ -1048,14 +1058,15 @@ class StringsToExcel:
             return l
 
         # ---------------------------------------------------------------------
-        def remove_duplicates(self, Strings):
+        @staticmethod
+        def remove_duplicates(Strings):
             """
                 Function to club all the duplicate strings into one row
                 with ";" separated locations
             """
 
             uniq = {}
-            appname = request.application
+            appname = current.request.application
 
             for (loc, data) in Strings:
                 uniq[data] = ""
@@ -1078,7 +1089,8 @@ class StringsToExcel:
             return l
 
         # ---------------------------------------------------------------------
-        def create_spreadsheet(self, Strings):
+        @staticmethod
+        def create_spreadsheet(Strings):
             """
                 Function to create a spreadsheet (.xls file) of strings with
                 location, original string and translated string as columns
@@ -1207,7 +1219,8 @@ class CsvToWeb2py:
         """ Class to convert a group of csv files to a web2py language file"""
 
         # ---------------------------------------------------------------------
-        def write_csvfile(self, fileName, data):
+        @staticmethod
+        def write_csvfile(fileName, data):
             """ Function to write a list of rows into a csv file """
 
             import csv

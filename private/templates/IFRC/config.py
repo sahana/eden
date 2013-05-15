@@ -498,6 +498,8 @@ settings.ui.customize_survey_series = customize_survey_series
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 settings.project.community = True
 # Uncomment this to use multiple Budgets per project
@@ -508,10 +510,11 @@ settings.project.multiple_organisations = True
 # Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {
     1: T("Host National Society"),
-    2: T("Partner National Society"),
+    2: T("Partner"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    5: T("Partner")
+    #5: T("Supplier"),
+    9: T("Partner National Society"),
 }
 
 # -----------------------------------------------------------------------------
@@ -538,7 +541,7 @@ def customize_project_project(**attr):
     crud_form = s3forms.S3SQLCustomForm(
         "organisation_id",
         "name",
-        #"code",
+        "code",
         "description",
         "status_id",
         "start_date",
