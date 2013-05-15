@@ -23,8 +23,8 @@
          project_organisation_types -->
     <project:organisation-role code="1">Host National Society</project:organisation-role>
     <project:organisation-role code="2">Partner National Society</project:organisation-role>
+    <project:organisation-role code="2">Partner</project:organisation-role>
     <project:organisation-role code="3">Donor</project:organisation-role>
-    <project:organisation-role code="5">Partner</project:organisation-role>
 
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="org_types" match="row" use="col[@field='Organisation Type']"/>
