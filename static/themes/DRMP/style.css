@@ -150,3 +150,6 @@ table.embeddedComponent {
     display: none;	
 }
 
+form.pr_person table.embeddedComponent td {
+    border-style: none;
+}

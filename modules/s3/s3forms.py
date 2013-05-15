@@ -2787,8 +2787,14 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                           record=record_id, representation="html")
                     if fieldname in item:
                         id = item[fieldname]["value"]
-                        options[id].update(selected=True,
-                                           editable=editable)
+                        try:
+                            options[id].update(selected=True,
+                                               editable=editable)
+                        except:
+                            # e.g. Theme filtered by Sector
+                            current.session.error = \
+                                T("Invalid data: record %s not accessible in table %s" % (id, table))
+                            redirect(URL(args=None, vars=None))
 
             # Render the options
             formname = self._formname()

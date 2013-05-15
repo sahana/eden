@@ -435,4 +435,23 @@ def saved_search():
 
     return s3_rest_controller()
 
+# =============================================================================
+def human_resource():
+    """
+        RESTful CRUD controller for options.s3json lookups
+        - needed for DRMP template where HRM fields are embedded inside pr_person form
+    """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("hrm", "human_resource")
+
 # END =========================================================================

@@ -7,6 +7,7 @@ from gluon.validators import IS_NULL_OR
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3layouts import S3AddResourceLink
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
@@ -1197,6 +1198,8 @@ def customize_project_project(**attr):
             s3.actions = actions
             if "form" in output:
                 output["form"].add_class("project_project")
+            elif "item" in output:
+                output["item"].add_class("project_project")
 
         # Call standard postp
         if callable(standard_postp):
@@ -1252,6 +1255,8 @@ def customize_org_resource(**attr):
             s3.actions = actions
             if "form" in output:
                 output["form"].add_class("org_resource")
+            elif "item" in output:
+                output["item"].add_class("org_resource")
 
         # Call standard postp
         if callable(standard_postp):
@@ -1263,6 +1268,68 @@ def customize_org_resource(**attr):
     return attr
 
 settings.ui.customize_org_resource = customize_org_resource
+
+# -----------------------------------------------------------------------------
+def customize_org_office(**attr):
+    """
+        Customize org_office controller
+    """
+
+    s3 = current.response.s3
+
+    table = current.s3db.org_office
+    
+    # Configure fields
+    table.code.readable = table.code.writable = False
+    table.office_type_id.readable = table.office_type_id.writable = False
+    table.phone1.readable = table.phone1.writable = False
+    table.phone2.readable = table.phone2.writable = False
+    table.email.readable = table.email.writable = False
+    table.fax.readable = table.fax.writable = False
+    table.location_id.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                           S3Represent(lookup="gis_location"),
+                                           sort = True,
+                                           filterby = "level",
+                                           filter_opts = ["L1"]
+                                           )
+    table.location_id.widget = None
+    
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="org", f="office",
+                                    args=["[id]", "read"]))
+                       ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("update", table):
+                actions.append(dict(label=str(T("Edit")),
+                                    _class="action-btn",
+                                    url=URL(c="org", f="office",
+                                            args=["[id]", "update"])))
+            if has_permission("delete", table):
+                actions.append(dict(label=str(T("Delete")),
+                                    _class="action-btn",
+                                    url=URL(c="org", f="office",
+                                            args=["[id]", "delete"])))
+            s3.actions = actions
+            if "form" in output:
+                output["form"].add_class("org_office")
+            elif "item" in output:
+                output["item"].add_class("org_office")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_org_office = customize_org_office
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):
@@ -1296,12 +1363,25 @@ def customize_pr_person(**attr):
     MOBILE = settings.get_ui_label_mobile_phone()
     EMAIL = T("Email")
 
-    s3db.hrm_human_resource.organisation_id.widget = None
+    htable = s3db.hrm_human_resource
+    htable.organisation_id.widget = None
+    field = htable.site_id
+    represent = S3Represent(lookup="org_site")
+    field.represent = represent
+    field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                               represent,
+                               orderby = "org_site.name")
+    field.comment = S3AddResourceLink(c="org", f="office",
+                                      vars={"child": "site_id"},
+                                      label=T("Add New Office"),
+                                      title=T("Office"),
+                                      tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+
     s3db.pr_contact.value.label = ""
 
     crud_form = S3SQLCustomForm(
             "first_name",
-            "middle_name",
+            #"middle_name",
             "last_name",
             S3SQLInlineComponent(
                 "human_resource",
@@ -1340,14 +1420,14 @@ def customize_pr_person(**attr):
             ),
         )
 
-    list_fields = ["first_name",
-                   "middle_name",
+    list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                   "first_name",
+                   #"middle_name",
                    "last_name",
-                   (current.messages.ORGANISATION, "human_resource.organisation_id"),
                    (T("Job Title"), "human_resource.job_title_id"),
                    (T("Office"), "human_resource.site_id"),
-                   (EMAIL, "email.value"),
                    (MOBILE, "phone.value"),
+                   (EMAIL, "email.value"),
                    ]
 
     s3db.configure(tablename,
@@ -1355,6 +1435,17 @@ def customize_pr_person(**attr):
                    list_fields = list_fields,
                    listadd = True,
                    )
+
+    # Move fields to their desired Locations
+    # Disabled as breaks submission of inline_component
+    #i18n = []
+    #iappend = i18n.append
+    #iappend('''i18n.office="%s"''' % T("Office"))
+    #iappend('''i18n.organisation="%s"''' % T("Organization"))
+    #iappend('''i18n.job_title="%s"''' % T("Job Title"))
+    #i18n = '''\n'''.join(i18n)
+    #s3.js_global.append(i18n)
+    #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % current.request.application)
 
     # Custom postp
     standard_postp = s3.postp
@@ -1384,6 +1475,8 @@ def customize_pr_person(**attr):
             s3.actions = actions
             if "form" in output:
                 output["form"].add_class("pr_person")
+            elif "item" in output:
+                output["item"].add_class("pr_person")
 
         return output
     s3.postp = custom_postp
@@ -1391,6 +1484,58 @@ def customize_pr_person(**attr):
     return attr
 
 settings.ui.customize_pr_person = customize_pr_person
+
+# -----------------------------------------------------------------------------
+def customize_hrm_job_title(**attr):
+    """
+        Customize hrm_job_title controller
+    """
+
+    s3 = current.response.s3
+
+    table = current.s3db.hrm_job_title
+    
+    # Configure fields
+    field = table.organisation_id
+    field.readable = field.writable = False
+    field.default = None
+    
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="hrm", f="job_title",
+                                    args=["[id]", "read"]))
+                       ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("update", table):
+                actions.append(dict(label=str(T("Edit")),
+                                    _class="action-btn",
+                                    url=URL(c="hrm", f="job_title",
+                                            args=["[id]", "update"])))
+            if has_permission("delete", table):
+                actions.append(dict(label=str(T("Delete")),
+                                    _class="action-btn",
+                                    url=URL(c="hrm", f="job_title",
+                                            args=["[id]", "delete"])))
+            s3.actions = actions
+            if "form" in output:
+                output["form"].add_class("hrm_job_title")
+            elif "item" in output:
+                output["item"].add_class("hrm_job_title")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_hrm_job_title = customize_hrm_job_title
 
 # =============================================================================
 # Template Modules

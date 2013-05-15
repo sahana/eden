@@ -673,7 +673,7 @@ def partners():
 
     # @ToDo: This could need to be a deployment setting
     request.get_vars["organisation.organisation_type_id$name"] = \
-        "Bilateral,Government,Intergovernmental,NGO,UN agency"
+        "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency"
 
     return s3db.org_organisation_controller()
 
