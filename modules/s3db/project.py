@@ -3288,11 +3288,10 @@ class S3ProjectThemeModel(S3Model):
         add_component("project_theme_sector", project_theme="theme_id")
 
         # For Sync Filter
-        #add_component("org_sector",
-        #              project_theme=Storage(link="project_theme_sector",
-        #                                      joinby="theme_id",
-        #                                      key="sector_id",
-        #                                      actuate="hide"))
+        add_component("org_sector",
+                      project_theme=Storage(link="project_theme_sector",
+                                            joinby="theme_id",
+                                            key="sector_id"))
 
         crud_form = S3SQLCustomForm(
                         "name",

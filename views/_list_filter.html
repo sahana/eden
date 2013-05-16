@@ -46,16 +46,10 @@
 {{else:}}
 {{include "dataTables.html"}}
 {{pass}}
-<script type="text/javascript">//<![CDATA[
-$(document).ready(function(){
 {{if r.http == "POST" or not hide_listadd:}}
- $('#list-add').show();
- $('#show-add-btn').hide();
+{{script = '''$('#list-add').show()
+$('#show-add-btn').hide()'''}}
 {{else:}}
- $('#show-add-btn').click(function(){
-  $('#list-add').show();
-  $('#show-add-btn').hide();
- });
-{{pass}}
-});
-//]]></script>
+{{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
+ $('#show-add-btn').hide()})'''}}
+{{pass}}{{s3.jquery_ready.append(script)}}

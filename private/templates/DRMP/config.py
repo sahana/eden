@@ -896,6 +896,22 @@ def customize_gis_location(**attr):
     # Done already within Bootstrap formstyle (& anyway fails with this formstyle)
     #crud_settings.submit_style = "btn btn-primary"
 
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        if r.method == "datalist":
+            # Just show L1s (Districts)
+            s3.filter = (table.level == "L1")
+
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        return True
+    s3.prep = custom_prep
+
     return attr
 
 settings.ui.customize_gis_location = customize_gis_location

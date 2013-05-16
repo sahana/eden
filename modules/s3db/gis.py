@@ -295,6 +295,7 @@ class S3LocationModel(S3Model):
                        onvalidation=self.gis_location_onvalidation,
                        onaccept=self.gis_location_onaccept,
                        deduplicate=self.gis_location_duplicate,
+                       list_orderby=table.name,
                        list_fields = ["id",
                                       "name",
                                       "level",

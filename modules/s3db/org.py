@@ -564,6 +564,7 @@ class S3OrganisationModel(S3Model):
                   referenced_by=[(utablename, "organisation_id")],
                   search_method=organisation_search,
                   xml_post_parse=self.org_organisation_xml_post_parse,
+                  list_orderby=table.name,
                   list_fields=["id",
                                "name",
                                "acronym",
