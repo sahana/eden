@@ -864,7 +864,7 @@ def symbology():
                                                                       ),
                                                          not_filterby="layer_id",
                                                          not_filter_opts=[row.layer_id for row in rows]
-                                                        )
+                                                         )
 
         return True
     s3.prep = prep
@@ -1028,7 +1028,7 @@ def layer_entity():
                                                           "%(name)s",
                                                           not_filterby="id",
                                                           not_filter_opts=[row.id for row in rows]
-                                                        )
+                                                          )
 
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
@@ -1053,7 +1053,7 @@ def layer_entity():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1086,10 +1086,10 @@ def layer_feature():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology" and r.method != "update":
                 # Only show ones with no definition yet for this Layer
                 table = r.table
@@ -1103,7 +1103,7 @@ def layer_feature():
                                                          "%(name)s",
                                                          not_filterby="id",
                                                          not_filter_opts=[row.symbology_id for row in rows]
-                                                        )
+                                                         )
         return True
     s3.prep = prep
 
@@ -1161,10 +1161,10 @@ def layer_openstreetmap():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
 
         return True
     s3.prep = prep
@@ -1219,10 +1219,10 @@ def layer_bing():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
 
         return True
     s3.prep = prep
@@ -1277,10 +1277,10 @@ def layer_empty():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
 
         return True
     s3.prep = prep
@@ -1326,10 +1326,10 @@ def layer_google():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1392,10 +1392,10 @@ def layer_mgrs():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1454,10 +1454,10 @@ def layer_arcrest():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1521,10 +1521,10 @@ def layer_geojson():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
                 field = ltable.gps_marker
@@ -1542,7 +1542,7 @@ def layer_geojson():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1611,10 +1611,10 @@ def layer_georss():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
                 field = ltable.gps_marker
@@ -1632,7 +1632,7 @@ def layer_georss():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1699,10 +1699,10 @@ def layer_gpx():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1770,10 +1770,10 @@ def layer_kml():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
                 field = ltable.gps_marker
@@ -1791,7 +1791,7 @@ def layer_kml():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1860,10 +1860,10 @@ def layer_openweathermap():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
                 field = ltable.gps_marker
@@ -1881,7 +1881,7 @@ def layer_openweathermap():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1903,7 +1903,7 @@ def layer_shapefile():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3db.table(tablename)
+    table = s3db[tablename]
 
     # CRUD Strings
     type = "Shapefile"
@@ -1932,6 +1932,37 @@ def layer_shapefile():
                     method="enable",
                     action=enable_layer)
 
+    args = request.args
+    if len(args) > 1:
+        test = args[1]
+        if test[:4] == "data":
+            # This must be a request for the data held within a layer
+            # Define the Table
+            id = args[0]
+            _tablename = "gis_layer_shapefile_%s" % id
+            row = db(table.id == id).select(table.data,
+                                            limitby=(0, 1)
+                                            ).first()
+            fields = json.loads(row.data)
+            Fields = [Field("wkt"),
+                      Field("layer_id", table),
+                      ]
+            append = Fields.append
+            for field in fields:
+                # Unicode fieldnames not supported
+                append(Field(str(field[0]), field[1]))
+            if settings.get_gis_spatialdb():
+                # Add a spatial field
+                append(Field("the_geom", "geometry()"))
+            s3db.define_table(_tablename, *Fields)
+            new_arg = _tablename[4:]
+            extension = test[4:]
+            if extension:
+                new_arg = "%s%s" % (new_arg, extension)
+            args[1] = new_arg
+            s3db.add_component(_tablename,
+                               gis_layer_shapefile="layer_id")
+
     # Pre-processor
     def prep(r):
         if r.interactive:
@@ -1949,15 +1980,16 @@ def layer_shapefile():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                            "%(name)s",
-                                                             not_filterby="config_id",
-                                                             not_filter_opts=[row.config_id for row in rows]
-                                                             )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
+                # Markers - just for Points layers
                 ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
-                field.readable = False
-                field.writable = False
+                #field = ltable.gps_marker
+                #field.readable = False
+                #field.writable = False
                 if r.method != "update":
                     # Only show ones with no definition yet for this Layer
                     table = r.table
@@ -1967,10 +1999,10 @@ def layer_shapefile():
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
                     ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
-                                                                "%(name)s",
-                                                                not_filterby="id",
-                                                                not_filter_opts=[row.symbology_id for row in rows]
-                                                               )
+                                                             "%(name)s",
+                                                             not_filterby="id",
+                                                             not_filter_opts=[row.symbology_id for row in rows]
+                                                             )
         return True
     s3.prep = prep
 
@@ -2134,10 +2166,10 @@ def layer_tms():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2201,10 +2233,10 @@ def layer_wfs():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2270,10 +2302,10 @@ def layer_wms():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2342,10 +2374,10 @@ def layer_xyz():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2409,10 +2441,10 @@ def layer_js():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 

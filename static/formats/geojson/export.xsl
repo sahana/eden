@@ -3,7 +3,6 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-
          GeoJSON Export Templates for Sahana-Eden
 
          Copyright (c) 2012-13 Sahana Software Foundation
@@ -28,7 +27,6 @@
          WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
          FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
          OTHER DEALINGS IN THE SOFTWARE.
-
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
@@ -50,6 +48,9 @@
                 <xsl:value-of select="concat($prefix, '_', $name)"/>
             </xsl:variable>
             <xsl:choose>
+                <xsl:when test="$resource='gis_layer_shapefile'">
+                    <xsl:apply-templates select="./resource[@name='gis_layer_shapefile']"/>
+                </xsl:when>
                 <!-- skip if all resources have no latlon defined
                 <xsl:when test="not(//reference[@name='location'])">
                 </xsl:when> -->
@@ -204,6 +205,37 @@
                 </xsl:otherwise>
             </xsl:choose>
         </properties>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='gis_layer_shapefile']">
+        <!-- Shapefile Layer -->
+        <!-- @ToDo: Count Features (we can't rely on the header as that's for the main resource, which will always be 1) -->
+        <type>FeatureCollection</type>
+        <xsl:for-each select="./resource">
+            <features>
+                <xsl:variable name="geometry" select="geometry/@value"/>
+                <xsl:variable name="attributes" select="@attributes"/>
+
+                <type>Feature</type>
+                <geometry>
+                    <xsl:attribute name="value">
+                        <!-- Use pre-prepared GeoJSON -->
+                        <xsl:value-of select="$geometry"/>
+                    </xsl:attribute>
+                </geometry>
+                <properties>
+                    <xsl:if test="$attributes!=''">
+                        <xsl:call-template name="Attributes">
+                            <xsl:with-param name="attributes">
+                                <xsl:value-of select="$attributes"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:if>
+                </properties>
+            </features>
+        </xsl:for-each>
+        
     </xsl:template>
 
     <!-- ****************************************************************** -->

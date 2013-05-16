@@ -538,7 +538,7 @@ class S3Request(object):
 
         # Show information on deleted records?
         include_deleted = False
-        if self.representation=="xml" and "include_deleted" in vars:
+        if self.representation == "xml" and "include_deleted" in vars:
             include_deleted = True
         if "components" in vars:
             cnames = vars["components"]

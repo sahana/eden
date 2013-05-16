@@ -752,7 +752,70 @@ class S3XML(S3Codec):
         tablename = resource.tablename
         pkey = table._id
 
-        references = []
+        if len(tablename) > 19 and \
+           tablename.startswith("gis_layer_shapefile"):
+            # Shapefile data
+            # @ToDo: Look these up in Bulk rather than processing 1 by 1
+            attr = element.attrib
+            query = (table._id == record.id)
+            fields = []
+            fappend = fields.append
+            for f in table.fields:
+                if f not in ("id", "layer_id", "wkt"):
+                    fappend(f)
+            if settings.get_gis_spatialdb():
+                fields.remove("the_geom")
+                _fields = [table[f] for f in fields]
+                if format == "geojson":
+                    # Do the Simplify & GeoJSON direct from the DB
+                    row = db(query).select(table.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
+                                           *_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                        geometry = etree.SubElement(element, "geometry")
+                        geometry.set("value", row.geojson)
+                else:
+                    # Do the Simplify direct from the DB
+                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
+                                           *_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        # Convert the WKT in XSLT
+                        attr[ATTRIBUTE.wkt] = row.wkt
+            else:
+                _fields = [table[f] for f in fields]
+                row = db(query).select(table[WKTFIELD],
+                                       *_fields,
+                                       limitby=(0, 1)).first()
+                if row:
+                    wkt = row[WKTFIELD]
+                    if wkt:
+                        if format == "geojson":
+                            # Simplify the polygon to reduce download size
+                            geojson = gis.simplify(wkt, output="geojson")
+                            # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                            geometry = etree.SubElement(element, "geometry")
+                            geometry.set("value", geojson)
+                        else:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(wkt)
+                            # Convert the WKT in XSLT
+                            attr[ATTRIBUTE.wkt] = wkt
+
+            if row and format == "geojson":
+                # Add Attributes
+                _attr = ""
+                for a in fields:
+                    if _attr:
+                        _attr = "%s,[%s]=[%s]" % (_attr, a, row[a])
+                    else:
+                        _attr = "[%s]=[%s]" % (a, row[a])
+                if _attr:
+                    attr[ATTRIBUTE.attributes] = _attr
+
         for r in rmap:
             if r.element is None:
                 continue
@@ -760,16 +823,16 @@ class S3XML(S3Codec):
             if ktable is None:
                 continue
             fields = ktable.fields
-            if LATFIELD not in fields or \
-               LONFIELD not in fields:
+            if (LATFIELD not in fields or \
+                LONFIELD not in fields) and\
+               WKTFIELD not in fields:
                 continue
-            relement = r.element
-            attr = relement.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
                 continue # Multi-reference
 
+            attr = r.element.attrib
             LatLon = None
             polygon = False
             # Use the value calculated earlier if we can
@@ -829,26 +892,26 @@ class S3XML(S3Codec):
                     if settings.get_gis_spatialdb():
                         if format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
-                            geojson = db(query).select(ktable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
-                                                       limitby=(0, 1)).first().geojson
-                            if geojson:
+                            row = db(query).select(ktable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
+                                                       limitby=(0, 1)).first()
+                            if row:
                                 # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
                                 geometry = etree.SubElement(element, "geometry")
-                                geometry.set("value", geojson)
+                                geometry.set("value", row.geojson)
                                 polygon = True
                         else:
                             # Do the Simplify direct from the DB
-                            wkt = db(query).select(ktable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                                   limitby=(0, 1)).first().wkt
-                            if wkt:
+                            row = db(query).select(ktable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
+                                                   limitby=(0, 1)).first()
+                            if row:
                                 # Convert the WKT in XSLT
-                                attr[ATTRIBUTE.wkt] = wkt
+                                attr[ATTRIBUTE.wkt] = row.wkt
                                 polygon = True
                     else:
-                        wkt = db(query).select(ktable[WKTFIELD],
+                        row = db(query).select(ktable[WKTFIELD],
                                                limitby=(0, 1)).first()
-                        if wkt:
-                            wkt = wkt[WKTFIELD]
+                        if row:
+                            wkt = row[WKTFIELD]
                             if wkt:
                                 polygon = True
                                 if format == "geojson":
