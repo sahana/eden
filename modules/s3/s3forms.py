@@ -1432,6 +1432,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
         validated through Ajax-calls to the CRUD.validate() method.
         During accept(), the component gets updated according to the JSON
         returned.
+
+        @ToDo: Support filtering of field options
+               Usecase is inline project_organisation for IFRC
+               PartnerNS needs to be filtered differently from Partners/Donors,
+               so can't just set a global requires for the field in the controller
+               - needs to be inside the widget.
+               See private/templates/IFRC/config.py
     """
 
     prefix = "sub"

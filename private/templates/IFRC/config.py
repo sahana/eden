@@ -528,6 +528,24 @@ def customize_project_project(**attr):
     # Load normal model
     table = s3db[tablename]
 
+    # @ToDo: S3SQLInlineComponent for Project orgs
+    # Get IDs for PartnerNS/Partner-Donor
+    # db = current.db
+    # ttable = db.org_organisation_type
+    # rows = db(ttable.deleted != True).select(ttable.id,
+                                             # ttable.name,
+                                             # )
+    # rc = []
+    # not_rc = []
+    # nappend = not_rc.append
+    # for row in rows:
+        # if row.name == "Red Cross / Red Crescent":
+            # rc.append(row.id)
+        # elif row.name == "Supplier":
+            # pass
+        # else:
+            # nappend(row.id)
+
     # Custom Fields
     # Organisation needs to be an NS (not a branch)
     f = table.organisation_id
@@ -551,6 +569,13 @@ def customize_project_project(**attr):
         #    label = T("Countries"),
         #    fields = ["location_id"],
         #),
+        # Outputs
+        s3forms.S3SQLInlineComponent(
+            "output",
+            label = T("Outputs"),
+            #comment = "Bob",
+            fields = ["name", "status"],
+        ),
         s3forms.S3SQLInlineComponentCheckbox(
             "hazard",
             label = T("Hazards"),
@@ -587,30 +612,53 @@ S3OptionsFilter({
         "drr.hfa",
         "objectives",
         "human_resource_id",
+        # Disabled since we need organisation_id filtering to either organsiation_type_id == RC or NOT
+        # & also hiding Branches from RCs
+        # Partner NS
+        # s3forms.S3SQLInlineComponent(
+            # "organisation",
+            # name = "partnerns",
+            # label = T("Partner National Societies"),
+            # fields = ["organisation_id",
+                      # "comments",
+                      # ],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = "9")
+        # ),
         # Partner Orgs
-        #s3forms.S3SQLInlineComponent(
-        #    "organisation",
-        #    name = "partner",
-        #    label = T("Partner Organizations"),
-        #    fields = ["organisation_id",
-        #              "comments",
-        #              ],
-        #    filterby = dict(field = "role",
-        #                    options = "2"
-        #                    )
-        #),
+        # s3forms.S3SQLInlineComponent(
+            # "organisation",
+            # name = "partner",
+            # label = T("Partner Organizations"),
+            # fields = ["organisation_id",
+                      # "comments",
+                      # ],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": not_rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = "2")
+        # ),
         # Donors
-        #s3forms.S3SQLInlineComponent(
-        #    "organisation",
-        #    name = "donor",
-        #    label = T("Donor(s)"),
-        #    fields = ["organisation_id",
-        #              "amount",
-        #              "currency"],
-        #    filterby = dict(field = "role",
-        #                    options = "3"
-        #                    )
-        #),
+        # s3forms.S3SQLInlineComponent(
+            # "organisation",
+            # name = "donor",
+            # label = T("Donor(s)"),
+            # fields = ["organisation_id",
+                      # "amount",
+                      # "currency"],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": not_rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = "3")
+        # ),
         #"budget",
         #"currency",
         "comments",

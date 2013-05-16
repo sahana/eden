@@ -282,6 +282,22 @@ def customize_cms_post(**attr):
         return True
     s3.prep = custom_prep
 
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive:
+            if "form" in output:
+                output["form"].add_class("cms_post")
+            elif "item" in output:
+                output["item"].add_class("cms_post")
+
+        return output
+    s3.postp = custom_postp
+
     return attr
 
 settings.ui.customize_cms_post = customize_cms_post

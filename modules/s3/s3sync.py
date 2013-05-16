@@ -234,7 +234,8 @@ class S3Sync(S3Method):
             @param attr: the controller attributes
         """
 
-        result = self.log.SUCCESS
+        log = self.log
+        result = log.SUCCESS
         message = "registration successful"
         repository_id = None
 
@@ -258,13 +259,13 @@ class S3Sync(S3Method):
                                               uuid=ruid,
                                               accept_push=accept_push)
                 if not repository_id:
-                    result = self.log.ERROR
+                    result = log.ERROR
                     message = "registration failed"
         else:
-            result = self.log.ERROR
+            result = log.ERROR
             message = "no repository identifier specified"
 
-        if result == self.log.SUCCESS:
+        if result == log.SUCCESS:
             output = current.xml.json_message(message=message,
                                               sender="%s" % config.uuid)
         else:
@@ -277,13 +278,13 @@ class S3Sync(S3Method):
         headers["Content-Type"] = "application/json"
 
         # Log the operation
-        self.log.write(repository_id=repository_id,
-                       resource_name=self.log.NONE,
-                       transmission=self.log.IN,
-                       mode=self.log.PUSH,
-                       action="register repository",
-                       result=result,
-                       message=message)
+        log.write(repository_id=repository_id,
+                  resource_name=log.NONE,
+                  transmission=log.IN,
+                  mode=log.PUSH,
+                  action="register repository",
+                  result=result,
+                  message=message)
 
         return output
 
@@ -377,12 +378,13 @@ class S3Sync(S3Method):
         headers["Content-Type"] = "text/xml"
 
         # Log the operation
-        self.log.write(repository_id=repository_id,
-                       resource_name=r.resource.tablename,
-                       transmission=self.log.IN,
-                       mode=self.log.PULL,
-                       result=self.log.SUCCESS,
-                       message="data sent to peer (%s records)" % count)
+        log = self.log
+        log.write(repository_id=repository_id,
+                  resource_name=r.resource.tablename,
+                  transmission=log.IN,
+                  mode=log.PULL,
+                  result=log.SUCCESS,
+                  message="data sent to peer (%s records)" % count)
 
         return output
 
@@ -485,12 +487,14 @@ class S3Sync(S3Method):
             e = sys.exc_info()[1]
             r.error(400, e)
 
+        log = self.log
+
         if resource.error_tree is not None:
             # Validation error (log in any case)
             if ignore_errors:
-                result = self.log.WARNING
+                result = log.WARNING
             else:
-                result = self.log.FATAL
+                result = log.FATAL
             message = "%s" % resource.error
             for element in resource.error_tree.findall("resource"):
                 for field in element.findall("data[@error]"):
@@ -498,21 +502,21 @@ class S3Sync(S3Method):
                     if error_msg:
                         msg = "(UID: %s) %s.%s=%s: %s" % \
                                 (element.get("uuid", None),
-                                element.get("name", None),
-                                field.get("field", None),
-                                field.get("value", field.text),
-                                field.get("error", None))
+                                 element.get("name", None),
+                                 field.get("field", None),
+                                 field.get("value", field.text),
+                                 field.get("error", None))
                         message = "%s, %s" % (message, msg)
         else:
-            result = self.log.SUCCESS
+            result = log.SUCCESS
             message = "data received from peer"
 
-        self.log.write(repository_id=repository.id,
-                       resource_name=resource.tablename,
-                       transmission=self.log.IN,
-                       mode=self.log.PUSH,
-                       result=result,
-                       message=message)
+        log.write(repository_id=repository.id,
+                  resource_name=resource.tablename,
+                  transmission=log.IN,
+                  mode=log.PUSH,
+                  result=result,
+                  message=message)
 
         return output
 
@@ -553,11 +557,12 @@ class S3Sync(S3Method):
             task = current.db(query).select(limitby=(0, 1)).first()
             if task and item.original:
                 original = item.original
-                if task.conflict_policy == policies.OTHER:
+                conflict_policy = task.conflict_policy
+                if conflict_policy == policies.OTHER:
                     # Always accept
                     _debug("Accept by default")
                     item.conflict = False
-                elif task.conflict_policy == policies.NEWER:
+                elif conflict_policy == policies.NEWER:
                     # Accept if newer
                     xml = current.xml
                     if xml.MTIME in original and \
@@ -566,7 +571,7 @@ class S3Sync(S3Method):
                         item.conflict = False
                     else:
                         _debug("Do not accept")
-                elif task.conflict_policy == policies.MASTER:
+                elif conflict_policy == policies.MASTER:
                     # Accept if master
                     if current.xml.MCI in original and \
                        original.mci == 0 or item.mci == 1:
@@ -1217,7 +1222,7 @@ class S3SyncRepository(object):
                 code = e.code
                 message = e.read()
                 try:
-                    # Sahana-Eden would send a JSON message,
+                    # Sahana-Eden sends a JSON message,
                     # try to extract the actual error message:
                     message_json = json.loads(message)
                     message = message_json.get("message", message)
@@ -1377,16 +1382,15 @@ class S3SyncCiviCRM(S3SyncRepository):
                 count = 0
                 success = True
                 try:
-                    success = resource.import_xml(
-                                    tree,
-                                    stylesheet=stylesheet,
-                                    ignore_errors=True,
-                                    strategy=strategy,
-                                    update_policy=update_policy,
-                                    conflict_policy=conflict_policy,
-                                    last_sync=task.last_pull,
-                                    onconflict=onconflict,
-                                    site=hostname)
+                    success = resource.import_xml(tree,
+                                               stylesheet=stylesheet,
+                                               ignore_errors=True,
+                                               strategy=strategy,
+                                               update_policy=update_policy,
+                                               conflict_policy=conflict_policy,
+                                               last_sync=task.last_pull,
+                                               onconflict=onconflict,
+                                               site=hostname)
                     count = resource.import_count
                 except IOError, e:
                     result = log.FATAL
@@ -1403,11 +1407,11 @@ class S3SyncCiviCRM(S3SyncRepository):
                             error_msg = field.get("error", None)
                             if error_msg:
                                 msg = "(UID: %s) %s.%s=%s: %s" % \
-                                    (element.get("uuid", None),
-                                        element.get("name", None),
-                                        field.get("field", None),
-                                        field.get("value", field.text),
-                                        field.get("error", None))
+                                        (element.get("uuid", None),
+                                         element.get("name", None),
+                                         field.get("field", None),
+                                         field.get("value", field.text),
+                                         field.get("error", None))
                                 message = "%s, %s" % (message, msg)
 
                 # Check for failure

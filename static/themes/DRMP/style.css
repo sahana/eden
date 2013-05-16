@@ -150,6 +150,7 @@ table.embeddedComponent {
     display: none;	
 }
 
-form.pr_person table.embeddedComponent td {
+form.pr_person table.embeddedComponent td,
+#read-row-defaultevent_post-0 td {
     border-style: none;
 }

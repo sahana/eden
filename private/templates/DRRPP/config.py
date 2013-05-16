@@ -69,10 +69,10 @@ settings.L10n.thousands_separator = ","
 settings.fin.currencies = {
     #"AUD" : T("Australian Dollars"),
     #"CAD" : T("Canadian Dollars"),
-    #"EUR" : T("Euros"),
+    "EUR" : T("Euros"),             # Needed for IFRC RMS interop
     #"GBP" : T("Great British Pounds"),
-    #"PHP" : T("Philippine Pesos"),
-    #"CHF" : T("Swiss Francs"),
+    "PHP" : T("Philippine Pesos"),  # Needed for IFRC RMS interop
+    "CHF" : T("Swiss Francs"),      # Needed for IFRC RMS interop
     "USD" : T("United States Dollars"),
     "NZD" : T("New Zealand Dollars"),
 }
@@ -115,7 +115,8 @@ settings.project.organisation_roles = {
     2: T("Partner Organization"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    #5: T("Supplier")
+    #5: T("Supplier"),
+    9: T("Partner Organization"), # Needed for IFRC RMS interop ("Partner National Society")
 }
 
 # =============================================================================
@@ -287,6 +288,7 @@ def customize_project_project(**attr):
             list_fields = ["id",
                            "name",
                            "code",
+                           "description",
                            "status_id",
                            "start_date",
                            "end_date",
@@ -502,6 +504,7 @@ def customize_project_project(**attr):
     crud_form = s3forms.S3SQLCustomForm(
         "name",
         "code",
+        "description",
         "status_id",
         "start_date",
         "end_date",
@@ -551,8 +554,7 @@ def customize_project_project(**attr):
                       "comments", # NB This is labelled 'Role' in DRRPP
                       ],
             filterby = dict(field = "role",
-                            options = "2"
-                            )
+                            options = "2")
         ),
         # Donors
         s3forms.S3SQLInlineComponent(
@@ -561,8 +563,7 @@ def customize_project_project(**attr):
             label = T("Donor(s)"),
             fields = ["organisation_id", "amount", "currency"],
             filterby = dict(field = "role",
-                            options = "3"
-                            )
+                            options = "3")
         ),
         "budget",
         "drrpp.local_budget",
@@ -668,11 +669,9 @@ def customize_project_location(**attr):
     table = s3db.project_location
 
     # Custom Components
-    add_component = s3db.add_component
-    add_component("project_drrpp",
-                  project_project=Storage(joinby="project_id",
-                                          multiple = False))
-    add_component("project_output", project_project="project_id")
+    s3db.add_component("project_drrpp",
+                       project_project=Storage(joinby="project_id",
+                                               multiple = False))
 
     # Custom CRUD Strings
     s3.crud_strings.project_location.title_map = \
