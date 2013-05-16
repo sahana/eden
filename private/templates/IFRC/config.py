@@ -14,6 +14,10 @@ settings = current.deployment_settings
 # =============================================================================
 # System Settings
 # -----------------------------------------------------------------------------
+# Security Policy
+settings.security.policy = 8 # Delegations
+settings.security.map = True
+
 # Authorization Settings
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requires_verification = True
@@ -31,11 +35,6 @@ settings.auth.record_approval = True
 settings.auth.registration_roles = {"site_id": ["reader",
                                                 ],
                                     }
-
-# -----------------------------------------------------------------------------
-# Security Policy
-settings.security.policy = 8 # Delegations
-settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = True
@@ -627,7 +626,7 @@ S3OptionsFilter({
                                           # "filterfor": rc,
                                           # }],
             # filterby = dict(field = "role",
-                            # options = "9")
+                            # options = [9])
         # ),
         # Partner Orgs
         # s3forms.S3SQLInlineComponent(
@@ -642,7 +641,7 @@ S3OptionsFilter({
                                           # "filterfor": not_rc,
                                           # }],
             # filterby = dict(field = "role",
-                            # options = "2")
+                            # options = [2])
         # ),
         # Donors
         # s3forms.S3SQLInlineComponent(
@@ -657,7 +656,7 @@ S3OptionsFilter({
                                           # "filterfor": not_rc,
                                           # }],
             # filterby = dict(field = "role",
-                            # options = "3")
+                            # options = [3])
         # ),
         #"budget",
         #"currency",

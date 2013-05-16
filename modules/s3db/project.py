@@ -489,7 +489,7 @@ class S3ProjectModel(S3Model):
                             name="donor",
                             joinby="project_id",
                             filterby="role",
-                            filterfor=["3"], # Works for IFRC & DRRPP
+                            filterfor=[3], # Works for IFRC & DRRPP
                           ))
             # Partners
             add_component("project_organisation",
@@ -497,7 +497,7 @@ class S3ProjectModel(S3Model):
                             name="partner",
                             joinby="project_id",
                             filterby="role",
-                            filterfor=["2"], # Works for IFRC & DRRPP
+                            filterfor=[2, 9], # Works for IFRC & DRRPP
                           ))
 
         # Sites
@@ -660,8 +660,6 @@ class S3ProjectModel(S3Model):
         if settings.get_project_multiple_organisations():
             # Create/update project_organisation record from the organisation_id
             # (Not in form.vars if added via component tab)
-            db = current.db
-            s3db = current.s3db
             vars = form.vars
             id = vars.id
             organisation_id = vars.organisation_id or \
@@ -669,52 +667,18 @@ class S3ProjectModel(S3Model):
             if organisation_id:
                 lead_role = settings.get_project_organisation_lead_role()
 
-                otable = s3db.project_organisation
+                otable = current.s3db.project_organisation
                 query = (otable.project_id == id) & \
                         (otable.role == lead_role)
 
                 # Update the lead organisation
-                count = db(query).update(organisation_id = organisation_id)
+                count = current.db(query).update(organisation_id = organisation_id)
                 if not count:
                     # If there is no record to update, then create a new one
                     otable.insert(project_id = id,
                                   organisation_id = organisation_id,
                                   role = lead_role,
                                   )
-
-            # @ToDo: Move this to template?
-            if settings.get_template() == "DRRPP" and \
-               not current.response.s3.interactive:
-                # Assume coming from Sync from IFRC RMS
-                # - update focal_person from HRM
-                # (wouldn't work in interactive as subforms processed afterwards)
-                table = s3db.project_project
-                hr_id = db(table.id == id).select(table.human_resource_id,
-                                                  limitby=(0, 1)
-                                                  ).first().human_resource_id
-                if hr_id:
-                    htable = s3db.hrm_human_resource
-                    ctable = s3db.pr_contact
-                    ptable = db.pr_person
-                    query = (htable.id == hr_id) & \
-                            (ptable.id == htable.person_id)
-                    left = ctable.on((ctable.pe_id == ptable.pe_id) & \
-                                     (ctable.contact_method == "EMAIL"))
-                    row = db(query).select(htable.organisation_id,
-                                           ptable.first_name,
-                                           ptable.middle_name,
-                                           ptable.last_name,
-                                           ctable.value,
-                                           left=left,
-                                           limitby=(0, 1)).first()
-                    focal_person = s3_fullname(row)
-                    organisation_id = row[htable].organisation_id
-                    email = row[ctable].value
-                    query = (s3db.project_drrpp.project_id == id)
-                    db(query).update(focal_person = focal_person,
-                                     organisation_id = organisation_id,
-                                     email = email,
-                                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3323,6 +3287,13 @@ class S3ProjectThemeModel(S3Model):
 
         add_component("project_theme_sector", project_theme="theme_id")
 
+        # For Sync Filter
+        #add_component("org_sector",
+        #              project_theme=Storage(link="project_theme_sector",
+        #                                      joinby="theme_id",
+        #                                      key="sector_id",
+        #                                      actuate="hide"))
+
         crud_form = S3SQLCustomForm(
                         "name",
                         # Project Sectors
@@ -3703,9 +3674,61 @@ class S3ProjectDRRPPModel(S3Model):
             title_update = T("Edit DRRPP Extensions"),
         )
 
+        self.configure(tablename,
+                       onaccept = self.project_drrpp_onaccept,
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict(
             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_drrpp_onaccept(form):
+        """
+            After DB I/O tasks for Project DRRPP records
+        """
+
+        db = current.db
+        vars = form.vars
+        id = vars.id
+        project_id = vars.project_id
+
+        dtable = db.project_drrpp
+
+        if not project_id:
+            # Most reliable way to get the project_id is to read the record
+            project_id = db(dtable.id == id).select(dtable.project_id,
+                                                    limitby=(0, 1)
+                                                    ).first().project_id
+
+        table = db.project_project
+        hr_id = db(table.id == project_id).select(table.human_resource_id,
+                                                  limitby=(0, 1)
+                                                  ).first().human_resource_id
+        if hr_id:
+            s3db = current.s3db
+            htable = db.hrm_human_resource
+            ctable = s3db.pr_contact
+            ptable = db.pr_person
+            query = (htable.id == hr_id) & \
+                    (ptable.id == htable.person_id)
+            left = ctable.on((ctable.pe_id == ptable.pe_id) & \
+                             (ctable.contact_method == "EMAIL"))
+            row = db(query).select(htable.organisation_id,
+                                   ptable.first_name,
+                                   ptable.middle_name,
+                                   ptable.last_name,
+                                   ctable.value,
+                                   left=left,
+                                   limitby=(0, 1)).first()
+            focal_person = s3_fullname(row[ptable])
+            organisation_id = row[htable].organisation_id
+            email = row[ctable].value
+            db(dtable.id == id).update(focal_person = focal_person,
+                                       organisation_id = organisation_id,
+                                       email = email,
+                                       )
 
     # -------------------------------------------------------------------------
     @staticmethod
