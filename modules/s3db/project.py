@@ -5062,7 +5062,9 @@ class S3ProjectTaskIReportModel(S3Model):
 def project_project_represent(id, row=None, show_link=True):
     """ FK representation """
 
-    if not row:
+    if row:
+        id = row.id
+    else:
         if not id:
             return current.messages["NONE"]
         db = current.db
@@ -5478,8 +5480,8 @@ def project_rheader(r):
 
         # RHeader
         db = current.db
-        ptable = s3db.project_project
         ltable = s3db.project_task_project
+        ptable = db.project_project
         query = (ltable.deleted == False) & \
                 (ltable.task_id == r.id) & \
                 (ltable.project_id == ptable.id)
@@ -5551,21 +5553,19 @@ def project_rheader(r):
         else:
             time_actual = ""
 
-        rheader = DIV(TABLE(
-            project,
-            activity,
-            TR(
-                TH("%s: " % table.name.label),
-                record.name,
-                ),
-            description,
-            facility,
-            location,
-            creator,
-            time_estimated,
-            time_actual,
-            #comments,
-            ), rheader_tabs)
+        rheader = DIV(TABLE(project,
+                            activity,
+                            TR(TH("%s: " % table.name.label),
+                               record.name,
+                               ),
+                            description,
+                            facility,
+                            location,
+                            creator,
+                            time_estimated,
+                            time_actual,
+                            #comments,
+                            ), rheader_tabs)
 
     return rheader
 

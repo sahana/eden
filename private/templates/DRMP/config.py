@@ -1498,7 +1498,7 @@ def customize_pr_person(**attr):
             output = standard_postp(r, output)
 
         if r.interactive:
-            output["rheader"] = None
+            output["rheader"] = ""
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
                             url=URL(c="pr", f="person",
