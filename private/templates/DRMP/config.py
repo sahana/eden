@@ -902,6 +902,8 @@ def customize_gis_location(**attr):
         if r.method == "datalist":
             # Just show L1s (Districts)
             s3.filter = (table.level == "L1")
+            # Default 5 triggers an AJAX call, we should load all by default
+            s3.dl_pagelength = 13
 
         # Call standard prep
         if callable(standard_prep):
@@ -1016,6 +1018,15 @@ def customize_org_organisation(**attr):
     # Load normal Model
     table = s3db.org_organisation
 
+    # Hide fields
+    table.organisation_type_id.readable = table.organisation_type_id.writable = False
+    table.multi_sector_id.readable = table.multi_sector_id.writable = False
+    table.region.readable = table.region.writable = False
+    table.country.readable = table.country.writable = False
+    table.year.readable = table.year.writable = False
+    table.twitter.readable = table.twitter.writable = False
+    table.donation_phone.readable = table.donation_phone.writable = False
+    
     alerts_widget = dict(label = "Alerts",
                          title_create = "Add New Alert",
                          type = "datalist",

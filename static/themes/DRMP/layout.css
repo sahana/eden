@@ -54,7 +54,6 @@ footer {
   background: rgba(0, 0, 0, 0.03);
   color: #999999;
   text-shadow: 0px 1px 0px white;
-  
 }
 
 #page-footer h3 {
@@ -71,7 +70,6 @@ footer {
 #page-footer ul {
     margin-bottom: 21px;
     margin-left: 0px;
-    
 }
 
 #page-footer ul > li {

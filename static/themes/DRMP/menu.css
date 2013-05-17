@@ -115,6 +115,6 @@ ul.nav li.dropdown ul.dropdown-menu {
     display: none;
 }
 
-ul.nav li.dropdown ul.dropdown-menu ul.dropdown-menu li {
+ul.nav li.dropdown ul.dropdown-menu li {
     margin-top: 8px;
 }
