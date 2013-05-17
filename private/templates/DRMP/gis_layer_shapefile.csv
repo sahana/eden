@@ -1,2 +1,3 @@
-Name,Shapefile,Description,Style,Symbology,Marker,Folder,Config,Enabled,Visible
-Airport_Seaport,http://tldrmp.aidiq.com/eden/static/prepop/Airport_Seaport.zip,,,,,Risks,,True,False
+Name,Description,Shapefile,Projection,Style,Symbology,Marker,Filter,Folder,Config,Enabled,Visible
+Airports,,http://tldrmp.aidiq.com/eden/static/prepop/Airport_Seaport.zip,4326,,DRMP,airport,"Class__like=*Airport",Infrastructure,,True,False
+Seaports,,http://tldrmp.aidiq.com/eden/static/prepop/Airport_Seaport.zip,4326,,DRMP,seaport,"Class=Main Seaport,Medium Seaport,Small Port",Infrastructure,,True,False

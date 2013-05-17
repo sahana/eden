@@ -225,4 +225,89 @@ class S3SHP(S3Codec):
         return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
                                request=request)
 
+    # -------------------------------------------------------------------------
+    def decode(self, resource, source, **attr):
+        """
+            Import data from a Shapefile
+
+            @param resource: the S3Resource
+            @param source: the source
+
+            @returns: an S3XML ElementTree
+
+            @ToDo: Handle encodings within Shapefiles other than UTF-8
+        """
+
+        # @ToDo: Complete this!
+        # Sample code coming from this working script:
+        # http://eden.sahanafoundation.org/wiki/BluePrint/GIS/ShapefileLayers#ImportintonativeTables
+        # We also have sample code to read SHP from GDAL in:
+        # gis_layer_shapefile_onaccept() & import_admin_areas() [GADM]
+        raise NotImplementedError
+
+        try:
+            from lxml import etree
+        except ImportError:
+            import sys
+            print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+            raise
+
+        try:
+            from osgeo import ogr
+        except ImportError:
+            import sys
+            print >> sys.stderr, "ERROR: GDAL module needed for Shapefile handling"
+            raise
+
+        # @ToDo: Check how this would happen
+        shapefilename = source
+
+        layername = os.path.splitext(os.path.basename(shapefilename))[0]
+
+        # Create the datasource
+        ds = ogr.Open(shapefilename)
+
+        # Open the shapefile
+        if ds is None:
+            # @ToDo: Bail gracefully
+            raise
+
+        # Get the layer and iterate through the features
+        lyr = ds.GetLayer(0)
+
+        root = etree.Element("shapefile", name=layername)
+
+        OFTInteger = ogr.OFTInteger
+        OFTReal = ogr.OFTReal
+        OFTString = ogr.OFTString
+        for feat in lyr:
+            featurenode = etree.SubElement(root, "feature")
+            feat_defn = lyr.GetLayerDefn()
+            GetFieldDefn = feat_defn.GetFieldDefn
+            for i in range(feat_defn.GetFieldCount()):
+                field_defn = GetFieldDefn(i)
+                fieldnode = etree.SubElement(featurenode, field_defn.GetName())
+                if field_defn.GetType() == OFTInteger:
+                    fieldnode.text = str(feat.GetFieldAsInteger(i))
+                elif field_defn.GetType() == OFTReal:
+                    fieldnode.text = str(feat.GetFieldAsDouble(i))
+                elif field_defn.GetType() == OFTString:
+                    FieldString = str(feat.GetFieldAsString(i))
+                    # @ToDo: Don't assume UTF-8
+                    fieldnode.text = FieldString.decode(encoding="UTF-8",
+                                                        errors="strict")
+
+            wktnode = etree.SubElement(featurenode, "wkt")
+            geom = feat.GetGeometryRef()	
+            wktnode.text = geom.ExportToWkt()    
+
+        # @ToDo: Convert using XSLT
+
+        # Debug: Write out the etree
+        #xmlString = etree.tostring(root, pretty_print=True)
+        #f = open("test.xml","w")
+        #f.write(xmlString)
+
+        return root
+
 # End =========================================================================

@@ -53,7 +53,7 @@
                 <xsl:call-template name="Config"/>
             </xsl:for-each>
 
-            <!-- Feature Layers -->
+            <!-- Layers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
                                                                    col[@field='Name'])[1])]">
                 <xsl:call-template name="Layer"/>

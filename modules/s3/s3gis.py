@@ -6653,6 +6653,8 @@ class FeatureLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
@@ -6679,9 +6681,9 @@ class GeoJSONLayer(Layer):
                       "name": self.safe_name,
                       "url": self.url,
                       }
-            self.marker.add_attributes_to_output(output)
 
             # Attributes which are defaulted client-side if not set
+            self.marker.add_attributes_to_output(output)
             projection = self.projection
             if projection.epsg != 4326:
                 output["projection"] = projection.epsg
@@ -6904,6 +6906,8 @@ class GPXLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.marker.add_attributes_to_output(output)
             self.add_attributes_if_not_default(
                 output,
@@ -7033,10 +7037,13 @@ class KMLLayer(Layer):
                 # (Requires OpenLayers.Layer.KML to be available)
                 url = self.url
 
+            # Mandatory attributes
             output = dict(id = self.layer_id,
                           name = self.safe_name,
                           url = url,
                           )
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 title = (self.title, ("name", None, "")),
@@ -7069,10 +7076,13 @@ class OSMLayer(Layer):
                 # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
                 return {}
 
+            # Mandatory attributes
             output = {"id": self.layer_id,
                       "name": self.safe_name,
                       "url1": self.url1,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 base = (self.base, (True,)),
@@ -7149,8 +7159,8 @@ class ShapefileLayer(Layer):
         def as_dict(self):
             url = "%s/%s/data.geojson" % \
                 (URL(c="gis", f="layer_shapefile"), self.id)
-            #if self.filter:
-            #    url = "%s&%s" % (url, self.filter)
+            if self.filter:
+                url = "%s?layer_shapefile_%s.%s" % (url, self.id, self.filter)
 
             # Mandatory attributes
             output = {"id": self.layer_id,
@@ -7158,6 +7168,11 @@ class ShapefileLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+            
+            # Attributes which are defaulted client-side if not set
+            projection = self.projection
+            if projection.epsg != 4326:
+                output["projection"] = projection.epsg
             self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
             #self.setup_clustering(output)
@@ -7189,6 +7204,8 @@ class ThemeLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.setup_folder_and_visibility(output)
             self.setup_clustering(output)
             style = self.style
@@ -7210,12 +7227,15 @@ class TMSLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
+            # Mandatory attributes
             output = {"id": self.layer_id,
                       "type": "tms",
                       "name": self.safe_name,
                       "url": self.url,
                       "layername": self.layername
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 _base = (self._base, (False,)),
@@ -7240,6 +7260,7 @@ class WFSLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
+            # Mandatory attributes
             output = dict(id = self.layer_id,
                           name = self.safe_name,
                           url = self.url,
@@ -7248,6 +7269,8 @@ class WFSLayer(Layer):
                           featureNS = self.featureNS,
                           schema = self.wfs_schema,
                           )
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 version = (self.version, ("1.1.0",)),
@@ -7286,11 +7309,14 @@ class WMSLayer(Layer):
         def as_dict(self):
             if self.queryable:
                 current.response.s3.gis.get_feature_info = True
+            # Mandatory attributes
             output = dict(id = self.layer_id,
                           name = self.safe_name,
                           url = self.url,
                           layers = self.layers
                           )
+
+            # Attributes which are defaulted client-side if not set
             legend_url = self.legend_url
             if legend_url and not legend_url.startswith("http"):
                 legend_url = "%s/%s%s" % \
@@ -7329,10 +7355,13 @@ class XYZLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
+            # Mandatory attributes
             output = {"id": self.layer_id,
                       "name": self.safe_name,
                       "url": self.url
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 _base = (self._base, (False,)),

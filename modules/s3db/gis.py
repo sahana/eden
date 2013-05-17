@@ -1078,8 +1078,7 @@ class S3GISConfigModel(S3Model):
         # GIS Markers (Icons)
         tablename = "gis_marker"
         table = define_table(tablename,
-                             Field("name", length=64,
-                                   notnull=True, unique=True,
+                             Field("name", length=64, notnull=True, unique=True,
                                    label = T("Name")),
                              Field("image", "upload", autodelete=False,
                                    label = T("Image"),
@@ -1092,7 +1091,8 @@ class S3GISConfigModel(S3Model):
                                    represent = lambda filename: \
                                       (filename and [DIV(IMG(_src=URL(c="static",
                                                                       f="img",
-                                                                      args=["markers", filename]),
+                                                                      args=["markers",
+                                                                            filename]),
                                                              _height=40))] or [""])[0]),
                              Field("height", "integer", writable=False), # In Pixels, for display purposes
                              Field("width", "integer", writable=False),  # We could get size client-side using Javascript's Image() class, although this is unreliable!
@@ -1116,7 +1116,8 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Markers currently available"))
 
         # Reusable field to include in other table definitions
-        marker_id = S3ReusableField("marker_id", table, sortby="name",
+        marker_id = S3ReusableField("marker_id", table,
+                                    sortby="name",
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "gis_marker.id",
                                                           "%(name)s",
@@ -1125,7 +1126,7 @@ class S3GISConfigModel(S3Model):
                                     label = T("Marker"),
                                     comment=S3AddResourceLink(c="gis",
                                                               f="marker",
-                                                              vars={"child":"marker_id",
+                                                              vars={"child": "marker_id",
                                                                     "parent": "symbology"},
                                                               label=ADD_MARKER,
                                                               title=T("Marker"),
@@ -1137,17 +1138,17 @@ class S3GISConfigModel(S3Model):
         # Components
         # Layers
         add_component("gis_layer_entity",
-                      gis_marker=Storage(
-                                    link="gis_layer_symbology",
-                                    joinby="marker_id",
-                                    key="layer_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_marker=Storage(link="gis_layer_symbology",
+                                         joinby="marker_id",
+                                         key="layer_id",
+                                         actuate="hide",
+                                         autocomplete="name",
+                                         autodelete=False))
 
         configure(tablename,
                   onvalidation=self.gis_marker_onvalidation,
-                  deduplicate=self.gis_marker_deduplicate)
+                  deduplicate=self.gis_marker_deduplicate,
+                  )
 
         # =====================================================================
         # GIS Projections
@@ -1190,14 +1191,13 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Projections currently defined"))
 
         # Reusable field to include in other table definitions
+        represent = S3Represent(lookup=tablename)
         projection_id = S3ReusableField("projection_id", table,
                                         sortby="name",
                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "gis_projection.id",
-                                                              "%(name)s")),
-                                        represent = lambda id: \
-                                            (id and [db(db.gis_projection.id == id).select(db.gis_projection.name,
-                                                                                           limitby=(0, 1)).first().name] or [NONE])[0],
+                                                              represent)),
+                                        represent = represent,
                                         label = T("Projection"),
                                         comment=S3AddResourceLink(c="gis",
                                                                   f="projection",
@@ -1210,7 +1210,8 @@ class S3GISConfigModel(S3Model):
 
         configure(tablename,
                   deduplicate=self.gis_projection_deduplicate,
-                  deletable=False)
+                  deletable=False,
+                  )
 
         # =====================================================================
         # GIS Symbology
@@ -1241,37 +1242,34 @@ class S3GISConfigModel(S3Model):
         )
 
         # Reusable field to include in other table definitions
+        represent = S3Represent(lookup=tablename)
         symbology_id = S3ReusableField("symbology_id", table,
                                        sortby="name",
                                        requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "gis_symbology.id",
-                                                              "%(name)s")),
-                                       represent = lambda id: \
-                                        (id and [db(db.gis_symbology.id == id).select(db.gis_symbology.name,
-                                                                                      limitby=(0, 1)).first().name] or [NONE])[0],
+                                                              represent)),
+                                       represent = represent,
                                        label = T("Symbology"),
                                        ondelete = "SET NULL")
 
         # Components
         # Layers
         add_component("gis_layer_entity",
-                      gis_symbology=Storage(
-                                    link="gis_layer_symbology",
-                                    joinby="symbology_id",
-                                    key="layer_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_symbology=Storage(link="gis_layer_symbology",
+                                            joinby="symbology_id",
+                                            key="layer_id",
+                                            actuate="hide",
+                                            autocomplete="name",
+                                            autodelete=False))
 
         # Markers
         add_component("gis_marker",
-                      gis_symbology=Storage(
-                                    link="gis_layer_symbology",
-                                    joinby="symbology_id",
-                                    key="marker_id",
-                                    actuate="replace",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_symbology=Storage(link="gis_layer_symbology",
+                                            joinby="symbology_id",
+                                            key="marker_id",
+                                            actuate="replace",
+                                            autocomplete="name",
+                                            autodelete=False))
 
         configure(tablename,
                   deduplicate=self.gis_symbology_deduplicate)
@@ -1355,11 +1353,10 @@ class S3GISConfigModel(S3Model):
                                    requires = IS_NULL_OR(IS_LAT())),
                              Field("lon", "double",
                                    requires = IS_NULL_OR(IS_LON())),
-                             projection_id(
-                                   #empty=False,
-                                   # Nice if we could get this set to epsg field
-                                   #default=900913
-                                   ),
+                             projection_id(#empty=False,
+                                           # Nice if we could get this set to epsg field
+                                           #default=900913
+                                           ),
                              symbology_id(),
                              Field("wmsbrowser_url"),
                              Field("wmsbrowser_name",
@@ -1377,13 +1374,13 @@ class S3GISConfigModel(S3Model):
                              *s3_meta_fields())
 
         # Reusable field - used by Events & Scenarios
+        represent = S3Represent(lookup=tablename)
         config_id = S3ReusableField("config_id", table,
                                     #readable=False,
                                     #writable=False,
-                                    requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
-                                                         "%(name)s"),
-                                    represent = self.gis_config_represent,
+                                    requires = IS_ONE_OF(db, "gis_config.id",
+                                                         represent),
+                                    represent = represent,
                                     label = T("Map Configuration"),
                                     ondelete = "CASCADE")
 
@@ -1421,10 +1418,9 @@ class S3GISConfigModel(S3Model):
                   create_next=URL(c="gis", f="config",
                                   args=["[id]", "layer_entity"]),
                   ondelete=self.gis_config_ondelete,
-                  subheadings = {
-                       T("Map Settings"): "zoom",
-                       T("Form Settings"): "default_location_id",
-                   },
+                  subheadings = {T("Map Settings"): "zoom",
+                                 T("Form Settings"): "default_location_id",
+                                 },
                   list_fields = ["id",
                                  "name",
                                  "pe_id",
@@ -1481,7 +1477,7 @@ class S3GISConfigModel(S3Model):
                 gis_marker_id = marker_id,
                 gis_projection_id = projection_id,
                 gis_symbology_id = symbology_id,
-                )
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1599,7 +1595,7 @@ class S3GISConfigModel(S3Model):
         """
 
         if item.tablename == "gis_config" and \
-            "name" in item.data:
+           "name" in item.data:
             # Match by name (all-lowercase)
             table = item.table
             name = item.data.name
@@ -1610,26 +1606,6 @@ class S3GISConfigModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_config_represent(id):
-        """
-            Represent a Configuration
-        """
-
-        if not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.gis_config
-        query = (table.id == id)
-        record = db(query).select(table.name,
-                                  limitby=(0, 1)).first()
-        try:
-            return record.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1801,7 +1777,7 @@ class S3GISConfigModel(S3Model):
         """
 
         if item.tablename == "gis_marker" and \
-            "name" in item.data:
+           "name" in item.data:
             # Match by name (all-lowercase)
             table = item.table
             name = item.data.name
@@ -1846,7 +1822,7 @@ class S3GISConfigModel(S3Model):
         """
 
         if item.tablename == "gis_projection" and \
-            "epsg" in item.data:
+           "epsg" in item.data:
             # Match by epsg
             table = item.table
             epsg = item.data.epsg
@@ -1873,7 +1849,7 @@ class S3GISConfigModel(S3Model):
         """
 
         if item.tablename == "gis_symbology" and \
-            "name" in item.data:
+           "name" in item.data:
             # Match by name (all-lowercase)
             table = item.table
             name = item.data.name
@@ -2080,13 +2056,16 @@ class S3LayerEntityModel(S3Model):
                              layer_id,
                              symbology_id(),
                              marker_id(),
-                             Field("gps_marker", label = T("GPS Marker"),
+                             Field("gps_marker",
+                                   label = T("GPS Marker"),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("GPS Marker"),
                                                                    T("Defines the icon used for display of features on handheld GPS."))),
                                    # This is the list of GPS Markers for Garmin devices
-                                   requires = IS_NULL_OR(IS_IN_SET(current.gis.gps_symbols(),
-                                                                   zero=T("Use default")))),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(current.gis.gps_symbols(),
+                                                          zero=T("Use default")))
+                                                          ),
                              *s3_meta_fields())
 
         # Default to the Layer -> Symbology view
@@ -2647,11 +2626,10 @@ class S3MapModel(S3Model):
                              Field("url",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY()),
-                             projection_id(
-                                default=2,
-                                requires = IS_ONE_OF(db, "gis_projection.id",
-                                                     "%(name)s")
-                                ),
+                             projection_id(# Nice if we could get this set to epsg field
+                                           #default=4326,
+                                           empty=False,
+                                           ),
                              gis_layer_folder()(),
                              gis_opacity()(),
                              gis_refresh()(),
@@ -3091,15 +3069,17 @@ class S3MapModel(S3Model):
                                    label = T("Feature Type"),
                                    ),
                              # @ToDo: Can we auto-populate this from the layer?
-                             #projection_id(default=2), # 4326
-                             # @ToDo
-                             #Field("filter",
-                             #      label = T("REST Filter"),
-                             #      comment = DIV(_class="stickytip",
-                             #                    _title="%s|%s" % (T("REST Filter"),
-                             #                                      "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
-                             #                                        T("Uses the REST Query Format defined in"))),
-                             #      ),
+                             projection_id(# Nice if we could get this set to epsg field
+                                           #default=4326,
+                                           empty=False,
+                                           ),
+                             Field("filter",
+                                   label = T("REST Filter"),
+                                   comment = DIV(_class="stickytip",
+                                                 _title="%s|%s" % (T("REST Filter"),
+                                                                   "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
+                                                                     T("Uses the REST Query Format defined in"))),
+                                   ),
                              Field("data", "text",
                                    # Auto-populated by reading Shapefile
                                    writable=False,
@@ -3115,8 +3095,10 @@ class S3MapModel(S3Model):
                              s3_role_required(), # Single Role
                              *s3_meta_fields())  
         configure(tablename,
+                  super_entity="gis_layer_entity",
                   onaccept=self.gis_layer_shapefile_onaccept,
-                  super_entity="gis_layer_entity")
+                  deduplicate = self.gis_layer_shapefile_deduplicate,
+                  )
 
         # Components
         # Configs
@@ -3125,6 +3107,16 @@ class S3MapModel(S3Model):
                                                   pkey="layer_id",
                                                   joinby="layer_id",
                                                   key="config_id",
+                                                  actuate="hide",
+                                                  autocomplete="name",
+                                                  autodelete=False))
+
+        # Symbologies
+        add_component("gis_symbology",
+                      gis_layer_shapefile=Storage(link="gis_layer_symbology",
+                                                  pkey="layer_id",
+                                                  joinby="layer_id",
+                                                  key="symbology_id",
                                                   actuate="hide",
                                                   autocomplete="name",
                                                   autodelete=False))
@@ -3246,7 +3238,10 @@ class S3MapModel(S3Model):
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Schema"),
                                                                  T("Optional. The name of the schema. In Geoserver this has the form http://host_name/geoserver/wfs/DescribeFeatureType?version=1.1.0&;typename=workspace_name:layer_name.")))),
-                             projection_id(default=2), # 4326
+                             projection_id(# Nice if we could get this set to epsg field
+                                           #default=4326,
+                                           empty=False,
+                                           ),
                              Field("version",
                                    label=T("Version"),
                                    default="1.1.0",
@@ -3565,19 +3560,51 @@ class S3MapModel(S3Model):
         
     # -------------------------------------------------------------------------
     @staticmethod
+    def gis_layer_shapefile_deduplicate(item):
+        """
+          This callback will be called when importing Symbology records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+        """
+
+        if item.tablename == "gis_layer_shapefile":
+            # Match if name is identical (not ideal)
+            table = item.table
+            data = item.data
+            name = data.name
+            query = (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def gis_layer_shapefile_onaccept(form):
         """
             Convert the Uploaded Shapefile to GeoJSON for display on the map
+
+            @ToDo: update_onacept should only run this when uploaded file is changed
         """
 
+        id = form.vars.id
+        db = current.db
+        tablename = "gis_layer_shapefile_%s" % id
+        if tablename in db:
+            # Table already defined, so can quit here
+            return
         try:
             from osgeo import ogr
         except ImportError:
             current.response.error = current.T("Python GDAL required for Shapefile support!")
         else:
             # Retrieve the file
-            db = current.db
-            id = form.vars.id
             table = db.gis_layer_shapefile
             row = db(table.id == id).select(table.shape,
                                             limitby=(0, 1)).first()
@@ -3708,7 +3735,6 @@ class S3MapModel(S3Model):
                                       data = data)
 
             # Create Database table to store these features in
-            tablename = "gis_layer_shapefile_%s" % id
             Fields = [Field("wkt"),
                       Field("layer_id", table),
                       ]
@@ -4489,7 +4515,7 @@ def gis_rheader(r, tabs=[]):
                     (T("Profiles"), "config"),
                     (T("Markers"), "symbology"),
                     # @ToDo: Not showing as not a component yet
-                    (T("Data"), "data"),
+                    #(T("Data"), "data"),
                     ]
 
         rheader_tabs = s3_rheader_tabs(r, tabs)

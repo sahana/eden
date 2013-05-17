@@ -8,15 +8,21 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         Shapefile............string..........Layer Shapefile (URL to download)
          Description..........string..........Layer Description
+         Shapefile............string..........Layer Shapefile (URL to download)
+         Projection...........string..........Layer Projection (Mandatory)
          Style................string..........Layer Style
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
+         Filter...............string..........Layer Filter
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
+
+         Needs Importing twice:
+            layer_config
+            layer_symbology
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -26,6 +32,7 @@
     <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
     <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
+    <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
 
     <!-- ****************************************************************** -->
@@ -37,7 +44,7 @@
                 <xsl:call-template name="Config"/>
             </xsl:for-each>
 
-            <!-- Feature Layers -->
+            <!-- Layers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
                                                                    col[@field='Name'])[1])]">
                 <xsl:call-template name="Layer"/>
@@ -47,6 +54,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('markers',
                                                                    col[@field='Marker'])[1])]">
                 <xsl:call-template name="Marker"/>
+            </xsl:for-each>
+
+            <!-- Projections -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('projections',
+                                                                   col[@field='Projection'])[1])]">
+                <xsl:call-template name="Projection"/>
             </xsl:for-each>
 
             <!-- Symbologies -->
@@ -63,7 +76,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <resource name="gis_layer_symbology">
-            <reference field="layer_id" resource="gis_layer_feature">
+            <reference field="layer_id" resource="gis_layer_shapefile">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Name']"/>
                 </xsl:attribute>
@@ -99,6 +112,7 @@
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
 
         <resource name="gis_layer_shapefile">
             <xsl:attribute name="tuid">
@@ -110,11 +124,19 @@
                     <xsl:value-of select="col[@field='Shapefile']"/>
                 </xsl:attribute>
             </data>
+            <reference field="projection_id" resource="gis_projection">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Projection"/>
+                </xsl:attribute>
+            </reference>
             <xsl:if test="col[@field='Description']!=''">
                 <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Folder']!=''">
                 <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Filter']!=''">
+                <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
             </xsl:if>
         </resource>
 
@@ -155,6 +177,19 @@
                 <xsl:value-of select="$Marker"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Marker"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Projection">
+
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
+    
+        <resource name="gis_projection">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Projection"/>
+            </xsl:attribute>
+            <data field="epsg"><xsl:value-of select="$Projection"/></data>
         </resource>
     </xsl:template>
 
