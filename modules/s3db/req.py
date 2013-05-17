@@ -687,8 +687,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupResource':'item_pack',
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
             # Custom Form
             settings = current.deployment_settings
@@ -1497,8 +1497,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/req/req_item_packs/'),
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
 
         if settings.get_req_prompt_match():

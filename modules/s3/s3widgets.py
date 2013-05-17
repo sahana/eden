@@ -3141,7 +3141,6 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
 # =============================================================================
 class S3PriorityListWidget(StringWidget):
-
     """
         Widget to broadcast facility needs
     """
@@ -3385,7 +3384,7 @@ class S3AddPersonWidget(FormWidget):
 
         if self.select_existing:
             # Autocomplete
-            select = '''select_person($('#%s').val())''' % real_input
+            select = '''S3.select_person($('#%s').val())''' % real_input
             widget = S3PersonAutocompleteWidget(post_process=select,
                                                 hideerror=True)
             ac_row = TR(TD(LABEL("%s: " % T("Name"),
@@ -3405,13 +3404,13 @@ class S3AddPersonWidget(FormWidget):
                                  _class="action-btn"),
                                A(T("Remove selection"),
                                  _href="#",
-                                 _onclick="clear_person_form();",
+                                 _onclick='''S3.select_person_clear_form();''',
                                  _id="clear_form_link",
                                  _class="action-btn hide",
                                  _style="padding-left:15px;"),
                                A(T("Edit Details"),
                                  _href="#",
-                                 _onclick="edit_selected_person_form();",
+                                 _onclick='''S3.select_person_edit_form();''',
                                  _id="edit_selected_person_link",
                                  _class="action-btn hide",
                                  _style="padding-left:15px;"),
@@ -3434,7 +3433,7 @@ class S3AddPersonWidget(FormWidget):
             ac_row = ""
             select_row = TR(TD(A(T("Edit Details"),
                                  _href="#",
-                                 _onclick="edit_selected_person_form();",
+                                 _onclick='''S3.select_person_edit_form();''',
                                  _id="edit_selected_person_link",
                                  _class="action-btn hide",
                                  _style="padding-left:15px;"),
@@ -3556,7 +3555,7 @@ class S3AddPersonWidget(FormWidget):
                      _class="box_bottom")
 
         # JS
-        s3.jquery_ready.append('''addPersonWidget()''')
+        s3.jquery_ready.append('''S3.addPersonWidget()''')
 
         # Overall layout of components
         return TAG[""](select_row,

@@ -63,24 +63,6 @@ S3.Utf8 = {
     }
 };
 
-// Used by Scenario module currently, but may be deprecated as not great UI
-var popupWin = null;
-// function openPopup(url) {
-    // if ( !popupWin || popupWin.closed ) {
-        // popupWin = window.open(url, 'popupWin', 'width=640, height=480');
-    // } else popupWin.focus();
-// }
-function openPopup(url, center) {
-    if ( !popupWin || popupWin.closed ) {
-        var params = 'width=640, height=480';
-        if (center === true) {
-            params += ',left=' + (screen.width - 640)/2 +
-                ',top=' + (screen.height - 480)/2;
-        }
-        popupWin = window.open(url, 'popupWin', params);
-    } else popupWin.focus();
-}
-
 S3.addTooltips = function() {
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
@@ -181,7 +163,7 @@ $(document).ready(function() {
 
     // If a form is submitted with errors, this will scroll
     // the window to the first form error message
-    inputErrorId = $('form .error[id]').eq(0).attr('id');
+    var inputErrorId = $('form .error[id]').eq(0).attr('id');
     if (inputErrorId != undefined) {
         inputName = inputErrorId.replace('__error', '');
         inputId = $('[name=' + inputName + ']').attr('id');
@@ -672,6 +654,17 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
     $('#map').html(iframe);
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
 }
+S3.popupWin = null;
+S3.openPopup = function(url, center) {
+    if ( !S3.popupWin || S3.popupWin.closed ) {
+        var params = 'width=640, height=480';
+        if (center === true) {
+            params += ',left=' + (screen.width - 640)/2 +
+                ',top=' + (screen.height - 480)/2;
+        }
+        S3.popupWin = window.open(url, 'popupWin', params);
+    } else S3.popupWin.focus();
+}
 function s3_showMap(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
@@ -688,7 +681,7 @@ function s3_showMap(feature_id) {
 			// }
 		// }]
 	// }).show();
-    openPopup(url, true);
+    S3.openPopup(url, true);
 }
 
 // ============================================================================
@@ -1152,7 +1145,7 @@ S3.slider = function(fieldname, minval, maxval, steprange, value) {
  * Sample usage: _onchange="S3reloadWithQueryStringVars({'_language': $(this).val()});")
  */
 
-function S3reloadWithQueryStringVars (queryStringVars) {
+function S3reloadWithQueryStringVars(queryStringVars) {
     var existingQueryVars = location.search ? location.search.substring(1).split("&") : [],
         currentUrl = location.search ? location.href.replace(location.search,"") : location.href,
         newQueryVars = {},

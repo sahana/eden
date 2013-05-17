@@ -5714,12 +5714,12 @@ S3.gis.lon=%s
         #   Localisation of name/popup_label
         #
         if feature_queries:
-            layers_feature_queries = '''
-S3.gis.layers_feature_queries=new Array()'''
+            layers_feature_query = '''
+S3.gis.layers_feature_query=new Array()'''
             counter = -1
             mtable = s3db.gis_marker
         else:
-            layers_feature_queries = ""
+            layers_feature_query = ""
         for layer in feature_queries:
             counter = counter + 1
             name = str(layer["name"])
@@ -5835,8 +5835,8 @@ S3.gis.layers_feature_queries=new Array()'''
                 cluster_threshold = ""
 
             # Generate JS snippet to pass to static
-            layers_feature_queries += '''
-S3.gis.layers_feature_queries[%i]={
+            layers_feature_query += '''
+S3.gis.layers_feature_query[%i]={
  "name":"%s",
  "url":"%s"%s%s%s%s%s
 }
@@ -5855,11 +5855,11 @@ S3.gis.layers_feature_queries[%i]={
         #   REST URLs to back-end resources
         #
         if feature_resources:
-            layers_feature_resources = '''
-S3.gis.layers_feature_resources=new Array()'''
+            layers_feature_resource = '''
+S3.gis.layers_feature_resource=new Array()'''
             counter = -1
         else:
-            layers_feature_resources = ""
+            layers_feature_resource = ""
         for layer in feature_resources:
             counter = counter + 1
             name = str(layer["name"])
@@ -5926,8 +5926,8 @@ S3.gis.layers_feature_resources=new Array()'''
                 # Request the server to provide per-feature Markers
                 url = "%s&markers=1" % url
             # Generate JS snippet to pass to static
-            layers_feature_resources += '''
-S3.gis.layers_feature_resources[%i]={
+            layers_feature_resource += '''
+S3.gis.layers_feature_resource[%i]={
  "name":"%s",
  "id":"%s",
  "url":"%s"%s%s%s%s%s
@@ -5960,6 +5960,7 @@ S3.gis.layers_feature_resources[%i]={
                            GeoRSSLayer,
                            KMLLayer,
                            OpenWeatherMapLayer,
+                           ShapefileLayer,
                            WFSLayer,
                            FeatureLayer,
                            ]
@@ -6080,8 +6081,8 @@ i18n.gis_feature_info="%s"
             draw_polygon,
             marker_default,
             osm_auth,
-            layers_feature_queries,
-            layers_feature_resources,
+            layers_feature_query,
+            layers_feature_resource,
             _features,
             layers_config,
             # i18n Labels
@@ -6446,12 +6447,11 @@ class ArcRESTLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             # Mandatory attributes
-            output = {
-                "id": self.layer_id,
-                "type": "arcrest",
-                "name": self.safe_name,
-                "url": self.url,
-            }
+            output = {"id": self.layer_id,
+                      "type": "arcrest",
+                      "name": self.safe_name,
+                      "url": self.url,
+                      }
 
             # Attributes which are defaulted client-side if not set
             self.setup_folder_and_visibility(output)
@@ -6598,7 +6598,7 @@ class FeatureLayer(Layer):
     """
 
     tablename = "gis_layer_feature"
-    js_array = "S3.gis.layers_features"
+    js_array = "S3.gis.layers_feature"
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
@@ -6674,12 +6674,11 @@ class GeoJSONLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             # Mandatory attributes
-            output = {
-                "id": self.layer_id,
-                "type": "geojson",
-                "name": self.safe_name,
-                "url": self.url,
-            }
+            output = {"id": self.layer_id,
+                      "type": "geojson",
+                      "name": self.safe_name,
+                      "url": self.url,
+                      }
             self.marker.add_attributes_to_output(output)
 
             # Attributes which are defaulted client-side if not set
@@ -6975,12 +6974,8 @@ class KMLLayer(Layer):
             try:
                 os.mkdir(cachepath)
             except OSError, os_error:
-                s3_debug(
-                    "GIS: KML layers cannot be cached: %s %s" % (
-                        cachepath,
-                        os_error
-                    )
-                )
+                s3_debug("GIS: KML layers cannot be cached: %s %s" % \
+                            (cachepath, os_error))
                 cacheable = False
             else:
                 cacheable = True
@@ -7038,11 +7033,10 @@ class KMLLayer(Layer):
                 # (Requires OpenLayers.Layer.KML to be available)
                 url = self.url
 
-            output = dict(
-                id = self.layer_id,
-                name = self.safe_name,
-                url = url,
-            )
+            output = dict(id = self.layer_id,
+                          name = self.safe_name,
+                          url = url,
+                          )
             self.add_attributes_if_not_default(
                 output,
                 title = (self.title, ("name", None, "")),
@@ -7142,6 +7136,39 @@ class OpenWeatherMapLayer(Layer):
         return None
 
 # -----------------------------------------------------------------------------
+class ShapefileLayer(Layer):
+    """
+        Shapefile Layers from Catalogue
+    """
+
+    tablename = "gis_layer_shapefile"
+    js_array = "S3.gis.layers_shapefile"
+
+    # -------------------------------------------------------------------------
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            url = "%s/%s/data.geojson" % \
+                (URL(c="gis", f="layer_shapefile"), self.id)
+            #if self.filter:
+            #    url = "%s&%s" % (url, self.filter)
+
+            # Mandatory attributes
+            output = {"id": self.layer_id,
+                      "type": "shapefile",
+                      "name": self.safe_name,
+                      "url": url,
+                      }
+            self.marker.add_attributes_to_output(output)
+            self.setup_folder_visibility_and_opacity(output)
+            #self.setup_clustering(output)
+            style = self.style
+            if style:
+                style = json.loads(style)
+                output["style"] = style
+
+            return output
+
+# -----------------------------------------------------------------------------
 class ThemeLayer(Layer):
     """
         Theme Layers from Catalogue
@@ -7154,8 +7181,7 @@ class ThemeLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1&maxdepth=0&references=location_id&fields=value" % \
-                (URL(c="gis", f="theme_data"),
-                 self.id)
+                (URL(c="gis", f="theme_data"), self.id)
 
             # Mandatory attributes
             output = {"id": self.layer_id,
@@ -7214,15 +7240,14 @@ class WFSLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-            output = dict(
-                id = self.layer_id,
-                name = self.safe_name,
-                url = self.url,
-                title = self.title,
-                featureType = self.featureType,
-                featureNS = self.featureNS,
-                schema = self.wfs_schema,
-            )
+            output = dict(id = self.layer_id,
+                          name = self.safe_name,
+                          url = self.url,
+                          title = self.title,
+                          featureType = self.featureType,
+                          featureNS = self.featureNS,
+                          schema = self.wfs_schema,
+                          )
             self.add_attributes_if_not_default(
                 output,
                 version = (self.version, ("1.1.0",)),
@@ -7237,7 +7262,6 @@ class WFSLayer(Layer):
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             return output
-
 
 # -----------------------------------------------------------------------------
 class WMSLayer(Layer):
@@ -7262,12 +7286,11 @@ class WMSLayer(Layer):
         def as_dict(self):
             if self.queryable:
                 current.response.s3.gis.get_feature_info = True
-            output = dict(
-                id = self.layer_id,
-                name = self.safe_name,
-                url = self.url,
-                layers = self.layers
-            )
+            output = dict(id = self.layer_id,
+                          name = self.safe_name,
+                          url = self.url,
+                          layers = self.layers
+                          )
             legend_url = self.legend_url
             if legend_url and not legend_url.startswith("http"):
                 legend_url = "%s/%s%s" % \

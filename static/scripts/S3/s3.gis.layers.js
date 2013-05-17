@@ -1,6 +1,6 @@
 /**
  * S3 GIS Layers
- * Used by the Map (modules/s3gis.py)
+ * Used by the Map (modules/s3/s3gis.py)
  * For Production usage gets assembled into s3.gis.min.js
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
@@ -12,8 +12,9 @@ function addLayers() {
     /* Base Layers */
     // OSM
     if (S3.gis.layers_osm) {
-        for (i = S3.gis.layers_osm.length; i > 0; i--) {
-            addOSMLayer(S3.gis.layers_osm[i - 1]);
+        var layers_osm = S3.gis.layers_osm;
+        for (i = layers_osm.length; i > 0; i--) {
+            addOSMLayer(layers_osm[i - 1]);
         }
     }
     // Google
@@ -28,20 +29,23 @@ function addLayers() {
     }
     // TMS
     if (S3.gis.layers_tms) {
-        for (i = S3.gis.layers_tms.length; i > 0; i--) {
-            addTMSLayer(S3.gis.layers_tms[i - 1]);
+        var layers_tms = S3.gis.layers_tms;
+        for (i = layers_tms.length; i > 0; i--) {
+            addTMSLayer(layers_tms[i - 1]);
         }
     }
     // WMS
     if (S3.gis.layers_wms) {
-        for (i = S3.gis.layers_wms.length; i > 0; i--) {
-            addWMSLayer(S3.gis.layers_wms[i - 1]);
+        var layers_wms = S3.gis.layers_wms;
+        for (i = layers_wms.length; i > 0; i--) {
+            addWMSLayer(layers_wms[i - 1]);
         }
     }
     // XYZ
     if (S3.gis.layers_xyz) {
-        for (i = S3.gis.layers_xyz.length; i > 0; i--) {
-            addXYZLayer(S3.gis.layers_xyz[i - 1]);
+        var layers_xyz = S3.gis.layers_xyz;
+        for (i = layers_xyz.length; i > 0; i--) {
+            addXYZLayer(layers_xyz[i - 1]);
         }
     }
     // Empty
@@ -67,26 +71,30 @@ function addLayers() {
     /* Overlays */
     // Theme
     if (S3.gis.layers_theme) {
-        for (i = S3.gis.layers_theme.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_theme[i - 1]);
+        var layers_theme = S3.gis.layers_theme;
+        for (i = layers_theme.length; i > 0; i--) {
+            addGeoJSONLayer(layers_theme[i - 1]);
         }
     }
     // GeoJSON
     if (S3.gis.layers_geojson) {
-        for (i = S3.gis.layers_geojson.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_geojson[i - 1]);
+        var layers_geojson = S3.gis.layers_geojson;
+        for (i = layers_geojson.length; i > 0; i--) {
+            addGeoJSONLayer(layers_geojson[i - 1]);
         }
     }
     // GPX
     if (S3.gis.layers_gpx) {
-        for (i = S3.gis.layers_gpx.length; i > 0; i--) {
-            addGPXLayer(S3.gis.layers_gpx[i - 1]);
+        var layers_gpx = S3.gis.layers_gpx;
+        for (i = layers_gpx.length; i > 0; i--) {
+            addGPXLayer(layers_gpx[i - 1]);
         }
     }
     // ArcGIS REST
     if (S3.gis.layers_arcrest) {
-        for (i = S3.gis.layers_arcrest.length; i > 0; i--) {
-            addArcRESTLayer(S3.gis.layers_arcrest[i - 1]);
+        var layers_arcrest = S3.gis.layers_arcrest;
+        for (i = layers_arcrest.length; i > 0; i--) {
+            addArcRESTLayer(layers_arcrest[i - 1]);
         }
     }
     // CoordinateGrid
@@ -95,8 +103,9 @@ function addLayers() {
     }
     // GeoRSS
     if (S3.gis.layers_georss) {
-        for (i = S3.gis.layers_georss.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_georss[i - 1]);
+        var layers_georss = S3.gis.layers_georss;
+        for (i = layers_georss.length; i > 0; i--) {
+            addGeoJSONLayer(layers_georss[i - 1]);
         }
     }
     // KML
@@ -106,36 +115,48 @@ function addLayers() {
             extractAttributes: true,
             maxDepth: 2
         });
-        for (i = S3.gis.layers_kml.length; i > 0; i--) {
-            addKMLLayer(S3.gis.layers_kml[i - 1]);
+        var layers_kml = S3.gis.layers_kml;
+        for (i = layers_kml.length; i > 0; i--) {
+            addKMLLayer(layers_kml[i - 1]);
         }
     }
     // OpenWeatherMap
     if (S3.gis.OWM) {
         addOWMLayers();
     }
+    // Shapefiles
+    if (S3.gis.layers_shapefile) {
+        var layers_shapefile = S3.gis.layers_shapefile;
+        for (i = layers_shapefile.length; i > 0; i--) {
+            addGeoJSONLayer(layers_shapefile[i - 1]);
+        }
+    }
     // WFS
     if (S3.gis.layers_wfs) {
-        for (i = S3.gis.layers_wfs.length; i > 0; i--) {
-            addWFSLayer(S3.gis.layers_wfs[i - 1]);
+        var layers_wfs = S3.gis.layers_wfs;
+        for (i = layers_wfs.length; i > 0; i--) {
+            addWFSLayer(layers_wfs[i - 1]);
         }
     }
     // Feature Queries from Mapping API
-    if (S3.gis.layers_feature_queries) {
-        for (i = S3.gis.layers_feature_queries.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_feature_queries[i - 1]);
+    if (S3.gis.layers_feature_query) {
+        var layers_feature_query = S3.gis.layers_feature_query;
+        for (i = layers_feature_query.length; i > 0; i--) {
+            addGeoJSONLayer(layers_feature_query[i - 1]);
         }
     }
     // Feature Resources (e.g. Search Results))
-    if (S3.gis.layers_feature_resources) {
-        for (i = S3.gis.layers_feature_resources.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_feature_resources[i - 1]);
+    if (S3.gis.layers_feature_resource) {
+        var layers_feature_resource = S3.gis.layers_feature_resource;
+        for (i = layers_feature_resource.length; i > 0; i--) {
+            addGeoJSONLayer(layers_feature_resource[i - 1]);
         }
     }
     // Feature Layers from Catalogue
-    if (S3.gis.layers_features) {
-        for (i = S3.gis.layers_features.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_features[i - 1]);
+    if (S3.gis.layers_feature) {
+        var layers_feature = S3.gis.layers_feature;
+        for (i = layers_feature.length; i > 0; i--) {
+            addGeoJSONLayer(layers_feature[i - 1]);
         }
     }
     // Draft Layers
@@ -369,7 +390,7 @@ function addGeoJSONLayer(layer) {
     var dir;
     if (undefined != layer.dir) {
         dir = layer.dir;
-        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
+        if ($.inArray(dir, S3.gis.dirs) == -1) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -797,7 +818,7 @@ function addGeoJSONLayer(layer) {
             ],
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
-            // These is used to Save State & locate Layer to Activate/Refresh
+            // These are used to Save State & locate Layer to Activate/Refresh
             s3_layer_id: layer.id,
             s3_layer_type: layer_type,
             s3_style: style,

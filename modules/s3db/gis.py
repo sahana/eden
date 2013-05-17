@@ -1942,7 +1942,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_wfs = T("WFS Layer"),
                               gis_layer_wms = T("WMS Layer"),
                               gis_layer_xyz = T("XYZ Layer"),
-                            )
+                              )
 
         tablename = "gis_layer_entity"
         table = self.super_entity(tablename, "layer_id", layer_types,
@@ -1953,58 +1953,57 @@ class S3LayerEntityModel(S3Model):
                                   )
 
         crud_strings[tablename] = Storage(
-                    title_create = T("Add Layer"),
-                    title_display = T("Layer Details"),
-                    title_list = T("Layers"),
-                    title_update = T("Edit Layer"),
-                    title_search = T("Search Layers"),
-                    subtitle_create = T("Add New Layer"),
-                    label_list_button = T("List Layers"),
-                    label_create_button = T("Add Layer"),
-                    label_delete_button = T("Delete Layer"),
-                    msg_record_created = T("Layer added"),
-                    msg_record_modified = T("Layer updated"),
-                    msg_record_deleted = T("Layer deleted"),
-                    msg_list_empty=T("No Layers currently defined"))
+            title_create = T("Add Layer"),
+            title_display = T("Layer Details"),
+            title_list = T("Layers"),
+            title_update = T("Edit Layer"),
+            title_search = T("Search Layers"),
+            subtitle_create = T("Add New Layer"),
+            label_list_button = T("List Layers"),
+            label_create_button = T("Add Layer"),
+            label_delete_button = T("Delete Layer"),
+            msg_record_created = T("Layer added"),
+            msg_record_modified = T("Layer updated"),
+            msg_record_deleted = T("Layer deleted"),
+            msg_list_empty=T("No Layers currently defined")
+            )
 
         layer_id = self.super_link("layer_id", "gis_layer_entity",
-                                    label = T("Layer"),
-                                    # SuperLinks don't support requires
-                                    #requires = IS_ONE_OF(db,
-                                    #                     "gis_layer_entity.layer_id",
-                                    #                     "%(name)s",
-                                    # This filter is applied in the symbology controller to restrict to just those layer types with Markers
-                                    #                     filterby="instance_type",
-                                    #                     filter_opts=("gis_layer_feature",
-                                    #                                  "gis_layer_georss",
-                                    #                                  "gis_layer_geojson",
-                                    #                                  "gis_layer_kml")
-                                    #                     ),
-                                    represent = gis_layer_represent,
-                                    readable=True, writable=True)
+                                   label = T("Layer"),
+                                   # SuperLinks don't support requires
+                                   #requires = IS_ONE_OF(db,
+                                   #                     "gis_layer_entity.layer_id",
+                                   #                     "%(name)s",
+                                   # This filter is applied in the symbology controller to restrict to just those layer types with Markers
+                                   #                     filterby="instance_type",
+                                   #                     filter_opts=("gis_layer_feature",
+                                   #                                  "gis_layer_georss",
+                                   #                                  "gis_layer_geojson",
+                                   #                                  "gis_layer_kml")
+                                   #                     ),
+                                   represent = gis_layer_represent,
+                                   readable=True, writable=True)
 
         # Components
         # Configs
         add_component("gis_config",
-                      gis_layer_entity=Storage(
-                                    link="gis_layer_config",
-                                    pkey="layer_id",
-                                    joinby="layer_id",
-                                    key="config_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_layer_entity=Storage(link="gis_layer_config",
+                                               pkey="layer_id",
+                                               joinby="layer_id",
+                                               key="config_id",
+                                               actuate="hide",
+                                               autocomplete="name",
+                                               autodelete=False))
 
         # Symbologies
         add_component("gis_symbology",
-                      gis_layer_entity=Storage(
-                                    link="gis_layer_symbology",
-                                    pkey="layer_id",
-                                    joinby="layer_id",
-                                    key="symbology_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_layer_entity=Storage(link="gis_layer_symbology",
+                                               pkey="layer_id",
+                                               joinby="layer_id",
+                                               key="symbology_id",
+                                               actuate="hide",
+                                               autocomplete="name",
+                                               autodelete=False))
 
         # =====================================================================
         #  Layer Config link table
@@ -2042,7 +2041,7 @@ class S3LayerEntityModel(S3Model):
                                    represent = s3_yes_no_represent,
                                    label=T("Default Base layer?")),
                              Field("style", "text",
-                                   # Only used by Theme Layers currently
+                                   # Used by Layers: Shapefile & Theme (@ToDo: Features should move here)
                                    readable=False,
                                    writable=False,
                                    comment = DIV(_class="tooltip",
@@ -2055,22 +2054,23 @@ class S3LayerEntityModel(S3Model):
         # since there are many diff layers
         # - override for single Config -> Layer
         crud_strings[tablename] = Storage(
-                    title_create = T("Add Profile Configuration for this Layer"),
-                    title_display = T("Profile Configuration"),
-                    title_list = T("Profile Configurations"),
-                    title_update = T("Edit Profile Configuration"),
-                    subtitle_create = T("Add New Profile Configuration"),
-                    label_list_button = T("List Profiles configured for this Layer"),
-                    label_create_button = T("Add Profile Configuration"),
-                    label_delete_button = T("Remove Profile Configuration for Layer"),
-                    msg_record_created = T("Profile Configured"),
-                    msg_record_modified = T("Profile Configuration updated"),
-                    msg_record_deleted = T("Profile Configuration removed"),
-                    msg_list_empty = T("No Profiles currently have Configurations for this Layer"))
+            title_create = T("Add Profile Configuration for this Layer"),
+            title_display = T("Profile Configuration"),
+            title_list = T("Profile Configurations"),
+            title_update = T("Edit Profile Configuration"),
+            subtitle_create = T("Add New Profile Configuration"),
+            label_list_button = T("List Profiles configured for this Layer"),
+            label_create_button = T("Add Profile Configuration"),
+            label_delete_button = T("Remove Profile Configuration for Layer"),
+            msg_record_created = T("Profile Configured"),
+            msg_record_modified = T("Profile Configuration updated"),
+            msg_record_deleted = T("Profile Configuration removed"),
+            msg_list_empty = T("No Profiles currently have Configurations for this Layer")
+            )
 
         self.configure(tablename,
-                        onvalidation=self.gis_layer_config_onvalidation,
-                        onaccept=self.gis_layer_config_onaccept)
+                       onvalidation=self.gis_layer_config_onvalidation,
+                       onaccept=self.gis_layer_config_onaccept)
 
         # =====================================================================
         #  Layer Symbology link table
@@ -2093,18 +2093,19 @@ class S3LayerEntityModel(S3Model):
         # since there are many diff layers
         # - override for single Symbology -> Layer
         crud_strings[tablename] = Storage(
-                    title_create = T("Add Symbology for Layer"),
-                    title_display = T("Symbology"),
-                    title_list = T("Symbologies"),
-                    title_update = T("Edit Symbology"),
-                    subtitle_create = T("Add New Symbology for Layer"),
-                    label_list_button = T("List Symbologies for Layer"),
-                    label_create_button = T("Add Symbology for Layer"),
-                    label_delete_button = T("Remove Symbology from Layer"),
-                    msg_record_created = T("Symbology added"),
-                    msg_record_modified = T("Symbology updated"),
-                    msg_record_deleted = T("Symbology removed from Layer"),
-                    msg_list_empty = T("No Symbologies currently defined for this Layer"))
+            title_create = T("Add Symbology for Layer"),
+            title_display = T("Symbology"),
+            title_list = T("Symbologies"),
+            title_update = T("Edit Symbology"),
+            subtitle_create = T("Add New Symbology for Layer"),
+            label_list_button = T("List Symbologies for Layer"),
+            label_create_button = T("Add Symbology for Layer"),
+            label_delete_button = T("Remove Symbology from Layer"),
+            msg_record_created = T("Symbology added"),
+            msg_record_modified = T("Symbology updated"),
+            msg_record_deleted = T("Symbology removed from Layer"),
+            msg_list_empty = T("No Symbologies currently defined for this Layer")
+            )
 
         # ---------------------------------------------------------------------
         return Storage(
@@ -2256,6 +2257,7 @@ class S3FeatureLayerModel(S3Model):
                                   Field("polygons", "boolean", default=False,
                                         represent = s3_yes_no_represent,
                                         label=T("Display Polygons?")),
+                                  # @ToDo: Move this to the layer_config link table
                                   Field("style",
                                         label=T("Style"),
                                         comment = DIV(_class="tooltip",
@@ -2312,30 +2314,27 @@ class S3FeatureLayerModel(S3Model):
         # Components
         # Configs
         add_component("gis_config",
-                      gis_layer_feature=Storage(
-                                    link="gis_layer_config",
-                                    pkey="layer_id",
-                                    joinby="layer_id",
-                                    key="config_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_layer_feature=Storage(link="gis_layer_config",
+                                                pkey="layer_id",
+                                                joinby="layer_id",
+                                                key="config_id",
+                                                actuate="hide",
+                                                autocomplete="name",
+                                                autodelete=False))
 
         # Symbologies
         add_component("gis_symbology",
-                      gis_layer_feature=Storage(
-                                    link="gis_layer_symbology",
-                                    pkey="layer_id",
-                                    joinby="layer_id",
-                                    key="symbology_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_layer_feature=Storage(link="gis_layer_symbology",
+                                                pkey="layer_id",
+                                                joinby="layer_id",
+                                                key="symbology_id",
+                                                actuate="hide",
+                                                autocomplete="name",
+                                                autodelete=False))
 
         # ---------------------------------------------------------------------
         return Storage(
             )
-
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3080,24 +3079,39 @@ class S3MapModel(S3Model):
                                                  _title="%s|%s" % (T("ESRI Shape File"),
                                                                    T("An ESRI Shapefile (zipped)"),
                                                                    ))),
-                             # Auto-populated by reading Shapefile
                              Field("gis_feature_type", "integer",
+                                   # Auto-populated by reading Shapefile
                                    writable=False,
-                                   requires = IS_IN_SET(gis_feature_type_opts,
-                                                        zero=None),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(gis_feature_type_opts,
+                                                          zero=None)),
                                    represent = lambda opt: \
                                     gis_feature_type_opts.get(opt,
                                                               messages.UNKNOWN_OPT),
                                    label = T("Feature Type"),
                                    ),
-                             # Auto-populated by reading Shapefile
+                             # @ToDo: Can we auto-populate this from the layer?
+                             #projection_id(default=2), # 4326
+                             # @ToDo
+                             #Field("filter",
+                             #      label = T("REST Filter"),
+                             #      comment = DIV(_class="stickytip",
+                             #                    _title="%s|%s" % (T("REST Filter"),
+                             #                                      "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
+                             #                                        T("Uses the REST Query Format defined in"))),
+                             #      ),
                              Field("data", "text",
-                                   # Left readable for now, to allow easier debugging
-                                   #readable=False,
+                                   # Auto-populated by reading Shapefile
                                    writable=False,
+                                   readable=False,
                                    represent = lambda v: v or NONE,
                                    label=T("Attributes")),
                              gis_layer_folder()(),
+                             gis_opacity()(),
+                             # @ToDo
+                             #gis_refresh()(),
+                             #cluster_distance()(),
+                             #cluster_threshold()(),
                              s3_role_required(), # Single Role
                              *s3_meta_fields())  
         configure(tablename,
@@ -3561,6 +3575,20 @@ class S3MapModel(S3Model):
         except ImportError:
             current.response.error = current.T("Python GDAL required for Shapefile support!")
         else:
+            # Retrieve the file
+            db = current.db
+            id = form.vars.id
+            table = db.gis_layer_shapefile
+            row = db(table.id == id).select(table.shape,
+                                            limitby=(0, 1)).first()
+            try:
+                shapefile = table.shape.retrieve(row.shape)
+            except:
+                s3_debug("No Shapefile found in layer %s!" % id)
+                return
+            (fileName, fp) = shapefile
+            layerName = fileName.rsplit(".", 1)[0] # strip the .zip extension
+
             # Copy the current working directory to revert back to later
             cwd = os.getcwd()
             # Create the working directory
@@ -3577,17 +3605,7 @@ class S3MapModel(S3Model):
             # Set the current working directory
             os.chdir(tempPath)
 
-            # Retrieve the file
-            db = current.db
-            id = form.vars.id
-            table = db.gis_layer_shapefile
-            row = db(table.id == id).select(table.shape,
-                                            limitby=(0, 1)).first()
-            shapefile = table.shape.retrieve(row.shape)
-            (fileName, fp) = shapefile
-            layerName = fileName.rsplit(".", 1)[0] # strip the .zip extension
-
-            # Unzip it
+            # Unzip the file
             import zipfile
             myfile = zipfile.ZipFile(fp)
             for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
@@ -3604,6 +3622,8 @@ class S3MapModel(S3Model):
             ds = ogr.Open(shapefile)
             if ds is None:
                 current.response.error = current.T("Couldn't open %s!" % shapefile)
+                # Revert back to the working directory as before.
+                os.chdir(cwd)
                 return
             lyr = ds.GetLayerByName(layerName)
             lyr.ResetReading()
@@ -3660,24 +3680,11 @@ class S3MapModel(S3Model):
                 if geom is None:
                     lat = lon = wkt = None
                 if geom_type == wkbPoint:
-                    lat = geom.GetX()
-                    lon = geom.GetY()
+                    lon = geom.GetX()
+                    lat = geom.GetY()
                     wkt = "POINT(%f %f)" % (lon, lat)
-                    # gis_feature_type = 1
                 else:
                     wkt = geom.ExportToWkt()
-                    # if wkt.startswith("LINESTRING"):
-                        # gis_feature_type = 2
-                    # elif wkt.startswith("POLYGON"):
-                        # gis_feature_type = 3
-                    # elif wkt.startswith("MULTIPOINT"):
-                        # gis_feature_type = 4
-                    # elif wkt.startswith("MULTILINESTRING"):
-                        # gis_feature_type = 5
-                    # elif wkt.startswith("MULTIPOLYGON"):
-                        # gis_feature_type = 6
-                    # elif wkt.startswith("GEOMETRYCOLLECTION"):
-                        # gis_feature_type = 7
                     # @ToDo: Centroids?
                     #lat = 
                     #lon = 
@@ -3774,14 +3781,13 @@ class S3GISThemeModel(S3Model):
         # Components
         # Configs
         add_component("gis_config",
-                      gis_layer_theme=Storage(
-                                    link="gis_layer_config",
-                                    pkey="layer_id",
-                                    joinby="layer_id",
-                                    key="config_id",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                      gis_layer_theme=Storage(link="gis_layer_config",
+                                              pkey="layer_id",
+                                              joinby="layer_id",
+                                              key="config_id",
+                                              actuate="hide",
+                                              autocomplete="name",
+                                              autodelete=False))
 
         # Theme Data
         add_component("gis_theme_data", gis_layer_theme="layer_theme_id")

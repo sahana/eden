@@ -427,8 +427,8 @@ S3OptionsFilter({
  'lookupKey':'req_item_id',
  'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
                     # Custom Form
                     s3forms = s3base.s3forms
@@ -1078,8 +1078,8 @@ S3OptionsFilter({
 'lookupKey':'req_item_id',
 'lookupField':'id',
 'msgNoRecords':i18n.no_packs,
-'fncPrep':fncPrepItem,
-'fncRepresent':fncRepresentItem
+'fncPrep':S3.supply.fncPrepItem,
+'fncRepresent':S3.supply.fncRepresentItem
 })''')
                     # Custom Form
                     s3forms = s3base.s3forms
