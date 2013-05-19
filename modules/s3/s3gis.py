@@ -5201,7 +5201,9 @@ class GIS(object):
         elif geom_type == "Polygon":
             shape = shrink_polygon(shape)
         elif geom_type == "LineString":
-            points = line.coords
+            points = shape.coords
+            coords = []
+            cappend = coords.append
             for point in points:
                 x = float(format(point[0], formatter))
                 y = float(format(point[1], formatter))
@@ -6151,9 +6153,11 @@ i18n.gis_feature_info="%s"
 class Marker(object):
     """
         Represents a Map Marker
+
+        @ToDo: Support Markers in Themes
     """
 
-    def __init__(self, id=None, layer_id=None):
+    def __init__(self, id=None, tablename=None, layer_id=None):
 
         db = current.db
         s3db = current.s3db
@@ -6180,13 +6184,22 @@ class Marker(object):
                                       mtable.width,
                                       limitby=(0, 1)).first()
             if not marker:
-                # Check to see if we're a Polygon (& hence shouldn't use a default marker)
-                table = s3db.gis_layer_feature
-                query = (table.layer_id == layer_id)
-                layer = db(query).select(table.polygons,
-                                         limitby=(0, 1)).first()
-                if layer and layer.polygons:
-                    polygons = True
+                # Check to see if we're a Polygon/LineString
+                # (& hence shouldn't use a default marker)
+                if tablename == "gis_layer_feature":
+                    table = db.gis_layer_feature
+                    query = (table.layer_id == layer_id)
+                    layer = db(query).select(table.polygons,
+                                             limitby=(0, 1)).first()
+                    if layer and layer.polygons:
+                        polygons = True
+                elif tablename == "gis_layer_shapefile":
+                    table = db.gis_layer_shapefile
+                    query = (table.layer_id == layer_id)
+                    layer = db(query).select(table.gis_feature_type,
+                                             limitby=(0, 1)).first()
+                    if layer and layer.gis_feature_type != 1:
+                        polygons = True
 
         if marker:
             self.image = marker.image
@@ -6201,10 +6214,6 @@ class Marker(object):
             self.image = config.marker_image
             self.height = config.marker_height
             self.width = config.marker_width
-
-        # Always lookup URL client-side
-        #self.url = URL(c="static", f="img",
-        #               args=["markers", marker.image])
 
     def add_attributes_to_output(self, output):
         """
@@ -6341,7 +6350,7 @@ class Layer(object):
                 # SubLayers handled differently
                 append(record)
             else:
-                append(SubLayer(record))
+                append(SubLayer(tablename, record))
 
         # Alphasort layers
         # - client will only sort within their type: s3.gis.layers.js
@@ -6389,13 +6398,26 @@ class Layer(object):
 
     # -------------------------------------------------------------------------
     class SubLayer(object):
-        def __init__(self, record):
+        def __init__(self, tablename, record):
             # Ensure all attributes available (even if Null)
             self.__dict__.update(record)
             del record
             self.safe_name = re.sub('[\\"]', "", self.name)
 
-            self.marker = Marker(layer_id=self.layer_id)
+            if tablename not in ("gis_layer_arcrest",
+                                 "gis_layer_coordinate",
+                                 "gis_layer_empty",
+                                 "gis_layer_js",
+                                 "gis_layer_mgrs",
+                                 "gis_layer_openstreetmap",
+                                 "gis_layer_openweathermap",
+                                 "gis_layer_theme",
+                                 "gis_layer_tms",
+                                 "gis_layer_wms",
+                                 "gis_layer_xyz",
+                                 ):
+                # Layer uses Markers
+                self.marker = Marker(tablename=tablename, layer_id=self.layer_id)
             if hasattr(self, "projection_id"):
                 self.projection = Projection(self.projection_id)
 
@@ -6426,6 +6448,7 @@ class Layer(object):
             if self.dir:
                 output["dir"] = self.dir
 
+        # ---------------------------------------------------------------------
         @staticmethod
         def add_attributes_if_not_default(output, **values_and_defaults):
             # could also write values in debug mode, to check if defaults ignored.
@@ -6602,7 +6625,7 @@ class FeatureLayer(Layer):
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
-        def __init__(self, record):
+        def __init__(self, tablename, record):
             record_module = record.controller or record.module # Backwards-compatibility
             self.skip = False
             if record_module is not None:
@@ -6616,7 +6639,7 @@ class FeatureLayer(Layer):
                     self.skip = True
             else:
                 raise Exception("FeatureLayer Record '%s' has no controller" % record.name)
-            super(FeatureLayer.SubLayer, self).__init__(record)
+            super(FeatureLayer.SubLayer, self).__init__(tablename, record)
 
         def as_dict(self):
             if self.skip:
@@ -7175,7 +7198,7 @@ class ShapefileLayer(Layer):
                 output["projection"] = projection.epsg
             self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
-            #self.setup_clustering(output)
+            self.setup_clustering(output)
             style = self.style
             if style:
                 style = json.loads(style)

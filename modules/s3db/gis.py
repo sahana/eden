@@ -1984,23 +1984,24 @@ class S3LayerEntityModel(S3Model):
         # =====================================================================
         #  Layer Config link table
 
-        # Style is a JSON object with the following structure (only the starred elements are currently parsed):
+        # Style is a JSON object with the following structure
+        # (only the starred elements are currently parsed)
+        # @ToDo: Support elements in a common section (such as attrib)
+        # @ToDo: Popup style
         #Style = [{
-        #   low: float,   //*
-        #   high: float,  //*
-        #   external_graphic: string, //*
-        #   fill: string, //*
+        #   attrib: string, //* Attribute used to colour the element
+        #   cat: string,    //* Value used to colour the element
+        #   low: float,     //* Low value of the range of values used for this colour rule
+        #   high: float,    //* High value of the range of values used for this colour rule
+        #   external_graphic: string, //* Marker to load from /static/path/to/marker.png
+        #   fill: string,   //*
         #   fill_opacity: float, //*
         #   stroke: string, //* (will default to fill, if not set)
         #   stroke_opacity: float,
         #   stroke_width: float or int, //* OpenLayers wants int, SLD wants float
-        #   marker: {
-        #       image: string,
-        #       height: int,
-        #       width: int
-        #   }
+        #   label: string,  //* Attribute used to label the element
         #   shape: string,
-        #   label: {}
+        #   popup: {},
         #}]
 
         tablename = "gis_layer_config"
@@ -3090,8 +3091,8 @@ class S3MapModel(S3Model):
                              gis_opacity()(),
                              # @ToDo
                              #gis_refresh()(),
-                             #cluster_distance()(),
-                             #cluster_threshold()(),
+                             cluster_distance()(),
+                             cluster_threshold()(),
                              s3_role_required(), # Single Role
                              *s3_meta_fields())  
         configure(tablename,
@@ -3215,6 +3216,7 @@ class S3MapModel(S3Model):
                                    comment=DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Password"),
                                                                  T("Optional password for HTTP Basic Authentication.")))),
+                             # @ToDo: Replace with Style JSON
                              Field("style_field",
                                    label=T("Style Field"),
                                    comment=DIV(_class="tooltip",
@@ -3225,7 +3227,7 @@ class S3MapModel(S3Model):
                                    default="{}",
                                    comment=DIV(_class="stickytip",
                                                _title="%s|%s" % (T("Style Values"),
-                                                                  T("Format the list of attribute values & the RGB value to use for these as a JSON object, e.g.: {Red: '#FF0000', Green: '#00FF00', Yellow: '#FFFF00'}")))),
+                                                                 T("Format the list of attribute values & the RGB value to use for these as a JSON object, e.g.: {Red: '#FF0000', Green: '#00FF00', Yellow: '#FFFF00'}")))),
                              Field("geometryName",
                                    label=T("Geometry Name"),
                                    default="the_geom",
@@ -3637,10 +3639,14 @@ class S3MapModel(S3Model):
             myfile = zipfile.ZipFile(fp)
             for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
                 fileName = "%s.%s" % (layerName, ext)
-                file = myfile.read(fileName)
-                f = open(fileName, "wb")
-                f.write(file)
-                f.close()
+                try:
+                    file = myfile.read(fileName)
+                except KeyError:
+                    s3_debug("%s.zip doesn't contain a file %s" % (layerName, fileName))
+                else:
+                    f = open(fileName, "wb")
+                    f.write(file)
+                    f.close()
             myfile.close()
             fp.close()
 
@@ -3747,6 +3753,8 @@ class S3MapModel(S3Model):
             db._migrate_enabled = True
             dtable = db.define_table(tablename, *Fields)
             db._migrate_enabled = False
+            # Clear old data if-any
+            dtable.truncate()
             # Populate table with data
             # @ToDo: PostGIS when-available
             for feature in features:

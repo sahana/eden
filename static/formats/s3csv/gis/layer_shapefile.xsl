@@ -19,6 +19,8 @@
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
+         Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
+         Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
 
          Needs Importing twice:
             layer_config
@@ -132,11 +134,17 @@
             <xsl:if test="col[@field='Description']!=''">
                 <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
+            <xsl:if test="col[@field='Filter']!=''">
+                <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Folder']!=''">
                 <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Filter']!=''">
-                <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
+            <xsl:if test="col[@field='Cluster Distance']!=''">
+                <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Threshold']!=''">
+                <data field="cluster_threshold"><xsl:value-of select="col[@field='Cluster Threshold']"/></data>
             </xsl:if>
         </resource>
 
