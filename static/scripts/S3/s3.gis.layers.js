@@ -831,7 +831,7 @@ function addGeoJSONLayer(layer) {
     );
     geojsonLayer.setVisibility(visibility);
     geojsonLayer.events.on({
-        'featureselected': onGeojsonFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -1114,7 +1114,7 @@ function addGPXLayer(layer) {
     );
     gpxLayer.setVisibility(visibility);
     gpxLayer.events.on({
-        'featureselected': onGpxFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -1357,7 +1357,7 @@ function addKMLLayer(layer) {
 
     kmlLayer.setVisibility(visibility);
     kmlLayer.events.on({
-        'featureselected': onKmlFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -1833,7 +1833,7 @@ function addWFSLayer(layer) {
     wfsLayer.title = title;
     wfsLayer.setVisibility(visibility);
     wfsLayer.events.on({
-        'featureselected': onWfsFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -2093,30 +2093,39 @@ function s3_gis_loadDetails(url, id, popup) {
         'dataType': 'html'
     });
 }
-function onGeojsonFeatureSelect(event) {
-    // unselect any previous selections
+function onFeatureSelect(event) {
+    // Unselect any previous selections
+    // @ToDo: setting to allow multiple popups at once
     s3_gis_tooltipUnselect(event);
     var feature = event.feature;
-    //S3.gis.selectedFeature = feature;
-    var popup_id = S3.uid();
+    var layer = feature.layer
+    var layer_type = layer.s3_layer_type;
     var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var data_link = false;
-    var contents;
-    var name;
+    var popup_id = S3.uid();
+    if (undefined != layer.title) {
+        // KML, WFS
+        var titleField = layer.title;
+    } else {
+        var titleField = 'name';
+    }
+    var contents, data_link, name, popup_url;
     if (feature.cluster) {
         // Cluster
-        var uuid, url;
+        var cluster = feature.cluster;
         contents = i18n.gis_cluster_multiple + ':<ul>';
-        for (var i = 0; i < feature.cluster.length; i++) {
-            if (undefined != feature.cluster[i].attributes.popup) {
+        // Only display 1st 9 records
+        //var length = Math.min(cluster.length, 9);
+        var length = cluster.length;
+        for (var i = 0; i < length; i++) {
+            var attributes = cluster[i].attributes;
+            if (undefined != attributes.popup) {
                 // Only display the 1st line of the hover popup
-                name = feature.cluster[i].attributes.popup.split('<br />', 1)[0];
+                name = attributes.popup.split('<br />', 1)[0];
             } else {
-                name = feature.cluster[i].attributes.name;
+                name = attributes[titleField];
             }
-            if (undefined != feature.cluster[i].attributes.url) {
-                url = feature.cluster[i].attributes.url;
-                contents += "<li><a href='javascript:s3_gis_loadClusterPopup(" + "\"" + url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
+            if (undefined != attributes.url) {
+                contents += "<li><a href='javascript:s3_gis_loadClusterPopup(" + "\"" + attributes.url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
             } else {
                 // @ToDo: Provide a way to load non-URL based popups
                 contents += '<li>' + name + '</li>';
@@ -2126,47 +2135,132 @@ function onGeojsonFeatureSelect(event) {
         contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
     } else {
         // Single Feature
-        if (undefined != feature.attributes.url) {
-            // Popup contents are pulled via AJAX
-            contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
+        if (layer_type == 'kml') {
+            var attributes = feature.attributes;
+            if (undefined != feature.style.balloonStyle) {
+                // Use the provided BalloonStyle
+                var balloonStyle = feature.style.balloonStyle;
+                // "<strong>{name}</strong><br /><br />{description}"
+                contents = balloonStyle.replace(/{([^{}]*)}/g,
+                    function (a, b) {
+                        var r = attributes[b];
+                        return typeof r === 'string' || typeof r === 'number' ? r : a;
+                    }
+                );
+            } else {
+                // Build the Popup contents manually
+                var type = typeof attributes[titleField];
+                var title;
+                if ('object' == type) {
+                    title = attributes[titleField].value;
+                } else {
+                    title = attributes[titleField];
+                }
+                contents = '<h3>' + title + '</h3>';
+                var body = feature.layer.body.split(' ');
+                var label, row, value;
+                for (var j = 0; j < body.length; j++) {
+                    type = typeof attributes[body[j]];
+                    if ('object' == type) {
+                        // Geocommons style
+                        label = attributes[body[j]].displayName;
+                        if (label === '') {
+                            label = body[j];
+                        }
+                        value = attributes[body[j]].value;
+                        row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                              ':</div><div class="gis_popup_cell">' + value + '</div></div>';
+                    } else if (undefined != attributes[body[j]]) {
+                        row = '<div class="gis_popup_row">' + attributes[body[j]] + '</div>';
+                    } else {
+                        // How would we get here?
+                        row = '';
+                    }                    
+                    contents += row;
+                }
+            }
+            // Protect the content against JavaScript attacks
+            if (contents.search('<script') != -1) {
+                contents = 'Content contained Javascript! Escaped content below.<br />' + contents.replace(/</g, '<');
+            }
+        } else if (layer_type == 'gpx') {
+            // @ToDo: display as many attributes as we can: Description (Points), Date, Author?, Lat, Lon
+        } else if (layer_type == 'shapefile') {
+            // We don't have control of attributes, so simply display all
+            // @ToDo: have an optional style.popup (like KML's balloonStyle)
+            var attributes = feature.attributes;
+            contents = '<div>';
+            var label, prop, row, value;
+            for (prop in attributes) {
+                if (attributes.hasOwnProperty(prop)) {
+                    if (prop == 'id_orig') {
+                        label = 'id';
+                    } else {
+                        label = prop;
+                    }
+                    value = attributes[prop];
+                    row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                          ':</div><div class="gis_popup_cell">' + value + '</div></div>';
+                    contents += row;
+                }
+            }
+            contents += '</div>';
+        } else if (layer_type == 'wfs') {
+            var attributes = feature.attributes;
+            var title = attributes[titleField];
+            contents = '<h3>' + title + '</h3>';
+            var row;
+            $.each(attributes, function(label, value) {
+                row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                      ':</div><div class="gis_popup_val">' + value + '</div></div>';
+                contents += row;
+            });
         } else {
-            // Popup contents are built from the attributes
-            if (undefined == feature.attributes.name) {
-                name = '';
+            // @ToDo: disambiguate these by type
+            if (undefined != feature.attributes.url) {
+                // Popup contents are pulled via AJAX
+                popup_url = feature.attributes.url;
+                contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
             } else {
-                name = '<h3>' + feature.attributes.name + '</h3>';
+                // Popup contents are built from the attributes
+                var attributes = feature.attributes;
+                if (undefined == attributes.name) {
+                    name = '';
+                } else {
+                    name = '<h3>' + attributes.name + '</h3>';
+                }
+                var description;
+                if (undefined == attributes.description) {
+                    description = '';
+                } else {
+                    description = '<p>' + attributes.description + '</p>';
+                }
+                var link;
+                if (undefined == attributes.link) {
+                    link = '';
+                } else {
+                    link = '<a href="' + attributes.link + '" target="_blank">' + attributes.link + '</a>';
+                }
+                var data;
+                if (undefined == attributes.data) {
+                    data = '';
+                } else if (attributes.data.indexOf('http://') === 0) {
+                    data_link = true;
+                    var data_id = S3.uid();
+                    data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
+                } else {
+                    data = '<p>' + attributes.data + '</p>';
+                }
+                var image;
+                if (undefined == attributes.image) {
+                    image = '';
+                } else if (attributes.image.indexOf('http://') === 0) {
+                    image = '<img src="' + attributes.image + '" height=300 width=300>';
+                } else {
+                    image = '';
+                }
+                contents = name + description + link + data + image;
             }
-            var description;
-            if (undefined == feature.attributes.description) {
-                description = '';
-            } else {
-                description = '<p>' + feature.attributes.description + '</p>';
-            }
-            var link;
-            if (undefined == feature.attributes.link) {
-                link = '';
-            } else {
-                link = '<a href="' + feature.attributes.link + '" target="_blank">' + feature.attributes.link + '</a>';
-            }
-            var data;
-            if (undefined == feature.attributes.data) {
-                data = '';
-            } else if (feature.attributes.data.indexOf('http://') === 0) {
-                data_link = true;
-                var data_id = S3.uid();
-                data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
-            } else {
-                data = '<p>' + feature.attributes.data + '</p>';
-            }
-            var image;
-            if (undefined == feature.attributes.image) {
-                image = '';
-            } else if (feature.attributes.image.indexOf('http://') === 0) {
-                image = '<img src="' + feature.attributes.image + '" height=300 width=300>';
-            } else {
-                image = '';
-            }
-            contents = name + description + link + data + image;
         }
     }
     var popup = new OpenLayers.Popup.FramedCloud(
@@ -2178,9 +2272,8 @@ function onGeojsonFeatureSelect(event) {
         true,
         onPopupClose
     );
-    if (undefined != feature.attributes.url) {
+    if (undefined != popup_url) {
         // call AJAX to get the contentHTML
-        var popup_url = feature.attributes.url;
         s3_gis_loadDetails(popup_url, popup_id + '_contentDiv', popup);
     } else if (data_link) {
         // call AJAX to get the data
@@ -2188,140 +2281,5 @@ function onGeojsonFeatureSelect(event) {
     }
     feature.popup = popup;
     //popup.feature = feature;
-    map.addPopup(popup);
-}
-
-// Support GPX Layers
-function onGpxFeatureSelect(event) {
-    // unselect any previous selections
-    s3_gis_tooltipUnselect(event);
-    var feature = event.feature;
-    // Anything we want to do here?
-}
-
-// Support KML Layers
-// @ToDo: Remove once moved to GeoJSON
-function onKmlFeatureSelect(event) {
-    // unselect any previous selections
-    s3_gis_tooltipUnselect(event);
-    var feature = event.feature;
-    //S3.gis.selectedFeature = feature;
-    var popup_id = S3.uid();
-    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var contents;
-    if (feature.cluster) {
-        // Cluster
-        var name, uuid, url;
-        contents = i18n.gis_cluster_multiple + ':<ul>';
-        for (var i = 0; i < feature.cluster.length; i++) {
-            name = feature.cluster[i].attributes.name;
-            // @ToDo: Provide a way to load popups
-            contents += '<li>' + name + '</li>';
-        }
-        contents += '</ul>';
-        contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
-    } else {
-        // Single Feature
-        var attributes = feature.attributes;
-        if (undefined != feature.style.balloonStyle) {
-            // Use the provided BalloonStyle
-            var balloonStyle = feature.style.balloonStyle;
-            // "<strong>{name}</strong><br /><br />{description}"
-            contents = balloonStyle.replace(/{([^{}]*)}/g,
-                function (a, b) {
-                    var r = attributes[b];
-                    return typeof r === 'string' || typeof r === 'number' ? r : a;
-                }
-            );
-        } else {
-            // Build the Popup contents manually
-            var titleField = feature.layer.title;
-            var type = typeof attributes[titleField];
-            var title;
-            if ('object' == type) {
-                title = attributes[titleField].value;
-            } else {
-                title = attributes[titleField];
-            }
-            var body = feature.layer.body.split(' ');
-            content = '';
-            for (var j = 0; j < body.length; j++) {
-                type = typeof attributes[body[j]];
-                var row = '';
-                if ('object' == type) {
-                    // Geocommons style
-                    var displayName = attributes[body[j]].displayName;
-                    if (displayName === '') {
-                        displayName = body[j];
-                    }
-                    var value = attributes[body[j]].value;
-                    row = '<b>' + displayName + '</b>: ' + value + '<br />';
-                } else if (undefined != attributes[body[j]]) {
-                    row = attributes[body[j]] + '<br />';
-                }
-                content += row;
-            }
-            contents = '<h3>' + title + '</h3>' + content;
-        }
-        // Protect the content against JavaScript attacks
-        if (contents.search('<script') != -1) {
-            contents = 'Content contained Javascript! Escaped content below.<br />' + contents.replace(/</g, '<');
-        }
-    }
-    var popup = new OpenLayers.Popup.FramedCloud(
-        popup_id,
-        centerPoint,
-        new OpenLayers.Size(200, 200),
-        contents,
-        null,
-        true,
-        onPopupClose
-    );
-    feature.popup = popup;
-    map.addPopup(popup);
-}
-
-// Support WFS Layers
-// @ToDo: See if this can be DRYed
-function onWfsFeatureSelect(event) {
-    // unselect any previous selections
-    s3_gis_tooltipUnselect(event);
-    var feature = event.feature;
-    //S3.gis.selectedFeature = feature;
-    var popup_id = S3.uid();
-    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var titleField = feature.layer.title;
-    var contents;
-    if (feature.cluster) {
-        // Cluster
-        var name;
-        contents = i18n.gis_cluster_multiple + ':<ul>';
-        var length = Math.min(feature.cluster.length, 9);
-        for (var i = 0; i < length; i++) {
-            name = feature.cluster[i].attributes[titleField];
-            contents += '<li>' + name + '</li>';
-        }
-        contents += '</ul>';
-        contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
-    } else {
-        // Single Feature
-        var attributes = feature.attributes;
-        var title = attributes[titleField];
-        var content = '';
-        $.each( attributes, function(i, n){
-            content += '<b>' + i + ':</b> ' + n + '<br />';
-        });
-        contents = '<h3>' + title + '</h3>' + content;
-    }
-    var popup = new OpenLayers.Popup.FramedCloud(
-        popup_id,
-        centerPoint,
-        new OpenLayers.Size(200, 200),
-        contents,
-        null,
-        true,
-        onPopupClose
-    );
-    feature.popup = popup;
     map.addPopup(popup);
 }
