@@ -318,7 +318,7 @@ class S3ProjectModel(S3Model):
             append(S3SearchOptionsWidget(
                         name = "project_search_sector",
                         label = sector,
-                        field = "sector.name",
+                        field = "sector.id",
                         options = self.org_sector_opts,
                         cols = 4
                     ))
@@ -326,7 +326,7 @@ class S3ProjectModel(S3Model):
             append(S3SearchOptionsWidget(
                         name = "project_search_hazard",
                         label = T("Hazard"),
-                        field = "hazard.name",
+                        field = "hazard.id",
                         options = self.project_hazard_opts,
                         help_field = self.project_hazard_helps,
                         cols = 4
@@ -335,7 +335,7 @@ class S3ProjectModel(S3Model):
             append(S3SearchOptionsWidget(
                         name = "project_search_theme",
                         label = T("Theme"),
-                        field = "theme.name",
+                        field = "theme.id",
                         options = self.project_theme_opts,
                         help_field = self.project_theme_helps,
                         cols = 4
