@@ -1277,8 +1277,7 @@ Thank you
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             organisation_id = utable.organisation_id
-            organisation_id.writable = True
-            organisation_id.readable = True
+            organisation_id.readable = organisation_id.writable = True
             from s3validators import IS_ONE_OF
             organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
                                                  s3db.org_organisation_represent,
@@ -1286,9 +1285,9 @@ Thank you
                                                  sort=True)
             organisation_id.represent = s3db.org_organisation_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
+            # no permissions for autocomplete on registration page yet
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
-            # no permissions for autocomplete on registration page
             #organisation_id.comment = DIV(_class="tooltip",
             #                              _title="%s|%s" % (T("Organization"),
             #                                                T("Enter some characters to bring up a list of possible matches")))
