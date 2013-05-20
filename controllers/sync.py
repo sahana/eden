@@ -36,7 +36,7 @@ def repository():
             (T("Resources"), "task"),
             (T("Schedule"), "job"),
             (T("Log"), "log")
-           ]
+            ]
 
     s3db.set_method("sync", "repository",
                     method="register", action=current.sync)

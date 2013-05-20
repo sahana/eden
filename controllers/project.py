@@ -116,18 +116,43 @@ def project():
             else:
                 if r.component_name == "organisation":
                     if r.method != "update":
-                        host_role = 1
-                        otable = s3db.project_organisation
-                        query = (otable.deleted != True) & \
-                                (otable.role == host_role) & \
-                                (otable.project_id == r.id)
-                        row = db(query).select(otable.id,
-                                               limitby=(0, 1)).first()
-                        if row:
+                        # @ToDo: Move this to template?
+                        if settings.get_template() == "DRRPP":
                             project_organisation_roles = settings.get_project_organisation_roles()
-                            del project_organisation_roles[host_role]
+                            roles_subset = {}
+                            exclude_roles = [9] # Partner NS should only come via sync from RMS
+                            lead_role = 1
+                            otable = s3db.project_organisation
+                            query = (otable.deleted != True) & \
+                                    (otable.role == lead_role) & \
+                                    (otable.project_id == r.id)
+                            row = db(query).select(otable.id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                # We already have a Lead Org, so ensure we don't try to add a 2nd
+                                exclude_roles.append(lead_role)
+                            for role in project_organisation_roles:
+                                if role not in exclude_roles:
+                                    roles_subset[role] = project_organisation_roles[role]
                             otable.role.requires = \
-                                IS_NULL_OR(IS_IN_SET(project_organisation_roles))
+                                IS_NULL_OR(IS_IN_SET(roles_subset))
+                        else:
+                            lead_role = 1
+                            otable = s3db.project_organisation
+                            query = (otable.deleted != True) & \
+                                    (otable.role == lead_role) & \
+                                    (otable.project_id == r.id)
+                            row = db(query).select(otable.id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                # We already have a Lead Org, so ensure we don't try to add a 2nd
+                                project_organisation_roles = settings.get_project_organisation_roles()
+                                roles_subset = {}
+                                for role in project_organisation_roles:
+                                    if role != lead_role:
+                                        roles_subset[role] = project_organisation_roles[role]
+                                otable.role.requires = \
+                                    IS_NULL_OR(IS_IN_SET(roles_subset))
 
                 elif r.component_name == "activity":
                     # Filter Activity Type based on Sector
@@ -622,12 +647,10 @@ def location():
                 popup_url = URL(f="project", args=[project_id])
                 details_btn = A(T("Show Details"), _href=popup_url,
                                 _id="details-btn", _target="_blank")
-                output = dict(
-                        item = item,
-                        title = title,
-                        details_btn = details_btn,
-                    )
-
+                output = dict(item = item,
+                              title = title,
+                              details_btn = details_btn,
+                              )
         return output
     s3.postp = postp
 
@@ -671,7 +694,7 @@ def partners():
 
     # @ToDo: This could need to be a deployment setting
     request.get_vars["organisation.organisation_type_id$name"] = \
-        "Bilateral,Government,Intergovernmental,NGO,UN agency"
+        "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency"
 
     return s3db.org_organisation_controller()
 

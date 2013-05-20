@@ -1,9 +1,10 @@
 /**
- * Used by the Map (modules/s3gis.py)
+ * Used by the Map (modules/s3/s3gis.py)
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  *
- * @ToDo: Restructure as more of a class so less methods are visible to the global scope
+ * @ToDo: Restructure as module pattern so that less methods are visible to the global scope
+ *        & can have multiple maps within a page
  *
  */
 

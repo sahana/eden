@@ -138,10 +138,10 @@ $(function() {
                 cloned.insertAfter(input);
                 // We move the original input as it doesn't contain the file otherwise on IE, etc
                 // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
-                input.css({display: 'none'});
-                input.attr('id', upload_id);
-                input.attr('name', upload_id);
-                input.appendTo(form);
+                input.css({display: 'none'})
+                     .attr('id', upload_id)
+                     .attr('name', upload_id)
+                     .appendTo(form);
             } else {
                 cssclass = input.attr('class');
                 if (cssclass == 'generic-widget') {
@@ -264,6 +264,10 @@ $(function() {
             input = $(element);
             if (input.attr('type') != 'file') {
                 input.val(value);
+                // Populate text in autocompletes
+                element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
+                var text = row[fieldname]['text'];
+                $(element).val(text);
             } else {
                 // Update the existing upload item, if there is one
                 var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
@@ -271,15 +275,11 @@ $(function() {
                     var id = input.attr('id');
                     var name = input.attr('name');
                     input.replaceWith(upload);
-                    upload.attr('id', id);
-                    upload.attr('name', name);
-                    upload.css({display: ''});
+                    upload.attr('id', id)
+                          .attr('name', name)
+                          .css({display: ''});
                 }
             }
-            // Populate text in autocompletes
-            var text = row[fieldname]['text'];
-            element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
-            input.val(text);
         }
 
         // Insert the edit row after this read row
@@ -305,9 +305,9 @@ $(function() {
         var $edit = $('#edit-row-' + formname);
         
         // Hide and reset the edit-row
-        $edit.addClass('hide');
-        $edit.data('rowindex', null);
-        $edit.removeClass('changed');
+        $edit.addClass('hide')
+             .data('rowindex', null)
+             .removeClass('changed');
         
         // Show the read-row
         $('#read-row-' + rowname).removeClass('hide');
@@ -354,8 +354,8 @@ $(function() {
                 if (upload.length) {
                     var upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
                     $('#' + upload_id).remove();
-                    upload.attr('id', upload_id);
-                    upload.attr('name', upload_id);
+                    upload.attr('id', upload_id)
+                          .attr('name', upload_id);
                 }
                 read_row += '<td>' + new_row[field]['text'] + '</td>';
                 // Reset add-field to default value
@@ -363,8 +363,8 @@ $(function() {
                 var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
                 if (f.attr('type') == 'file') {
                     var empty = d.clone();
-                    empty.attr('id', f.attr('id'));
-                    empty.attr('name', f.attr('name'));
+                    empty.attr('id', f.attr('id'))
+                         .attr('name', f.attr('name'));
                     f.replaceWith(empty);
                 } else {
                     default_value = d.val();
@@ -450,8 +450,8 @@ $(function() {
                 var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
                 if (f.attr('type') == 'file') {
                     var empty = d.clone();
-                    empty.attr('id', f.attr('id'));
-                    empty.attr('name', f.attr('name'));
+                    empty.attr('id', f.attr('id'))
+                         .attr('name', f.attr('name'));
                     f.replaceWith(empty);
                 } else {
                     default_value = d.val();
@@ -560,8 +560,8 @@ $(function() {
     var inline_catch_submit = function(toggle, element) {
         var form = $(element).closest('form');
         if (toggle) {
-            $('form').unbind('submit', inline_submit_all);
-            $('form').bind('submit', inline_submit_all);
+            $('form').unbind('submit', inline_submit_all)
+                     .bind('submit', inline_submit_all);
         } else {
             $('form').unbind('submit', inline_submit_all);
         }

@@ -1,7 +1,9 @@
 ﻿function popup(url) {
-  newwindow=window.open(url, 'name', 'height=400,width=600');
-  if (window.focus) newwindow.focus();
-  return false;
+    newwindow = window.open(url, 'name', 'height=400,width=600');
+    if (window.focus) {
+        newwindow.focus();
+    }
+    return false;
 }
 function collapse(id) { jQuery('#' + id).slideToggle(); }
 function fade(id,value) { if(value>0) jQuery('#' + id).hide().fadeIn('slow'); else jQuery('#' + id).show().fadeOut('slow'); }

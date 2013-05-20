@@ -1432,6 +1432,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
         validated through Ajax-calls to the CRUD.validate() method.
         During accept(), the component gets updated according to the JSON
         returned.
+
+        @ToDo: Support filtering of field options
+               Usecase is inline project_organisation for IFRC
+               PartnerNS needs to be filtered differently from Partners/Donors,
+               so can't just set a global requires for the field in the controller
+               - needs to be inside the widget.
+               See private/templates/IFRC/config.py
     """
 
     prefix = "sub"
@@ -2787,8 +2794,14 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                           record=record_id, representation="html")
                     if fieldname in item:
                         id = item[fieldname]["value"]
-                        options[id].update(selected=True,
-                                           editable=editable)
+                        try:
+                            options[id].update(selected=True,
+                                               editable=editable)
+                        except:
+                            # e.g. Theme filtered by Sector
+                            current.session.error = \
+                                T("Invalid data: record %s not accessible in table %s" % (id, table))
+                            redirect(URL(args=None, vars=None))
 
             # Render the options
             formname = self._formname()

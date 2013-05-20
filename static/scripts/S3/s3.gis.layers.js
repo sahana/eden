@@ -1,6 +1,6 @@
 /**
  * S3 GIS Layers
- * Used by the Map (modules/s3gis.py)
+ * Used by the Map (modules/s3/s3gis.py)
  * For Production usage gets assembled into s3.gis.min.js
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
@@ -12,8 +12,9 @@ function addLayers() {
     /* Base Layers */
     // OSM
     if (S3.gis.layers_osm) {
-        for (i = S3.gis.layers_osm.length; i > 0; i--) {
-            addOSMLayer(S3.gis.layers_osm[i - 1]);
+        var layers_osm = S3.gis.layers_osm;
+        for (i = layers_osm.length; i > 0; i--) {
+            addOSMLayer(layers_osm[i - 1]);
         }
     }
     // Google
@@ -28,20 +29,23 @@ function addLayers() {
     }
     // TMS
     if (S3.gis.layers_tms) {
-        for (i = S3.gis.layers_tms.length; i > 0; i--) {
-            addTMSLayer(S3.gis.layers_tms[i - 1]);
+        var layers_tms = S3.gis.layers_tms;
+        for (i = layers_tms.length; i > 0; i--) {
+            addTMSLayer(layers_tms[i - 1]);
         }
     }
     // WMS
     if (S3.gis.layers_wms) {
-        for (i = S3.gis.layers_wms.length; i > 0; i--) {
-            addWMSLayer(S3.gis.layers_wms[i - 1]);
+        var layers_wms = S3.gis.layers_wms;
+        for (i = layers_wms.length; i > 0; i--) {
+            addWMSLayer(layers_wms[i - 1]);
         }
     }
     // XYZ
     if (S3.gis.layers_xyz) {
-        for (i = S3.gis.layers_xyz.length; i > 0; i--) {
-            addXYZLayer(S3.gis.layers_xyz[i - 1]);
+        var layers_xyz = S3.gis.layers_xyz;
+        for (i = layers_xyz.length; i > 0; i--) {
+            addXYZLayer(layers_xyz[i - 1]);
         }
     }
     // Empty
@@ -67,26 +71,30 @@ function addLayers() {
     /* Overlays */
     // Theme
     if (S3.gis.layers_theme) {
-        for (i = S3.gis.layers_theme.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_theme[i - 1]);
+        var layers_theme = S3.gis.layers_theme;
+        for (i = layers_theme.length; i > 0; i--) {
+            addGeoJSONLayer(layers_theme[i - 1]);
         }
     }
     // GeoJSON
     if (S3.gis.layers_geojson) {
-        for (i = S3.gis.layers_geojson.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_geojson[i - 1]);
+        var layers_geojson = S3.gis.layers_geojson;
+        for (i = layers_geojson.length; i > 0; i--) {
+            addGeoJSONLayer(layers_geojson[i - 1]);
         }
     }
     // GPX
     if (S3.gis.layers_gpx) {
-        for (i = S3.gis.layers_gpx.length; i > 0; i--) {
-            addGPXLayer(S3.gis.layers_gpx[i - 1]);
+        var layers_gpx = S3.gis.layers_gpx;
+        for (i = layers_gpx.length; i > 0; i--) {
+            addGPXLayer(layers_gpx[i - 1]);
         }
     }
     // ArcGIS REST
     if (S3.gis.layers_arcrest) {
-        for (i = S3.gis.layers_arcrest.length; i > 0; i--) {
-            addArcRESTLayer(S3.gis.layers_arcrest[i - 1]);
+        var layers_arcrest = S3.gis.layers_arcrest;
+        for (i = layers_arcrest.length; i > 0; i--) {
+            addArcRESTLayer(layers_arcrest[i - 1]);
         }
     }
     // CoordinateGrid
@@ -95,8 +103,9 @@ function addLayers() {
     }
     // GeoRSS
     if (S3.gis.layers_georss) {
-        for (i = S3.gis.layers_georss.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_georss[i - 1]);
+        var layers_georss = S3.gis.layers_georss;
+        for (i = layers_georss.length; i > 0; i--) {
+            addGeoJSONLayer(layers_georss[i - 1]);
         }
     }
     // KML
@@ -106,36 +115,48 @@ function addLayers() {
             extractAttributes: true,
             maxDepth: 2
         });
-        for (i = S3.gis.layers_kml.length; i > 0; i--) {
-            addKMLLayer(S3.gis.layers_kml[i - 1]);
+        var layers_kml = S3.gis.layers_kml;
+        for (i = layers_kml.length; i > 0; i--) {
+            addKMLLayer(layers_kml[i - 1]);
         }
     }
     // OpenWeatherMap
     if (S3.gis.OWM) {
         addOWMLayers();
     }
+    // Shapefiles
+    if (S3.gis.layers_shapefile) {
+        var layers_shapefile = S3.gis.layers_shapefile;
+        for (i = layers_shapefile.length; i > 0; i--) {
+            addGeoJSONLayer(layers_shapefile[i - 1]);
+        }
+    }
     // WFS
     if (S3.gis.layers_wfs) {
-        for (i = S3.gis.layers_wfs.length; i > 0; i--) {
-            addWFSLayer(S3.gis.layers_wfs[i - 1]);
+        var layers_wfs = S3.gis.layers_wfs;
+        for (i = layers_wfs.length; i > 0; i--) {
+            addWFSLayer(layers_wfs[i - 1]);
         }
     }
     // Feature Queries from Mapping API
-    if (S3.gis.layers_feature_queries) {
-        for (i = S3.gis.layers_feature_queries.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_feature_queries[i - 1]);
+    if (S3.gis.layers_feature_query) {
+        var layers_feature_query = S3.gis.layers_feature_query;
+        for (i = layers_feature_query.length; i > 0; i--) {
+            addGeoJSONLayer(layers_feature_query[i - 1]);
         }
     }
     // Feature Resources (e.g. Search Results))
-    if (S3.gis.layers_feature_resources) {
-        for (i = S3.gis.layers_feature_resources.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_feature_resources[i - 1]);
+    if (S3.gis.layers_feature_resource) {
+        var layers_feature_resource = S3.gis.layers_feature_resource;
+        for (i = layers_feature_resource.length; i > 0; i--) {
+            addGeoJSONLayer(layers_feature_resource[i - 1]);
         }
     }
     // Feature Layers from Catalogue
-    if (S3.gis.layers_features) {
-        for (i = S3.gis.layers_features.length; i > 0; i--) {
-            addGeoJSONLayer(S3.gis.layers_features[i - 1]);
+    if (S3.gis.layers_feature) {
+        var layers_feature = S3.gis.layers_feature;
+        for (i = layers_feature.length; i > 0; i--) {
+            addGeoJSONLayer(layers_feature[i - 1]);
         }
     }
     // Draft Layers
@@ -369,7 +390,7 @@ function addGeoJSONLayer(layer) {
     var dir;
     if (undefined != layer.dir) {
         dir = layer.dir;
-        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
+        if ($.inArray(dir, S3.gis.dirs) == -1) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -466,7 +487,7 @@ function addGeoJSONLayer(layer) {
                     // Clustered Point
                     pix = '';
                 } else if (feature.attributes.marker_height) {
-                    // Use marker_height from feature
+                    // Use marker_height from feature (Query)
                     pix = feature.attributes.marker_height;
                 } else {
                     // per-Layer Marker for Unclustered Point
@@ -480,7 +501,7 @@ function addGeoJSONLayer(layer) {
                     // Clustered Point
                     pix = '';
                 } else if (feature.attributes.marker_width) {
-                    // Use marker_width from feature
+                    // Use marker_width from feature (Query)
                     pix = -(feature.attributes.marker_width / 2);
                 } else {
                     // per-Layer Marker for Unclustered Point
@@ -494,7 +515,7 @@ function addGeoJSONLayer(layer) {
                     // Clustered Point
                     pix = '';
                 } else if (feature.attributes.marker_height) {
-                    // Use marker_height from feature
+                    // Use marker_height from feature (Query)
                     pix = -feature.attributes.marker_height;
                 } else {
                     // per-Layer Marker for Unclustered Point
@@ -508,7 +529,7 @@ function addGeoJSONLayer(layer) {
                     // Clustered Point
                     shape = 'circle';
                 } else if (feature.attributes.shape) {
-                    // Use shape from feature
+                    // Use shape from feature (Query)
                     shape = feature.attributes.shape;
                 } else {
                     // default to a Circle
@@ -522,25 +543,44 @@ function addGeoJSONLayer(layer) {
                     // Clustered Point
                     url = '';
                 } else if (feature.attributes.marker_url) {
-                    // Use marker from feature
+                    // Use marker from feature (Query)
                     url = feature.attributes.marker_url;
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
                     if (Object.prototype.toString.call(style) !== '[object Array]') {
-                        // Polygon Layer
+                        // Common Style for all features in layer
                         if (undefined != style.external_graphic) {
-                            url = S3.Ap.concat('/static/img/' + style.external_graphic);
+                            url = S3.Ap.concat('/static/' + style.external_graphic);
                         }
+                    } else {
+                        // Lookup from rule
+                        var attrib, value;
+                        $.each(style, function(index, elem) {
+                            if (undefined != elem.attrib) {
+                                attrib = elem.attrib;
+                            } else {
+                                // Default (e.g. for Theme Layers)
+                                attrib = 'value';
+                            }
+                            value = feature.attributes[attrib];
+                            if (undefined != elem.cat) {
+                                // Category-based style
+                                if (value == elem.cat) {
+                                    url = S3.Ap.concat('/static/' + elem.external_graphic);
+                                    return false;
+                                }
+                            } else {
+                                // Range-based style
+                                if ((value >= elem.low) && (value < elem.high)) {
+                                    url = S3.Ap.concat('/static/' + elem.external_graphic);
+                                    return false;
+                                }
+                            }
+                        });
                     }
-                    if (undefined == url) {
-                        // default
-                        url = marker_url;
-                    }
-                } else {
-                    // per-Layer Marker for Unclustered Point
-                    url = marker_url;
                 }
-                return url;
+                // Default to Layer Marker
+                return url || marker_url;
             },
             radius: function(feature) {
             	var pix;
@@ -548,7 +588,7 @@ function addGeoJSONLayer(layer) {
                     // Size for Clustered Point
                     pix = Math.min(feature.attributes.count / 2, 8) + 10;
                 } else if (feature.attributes.size) {
-                    // Use size from feature
+                    // Use size from feature (Query)
                     pix = feature.attributes.size;
                 } else {
                     // default Size for Unclustered Point
@@ -560,27 +600,43 @@ function addGeoJSONLayer(layer) {
             	var color;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
-                        // Use colour from features
+                        // Use colour from features (Query)
                         color = feature.cluster[0].attributes.colour;
                     } else {
                         // default fillColor for Clustered Point
                         color = '#8087ff';
                     }
                 } else if (feature.attributes.colour) {
-                    // Feature Query: Use colour from feature
+                    // Feature Query: Use colour from feature (Query)
                     color = feature.attributes.colour;
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
                     if (Object.prototype.toString.call(style) !== '[object Array]') {
-                        // Polygon Layer
+                        // Common Style for all features in layer
                         color = style.fill;
                     } else {
-                        // Polygon Layer: Lookup colour from style rule
-                        var value = feature.attributes.value;
-                        $.each(style, function(index, elem) { 
-                            if ((value >= elem.low) && (value < elem.high)) {
-                                color = elem.fill;
-                                return false;
+                        // Lookup from rule
+                        var attrib, value;
+                        $.each(style, function(index, elem) {
+                            if (undefined != elem.attrib) {
+                                attrib = elem.attrib;
+                            } else {
+                                // Default (e.g. for Theme Layers)
+                                attrib = 'value';
+                            }
+                            value = feature.attributes[attrib];
+                            if (undefined != elem.cat) {
+                                // Category-based style
+                                if (value == elem.cat) {
+                                    color = elem.fill;
+                                    return false;
+                                }
+                            } else {
+                                // Range-based style
+                                if ((value >= elem.low) && (value < elem.high)) {
+                                    color = elem.fill;
+                                    return false;
+                                }
                             }
                         });
                     }
@@ -612,27 +668,37 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
                     if (Object.prototype.toString.call(style) !== '[object Array]') {
-                        // Polygon Layer
+                        // Common Style for all features in layer
                         fill_opacity = style.fill_opacity;
                     } else {
-                        // Theme Layer: Lookup opacity from style rule
-                        var value = feature.attributes.value;
-                        $.each(style, function(index, elem) { 
-                            if ((value >= elem.low) && (value < elem.high)) {
-                                fill_opacity = elem.fill_opacity;
-                                return false;
+                        // Lookup from rule
+                        var attrib, value;
+                        $.each(style, function(index, elem) {
+                            if (undefined != elem.attrib) {
+                                attrib = elem.attrib;
+                            } else {
+                                // Default (e.g. for Theme Layers)
+                                attrib = 'value';
+                            }
+                            value = feature.attributes[attrib];
+                            if (undefined != elem.cat) {
+                                // Category-based style
+                                if (value == elem.cat) {
+                                    fill_opacity = elem.fill_opacity;
+                                    return false;
+                                }
+                            } else {
+                                // Range-based style
+                                if ((value >= elem.low) && (value < elem.high)) {
+                                    fill_opacity = elem.fill_opacity;
+                                    return false;
+                                }
                             }
                         });
                     }
-                    if (undefined == fill_opacity) {
-                        // default fillOpacity
-                        fill_opacity = opacity;
-                    }
-                } else {
-                    // default fillOpacity for Unclustered Point
-                    fill_opacity = opacity;
                 }
-                return fill_opacity;
+                // default to layer's opacity
+                return fill_opacity || opacity;
             },
             stroke: function(feature) {
             	var color;
@@ -650,15 +716,31 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
                     if (Object.prototype.toString.call(style) !== '[object Array]') {
-                        // Polygon Layer
+                        // Common Style for all features in layer
                         color = style.stroke || style.fill;
                     } else {
-                        // Theme Layer: Lookup colour from style rule
-                        var value = feature.attributes.value;
-                        $.each(style, function(index, elem) { 
-                            if ((value >= elem.low) && (value < elem.high)) {
-                                color = elem.stroke || elem.fill;
-                                return false;
+                        // Lookup from rule
+                        var attrib, value;
+                        $.each(style, function(index, elem) {
+                            if (undefined != elem.attrib) {
+                                attrib = elem.attrib;
+                            } else {
+                                // Default (e.g. for Theme Layers)
+                                attrib = 'value';
+                            }
+                            value = feature.attributes[attrib];
+                            if (undefined != elem.cat) {
+                                // Category-based style
+                                if (value == elem.cat) {
+                                    color = elem.stroke || elem.fill;
+                                    return false;
+                                }
+                            } else {
+                                // Range-based style
+                                if ((value >= elem.low) && (value < elem.high)) {
+                                    color = elem.stroke || elem.fill;
+                                    return false;
+                                }
                             }
                         });
                     }
@@ -690,36 +772,79 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
                     if (Object.prototype.toString.call(style) !== '[object Array]') {
-                        // Polygon Layer
+                        // Common Style for all features in layer
                         width = style.stroke_width;
                     } else {
-                        // Theme Layer: Lookup colour from style rule
-                        var value = feature.attributes.value;
-                        $.each(style, function(index, elem) { 
-                            if ((value >= elem.low) && (value < elem.high)) {
-                                width = elem.stroke_width;
-                                return false;
+                        // Lookup from rule
+                        var attrib, value;
+                        $.each(style, function(index, elem) {
+                            if (undefined != elem.attrib) {
+                                attrib = elem.attrib;
+                            } else {
+                                // Default (e.g. for Theme Layers)
+                                attrib = 'value';
+                            }
+                            value = feature.attributes[attrib];
+                            if (undefined != elem.cat) {
+                                // Category-based style
+                                if (value == elem.cat) {
+                                    width = elem.stroke_width;
+                                    return false;
+                                }
+                            } else {
+                                // Range-based style
+                                if ((value >= elem.low) && (value < elem.high)) {
+                                    width = elem.stroke_width;
+                                    return false;
+                                }
                             }
                         });
                     }
-                    if (undefined == width) {
-                        // default strokeWidth
-                        width = 2;
-                    }
-                } else {
-                    // default strokeWidth
-                    width = 2;
                 }
-                return width;
+                // Defalt width: 2
+                return width || 2;
             },
             label: function(feature) {
                 // Label For Unclustered Point
-                var label = '';
+                var label;
                 // Label For Clustered Point
-                if (feature.cluster && feature.attributes.count > 1) {
-                    label = feature.attributes.count;
+                if (feature.cluster) {
+                    if (feature.attributes.count > 1) {
+                        label = feature.attributes.count;
+                    }
+                } else if (feature.layer && (undefined != feature.layer.s3_style)) {
+                    var style = feature.layer.s3_style;
+                    if (Object.prototype.toString.call(style) !== '[object Array]') {
+                        // Common Style for all features in layer
+                        label = style.label;
+                    } else {
+                        // Lookup from rule
+                        var attrib, value;
+                        $.each(style, function(index, elem) {
+                            if (undefined != elem.attrib) {
+                                attrib = elem.attrib;
+                            } else {
+                                // Default (e.g. for Theme Layers)
+                                attrib = 'value';
+                            }
+                            value = feature.attributes[attrib];
+                            if (undefined != elem.cat) {
+                                // Category-based style
+                                if (value == elem.cat) {
+                                    label = elem.label;
+                                    return false
+                                }
+                            } else {
+                                // Range-based style
+                                if ((value >= elem.low) && (value < elem.high)) {
+                                    label = elem.label;
+                                    return false
+                                }
+                            }
+                        });
+                    }
                 }
-                return label;
+                return label || '';
             }
         }
     };
@@ -729,26 +854,50 @@ function addGeoJSONLayer(layer) {
         cluster_options
     );
     if (Object.prototype.toString.call(style) === '[object Array]') {
-        // Theme Layer
+        // Style varies per Feature (currently Shapefile or Theme Layer)
         var rules = [];
-        var fill;
+        var attrib, fill, filter, rule, symbolizer, title;
         $.each(style, function(index, elem) {
-            fill = '#' + elem.fill;
-            var rule = new OpenLayers.Rule({
-                filter: new OpenLayers.Filter.Comparison({
+            if (undefined != elem.attrib) {
+                attrib = elem.attrib;
+            } else {
+                // Default (e.g. for Theme Layers)
+                attrib = 'value';
+            }
+            if (undefined != elem.cat) {
+                // Category-based style
+                title = elem.cat;
+                filter = new OpenLayers.Filter.Comparison({
+                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                    property: attrib,
+                    value: title
+                });
+            } else {
+                // Range-based Style
+                title = elem.low + '-' + elem.high; 
+                filter = new OpenLayers.Filter.Comparison({
                     type: OpenLayers.Filter.Comparison.BETWEEN,
-                    property: 'value',
+                    property: attrib,
                     lowerBoundary: elem.low,
                     upperBoundary: elem.high
-                }),
+                });
+            }
+            if (undefined != elem.fill) {
+                // Polygon/Point
+                fill = '#' + elem.fill;
+            } else if (undefined != elem.stroke) {
+                // LineString
+                fill = '#' + elem.stroke;
+            }
+            rule = new OpenLayers.Rule({
+                filter: filter,
                 symbolizer: {
-                    fillColor: fill,
+                    fillColor: fill, // Used for Legend on LineStrings
                     strokeColor: fill,
-                    // @ToDo: Have the Legend to use a Square but the actual features to use a circle
-                    graphicName: 'circle',
+                    graphicName: 'square',
                     pointRadius: 10
                 },
-                title: elem.low + '-' + elem.high
+                title: title
             });
             rules.push(rule);
         });
@@ -797,7 +946,7 @@ function addGeoJSONLayer(layer) {
             ],
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
-            // These is used to Save State & locate Layer to Activate/Refresh
+            // These are used to Save State & locate Layer to Activate/Refresh
             s3_layer_id: layer.id,
             s3_layer_type: layer_type,
             s3_style: style,
@@ -810,7 +959,7 @@ function addGeoJSONLayer(layer) {
     );
     geojsonLayer.setVisibility(visibility);
     geojsonLayer.events.on({
-        'featureselected': onGeojsonFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -1093,7 +1242,7 @@ function addGPXLayer(layer) {
     );
     gpxLayer.setVisibility(visibility);
     gpxLayer.events.on({
-        'featureselected': onGpxFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -1336,7 +1485,7 @@ function addKMLLayer(layer) {
 
     kmlLayer.setVisibility(visibility);
     kmlLayer.events.on({
-        'featureselected': onKmlFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -1587,6 +1736,7 @@ function addWFSLayer(layer) {
     } else {
         geometryName = 'the_geom';
     }
+    // @ToDo: Replace with Style JSON
     var styleField;
     if (undefined != layer.styleField) {
         styleField = layer.styleField;
@@ -1703,7 +1853,7 @@ function addWFSLayer(layer) {
         cluster_options.context.fill = function(feature) {
             // fillColor for Unclustered Point
             var color;
-            $.each( styleValues, function(i, n){
+            $.each(styleValues, function(i, n) {
                 if (i == feature.attributes[styleField]) {
                     color = n;
                 }
@@ -1721,7 +1871,7 @@ function addWFSLayer(layer) {
         cluster_options.context.stroke = function(feature) {
             // strokeColor for Unclustered Point
             var color;
-            $.each( styleValues, function(i, n){
+            $.each(styleValues, function(i, n) {
                 if (i == feature.attributes[styleField]) {
                     color = n;
                 }
@@ -1812,7 +1962,7 @@ function addWFSLayer(layer) {
     wfsLayer.title = title;
     wfsLayer.setVisibility(visibility);
     wfsLayer.events.on({
-        'featureselected': onWfsFeatureSelect,
+        'featureselected': onFeatureSelect,
         'featureunselected': onFeatureUnselect,
         'loadstart': function(event) {
             showThrobber(event.object.s3_layer_id);
@@ -2072,30 +2222,39 @@ function s3_gis_loadDetails(url, id, popup) {
         'dataType': 'html'
     });
 }
-function onGeojsonFeatureSelect(event) {
-    // unselect any previous selections
+function onFeatureSelect(event) {
+    // Unselect any previous selections
+    // @ToDo: setting to allow multiple popups at once
     s3_gis_tooltipUnselect(event);
     var feature = event.feature;
-    //S3.gis.selectedFeature = feature;
-    var popup_id = S3.uid();
+    var layer = feature.layer
+    var layer_type = layer.s3_layer_type;
     var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var data_link = false;
-    var contents;
-    var name;
+    var popup_id = S3.uid();
+    if (undefined != layer.title) {
+        // KML, WFS
+        var titleField = layer.title;
+    } else {
+        var titleField = 'name';
+    }
+    var contents, data_link, name, popup_url;
     if (feature.cluster) {
         // Cluster
-        var uuid, url;
+        var cluster = feature.cluster;
         contents = i18n.gis_cluster_multiple + ':<ul>';
-        for (var i = 0; i < feature.cluster.length; i++) {
-            if (undefined != feature.cluster[i].attributes.popup) {
+        // Only display 1st 9 records
+        //var length = Math.min(cluster.length, 9);
+        var length = cluster.length;
+        for (var i = 0; i < length; i++) {
+            var attributes = cluster[i].attributes;
+            if (undefined != attributes.popup) {
                 // Only display the 1st line of the hover popup
-                name = feature.cluster[i].attributes.popup.split('<br />', 1)[0];
+                name = attributes.popup.split('<br />', 1)[0];
             } else {
-                name = feature.cluster[i].attributes.name;
+                name = attributes[titleField];
             }
-            if (undefined != feature.cluster[i].attributes.url) {
-                url = feature.cluster[i].attributes.url;
-                contents += "<li><a href='javascript:s3_gis_loadClusterPopup(" + "\"" + url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
+            if (undefined != attributes.url) {
+                contents += "<li><a href='javascript:s3_gis_loadClusterPopup(" + "\"" + attributes.url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
             } else {
                 // @ToDo: Provide a way to load non-URL based popups
                 contents += '<li>' + name + '</li>';
@@ -2105,47 +2264,127 @@ function onGeojsonFeatureSelect(event) {
         contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
     } else {
         // Single Feature
-        if (undefined != feature.attributes.url) {
-            // Popup contents are pulled via AJAX
-            contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
+        if (layer_type == 'kml') {
+            var attributes = feature.attributes;
+            if (undefined != feature.style.balloonStyle) {
+                // Use the provided BalloonStyle
+                var balloonStyle = feature.style.balloonStyle;
+                // "<strong>{name}</strong><br /><br />{description}"
+                contents = balloonStyle.replace(/{([^{}]*)}/g,
+                    function (a, b) {
+                        var r = attributes[b];
+                        return typeof r === 'string' || typeof r === 'number' ? r : a;
+                    }
+                );
+            } else {
+                // Build the Popup contents manually
+                var type = typeof attributes[titleField];
+                var title;
+                if ('object' == type) {
+                    title = attributes[titleField].value;
+                } else {
+                    title = attributes[titleField];
+                }
+                contents = '<h3>' + title + '</h3>';
+                var body = feature.layer.body.split(' ');
+                var label, row, value;
+                for (var j = 0; j < body.length; j++) {
+                    type = typeof attributes[body[j]];
+                    if ('object' == type) {
+                        // Geocommons style
+                        label = attributes[body[j]].displayName;
+                        if (label === '') {
+                            label = body[j];
+                        }
+                        value = attributes[body[j]].value;
+                        row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                              ':</div><div class="gis_popup_cell">' + value + '</div></div>';
+                    } else if (undefined != attributes[body[j]]) {
+                        row = '<div class="gis_popup_row">' + attributes[body[j]] + '</div>';
+                    } else {
+                        // How would we get here?
+                        row = '';
+                    }                    
+                    contents += row;
+                }
+            }
+            // Protect the content against JavaScript attacks
+            if (contents.search('<script') != -1) {
+                contents = 'Content contained Javascript! Escaped content below.<br />' + contents.replace(/</g, '<');
+            }
+        } else if (layer_type == 'gpx') {
+            // @ToDo: display as many attributes as we can: Description (Points), Date, Author?, Lat, Lon
+        } else if (layer_type == 'shapefile') {
+            // We don't have control of attributes, so simply display all
+            // @ToDo: have an optional style.popup (like KML's balloonStyle)
+            var attributes = feature.attributes;
+            contents = '<div>';
+            var label, prop, row, value;
+            $.each(attributes, function(label, value) {
+                if (label == 'id_orig') {
+                    label = 'id';
+                }
+                row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                      ':</div><div class="gis_popup_cell">' + value + '</div></div>';
+                contents += row;
+            });
+            contents += '</div>';
+        } else if (layer_type == 'wfs') {
+            var attributes = feature.attributes;
+            var title = attributes[titleField];
+            contents = '<h3>' + title + '</h3>';
+            var row;
+            $.each(attributes, function(label, value) {
+                row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                      ':</div><div class="gis_popup_val">' + value + '</div></div>';
+                contents += row;
+            });
         } else {
-            // Popup contents are built from the attributes
-            if (undefined == feature.attributes.name) {
-                name = '';
+            // @ToDo: disambiguate these by type
+            if (undefined != feature.attributes.url) {
+                // Popup contents are pulled via AJAX
+                popup_url = feature.attributes.url;
+                contents = i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />";
             } else {
-                name = '<h3>' + feature.attributes.name + '</h3>';
+                // Popup contents are built from the attributes
+                var attributes = feature.attributes;
+                if (undefined == attributes.name) {
+                    name = '';
+                } else {
+                    name = '<h3>' + attributes.name + '</h3>';
+                }
+                var description;
+                if (undefined == attributes.description) {
+                    description = '';
+                } else {
+                    description = '<p>' + attributes.description + '</p>';
+                }
+                var link;
+                if (undefined == attributes.link) {
+                    link = '';
+                } else {
+                    link = '<a href="' + attributes.link + '" target="_blank">' + attributes.link + '</a>';
+                }
+                var data;
+                if (undefined == attributes.data) {
+                    data = '';
+                } else if (attributes.data.indexOf('http://') === 0) {
+                    data_link = true;
+                    var data_id = S3.uid();
+                    data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
+                } else {
+                    data = '<p>' + attributes.data + '</p>';
+                }
+                var image;
+                if (undefined == attributes.image) {
+                    image = '';
+                } else if (attributes.image.indexOf('http://') === 0) {
+                    image = '<img src="' + attributes.image + '" height=300 width=300>';
+                } else {
+                    image = '';
+                }
+                contents = name + description + link + data + image;
             }
-            var description;
-            if (undefined == feature.attributes.description) {
-                description = '';
-            } else {
-                description = '<p>' + feature.attributes.description + '</p>';
-            }
-            var link;
-            if (undefined == feature.attributes.link) {
-                link = '';
-            } else {
-                link = '<a href="' + feature.attributes.link + '" target="_blank">' + feature.attributes.link + '</a>';
-            }
-            var data;
-            if (undefined == feature.attributes.data) {
-                data = '';
-            } else if (feature.attributes.data.indexOf('http://') === 0) {
-                data_link = true;
-                var data_id = S3.uid();
-                data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + S3.gis.ajax_loader + "' border=0 />" + '</div>';
-            } else {
-                data = '<p>' + feature.attributes.data + '</p>';
-            }
-            var image;
-            if (undefined == feature.attributes.image) {
-                image = '';
-            } else if (feature.attributes.image.indexOf('http://') === 0) {
-                image = '<img src="' + feature.attributes.image + '" height=300 width=300>';
-            } else {
-                image = '';
-            }
-            contents = name + description + link + data + image;
         }
     }
     var popup = new OpenLayers.Popup.FramedCloud(
@@ -2157,9 +2396,8 @@ function onGeojsonFeatureSelect(event) {
         true,
         onPopupClose
     );
-    if (undefined != feature.attributes.url) {
+    if (undefined != popup_url) {
         // call AJAX to get the contentHTML
-        var popup_url = feature.attributes.url;
         s3_gis_loadDetails(popup_url, popup_id + '_contentDiv', popup);
     } else if (data_link) {
         // call AJAX to get the data
@@ -2167,140 +2405,5 @@ function onGeojsonFeatureSelect(event) {
     }
     feature.popup = popup;
     //popup.feature = feature;
-    map.addPopup(popup);
-}
-
-// Support GPX Layers
-function onGpxFeatureSelect(event) {
-    // unselect any previous selections
-    s3_gis_tooltipUnselect(event);
-    var feature = event.feature;
-    // Anything we want to do here?
-}
-
-// Support KML Layers
-// @ToDo: Remove once moved to GeoJSON
-function onKmlFeatureSelect(event) {
-    // unselect any previous selections
-    s3_gis_tooltipUnselect(event);
-    var feature = event.feature;
-    //S3.gis.selectedFeature = feature;
-    var popup_id = S3.uid();
-    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var contents;
-    if (feature.cluster) {
-        // Cluster
-        var name, uuid, url;
-        contents = i18n.gis_cluster_multiple + ':<ul>';
-        for (var i = 0; i < feature.cluster.length; i++) {
-            name = feature.cluster[i].attributes.name;
-            // @ToDo: Provide a way to load popups
-            contents += '<li>' + name + '</li>';
-        }
-        contents += '</ul>';
-        contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
-    } else {
-        // Single Feature
-        var attributes = feature.attributes;
-        if (undefined != feature.style.balloonStyle) {
-            // Use the provided BalloonStyle
-            var balloonStyle = feature.style.balloonStyle;
-            // "<strong>{name}</strong><br /><br />{description}"
-            contents = balloonStyle.replace(/{([^{}]*)}/g,
-                function (a, b) {
-                    var r = attributes[b];
-                    return typeof r === 'string' || typeof r === 'number' ? r : a;
-                }
-            );
-        } else {
-            // Build the Popup contents manually
-            var titleField = feature.layer.title;
-            var type = typeof attributes[titleField];
-            var title;
-            if ('object' == type) {
-                title = attributes[titleField].value;
-            } else {
-                title = attributes[titleField];
-            }
-            var body = feature.layer.body.split(' ');
-            content = '';
-            for (var j = 0; j < body.length; j++) {
-                type = typeof attributes[body[j]];
-                var row = '';
-                if ('object' == type) {
-                    // Geocommons style
-                    var displayName = attributes[body[j]].displayName;
-                    if (displayName === '') {
-                        displayName = body[j];
-                    }
-                    var value = attributes[body[j]].value;
-                    row = '<b>' + displayName + '</b>: ' + value + '<br />';
-                } else if (undefined != attributes[body[j]]) {
-                    row = attributes[body[j]] + '<br />';
-                }
-                content += row;
-            }
-            contents = '<h3>' + title + '</h3>' + content;
-        }
-        // Protect the content against JavaScript attacks
-        if (contents.search('<script') != -1) {
-            contents = 'Content contained Javascript! Escaped content below.<br />' + contents.replace(/</g, '<');
-        }
-    }
-    var popup = new OpenLayers.Popup.FramedCloud(
-        popup_id,
-        centerPoint,
-        new OpenLayers.Size(200, 200),
-        contents,
-        null,
-        true,
-        onPopupClose
-    );
-    feature.popup = popup;
-    map.addPopup(popup);
-}
-
-// Support WFS Layers
-// @ToDo: See if this can be DRYed
-function onWfsFeatureSelect(event) {
-    // unselect any previous selections
-    s3_gis_tooltipUnselect(event);
-    var feature = event.feature;
-    //S3.gis.selectedFeature = feature;
-    var popup_id = S3.uid();
-    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var titleField = feature.layer.title;
-    var contents;
-    if (feature.cluster) {
-        // Cluster
-        var name;
-        contents = i18n.gis_cluster_multiple + ':<ul>';
-        var length = Math.min(feature.cluster.length, 9);
-        for (var i = 0; i < length; i++) {
-            name = feature.cluster[i].attributes[titleField];
-            contents += '<li>' + name + '</li>';
-        }
-        contents += '</ul>';
-        contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
-    } else {
-        // Single Feature
-        var attributes = feature.attributes;
-        var title = attributes[titleField];
-        var content = '';
-        $.each( attributes, function(i, n){
-            content += '<b>' + i + ':</b> ' + n + '<br />';
-        });
-        contents = '<h3>' + title + '</h3>' + content;
-    }
-    var popup = new OpenLayers.Popup.FramedCloud(
-        popup_id,
-        centerPoint,
-        new OpenLayers.Size(200, 200),
-        contents,
-        null,
-        true,
-        onPopupClose
-    );
-    feature.popup = popup;
     map.addPopup(popup);
 }

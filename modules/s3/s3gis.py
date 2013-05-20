@@ -35,7 +35,7 @@ __all__ = ["GIS",
            "GoogleGeocoder",
            "YahooGeocoder",
            "S3ExportPOI",
-           "S3ImportPOI"
+           "S3ImportPOI",
            ]
 
 import os
@@ -91,143 +91,141 @@ else:
     _debug = lambda m: None
 
 # Map WKT types to db types
-GEOM_TYPES = {
-    "point": 1,
-    "linestring": 2,
-    "polygon": 3,
-    "multipoint": 4,
-    "multilinestring": 5,
-    "multipolygon": 6,
-    "geometrycollection": 7,
-}
+GEOM_TYPES = {"point": 1,
+              "linestring": 2,
+              "polygon": 3,
+              "multipoint": 4,
+              "multilinestring": 5,
+              "multipolygon": 6,
+              "geometrycollection": 7,
+              }
 
 # km
 RADIUS_EARTH = 6371.01
 
 # Garmin GPS Symbols
-GPS_SYMBOLS = [
-    "Airport",
-    "Amusement Park"
-    "Ball Park",
-    "Bank",
-    "Bar",
-    "Beach",
-    "Bell",
-    "Boat Ramp",
-    "Bowling",
-    "Bridge",
-    "Building",
-    "Campground",
-    "Car",
-    "Car Rental",
-    "Car Repair",
-    "Cemetery",
-    "Church",
-    "Circle with X",
-    "City (Capitol)",
-    "City (Large)",
-    "City (Medium)",
-    "City (Small)",
-    "Civil",
-    "Contact, Dreadlocks",
-    "Controlled Area",
-    "Convenience Store",
-    "Crossing",
-    "Dam",
-    "Danger Area",
-    "Department Store",
-    "Diver Down Flag 1",
-    "Diver Down Flag 2",
-    "Drinking Water",
-    "Exit",
-    "Fast Food",
-    "Fishing Area",
-    "Fitness Center",
-    "Flag",
-    "Forest",
-    "Gas Station",
-    "Geocache",
-    "Geocache Found",
-    "Ghost Town",
-    "Glider Area",
-    "Golf Course",
-    "Green Diamond",
-    "Green Square",
-    "Heliport",
-    "Horn",
-    "Hunting Area",
-    "Information",
-    "Levee",
-    "Light",
-    "Live Theater",
-    "Lodging",
-    "Man Overboard",
-    "Marina",
-    "Medical Facility",
-    "Mile Marker",
-    "Military",
-    "Mine",
-    "Movie Theater",
-    "Museum",
-    "Navaid, Amber",
-    "Navaid, Black",
-    "Navaid, Blue",
-    "Navaid, Green",
-    "Navaid, Green/Red",
-    "Navaid, Green/White",
-    "Navaid, Orange",
-    "Navaid, Red",
-    "Navaid, Red/Green",
-    "Navaid, Red/White",
-    "Navaid, Violet",
-    "Navaid, White",
-    "Navaid, White/Green",
-    "Navaid, White/Red",
-    "Oil Field",
-    "Parachute Area",
-    "Park",
-    "Parking Area",
-    "Pharmacy",
-    "Picnic Area",
-    "Pizza",
-    "Post Office",
-    "Private Field",
-    "Radio Beacon",
-    "Red Diamond",
-    "Red Square",
-    "Residence",
-    "Restaurant",
-    "Restricted Area",
-    "Restroom",
-    "RV Park",
-    "Scales",
-    "Scenic Area",
-    "School",
-    "Seaplane Base",
-    "Shipwreck",
-    "Shopping Center",
-    "Short Tower",
-    "Shower",
-    "Skiing Area",
-    "Skull and Crossbones",
-    "Soft Field",
-    "Stadium",
-    "Summit",
-    "Swimming Area",
-    "Tall Tower",
-    "Telephone",
-    "Toll Booth",
-    "TracBack Point",
-    "Trail Head",
-    "Truck Stop",
-    "Tunnel",
-    "Ultralight Area",
-    "Water Hydrant",
-    "Waypoint",
-    "White Buoy",
-    "White Dot",
-    "Zoo"
-    ]
+GPS_SYMBOLS = ["Airport",
+               "Amusement Park"
+               "Ball Park",
+               "Bank",
+               "Bar",
+               "Beach",
+               "Bell",
+               "Boat Ramp",
+               "Bowling",
+               "Bridge",
+               "Building",
+               "Campground",
+               "Car",
+               "Car Rental",
+               "Car Repair",
+               "Cemetery",
+               "Church",
+               "Circle with X",
+               "City (Capitol)",
+               "City (Large)",
+               "City (Medium)",
+               "City (Small)",
+               "Civil",
+               "Contact, Dreadlocks",
+               "Controlled Area",
+               "Convenience Store",
+               "Crossing",
+               "Dam",
+               "Danger Area",
+               "Department Store",
+               "Diver Down Flag 1",
+               "Diver Down Flag 2",
+               "Drinking Water",
+               "Exit",
+               "Fast Food",
+               "Fishing Area",
+               "Fitness Center",
+               "Flag",
+               "Forest",
+               "Gas Station",
+               "Geocache",
+               "Geocache Found",
+               "Ghost Town",
+               "Glider Area",
+               "Golf Course",
+               "Green Diamond",
+               "Green Square",
+               "Heliport",
+               "Horn",
+               "Hunting Area",
+               "Information",
+               "Levee",
+               "Light",
+               "Live Theater",
+               "Lodging",
+               "Man Overboard",
+               "Marina",
+               "Medical Facility",
+               "Mile Marker",
+               "Military",
+               "Mine",
+               "Movie Theater",
+               "Museum",
+               "Navaid, Amber",
+               "Navaid, Black",
+               "Navaid, Blue",
+               "Navaid, Green",
+               "Navaid, Green/Red",
+               "Navaid, Green/White",
+               "Navaid, Orange",
+               "Navaid, Red",
+               "Navaid, Red/Green",
+               "Navaid, Red/White",
+               "Navaid, Violet",
+               "Navaid, White",
+               "Navaid, White/Green",
+               "Navaid, White/Red",
+               "Oil Field",
+               "Parachute Area",
+               "Park",
+               "Parking Area",
+               "Pharmacy",
+               "Picnic Area",
+               "Pizza",
+               "Post Office",
+               "Private Field",
+               "Radio Beacon",
+               "Red Diamond",
+               "Red Square",
+               "Residence",
+               "Restaurant",
+               "Restricted Area",
+               "Restroom",
+               "RV Park",
+               "Scales",
+               "Scenic Area",
+               "School",
+               "Seaplane Base",
+               "Shipwreck",
+               "Shopping Center",
+               "Short Tower",
+               "Shower",
+               "Skiing Area",
+               "Skull and Crossbones",
+               "Soft Field",
+               "Stadium",
+               "Summit",
+               "Swimming Area",
+               "Tall Tower",
+               "Telephone",
+               "Toll Booth",
+               "TracBack Point",
+               "Trail Head",
+               "Truck Stop",
+               "Tunnel",
+               "Ultralight Area",
+               "Water Hydrant",
+               "Waypoint",
+               "White Buoy",
+               "White Dot",
+               "Zoo"
+               ]
 
 # -----------------------------------------------------------------------------
 class GIS(object):
@@ -5203,7 +5201,9 @@ class GIS(object):
         elif geom_type == "Polygon":
             shape = shrink_polygon(shape)
         elif geom_type == "LineString":
-            points = line.coords
+            points = shape.coords
+            coords = []
+            cappend = coords.append
             for point in points:
                 x = float(format(point[0], formatter))
                 y = float(format(point[1], formatter))
@@ -5716,12 +5716,12 @@ S3.gis.lon=%s
         #   Localisation of name/popup_label
         #
         if feature_queries:
-            layers_feature_queries = '''
-S3.gis.layers_feature_queries=new Array()'''
+            layers_feature_query = '''
+S3.gis.layers_feature_query=new Array()'''
             counter = -1
             mtable = s3db.gis_marker
         else:
-            layers_feature_queries = ""
+            layers_feature_query = ""
         for layer in feature_queries:
             counter = counter + 1
             name = str(layer["name"])
@@ -5837,8 +5837,8 @@ S3.gis.layers_feature_queries=new Array()'''
                 cluster_threshold = ""
 
             # Generate JS snippet to pass to static
-            layers_feature_queries += '''
-S3.gis.layers_feature_queries[%i]={
+            layers_feature_query += '''
+S3.gis.layers_feature_query[%i]={
  "name":"%s",
  "url":"%s"%s%s%s%s%s
 }
@@ -5857,11 +5857,11 @@ S3.gis.layers_feature_queries[%i]={
         #   REST URLs to back-end resources
         #
         if feature_resources:
-            layers_feature_resources = '''
-S3.gis.layers_feature_resources=new Array()'''
+            layers_feature_resource = '''
+S3.gis.layers_feature_resource=new Array()'''
             counter = -1
         else:
-            layers_feature_resources = ""
+            layers_feature_resource = ""
         for layer in feature_resources:
             counter = counter + 1
             name = str(layer["name"])
@@ -5928,8 +5928,8 @@ S3.gis.layers_feature_resources=new Array()'''
                 # Request the server to provide per-feature Markers
                 url = "%s&markers=1" % url
             # Generate JS snippet to pass to static
-            layers_feature_resources += '''
-S3.gis.layers_feature_resources[%i]={
+            layers_feature_resource += '''
+S3.gis.layers_feature_resource[%i]={
  "name":"%s",
  "id":"%s",
  "url":"%s"%s%s%s%s%s
@@ -5962,6 +5962,7 @@ S3.gis.layers_feature_resources[%i]={
                            GeoRSSLayer,
                            KMLLayer,
                            OpenWeatherMapLayer,
+                           ShapefileLayer,
                            WFSLayer,
                            FeatureLayer,
                            ]
@@ -6082,8 +6083,8 @@ i18n.gis_feature_info="%s"
             draw_polygon,
             marker_default,
             osm_auth,
-            layers_feature_queries,
-            layers_feature_resources,
+            layers_feature_query,
+            layers_feature_resource,
             _features,
             layers_config,
             # i18n Labels
@@ -6152,9 +6153,11 @@ i18n.gis_feature_info="%s"
 class Marker(object):
     """
         Represents a Map Marker
+
+        @ToDo: Support Markers in Themes
     """
 
-    def __init__(self, id=None, layer_id=None):
+    def __init__(self, id=None, tablename=None, layer_id=None):
 
         db = current.db
         s3db = current.s3db
@@ -6181,13 +6184,22 @@ class Marker(object):
                                       mtable.width,
                                       limitby=(0, 1)).first()
             if not marker:
-                # Check to see if we're a Polygon (& hence shouldn't use a default marker)
-                table = s3db.gis_layer_feature
-                query = (table.layer_id == layer_id)
-                layer = db(query).select(table.polygons,
-                                         limitby=(0, 1)).first()
-                if layer and layer.polygons:
-                    polygons = True
+                # Check to see if we're a Polygon/LineString
+                # (& hence shouldn't use a default marker)
+                if tablename == "gis_layer_feature":
+                    table = db.gis_layer_feature
+                    query = (table.layer_id == layer_id)
+                    layer = db(query).select(table.polygons,
+                                             limitby=(0, 1)).first()
+                    if layer and layer.polygons:
+                        polygons = True
+                elif tablename == "gis_layer_shapefile":
+                    table = db.gis_layer_shapefile
+                    query = (table.layer_id == layer_id)
+                    layer = db(query).select(table.gis_feature_type,
+                                             limitby=(0, 1)).first()
+                    if layer and layer.gis_feature_type != 1:
+                        polygons = True
 
         if marker:
             self.image = marker.image
@@ -6202,10 +6214,6 @@ class Marker(object):
             self.image = config.marker_image
             self.height = config.marker_height
             self.width = config.marker_width
-
-        # Always lookup URL client-side
-        #self.url = URL(c="static", f="img",
-        #               args=["markers", marker.image])
 
     def add_attributes_to_output(self, output):
         """
@@ -6342,7 +6350,7 @@ class Layer(object):
                 # SubLayers handled differently
                 append(record)
             else:
-                append(SubLayer(record))
+                append(SubLayer(tablename, record))
 
         # Alphasort layers
         # - client will only sort within their type: s3.gis.layers.js
@@ -6390,13 +6398,26 @@ class Layer(object):
 
     # -------------------------------------------------------------------------
     class SubLayer(object):
-        def __init__(self, record):
+        def __init__(self, tablename, record):
             # Ensure all attributes available (even if Null)
             self.__dict__.update(record)
             del record
             self.safe_name = re.sub('[\\"]', "", self.name)
 
-            self.marker = Marker(layer_id=self.layer_id)
+            if tablename not in ("gis_layer_arcrest",
+                                 "gis_layer_coordinate",
+                                 "gis_layer_empty",
+                                 "gis_layer_js",
+                                 "gis_layer_mgrs",
+                                 "gis_layer_openstreetmap",
+                                 "gis_layer_openweathermap",
+                                 "gis_layer_theme",
+                                 "gis_layer_tms",
+                                 "gis_layer_wms",
+                                 "gis_layer_xyz",
+                                 ):
+                # Layer uses Markers
+                self.marker = Marker(tablename=tablename, layer_id=self.layer_id)
             if hasattr(self, "projection_id"):
                 self.projection = Projection(self.projection_id)
 
@@ -6427,6 +6448,7 @@ class Layer(object):
             if self.dir:
                 output["dir"] = self.dir
 
+        # ---------------------------------------------------------------------
         @staticmethod
         def add_attributes_if_not_default(output, **values_and_defaults):
             # could also write values in debug mode, to check if defaults ignored.
@@ -6448,12 +6470,11 @@ class ArcRESTLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             # Mandatory attributes
-            output = {
-                "id": self.layer_id,
-                "type": "arcrest",
-                "name": self.safe_name,
-                "url": self.url,
-            }
+            output = {"id": self.layer_id,
+                      "type": "arcrest",
+                      "name": self.safe_name,
+                      "url": self.url,
+                      }
 
             # Attributes which are defaulted client-side if not set
             self.setup_folder_and_visibility(output)
@@ -6600,11 +6621,11 @@ class FeatureLayer(Layer):
     """
 
     tablename = "gis_layer_feature"
-    js_array = "S3.gis.layers_features"
+    js_array = "S3.gis.layers_feature"
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
-        def __init__(self, record):
+        def __init__(self, tablename, record):
             record_module = record.controller or record.module # Backwards-compatibility
             self.skip = False
             if record_module is not None:
@@ -6618,7 +6639,7 @@ class FeatureLayer(Layer):
                     self.skip = True
             else:
                 raise Exception("FeatureLayer Record '%s' has no controller" % record.name)
-            super(FeatureLayer.SubLayer, self).__init__(record)
+            super(FeatureLayer.SubLayer, self).__init__(tablename, record)
 
         def as_dict(self):
             if self.skip:
@@ -6655,6 +6676,8 @@ class FeatureLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
@@ -6676,15 +6699,14 @@ class GeoJSONLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             # Mandatory attributes
-            output = {
-                "id": self.layer_id,
-                "type": "geojson",
-                "name": self.safe_name,
-                "url": self.url,
-            }
-            self.marker.add_attributes_to_output(output)
+            output = {"id": self.layer_id,
+                      "type": "geojson",
+                      "name": self.safe_name,
+                      "url": self.url,
+                      }
 
             # Attributes which are defaulted client-side if not set
+            self.marker.add_attributes_to_output(output)
             projection = self.projection
             if projection.epsg != 4326:
                 output["projection"] = projection.epsg
@@ -6907,6 +6929,8 @@ class GPXLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.marker.add_attributes_to_output(output)
             self.add_attributes_if_not_default(
                 output,
@@ -6977,12 +7001,8 @@ class KMLLayer(Layer):
             try:
                 os.mkdir(cachepath)
             except OSError, os_error:
-                s3_debug(
-                    "GIS: KML layers cannot be cached: %s %s" % (
-                        cachepath,
-                        os_error
-                    )
-                )
+                s3_debug("GIS: KML layers cannot be cached: %s %s" % \
+                            (cachepath, os_error))
                 cacheable = False
             else:
                 cacheable = True
@@ -7040,11 +7060,13 @@ class KMLLayer(Layer):
                 # (Requires OpenLayers.Layer.KML to be available)
                 url = self.url
 
-            output = dict(
-                id = self.layer_id,
-                name = self.safe_name,
-                url = url,
-            )
+            # Mandatory attributes
+            output = dict(id = self.layer_id,
+                          name = self.safe_name,
+                          url = url,
+                          )
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 title = (self.title, ("name", None, "")),
@@ -7077,10 +7099,13 @@ class OSMLayer(Layer):
                 # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
                 return {}
 
+            # Mandatory attributes
             output = {"id": self.layer_id,
                       "name": self.safe_name,
                       "url1": self.url1,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 base = (self.base, (True,)),
@@ -7144,6 +7169,44 @@ class OpenWeatherMapLayer(Layer):
         return None
 
 # -----------------------------------------------------------------------------
+class ShapefileLayer(Layer):
+    """
+        Shapefile Layers from Catalogue
+    """
+
+    tablename = "gis_layer_shapefile"
+    js_array = "S3.gis.layers_shapefile"
+
+    # -------------------------------------------------------------------------
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            url = "%s/%s/data.geojson" % \
+                (URL(c="gis", f="layer_shapefile"), self.id)
+            if self.filter:
+                url = "%s?layer_shapefile_%s.%s" % (url, self.id, self.filter)
+
+            # Mandatory attributes
+            output = {"id": self.layer_id,
+                      "type": "shapefile",
+                      "name": self.safe_name,
+                      "url": url,
+                      }
+            
+            # Attributes which are defaulted client-side if not set
+            projection = self.projection
+            if projection.epsg != 4326:
+                output["projection"] = projection.epsg
+            self.marker.add_attributes_to_output(output)
+            self.setup_folder_visibility_and_opacity(output)
+            self.setup_clustering(output)
+            style = self.style
+            if style:
+                style = json.loads(style)
+                output["style"] = style
+
+            return output
+
+# -----------------------------------------------------------------------------
 class ThemeLayer(Layer):
     """
         Theme Layers from Catalogue
@@ -7156,8 +7219,7 @@ class ThemeLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1&maxdepth=0&references=location_id&fields=value" % \
-                (URL(c="gis", f="theme_data"),
-                 self.id)
+                (URL(c="gis", f="theme_data"), self.id)
 
             # Mandatory attributes
             output = {"id": self.layer_id,
@@ -7165,6 +7227,8 @@ class ThemeLayer(Layer):
                       "name": self.safe_name,
                       "url": url,
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.setup_folder_and_visibility(output)
             self.setup_clustering(output)
             style = self.style
@@ -7186,12 +7250,15 @@ class TMSLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
+            # Mandatory attributes
             output = {"id": self.layer_id,
                       "type": "tms",
                       "name": self.safe_name,
                       "url": self.url,
                       "layername": self.layername
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 _base = (self._base, (False,)),
@@ -7216,15 +7283,17 @@ class WFSLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-            output = dict(
-                id = self.layer_id,
-                name = self.safe_name,
-                url = self.url,
-                title = self.title,
-                featureType = self.featureType,
-                featureNS = self.featureNS,
-                schema = self.wfs_schema,
-            )
+            # Mandatory attributes
+            output = dict(id = self.layer_id,
+                          name = self.safe_name,
+                          url = self.url,
+                          title = self.title,
+                          featureType = self.featureType,
+                          featureNS = self.featureNS,
+                          schema = self.wfs_schema,
+                          )
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 version = (self.version, ("1.1.0",)),
@@ -7239,7 +7308,6 @@ class WFSLayer(Layer):
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             return output
-
 
 # -----------------------------------------------------------------------------
 class WMSLayer(Layer):
@@ -7264,12 +7332,14 @@ class WMSLayer(Layer):
         def as_dict(self):
             if self.queryable:
                 current.response.s3.gis.get_feature_info = True
-            output = dict(
-                id = self.layer_id,
-                name = self.safe_name,
-                url = self.url,
-                layers = self.layers
-            )
+            # Mandatory attributes
+            output = dict(id = self.layer_id,
+                          name = self.safe_name,
+                          url = self.url,
+                          layers = self.layers
+                          )
+
+            # Attributes which are defaulted client-side if not set
             legend_url = self.legend_url
             if legend_url and not legend_url.startswith("http"):
                 legend_url = "%s/%s%s" % \
@@ -7308,10 +7378,13 @@ class XYZLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
+            # Mandatory attributes
             output = {"id": self.layer_id,
                       "name": self.safe_name,
                       "url": self.url
                       }
+
+            # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 _base = (self._base, (False,)),

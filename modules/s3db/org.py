@@ -131,17 +131,17 @@ class S3OrganisationModel(S3Model):
         # CRUD strings
         if settings.get_ui_label_cluster():
             SECTOR = T("Cluster")
-            ADD_SECTOR = T("Add Cluster")
-            help = T("If you don't see the Cluster in the list, you can add a new one by clicking link 'Add Cluster'.")
+            ADD_SECTOR = T("Add New Cluster")
+            help = T("If you don't see the Cluster in the list, you can add a new one by clicking link 'Add New Cluster'.")
             crud_strings[tablename] = Storage(
-                title_create=ADD_SECTOR,
+                title_create=T("Add Cluster"),
                 title_display=T("Cluster Details"),
                 title_list=T("Clusters"),
                 title_update=T("Edit Cluster"),
                 title_search=T("Search Clusters"),
-                subtitle_create=T("Add New Cluster"),
+                subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Clusters"),
-                label_create_button=T("Add New Cluster"),
+                label_create_button=ADD_SECTOR,
                 label_delete_button=T("Delete Cluster"),
                 msg_record_created=T("Cluster added"),
                 msg_record_modified=T("Cluster updated"),
@@ -149,17 +149,17 @@ class S3OrganisationModel(S3Model):
                 msg_list_empty=T("No Clusters currently registered"))
         else:
             SECTOR = T("Sector")
-            ADD_SECTOR = T("Add Sector")
-            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Add Sector'.")
+            ADD_SECTOR = T("Add New Sector")
+            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Add New Sector'.")
             crud_strings[tablename] = Storage(
-                title_create=ADD_SECTOR,
+                title_create=T("Add Sector"),
                 title_display=T("Sector Details"),
                 title_list=T("Sectors"),
                 title_update=T("Edit Sector"),
                 title_search=T("Search Sectors"),
-                subtitle_create=T("Add New Sector"),
+                subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Sectors"),
-                label_create_button=T("Add New Sector"),
+                label_create_button=ADD_SECTOR,
                 label_delete_button=T("Delete Sector"),
                 msg_record_created=T("Sector added"),
                 msg_record_modified=T("Sector updated"),
@@ -440,17 +440,17 @@ class S3OrganisationModel(S3Model):
         #table.virtualfields.append(S3OrganisationVirtualFields())
 
         # CRUD strings
-        ADD_ORGANIZATION = T("Add Organization")
+        ADD_ORGANIZATION = T("Add New Organization")
         crud_strings[tablename] = Storage(
-            title_create=ADD_ORGANIZATION,
+            title_create=T("Add Organization"),
             title_display=T("Organization Details"),
             title_list=T("Organizations"),
             title_update=T("Edit Organization"),
             title_search=T("Search Organizations"),
             title_upload=T("Import Organizations"),
-            subtitle_create=T("Add New Organization"),
+            subtitle_create=ADD_ORGANIZATION,
             label_list_button=T("List Organizations"),
-            label_create_button=T("Add New Organization"),
+            label_create_button=ADD_ORGANIZATION,
             label_delete_button=T("Delete Organization"),
             msg_record_created=T("Organization added"),
             msg_record_modified=T("Organization updated"),
@@ -564,6 +564,7 @@ class S3OrganisationModel(S3Model):
                   referenced_by=[(utablename, "organisation_id")],
                   search_method=organisation_search,
                   xml_post_parse=self.org_organisation_xml_post_parse,
+                  list_orderby=table.name,
                   list_fields=["id",
                                "name",
                                "acronym",
@@ -3051,7 +3052,7 @@ def org_rheader(r, tabs=[]):
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
                             ]
-                elif type_filter == "Bilateral,Government,Intergovernmental,NGO,UN agency":
+                elif type_filter == "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency":
                     tabs = [(T("Basic Details"), None, {"native": 1}),
                             (T("Branches"), "branch"),
                             (T("Offices"), "office"),
@@ -3256,7 +3257,7 @@ def org_organisation_controller():
                     # Hide/show host role after project selection in embed-widget
                     tn = r.link.tablename
                     s3db.configure(tn,
-                                   post_process='''hide_host_role($('#%s').val())''')
+                                   post_process='''S3.hide_host_role($('#%s').val())''')
                     s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
                         request.application)
 
@@ -3304,7 +3305,7 @@ def org_organisation_controller():
                             msg_record_deleted=T("Supplier deleted"),
                             msg_list_empty=T("No Suppliers currently registered")
                             ),
-                    "Bilateral,Government,Intergovernmental,NGO,UN agency" :
+                    "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency" :
                         Storage(
                             title_create=ADD_PARTNER,
                             title_display=T("Partner Organization Details"),

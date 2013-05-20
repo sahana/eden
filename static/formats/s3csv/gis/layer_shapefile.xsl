@@ -3,30 +3,22 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Feature Layers - CSV Import Stylesheet
+         Shapefile Layers - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
          Description..........string..........Layer Description
+         Shapefile............string..........Layer Shapefile (URL to download)
+         Projection...........string..........Layer Projection (Mandatory)
+         Style................string..........Layer Style
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
-         GPS Marker...........string..........Layer Symbology GPS Marker
-         Controller...........string..........Layer Controller
-         Function.............string..........Layer Function
-         Popup Label..........string..........Layer Popup Label
-         Popup Fields.........string..........Layer Popup Fields (Fields to build feature.popup)
-         REST Filter..........string..........Layer Filter (for Map JS calling back to server)
-         Filter Field.........string..........Layer Filter Field (for exports to determine Marker)
-         Filter Value.........string..........Layer Filter Value (for exports to determine Marker)
-         Site.................boolean.........Layer Site (use Site for location)
-         Trackable............boolean.........Layer Trackable
-         Polygons.............boolean.........Layer Polygons
-         Style................string..........Layer Style (@ToDo: Move to layer_config)
+         Filter...............string..........Layer Filter
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
-         Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
+         Visible..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
          Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
 
@@ -42,6 +34,7 @@
     <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
     <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
+    <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
 
     <!-- ****************************************************************** -->
@@ -65,6 +58,12 @@
                 <xsl:call-template name="Marker"/>
             </xsl:for-each>
 
+            <!-- Projections -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('projections',
+                                                                   col[@field='Projection'])[1])]">
+                <xsl:call-template name="Projection"/>
+            </xsl:for-each>
+
             <!-- Symbologies -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('symbologies',
                                                                    col[@field='Symbology'])[1])]">
@@ -79,7 +78,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <resource name="gis_layer_symbology">
-            <reference field="layer_id" resource="gis_layer_feature">
+            <reference field="layer_id" resource="gis_layer_shapefile">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Name']"/>
                 </xsl:attribute>
@@ -94,7 +93,6 @@
                     <xsl:value-of select="col[@field='Marker']"/>
                 </xsl:attribute>
             </reference>
-            <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
         </resource>
     </xsl:template>
 
@@ -103,14 +101,12 @@
 
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
     
-        <xsl:if test="$Config!=''">
-            <resource name="gis_config">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Config"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$Config"/></data>
-            </resource>
-        </xsl:if>
+        <resource name="gis_config">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Config"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Config"/></data>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -118,32 +114,32 @@
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
 
-        <resource name="gis_layer_feature">
+        <resource name="gis_layer_shapefile">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$Layer"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
-            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <xsl:if test="col[@field='Site']">
-                <data field="use_site"><xsl:value-of select="col[@field='Site']"/></data>
+            <data field="shape">
+                <xsl:attribute name="url">
+                    <xsl:value-of select="col[@field='Shapefile']"/>
+                </xsl:attribute>
+            </data>
+            <reference field="projection_id" resource="gis_projection">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Projection"/>
+                </xsl:attribute>
+            </reference>
+            <xsl:if test="col[@field='Description']!=''">
+                <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Trackable']">
-                <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
+            <xsl:if test="col[@field='Filter']!=''">
+                <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Polygons']">
-                <data field="polygons"><xsl:value-of select="col[@field='Polygons']"/></data>
+            <xsl:if test="col[@field='Folder']!=''">
+                <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             </xsl:if>
-            <data field="controller"><xsl:value-of select="col[@field='Controller']"/></data>
-            <data field="function"><xsl:value-of select="col[@field='Function']"/></data>
-            <data field="filter"><xsl:value-of select="col[@field='REST Filter']"/></data>
-            <data field="filter_field"><xsl:value-of select="col[@field='Filter Field']"/></data>
-            <data field="filter_value"><xsl:value-of select="col[@field='Filter Value']"/></data>
-            <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
-            <data field="popup_fields"><xsl:value-of select="col[@field='Popup Fields']"/></data>
-            <!-- @ToDo: This should move to layer_config -->
-            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <xsl:if test="col[@field='Cluster Distance']!=''">
                 <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
             </xsl:if>
@@ -153,7 +149,7 @@
         </resource>
 
         <resource name="gis_layer_config">
-            <reference field="layer_id" resource="gis_layer_feature">
+            <reference field="layer_id" resource="gis_layer_shapefile">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Layer"/>
                 </xsl:attribute>
@@ -172,6 +168,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>
@@ -188,6 +185,19 @@
                 <xsl:value-of select="$Marker"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Marker"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Projection">
+
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
+    
+        <resource name="gis_projection">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Projection"/>
+            </xsl:attribute>
+            <data field="epsg"><xsl:value-of select="$Projection"/></data>
         </resource>
     </xsl:template>
 

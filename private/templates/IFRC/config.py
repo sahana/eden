@@ -14,6 +14,10 @@ settings = current.deployment_settings
 # =============================================================================
 # System Settings
 # -----------------------------------------------------------------------------
+# Security Policy
+settings.security.policy = 8 # Delegations
+settings.security.map = True
+
 # Authorization Settings
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requires_verification = True
@@ -31,11 +35,6 @@ settings.auth.record_approval = True
 settings.auth.registration_roles = {"site_id": ["reader",
                                                 ],
                                     }
-
-# -----------------------------------------------------------------------------
-# Security Policy
-settings.security.policy = 8 # Delegations
-settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = True
@@ -498,6 +497,8 @@ settings.ui.customize_survey_series = customize_survey_series
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 settings.project.community = True
 # Uncomment this to use multiple Budgets per project
@@ -508,10 +509,11 @@ settings.project.multiple_organisations = True
 # Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {
     1: T("Host National Society"),
-    2: T("Partner National Society"),
+    2: T("Partner"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    5: T("Partner")
+    #5: T("Supplier"),
+    9: T("Partner National Society"),
 }
 
 # -----------------------------------------------------------------------------
@@ -524,6 +526,24 @@ def customize_project_project(**attr):
     tablename = "project_project"
     # Load normal model
     table = s3db[tablename]
+
+    # @ToDo: S3SQLInlineComponent for Project orgs
+    # Get IDs for PartnerNS/Partner-Donor
+    # db = current.db
+    # ttable = db.org_organisation_type
+    # rows = db(ttable.deleted != True).select(ttable.id,
+                                             # ttable.name,
+                                             # )
+    # rc = []
+    # not_rc = []
+    # nappend = not_rc.append
+    # for row in rows:
+        # if row.name == "Red Cross / Red Crescent":
+            # rc.append(row.id)
+        # elif row.name == "Supplier":
+            # pass
+        # else:
+            # nappend(row.id)
 
     # Custom Fields
     # Organisation needs to be an NS (not a branch)
@@ -538,7 +558,7 @@ def customize_project_project(**attr):
     crud_form = s3forms.S3SQLCustomForm(
         "organisation_id",
         "name",
-        #"code",
+        "code",
         "description",
         "status_id",
         "start_date",
@@ -548,6 +568,13 @@ def customize_project_project(**attr):
         #    label = T("Countries"),
         #    fields = ["location_id"],
         #),
+        # Outputs
+        s3forms.S3SQLInlineComponent(
+            "output",
+            label = T("Outputs"),
+            #comment = "Bob",
+            fields = ["name", "status"],
+        ),
         s3forms.S3SQLInlineComponentCheckbox(
             "hazard",
             label = T("Hazards"),
@@ -584,30 +611,53 @@ S3OptionsFilter({
         "drr.hfa",
         "objectives",
         "human_resource_id",
+        # Disabled since we need organisation_id filtering to either organsiation_type_id == RC or NOT
+        # & also hiding Branches from RCs
+        # Partner NS
+        # s3forms.S3SQLInlineComponent(
+            # "organisation",
+            # name = "partnerns",
+            # label = T("Partner National Societies"),
+            # fields = ["organisation_id",
+                      # "comments",
+                      # ],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = [9])
+        # ),
         # Partner Orgs
-        #s3forms.S3SQLInlineComponent(
-        #    "organisation",
-        #    name = "partner",
-        #    label = T("Partner Organizations"),
-        #    fields = ["organisation_id",
-        #              "comments",
-        #              ],
-        #    filterby = dict(field = "role",
-        #                    options = "2"
-        #                    )
-        #),
+        # s3forms.S3SQLInlineComponent(
+            # "organisation",
+            # name = "partner",
+            # label = T("Partner Organizations"),
+            # fields = ["organisation_id",
+                      # "comments",
+                      # ],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": not_rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = [2])
+        # ),
         # Donors
-        #s3forms.S3SQLInlineComponent(
-        #    "organisation",
-        #    name = "donor",
-        #    label = T("Donor(s)"),
-        #    fields = ["organisation_id",
-        #              "amount",
-        #              "currency"],
-        #    filterby = dict(field = "role",
-        #                    options = "3"
-        #                    )
-        #),
+        # s3forms.S3SQLInlineComponent(
+            # "organisation",
+            # name = "donor",
+            # label = T("Donor(s)"),
+            # fields = ["organisation_id",
+                      # "amount",
+                      # "currency"],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": not_rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = [3])
+        # ),
         #"budget",
         #"currency",
         "comments",

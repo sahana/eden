@@ -28,7 +28,8 @@
 """
 
 __all__ = ["S3CampDataModel",
-           "cr_shelter_rheader"]
+           "cr_shelter_rheader",
+           ]
 
 from gluon import *
 from gluon.storage import Storage

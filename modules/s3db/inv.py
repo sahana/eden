@@ -571,8 +571,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
 
         if track_pack_values:
@@ -1696,8 +1696,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })'''),
                              item_id(ondelete = "RESTRICT"),
                              item_pack_id(ondelete = "SET NULL"),

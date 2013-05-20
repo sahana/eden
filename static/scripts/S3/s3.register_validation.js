@@ -1,5 +1,5 @@
 /**
- * Used by s3_register_validation() (modules/s3utils.py)
+ * Used by s3_register_validation() (modules/s3/s3utils.py)
  */
 
 var s3_register_validation = function() {

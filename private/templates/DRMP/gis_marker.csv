@@ -8,3 +8,5 @@ Name,Height,Width,Image
 "project",34,20,"gis_marker.image.DRMP_Project.png"
 "report",34,20,"gis_marker.image.DRMP_Report.png"
 "training",34,20,"gis_marker.image.DRMP_Training.png"
+"airport",40,40,"gis_marker.image.Logistics_Airport.png"
+"seaport",40,40,"gis_marker.image.Logistics_Port.png"

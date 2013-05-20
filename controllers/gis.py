@@ -651,7 +651,7 @@ def config():
                     type = db(query).select(table.instance_type,
                                             limitby=(0, 1)).first().instance_type
                     if type in ("gis_layer_coordinate",
-                                "gis_layer_feature",
+                                "gis_layer_feature", # @ToDo: Move down once style moved to link table
                                 "gis_layer_geojson",
                                 "gis_layer_georss",
                                 "gis_layer_gpx",
@@ -660,24 +660,18 @@ def config():
                                 "gis_layer_openweathermap",
                                 "gis_layer_wfs",
                                 ):
-                        field = ltable.base
-                        field.readable = False
-                        field.writable = False
+                        ltable.base.readable = ltable.base.writable = False
                     elif type in ("gis_layer_bing",
                                   "gis_layer_google",
                                   "gis_layer_tms",
                                   ):
-                        field = ltable.visible
-                        field.readable = False
-                        field.writable = False
-                    elif type in ("gis_layer_theme",
+                        ltable.visible.readable = ltable.visible.writable = False
+                    elif type in (#"gis_layer_feature",
+                                  "gis_layer_shapefile",
+                                  "gis_layer_theme",
                                   ):
-                        field = ltable.base
-                        field.readable = False
-                        field.writable = False
-                        field = ltable.style
-                        field.readable = True
-                        field.writable = True
+                        ltable.base.readable = ltable.base.writable = False
+                        ltable.style.readable = ltable.style.writable = True
                 else:
                     # Only show Layers not yet in this config
                     # Find the records which are used
@@ -864,7 +858,7 @@ def symbology():
                                                                       ),
                                                          not_filterby="layer_id",
                                                          not_filter_opts=[row.layer_id for row in rows]
-                                                        )
+                                                         )
 
         return True
     s3.prep = prep
@@ -1002,17 +996,13 @@ def layer_entity():
                             "gis_layer_mgrs",
                             "gis_layer_wfs",
                             ):
-                    field = ltable.base
-                    field.readable = False
-                    field.writable = False
+                    ltable.base.writable = ltable.base.readable = False
                 elif type in ("gis_layer_empty",
                               "gis_layer_bing",
                               "gis_layer_google",
                               "gis_layer_tms",
                               ):
-                    field = ltable.visible
-                    field.readable = False
-                    field.writable = False
+                    ltable.visible.writable = table.visible.readable = False
                 if r.method =="update":
                     # Existing records don't need to change the config pointed to (confusing UI & adds validation overheads)
                     ltable.config_id.writable = False
@@ -1028,16 +1018,14 @@ def layer_entity():
                                                           "%(name)s",
                                                           not_filterby="id",
                                                           not_filter_opts=[row.id for row in rows]
-                                                        )
+                                                          )
 
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
                 # Hide irrelevant fields
                 type = r.record.instance_type
                 if type != "gis_layer_feature":
-                    field = ltable.gps_marker
-                    field.readable = False
-                    field.writable = False
+                    ltable.gps_marker.writable = ltable.gps_marker.readable = False
                 if r.method =="update":
                     # Existing records don't need to change the symbology pointed to (confusing UI & adds validation overheads)
                     ltable.symbology_id.writable = False
@@ -1053,7 +1041,7 @@ def layer_entity():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1074,9 +1062,9 @@ def layer_feature():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
+                # @ToDo: Move style to layer_config
+                #ltable.style.writable = ltable.style.readable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1086,10 +1074,10 @@ def layer_feature():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology" and r.method != "update":
                 # Only show ones with no definition yet for this Layer
                 table = r.table
@@ -1103,7 +1091,7 @@ def layer_feature():
                                                          "%(name)s",
                                                          not_filterby="id",
                                                          not_filter_opts=[row.symbology_id for row in rows]
-                                                        )
+                                                         )
         return True
     s3.prep = prep
 
@@ -1161,10 +1149,10 @@ def layer_openstreetmap():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
 
         return True
     s3.prep = prep
@@ -1207,9 +1195,7 @@ def layer_bing():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.visible
-                field.readable = False
-                field.writable = False
+                ltable.visible.writable = table.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1219,10 +1205,10 @@ def layer_bing():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
 
         return True
     s3.prep = prep
@@ -1265,9 +1251,7 @@ def layer_empty():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.visible
-                field.readable = False
-                field.writable = False
+                ltable.visible.writable = table.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1277,10 +1261,10 @@ def layer_empty():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
 
         return True
     s3.prep = prep
@@ -1314,9 +1298,7 @@ def layer_google():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.visible
-                field.readable = False
-                field.writable = False
+                ltable.visible.writable = table.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1326,10 +1308,10 @@ def layer_google():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1380,9 +1362,7 @@ def layer_mgrs():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1392,10 +1372,10 @@ def layer_mgrs():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1442,9 +1422,7 @@ def layer_arcrest():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1454,10 +1432,10 @@ def layer_arcrest():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1509,9 +1487,7 @@ def layer_geojson():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1521,15 +1497,13 @@ def layer_geojson():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
-                field.readable = False
-                field.writable = False
+                ltable.gps_marker.writable = ltable.gps_marker.readable = False
                 if r.method != "update":
                     # Only show ones with no definition yet for this Layer
                     table = r.table
@@ -1542,7 +1516,7 @@ def layer_geojson():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1599,9 +1573,7 @@ def layer_georss():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1611,15 +1583,13 @@ def layer_georss():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
-                field.readable = False
-                field.writable = False
+                ltable.gps_marker.writable = ltable.gps_marker.readable = False
                 if r.method != "update":
                     # Only show ones with no definition yet for this Layer
                     table = r.table
@@ -1632,7 +1602,7 @@ def layer_georss():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1687,9 +1657,7 @@ def layer_gpx():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1699,10 +1667,10 @@ def layer_gpx():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -1758,9 +1726,7 @@ def layer_kml():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1770,15 +1736,13 @@ def layer_kml():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
-                field.readable = False
-                field.writable = False
+                #ltable.gps_marker.readable = ltable.gps_marker.writable = False
                 if r.method != "update":
                     # Only show ones with no definition yet for this Layer
                     table = r.table
@@ -1791,7 +1755,7 @@ def layer_kml():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1848,9 +1812,7 @@ def layer_openweathermap():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1860,15 +1822,13 @@ def layer_openweathermap():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
-                field.readable = False
-                field.writable = False
+                ltable.gps_marker.readable = ltable.gps_marker.writable = False
                 if r.method != "update":
                     # Only show ones with no definition yet for this Layer
                     table = r.table
@@ -1881,7 +1841,7 @@ def layer_openweathermap():
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
-                                                            )
+                                                             )
         return True
     s3.prep = prep
 
@@ -1903,7 +1863,7 @@ def layer_shapefile():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3db.table(tablename)
+    table = s3db[tablename]
 
     # CRUD Strings
     type = "Shapefile"
@@ -1932,14 +1892,45 @@ def layer_shapefile():
                     method="enable",
                     action=enable_layer)
 
+    args = request.args
+    if len(args) > 1:
+        test = args[1]
+        if test[:4] == "data":
+            # This must be a request for the data held within a layer
+            # Define the Table
+            id = args[0]
+            _tablename = "gis_layer_shapefile_%s" % id
+            row = db(table.id == id).select(table.data,
+                                            limitby=(0, 1)
+                                            ).first()
+            fields = json.loads(row.data)
+            Fields = [Field("wkt"),
+                      Field("layer_id", table),
+                      ]
+            append = Fields.append
+            for field in fields:
+                # Unicode fieldnames not supported
+                append(Field(str(field[0]), field[1]))
+            if settings.get_gis_spatialdb():
+                # Add a spatial field
+                append(Field("the_geom", "geometry()"))
+            s3db.define_table(_tablename, *Fields)
+            new_arg = _tablename[4:]
+            extension = test[4:]
+            if extension:
+                new_arg = "%s%s" % (new_arg, extension)
+            args[1] = new_arg
+            s3db.add_component(_tablename,
+                               gis_layer_shapefile="layer_id")
+            # @ToDo: onaccept to write any modified data back to the attached shapefile
+
     # Pre-processor
     def prep(r):
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
+                ltable.style.writable = ltable.style.readable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1949,15 +1940,14 @@ def layer_shapefile():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                            "%(name)s",
-                                                             not_filterby="config_id",
-                                                             not_filter_opts=[row.config_id for row in rows]
-                                                             )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
             elif r.component_name == "symbology":
+                # Markers - just for Points layers
                 ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
-                field.readable = False
-                field.writable = False
+                #ltable.gps_marker.readable = ltable.gps_marker.writable = False
                 if r.method != "update":
                     # Only show ones with no definition yet for this Layer
                     table = r.table
@@ -1967,10 +1957,10 @@ def layer_shapefile():
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
                     ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
-                                                                "%(name)s",
-                                                                not_filterby="id",
-                                                                not_filter_opts=[row.symbology_id for row in rows]
-                                                               )
+                                                             "%(name)s",
+                                                             not_filterby="id",
+                                                             not_filter_opts=[row.symbology_id for row in rows]
+                                                             )
         return True
     s3.prep = prep
 
@@ -1996,12 +1986,8 @@ def layer_theme():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
-                field = ltable.style
-                field.readable = True
-                field.writable = True
+                ltable.base.writable = ltable.base.readable = False
+                ltable.style.writable = ltable.style.readable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -2122,9 +2108,7 @@ def layer_tms():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.visible
-                field.readable = False
-                field.writable = False
+                ltable.visible.writable = ltable.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -2134,10 +2118,10 @@ def layer_tms():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2189,9 +2173,7 @@ def layer_wfs():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.base
-                field.readable = False
-                field.writable = False
+                ltable.base.writable = ltable.base.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -2201,10 +2183,10 @@ def layer_wfs():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2270,10 +2252,10 @@ def layer_wms():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2330,9 +2312,7 @@ def layer_xyz():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                field = ltable.visible
-                field.readable = False
-                field.writable = False
+                ltable.visible.writable = ltable.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -2342,10 +2322,10 @@ def layer_xyz():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 
@@ -2409,10 +2389,10 @@ def layer_js():
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
+                                                          "%(name)s",
+                                                          not_filterby="config_id",
+                                                          not_filter_opts=[row.config_id for row in rows]
+                                                          )
         return True
     s3.prep = prep
 

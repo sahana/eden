@@ -1,4 +1,12 @@
-(function( $ ) {
+/**
+ * Used by the S3PriorityListWidget (modules/s3/s3widgets.py)
+ * This script is in Static to allow caching
+ * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
+ * 
+ * @ToDo: minified version
+ */
+
+ (function( $ ) {
 
     var self;
 

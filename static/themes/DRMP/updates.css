@@ -146,11 +146,9 @@ h4.latest-updates {
     position: relative;
     top: 11px;
     border: 1px solid #b2b2b2;
-    border-top: none;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
-    padding-top: 7px;
-    padding-left: 9px;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 25px;
 }
 
 .accordion-toggle {
@@ -244,3 +242,133 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     font-style: normal;
     color: #5d5d5b;
 }
+
+/*============ Filter Responsive Input Size =====================*/
+
+/* default screen */
+input.filter-search{
+	width: 50%;
+}
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    width:100%!important;
+}
+label#post-auth_user_organisation_id-options-filter__label,
+label#post-cms_post_series_id-options-filter__label,
+label#post-cms_post_created_on-date-filter__label,
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_location_id-location-filter__label, 
+label#post-cms_post_created_on-date-filter__label{
+	font-size: 13px;
+}
+#post-cms_post_created_on-date-filter-ge,
+#post-cms_post_created_on-date-filter-le {
+	width: 70px;
+	margin-right: 6px;
+	font-size: 13px;
+	margin-left: 17px;
+}
+#post-cms_post_created_on-date-filter-le {
+	margin-left: 24px;
+}
+input.btn.btn-primary.filter-submit.filter-ajax {
+	width: 100%;
+	margin-left: -1px;
+}
+
+
+/* Large desktop */
+@media (min-width: 1200px) { 
+	#post-cms_post_created_on-date-filter-ge,
+	#post-cms_post_created_on-date-filter-le {
+		width: 112px;
+	}
+	input.filter-search{
+		width: 66%;
+	}
+}
+ 
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) { 
+	input.filter-search{
+		width: 33%;
+	}
+	button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	    width:100%!important;
+	}
+	label#post-auth_user_organisation_id-options-filter__label,
+	label#post-cms_post_series_id-options-filter__label,
+	label#post-cms_post_created_on-date-filter__label,
+	label#post-cms_post_location_id-location-filter__label, 
+	label#post-cms_post_location_id-location-filter__label, 
+	label#post-cms_post_created_on-date-filter__label{
+		font-size: 12px;
+		word-spacing: -2px;
+	}
+	#post-cms_post_created_on-date-filter-ge,
+	#post-cms_post_created_on-date-filter-le {
+		margin-right: 3px;
+		font-size: 12px;
+		margin-top: 2px;
+	}
+	
+	#post-cms_post_created_on-date-filter-le {
+		margin-left: 17px;
+		
+	}
+	input.btn.btn-primary.filter-submit.filter-ajax {
+		width: 100%;
+		margin-left: -1px;
+	}
+} 
+
+
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) { 
+	input.filter-search{
+		width: 100%!important;
+	}
+	button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	    width:100%!important;
+	}
+	label#post-auth_user_organisation_id-options-filter__label,
+	label#post-cms_post_series_id-options-filter__label,
+	label#post-cms_post_created_on-date-filter__label,
+	label#post-cms_post_location_id-location-filter__label, 
+	label#post-cms_post_location_id-location-filter__label, 
+	label#post-cms_post_created_on-date-filter__label{
+		font-size: 12px;
+		word-spacing: -2px;
+	}
+	#post-cms_post_created_on-date-filter-ge,
+	#post-cms_post_created_on-date-filter-le {
+		width: 20%;
+		margin-right: 6px;
+		font-size: 12px;
+		margin-left: 6px;
+	}
+	#post-cms_post_created_on-date-filter-ge{
+		margin-left: 6px;
+	}
+	
+	input#post-cms_post_created_on-date-filter-ge_clear {
+		margin-right: 10px;
+	}
+	
+	input.btn.btn-primary.filter-submit.filter-ajax {
+		width: 100%;
+		margin-left: -1px;
+	}
+}
+ 
+/* Landscape phones and down */
+@media (max-width: 480px) { 
+	input.filter-search{
+		width: 100%!important;
+	}
+	button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	    margin-bottom: 10px;
+	    
+	}
+}
+
+

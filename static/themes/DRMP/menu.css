@@ -91,7 +91,8 @@ i.icon-cog {
 }
 
 /* Dropdown menu styling */
-ul.dropdown-menu {
+
+ul.nav li.dropdown ul.dropdown-menu {
     padding: 12px;
     height: auto;
     line-height: 1.2;
@@ -114,6 +115,6 @@ ul.dropdown-menu {
     display: none;
 }
 
-ul.dropdown-menu li {
+ul.nav li.dropdown ul.dropdown-menu li {
     margin-top: 8px;
 }

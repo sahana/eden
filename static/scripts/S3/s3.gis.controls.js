@@ -1,6 +1,6 @@
 /**
  * S3 GIS Controls
- * Used by the Map (modules/s3gis.py)
+ * Used by the Map (modules/s3/s3gis.py)
  * For Production usage gets assembled into s3.gis.min.js
  * Functions which are called by user need to be in global scope
  * This script is in Static to allow caching
