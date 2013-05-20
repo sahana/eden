@@ -214,7 +214,8 @@ class S3Profile(S3CRUD):
 
         # Permission to create new items?
         # @ToDo: Special check for creating resources on Organisation profile
-        if current.auth.s3_has_permission("create", table):
+        insert = widget.get("insert", True)
+        if insert and current.auth.s3_has_permission("create", table):
             if filter:
                 vars = filter.serialize_url(filter)
             else:
@@ -228,13 +229,15 @@ class S3Profile(S3CRUD):
             else:
                 title_create = S3CRUD.crud_string(tablename, "title_create")
             c, f = tablename.split("_", 1)
+            c = widget.get("create_controller", c)
+            f = widget.get("create_function", f)
             create = A(I(_class="icon icon-plus-sign small-add"),
                        _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
                        _class="s3_modal",
                        _title=title_create,
                        )
         else:
-            create = "" 
+            create = ""
 
         # Page size
         pagesize = 4
@@ -336,6 +339,10 @@ class S3Profile(S3CRUD):
         if context:
             context = "(%s)=%s" % (context, r.id)
 
+        height = widget.get("height", 383)
+        width = widget.get("width", 568) # span6 * 99.7%
+        bbox = widget.get("bbox", {})
+
         # Default to showing all the resources in datalist widgets as separate layers
         feature_resources = []
         fappend = feature_resources.append
@@ -385,10 +392,9 @@ class S3Profile(S3CRUD):
                      #"cluster_threshold"         # Optional
                      })
 
-        height = widget.get("height", 383)
-        width = widget.get("width", 568) # span6 * 99.7%
         map = current.gis.show_map(height=height,
                                    width=width,
+                                   bbox=bbox,
                                    collapsed=True,
                                    feature_resources=feature_resources,
                                    )

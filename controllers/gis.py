@@ -413,7 +413,7 @@ def ldata():
         n = {id : {'n' : name,
                    'l' : level,
                    'f' : parent,
-                   'b' : [min_lon, min_lat, max_lon, max_lat] // Just for lowest-level of hierarchy, for setting the map
+                   'b' : [lon_min, lat_min, lon_max, lat_max] // Just for lowest-level of hierarchy, for setting the map
                    }}
     """
 

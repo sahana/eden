@@ -437,6 +437,9 @@ class S3ProjectModel(S3Model):
                         totals=True
                     )
                   ),
+                  context = {"location": "location.location_id",
+                             "organisation": "organisation_id",
+                             },
                   realm_components = ["human_resource",
                                       "task",
                                       "organisation",

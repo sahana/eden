@@ -510,6 +510,25 @@ def donor():
 def resource():
     """ RESTful CRUD controller """
 
+    def prep(r):
+        if r.interactive:
+            if r.method in ("create", "update"):
+                # Context from a Profile page?"
+                table = r.table
+                location_id = request.get_vars.get("(location)", None)
+                if location_id:
+                    field = table.location_id
+                    field.default = location_id
+                    field.readable = field.writable = False
+                organisation_id = request.get_vars.get("(organisation)", None)
+                if organisation_id:
+                    field = table.organisation_id
+                    field.default = organisation_id
+                    field.readable = field.writable = False
+
+        return True
+    s3.prep = prep
+    
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

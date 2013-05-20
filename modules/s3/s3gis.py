@@ -596,10 +596,10 @@ class GIS(object):
 
         if len(features) > 0:
 
-            min_lon = 180
-            min_lat = 90
-            max_lon = -180
-            max_lat = -90
+            lon_min = 180
+            lat_min = 90
+            lon_max = -180
+            lat_max = -90
 
             # Is this a simple feature set or the result of a join?
             try:
@@ -628,49 +628,49 @@ class GIS(object):
                 if lon is None or lat is None:
                     continue
 
-                min_lon = min(lon, min_lon)
-                min_lat = min(lat, min_lat)
-                max_lon = max(lon, max_lon)
-                max_lat = max(lat, max_lat)
+                lon_min = min(lon, lon_min)
+                lat_min = min(lat, lat_min)
+                lon_max = max(lon, lon_max)
+                lat_max = max(lat, lat_max)
 
             # Assure a reasonable-sized box.
-            delta_lon = (bbox_min_size - (max_lon - min_lon)) / 2.0
+            delta_lon = (bbox_min_size - (lon_max - lon_min)) / 2.0
             if delta_lon > 0:
-                min_lon -= delta_lon
-                max_lon += delta_lon
-            delta_lat = (bbox_min_size - (max_lat - min_lat)) / 2.0
+                lon_min -= delta_lon
+                lon_max += delta_lon
+            delta_lat = (bbox_min_size - (lat_max - lat_min)) / 2.0
             if delta_lat > 0:
-                min_lat -= delta_lat
-                max_lat += delta_lat
+                lat_min -= delta_lat
+                lat_max += delta_lat
 
             # Move bounds outward by specified inset.
-            min_lon -= bbox_inset
-            max_lon += bbox_inset
-            min_lat -= bbox_inset
-            max_lat += bbox_inset
+            lon_min -= bbox_inset
+            lon_max += bbox_inset
+            lat_min -= bbox_inset
+            lat_max += bbox_inset
 
         else:
             # no features
             config = GIS.get_config()
-            if config.min_lat is not None:
-                min_lat = config.min_lat
+            if config.lat_min is not None:
+                lat_min = config.lat_min
             else:
-                min_lat = -90
-            if config.min_lon is not None:
-                min_lon = config.min_lon
+                lat_min = -90
+            if config.lon_min is not None:
+                lon_min = config.lon_min
             else:
-                min_lon = -180
-            if config.max_lat is not None:
-                max_lat = config.max_lat
+                lon_min = -180
+            if config.lat_max is not None:
+                lat_max = config.lat_max
             else:
-                max_lat = 90
-            if config.max_lon is not None:
-                max_lon = config.max_lon
+                lat_max = 90
+            if config.lon_max is not None:
+                lon_max = config.lon_max
             else:
-                max_lon = 180
+                lon_max = 180
 
-        return dict(min_lon=min_lon, min_lat=min_lat,
-                    max_lon=max_lon, max_lat=max_lat)
+        return dict(lon_min=lon_min, lat_min=lat_min,
+                    lon_max=lon_max, lat_max=lat_max)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5272,11 +5272,11 @@ class GIS(object):
             @param height: Height of viewport (if not provided then the default deployment setting is used)
             @param width: Width of viewport (if not provided then the default deployment setting is used)
             @param bbox: default Bounding Box of viewport (if not provided then the Lat/Lon/Zoom are used) (Dict):
-                {"max_lat" : float,
-                 "max_lon" : float,
-                 "min_lat" : float,
-                 "min_lon" : float
-                }
+                {"lon_min" : float,
+                 "lat_min" : float,
+                 "lon_max" : float,
+                 "lat_max" : float,
+                 }
             @param lat: default Latitude of viewport (if not provided then the default setting from the Map Service Catalogue is used)
             @param lon: default Longitude of viewport (if not provided then the default setting from the Map Service Catalogue is used)
             @param zoom: default Zoom level of viewport (if not provided then the default setting from the Map Service Catalogue is used)
@@ -5389,10 +5389,10 @@ class GIS(object):
         else:
             map_width = settings.get_gis_map_width()
         if (bbox
-            and (-90 < bbox["max_lat"] < 90)
-            and (-90 < bbox["min_lat"] < 90)
-            and (-180 < bbox["max_lon"] < 180)
-            and (-180 < bbox["min_lon"] < 180)
+            and (-90 <= bbox["lat_max"] <= 90)
+            and (-90 <= bbox["lat_min"] <= 90)
+            and (-180 <= bbox["lon_max"] <= 180)
+            and (-180 <= bbox["lon_min"] <= 180)
             ):
             # We have sane Bounds provided, so we should use them
             pass
@@ -5665,7 +5665,7 @@ S3.gis.marker_default_width=%i
             center = '''S3.gis.lat,S3.gis.lon
 S3.gis.bottom_left=[%f,%f]
 S3.gis.top_right=[%f,%f]
-''' % (bbox["min_lon"], bbox["min_lat"], bbox["max_lon"], bbox["max_lat"])
+''' % (bbox["lon_min"], bbox["lat_min"], bbox["lon_max"], bbox["lat_max"])
         else:
             center = '''S3.gis.lat=%s
 S3.gis.lon=%s

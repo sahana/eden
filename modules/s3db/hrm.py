@@ -584,7 +584,6 @@ class S3HRModel(S3Model):
                        ),
                        create_next = hrm_url,
                        #update_next = hrm_url,
-                       
                        context = {"location": "site_id$location_id",
                                   "organisation": "organisation_id",
                                   },

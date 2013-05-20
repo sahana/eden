@@ -26,10 +26,10 @@
          Lon..................float...........gis_config.lon
          Projection...........integer.........gis_config.projection.epsg
          Symbology............string..........gis_config.symbology_id
-         MinLat...............float...........gis_config.min_lat
-         MaxLat...............float...........gis_config.max_lat
-         MinLon...............float...........gis_config.min_lon
-         MaxLon...............float...........gis_config.max_lon
+         LatMin...............float...........gis_config.lat_min
+         LatMax...............float...........gis_config.lat_max
+         LonMin...............float...........gis_config.lon_min
+         LonMax...............float...........gis_config.lon_max
          WMS Browser..........float...........gis_config.wmsbrowser_url
          
 
@@ -202,10 +202,10 @@
             <data field="zoom"><xsl:value-of select="col[@field='Zoom']"/></data>
             <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
             <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
-            <data field="min_lat"><xsl:value-of select="col[@field='MinLat']"/></data>
-            <data field="min_lon"><xsl:value-of select="col[@field='MinLon']"/></data>
-            <data field="max_lat"><xsl:value-of select="col[@field='MaxLat']"/></data>
-            <data field="max_lon"><xsl:value-of select="col[@field='MaxLon']"/></data>
+            <data field="lat_min"><xsl:value-of select="col[@field='LatMin']"/></data>
+            <data field="lon_min"><xsl:value-of select="col[@field='LonMin']"/></data>
+            <data field="lat_max"><xsl:value-of select="col[@field='LatMax']"/></data>
+            <data field="lon_max"><xsl:value-of select="col[@field='LonMax']"/></data>
             <xsl:if test="col[@field='WMS Browser']!=''">
                 <data field="wmsbrowser_url"><xsl:value-of select="col[@field='WMS Browser']"/></data>
             </xsl:if>

@@ -307,7 +307,9 @@ class S3LocationModel(S3Model):
                                       "L4",
                                       "lat",
                                       "lon"
-                                      ]
+                                      ],
+                       context = {"location": "parent",
+                                  },
                        )
 
         # Tags as component of Locations
@@ -520,14 +522,14 @@ class S3LocationModel(S3Model):
                 if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
                     # Check within Bounds of the Parent
                     # Rough (Bounding Box)
-                    min_lat, min_lon, max_lat, max_lon, parent_name = gis.get_bounds(parent=parent)
-                    if (lat > max_lat) or (lat < min_lat):
+                    lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)
+                    if (lat > lat_max) or (lat < lat_min):
                         lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                      min_lat, max_lat)
+                                                      lat_min, lat_max)
                         form.errors["lat"] = lat_error
-                    if (lon > max_lon) or (lon < min_lon):
+                    if (lon > lon_max) or (lon < lon_min):
                         lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                     min_lon, max_lon)
+                                                     lon_min, lon_max)
                         form.errors["lon"] = lon_error
                     if form.errors:
                         if name:
@@ -546,36 +548,36 @@ class S3LocationModel(S3Model):
                 else:
                     # Check bounds for the Instance
                     config = gis.get_config()
-                    if config.min_lat is not None:
-                        min_lat = config.min_lat
+                    if config.lat_min is not None:
+                        lat_min = config.lat_min
                     else:
-                        min_lat = -90
-                    if config.min_lon is not None:
-                        min_lon = config.min_lon
+                        lat_min = -90
+                    if config.lon_min is not None:
+                        lon_min = config.lon_min
                     else:
-                        min_lon = -180
-                    if config.max_lat is not None:
-                        max_lat = config.max_lat
+                        lon_min = -180
+                    if config.lat_max is not None:
+                        lat_max = config.lat_max
                     else:
-                        max_lat = 90
-                    if config.max_lon is not None:
-                        max_lon = config.max_lon
+                        lat_max = 90
+                    if config.lon_max is not None:
+                        lon_max = config.lon_max
                     else:
-                        max_lon = 180
+                        lon_max = 180
                     if name:
                         base_error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % dict(location=name)
                     else:
                         base_error = T("Sorry location appears to be outside the area supported by this deployment.")
                     lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                  str(min_lat), str(max_lat))
+                                                  str(lat_min), str(lat_max))
                     lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                 str(min_lon), str(max_lon))
-                    if (lat > max_lat) or (lat < min_lat):
+                                                 str(lon_min), str(lon_max))
+                    if (lat > lat_max) or (lat < lat_min):
                         response.error = base_error
                         s3_debug(base_error)
                         form.errors["lat"] = lat_error
                         return
-                    elif (lon > max_lon) or (lon < min_lon):
+                    elif (lon > lon_max) or (lon < lon_min):
                         response.error = base_error
                         s3_debug(base_error)
                         form.errors["lon"] = lon_error
@@ -1329,19 +1331,19 @@ class S3GISConfigModel(S3Model):
                                    # @ToDo: Remove default once we have cascading working
                                    default=True),
                              # Overall Bounding Box for sanity-checking inputs
-                             Field("min_lat", "double",
+                             Field("lat_min", "double",
                                    # @ToDo: Remove default once we have cascading working
                                    default=-90,
                                    requires = IS_NULL_OR(IS_LAT())),
-                             Field("max_lat", "double",
+                             Field("lat_max", "double",
                                    # @ToDo: Remove default once we have cascading working
                                    default=90,
                                    requires = IS_NULL_OR(IS_LAT())),
-                             Field("min_lon", "double",
+                             Field("lon_min", "double",
                                    # @ToDo: Remove default once we have cascading working
                                    default=-180,
                                    requires = IS_NULL_OR(IS_LON())),
-                             Field("max_lon", "double",
+                             Field("lon_max", "double",
                                    # @ToDo: Remove default once we have cascading working
                                    default=180,
                                    requires = IS_NULL_OR(IS_LON())),
@@ -1539,29 +1541,29 @@ class S3GISConfigModel(S3Model):
                 T("The URL for the GetCapabilities page of a Web Map Service (WMS) whose layers you want available via the Browser panel on the Map."),
                 T("The form of the URL is http://your/web/map/service?service=WMS&request=GetCapabilities where your/web/map/service stands for the URL path to the WMS.")))
         table.geocoder.label = T("Use Geocoder for address lookups?")
-        table.min_lat.label = T("Minimum Location Latitude")
-        table.min_lat.comment = DIV(
+        table.lat_min.label = T("Minimum Location Latitude")
+        table.lat_min.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
                 T("Minimum Location Latitude"),
                 T("Latitude of far southern end of the region of interest."),
                 T("Used to check that latitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
-        table.max_lat.label = T("Maximum Location Latitude")
-        table.max_lat.comment = DIV(
+        table.lat_max.label = T("Maximum Location Latitude")
+        table.lat_max.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
                 T("Maximum Location Latitude"),
                 T("Latitude of far northern end of the region of interest."),
                 T("Used to check that latitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
-        table.min_lon.label = T("Minimum Location Longitude")
-        table.min_lon.comment = DIV(
+        table.lon_min.label = T("Minimum Location Longitude")
+        table.lon_min.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
                 T("Minimum Location Longitude"),
                 T("Longitude of far western end of the region of interest."),
                 T("Used to check that longitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
-        table.max_lon.label = T("Maximum Location Longitude")
-        table.max_lon.comment = DIV(
+        table.lon_max.label = T("Maximum Location Longitude")
+        table.lon_max.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
                 T("Maximum Location Longitude"),
