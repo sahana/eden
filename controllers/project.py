@@ -73,7 +73,6 @@ def project():
 
     # Pre-process
     def prep(r):
-        
         # Location Filter
         s3db.gis_location_filter(r)
         
@@ -97,6 +96,19 @@ def project():
 
             if not r.component:
                 set_theme_requires(sector_ids)
+
+                if r.method in ("create", "update"):
+                    # Context from a Profile page?"
+                    location_id = request.get_vars.get("(location)", None)
+                    if location_id:
+                        field = s3db.project_location.location_id
+                        field.default = location_id
+                        field.readable = field.writable = False
+                    organisation_id = request.get_vars.get("(organisation)", None)
+                    if organisation_id:
+                        field = r.table.organisation_id
+                        field.default = organisation_id
+                        field.readable = field.writable = False
 
                 if r.id:
                     r.table.human_resource_id.represent = lambda id: \

@@ -16,9 +16,9 @@
          End Date.............YYYY-MM-DD......End date of the project
          Activity Types.......comma-sep list..List of Activity Types
          Country..............string..........Country code/name (L0)
-         L1...................string..........L1 location name (State/Province)
-         L2...................string..........L1 location name (District)
-         L3...................string..........L3 location name (City)
+         L1...................string..........L1 location name (e.g. State/Province)
+         L2...................string..........L2 location name (e.g. District/County)
+         L3...................string..........L3 location name (e.g. City)
          L4...................string..........L4 location name
          L5...................string..........L5 location name
          Lat..................float...........Latitude of the most local location

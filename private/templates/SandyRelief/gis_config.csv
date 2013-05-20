@@ -1,3 +1,3 @@
-"UUID",Name,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,Symbology,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
+"UUID",Name,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,Symbology,LatMin,LatMax,LonMin,LonMax,WMS Browser
 "SITE_DEFAULT",Default,,US,,,9,40.71024,-73.8498,900913,US,20,90,-180,-50,
 "QUEENS","Queens",,US,New York,"Queens",11,40.6665,-73.7406,900913,US,11,90,-180,-50,

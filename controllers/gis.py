@@ -413,7 +413,7 @@ def ldata():
         n = {id : {'n' : name,
                    'l' : level,
                    'f' : parent,
-                   'b' : [min_lon, min_lat, max_lon, max_lat] // Just for lowest-level of hierarchy, for setting the map
+                   'b' : [lon_min, lat_min, lon_max, lat_max] // Just for lowest-level of hierarchy, for setting the map
                    }}
     """
 
@@ -1904,7 +1904,7 @@ def layer_shapefile():
                                             limitby=(0, 1)
                                             ).first()
             fields = json.loads(row.data)
-            Fields = [Field("wkt"),
+            Fields = [Field("wkt", "text"),
                       Field("layer_id", table),
                       ]
             append = Fields.append

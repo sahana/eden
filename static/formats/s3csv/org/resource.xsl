@@ -94,15 +94,7 @@
             </reference>
 
             <!-- Link to Location -->
-            <reference field="location_id" resource="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat(col[@field='Country']/text(),
-	                                             col[@field='L1']/text(),
-	                                             col[@field='L2']/text(),
-	                                             col[@field='L3']/text(),
-	                                             col[@field='L4']/text())"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:call-template name="LocationReference"/>
 
             <xsl:if test="col[@field='Resource Type']!=''">
                 <reference field="resource_type_id" resource="org_resource_type">
@@ -117,6 +109,7 @@
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
+        <!-- Locations -->
         <xsl:call-template name="Locations"/>
 
     </xsl:template>
@@ -176,12 +169,21 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Locations">
 
-        <xsl:variable name="Building" select="col[@field='Building']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
+        <xsl:variable name="l5" select="col[@field='L5']/text()"/>
+
+        <xsl:variable name="l1id" select="concat('L1: ', $l1)"/>
+        <xsl:variable name="l2id" select="concat('L2: ', $l2)"/>
+        <xsl:variable name="l3id" select="concat('L3: ', $l3)"/>
+        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
+        <xsl:variable name="l5id" select="concat('L5: ', $l5)"/>
+
+        <xsl:variable name="lat" select="col[@field='Lat']"/>
+        <xsl:variable name="lon" select="col[@field='Lon']"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -209,7 +211,7 @@
         <xsl:if test="$l1!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('L1',$l1)"/>
+                    <xsl:value-of select="$l1id"/>
                 </xsl:attribute>
                 <reference field="parent" resource="gis_location">
                     <xsl:attribute name="uuid">
@@ -218,6 +220,16 @@
                 </reference>
                 <data field="name"><xsl:value-of select="$l1"/></data>
                 <data field="level"><xsl:text>L1</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
@@ -225,13 +237,13 @@
         <xsl:if test="$l2!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('L2',$l2)"/>
+                    <xsl:value-of select="$l2id"/>
                 </xsl:attribute>
                 <xsl:choose>
                     <xsl:when test="$l1!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('L1',$l1)"/>
+                                <xsl:value-of select="$l1id"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
@@ -245,6 +257,16 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l2"/></data>
                 <data field="level"><xsl:text>L2</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L3'] or col[@field='L4']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
@@ -252,20 +274,20 @@
         <xsl:if test="$l3!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('L3',$l3)"/>
+                    <xsl:value-of select="$l3id"/>
                 </xsl:attribute>
                 <xsl:choose>
                     <xsl:when test="$l2!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('L2',$l2)"/>
+                                <xsl:value-of select="$l2id"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
                     <xsl:when test="$l1!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('L1',$l1)"/>
+                                <xsl:value-of select="$l1id"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
@@ -279,6 +301,16 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l3"/></data>
                 <data field="level"><xsl:text>L3</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L4']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
@@ -286,27 +318,27 @@
         <xsl:if test="$l4!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('L4',$l4)"/>
+                    <xsl:value-of select="$l4id"/>
                 </xsl:attribute>
                 <xsl:choose>
                     <xsl:when test="$l3!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('L3',$l3)"/>
+                                <xsl:value-of select="$l3id"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
                     <xsl:when test="$l2!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('L2',$l2)"/>
+                                <xsl:value-of select="$l2id"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
                     <xsl:when test="$l1!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('L1',$l1)"/>
+                                <xsl:value-of select="$l1id"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
@@ -320,62 +352,153 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l4"/></data>
                 <data field="level"><xsl:text>L4</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L5']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                     </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
-        <!-- Resource Location -->
-        <resource name="gis_location">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat(col[@field='Country']/text(),
-                                             col[@field='L1']/text(),
-                                             col[@field='L2']/text(),
-                                             col[@field='L3']/text(),
-                                             col[@field='L4']/text())"/>
-            </xsl:attribute>
-            <xsl:choose>
-                <xsl:when test="$l4!=''">
-                    <reference field="parent" resource="gis_location">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('L4',$l4)"/>
-                        </xsl:attribute>
-                        <data field="name"><xsl:value-of select="$l4"/></data>
-                    </reference>
-                </xsl:when>
-                <xsl:when test="$l3!=''">
-                    <reference field="parent" resource="gis_location">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('L3',$l3)"/>
-                        </xsl:attribute>
-                        <data field="name"><xsl:value-of select="$l3"/></data>
-                    </reference>
-                </xsl:when>
-                <xsl:when test="$l2!=''">
-                    <reference field="parent" resource="gis_location">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('L2',$l2)"/>
-                        </xsl:attribute>
-                        <data field="name"><xsl:value-of select="$l2"/></data>
-                    </reference>
-                </xsl:when>
-                <xsl:when test="$l1!=''">
-                    <reference field="parent" resource="gis_location">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('L1',$l1)"/>
-                        </xsl:attribute>
-                        <data field="name"><xsl:value-of select="$l1"/></data>
-                    </reference>
-                </xsl:when>
-                <xsl:otherwise>
-                    <reference field="parent" resource="gis_location">
-                        <xsl:attribute name="uuid">
-                            <xsl:value-of select="$country"/>
-                        </xsl:attribute>
-                        <data field="name"><xsl:value-of select="$country"/></data>
-                    </reference>
-                </xsl:otherwise>
-            </xsl:choose>
+        <!-- L5 Location -->
+        <xsl:if test="$l5!=''">
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$l5id"/>
+                </xsl:attribute>
+                <xsl:choose>
+                    <xsl:when test="$l4!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l4id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$l3!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l3id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$l2!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l2id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$l1!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l1id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <data field="name"><xsl:value-of select="$l5"/></data>
+                <data field="level"><xsl:text>L5</xsl:text></data>
+                <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                    <data field="lat"><xsl:value-of select="$lat"/></data>
+                    <data field="lon"><xsl:value-of select="$lon"/></data>
+                </xsl:if>
+            </resource>
+        </xsl:if>
 
-        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="LocationReference">
+
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='L1']/text()"/>
+        <xsl:variable name="l2" select="col[@field='L2']/text()"/>
+        <xsl:variable name="l3" select="col[@field='L3']/text()"/>
+        <xsl:variable name="l4" select="col[@field='L4']/text()"/>
+        <xsl:variable name="l5" select="col[@field='L5']/text()"/>
+
+        <xsl:variable name="l1id" select="concat('L1: ', $l1)"/>
+        <xsl:variable name="l2id" select="concat('L2: ', $l2)"/>
+        <xsl:variable name="l3id" select="concat('L3: ', $l3)"/>
+        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
+        <xsl:variable name="l5id" select="concat('L5: ', $l5)"/>
+
+        <xsl:choose>
+            <xsl:when test="$l5!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$l5id"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:when test="$l4!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$l4id"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:when test="$l3!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$l3id"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:when test="$l2!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$l2id"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:when test="$l1!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$l1id"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:when test="$l0!=''">
+                <!-- Country Code = UUID of the L0 Location -->
+                <xsl:variable name="countrycode">
+                    <xsl:choose>
+                        <xsl:when test="string-length($l0)!=2">
+                            <xsl:call-template name="countryname2iso">
+                                <xsl:with-param name="country">
+                                    <xsl:value-of select="$l0"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:call-template name="uppercase">
+                                <xsl:with-param name="string">
+                                   <xsl:value-of select="$l0"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="uuid">
+                        <xsl:value-of select="$country"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+        </xsl:choose>
 
     </xsl:template>
 

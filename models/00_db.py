@@ -54,13 +54,14 @@ else:
     try:
         if db_string.find("mysql") != -1:
             # Use MySQLdb where available (pymysql has given broken pipes)
-            try:
-                import MySQLdb
-                from gluon.dal import MySQLAdapter
-                MySQLAdapter.driver = MySQLdb
-            except ImportError:
-                # Fallback to pymysql
-                pass
+            # - done automatically now, no need to add this manually
+            #try:
+            #    import MySQLdb
+            #    from gluon.dal import MySQLAdapter
+            #    MySQLAdapter.driver = MySQLdb
+            #except ImportError:
+            #    # Fallback to pymysql
+            #    pass
             if check_reserved:
                 check_reserved = ["postgres"]
             db = DAL(db_string, check_reserved=check_reserved,

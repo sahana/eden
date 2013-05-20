@@ -380,13 +380,13 @@ class S3XML(S3Codec):
             # @ToDo: This should be done based on the features, not just the config
             bounds = current.gis.get_bounds()
             set(ATTRIBUTE.latmin,
-                str(bounds["min_lat"]))
+                str(bounds["lat_min"]))
             set(ATTRIBUTE.latmax,
-                str(bounds["max_lat"]))
+                str(bounds["lat_max"]))
             set(ATTRIBUTE.lonmin,
-                str(bounds["min_lon"]))
+                str(bounds["lon_min"]))
             set(ATTRIBUTE.lonmax,
-                str(bounds["max_lon"]))
+                str(bounds["lon_max"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------

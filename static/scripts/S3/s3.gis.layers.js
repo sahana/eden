@@ -471,7 +471,8 @@ function addGeoJSONLayer(layer) {
             	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    pix = '';
+                    // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
+                    pix = marker_width;
                 } else if (feature.attributes.marker_width) {
                     // Use marker_width from feature
                     pix = feature.attributes.marker_width;
@@ -485,7 +486,8 @@ function addGeoJSONLayer(layer) {
             	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    pix = '';
+                    // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
+                    pix = marker_height;
                 } else if (feature.attributes.marker_height) {
                     // Use marker_height from feature (Query)
                     pix = feature.attributes.marker_height;
@@ -499,7 +501,8 @@ function addGeoJSONLayer(layer) {
             	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    pix = '';
+                    // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
+                    pix = -(marker_width / 2);
                 } else if (feature.attributes.marker_width) {
                     // Use marker_width from feature (Query)
                     pix = -(feature.attributes.marker_width / 2);
@@ -513,7 +516,8 @@ function addGeoJSONLayer(layer) {
             	var pix;
                 if (feature.cluster) {
                     // Clustered Point
-                    pix = '';
+                    // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
+                    pix = -marker_height;
                 } else if (feature.attributes.marker_height) {
                     // Use marker_height from feature (Query)
                     pix = -feature.attributes.marker_height;
