@@ -1904,7 +1904,7 @@ def layer_shapefile():
                                             limitby=(0, 1)
                                             ).first()
             fields = json.loads(row.data)
-            Fields = [Field("wkt"),
+            Fields = [Field("wkt", "text"),
                       Field("layer_id", table),
                       ]
             append = Fields.append

@@ -3753,7 +3753,7 @@ class S3MapModel(S3Model):
                                       data = data)
 
             # Create Database table to store these features in
-            Fields = [Field("wkt"),
+            Fields = [Field("wkt", "text"),
                       Field("layer_id", table),
                       ]
             append = Fields.append
