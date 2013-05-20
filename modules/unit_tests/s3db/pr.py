@@ -454,8 +454,7 @@ class SavedSearchTests(unittest.TestCase):
         f = S3SavedSearch.friendly_string_from_field_query
 
         result = f(
-            "org",
-            "organisation",
+            "org_organisation",
             "/%s/org/organisation/search?organisation.country__belongs=NZ" % app,
         )
         self.assertEqual(
@@ -464,8 +463,7 @@ class SavedSearchTests(unittest.TestCase):
         )
 
         result = f(
-            "org",
-            "organisation",
+            "org_organisation",
             "/%s/org/organisation/search?parent.acronym%%7Cparent.name%%7Cacronym%%7Cname__like=%%2Atest%%2A" % app,
         )
         self.assertEqual(
