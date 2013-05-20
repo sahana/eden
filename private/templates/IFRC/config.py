@@ -135,11 +135,12 @@ def ifrc_realm_entity(table, row):
     # Suppliers & Partners are owned by the user's organisation
     if realm_entity == 0 and tablename == "org_organisation":
         ott = s3db.org_organisation_type
-        row = table[row.id]
-        row = db(table.organisation_type_id == ott.id).select(ott.name,
-                                                              limitby=(0, 1)
-                                                              ).first()
-        
+        query = (table.id == row.id) & \
+                (table.organisation_type_id == ott.id)
+        row = db(query).select(ott.name,
+                               limitby=(0, 1)
+                               ).first()
+
         if row and row.name != "Red Cross / Red Crescent":
             use_user_organisation = True
 
@@ -154,6 +155,7 @@ def ifrc_realm_entity(table, row):
                                          user.organisation_id)
 
     return realm_entity
+
 settings.auth.realm_entity = ifrc_realm_entity
 
 # -----------------------------------------------------------------------------
