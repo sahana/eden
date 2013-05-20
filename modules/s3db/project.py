@@ -318,7 +318,7 @@ class S3ProjectModel(S3Model):
             append(S3SearchOptionsWidget(
                         name = "project_search_sector",
                         label = sector,
-                        field = "sector.name",
+                        field = "sector.id",
                         options = self.org_sector_opts,
                         cols = 4
                     ))
