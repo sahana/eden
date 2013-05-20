@@ -212,8 +212,6 @@ class S3Profile(S3CRUD):
         # Use the widget-index to create a unique ID
         listid = "profile-list-%s-%s" % (tablename, widget["index"])
 
-        c, f = tablename.split("_", 1)
-
         # Permission to create new items?
         # @ToDo: Special check for creating resources on Organisation profile
         if current.auth.s3_has_permission("create", table):
@@ -229,6 +227,7 @@ class S3Profile(S3CRUD):
                 title_create = T(title_create)
             else:
                 title_create = S3CRUD.crud_string(tablename, "title_create")
+            c, f = tablename.split("_", 1)
             create = A(I(_class="icon icon-plus-sign small-add"),
                        _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
                        _class="s3_modal",
