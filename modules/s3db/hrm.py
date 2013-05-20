@@ -102,15 +102,13 @@ class S3HRModel(S3Model):
         STAFF = settings.get_hrm_staff_label()
 
         # NB These numbers are hardcoded into KML Export stylesheet
-        hrm_type_opts = {
-            1: STAFF,
-            2: T("Volunteer"),
-        }
+        hrm_type_opts = {1: STAFF,
+                         2: T("Volunteer"),
+                         }
 
-        hrm_status_opts = {
-            1: T("current"),
-            2: T("obsolete")
-        }
+        hrm_status_opts = {1: T("current"),
+                           2: T("obsolete"),
+                           }
 
         request = current.request
         controller = request.controller
@@ -586,6 +584,10 @@ class S3HRModel(S3Model):
                        ),
                        create_next = hrm_url,
                        #update_next = hrm_url,
+                       
+                       context = {"location": "site_id$location_id",
+                                  "organisation": "organisation_id",
+                                  },
                        realm_components = ["presence"],
                        update_realm = True,
                        #extra_fields = ["person_id"]

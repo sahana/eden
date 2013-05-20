@@ -420,7 +420,7 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
     event_id = raw["event_event_post.event_id"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id])
+    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
     author = record["cms_post.created_by"]
     author_id = raw["cms_post.created_by"]
     organisation = record["auth_user.organisation_id"]
@@ -558,13 +558,13 @@ def render_profile_posts(listid, resource, rfields, record, **attr):
                               _href=location_url,
                               ),
                             _class="location-title"),
-                        " ",
-                        SPAN(date,
-                             _class="date-title"),
-                        edit_bar,
-                        P(body,
-                          _class="card_comments"),
-                        docs,
+                       " ",
+                       SPAN(date,
+                            _class="date-title"),
+                       edit_bar,
+                       P(body,
+                         _class="card_comments"),
+                       docs,
                        _class="span5 card-details"),
                    _class="row",
                    ),
@@ -919,6 +919,121 @@ def customize_gis_location(**attr):
 settings.ui.customize_gis_location = customize_gis_location
 
 # -----------------------------------------------------------------------------
+def render_contacts(listid, resource, rfields, record, **attr):
+    """
+        Custom dataList item renderer for Contacts on the Profile pages
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "hrm_human_resource.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    fullname = record["hrm_human_resource.person_id"]
+    organisation_id = raw["hrm_human_resource.organisation_id"]
+    pe_id = raw["pr_person.pe_id"]
+    person_id = raw["hrm_human_resource.person_id"]
+    avatar_url = URL(c="hrm", f="person", args=[person_id, "image"])
+    site_id = raw["hrm_human_resource.site_id"]
+    if site_id:
+        office = record["hrm_human_resource.site_id"]
+        body = "%s, %s" % (fullname, office)
+        location = record["org_site.location_id"]
+        location_id = raw["org_site.location_id"]
+        location_url = URL(c="gis", f="location",
+                           args=[location_id, "profile"])
+    else:
+        body = fullname
+        location = ""
+        location_url = "#"
+
+    db = current.db
+    s3db = current.s3db
+    ltable = s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ltable.user_id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        # Use Personal Avatar
+        # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+        avatar = s3_avatar_represent(row.user_id,
+                                     _class="media-object")
+        avatar = A(avatar,
+                   _href=avatar_url,
+                   _class="pull-left",
+                   )
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = db.pr_person
+    if permit("update", table, record_id=person_id):
+        vars = {"refresh": listid,
+                "record": record_id,
+                }
+        f = current.request.function
+        if f == "organisation" and organisation_id:
+            vars["(organisation)"] = organisation_id
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="hrm", f="person",
+                               args=[person_id, "update.popup"],
+                               vars=vars),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.hrm_human_resource.title_update,
+                     )
+    else:
+        edit_btn = ""
+    # Deletions failing due to Integrity Errors
+    #if permit("delete", table, record_id=person_id):
+    #    delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+    #                   _class="dl-item-delete",
+    #                   )
+    #else:
+    delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    class SMALL(DIV):
+        tag = "small"
+
+    item = DIV(DIV(DIV(avatar,
+                       _class="span1"),
+                   DIV(SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title"),
+                       " ",
+                       edit_bar,
+                       P(body,
+                         _class="card_comments"),
+                       _class="span5 card-details"),
+                   _class="row",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# -----------------------------------------------------------------------------
 def render_organisations(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Organisations on the Stakeholder Selection Page
@@ -1009,8 +1124,20 @@ def customize_org_organisation(**attr):
     s3db = current.s3db
     s3 = current.response.s3
 
-    # Customise the cms_post table as that is used for the widgets
+    # Customise the cms_post table as-used for the widgets
     customize_cms_post()
+
+    # Customise the hrm_human_reource table as-used for the Contacts widget
+    list_fields = ["person_id",
+                   "person_id$pe_id",
+                   "organisation_id",
+                   "site_id",
+                   "site_id$location_id",
+                   ]
+
+    s3db.configure("hrm_human_resource",
+                   list_fields = list_fields,
+                   )
 
     # Represent used in rendering
     current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
@@ -1027,16 +1154,17 @@ def customize_org_organisation(**attr):
     table.twitter.readable = table.twitter.writable = False
     table.donation_phone.readable = table.donation_phone.writable = False
     
-    alerts_widget = dict(label = "Alerts",
-                         title_create = "Add New Alert",
-                         type = "datalist",
-                         tablename = "cms_post",
-                         context = "organisation",
-                         filter = S3FieldSelector("series_id$name") == "Alert",
-                         icon = "icon-alert",
-                         marker = "alert",
-                         list_layout = render_profile_posts,
-                         )
+    contacts_widget = dict(label = "Contacts",
+                           title_create = "Add New Contact",
+                           type = "datalist",
+                           tablename = "hrm_human_resource",
+                           context = "organisation",
+                           #create_controller = "hrm",
+                           create_function = "person",
+                           icon = "icon-user",
+                           show_on_map = False, # Since they will show within Offices
+                           list_layout = render_contacts,
+                           )
     map_widget = dict(label = "Location",
                       type = "map",
                       context = "organisation",
@@ -1095,7 +1223,7 @@ def customize_org_organisation(**attr):
                                   "logo",
                                   ],
                    list_layout = render_organisations,
-                   profile_widgets=[alerts_widget,
+                   profile_widgets=[contacts_widget,
                                     map_widget,
                                     incidents_widget,
                                     assessments_widget,
