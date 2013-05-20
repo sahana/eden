@@ -192,10 +192,11 @@ def s3_mark_required(fields,
         else:
             labels[fname] = "%s:" % flabel
 
-    if labels:
-        return (labels, _required)
-    else:
-        return None
+    # Callers expect an iterable
+    #if labels:
+    return (labels, _required)
+    #else:
+    #    return None
 
 # =============================================================================
 def s3_truncate(text, length=48, nice=True):

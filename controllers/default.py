@@ -492,6 +492,11 @@ def user():
     else:
         arg = None
 
+    # Check for template-specific customisations
+    customize = settings.ui.get("customize_auth_user", None)
+    if customize:
+        customize(arg=arg)
+
     if arg == "login":
         response.title = T("Login")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def login?

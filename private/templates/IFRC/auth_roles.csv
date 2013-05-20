@@ -57,7 +57,6 @@
 "reader","All Module Reader",,,,"hrm_human_resource",,"READ",,,,,
 "reader","All Module Reader",,,,"hrm_training",,"READ",,,,,
 "reader","All Module Reader",,,,"member_membership_type",,"READ",,,,,
-"reader","All Module Reader",,,,"org_organisation","any","READ",,,,,"Used to filter organisation fields"
 "reader","All Module Reader",,,,"pr_address",,"READ",,,,,
 "reader","All Module Reader",,,,"pr_contact",,"READ",,,,,
 "reader","All Module Reader",,,,"pr_contact_emergency",,"READ",,,,,

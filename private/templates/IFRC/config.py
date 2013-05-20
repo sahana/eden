@@ -135,11 +135,12 @@ def ifrc_realm_entity(table, row):
     # Suppliers & Partners are owned by the user's organisation
     if realm_entity == 0 and tablename == "org_organisation":
         ott = s3db.org_organisation_type
-        row = table[row.id]
-        row = db(table.organisation_type_id == ott.id).select(ott.name,
-                                                              limitby=(0, 1)
-                                                              ).first()
-        
+        query = (table.id == row.id) & \
+                (table.organisation_type_id == ott.id)
+        row = db(query).select(ott.name,
+                               limitby=(0, 1)
+                               ).first()
+
         if row and row.name != "Red Cross / Red Crescent":
             use_user_organisation = True
 
@@ -154,6 +155,7 @@ def ifrc_realm_entity(table, row):
                                          user.organisation_id)
 
     return realm_entity
+
 settings.auth.realm_entity = ifrc_realm_entity
 
 # -----------------------------------------------------------------------------
@@ -259,7 +261,7 @@ settings.hrm.use_skills = False
 settings.hrm.organisation_label = "National Society / Branch"
 
 # -----------------------------------------------------------------------------
-def ns_only(f, required=True, branches=True):
+def ns_only(f, required=True, branches=True, updateable=True):
     """
         Function to configure an organisation_id field to be restricted to just NS/Branch
     """
@@ -291,7 +293,7 @@ def ns_only(f, required=True, branches=True):
                          filter_opts=[type_id],
                          not_filterby=not_filterby,
                          not_filter_opts=not_filter_opts,
-                         updateable = True,
+                         updateable = updateable,
                          orderby = "org_organisation.name",
                          sort = True)
     if not required:
@@ -330,6 +332,24 @@ def customize_asset_asset(**attr):
     return attr
 
 settings.ui.customize_asset_asset = customize_asset_asset
+
+# -----------------------------------------------------------------------------
+def customize_auth_user(**attr):
+    """
+        Customize admin/user() and default/user() controllers
+    """
+
+    if "arg" in attr and attr["arg"] == "register":
+        # Organisation needs to be an NS/Branch
+        ns_only(current.db.auth_user.organisation_id,
+                required=True,
+                branches=True,
+                updateable=False, # Need to see all Orgs in Registration screens
+                )
+
+    return attr
+
+settings.ui.customize_auth_user = customize_auth_user
 
 # -----------------------------------------------------------------------------
 def customize_hrm_certificate(**attr):

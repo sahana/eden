@@ -1988,6 +1988,8 @@ class S3LayerEntityModel(S3Model):
         # (only the starred elements are currently parsed)
         # @ToDo: Support elements in a common section (such as attrib)
         # @ToDo: Popup style
+        # @ToDo: Import/Export SLD
+        # @ToDo: Be able to reuse Styles across Layers/Configs (separate gis_style table)
         #Style = [{
         #   attrib: string, //* Attribute used to colour the element
         #   cat: string,    //* Value used to colour the element

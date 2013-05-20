@@ -1277,8 +1277,7 @@ Thank you
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             organisation_id = utable.organisation_id
-            organisation_id.writable = True
-            organisation_id.readable = True
+            organisation_id.readable = organisation_id.writable = True
             from s3validators import IS_ONE_OF
             organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
                                                  s3db.org_organisation_represent,
@@ -1286,9 +1285,9 @@ Thank you
                                                  sort=True)
             organisation_id.represent = s3db.org_organisation_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
+            # no permissions for autocomplete on registration page yet
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
-            # no permissions for autocomplete on registration page
             #organisation_id.comment = DIV(_class="tooltip",
             #                              _title="%s|%s" % (T("Organization"),
             #                                                T("Enter some characters to bring up a list of possible matches")))
@@ -1305,8 +1304,7 @@ Thank you
                 field.represent = lambda v: s3db.org_site_represent(site_id)
             else:
                 site_id = utable.site_id
-                site_id.writable = True
-                site_id.readable = True
+                site_id.readable = site_id.writable = True
                 if req_org:
                     from s3validators import IS_ONE_OF_EMPTY
                     site_id.requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
@@ -1351,8 +1349,7 @@ S3OptionsFilter({
             if link_user_to_default:
                 link_user_to.default = link_user_to_default
             else:
-                link_user_to.writable = True
-                link_user_to.readable = True
+                link_user_to.readable = link_user_to.writable = True
                 link_user_to.label = T("Register As")
                 link_user_to.requires = IS_IN_SET(link_user_to_opts,
                                                   multiple = True
@@ -3921,11 +3918,14 @@ S3OptionsFilter({
                table._tablename not in ("pr_person", "dvi_body"):
                 realm_entity = record["pe_id"]
             elif "organisation_id" in record:
-                realm_entity = s3db.pr_get_pe_id("org_organisation", record["organisation_id"])
+                realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                 record["organisation_id"])
             elif "site_id" in record:
-                realm_entity = s3db.pr_get_pe_id("org_site", record["site_id"])
+                realm_entity = s3db.pr_get_pe_id("org_site",
+                                                 record["site_id"])
             elif "group_id" in record:
-                realm_entity = s3db.pr_get_pe_id("pr_group", record["group_id"])
+                realm_entity = s3db.pr_get_pe_id("pr_group",
+                                                 record["group_id"])
             else:
                 realm_entity = None
 
