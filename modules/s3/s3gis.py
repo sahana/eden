@@ -503,7 +503,7 @@ class GIS(object):
         return bearing
 
     # -------------------------------------------------------------------------
-    def get_bounds(self, features=[], parent=None):
+    def get_bounds(self, features=None, parent=None):
         """
             Calculate the Bounds of a list of Point Features
             e.g. When a map is displayed that focuses on a collection of points,
@@ -594,7 +594,7 @@ class GIS(object):
         # Without this, the outermost points would be on the bounding box, and might not be visible.
         bbox_inset = 0.007
 
-        if len(features) > 0:
+        if features:
 
             lon_min = 180
             lat_min = 90
