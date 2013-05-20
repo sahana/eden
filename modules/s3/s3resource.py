@@ -5325,7 +5325,7 @@ class S3FieldPath(object):
 
         field_not_found = lambda f: AttributeError("Field not found: %s" % f)
 
-        if head[0] == "(" and head[-1] == ")":
+        if head and head[0] == "(" and head[-1] == ")":
 
             # Context expression
             head = head.strip("()")
