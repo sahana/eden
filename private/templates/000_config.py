@@ -180,7 +180,7 @@ if os.path.exists(path):
 #
 
 # e.g.
-#settings.base.prepopulate = ["IFRC_Train"]
+#settings.base.prepopulate = ["demo"]
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs

@@ -512,7 +512,6 @@
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
-        <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
 
         <xsl:variable name="gender">
@@ -641,7 +640,8 @@
                     <xsl:call-template name="HumanResource">
                         <xsl:with-param name="OrgName" select="$OrgName"/>
                         <xsl:with-param name="BranchName" select="$BranchName"/>
-                        <xsl:with-param name="OfficeName" select="$OfficeName"/>
+                        <xsl:with-param name="OfficeName" select="col[@field='Office']/text()"/>
+                        <xsl:with-param name="FacilityType" select="col[@field='Facility Type']/text()"/>
                         <xsl:with-param name="type" select="$type"/>
                     </xsl:call-template>
                 </xsl:otherwise>

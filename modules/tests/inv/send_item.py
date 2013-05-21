@@ -32,7 +32,7 @@ class SendItem(InvTestFunctions):
             Inventory Test - Send Workflow (Send items)
             
             @param items: This test sends a specific item to another party.
-        This test assume that regression/inv-mngt has been added to prepop
+        This test assume that test/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
             @Case: INV001
             
