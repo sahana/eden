@@ -2918,10 +2918,6 @@ i18n.gis_range_error={degrees:{lat:'%s',lon:'%s'},minutes:'%s',seconds:'%s',deci
 
             s3.lat_lon_i18n_appended = True
 
-        if s3.debug and \
-            (not "S3/locationselector.widget.css" in s3.stylesheets):
-            s3.stylesheets.append("S3/locationselector.widget.css")
-
         if (field == None):
             return SPAN(decimal,
                         dms_boxes,

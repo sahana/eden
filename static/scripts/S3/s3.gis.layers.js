@@ -511,7 +511,7 @@ function addGeoJSONLayer(layer) {
                     // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
                     pix = -(marker_width / 2);
                 } else if (feature.attributes.marker_width) {
-                    // Use marker_width from feature (Query)
+                    // Use marker_width from feature (e.g. FeatureQuery)
                     pix = -(feature.attributes.marker_width / 2);
                 } else {
                     // per-Layer Marker for Unclustered Point
@@ -526,7 +526,7 @@ function addGeoJSONLayer(layer) {
                     // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
                     pix = -marker_height;
                 } else if (feature.attributes.marker_height) {
-                    // Use marker_height from feature (Query)
+                    // Use marker_height from feature (e.g. FeatureQuery)
                     pix = -feature.attributes.marker_height;
                 } else {
                     // per-Layer Marker for Unclustered Point
@@ -540,7 +540,7 @@ function addGeoJSONLayer(layer) {
                     // Clustered Point
                     shape = 'circle';
                 } else if (feature.attributes.shape) {
-                    // Use shape from feature (Query)
+                    // Use shape from feature (e.g. FeatureQuery)
                     shape = feature.attributes.shape;
                 } else {
                     // default to a Circle
@@ -552,6 +552,9 @@ function addGeoJSONLayer(layer) {
             	var url;
                 if (feature.cluster) {
                     // Clustered Point
+                    // Just show shape not marker
+                    // @ToDo: Make this configurable per-Layer & within-Layer as to which gets shown
+                    // e.g. http://openflights.org/blog/2009/10/21/customized-openlayers-cluster-strategies/
                     url = '';
                 } else if (feature.attributes.marker_url) {
                     // Use marker from feature (Query)
@@ -598,7 +601,7 @@ function addGeoJSONLayer(layer) {
                     // Size for Clustered Point
                     pix = Math.min(feature.attributes.count / 2, 8) + 10;
                 } else if (feature.attributes.size) {
-                    // Use size from feature (Query)
+                    // Use size from feature (e.g. FeatureQuery)
                     pix = feature.attributes.size;
                 } else {
                     // default Size for Unclustered Point
@@ -610,14 +613,14 @@ function addGeoJSONLayer(layer) {
             	var color;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
-                        // Use colour from features (Query)
+                        // Use colour from features (e.g. FeatureQuery)
                         color = feature.cluster[0].attributes.colour;
                     } else {
                         // default fillColor for Clustered Point
                         color = '#8087ff';
                     }
                 } else if (feature.attributes.colour) {
-                    // Feature Query: Use colour from feature (Query)
+                    // Feature Query: Use colour from feature (e.g. FeatureQuery)
                     color = feature.attributes.colour;
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
@@ -666,14 +669,14 @@ function addGeoJSONLayer(layer) {
             	var fill_opacity;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.opacity) {
-                        // Use opacity from features
+                        // Use opacity from features (e.g. FeatureQuery)
                         fill_opacity = feature.cluster[0].attributes.opacity;
                     } else {
                         // default fillOpacity for Clustered Point
                         fill_opacity = opacity;
                     }
                 } else if (feature.attributes.opacity) {
-                    // Use opacity from feature
+                    // Use opacity from feature (e.g. FeatureQuery)
                     fill_opacity = feature.attributes.opacity;
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
@@ -714,14 +717,14 @@ function addGeoJSONLayer(layer) {
             	var color;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
-                        // Use colour from features
+                        // Use colour from features (e.g. FeatureQuery)
                         color = feature.cluster[0].attributes.colour;
                     } else {
                         // default strokeColor for Clustered Point
                         color = '#2b2f76';
                     }
                 } else if (feature.attributes.colour) {
-                    // Feature Query: Use colour from feature
+                    // Use colour from feature (e.g. FeatureQuery)
                     color = feature.attributes.colour;
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;
@@ -770,14 +773,14 @@ function addGeoJSONLayer(layer) {
             	var width;
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.stroke_width) {
-                        // Use colour from features
+                        // Use colour from features (e.g. FeatureQuery)
                         width = feature.cluster[0].attributes.stroke_width;
                     } else {
                         // default strokeWidth
                         width = 2;
                     }
                 //} else if (feature.attributes.stroke_width) {
-                //    // Feature Query: Use stroke_width from feature
+                //    // Use stroke_width from feature (e.g. FeatureQuery)
                 //    width = feature.attributes.stroke_width;
                 } else if (feature.layer && (undefined != feature.layer.s3_style)) {
                     var style = feature.layer.s3_style;

@@ -92,6 +92,7 @@ OpenLayers.Layer.Google.v3 = {
             googleControl.style.width = '100%';
             googleControl.style.height = '100%';
             mapObject.controls[google.maps.ControlPosition.TOP_LEFT].push(googleControl);
+            this.map.div.appendChild(container);
             
             // cache elements for use by any other google layers added to
             // this same map
@@ -155,11 +156,11 @@ OpenLayers.Layer.Google.v3 = {
                     }
                     google.maps.event.trigger(this.mapObject, 'resize');
                 }
-                this.mapObject.setMapTypeId(type);                
+                this.mapObject.setMapTypeId(type);
                 cache.displayed = this.id;
             } else {
                 if (cache.googleControl.hasChildNodes()) {
-                   map.div.appendChild(map.viewPortDiv);
+                    map.div.appendChild(map.viewPortDiv);
                     map.div.removeChild(container);
                 }
                 delete cache.displayed;

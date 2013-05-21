@@ -34,6 +34,20 @@ OpenLayers.TileManager = OpenLayers.Class({
     cacheSize: 256,
 
     /**
+     * APIProperty: tilesPerFrame
+     * {Number} Number of queued tiles to load per frame (see <frameDelay>).
+     *     Default is 2.
+     */
+    tilesPerFrame: 2,
+
+    /**
+     * APIProperty: frameDelay
+     * {Number} Delay between tile loading frames (see <tilesPerFrame>) in
+     *     milliseconds. Default is 16.
+     */
+    frameDelay: 16,
+
+    /**
      * APIProperty: moveDelay
      * {Number} Delay in milliseconds after a map's move event before loading
      * tiles. Default is 100.
@@ -161,7 +175,7 @@ OpenLayers.TileManager = OpenLayers.Class({
      * evt - {Object} Listener argument
      */
     move: function(evt) {
-        this.updateTimeout(evt.object, this.moveDelay);
+        this.updateTimeout(evt.object, this.moveDelay, true);
     },
     
     /**
@@ -251,18 +265,29 @@ OpenLayers.TileManager = OpenLayers.Class({
     
     /**
      * Method: updateTimeout
-     * Applies the <moveDelay> or <zoomDelay> to the <drawTilesFromQueue> loop.
+     * Applies the <moveDelay> or <zoomDelay> to the <drawTilesFromQueue> loop,
+     * and schedules more queue processing after <frameDelay> if there are still
+     * tiles in the queue.
      *
      * Parameters:
      * map - {<OpenLayers.Map>} The map to update the timeout for
      * delay - {Number} The delay to apply
+     * nice - {Boolean} If true, the timeout function will only be created if
+     *     the tilequeue is not empty. This is used by the move handler to
+     *     avoid impacts on dragging performance. For other events, the tile
+     *     queue may not be populated yet, so we need to set the timer
+     *     regardless of the queue size.
      */
-    updateTimeout: function(map, delay) {
+    updateTimeout: function(map, delay, nice) {
         window.clearTimeout(this.tileQueueId[map.id]);
-        if (this.tileQueue[map.id].length) {
+        var tileQueue = this.tileQueue[map.id];
+        if (!nice || tileQueue.length) {
             this.tileQueueId[map.id] = window.setTimeout(
                 OpenLayers.Function.bind(function() {
                     this.drawTilesFromQueue(map);
+                    if (tileQueue.length) {
+                        this.updateTimeout(map, this.frameDelay);
+                    }
                 }, this), delay
             );
         }
@@ -341,8 +366,11 @@ OpenLayers.TileManager = OpenLayers.Class({
      */
     drawTilesFromQueue: function(map) {
         var tileQueue = this.tileQueue[map.id];
-        while (tileQueue.length) {
+        var limit = this.tilesPerFrame;
+        var animating = map.zoomTween && map.zoomTween.playing;
+        while (!animating && tileQueue.length && limit) {
             tileQueue.shift().draw(true);
+            --limit;
         }
     },
     

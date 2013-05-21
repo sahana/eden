@@ -6438,7 +6438,10 @@ class Layer(object):
 
         def setup_clustering(self, output):
             gis = current.gis
-            cluster_attribute = self.cluster_attribute
+            if hasattr(self, "cluster_attribute"):
+                cluster_attribute = self.cluster_attribute
+            else:
+                cluster_attribute = None
             cluster_distance = self.cluster_distance
             cluster_threshold = self.cluster_threshold
             if cluster_attribute and \

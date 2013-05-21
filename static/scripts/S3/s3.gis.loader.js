@@ -70,8 +70,6 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Console.js',
             'gis/openlayers/lib/OpenLayers/Tween.js',
             'gis/openlayers/lib/OpenLayers/Kinetic.js',
-            //'gis/openlayers/lib/Rico/Corner.js',
-            //'gis/openlayers/lib/Rico/Color.js',
             'gis/openlayers/lib/OpenLayers/Events.js',
             'gis/openlayers/lib/OpenLayers/Events/buttonclick.js',
             'gis/openlayers/lib/OpenLayers/Request.js',
@@ -123,8 +121,6 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             //'gis/openlayers/lib/OpenLayers/Layer/Zoomify.js',
             //'gis/openlayers/lib/OpenLayers/Layer/ArcGISCache.js',
             'gis/openlayers/lib/OpenLayers/Popup/Anchored.js',
-            // Requires Rico
-            //'gis/openlayers/lib/OpenLayers/Popup/AnchoredBubble.js',
             'gis/openlayers/lib/OpenLayers/Popup/Framed.js',
             'gis/openlayers/lib/OpenLayers/Popup/FramedCloud.js',
             'gis/openlayers/lib/OpenLayers/Feature.js',

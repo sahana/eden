@@ -77,6 +77,7 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
     /** APIProperty: ratio
      *  {Float} Used only when in single-tile mode, this specifies the 
      *          ratio of the size of the single tile to the size of the map.
+     *          Default value is 1.5.
      */
     ratio: 1.5,
 
@@ -97,9 +98,14 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      * Two posible values:
      *
      * "resize" - Existing tiles are resized on zoom to provide a visual
-     * effect of the zoom having taken place immediately.  As the
-     * new tiles become available, they are drawn over top of the
-     * resized tiles (this is the default setting).
+     *     effect of the zoom having taken place immediately.  As the
+     *     new tiles become available, they are drawn on top of the
+     *     resized tiles (this is the default setting).
+     * "map-resize" - Existing tiles are resized on zoom and placed below the
+     *     base layer.  New tiles for the base layer will cover existing tiles.
+     *     This setting is recommended when having an overlay duplicated during
+     *     the transition is undesirable (e.g. street labels or big transparent
+     *     fills). 
      * null - No transition effect.
      *
      * Using "resize" on non-opaque layers can cause undesired visual
@@ -704,6 +710,12 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
             backBuffer.id = this.div.id + '_bb';
             backBuffer.className = 'olBackBuffer';
             backBuffer.style.position = 'absolute';
+            var map = this.map;
+            backBuffer.style.zIndex = this.transitionEffect === 'resize' ?
+                    this.getZIndex() - 1 :
+                    // 'map-resize':
+                    map.Z_INDEX_BASE.BaseLayer -
+                            (map.getNumLayers() - map.getLayerIndex(this));
             for(var i=0, lenI=this.grid.length; i<lenI; i++) {
                 for(var j=0, lenJ=this.grid[i].length; j<lenJ; j++) {
                     var tile = this.grid[i][j],
@@ -1088,7 +1100,7 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
             this.events.triggerEvent("tileloadstart", {tile: tile});
             this.numLoadingTiles++;
             if (!this.singleTile && this.backBuffer && this.gridResolution === this.backBufferResolution) {
-                OpenLayers.Element.addClass(tile.imgDiv, replacingCls);
+                OpenLayers.Element.addClass(tile.getTile(), replacingCls);
             }
         };
       
@@ -1100,28 +1112,37 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
                 aborted: aborted
             });
             if (!this.singleTile && !aborted && this.backBuffer && this.gridResolution === this.backBufferResolution) {
-                if (OpenLayers.Element.getStyle(tile.imgDiv, 'display') === 'none') {
+                var tileDiv = tile.getTile();
+                if (OpenLayers.Element.getStyle(tileDiv, 'display') === 'none') {
                     var bufferTile = document.getElementById(tile.id + '_bb');
                     if (bufferTile) {
                         bufferTile.parentNode.removeChild(bufferTile);
                     }
                 }
-                OpenLayers.Element.removeClass(tile.imgDiv, replacingCls);
+                OpenLayers.Element.removeClass(tileDiv, replacingCls);
             }
             //if that was the last tile, then trigger a 'loadend' on the layer
             if (this.numLoadingTiles === 0) {
-                if(this.backBuffer) {
-                    this._transitionElement = tile.imgDiv;
-                    for (var i=this.transitionendEvents.length-1; i>=0; --i) {
-                        OpenLayers.Event.observe(this._transitionElement,
-                            this.transitionendEvents[i],
-                            this._removeBackBuffer);
+                if (this.backBuffer) {
+                    if (this.backBuffer.childNodes.length === 0) {
+                        // no tiles transitioning, remove immediately
+                        this.removeBackBuffer();
+                    } else {
+                        // wait until transition has ended or delay has passed
+                        this._transitionElement = aborted ?
+                            this.div.lastChild : tile.imgDiv;
+                        var transitionendEvents = this.transitionendEvents;
+                        for (var i=transitionendEvents.length-1; i>=0; --i) {
+                            OpenLayers.Event.observe(this._transitionElement,
+                                transitionendEvents[i],
+                                this._removeBackBuffer);
+                        }
+                        // the removal of the back buffer is delayed to prevent
+                        // flash effects due to the animation of tile displaying
+                        this.backBufferTimerId = window.setTimeout(
+                            this._removeBackBuffer, this.removeBackBufferDelay
+                        );
                     }
-                    // the removal of the back buffer is delayed to prevent
-                    // flash effects due to the animation of tile displaying
-                    this.backBufferTimerId = window.setTimeout(
-                        this._removeBackBuffer, this.removeBackBufferDelay
-                    );
                 }
                 this.loading = false;
                 this.events.triggerEvent("loadend");
