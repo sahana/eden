@@ -97,6 +97,52 @@ a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
 }
 
+/* Activity */
+/*.icon-:*/
+.icon-activity:before  {
+    content: "\f085";
+}
+/* Alert */
+/*.icon-bullhorn*/
+.icon-alert:before {
+    content: "\f0a1";
+}
+/* Assessment */
+/*icon-info-sign*/
+.icon-assessment:before{
+    content: "\f05a";
+}
+/* Contact */
+/*.icon-group*/
+.icon-contact:before {
+    content: "\f0c0";
+}
+/* Incident */
+/*icon-warning-sign*/
+.icon-incident:before {
+    content: "\f071";
+}
+/* Project */
+/*.icon-retweet*/
+.icon-project:before {
+    content: "\f079";
+}
+/* Report */
+/*.icon-file-alt*/
+.icon-report:before {
+    content: "\f0f6";
+}
+/* Resource */
+/*.icon-truck*/
+.icon-resource:before {
+    content: "\f0d1";
+}
+/* Training Material */
+/*icon-book*/
+.icon-training_material:before {
+    content: "\f02d";
+}
+
 /* Modals */
 /* Imitate Bootstrap in jQueryUI Modal */
 #popup #submit_record__row {

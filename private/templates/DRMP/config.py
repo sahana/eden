@@ -69,6 +69,8 @@ settings.L10n.languages = OrderedDict([
 settings.L10n.default_language = "en"
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0900"
+# Don't show Seconds
+settings.L10n.time_format = T("%H:%M")
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = "."
@@ -653,7 +655,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
         # template
         item_id = "%s-[id]" % listid
 
-    item_class = "thumbnail"
+    item_class = "thumbnail span6"
 
     raw = record._row
     name = record["org_organisation.name"]
@@ -998,7 +1000,13 @@ def render_projects(listid, resource, rfields, record, **attr):
                      _title=current.response.s3.crud_strings.project_project.title_update,
                      )
     else:
-        edit_btn = ""
+        # Read in Popup
+        edit_btn = A(I(" ", _class="icon icon-search"),
+                     _href=URL(c="project", f="project",
+                               args=[record_id, "read.popup"]),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.project_project.title_display,
+                     )
     if permit("delete", table, record_id=record_id):
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
                        _class="dl-item-delete",
@@ -1344,7 +1352,7 @@ def customize_event_event(**attr):
                                     tablename = "cms_post",
                                     context = "event",
                                     filter = S3FieldSelector("series_id$name") == "Incident",
-                                    icon = "icon-warning-sign",
+                                    icon = "icon-incident",
                                     marker = "incident",
                                     list_layout = render_profile_posts,
                                     )
@@ -1378,11 +1386,11 @@ def customize_event_event(**attr):
                                   marker = "report",
                                   list_layout = render_profile_posts,
                                   )
-            comments_widget = dict(label = "Comments",
-                                   type = "comments",
-                                   icon = "icon-comments-alt",
-                                   colspan = 2,
-                                   )
+            #comments_widget = dict(label = "Comments",
+            #                       type = "comments",
+            #                       icon = "icon-comments-alt",
+            #                       colspan = 2,
+            #                       )
             s3db.configure("event_event",
                            create_next = URL(c="event", f="event",
                                              args=["[id]", "profile"]),
@@ -1499,16 +1507,25 @@ def customize_gis_location(**attr):
                 # Represent used in rendering
                 current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
-                locations_widget = dict(label = "Locations",
-                                        insert = False,
-                                        #title_create = "Add New Location",
+                #locations_widget = dict(label = "Locations",
+                #                        insert = False,
+                #                        #title_create = "Add New Location",
+                #                        type = "datalist",
+                #                        tablename = "gis_location",
+                #                        context = "location",
+                #                        icon = "icon-globe",
+                #                        # @ToDo: Show as Polygons?
+                #                        show_on_map = False,
+                #                        list_layout = render_locations_profile,
+                #                        )
+                resources_widget = dict(label = "Resources",
+                                        title_create = "Add New Resource",
                                         type = "datalist",
-                                        tablename = "gis_location",
+                                        tablename = "org_resource",
                                         context = "location",
-                                        icon = "icon-globe",
-                                        # @ToDo: Show as Polygons?
-                                        show_on_map = False,
-                                        list_layout = render_locations_profile,
+                                        icon = "icon-resource",
+                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
+                                        list_layout = render_resources,
                                         )
                 record = r.record
                 map_widget = dict(label = "Location",
@@ -1523,15 +1540,15 @@ def customize_gis_location(**attr):
                                           "lon_min" : record.lon_min
                                           },
                                   )
-                resources_widget = dict(label = "Resources",
-                                        title_create = "Add New Resource",
+                incidents_widget = dict(label = "Incidents",
+                                        title_create = "Add New Incident",
                                         type = "datalist",
-                                        tablename = "org_resource",
+                                        tablename = "cms_post",
                                         context = "location",
-                                        # @ToDo: Replace Icon
-                                        icon = "icon-folder-close-alt",
-                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                        list_layout = render_resources,
+                                        filter = S3FieldSelector("series_id$name") == "Incident",
+                                        icon = "icon-incident",
+                                        marker = "incident",
+                                        list_layout = render_profile_posts,
                                         )
                 reports_widget = dict(label = "Reports",
                                       title_create = "Add New Report",
@@ -1548,8 +1565,7 @@ def customize_gis_location(**attr):
                                        type = "datalist",
                                        tablename = "project_project",
                                        context = "location",
-                                       # @ToDo: Replace Icon
-                                       icon = "icon-map-marker",
+                                       icon = "icon-project",
                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
                                        list_layout = render_projects,
                                        )
@@ -1565,9 +1581,10 @@ def customize_gis_location(**attr):
                                          )
                 s3db.configure("gis_location",
                                list_fields = list_fields,
-                               profile_widgets=[locations_widget,
-                                                map_widget,
+                               profile_widgets=[#locations_widget,
                                                 resources_widget,
+                                                map_widget,
+                                                incidents_widget,
                                                 reports_widget,
                                                 projects_widget,
                                                 activities_widget,
@@ -1717,7 +1734,7 @@ def customize_org_organisation(**attr):
                                    context = "organisation",
                                    create_controller = "pr",
                                    create_function = "person",
-                                   icon = "icon-user",
+                                   icon = "icon-contact",
                                    show_on_map = False, # Since they will show within Offices
                                    list_layout = render_contacts,
                                    )
@@ -1742,8 +1759,7 @@ def customize_org_organisation(**attr):
                                     type = "datalist",
                                     tablename = "org_resource",
                                     context = "organisation",
-                                    # @ToDo: Replace Icon
-                                    icon = "icon-folder-close-alt",
+                                    icon = "icon-resource",
                                     show_on_map = False, # No Marker yet & only show at L1-level anyway
                                     list_layout = render_resources,
                                     )
@@ -1752,8 +1768,7 @@ def customize_org_organisation(**attr):
                                    type = "datalist",
                                    tablename = "project_project",
                                    context = "organisation",
-                                   # @ToDo: Replace Icon
-                                   icon = "icon-map-marker",
+                                   icon = "icon-project",
                                    show_on_map = False, # No Marker yet & only show at L1-level anyway
                                    list_layout = render_projects,
                                    )
