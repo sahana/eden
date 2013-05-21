@@ -1886,17 +1886,20 @@ class S3ImportItem(object):
             if UID in original:
                 self.uid = original[UID]
                 self.data.update({UID:self.uid})
-            self.method = self.METHOD["UPDATE"]
+            self.method = DELETE if self.data.deleted else UPDATE
         else:
-            resolve = current.s3db.get_config(self.tablename, RESOLVER)
-            if self.data and resolve:
-                resolve(self)
-            if self.id and self.method in (UPDATE, DELETE):
-                self.original = current.db(table._id == self.id).select(limitby=(0, 1)
-                                                                        ).first()
-                if original and UID in original:
-                    self.uid = original[UID]
-                    self.data.update({UID:self.uid})
+            if self.data.deleted:
+                self.method = DELETE
+            else:
+                resolve = current.s3db.get_config(self.tablename, RESOLVER)
+                if self.data and resolve:
+                    resolve(self)
+                if self.id and self.method in (UPDATE, DELETE):
+                    self.original = current.db(table._id == self.id) \
+                                           .select(limitby=(0, 1)).first()
+                    if original and UID in original:
+                        self.uid = original[UID]
+                        self.data.update({UID:self.uid})
 
         return
 
@@ -1961,6 +1964,11 @@ class S3ImportItem(object):
         # Detect update
         self.deduplicate()
 
+        # Don't need to validate deleted records
+        if self.method == self.METHOD["DELETE"]:
+            self.accepted = self.id and True or False
+            return True
+                
         # Set dynamic defaults for new records
         if not self.id:
             self._dynamic_defaults(self.data)
@@ -2106,7 +2114,7 @@ class S3ImportItem(object):
                     
             return ignore_errors
 
-        elif self.components:
+        elif self.method != DELETE and self.components:
             for component in self.components:
                 if component.accepted is False or \
                    component.data is None:
@@ -2120,6 +2128,11 @@ class S3ImportItem(object):
                     self.skip = True
                     self.error = self.ERROR.VALIDATION_ERROR
                     return False
+
+        elif self.method == DELETE and not self.accepted:
+            self.skip = True
+            # Deletion of non-existent record: ignore silently
+            return True
 
         # Authorize item
         if not self.authorize():
